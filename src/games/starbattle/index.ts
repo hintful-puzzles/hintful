@@ -28,7 +28,12 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newStarbattleDesc } from "./generator.ts";
-import { starbattleHint, starbattleKeepTrack } from "./hint.ts";
+import {
+  type StarbattleHint,
+  starbattleHint,
+  starbattleKeepTrack,
+  starbattleRefreshHintStep,
+} from "./hint.ts";
 import {
   border,
   colors,
@@ -212,7 +217,7 @@ function hintGesture(
   ui: StarbattleUi,
   ds: StarbattleDrawState,
   move: StarbattleMove,
-  step: HintStep<StarbattleMove>,
+  step: HintStep<StarbattleMove, StarbattleHint>,
 ): readonly PointerAction[] {
   if (move.kind !== "mark") return [];
   const { size } = state;
@@ -234,7 +239,7 @@ export const starbattleGame: Game<
   StarbattleUi,
   StarbattleDrawState,
   StarbattleMistake,
-  unknown,
+  StarbattleHint,
   StarbattleRung
 > = {
   id: "starbattle",
@@ -275,6 +280,7 @@ export const starbattleGame: Game<
     },
   },
   hintKeepTrack: starbattleKeepTrack,
+  refreshHintStep: starbattleRefreshHintStep,
   hintGesture,
 
   rulesOut: { name: "Cross out the squares a star rules out", bring: ruledOut },

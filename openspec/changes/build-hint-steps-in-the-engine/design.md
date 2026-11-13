@@ -365,6 +365,42 @@ defect found in the game, said which.
   `deduceHintPlan` and the reasons gone), `hint.ts` 66 and the description +31
   of `says`; `hint-text.ts` -9.
 
+### Star Battle, built (2026-11-13)
+
+- **`describedFiringHint`, a step a firing, no engine change.** Thirteen
+  techniques say; `confined` and `banded` have two arms (`lines`, `regions`),
+  which are the old reason's `rest`. The kinds were eight (`full`, `exact`,
+  `crowded`...); they are the techniques' ids now (fifteen with the arms).
+- **A line is a term, a unit's cells are a mark.** A Line technique says
+  `L`, and its sentence reads row or column off it (the rows are numbered
+  first); a Region technique's sentence says "region". The unit itself is the
+  `stripes` mark. The trials' `completes` is three booleans of the
+  description (`closesRow`, `closesCol`, `closesRegion`), read before the
+  firing, and the squares those units hold are a define (`completing`) that
+  `reads` takes.
+- **A change of behavior, the one the comparison found**: a square a firing
+  decides that its own `confined`/`banded` arm also outlines (a region's
+  squares outside the lines, struck) was outlined and ringed; the engine's
+  evidence is the outline less the targets, so it is ringed only. A ringed
+  square drawn with the evidence tint beneath had nothing more to say.
+- **The comparison.** 2,813 steps over 60 boards (5x5 to 12x12, one to three
+  stars, all tiers), HEAD against the new tree: every line's words and move
+  are the same, and the marks are the same once an outline of a ringed square
+  is cut from the HEAD side. All fifteen kinds met (the least, 19
+  `starvedLine`).
+- **A define added for a `says` re-opens the game's soundness check.** The
+  fingerprint reads the description's `define` block, so the four defines
+  `says` needed (`closesRow`, `closesCol`, `closesRegion`, `completing`)
+  changed every technique's, and the gate's source scan failed until
+  `CHECK_GAMES=starbattle npx vitest run -c research/technique-check/vitest.config.ts describe-check`
+  was run again. A game's `says` that can be written without a new define
+  avoids that cost.
+- **Kept**: the game's `hintKeepTrack` wraps the engine's, for the first of
+  two clicks (a button's second click is the other's first), which the engine
+  cannot know.
+- **Lines.** `solver.ts` -207, `hint.ts` -113, `hint-text.ts` +108 (a
+  sentence a technique), the description +78 of `says` and defines.
+
 ### What blocks the rest (2026-11-13, a survey by reading, to be re-checked per game)
 
 The first read of the remaining games found one that is a plain Clusters-shaped
@@ -393,6 +429,47 @@ does not fit a convention is a question about the convention).
   trial rungs whose `ruled`, `completes` and `touches` are derived from the
   square; the first read of what is next. Range and Bricks are one technique
   each away from it (`reach`, `three`).
+
+### The per-fact `says` (a design, 2026-11-13, read against `compile.ts`)
+
+Where a technique places several squares and each has its own evidence (Bricks'
+`three`: the run through the square, supposing it shaded; Range's `reach` and
+`cut`; Sticks; Seismic's `cull`), the evidence is read where the square is
+made, which is inside the conclusion's `forall`, and a `says` is read after it,
+in the binders' scope only. The shape:
+
+```yaml
+says:
+  fact:                      # read at each `place`, in the conclusion's scope
+    terms: { ... }           # per square; the square is the binder the `place` names
+    marks:
+      outline: "with place(c, 1): run(c)"   # a nested `with` is a formula as any
+```
+
+- **Compiler.** The `place` site (`compile.ts`, `case "place"`) is where the
+  facts are pushed; on a hint's path (`fire !== null`) it also pushes one
+  record of the fact's `says`, compiled by `compileExpr` in the site's own
+  scope, so the `forall` binder and any `with` around it are live. The record
+  rides beside `facts` as `factSays`, in step with it (the earlier `arms` idea,
+  which was withdrawn for conditions on the binding, had the same slot), and
+  `fire(binding, facts, says, factSays)`. A solve passes no `fire`, so it pays
+  nothing; a technique with no `says.fact` is unchanged.
+- **The record.** `compiledRung` already makes one reason a fact
+  (`reasonOf(binding, fact, ..., says)`); it takes the fact's record as well, so
+  `Firing.reasons[i]` holds `{ binding, says, fact }` and the engine reads the
+  fact's own where it has one.
+- **The engine.** A step that is `shown: each` takes the fact's terms and marks
+  in place of the firing's (the outline is still less that square alone); a step
+  that is a firing takes the union of the facts' outlines and an array of their
+  terms. `FiringSpoken` gains `fact`, the terms of the square a sentence is
+  about. `reads` is the union of every fact's marks and the firing's.
+- **Why not the `for` binders.** Moving the square into them changes the firing
+  granularity, so the walk (a firing a square, not a row), and the `three` guard
+  (a position already broken) would have to be a technique of its own. The
+  per-fact `says` leaves both as they are.
+- **The risk is the cost of a nested `with` a fact**: it runs only on a hint's
+  path, a firing at a time, and the soundness fingerprint does not read it (the
+  fingerprint reads the `statement`, and `withoutSays` for variations).
 
 ### Read off Boats (2026-11-12, `boats/solver.ts` and `index.ts`), before it was built
 

@@ -79,6 +79,16 @@ define:
     or (row(p) = row(x) and need(cells(row(x))) = 1)
     or (col(p) = col(x) and need(cells(col(x))) = 1)
     or (region(p) = region(x) and need(cells(region(x))) = 1))}
+  # Whether a star tried in x would complete its row, column or region and so
+  # rule out some of Q, the squares a hint names, in that unit.
+  closesRow(x, Q): "need(cells(row(x))) = 1 and (exists p in Q: row(p) = row(x))"
+  closesCol(x, Q): "need(cells(col(x))) = 1 and (exists p in Q: col(p) = col(x))"
+  closesRegion(x, Q): "need(cells(region(x))) = 1 and (exists p in Q: region(p) = region(x))"
+  # The squares of the units a star tried in x would complete among Q's.
+  completing(x, Q): >-
+    {c in cells where (closesRow(x, Q) and row(c) = row(x))
+    or (closesCol(x, Q) and col(c) = col(x))
+    or (closesRegion(x, Q) and region(c) = region(x))}
 shape:
   - "forall L in lines: count(c in cells(L) where value(c) = 1) = stars"
   - "forall r in region: count(c in cells(r) where value(c) = 1) = stars"
@@ -98,26 +108,42 @@ techniques:
     conclude: >-
       (forall p in adj8(c): value(p) != 1)
       and (forall p in adj8(c) where not known(p): place(p, 2))
+    # The hint names the star and outlines it; the squares touching it are its
+    # step's, and the walk reads them all.
+    says:
+      marks: { outline: "{c}", reads: "{c} + adj8(c)" }
   # A row or column that has its stars holds no more. One with more makes
   # the marks inconsistent.
   - id: fullLine
     tier: Easy
     for: "L in lines, n = need(cells(L)) where n <= 0"
     conclude: "n = 0 and forall c in open(cells(L)): place(c, 2)"
+    says:
+      terms: { L: L }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
   - id: fullRegion
     tier: Easy
     for: "r in region, n = need(cells(r)) where n <= 0"
     conclude: "n = 0 and forall c in open(cells(r)): place(c, 2)"
+    says:
+      terms: { r: r }
+      marks: { stripes: "cells(r)", reads: "cells(r)" }
   # A row or column with exactly as many open squares as it still needs
   # stars has a star in each. One with fewer makes the marks inconsistent.
   - id: exactLine
     tier: Easy
     for: "L in lines, n = need(cells(L)), O = open(cells(L)) where n > 0 and n >= |O|"
     conclude: "n = |O| and forall c in O: place(c, 1)"
+    says:
+      terms: { L: L, n: n }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
   - id: exactRegion
     tier: Easy
     for: "r in region, n = need(cells(r)), O = open(cells(r)) where n > 0 and n >= |O|"
     conclude: "n = |O| and forall c in O: place(c, 1)"
+    says:
+      terms: { r: r, n: n }
+      marks: { stripes: "cells(r)", reads: "cells(r)" }
   # A row or column counted against its regions, two ways, the first where
   # it decides a square (`lines`): where the regions lying wholly inside it
   # need as many stars as it does, its other open squares are empty; where
@@ -137,6 +163,20 @@ techniques:
       mi <= n and mr >= n
       and (lines implies (forall c in open(B) where region(c) not in I: place(c, 2)))
       and (lines or mr > n or (forall r in R, c in open(cells(r)) where c not in B: place(c, 2)))
+    # The hint names the lines (striped), the regions it counts them against
+    # (outlined), and the stars they share.
+    says:
+      terms: { dir: dir, k: "1", n: n }
+      marks: { stripes: B, reads: B }
+      arms:
+        lines:
+          when: lines
+          terms: { regionCount: "|I|" }
+          marks: { outline: "set(c over r in I, c in cells(r))" }
+        regions:
+          when: "true"
+          terms: { regionCount: "|R|" }
+          marks: { outline: "set(c over r in R, c in cells(r))" }
   # A row or column that would have room for too few stars without an open
   # square of its: a star is there.
   - id: neededLine
@@ -145,12 +185,18 @@ techniques:
       L in lines, n = need(cells(L)), O = open(cells(L)) where n > 0,
       x in O, E = O - {x} where not fits(E, n), room = most(E, n)
     conclude: "place(x, 1)"
+    says:
+      terms: { L: L, n: n, room: room }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
   - id: neededRegion
     tier: Easy
     for: >-
       r in region, n = need(cells(r)), O = open(cells(r)) where n > 0,
       x in O, E = O - {x} where not fits(E, n), room = most(E, n)
     conclude: "place(x, 1)"
+    says:
+      terms: { r: r, n: n, room: room }
+      marks: { stripes: "cells(r)", reads: "cells(r)" }
   # A star tried in a square would rule out the open squares touching it,
   # leaving a row or column it touches room for too few stars: the square is
   # empty.
@@ -162,6 +208,9 @@ techniques:
       S = cells(L), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R}
       where n > 0 and not fits(E, n), room = most(E, n), Q = {c in open(S) where c in R}
     conclude: "place(x, 2)"
+    says:
+      terms: { L: L, n: n, room: room, mine: "x in S", exhausted: "|E| = 0" }
+      marks: { stripes: S, outline: Q, reads: "Q + S" }
   - id: crowdedRegion
     tier: Easy
     for: >-
@@ -170,6 +219,9 @@ techniques:
       S = cells(g), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R}
       where n > 0 and not fits(E, n), room = most(E, n), Q = {c in open(S) where c in R}
     conclude: "place(x, 2)"
+    says:
+      terms: { g: g, n: n, room: room, mine: "x in S", exhausted: "|E| = 0" }
+      marks: { stripes: S, outline: Q, reads: "Q + S" }
   # Several neighboring rows or columns, fewer than all but one, counted
   # against their regions as one row or column is, the fewest first.
   - id: banded
@@ -185,6 +237,20 @@ techniques:
       mi <= n and mr >= n
       and (lines implies (forall c in open(B) where region(c) not in I: place(c, 2)))
       and (lines or mr > n or (forall r in R, c in open(cells(r)) where c not in B: place(c, 2)))
+    # The hint names the lines (striped), the regions it counts them against
+    # (outlined), and the stars they share.
+    says:
+      terms: { dir: dir, k: k, n: n }
+      marks: { stripes: B, reads: B }
+      arms:
+        lines:
+          when: lines
+          terms: { regionCount: "|I|" }
+          marks: { outline: "set(c over r in I, c in cells(r))" }
+        regions:
+          when: "true"
+          terms: { regionCount: "|R|" }
+          marks: { outline: "set(c over r in R, c in cells(r))" }
   # A star tried in a square would also complete a row, column or region of
   # its own and rule out the rest of it, leaving another room for too few
   # stars: the square is empty.
@@ -196,6 +262,12 @@ techniques:
       S = cells(L), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R}
       where n > 0 and not fits(E, n), room = most(E, n), Q = {c in open(S) where c in R}
     conclude: "place(x, 2)"
+    says:
+      terms:
+        { L: L, n: n, room: room, mine: "x in S", exhausted: "|E| = 0",
+          closesRow: "closesRow(x, Q)", closesCol: "closesCol(x, Q)",
+          closesRegion: "closesRegion(x, Q)" }
+      marks: { stripes: S, outline: Q, reads: "Q + S + completing(x, Q)" }
   - id: starvedRegion
     tier: Tricky
     for: >-
@@ -204,3 +276,9 @@ techniques:
       S = cells(g), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R}
       where n > 0 and not fits(E, n), room = most(E, n), Q = {c in open(S) where c in R}
     conclude: "place(x, 2)"
+    says:
+      terms:
+        { g: g, n: n, room: room, mine: "x in S", exhausted: "|E| = 0",
+          closesRow: "closesRow(x, Q)", closesCol: "closesCol(x, Q)",
+          closesRegion: "closesRegion(x, Q)" }
+      marks: { stripes: S, outline: Q, reads: "Q + S + completing(x, Q)" }

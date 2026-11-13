@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/starbattle/starbattle.description.yaml: edit that, not this.
 
-import { type Fire, type GridSpace, type Marks, type Partition, PLACE, cellsValued, freshBinding, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, type Kept } from "../../engine/describe-runtime.ts";
+import { type Fire, type GridSpace, type Marks, type Partition, PLACE, addOnce, cellsValued, freshBinding, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, stamps, type Kept, union } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -18,6 +18,27 @@ export const units: readonly string[] = [];
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "around" | "fullLine" | "fullRegion" | "exactLine" | "exactRegion" | "confined" | "neededLine" | "neededRegion" | "crowdedLine" | "crowdedRegion" | "banded" | "starvedLine" | "starvedRegion";
+
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  around: AroundSays;
+  fullLine: FullLineSays;
+  fullRegion: FullRegionSays;
+  exactLine: ExactLineSays;
+  exactRegion: ExactRegionSays;
+  confined: ConfinedSays;
+  neededLine: NeededLineSays;
+  neededRegion: NeededRegionSays;
+  crowdedLine: CrowdedLineSays;
+  crowdedRegion: CrowdedRegionSays;
+  banded: BandedSays;
+  starvedLine: StarvedLineSays;
+  starvedRegion: StarvedRegionSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["around","fullLine","fullRegion","exactLine","exactRegion","confined.lines","confined.regions","neededLine","neededRegion","crowdedLine","crowdedRegion","banded.lines","banded.regions","starvedLine","starvedRegion"] as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
@@ -146,10 +167,16 @@ export interface AroundBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface AroundSays {
+  terms: {  };
+  marks: { outline: readonly number[]; reads: readonly number[]; };
+}
+
 const aroundFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function around(b: Marks, sp: GridSpace, fire: Fire<AroundBinding> | null): number {
+export function around(b: Marks, sp: GridSpace, fire: Fire<AroundBinding, AroundSays> | null): number {
   const facts = aroundFacts;
   let fired = 0;
   let changed = false;
@@ -193,7 +220,10 @@ export function around(b: Marks, sp: GridSpace, fire: Fire<AroundBinding> | null
     if (!(_c13)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: {  }, marks: { outline: setOf(v_c).slice(), reads: union(setOf(v_c), sp.adj8[v_c]).slice() } };
+        if (!fire({ c: v_c }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -204,10 +234,16 @@ export interface FullLineBinding {
   n: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface FullLineSays {
+  terms: { L: number; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const fullLineFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function fullLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FullLineBinding> | null): number {
+export function fullLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FullLineBinding, FullLineSays> | null): number {
   const _g25: number[] = [];
   const facts = fullLineFacts;
   let fired = 0;
@@ -272,7 +308,10 @@ export function fullLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FullLine
       if (!(_c33)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L, n: v_n }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { L: v_L }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+          if (!fire({ L: v_L, n: v_n }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -284,10 +323,16 @@ export interface FullRegionBinding {
   n: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface FullRegionSays {
+  terms: { r: number; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const fullRegionFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function fullRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<FullRegionBinding> | null): number {
+export function fullRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<FullRegionBinding, FullRegionSays> | null): number {
   const _g25: number[] = [];
   const facts = fullRegionFacts;
   let fired = 0;
@@ -352,7 +397,10 @@ export function fullRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<FullR
       if (!(_c33)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ r: v_r, n: v_n }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { r: v_r }, marks: { stripes: cl.region.cells[v_r].slice(), reads: cl.region.cells[v_r].slice() } };
+          if (!fire({ r: v_r, n: v_n }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -365,10 +413,16 @@ export interface ExactLineBinding {
   O: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ExactLineSays {
+  terms: { L: number; n: number; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const exactLineFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function exactLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactLineBinding> | null): number {
+export function exactLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactLineBinding, ExactLineSays> | null): number {
   const _g24: number[] = [];
   const facts = exactLineFacts;
   let fired = 0;
@@ -445,7 +499,10 @@ export function exactLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactLi
       if (!(_c48)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L, n: v_n, O: v_O.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { L: v_L, n: v_n }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+          if (!fire({ L: v_L, n: v_n, O: v_O.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -458,10 +515,16 @@ export interface ExactRegionBinding {
   O: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ExactRegionSays {
+  terms: { r: number; n: number; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const exactRegionFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function exactRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<ExactRegionBinding> | null): number {
+export function exactRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<ExactRegionBinding, ExactRegionSays> | null): number {
   const _g24: number[] = [];
   const facts = exactRegionFacts;
   let fired = 0;
@@ -538,7 +601,10 @@ export function exactRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<Exac
       if (!(_c48)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ r: v_r, n: v_n, O: v_O.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { r: v_r, n: v_n }, marks: { stripes: cl.region.cells[v_r].slice(), reads: cl.region.cells[v_r].slice() } };
+          if (!fire({ r: v_r, n: v_n, O: v_O.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -557,10 +623,18 @@ export interface ConfinedBinding {
   lines: boolean;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type ConfinedSays =
+  | { arm: "lines"; terms: { dir: number; k: number; n: number; regionCount: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; } }
+  | { arm: "regions"; terms: { dir: number; k: number; n: number; regionCount: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; } }
+;
+
 const confinedFacts: number[] = [];
+const confined_st464 = stamps();
+const confined_st477 = stamps();
 
 /** Its dearest read grows with the board as 1. */
-export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ConfinedBinding> | null): number {
+export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ConfinedBinding, ConfinedSays> | null): number {
   const _g151: number[] = [];
   const _g196: number[] = [];
   const _g214: number[] = [];
@@ -568,6 +642,8 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
   const _g279: number[] = [];
   const _g432: number[] = [];
   const _g447: number[] = [];
+  const _g458: number[] = [];
+  const _g471: number[] = [];
   const facts = confinedFacts;
   let fired = 0;
   let changed = false;
@@ -632,6 +708,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
           }
         }
         const v_I = _g151;
+        const _h457 = v_I.length;
         let _g205 = 0;
         G206: {
           const _a207 = v_I;
@@ -696,6 +773,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
           }
         }
         const v_R = _g214;
+        const _h470 = v_R.length;
         let _g268 = 0;
         G269: {
           const _a270 = v_R;
@@ -972,7 +1050,47 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
           if (!(_c456)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ dir: v_dir, a: v_a, B: v_B.slice(), n: v_n, I: v_I.slice(), mi: v_mi, R: v_R.slice(), mr: v_mr, lines: v_lines }, facts)) return 1;
+            if (fire !== null) {
+              let _arm = -1;
+              if (v_lines) _arm = 0; else if (true) _arm = 1;
+              let _says: ConfinedSays | null = null;
+              if (_arm === 0) {
+                _g458.length = 0;
+                confined_st464.pass++;
+                G459: {
+                  const _a465 = v_I;
+                  for (let _i466 = 0; _i466 < _a465.length; _i466++) {
+                    const v_r = _a465[_i466];
+                    const _a467 = cl.region.cells[v_r];
+                    for (let _i468 = 0; _i468 < _a467.length; _i468++) {
+                      const v_c = _a467[_i468];
+                      const _t469 = v_c;
+                      if (_g458.length < 16) { if (!_g458.includes(_t469)) _g458.push(_t469); } else addOnce(_g458, confined_st464, _t469);
+                    }
+                  }
+                }
+                _says = { arm: "lines", terms: { dir: v_dir, k: 1, n: v_n, regionCount: _h457 }, marks: { stripes: v_B.slice(), reads: v_B.slice(), outline: _g458.slice() } };
+              }
+              if (_arm === 1) {
+                _g471.length = 0;
+                confined_st477.pass++;
+                G472: {
+                  const _a478 = v_R;
+                  for (let _i479 = 0; _i479 < _a478.length; _i479++) {
+                    const v_r = _a478[_i479];
+                    const _a480 = cl.region.cells[v_r];
+                    for (let _i481 = 0; _i481 < _a480.length; _i481++) {
+                      const v_c = _a480[_i481];
+                      const _t482 = v_c;
+                      if (_g471.length < 16) { if (!_g471.includes(_t482)) _g471.push(_t482); } else addOnce(_g471, confined_st477, _t482);
+                    }
+                  }
+                }
+                _says = { arm: "regions", terms: { dir: v_dir, k: 1, n: v_n, regionCount: _h470 }, marks: { stripes: v_B.slice(), reads: v_B.slice(), outline: _g471.slice() } };
+              }
+              if (_says === null) throw new Error("confined: no arm of says holds");
+              if (!fire({ dir: v_dir, a: v_a, B: v_B.slice(), n: v_n, I: v_I.slice(), mi: v_mi, R: v_R.slice(), mr: v_mr, lines: v_lines }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -990,6 +1108,12 @@ export interface NeededLineBinding {
   room: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NeededLineSays {
+  terms: { L: number; n: number; room: number; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const neededLineFacts: number[] = [];
 let neededLine_f86 = new Int32Array(0);
 let neededLine_l87: readonly number[] = [];
@@ -997,7 +1121,7 @@ let neededLine_f113 = new Int32Array(0);
 let neededLine_l114: readonly number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NeededLineBinding> | null): number {
+export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NeededLineBinding, NeededLineSays> | null): number {
   const _g73: number[] = [];
   if (neededLine_f86.length < sp.cells.length) neededLine_f86 = new Int32Array(sp.cells.length).fill(-1);
   else neededLine_f86.fill(-1);
@@ -1374,7 +1498,10 @@ export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Needed
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, n: v_n, O: v_O.slice(), x: v_x, E: v_E.slice(), room: v_room }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { L: v_L, n: v_n, room: v_room }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+              if (!fire({ L: v_L, n: v_n, O: v_O.slice(), x: v_x, E: v_E.slice(), room: v_room }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -1392,6 +1519,12 @@ export interface NeededRegionBinding {
   room: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NeededRegionSays {
+  terms: { r: number; n: number; room: number; };
+  marks: { stripes: readonly number[]; reads: readonly number[]; };
+}
+
 const neededRegionFacts: number[] = [];
 let neededRegion_f86 = new Int32Array(0);
 let neededRegion_l87: readonly number[] = [];
@@ -1399,7 +1532,7 @@ let neededRegion_f113 = new Int32Array(0);
 let neededRegion_l114: readonly number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NeededRegionBinding> | null): number {
+export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NeededRegionBinding, NeededRegionSays> | null): number {
   const _g73: number[] = [];
   if (neededRegion_f86.length < sp.cells.length) neededRegion_f86 = new Int32Array(sp.cells.length).fill(-1);
   else neededRegion_f86.fill(-1);
@@ -1776,7 +1909,10 @@ export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ r: v_r, n: v_n, O: v_O.slice(), x: v_x, E: v_E.slice(), room: v_room }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { r: v_r, n: v_n, room: v_room }, marks: { stripes: cl.region.cells[v_r].slice(), reads: cl.region.cells[v_r].slice() } };
+              if (!fire({ r: v_r, n: v_n, O: v_O.slice(), x: v_x, E: v_E.slice(), room: v_room }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -1796,6 +1932,12 @@ export interface CrowdedLineBinding {
   Q: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CrowdedLineSays {
+  terms: { L: number; n: number; room: number; mine: boolean; exhausted: boolean; };
+  marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
+}
+
 const crowdedLineFacts: number[] = [];
 let crowdedLine_f153 = new Int32Array(0);
 let crowdedLine_l154: readonly number[] = [];
@@ -1803,7 +1945,7 @@ let crowdedLine_f181 = new Int32Array(0);
 let crowdedLine_l182: readonly number[] = [];
 
 /** Its dearest read grows with the board as n^1.5. */
-export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrowdedLineBinding> | null): number {
+export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrowdedLineBinding, CrowdedLineSays> | null): number {
   const _g109: number[] = [];
   const _g131: number[] = [];
   const _g141: number[] = [];
@@ -2299,7 +2441,10 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ x: v_x, R: v_R.slice(), L: v_L, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { L: v_L, n: v_n, room: v_room, mine: (v_S.includes(v_x)), exhausted: (_h161 === 0) }, marks: { stripes: v_S.slice(), outline: v_Q.slice(), reads: union(v_Q, v_S).slice() } };
+            if (!fire({ x: v_x, R: v_R.slice(), L: v_L, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -2318,6 +2463,12 @@ export interface CrowdedRegionBinding {
   Q: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CrowdedRegionSays {
+  terms: { g: number; n: number; room: number; mine: boolean; exhausted: boolean; };
+  marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
+}
+
 const crowdedRegionFacts: number[] = [];
 let crowdedRegion_f152 = new Int32Array(0);
 let crowdedRegion_l153: readonly number[] = [];
@@ -2325,7 +2476,7 @@ let crowdedRegion_f180 = new Int32Array(0);
 let crowdedRegion_l181: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrowdedRegionBinding> | null): number {
+export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrowdedRegionBinding, CrowdedRegionSays> | null): number {
   const _g109: number[] = [];
   const _g130: number[] = [];
   const _g140: number[] = [];
@@ -2820,7 +2971,10 @@ export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cro
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ x: v_x, R: v_R.slice(), g: v_g, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { g: v_g, n: v_n, room: v_room, mine: (v_S.includes(v_x)), exhausted: (_h160 === 0) }, marks: { stripes: v_S.slice(), outline: v_Q.slice(), reads: union(v_Q, v_S).slice() } };
+            if (!fire({ x: v_x, R: v_R.slice(), g: v_g, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -2841,10 +2995,18 @@ export interface BandedBinding {
   lines: boolean;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type BandedSays =
+  | { arm: "lines"; terms: { dir: number; k: number; n: number; regionCount: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; } }
+  | { arm: "regions"; terms: { dir: number; k: number; n: number; regionCount: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; } }
+;
+
 const bandedFacts: number[] = [];
+const banded_st468 = stamps();
+const banded_st481 = stamps();
 
 /** Its dearest read grows with the board as 1. */
-export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBinding> | null): number {
+export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBinding, BandedSays> | null): number {
   const _g155: number[] = [];
   const _g200: number[] = [];
   const _g218: number[] = [];
@@ -2852,6 +3014,8 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
   const _g283: number[] = [];
   const _g436: number[] = [];
   const _g451: number[] = [];
+  const _g462: number[] = [];
+  const _g475: number[] = [];
   const facts = bandedFacts;
   let fired = 0;
   let changed = false;
@@ -2920,6 +3084,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
             }
           }
           const v_I = _g155;
+          const _h461 = v_I.length;
           let _g209 = 0;
           G210: {
             const _a211 = v_I;
@@ -2984,6 +3149,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
             }
           }
           const v_R = _g218;
+          const _h474 = v_R.length;
           let _g272 = 0;
           G273: {
             const _a274 = v_R;
@@ -3260,7 +3426,47 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
             if (!(_c460)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ k: v_k, dir: v_dir, a: v_a, B: v_B.slice(), n: v_n, I: v_I.slice(), mi: v_mi, R: v_R.slice(), mr: v_mr, lines: v_lines }, facts)) return 1;
+              if (fire !== null) {
+                let _arm = -1;
+                if (v_lines) _arm = 0; else if (true) _arm = 1;
+                let _says: BandedSays | null = null;
+                if (_arm === 0) {
+                  _g462.length = 0;
+                  banded_st468.pass++;
+                  G463: {
+                    const _a469 = v_I;
+                    for (let _i470 = 0; _i470 < _a469.length; _i470++) {
+                      const v_r = _a469[_i470];
+                      const _a471 = cl.region.cells[v_r];
+                      for (let _i472 = 0; _i472 < _a471.length; _i472++) {
+                        const v_c = _a471[_i472];
+                        const _t473 = v_c;
+                        if (_g462.length < 16) { if (!_g462.includes(_t473)) _g462.push(_t473); } else addOnce(_g462, banded_st468, _t473);
+                      }
+                    }
+                  }
+                  _says = { arm: "lines", terms: { dir: v_dir, k: v_k, n: v_n, regionCount: _h461 }, marks: { stripes: v_B.slice(), reads: v_B.slice(), outline: _g462.slice() } };
+                }
+                if (_arm === 1) {
+                  _g475.length = 0;
+                  banded_st481.pass++;
+                  G476: {
+                    const _a482 = v_R;
+                    for (let _i483 = 0; _i483 < _a482.length; _i483++) {
+                      const v_r = _a482[_i483];
+                      const _a484 = cl.region.cells[v_r];
+                      for (let _i485 = 0; _i485 < _a484.length; _i485++) {
+                        const v_c = _a484[_i485];
+                        const _t486 = v_c;
+                        if (_g475.length < 16) { if (!_g475.includes(_t486)) _g475.push(_t486); } else addOnce(_g475, banded_st481, _t486);
+                      }
+                    }
+                  }
+                  _says = { arm: "regions", terms: { dir: v_dir, k: v_k, n: v_n, regionCount: _h474 }, marks: { stripes: v_B.slice(), reads: v_B.slice(), outline: _g475.slice() } };
+                }
+                if (_says === null) throw new Error("banded: no arm of says holds");
+                if (!fire({ k: v_k, dir: v_dir, a: v_a, B: v_B.slice(), n: v_n, I: v_I.slice(), mi: v_mi, R: v_R.slice(), mr: v_mr, lines: v_lines }, facts, _says)) return 1;
+              }
             }
           }
         }
@@ -3281,6 +3487,12 @@ export interface StarvedLineBinding {
   Q: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface StarvedLineSays {
+  terms: { L: number; n: number; room: number; mine: boolean; exhausted: boolean; closesRow: boolean; closesCol: boolean; closesRegion: boolean; };
+  marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
+}
+
 const starvedLineFacts: number[] = [];
 let starvedLine_f141 = new Int32Array(0);
 let starvedLine_l142: readonly number[] = [];
@@ -3288,7 +3500,7 @@ let starvedLine_f169 = new Int32Array(0);
 let starvedLine_l170: readonly number[] = [];
 
 /** Its dearest read grows with the board as n^1.5. */
-export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarvedLineBinding> | null): number {
+export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarvedLineBinding, StarvedLineSays> | null): number {
   const _g119: number[] = [];
   const _g129: number[] = [];
   if (starvedLine_f141.length < sp.cells.length) starvedLine_f141 = new Int32Array(sp.cells.length).fill(-1);
@@ -3301,6 +3513,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
   const _s171: number[] = [];
   const _g189: number[] = [];
   const _g199: number[] = [];
+  const _g333: number[] = [];
   const facts = starvedLineFacts;
   let fired = 0;
   let changed = false;
@@ -3308,11 +3521,12 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
   R1:
   for (let _i102 = 0; _i102 < _a101.length; _i102++) {
     const v_x = _a101[_i102];
-    const _m302_0 = b.made[0];
+    const _m403_0 = b.made[0];
     if (!(!((b.grid[v_x] !== 0)))) continue;
     const _h105 = sp.rowOf[v_x];
     const _h106 = sp.colOf[v_x];
-    const _m303_1 = b.made[1];
+    const _h322 = cl.region.of[v_x];
+    const _m404_1 = b.made[1];
     const v_R = ruled(b, sp, cl, v_x);
     const _a103 = sp.lines;
     for (let _i104 = 0; _i104 < _a103.length; _i104++) {
@@ -3533,7 +3747,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
           }
         }
         const v_Q = _g189;
-        if (b.made[0] !== _m302_0 || b.made[1] !== _m303_1) {
+        if (b.made[0] !== _m403_0 || b.made[1] !== _m404_1) {
           if (!(!((b.grid[v_x] !== 0)))) { continue R1; }
           if (!(sameSet(v_R, ruled(b, sp, cl, v_x)))) { continue R1; }
         }
@@ -3756,7 +3970,177 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ x: v_x, R: v_R.slice(), L: v_L, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _t302 = sp.lineCells[_h105];
+            let _g303 = 0;
+            G304: {
+              const _a305 = _t302;
+              for (let _i306 = 0; _i306 < _a305.length; _i306++) {
+                const v_c = _a305[_i306];
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
+                _g303++;
+              }
+            }
+            let _c311: boolean = ((cl.stars - _g303) === 1);
+            if (_c311) {
+              let _q307 = false;
+              Q308: {
+                const _a309 = v_Q;
+                for (let _i310 = 0; _i310 < _a309.length; _i310++) {
+                  const v_p = _a309[_i310];
+                  if ((sp.rowOf[v_p] === _h105)) {
+                    _q307 = true;
+                    break Q308;
+                  }
+                }
+              }
+              _c311 = _q307;
+            }
+            const _t312 = sp.lineCells[_h106];
+            let _g313 = 0;
+            G314: {
+              const _a315 = _t312;
+              for (let _i316 = 0; _i316 < _a315.length; _i316++) {
+                const v_c = _a315[_i316];
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
+                _g313++;
+              }
+            }
+            let _c321: boolean = ((cl.stars - _g313) === 1);
+            if (_c321) {
+              let _q317 = false;
+              Q318: {
+                const _a319 = v_Q;
+                for (let _i320 = 0; _i320 < _a319.length; _i320++) {
+                  const v_p = _a319[_i320];
+                  if ((sp.colOf[v_p] === _h106)) {
+                    _q317 = true;
+                    break Q318;
+                  }
+                }
+              }
+              _c321 = _q317;
+            }
+            const _t323 = cl.region.cells[_h322];
+            let _g324 = 0;
+            G325: {
+              const _a326 = _t323;
+              for (let _i327 = 0; _i327 < _a326.length; _i327++) {
+                const v_c = _a326[_i327];
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
+                _g324++;
+              }
+            }
+            let _c332: boolean = ((cl.stars - _g324) === 1);
+            if (_c332) {
+              let _q328 = false;
+              Q329: {
+                const _a330 = v_Q;
+                for (let _i331 = 0; _i331 < _a330.length; _i331++) {
+                  const v_p = _a330[_i331];
+                  if ((cl.region.of[v_p] === _h322)) {
+                    _q328 = true;
+                    break Q329;
+                  }
+                }
+              }
+              _c332 = _q328;
+            }
+            _g333.length = 0;
+            G334: {
+              const _a369 = sp.cells;
+              for (let _i370 = 0; _i370 < _a369.length; _i370++) {
+                const v_c = _a369[_i370];
+                const _t371 = sp.lineCells[_h105];
+                let _g372 = 0;
+                G373: {
+                  const _a374 = _t371;
+                  for (let _i375 = 0; _i375 < _a374.length; _i375++) {
+                    const v_c = _a374[_i375];
+                    if (!(((b.grid[v_c] || -1) === 1))) continue;
+                    _g372++;
+                  }
+                }
+                let _c380: boolean = ((cl.stars - _g372) === 1);
+                if (_c380) {
+                  let _q376 = false;
+                  Q377: {
+                    const _a378 = v_Q;
+                    for (let _i379 = 0; _i379 < _a378.length; _i379++) {
+                      const v_p = _a378[_i379];
+                      if ((sp.rowOf[v_p] === _h105)) {
+                        _q376 = true;
+                        break Q377;
+                      }
+                    }
+                  }
+                  _c380 = _q376;
+                }
+                let _c391: boolean = (_c380 && (sp.rowOf[v_c] === _h105));
+                if (!_c391) {
+                  const _t381 = sp.lineCells[_h106];
+                  let _g382 = 0;
+                  G383: {
+                    const _a384 = _t381;
+                    for (let _i385 = 0; _i385 < _a384.length; _i385++) {
+                      const v_c = _a384[_i385];
+                      if (!(((b.grid[v_c] || -1) === 1))) continue;
+                      _g382++;
+                    }
+                  }
+                  let _c390: boolean = ((cl.stars - _g382) === 1);
+                  if (_c390) {
+                    let _q386 = false;
+                    Q387: {
+                      const _a388 = v_Q;
+                      for (let _i389 = 0; _i389 < _a388.length; _i389++) {
+                        const v_p = _a388[_i389];
+                        if ((sp.colOf[v_p] === _h106)) {
+                          _q386 = true;
+                          break Q387;
+                        }
+                      }
+                    }
+                    _c390 = _q386;
+                  }
+                  _c391 = (_c390 && (sp.colOf[v_c] === _h106));
+                }
+                let _c402: boolean = _c391;
+                if (!_c402) {
+                  const _t392 = cl.region.cells[_h322];
+                  let _g393 = 0;
+                  G394: {
+                    const _a395 = _t392;
+                    for (let _i396 = 0; _i396 < _a395.length; _i396++) {
+                      const v_c = _a395[_i396];
+                      if (!(((b.grid[v_c] || -1) === 1))) continue;
+                      _g393++;
+                    }
+                  }
+                  let _c401: boolean = ((cl.stars - _g393) === 1);
+                  if (_c401) {
+                    let _q397 = false;
+                    Q398: {
+                      const _a399 = v_Q;
+                      for (let _i400 = 0; _i400 < _a399.length; _i400++) {
+                        const v_p = _a399[_i400];
+                        if ((cl.region.of[v_p] === _h322)) {
+                          _q397 = true;
+                          break Q398;
+                        }
+                      }
+                    }
+                    _c401 = _q397;
+                  }
+                  _c402 = (_c401 && (cl.region.of[v_c] === _h322));
+                }
+                if (!(_c402)) continue;
+                _g333.push(v_c);
+              }
+            }
+            const _says = { terms: { L: v_L, n: v_n, room: v_room, mine: (v_S.includes(v_x)), exhausted: (_h149 === 0), closesRow: _c311, closesCol: _c321, closesRegion: _c332 }, marks: { stripes: v_S.slice(), outline: v_Q.slice(), reads: union(union(v_Q, v_S), _g333).slice() } };
+            if (!fire({ x: v_x, R: v_R.slice(), L: v_L, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -3775,6 +4159,12 @@ export interface StarvedRegionBinding {
   Q: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface StarvedRegionSays {
+  terms: { g: number; n: number; room: number; mine: boolean; exhausted: boolean; closesRow: boolean; closesCol: boolean; closesRegion: boolean; };
+  marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
+}
+
 const starvedRegionFacts: number[] = [];
 let starvedRegion_f140 = new Int32Array(0);
 let starvedRegion_l141: readonly number[] = [];
@@ -3782,7 +4172,7 @@ let starvedRegion_f168 = new Int32Array(0);
 let starvedRegion_l169: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarvedRegionBinding> | null): number {
+export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarvedRegionBinding, StarvedRegionSays> | null): number {
   const _g118: number[] = [];
   const _g128: number[] = [];
   if (starvedRegion_f140.length < sp.cells.length) starvedRegion_f140 = new Int32Array(sp.cells.length).fill(-1);
@@ -3795,6 +4185,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
   const _s170: number[] = [];
   const _g188: number[] = [];
   const _g198: number[] = [];
+  const _g333: number[] = [];
   const facts = starvedRegionFacts;
   let fired = 0;
   let changed = false;
@@ -3802,10 +4193,12 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
   R1:
   for (let _i102 = 0; _i102 < _a101.length; _i102++) {
     const v_x = _a101[_i102];
-    const _m301_0 = b.made[0];
+    const _m403_0 = b.made[0];
     if (!(!((b.grid[v_x] !== 0)))) continue;
     const _h105 = cl.region.of[v_x];
-    const _m302_1 = b.made[1];
+    const _h301 = sp.rowOf[v_x];
+    const _h312 = sp.colOf[v_x];
+    const _m404_1 = b.made[1];
     const v_R = ruled(b, sp, cl, v_x);
     const _a103 = cl.region.parts;
     for (let _i104 = 0; _i104 < _a103.length; _i104++) {
@@ -4026,7 +4419,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
           }
         }
         const v_Q = _g188;
-        if (b.made[0] !== _m301_0 || b.made[1] !== _m302_1) {
+        if (b.made[0] !== _m403_0 || b.made[1] !== _m404_1) {
           if (!(!((b.grid[v_x] !== 0)))) { continue R1; }
           if (!(sameSet(v_R, ruled(b, sp, cl, v_x)))) { continue R1; }
         }
@@ -4249,7 +4642,177 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ x: v_x, R: v_R.slice(), g: v_g, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _t302 = sp.lineCells[_h301];
+            let _g303 = 0;
+            G304: {
+              const _a305 = _t302;
+              for (let _i306 = 0; _i306 < _a305.length; _i306++) {
+                const v_c = _a305[_i306];
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
+                _g303++;
+              }
+            }
+            let _c311: boolean = ((cl.stars - _g303) === 1);
+            if (_c311) {
+              let _q307 = false;
+              Q308: {
+                const _a309 = v_Q;
+                for (let _i310 = 0; _i310 < _a309.length; _i310++) {
+                  const v_p = _a309[_i310];
+                  if ((sp.rowOf[v_p] === _h301)) {
+                    _q307 = true;
+                    break Q308;
+                  }
+                }
+              }
+              _c311 = _q307;
+            }
+            const _t313 = sp.lineCells[_h312];
+            let _g314 = 0;
+            G315: {
+              const _a316 = _t313;
+              for (let _i317 = 0; _i317 < _a316.length; _i317++) {
+                const v_c = _a316[_i317];
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
+                _g314++;
+              }
+            }
+            let _c322: boolean = ((cl.stars - _g314) === 1);
+            if (_c322) {
+              let _q318 = false;
+              Q319: {
+                const _a320 = v_Q;
+                for (let _i321 = 0; _i321 < _a320.length; _i321++) {
+                  const v_p = _a320[_i321];
+                  if ((sp.colOf[v_p] === _h312)) {
+                    _q318 = true;
+                    break Q319;
+                  }
+                }
+              }
+              _c322 = _q318;
+            }
+            const _t323 = cl.region.cells[_h105];
+            let _g324 = 0;
+            G325: {
+              const _a326 = _t323;
+              for (let _i327 = 0; _i327 < _a326.length; _i327++) {
+                const v_c = _a326[_i327];
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
+                _g324++;
+              }
+            }
+            let _c332: boolean = ((cl.stars - _g324) === 1);
+            if (_c332) {
+              let _q328 = false;
+              Q329: {
+                const _a330 = v_Q;
+                for (let _i331 = 0; _i331 < _a330.length; _i331++) {
+                  const v_p = _a330[_i331];
+                  if ((cl.region.of[v_p] === _h105)) {
+                    _q328 = true;
+                    break Q329;
+                  }
+                }
+              }
+              _c332 = _q328;
+            }
+            _g333.length = 0;
+            G334: {
+              const _a369 = sp.cells;
+              for (let _i370 = 0; _i370 < _a369.length; _i370++) {
+                const v_c = _a369[_i370];
+                const _t371 = sp.lineCells[_h301];
+                let _g372 = 0;
+                G373: {
+                  const _a374 = _t371;
+                  for (let _i375 = 0; _i375 < _a374.length; _i375++) {
+                    const v_c = _a374[_i375];
+                    if (!(((b.grid[v_c] || -1) === 1))) continue;
+                    _g372++;
+                  }
+                }
+                let _c380: boolean = ((cl.stars - _g372) === 1);
+                if (_c380) {
+                  let _q376 = false;
+                  Q377: {
+                    const _a378 = v_Q;
+                    for (let _i379 = 0; _i379 < _a378.length; _i379++) {
+                      const v_p = _a378[_i379];
+                      if ((sp.rowOf[v_p] === _h301)) {
+                        _q376 = true;
+                        break Q377;
+                      }
+                    }
+                  }
+                  _c380 = _q376;
+                }
+                let _c391: boolean = (_c380 && (sp.rowOf[v_c] === _h301));
+                if (!_c391) {
+                  const _t381 = sp.lineCells[_h312];
+                  let _g382 = 0;
+                  G383: {
+                    const _a384 = _t381;
+                    for (let _i385 = 0; _i385 < _a384.length; _i385++) {
+                      const v_c = _a384[_i385];
+                      if (!(((b.grid[v_c] || -1) === 1))) continue;
+                      _g382++;
+                    }
+                  }
+                  let _c390: boolean = ((cl.stars - _g382) === 1);
+                  if (_c390) {
+                    let _q386 = false;
+                    Q387: {
+                      const _a388 = v_Q;
+                      for (let _i389 = 0; _i389 < _a388.length; _i389++) {
+                        const v_p = _a388[_i389];
+                        if ((sp.colOf[v_p] === _h312)) {
+                          _q386 = true;
+                          break Q387;
+                        }
+                      }
+                    }
+                    _c390 = _q386;
+                  }
+                  _c391 = (_c390 && (sp.colOf[v_c] === _h312));
+                }
+                let _c402: boolean = _c391;
+                if (!_c402) {
+                  const _t392 = cl.region.cells[_h105];
+                  let _g393 = 0;
+                  G394: {
+                    const _a395 = _t392;
+                    for (let _i396 = 0; _i396 < _a395.length; _i396++) {
+                      const v_c = _a395[_i396];
+                      if (!(((b.grid[v_c] || -1) === 1))) continue;
+                      _g393++;
+                    }
+                  }
+                  let _c401: boolean = ((cl.stars - _g393) === 1);
+                  if (_c401) {
+                    let _q397 = false;
+                    Q398: {
+                      const _a399 = v_Q;
+                      for (let _i400 = 0; _i400 < _a399.length; _i400++) {
+                        const v_p = _a399[_i400];
+                        if ((cl.region.of[v_p] === _h105)) {
+                          _q397 = true;
+                          break Q398;
+                        }
+                      }
+                    }
+                    _c401 = _q397;
+                  }
+                  _c402 = (_c401 && (cl.region.of[v_c] === _h105));
+                }
+                if (!(_c402)) continue;
+                _g333.push(v_c);
+              }
+            }
+            const _says = { terms: { g: v_g, n: v_n, room: v_room, mine: (v_S.includes(v_x)), exhausted: (_h148 === 0), closesRow: _c311, closesCol: _c322, closesRegion: _c332 }, marks: { stripes: v_S.slice(), outline: v_Q.slice(), reads: union(union(v_Q, v_S), _g333).slice() } };
+            if (!fire({ x: v_x, R: v_R.slice(), g: v_g, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }

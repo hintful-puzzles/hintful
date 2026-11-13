@@ -1,8 +1,8 @@
 /**
  * Every sentence Star Battle's hint speaks, and every word inside one.
  *
- * The deduction decides which sentence and with what values
- * ([`hint.ts`](./hint.ts)); this file decides only how it reads. Each sentence
+ * The description's `says` decides which sentence and with what values
+ * (`starbattle.description.yaml`); this file decides only how it reads. Each sentence
  * says what to look at and then what must follow (docs/hints.md
  * § "Writing the narration"). Every word that points at the board is a
  * reference to the mark it points at (`engine/hint-words.ts`): the squares a
@@ -14,6 +14,7 @@
  * ringed squares is a reference that re-renders from them.
  */
 
+import type { FiringSpoken } from "../../engine/described-firing-hint.ts";
 import {
   CELL,
   mark,
@@ -24,6 +25,8 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+import type { SaysById } from "./starbattle.compiled.ts";
+import type { StarbattleState } from "./state.ts";
 
 /** A row, a column or a region, as the squares it is made of. */
 export interface UnitSquares {
@@ -214,4 +217,109 @@ export const say = {
       move: mustBeEmpty(cells),
     });
   },
+};
+
+type Spoken<K extends keyof SaysById> = FiringSpoken<SaysById[K]>;
+
+/** Whether the line a term names is a row or a column: the rows are numbered
+ * first. */
+const lineKind = (line: number, size: number): "row" | "column" =>
+  line < size ? "row" : "column";
+
+const unitOf = (kind: UnitSquares["kind"], s: { stripes: readonly Point[] }) => ({
+  kind,
+  cells: s.stripes,
+});
+
+/** A star tried in the square, and what it would leave a unit short of. */
+const trialOf =
+  (touches: boolean) =>
+  (
+    s:
+      | Spoken<"crowdedLine">
+      | Spoken<"crowdedRegion">
+      | Spoken<"starvedLine">
+      | Spoken<"starvedRegion">,
+    kind: UnitSquares["kind"],
+  ): Sentence => {
+    const t = s.terms;
+    const closes = "closesRow" in t ? t : null;
+    return say.trial({
+      cell: s.targets[0],
+      unit: unitOf(kind, s),
+      own: t.mine,
+      need: t.n,
+      room: t.room,
+      ruled: s.outline,
+      all: t.exhausted,
+      touches,
+      completes: [
+        ...(closes?.closesRow ? (["row"] as const) : []),
+        ...(closes?.closesCol ? (["column"] as const) : []),
+        ...(closes?.closesRegion ? (["region"] as const) : []),
+      ],
+    });
+  };
+
+/** Lines counted against regions: the lines striped, the regions outlined. */
+function confined(
+  s: Spoken<"confined"> | Spoken<"banded">,
+  state: StarbattleState,
+): Sentence {
+  const { terms: t } = s;
+  return say.confined(
+    {
+      line: t.dir === 0 ? "row" : "column",
+      lines: { count: t.k, cells: s.stripes },
+      regions: { count: t.regionCount, cells: s.outline },
+      need: t.n,
+      linesPlaced: t.k * state.stars - t.n,
+      regionsPlaced: t.regionCount * state.stars - t.n,
+      rest: s.arm,
+    },
+    s.targets,
+  );
+}
+
+/** Each technique's sentence, from what its description says of a firing
+ * (`engine/described-firing-hint.ts`). */
+export const sentences = {
+  around: (s: Spoken<"around">) => say.around(s.outline[0], s.targets),
+  fullLine: (s: Spoken<"fullLine">, state: StarbattleState) =>
+    say.full(unitOf(lineKind(s.terms.L, state.size), s), state.stars, s.targets),
+  fullRegion: (s: Spoken<"fullRegion">, state: StarbattleState) =>
+    say.full(unitOf("region", s), state.stars, s.targets),
+  exactLine: (s: Spoken<"exactLine">, state: StarbattleState) =>
+    say.exact(
+      unitOf(lineKind(s.terms.L, state.size), s),
+      s.terms.n,
+      state.stars - s.terms.n,
+      s.targets,
+    ),
+  exactRegion: (s: Spoken<"exactRegion">, state: StarbattleState) =>
+    say.exact(unitOf("region", s), s.terms.n, state.stars - s.terms.n, s.targets),
+  neededLine: (s: Spoken<"neededLine">, state: StarbattleState) =>
+    say.needed(
+      unitOf(lineKind(s.terms.L, state.size), s),
+      s.terms.n,
+      state.stars - s.terms.n,
+      s.terms.room,
+      s.targets[0],
+    ),
+  neededRegion: (s: Spoken<"neededRegion">, state: StarbattleState) =>
+    say.needed(
+      unitOf("region", s),
+      s.terms.n,
+      state.stars - s.terms.n,
+      s.terms.room,
+      s.targets[0],
+    ),
+  crowdedLine: (s: Spoken<"crowdedLine">, state: StarbattleState) =>
+    trialOf(true)(s, lineKind(s.terms.L, state.size)),
+  crowdedRegion: (s: Spoken<"crowdedRegion">) => trialOf(true)(s, "region"),
+  starvedLine: (s: Spoken<"starvedLine">, state: StarbattleState) =>
+    trialOf(false)(s, lineKind(s.terms.L, state.size)),
+  starvedRegion: (s: Spoken<"starvedRegion">) => trialOf(false)(s, "region"),
+  confined,
+  banded: confined,
 };

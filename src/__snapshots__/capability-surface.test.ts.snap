@@ -2046,6 +2046,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "notApplicable",
       "paramConfig",
       "preferredTileSize",
+      "refreshHintStep",
       "rulesOut",
       "solve",
       "targetVerbs",
