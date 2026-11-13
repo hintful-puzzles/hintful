@@ -183,9 +183,9 @@ describe("group hint — recorded deductions", () => {
   it("an associativity record names its triple and the forced fourth product", () => {
     // The narration states the law with concrete element letters.
     const text = pinned("associativity").step.explanation;
-    // "…In any group, (a·b)·c = a·(b·c), so <fourth> must also be <v>."
-    expect(text).toMatch(/The grid shows .+·.+ = .+, .+·.+ = .+ and/);
-    expect(text).toMatch(/In any group, \(.+·.+\)·.+ = .+·\(.+·.+\), so /);
+    // "In any group, (a·b)·c = a·(b·c), and … so <fourth> must also be <v>."
+    expect(text).toMatch(/In any group, \(.+·.+\)·.+ = .+·\(.+·.+\), and /);
+    expect(text).toMatch(/.+·.+ = .+, .+·.+ = .+ and .+ = .+, so /);
     expect(text).toMatch(/must also be [a-z]\./);
   });
 });

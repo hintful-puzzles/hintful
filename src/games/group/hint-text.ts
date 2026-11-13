@@ -54,7 +54,7 @@ export const say = {
     const known = p.knownLeft ? `(${A}·${B})·${C}` : `${A}·(${B}·${C})`;
     const forced = p.knownLeft ? `${A}·(${B}·${C})` : `(${A}·${B})·${C}`;
     return so({
-      look: phrase`The grid shows ${shows(p.abCell, `${A}·${B} = ${p.ab}`)}, ${shows(p.bcCell, `${B}·${C} = ${p.bc}`)} and ${shows(p.thirdCell, `${known} = ${p.v}`)}. In any group, (${A}·${B})·${C} = ${A}·(${B}·${C})`,
+      look: phrase`In any group, (${A}·${B})·${C} = ${A}·(${B}·${C}), and ${shows(p.abCell, `${A}·${B} = ${p.ab}`)}, ${shows(p.bcCell, `${B}·${C} = ${p.bc}`)} and ${shows(p.thirdCell, `${known} = ${p.v}`)}`,
       move: phrase`${mark.as("ring", CELL, [p.at], forced)} must also be ${p.v}`,
     });
   },
