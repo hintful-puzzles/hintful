@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { pathGame } from "../games/path/index.ts";
 import { pathWalk } from "../games/path/solver.ts";
 import { DIFF_NORMAL, MODE_PATH, newState } from "../games/path/state.ts";
-import { PLACE, STRIKE, STRIKE_EDGE } from "./describe-runtime.ts";
-import { FactGraph, readsOf } from "./fact-graph.ts";
+import { MARK, PLACE, STRIKE, STRIKE_EDGE } from "./describe-runtime.ts";
+import { FactGraph, placeNotes, readsOf } from "./fact-graph.ts";
 import { ladderWalk, TIERS } from "./ladder-runtime.ts";
 import { randomNew } from "./random/index.ts";
 
@@ -90,5 +90,50 @@ describe("what a fact rests on", () => {
     // What the check looked at: lineBreaks fired, and with parents.
     expect(checked).toBeGreaterThan(5);
     expect(withParents).toBeGreaterThan(0);
+  });
+});
+
+describe("where the notes go", () => {
+  // A MARK fact is a note (the player cannot see it); a PLACE is a step.
+  const isNote = (f: { kind: number }) => f.kind === MARK;
+
+  /** Firing 0: note on cell 1 (reads 10). 1: note on cell 2 (reads 1).
+   * 2: note on cell 3, cited by nothing. 3: step reading cell 1.
+   * 4: step reading cell 2, whose note rests on the note of cell 1. */
+  const walk = () => {
+    const g = new FactGraph();
+    g.record([MARK, 1, 0], reads([10]));
+    g.record([MARK, 2, 0], reads([1]));
+    g.record([MARK, 3, 0], reads([10]));
+    g.record([PLACE, 20, 1], reads([1]));
+    g.record([PLACE, 21, 1], reads([2]));
+    return g;
+  };
+
+  it("puts a note before its first consumer, in firing order, and none that nothing cites", () => {
+    const { steps, before } = placeNotes(walk(), { isNote });
+    expect(steps).toEqual([3, 4]);
+    // Note 0 is cited by step 3; note 1 (resting on 0) by step 4; note 2 by none.
+    expect(before).toEqual([[0], [1]]);
+  });
+
+  it("places a note ahead of the note that rests on it, even when the first consumer is later", () => {
+    const g = new FactGraph();
+    g.record([MARK, 1, 0], reads([10]));
+    g.record([MARK, 2, 0], reads([1]));
+    g.record([PLACE, 20, 1], reads([30]));
+    g.record([PLACE, 21, 1], reads([2]));
+    expect(placeNotes(g, { isNote }).before).toEqual([[], [0, 1]]);
+  });
+
+  it("puts an expired note at its own tick, with the notes it rests on", () => {
+    const g = new FactGraph();
+    g.record([MARK, 1, 0], reads([10]));
+    g.record([MARK, 2, 0], reads([1]));
+    g.record([PLACE, 20, 1], reads([30]));
+    g.record([PLACE, 21, 1], reads([2]));
+    g.record([PLACE, 22, 1], reads([2]));
+    const { before } = placeNotes(g, { isNote, expired: (note) => note === 1 });
+    expect(before).toEqual([[0, 1], [], []]);
   });
 });

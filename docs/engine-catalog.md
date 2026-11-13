@@ -700,6 +700,13 @@ its firing. A fact's parents are derived from the firing's `says.reads`
 (roots), and whether every firing in the chain reported its reads. Read it
 before building a trace, a note's placement or a verdict's explanation.
 
+`placeNotes(graph, { isNote, expired? })` is the placement of the notes (the
+facts a player cannot see as marks): each note a step rests on goes just
+before the first step that does, in firing order, one journey with it; a
+note nothing cites goes nowhere; an `expired` note (its sentence quotes the
+board) goes at its own tick; a note is never placed after one resting on it.
+A game says only what a note is.
+
 ### `deduction-record.ts` — the recorded-firing shape
 
 Reach for it when your solver records firings for a candidate hint.

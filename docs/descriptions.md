@@ -1110,6 +1110,8 @@ any element its firing read. `restsOn(id)` answers from any fact: what it
 rests on transitively, the elements read that no fact made (the board's own
 marks), and `complete: false` where a firing in the chain did not say `reads`.
 A game writes no parent list. Relation facts have no readable element yet.
+`placeNotes` (same module) places the notes among a walk's steps from the
+graph, so no game keeps its own "where does this mark go" pass.
 
 **The witness is read where the sentence is built, by the name of what it
 holds**, not written into a term: `witnessOfDef(w, "shortNear")` finds the

@@ -180,3 +180,76 @@ export class FactGraph {
     };
   }
 }
+
+/** What {@link placeNotes} is asked. */
+export interface NotePlacement {
+  /** Whether a fact is one the player cannot see as a mark on the board. */
+  readonly isNote: (fact: Fact) => boolean;
+  /**
+   * Whether the sentence of the note made by firing `note` has stopped
+   * holding by the time step `step` (both by place in the walk): a note whose
+   * sentence quotes the board goes at its own tick, not beside its consumer.
+   * Without it a note is never expired.
+   */
+  readonly expired?: (note: number, step: number) => boolean;
+}
+
+/**
+ * Where the notes go in a hint's steps. A firing that makes only notes is not
+ * a step; every other firing is, in the order made. Each note a step rests on
+ * (transitively) is placed just before the first step that does, in firing
+ * order, as one journey with it, and a note nothing cites is placed nowhere.
+ * A note whose sentence has expired by its first consumer is placed instead at
+ * its own tick, before the first step made after it. A note rests on notes
+ * too, and is never placed after one that rests on it.
+ *
+ * Returns the steps (firings, in order) and, for each, the note firings placed
+ * before it, in firing order.
+ */
+export function placeNotes(
+  graph: FactGraph,
+  { isNote, expired }: NotePlacement,
+): {
+  readonly steps: readonly number[];
+  readonly before: readonly (readonly number[])[];
+} {
+  const made = new Map<number, Fact[]>();
+  for (const f of graph.facts) {
+    const list = made.get(f.firing);
+    if (list === undefined) made.set(f.firing, [f]);
+    else list.push(f);
+  }
+  const firings = [...made.keys()].sort((a, b) => a - b);
+  const steps = firings.filter((x) => !(made.get(x) ?? []).every(isNote));
+  const restsNotes = (firing: number): Set<number> => {
+    const out = new Set<number>();
+    for (const fact of made.get(firing) ?? [])
+      for (const p of graph.restsOn(fact.id).facts) if (isNote(p)) out.add(p.firing);
+    out.delete(firing);
+    return out;
+  };
+  const at = new Map<number, number>();
+  steps.forEach((firing, i) => {
+    for (const note of restsNotes(firing)) if (!at.has(note)) at.set(note, i);
+  });
+  // A note's own tick: the first step made after it.
+  const own = (note: number): number => {
+    const i = steps.findIndex((s) => s > note);
+    return i < 0 ? steps.length - 1 : i;
+  };
+  // Latest first, so a note's place is final before its parents are moved by it.
+  for (const note of [...at.keys()].sort((a, b) => b - a)) {
+    const first = at.get(note) as number;
+    if (expired?.(note, steps[first]) === true)
+      at.set(note, Math.min(first, own(note)));
+    const here = at.get(note) as number;
+    for (const p of restsNotes(note)) {
+      const there = at.get(p);
+      if (there === undefined || there > here) at.set(p, here);
+    }
+  }
+  const before: number[][] = steps.map(() => []);
+  for (const note of [...at.keys()].sort((a, b) => a - b))
+    before[at.get(note) as number].push(note);
+  return { steps, before };
+}
