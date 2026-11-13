@@ -19,6 +19,7 @@
   - [x] Light Up (design § "Light Up, built"): `says.shown: each`, `consequences: false`, the engine's `refreshHintStep`
   - [x] Mosaic (design § "Mosaic, built"): `move(targets, state)`, `refreshHintStep`
   - [x] Clusters (design § "Clusters, built"): `each`, five arms of `refute`, tile terms
+  - [ ] Star Battle first (firing-only on a first read), then design the per-fact `says` (design § "What blocks the rest") for Bricks, Range, Sticks and Seismic's `cull`
   - [ ] The other cell games that place or strike a firing's squares (`describedFiringHint`): Tents, Star Battle, Range, Bricks, Separate, Abcd, Sticks, Dominosa, Pearl, Slant, Magnets, Net, Tracks, Palisade, Path, Spokes, Undead, Seismic, Map, Galaxies, Rect, Crossing, Signpost
   - [ ] The candidate games (a Latin family's `latinPremise` and `runLatinCandidatePlan`: Unequal, Adjacent, Keen, Towers, Group, Solo, Mathrax, Rome, Salad): the engine's candidate-elimination shape is a design of its own, read first
 - [ ] 2.2 Remove what no game uses, and update `docs/descriptions.md`, `docs/hints.md` and the skeletons

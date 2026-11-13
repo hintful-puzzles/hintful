@@ -365,6 +365,35 @@ defect found in the game, said which.
   `deduceHintPlan` and the reasons gone), `hint.ts` 66 and the description +31
   of `says`; `hint-text.ts` -9.
 
+### What blocks the rest (2026-11-13, a survey by reading, to be re-checked per game)
+
+The first read of the remaining games found one that is a plain Clusters-shaped
+move and the rest each blocked by something the engine lacks. A game that
+meets one of these is first a question for the engine (AGENTS.md: a game that
+does not fit a convention is a question about the convention).
+
+- **Evidence per placed square.** A `says` reads the `for` binders, a firing's
+  binding. Where a technique places several squares and the old reason held
+  evidence of each (Bricks' `three`: the run through the square supposed shaded;
+  Range's `reach`: the line from the clue to that square, and `cut`'s neighbors
+  of its square; Sticks, all five techniques; Seismic's `cull`), one `says`
+  cannot state it. Moving the square into the `for` binders changes the firing
+  granularity and so the walk (a firing a square instead of a firing a row), and
+  a separate guard technique moves where a broken position is found. The
+  compiler's `place` site (`compile.ts`, `case "place"`) has the square but not
+  the scope the `says` formulas compile in; a per-fact `says` (terms and marks
+  read at each `place`, in the conclusion's scope) is the shape to design.
+- **Not a cell walk**: edge and line games (Separate, Palisade, Dominosa, Pearl,
+  Tracks, Path, Spokes), links (Tents, Galaxies, Signpost, Rect), state the walk
+  updates between steps (Slant's merge marks, Net's notes, Magnets' hidden
+  firings, Map's removed-color dots), candidate marks (Abcd, Seismic, Undead,
+  Crossing; the candidate games already have their own task). Bridges'
+  `describedEdgeHint` is the edge precedent.
+- **Star Battle** read as firing-only (13 techniques, stars and crosses), with
+  trial rungs whose `ruled`, `completes` and `touches` are derived from the
+  square; the first read of what is next. Range and Bricks are one technique
+  each away from it (`reach`, `three`).
+
 ### Read off Boats (2026-11-12, `boats/solver.ts` and `index.ts`), before it was built
 
 Sixteen of its nineteen techniques are what `says` already carries (terms,
