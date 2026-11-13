@@ -23,6 +23,19 @@ export const edgeGeometry = "king";
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "saturation" | "twoOnes" | "exhaustion" | "lineBreaks" | "spareBreaks";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  saturation: SaturationSays;
+  twoOnes: TwoOnesSays;
+  exhaustion: ExhaustionSays;
+  lineBreaks: LineBreaksSays;
+  spareBreaks: SpareBreaksSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["saturation","twoOnes","exhaustion","lineBreaks","spareBreaks"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -178,10 +191,16 @@ export interface SaturationBinding {
   U: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SaturationSays {
+  terms: { c: number; };
+  marks: {  };
+}
+
 const saturationFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function saturation(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SaturationBinding> | null): number {
+export function saturation(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SaturationBinding, SaturationSays> | null): number {
   const facts = saturationFacts;
   let fired = 0;
   let changed = false;
@@ -235,7 +254,10 @@ export function saturation(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Satura
       if (!(_c26)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, n: v_n, U: v_U.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c }, marks: {  } };
+          if (!fire({ c: v_c, n: v_n, U: v_U.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -249,10 +271,16 @@ export interface TwoOnesBinding {
   b: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface TwoOnesSays {
+  terms: { a: number; b: number; };
+  marks: {  };
+}
+
 const twoOnesFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function twoOnes(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoOnesBinding> | null): number {
+export function twoOnes(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoOnesBinding, TwoOnesSays> | null): number {
   const facts = twoOnesFacts;
   let fired = 0;
   let changed = false;
@@ -361,7 +389,10 @@ export function twoOnes(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoOnesBi
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ N: v_N, e: v_e, a: v_a, b: v_b }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { a: v_a, b: v_b }, marks: {  } };
+            if (!fire({ N: v_N, e: v_e, a: v_a, b: v_b }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -374,10 +405,16 @@ export interface ExhaustionBinding {
   U: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ExhaustionSays {
+  terms: { c: number; };
+  marks: {  };
+}
+
 const exhaustionFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function exhaustion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExhaustionBinding> | null): number {
+export function exhaustion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExhaustionBinding, ExhaustionSays> | null): number {
   const _g40: number[] = [];
   const facts = exhaustionFacts;
   let fired = 0;
@@ -489,7 +526,10 @@ export function exhaustion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Exhaus
       if (!(_q91)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, U: v_U.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c }, marks: {  } };
+          if (!fire({ c: v_c, U: v_U.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -503,10 +543,16 @@ export interface LineBreaksBinding {
   H: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LineBreaksSays {
+  terms: { e: number; a: number; b: number; };
+  marks: {  };
+}
+
 const lineBreaksFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
-export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBreaksBinding> | null): number {
+export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBreaksBinding, LineBreaksSays> | null): number {
   const facts = lineBreaksFacts;
   let fired = 0;
   let changed = false;
@@ -1310,7 +1356,10 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ e: v_e, a: v_a, b: v_b, H: v_H.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { e: v_e, a: v_a, b: v_b }, marks: {  } };
+          if (!fire({ e: v_e, a: v_a, b: v_b, H: v_H.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -1324,11 +1373,17 @@ export interface SpareBreaksBinding {
   H: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SpareBreaksSays {
+  terms: { c: number; y: number; H: readonly number[]; };
+  marks: {  };
+}
+
 const spareBreaksFacts: number[] = [];
 const spareBreaks_st198 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function spareBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SpareBreaksBinding> | null): number {
+export function spareBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SpareBreaksBinding, SpareBreaksSays> | null): number {
   const _g194: number[] = [];
   const facts = spareBreaksFacts;
   let fired = 0;
@@ -2158,7 +2213,10 @@ export function spareBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Spare
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ c: v_c, U: v_U.slice(), y: v_y, H: v_H.slice() }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { c: v_c, y: v_y, H: v_H.slice() }, marks: {  } };
+              if (!fire({ c: v_c, U: v_U.slice(), y: v_y, H: v_H.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }

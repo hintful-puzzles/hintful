@@ -23,14 +23,10 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { SLOW_TESTS_ENABLED, seedBudget } from "../../engine/testing/slow.ts";
 import { newSpokesDesc } from "./generator.ts";
-import { type SpokesHint, spokesGame } from "./index.ts";
+import type { SpokesHint } from "./hint.ts";
+import { spokesGame } from "./index.ts";
 import { COL_HINT_CELL } from "./render.ts";
-import {
-  deduceSpokesPlan,
-  type SpokesFiring,
-  spokesAnswer,
-  spokesSolved,
-} from "./solver.ts";
+import { type SpokesRung, spokesAnswer, spokesSolved } from "./solver.ts";
 import {
   cloneBoard,
   getSpoke,
@@ -40,6 +36,7 @@ import {
   SPOKE_MARKED,
   type SpokesBoard,
   type SpokesParams,
+  type SpokesSpokeRef,
   type SpokesState,
   spokesCount,
   spokesPlace,
@@ -112,9 +109,38 @@ function solutionOf(state: SpokesState) {
   return answer.solution;
 }
 
+/** A firing as the hint shows it: its technique and the spokes it decides, the
+ * legs of one journey grouped (the plan's steps, `continuesPrevious` ending a
+ * firing's run). Empty where the hint refuses. */
+interface Firing {
+  kind: SpokesRung;
+  forced: SpokesSpokeRef[];
+}
+
+function deduceSpokesPlan(board: SpokesBoard): Firing[] {
+  // The hint reads the board alone, so the rest of a state is any.
+  const state: SpokesState = {
+    ...board,
+    params: spokesGame.defaultParams(),
+    autoMarks: new Set(),
+  };
+  const res = spokesGame.hint?.(state, undefined);
+  if (!res?.ok) return [];
+  const plan: Firing[] = [];
+  for (const step of res.steps) {
+    if (step.move.kind !== "set") throw new Error("a hint step that is not a spoke");
+    const { index, dir, state: to } = step.move;
+    if (step.continuesPrevious)
+      plan[plan.length - 1].forced.push({ index, dir, state: to });
+    else
+      plan.push({ kind: step.rung as SpokesRung, forced: [{ index, dir, state: to }] });
+  }
+  return plan;
+}
+
 /** The firing the deductive plan opens with on `state`: the one a hint there
  * narrates. */
-function firingAt(state: SpokesState): SpokesFiring {
+function firingAt(state: SpokesState): Firing {
   const [firing] = deduceSpokesPlan(state);
   if (!firing) throw new Error("deduction has nothing to offer here");
   return firing;
@@ -263,9 +289,13 @@ describe("narration states the premise, in the necessity voice", () => {
 
   it("a rule-out that leaves a hub no spare spoke names that hub first", () => {
     const { state, step } = pinned("breaksLine");
-    const { filled } = firingAt(state);
-    if (filled === undefined) throw new Error("no hub was left short");
-    expect((step.highlights as SpokesHint).evidence).toContain(filled);
+    // The firing's rule-out leaves a hub no spare spoke, which takes the line
+    // the first leg draws: that line's hub is one end of it.
+    if (step.move.kind !== "set") throw new Error("not a spoke");
+    const { index, dir } = step.move;
+    const far = index + SPOKE_DIRS[dir].dx + SPOKE_DIRS[dir].dy * state.w;
+    const { evidence } = step.highlights as SpokesHint;
+    expect(evidence.includes(index) || evidence.includes(far)).toBe(true);
   });
 });
 

@@ -157,6 +157,9 @@ techniques:
       c in cells, n = takes(c) - lines(c), U = ways(c)
       where n < 0 or (n > 0 and |U| <= n)
     conclude: "n >= 0 and |U| = n and (forall y in U: place(edge(c, y), 1))"
+    says:
+      terms: { c: c }
+      marks: {}
   # A line between two 1-hubs would close the pair off from the other hubs.
   - id: twoOnes
     tier: Easy
@@ -164,6 +167,9 @@ techniques:
       N = hubs where N > 2, e in edges, a = end1(e), b = end2(e)
       where takes(a) = 1 and takes(b) = 1 and live(a, b)
     conclude: "place(e, 2)"
+    says:
+      terms: { a: a, b: b }
+      marks: {}
   # A hub with all its lines takes none on its other edges: those to a hub
   # still short of lines are crossed out.
   - id: exhaustion
@@ -174,6 +180,9 @@ techniques:
       and not crossed(edge(c, y))}
       where |U| > 0
     conclude: "forall y in U: place(edge(c, y), 2)"
+    says:
+      terms: { c: c }
+      marks: {}
   # A line on an edge would break the board at once, the hubs it fills
   # taking no more lines: the edge is crossed out.
   - id: lineBreaks
@@ -182,6 +191,9 @@ techniques:
       e in edges, a = end1(e), b = end2(e), H = {e}
       where live(a, b) and (brokenH(a, H) or brokenH(b, H))
     conclude: "place(e, 2)"
+    says:
+      terms: { e: e, a: a, b: b }
+      marks: {}
   # A hub with one edge to spare: crossing one out would leave it lines on
   # all the others. Where those would break the board at once, it takes a
   # line.
@@ -193,3 +205,6 @@ techniques:
       where not known(edge(c, y))
       and (brokenH(c, H) or (exists x in U where x != y: brokenH(x, H)))
     conclude: "place(edge(c, y), 1)"
+    says:
+      terms: { c: c, y: y, H: H }
+      marks: {}

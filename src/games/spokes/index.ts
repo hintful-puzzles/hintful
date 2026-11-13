@@ -22,7 +22,6 @@ import { assertNever } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   type Game,
-  type HintResult,
   type HintStep,
   type HintTrackVerdict,
   type SolveResult,
@@ -31,11 +30,6 @@ import {
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   LEFT_BUTTON,
@@ -60,7 +54,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
-import { type Hub, type Marked, type Spoke, say } from "./hint-text.ts";
+import { type SpokesHint, spokesHint } from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -71,15 +65,14 @@ import {
   toCoord,
 } from "./render.ts";
 import {
-  deduceSpokesPlan,
   SPOKES_RUNGS,
-  type SpokesFiring,
   type SpokesRung,
   spokesAnswer,
   spokesSolve,
   spokesSolved,
 } from "./solver.ts";
 import {
+  canonicalEdge,
   clearBoard,
   cloneState,
   crossingSpoke,
@@ -394,108 +387,6 @@ function revealOne(state: SpokesState, solved: SpokesState): SpokesMove | null {
 
 // --- hint (a second projection of the deductive solver) ---------------------
 
-/**
- * What a Spokes hint leg is about; its marks are the ones its words name.
- * `spokes` are the spokes the firing still forces from this leg on (the earlier
- * legs', once followed, are real lines or marks, and the renderer tints only a
- * spoke that is still EMPTY), each with what the step sets it to: a ringed
- * `SPOKE_LINE` spoke is drawn as a line inside its ring ("draw this"), a
- * `SPOKE_MARKED` one as a ring round its rim dot ("rule this out"), so the
- * picture never claims a different action than the words. `evidence` are the
- * hubs whose clue or lines are the argument. The whole deduction stays visible
- * while its legs are followed one at a time. `w` is the grid width, which a
- * spoke's canonical end is taken in.
- */
-export interface SpokesHint {
-  spokes: SpokesSpokeRef[];
-  evidence: number[];
-  w: number;
-}
-
-const spokeOf = (sp: SpokesSpokeRef, w: number): Spoke =>
-  canonicalEdge(sp.index, sp.dir, w);
-
-const markedOf = (hl: SpokesHint): Marked => ({
-  spokes: hl.spokes.map((sp) => spokeOf(sp, hl.w)),
-  hubs: hl.evidence,
-});
-
-/**
- * Narrate why a firing is forced — one crisp line for a player who knows the
- * rules, premise then conclusion, in the necessity voice (the hint quality bar).
- * Every claim here is one the compiled ladder has checked.
- */
-function narrate(
-  f: SpokesFiring,
-  hl: SpokesHint,
-  numbers: ArrayLike<number>,
-): Sentence {
-  const m = markedOf(hl);
-  const hubOf = (index: number): Hub => ({ index, number: numbers[index] });
-  switch (f.kind) {
-    case "twoOnes":
-      return say.twoOnes(m);
-    case "saturation":
-      return say.saturation(f.forced.length, m);
-    case "exhaustion":
-      return say.exhaustion(m);
-    case "lineBreaks":
-    case "spareBreaks": {
-      const filled = f.filled ?? null;
-      return say.breaks(
-        f.kind === "lineBreaks",
-        f.breakKind ?? "sealed",
-        m,
-        filled === null ? null : hubOf(filled),
-        f.evidenceHubs.filter((h) => h !== filled).map(hubOf),
-      );
-    }
-  }
-}
-
-/** The short continuation narration for legs 2+ of a multi-spoke firing. */
-function continuation(f: SpokesFiring, hl: SpokesHint): Sentence {
-  return say.continuation(f.kind === "saturation", markedOf(hl));
-}
-
-/** Flatten one firing into its journey of legs: leg 0 carries the full
- * narration, the rest continue it. Each leg shows the spokes still to settle,
- * so whichever leg is asked for shows what is left of the deduction. */
-function stepsOfFiring(
-  f: SpokesFiring,
-  state: SpokesState,
-): HintStep<SpokesMove, SpokesHint, SpokesRung>[] {
-  return f.forced.map((sp, leg) => {
-    const highlights: SpokesHint = {
-      spokes: f.forced.slice(leg),
-      evidence: f.evidenceHubs,
-      w: state.w,
-    };
-    const words =
-      leg === 0 ? narrate(f, highlights, state.numbers) : continuation(f, highlights);
-    return {
-      move: { kind: "set", ...sp },
-      rung: f.kind,
-      explanation: words.text,
-      words,
-      highlights,
-      continuesPrevious: leg > 0,
-    };
-  });
-}
-
-function hint(state: SpokesState): HintResult<SpokesMove, SpokesHint, SpokesRung> {
-  if (spokesAnswer(state).kind !== "one") {
-    return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  }
-
-  const plan = deduceSpokesPlan(state);
-  if (plan.length === 0) {
-    return { ok: false, error: DEDUCTION_EXHAUSTED };
-  }
-  return { ok: true, steps: plan.flatMap((f) => stepsOfFiring(f, state)) };
-}
-
 /** A move completes the current leg when it sets the leg's exact spoke to the
  * hinted state. Following a *different* spoke of the same firing reads as
  * off-plan, but a recompute simply re-offers the firing's remaining spokes, so
@@ -538,19 +429,6 @@ function sameEdge(
   const ca = canonicalEdge(a.index, a.dir, w);
   const cb = canonicalEdge(b.index, b.dir, w);
   return ca.index === cb.index && ca.dir === cb.dir;
-}
-
-/** The canonical end of an edge — the `dir < 4` end, so the two ends of one
- * spoke reduce to the same `(index, dir)`. */
-function canonicalEdge(
-  index: number,
-  dir: number,
-  w: number,
-): { index: number; dir: number } {
-  if (dir < 4) return { index, dir };
-  const nx = (index % w) + SPOKE_DIRS[dir].dx;
-  const ny = ((index / w) | 0) + SPOKE_DIRS[dir].dy;
-  return { index: ny * w + nx, dir: dir ^ 4 };
 }
 
 // --- the game ---------------------------------------------------------------
@@ -606,7 +484,7 @@ export const spokesGame: Game<
 
   solve,
   difficulty,
-  hint,
+  hint: spokesHint,
   hintMarks: {
     roles: {
       ring: "each spoke the step decides: a line in the hint color is one to draw, and a ring round a dot on a hub's rim is one to rule out by marking that dot as unused, as described above.",

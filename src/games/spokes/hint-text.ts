@@ -1,8 +1,8 @@
 /**
  * Every sentence Spokes' hint speaks, and the words inside them.
  *
- * The deduction decides which sentence and with what values (`index.ts`'s
- * `narrate`, every claim of which `deduceSpokesPlan` has checked); this file
+ * The deduction decides which sentence and with what values (`hint.ts`'s
+ * `narrate`, every claim of which the compiled ladder has checked); this file
  * decides only how it reads: one crisp line for a player who knows the rules,
  * premise then conclusion, in the necessity voice.
  *

@@ -14,13 +14,13 @@
  * `path-hint.test.ts` holds every Check a walk takes to finding one.
  */
 
-import { type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
+  describedEdgeHint,
+  type EdgeSpoken,
+  type Fired as FiredOf,
+} from "../../engine/described-edge-hint.ts";
+import { type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
+import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
 import {
@@ -29,11 +29,17 @@ import {
   type SquareEdges,
   squareEdges,
 } from "../../engine/square-edges.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Clash, type Square, say, type Why } from "./hint-text.ts";
-import { isComplete, type PathFiring, type PathRung, pathWalk } from "./solver.ts";
 import {
+  type PathFiring,
+  type PathRung,
+  type PathSays,
+  type PathWalkContext,
+  pathWalk,
+} from "./solver.ts";
+import {
+  DIFF_TRICKY,
   executeMove,
   MODE_PATH,
   NO_END,
@@ -45,14 +51,12 @@ import {
 /** How far ahead the plan is computed. A player rarely follows more than a
  * few steps before going their own way, and the plan is asked for again
  * then. */
-const PLAN_CAP = 24;
+const PLAN_CAP = 40;
 
 /** The edges a step tries lines on, as the board draws them. */
 export interface PathHighlights {
   tried: readonly ShapedEdge[];
 }
-
-type PathStep = HintStep<PathMove, PathHighlights, PathRung>;
 
 // --- what tried lines break --------------------------------------------------
 
@@ -285,50 +289,73 @@ function triedOf(firing: PathFiring): number[] {
   }
 }
 
-function stepOf(state: PathState, edges: Uint8Array, firing: PathFiring): PathStep {
-  const words = wordsOf(state, edges, firing);
-  return {
-    move: {
-      kind: "edges",
-      changes: firing.edges.map((edge) => ({ edge, mark: firing.mark })),
+/** What a firing's sentence is told besides the technique's terms: the firing
+ * as the game reads it, and the edges as they stood when it fired. */
+interface Fired {
+  firing: PathFiring;
+  before: Uint8Array;
+}
+
+/** Every technique's sentence is the one `wordsOf` says for its reason. */
+const sentence = (_spoken: unknown, { firing, before }: Fired, state: PathState) =>
+  wordsOf(state, before, firing);
+
+const sentences: {
+  [K in keyof PathSays]: (
+    spoken: EdgeSpoken<PathSays[K]>,
+    marked: Fired,
+    state: PathState,
+  ) => Sentence;
+} = {
+  forced: sentence,
+  lineBreaks: sentence,
+  pairBreaks: sentence,
+  weighed: sentence,
+};
+
+/** A firing's step: the lines or crosses it makes, and the lines it tries. */
+function stepOf(
+  fired: FiredOf<PathSays[keyof PathSays], PathWalkContext>,
+): { move: PathMove; highlights: PathHighlights; marked: Fired }[] {
+  const firing = fired.ctx.firing(fired.taken);
+  // Every edge a firing sets was open before it.
+  const before = fired.ctx.edges();
+  for (const e of firing.edges) before[e] = OPEN;
+  return [
+    {
+      move: {
+        kind: "edges",
+        changes: firing.edges.map((edge) => ({ edge, mark: firing.mark })),
+      },
+      highlights: {
+        tried: [...new Set(triedOf(firing))].map((edge) => ({ edge, mark: LINE })),
+      },
+      marked: { firing, before },
     },
-    rung: firing.reason.kind,
-    explanation: words.text,
-    words,
-    highlights: {
-      tried: [...new Set(triedOf(firing))].map((edge) => ({ edge, mark: LINE })),
-    },
-  };
+  ];
 }
 
 /** The plan from the player's lines and crosses. */
-export function pathHint(
-  state: PathState,
-): HintResult<PathMove, PathHighlights, PathRung> {
-  const walk = pathWalk(state, state.edges, stepBudget("path hint"));
-  // Each firing is narrated against the edges as they stood when it fired.
-  const before: Uint8Array[] = [];
-  let last: Uint8Array = state.edges;
-  const { plan } = deduceHintPlan<null, PathFiring, "open" | "done">({
-    board: null,
-    status: () => (isComplete(state, last) ? "done" : "open"),
-    incomplete: "open",
-    next: () => {
-      const made = walk.next();
-      if (made === null) return null;
-      before.push(made.before);
-      last = made.before.slice();
-      for (const e of made.firing.edges) last[e] = made.firing.mark;
-      return made.firing;
-    },
-    planCap: PLAN_CAP,
-  });
-  // The mistake check vouches for every line and cross, so a contradiction
-  // here means the board itself has no answer.
-  if (walk.impossible()) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps: plan.map((firing, k) => stepOf(state, before[k], firing)) };
-}
+export const pathHint = describedEdgeHint<
+  PathState,
+  PathMove,
+  PathHighlights,
+  Fired,
+  PathWalkContext,
+  PathSays,
+  PathRung
+>({
+  name: "path hint",
+  walk: (state) => pathWalk(state),
+  // The whole ladder, from the Easy rung up.
+  tiers: { lowest: () => DIFF_TRICKY, count: DIFF_TRICKY + 1 },
+  done: (_marks, ctx) => ctx.complete(),
+  plan: PLAN_CAP,
+  reads: (taken, ctx) => ctx.reads(taken),
+  writes: (taken, ctx) => ctx.writes(taken),
+  step: (fired) => stepOf(fired),
+  say: sentences,
+});
 
 /** Judge a move against the step on show by what it did to the edges, which
  * a solve never makes a step of. */

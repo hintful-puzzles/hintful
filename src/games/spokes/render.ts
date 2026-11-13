@@ -41,8 +41,8 @@ import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
+import type { SpokesHint } from "./hint.ts";
 import { HUB, SPOKE } from "./hint-text.ts";
-import type { SpokesHint } from "./index.ts";
 import {
   DIR_BOTLEFT,
   DIR_BOTRIGHT,

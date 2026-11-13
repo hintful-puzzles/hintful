@@ -79,6 +79,19 @@ export const SPOKE_DIRS: readonly { readonly dx: number; readonly dy: number }[]
   { dx: 1, dy: -1 },
 ];
 
+/** The canonical end of an edge — the `dir < 4` end, so the two ends of one
+ * spoke reduce to the same `(index, dir)`. */
+export function canonicalEdge(
+  index: number,
+  dir: number,
+  w: number,
+): { index: number; dir: number } {
+  if (dir < 4) return { index, dir };
+  const nx = (index % w) + SPOKE_DIRS[dir].dx;
+  const ny = ((index / w) | 0) + SPOKE_DIRS[dir].dy;
+  return { index: ny * w + nx, dir: dir ^ 4 };
+}
+
 // --- difficulty -------------------------------------------------------------
 
 export type SpokesDiff = "easy" | "tricky" | "hard";

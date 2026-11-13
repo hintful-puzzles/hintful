@@ -20,6 +20,18 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "forced" | "lineBreaks" | "pairBreaks" | "weighed";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  forced: ForcedSays;
+  lineBreaks: LineBreaksSays;
+  pairBreaks: PairBreaksSays;
+  weighed: WeighedSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["forced","lineBreaks","pairBreaks","weighed"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -265,11 +277,17 @@ export interface ForcedBinding {
   U: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ForcedSays {
+  terms: { c: number; n: number; };
+  marks: {  };
+}
+
 const forcedFacts: number[] = [];
 let forcedCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function forced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ForcedBinding> | null): number {
+export function forced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ForcedBinding, ForcedSays> | null): number {
   const facts = forcedFacts;
   let fired = 0;
   let changed = false;
@@ -350,7 +368,10 @@ export function forced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ForcedBind
       if (!(_c37)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, n: v_n, U: v_U.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c, n: v_n }, marks: {  } };
+          if (!fire({ c: v_c, n: v_n, U: v_U.slice() }, facts, _says)) return 1;
+        }
         cands.fill(-1);
         meetsMarkedKept.clear();
       }
@@ -365,6 +386,12 @@ export interface LineBreaksBinding {
   b: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LineBreaksSays {
+  terms: { e: number; };
+  marks: {  };
+}
+
 const lineBreaksFacts: number[] = [];
 let lineBreaksCands = new Int32Array(0);
 const lineBreaks_st625 = stamps();
@@ -377,7 +404,7 @@ const lineBreaks_st1066 = stamps();
 const lineBreaks_st1104 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBreaksBinding> | null): number {
+export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBreaksBinding, LineBreaksSays> | null): number {
   const _g606: number[] = [];
   const _g611: number[] = [];
   const _g646: number[] = [];
@@ -2290,7 +2317,10 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ e: v_e, a: v_a, b: v_b }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { e: v_e }, marks: {  } };
+          if (!fire({ e: v_e, a: v_a, b: v_b }, facts, _says)) return 1;
+        }
         cands.fill(-1);
         liveMarkedKept.clear();
         meetsMarkedKept.clear();
@@ -2309,6 +2339,12 @@ export interface PairBreaksBinding {
   j: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface PairBreaksSays {
+  terms: { c: number; i: number; j: number; };
+  marks: {  };
+}
+
 const pairBreaksFacts: number[] = [];
 let pairBreaksCands = new Int32Array(0);
 const pairBreaks_st648 = stamps();
@@ -2321,7 +2357,7 @@ const pairBreaks_st1089 = stamps();
 const pairBreaks_st1127 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBreaksBinding> | null): number {
+export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBreaksBinding, PairBreaksSays> | null): number {
   const _g629: number[] = [];
   const _g634: number[] = [];
   const _g669: number[] = [];
@@ -4275,7 +4311,10 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ c: v_c, U: v_U.slice(), k: v_k, I: v_I.slice(), i: v_i, j: v_j }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { c: v_c, i: v_i, j: v_j }, marks: {  } };
+              if (!fire({ c: v_c, U: v_U.slice(), k: v_k, I: v_I.slice(), i: v_i, j: v_j }, facts, _says)) return 1;
+            }
             cands.fill(-1);
             meetsMarkedKept.clear();
           }
@@ -4294,6 +4333,12 @@ export interface WeighedBinding {
   N: readonly number[];
   P: readonly number[];
   X: readonly number[];
+}
+
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface WeighedSays {
+  terms: { c: number; U: readonly number[]; P: readonly number[]; X: readonly number[]; };
+  marks: {  };
 }
 
 const weighedFacts: number[] = [];
@@ -4318,7 +4363,7 @@ const weighed_st4339 = stamps();
 const weighed_st4377 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBinding> | null): number {
+export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBinding, WeighedSays> | null): number {
   const _g2115: number[] = [];
   const _g2735: number[] = [];
   const _g2740: number[] = [];
@@ -8393,7 +8438,10 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
         if (!(_c6569)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, U: v_U.slice(), A: v_A.slice(), B: v_B.slice(), N: v_N.slice(), P: v_P.slice(), X: v_X.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { c: v_c, U: v_U.slice(), P: v_P.slice(), X: v_X.slice() }, marks: {  } };
+            if (!fire({ c: v_c, U: v_U.slice(), A: v_A.slice(), B: v_B.slice(), N: v_N.slice(), P: v_P.slice(), X: v_X.slice() }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           meetsMarkedKept.clear();
         }

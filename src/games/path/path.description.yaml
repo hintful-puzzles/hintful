@@ -223,6 +223,9 @@ techniques:
       and (forall i in U, j in before(i, U): j not in piece(i)
       and (numbered(c) or meets(i, j)))
       and (forall y in U: place(edge(c, y), 1))
+    says:
+      terms: { c: c, n: n }
+      marks: {}
   # A line on an edge would break the board at once: close a loop, or leave
   # a square short. The edge is crossed out.
   - id: lineBreaks
@@ -231,6 +234,9 @@ techniques:
       e in edges, a = end1(e), b = end2(e) where live(a, b)
       and (b in piece(a) or (with place(e, 1): shortNear(a, b, b)))
     conclude: "place(e, 2)"
+    says:
+      terms: { e: e }
+      marks: {}
   # A square that takes two more lines from three edges left, where lines
   # on two of them would break the board: the third takes a line.
   - id: pairBreaks
@@ -240,6 +246,9 @@ techniques:
       k in U, I = U - {k}, i = nth(I, 0), j = nth(I, 1)
       where bothBreak(c, i, j)
     conclude: "place(edge(c, k), 1)"
+    says:
+      terms: { c: c, i: i, j: j }
+      marks: {}
   # A square that takes two more lines from four edges left, weighed whole:
   # of its six pairs of edges, those that would not break the board are
   # left. N is the edges some pair left holds. An edge every pair left
@@ -267,3 +276,6 @@ techniques:
     conclude: >-
       |N| > 0 and (forall y in P: place(edge(c, y), 1))
       and (|P| = 0 implies forall y in X: place(edge(c, y), 2))
+    says:
+      terms: { c: c, U: U, P: P, X: X }
+      marks: {}

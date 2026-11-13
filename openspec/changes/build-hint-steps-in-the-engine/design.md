@@ -564,7 +564,54 @@ defect found in the game, said which.
 - **Changes of behavior**: the plan holds 40 steps; a contradiction found mid-walk
   is the unlocalized refusal (the old plan ended there with the steps so far).
 
+### Path, built (2026-11-13)
+
+- **No engine addition**: the shape took Path as it stood after Dominosa. A
+  technique's `says` is `terms` of its binding (`c`, `n`; `e`; `c, i, j`;
+  `c, U, P, X`) and `marks: {}`: the sentences outline squares and edges the
+  game reads off the board, not elements a mark names.
+- **The walk continues from a number's line, not from squares**: the game's
+  `reads` and `writes` hooks return numbers (`ctx.reads`, `ctx.writes`), and
+  `says` marks stay empty so the engine's reads add no square index that would
+  collide with a number.
+- **What stays the game's**: `clashOf` and `wordsOf` (what tried lines break is
+  read off the board with them drawn, and no `with` term reaches that). The step
+  gets the edges as they stood before its firing by resetting the firing's
+  edges to open in the marks (every edge a firing sets was open), which is what
+  the old walk's `before` was.
+- **Comparison.** 28,388 lines at `HEAD` (8 sizes of presets, 4 boards each, 0/15/
+  35/60% of the solution's lines played, every recomputed plan listed, plan cap
+  lifted) identical, words, marks, move and continues. The fingerprint's
+  snapshot moved on six boards of more than 24 steps: the plan cap.
+- **Changes of behavior**: the plan holds 40 steps (it held 24 firings); a
+  contradiction mid-walk is the unlocalized refusal (it was
+  `PUZZLE_NOT_REASONABLE`; the mistake check vouches for the player's marks, so
+  neither is reached on a board with one answer).
+
+### Spokes, built (2026-11-13)
+
+- **A `hint.ts` of its own** (the steps were built in `index.ts`): the same
+  shape as Path. A firing's `says` terms are its binding (`c`; `a, b`; `e, a, b`;
+  `c, y, H`), and a Check's evidence (what the tried lines break) is read by
+  `breakOf` on the links as they stood before the firing: from `ctx.reads`
+  before it is made, and, after it, on the marks with the firing's links reset to
+  open.
+- **`canonicalEdge` moved to `state.ts`**, which `index.ts` and `hint.ts` share.
+- **A test changed**: `spokes-hint.test.ts` read firings from `deduceSpokesPlan`,
+  which is gone; it groups the hint's own steps by `continuesPrevious`. The one
+  assertion that read a firing's `filled` hub reads that the first leg's line
+  has an end among the evidence.
+- **Comparison.** 10,483 lines at `HEAD` (the presets, 4 boards, 4 shares of the
+  solution's lines, every plan listed, cap lifted) identical; the fingerprint's
+  snapshot did not move.
+- **Changes of behavior**: the plan cap of 40 counts steps (legs), where it
+  counted firings; a contradiction mid-walk is the unlocalized refusal (the old
+  plan ended there with its steps so far).
+
 ### What Pearl, Tracks, Path and Spokes need beyond `describedEdgeHint` (2026-11-13, read, not built)
+
+*Path and Spokes are built (above) and needed nothing beyond Dominosa's two additions; the rest of this section is about Pearl and Tracks.*
+
 
 - **Pearl and Tracks are on the older plan engine** (`deduceHintPlan`, plan cap
   24, `trackTargets` for keep-track, a `reasonOf(binding)` callback and a

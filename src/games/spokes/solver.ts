@@ -11,7 +11,7 @@
  * generator grades a board below Unreasonable. Beneath it a search by trial
  * and error ({@link searchAnswer}) counts a board's answers to two, which
  * grades Unreasonable and serves Solve and the mistake check. A hint walks
- * the same ladder one firing at a time ({@link deduceSpokesPlan}).
+ * the same ladder one firing at a time ({@link spokesWalk}).
  */
 
 import {
@@ -26,21 +26,18 @@ import {
   describedSpace,
   type GridSpace,
 } from "../../engine/describe-runtime.ts";
+import { spokenOf } from "../../engine/described-hint.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   CellMarks,
   compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
-  type ReasonOf,
   runLadder,
   type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import * as spokes from "./spokes.compiled.ts";
 import {
   DIFF_HARD,
@@ -58,6 +55,9 @@ import {
 /** What the description reads a link as holding. */
 const LINED = 1;
 const NONE = 2;
+
+/** What each technique says, as the hint's sentences read it. */
+export type SpokesSays = spokes.SaysById;
 
 /** The rungs, easiest first: the ladder's techniques. */
 export const SPOKES_RUNGS = spokes.ladder.map((e) => e.id);
@@ -189,7 +189,7 @@ function deduction(board: SpokesBoard): Deduction {
   }
   const m = new CellMarks(geo.sp, (1 << LINED) | (1 << NONE), grid, null, "edge");
   m.seed(grid);
-  return { board, geo, dl, m, ladder: spokesLadder(geo, board, dl) };
+  return { board, geo, dl, m, ladder: spokesLadder(dl) };
 }
 
 /** A copy of `d` that shares no marks with it, for a search to assume on. */
@@ -294,87 +294,14 @@ function breakOf(
   return null;
 }
 
-// --- why a firing set what it set --------------------------------------------
-
-/** A firing's reason, before its forced spokes are known. */
-type SpokesReason = Omit<SpokesFiring, "forced">;
-
-/** A reason built once a firing, from its binding, and shared by each of its
- * facts. */
-function perFiring<B extends object>(
-  build: (binding: B, m: CellMarks) => SpokesReason,
-): ReasonOf<B> {
-  let last: B | null = null;
-  let reason: SpokesReason | null = null;
-  return (binding, _at, _n, m) => {
-    if (binding !== last || reason === null) {
-      last = binding;
-      reason = build(binding, m);
-    }
-    return reason;
-  };
-}
-
-/** The ladder over the dealt board, each technique with its reason. */
-function spokesLadder(geo: Geometry, board: SpokesBoard, dl: spokes.Dealt): Ladder {
-  const { sp } = geo;
-  // What a Check's trial breaks, which a firing of it must break.
-  const broken = (
-    grid: ArrayLike<number>,
-    tried: readonly number[],
-    changed: readonly number[],
-  ): { kind: SpokesBreakKind; hubs: number[] } => {
-    const got = breakOf(sp, board.numbers, grid, tried, changed);
-    if (got === null)
-      throw new Error("spokes: a Check fired where its trial breaks nothing");
-    return got;
-  };
+/** The ladder over the dealt board. */
+function spokesLadder(dl: spokes.Dealt): Ladder {
   return describedLadder(spokes, {
-    saturation: compiledRung(
-      spokes.saturation,
-      dl,
-      perFiring(({ c }) => ({ kind: "saturation", evidenceHubs: [c] })),
-    ),
-    twoOnes: compiledRung(
-      spokes.twoOnes,
-      dl,
-      perFiring(({ a, b }) => ({ kind: "twoOnes", evidenceHubs: [a, b] })),
-    ),
-    exhaustion: compiledRung(
-      spokes.exhaustion,
-      dl,
-      perFiring(({ c }) => ({ kind: "exhaustion", evidenceHubs: [c] })),
-    ),
-    lineBreaks: compiledRung(
-      spokes.lineBreaks,
-      dl,
-      perFiring(({ e, a, b }, m) => {
-        const why = broken(m.grid, [e], [a, b]);
-        return {
-          kind: "lineBreaks",
-          evidenceHubs: why.hubs,
-          hypothesis: spokeOf(geo, e, SPOKE_LINE),
-          breakKind: why.kind,
-        };
-      }),
-    ),
-    spareBreaks: compiledRung(
-      spokes.spareBreaks,
-      dl,
-      perFiring(({ c, y, H }, m) => {
-        const ends = H.map((e) =>
-          sp.edgeEnds[2 * e] === c ? sp.edgeEnds[2 * e + 1] : sp.edgeEnds[2 * e],
-        );
-        const why = broken(m.grid, H, [c, ...ends]);
-        return {
-          kind: "spareBreaks",
-          evidenceHubs: [...new Set([c, ...why.hubs])],
-          hypothesis: spokeOf(geo, sp.edgeOf(c, y), SPOKE_MARKED),
-          filled: c,
-          breakKind: why.kind,
-        };
-      }),
-    ),
+    saturation: compiledRung(spokes.saturation, dl),
+    twoOnes: compiledRung(spokes.twoOnes, dl),
+    exhaustion: compiledRung(spokes.exhaustion, dl),
+    lineBreaks: compiledRung(spokes.lineBreaks, dl),
+    spareBreaks: compiledRung(spokes.spareBreaks, dl),
   });
 }
 
@@ -501,13 +428,72 @@ export function spokesSolved(board: SpokesBoard): boolean {
 
 // --- the hint's walk ---------------------------------------------------------
 
-/** Runaway and UX cap on a plan's length: a player rarely follows more than
- * a few steps before going their own way, and the plan is asked for again
- * then. */
-const HINT_PLAN_MAX = 40;
+/** A firing's reason, before its forced spokes are known. */
+type SpokesReason = Omit<SpokesFiring, "forced">;
 
-/** A taken firing in the game's terms: its reason, and the spokes it set. */
+/**
+ * Why a taken firing decided what it did, from the terms its technique says
+ * and, for a Check, from the links as they stood (`grid`) when it fired: what
+ * the lines it tried break is read off them.
+ */
+function reasonOf(d: Deduction, taken: Taken, grid: ArrayLike<number>): SpokesReason {
+  const { sp } = d.geo;
+  const { terms } = spokenOf<SpokesSays[SpokesRung]>(taken).says;
+  // What a Check's trial breaks, which a firing of it must break.
+  const broken = (
+    tried: readonly number[],
+    changed: readonly number[],
+  ): { kind: SpokesBreakKind; hubs: number[] } => {
+    const got = breakOf(sp, d.board.numbers, grid, tried, changed);
+    if (got === null)
+      throw new Error("spokes: a Check fired where its trial breaks nothing");
+    return got;
+  };
+  switch (taken.entry.id as SpokesRung) {
+    case "saturation": {
+      const { c } = terms as SpokesSays["saturation"]["terms"];
+      return { kind: "saturation", evidenceHubs: [c] };
+    }
+    case "twoOnes": {
+      const { a, b } = terms as SpokesSays["twoOnes"]["terms"];
+      return { kind: "twoOnes", evidenceHubs: [a, b] };
+    }
+    case "exhaustion": {
+      const { c } = terms as SpokesSays["exhaustion"]["terms"];
+      return { kind: "exhaustion", evidenceHubs: [c] };
+    }
+    case "lineBreaks": {
+      const { e, a, b } = terms as SpokesSays["lineBreaks"]["terms"];
+      const why = broken([e], [a, b]);
+      return {
+        kind: "lineBreaks",
+        evidenceHubs: why.hubs,
+        hypothesis: spokeOf(d.geo, e, SPOKE_LINE),
+        breakKind: why.kind,
+      };
+    }
+    case "spareBreaks": {
+      const { c, y, H } = terms as SpokesSays["spareBreaks"]["terms"];
+      const ends = H.map((e) =>
+        sp.edgeEnds[2 * e] === c ? sp.edgeEnds[2 * e + 1] : sp.edgeEnds[2 * e],
+      );
+      const why = broken(H, [c, ...ends]);
+      return {
+        kind: "spareBreaks",
+        evidenceHubs: [...new Set([c, ...why.hubs])],
+        hypothesis: spokeOf(d.geo, sp.edgeOf(c, y), SPOKE_MARKED),
+        filled: c,
+        breakKind: why.kind,
+      };
+    }
+  }
+}
+
+/** A taken firing in the game's terms: its reason, and the spokes it set. The
+ * firing has been made, so the links it set are read as open for its reason. */
 function firingOf(d: Deduction, taken: Taken): SpokesFiring {
+  const before = d.m.grid.slice();
+  for (let i = 0; i < taken.facts.length; i += 3) before[taken.facts[i + 1]] = 0;
   const forced: SpokesSpokeRef[] = [];
   for (let i = 0; i < taken.facts.length; i += 3)
     forced.push(
@@ -517,41 +503,48 @@ function firingOf(d: Deduction, taken: Taken): SpokesFiring {
         taken.facts[i + 2] === LINED ? SPOKE_LINE : SPOKE_MARKED,
       ),
     );
-  return { ...(taken.reasons[0] as SpokesReason), forced };
+  return { ...reasonOf(d, taken, before), forced };
+}
+
+/** What the hint's steps are built from besides the technique's terms. */
+export interface SpokesWalkContext {
+  /** Whether every hub has its lines. */
+  complete(): boolean;
+  /** A taken firing in the game's terms. */
+  firing(taken: Taken): SpokesFiring;
+  /** The hubs a firing's premise reads, which the walk continues from. */
+  reads(taken: Taken): number[];
 }
 
 /**
- * The ladder's firings from the player's board, one at a time, each the one
- * that carries on from the hubs the plan is working round (`ladderWalk`),
- * up to Normal: the search beneath is not a deduction, so the plan stops
- * where the ladder does and the hint says so. Pure on its argument.
+ * The ladder over the player's board, for the engine's hint to walk
+ * (`engine/described-edge-hint.ts`), up to Normal: the search beneath is not a
+ * deduction, so the plan stops where the ladder does and the hint says so. A
+ * player follows the hubs: a firing reads the hubs it argues from and the ends
+ * of the spokes it decides.
  */
-export function deduceSpokesPlan(board: SpokesBoard): SpokesFiring[] {
+export function spokesWalk(board: SpokesBoard): {
+  marks: CellMarks;
+  entries: Ladder["entries"];
+  ctx: SpokesWalkContext;
+} {
   const d = deduction(board);
-  d.m.budget = stepBudget("spokes hint");
   const { sp } = d.geo;
-  const ends = (f: Taken): number[] => {
-    const out: number[] = [];
-    for (let i = 0; i < f.facts.length; i += 3) {
-      const e = f.facts[i + 1];
-      out.push(sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]);
-    }
-    return out;
-  };
-  // A player follows the hubs: a firing reads the hubs it argues from and
-  // the ends of the spokes it decides.
-  const walk = ladderWalk(d.m, d.ladder.entries, { [TIERS]: DIFF_TRICKY }, (f) => [
-    ...(f.reasons[0] as SpokesReason).evidenceHubs,
-    ...ends(f),
-  ]);
-  return deduceHintPlan<null, SpokesFiring, "open" | "done">({
-    board: null,
-    status: () => (unfinished(d) ? "open" : "done"),
-    incomplete: "open",
-    next: () => {
-      const taken = walk.next();
-      return taken === null || taken === "contradiction" ? null : firingOf(d, taken);
+  return {
+    marks: d.m,
+    entries: d.ladder.entries,
+    ctx: {
+      complete: () => !unfinished(d),
+      firing: (taken) => firingOf(d, taken),
+      // Read before the firing is made, on the links as they stand.
+      reads: (taken) => {
+        const out = [...reasonOf(d, taken, d.m.grid).evidenceHubs];
+        for (let i = 0; i < taken.facts.length; i += 3) {
+          const e = taken.facts[i + 1];
+          out.push(sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]);
+        }
+        return out;
+      },
     },
-    planCap: HINT_PLAN_MAX,
-  }).plan;
+  };
 }

@@ -28,6 +28,7 @@ import {
   type GridSpace,
   rangeMask,
 } from "../../engine/describe-runtime.ts";
+import { spokenOf } from "../../engine/described-hint.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import {
   CellMarks,
@@ -35,8 +36,6 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
-  type ReasonOf,
   runLadder,
   type Taken,
   TIERS,
@@ -47,9 +46,14 @@ import {
   type SquareEdges,
   squareEdges,
 } from "../../engine/square-edges.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
 import * as path from "./path.compiled.ts";
-import { DIFF_TRICKY, MODE_PATH, NO_END, type PathPuzzle } from "./state.ts";
+import {
+  DIFF_TRICKY,
+  MODE_PATH,
+  NO_END,
+  type PathPuzzle,
+  type PathState,
+} from "./state.ts";
 
 /** What the description reads an edge as holding. */
 const LINED = 1;
@@ -74,6 +78,9 @@ export interface PathFiring {
   edges: number[];
   mark: typeof LINE | typeof CROSS;
 }
+
+/** What each technique says, as the hint's sentences read it. */
+export type PathSays = path.SaysById;
 
 /** The rungs, easiest first: the ladder's techniques. */
 export const PATH_RUNGS = path.ladder.map((e) => e.id);
@@ -155,7 +162,7 @@ function deduction(puzzle: PathPuzzle, edges: ArrayLike<number>): Deduction {
     if (edges[e] !== OPEN) grid[geo.toSp[e]] = edges[e] === LINE ? LINED : NONE;
   const m = new CellMarks(geo.sp, rangeMask(LINED, NONE), grid, null, "edge");
   m.seed(grid);
-  return { puzzle, geo, dl, m, ladder: pathLadder(geo, dl) };
+  return { puzzle, geo, dl, m, ladder: pathLadder(dl) };
 }
 
 /** A copy of `d` that shares no marks with it, for a search to assume on. */
@@ -213,67 +220,13 @@ function deduce(d: Deduction, cap: number, firings?: FiringTally): Deduced {
   return impossible ? "contradiction" : verdictOf(d);
 }
 
-// --- why a firing set what it set --------------------------------------------
-
-/** A reason built once a firing, from its binding, and shared by each of its
- * facts. */
-function perFiring<B extends object>(
-  build: (binding: B, m: CellMarks) => PathReason,
-): ReasonOf<B> {
-  let last: B | null = null;
-  let reason: PathReason | null = null;
-  return (binding, _at, _n, m) => {
-    if (binding !== last || reason === null) {
-      last = binding;
-      reason = build(binding, m);
-    }
-    return reason;
-  };
-}
-
-/** The ladder over the dealt board, each technique with its reason. */
-function pathLadder(geo: Geometry, dl: path.Dealt): Ladder {
-  const { sp, toGame } = geo;
-  const edge = (c: number, y: number): number => toGame[sp.edgeOf(c, y)];
+/** The ladder over the dealt board. */
+function pathLadder(dl: path.Dealt): Ladder {
   return describedLadder(path, {
-    forced: compiledRung(
-      path.forced,
-      dl,
-      perFiring(({ c, n }) => ({ kind: "forced", cell: c, need: n })),
-    ),
-    lineBreaks: compiledRung(
-      path.lineBreaks,
-      dl,
-      perFiring(({ e }) => ({ kind: "lineBreaks", tried: [toGame[e]] })),
-    ),
-    pairBreaks: compiledRung(
-      path.pairBreaks,
-      dl,
-      perFiring(({ c, i, j }) => ({
-        kind: "pairBreaks",
-        cell: c,
-        tried: [edge(c, i), edge(c, j)],
-      })),
-    ),
-    weighed: compiledRung(
-      path.weighed,
-      dl,
-      perFiring(({ c, U, P, X }) => {
-        // The pairs of the square's four edges. Each pair without an edge
-        // of `P` breaks, and so does each with an edge of `X`.
-        const pairs: { tried: number[]; ys: number[] }[] = [];
-        for (let a = 0; a < U.length; a++)
-          for (let b = a + 1; b < U.length; b++)
-            pairs.push({ tried: [edge(c, U[a]), edge(c, U[b])], ys: [U[a], U[b]] });
-        // A line asked for is said against the pairs that leave it unmet;
-        // a cross against those that take it.
-        const ruledOut =
-          P.length > 0
-            ? pairs.filter(({ ys }) => !P.every((y) => ys.includes(y)))
-            : pairs.filter(({ ys }) => ys.some((y) => X.includes(y)));
-        return { kind: "weighed", cell: c, ruledOut: ruledOut.map((p) => p.tried) };
-      }),
-    ),
+    forced: compiledRung(path.forced, dl),
+    lineBreaks: compiledRung(path.lineBreaks, dl),
+    pairBreaks: compiledRung(path.pairBreaks, dl),
+    weighed: compiledRung(path.weighed, dl),
   });
 }
 
@@ -473,6 +426,43 @@ function numbersWritten(d: Deduction, firing: PathFiring): number[] {
   );
 }
 
+/** Why a taken firing decided its edges, from the terms its technique says. */
+function reasonOf(d: Deduction, taken: Taken): PathReason {
+  const { sp, toGame } = d.geo;
+  const edge = (c: number, y: number): number => toGame[sp.edgeOf(c, y)];
+  const { terms } = spokenOf<PathSays[PathRung]>(taken).says;
+  switch (taken.entry.id as PathRung) {
+    case "forced": {
+      const { c, n } = terms as PathSays["forced"]["terms"];
+      return { kind: "forced", cell: c, need: n };
+    }
+    case "lineBreaks": {
+      const { e } = terms as PathSays["lineBreaks"]["terms"];
+      return { kind: "lineBreaks", tried: [toGame[e]] };
+    }
+    case "pairBreaks": {
+      const { c, i, j } = terms as PathSays["pairBreaks"]["terms"];
+      return { kind: "pairBreaks", cell: c, tried: [edge(c, i), edge(c, j)] };
+    }
+    case "weighed": {
+      const { c, U, P, X } = terms as PathSays["weighed"]["terms"];
+      // The pairs of the square's four edges. Each pair without an edge of
+      // `P` breaks, and so does each with an edge of `X`.
+      const pairs: { tried: number[]; ys: number[] }[] = [];
+      for (let a = 0; a < U.length; a++)
+        for (let b = a + 1; b < U.length; b++)
+          pairs.push({ tried: [edge(c, U[a]), edge(c, U[b])], ys: [U[a], U[b]] });
+      // A line asked for is said against the pairs that leave it unmet; a
+      // cross against those that take it.
+      const ruledOut =
+        P.length > 0
+          ? pairs.filter(({ ys }) => !P.every((y) => ys.includes(y)))
+          : pairs.filter(({ ys }) => ys.some((y) => X.includes(y)));
+      return { kind: "weighed", cell: c, ruledOut: ruledOut.map((p) => p.tried) };
+    }
+  }
+}
+
 /** A taken firing in the game's terms: its reason, and the edges it set. */
 function firingOf(d: Deduction, taken: Taken): PathFiring {
   const { toGame } = d.geo;
@@ -482,45 +472,46 @@ function firingOf(d: Deduction, taken: Taken): PathFiring {
     edges.push(toGame[taken.facts[i + 1]]);
     mark = taken.facts[i + 2] === LINED ? LINE : CROSS;
   }
-  return { reason: taken.reasons[0] as PathReason, edges, mark };
+  return { reason: reasonOf(d, taken), edges, mark };
+}
+
+/** What the hint's sentences are built from besides the technique's terms: the
+ * edges as the marks hold them, and each firing as the game reads it. */
+export interface PathWalkContext {
+  /** The marks as the game's edges: a line, a cross, or open. */
+  edges(): Uint8Array;
+  /** Whether the marks already solve the board. */
+  complete(): boolean;
+  /** A taken firing in the game's terms. */
+  firing(taken: Taken): PathFiring;
+  /** The numbers a firing's premise reads. */
+  reads(taken: Taken): number[];
+  /** The numbers a firing's lines extend. */
+  writes(taken: Taken): number[];
 }
 
 /**
- * The ladder's firings from `edges`, the player's lines and crosses, one a
- * call, each the one that carries on from the line the plan is working on
- * (`ladderWalk`): `next` gives the firing just made, with the edges as they
- * stood before it, or `null` when no rung fires, and `impossible` says
- * whether a technique found the marks inconsistent. No tier cap: a board
- * that arrives by its ID carries no tier, and the ladder tries the Easy rung
- * first, which is the order a hint wants anyway.
+ * The ladder over `puzzle` with the player's lines and crosses as its marks,
+ * for the engine's hint to walk (`engine/described-edge-hint.ts`). The walk
+ * continues from a number's line, so the hooks read and write numbers, not
+ * squares. No tier cap: a board that arrives by its ID carries no tier, and
+ * the ladder tries the Easy rung first, which is the order a hint wants.
  */
-export function pathWalk(
-  puzzle: PathPuzzle,
-  edges: ArrayLike<number>,
-  budget: StepBudget,
-): {
-  next(): { firing: PathFiring; before: Uint8Array } | null;
-  impossible(): boolean;
+export function pathWalk(state: PathState): {
+  marks: CellMarks;
+  entries: Ladder["entries"];
+  ctx: PathWalkContext;
 } {
-  const d = deduction(puzzle, edges);
-  d.m.budget = budget;
-  let impossible = false;
-  const walk = ladderWalk(
-    d.m,
-    d.ladder.entries,
-    { [TIERS]: TOP },
-    (f) => numbersRead(d, f.reasons[0] as PathReason),
-    { writes: (f) => numbersWritten(d, firingOf(d, f)) },
-  );
+  const d = deduction(state, state.edges);
   return {
-    next() {
-      if (impossible) return null;
-      const before = edgesOf(d);
-      const taken = walk.next();
-      if (taken === "contradiction") impossible = true;
-      if (taken === null || taken === "contradiction") return null;
-      return { firing: firingOf(d, taken), before };
+    marks: d.m,
+    entries: d.ladder.entries,
+    ctx: {
+      edges: () => edgesOf(d),
+      complete: () => isComplete(state, edgesOf(d)),
+      firing: (taken) => firingOf(d, taken),
+      reads: (taken) => numbersRead(d, reasonOf(d, taken)),
+      writes: (taken) => numbersWritten(d, firingOf(d, taken)),
     },
-    impossible: () => impossible,
   };
 }
