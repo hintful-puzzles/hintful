@@ -323,11 +323,20 @@ export type Witness =
  * The elements whose marks a firing's `for ... where` and `premise` read, in
  * the order first read, each once: cells (or the game's own elements) and
  * edges. What a firing rests on is the facts that made these what they are.
+ * `relations`, where a game reads any, are the pairs of edges whose relation
+ * a firing used, each as {@link relationKey} names it (Loopy's pairs).
  */
 export interface Reads {
   cells: number[];
   edges: number[];
+  relations?: number[];
 }
+
+/** The element a relation between two edges is about, whichever way round
+ * they are given: the key a {@link RELATE} fact and a firing's
+ * {@link Reads.relations} name it by. */
+export const relationKey = (e: number, f: number): number =>
+  e < f ? e * 2 ** 24 + f : f * 2 ** 24 + e;
 
 /** The parts of an `and` that have a witness: `null` for none, the part
  * itself for one. */

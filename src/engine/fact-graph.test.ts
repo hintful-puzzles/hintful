@@ -5,7 +5,14 @@ import { DIFF_NORMAL, MODE_PATH, newState } from "../games/path/state.ts";
 import { newDesc as newSlantDesc } from "../games/slant/generator.ts";
 import { deduceHintPlan } from "../games/slant/solver.ts";
 import { DIFF_HARD, newState as slantNewState } from "../games/slant/state.ts";
-import { MARK, PLACE, STRIKE, STRIKE_EDGE } from "./describe-runtime.ts";
+import {
+  MARK,
+  PLACE,
+  RELATE,
+  relationKey,
+  STRIKE,
+  STRIKE_EDGE,
+} from "./describe-runtime.ts";
 import { FactGraph, placeNotes, readsOf } from "./fact-graph.ts";
 import { ladderWalk, TIERS } from "./ladder-runtime.ts";
 import { randomNew } from "./random/index.ts";
@@ -61,7 +68,7 @@ describe("what a fact rests on", () => {
 
     const rests = g.restsOn(c);
     expect(rests.facts.map((f) => f.id)).toEqual([a, b]);
-    expect(rests.roots).toEqual({ cells: [9], edges: [5] });
+    expect(rests.roots).toEqual({ cells: [9], edges: [5], relations: [] });
     expect(rests.complete).toBe(true);
     // A firing that reads the element it then strikes read it as the board
     // showed it: a root, not its own fact.
@@ -80,6 +87,37 @@ describe("what a fact rests on", () => {
     const [p] = g.record([PLACE, 2, 1], reads([1]));
     g.record([STRIKE, 1, 2], reads([]));
     expect(g.facts[p].parents).toEqual([s1, s2]);
+  });
+
+  it("rests on the facts that related two edges, either way round, and on a relation no fact made", () => {
+    const g = new FactGraph();
+    // Firing 0 relates edges 3 and 7 as opposites (4·7 + 2).
+    const [r] = g.record([RELATE, 3, 4 * 7 + 2], reads([]));
+    expect(g.facts[r]).toMatchObject({
+      value: 2,
+      about: { space: "relations", at: relationKey(7, 3) },
+    });
+    // Firing 1 uses that relation, and one the walk began with.
+    const [p] = g.record([PLACE, 5, 1], {
+      cells: [],
+      edges: [],
+      relations: [relationKey(7, 3), relationKey(1, 2)],
+    });
+    expect(g.facts[p].parents).toEqual([r]);
+    expect(g.restsOn(p)).toMatchObject({
+      facts: [{ id: r }],
+      roots: { relations: [relationKey(1, 2)] },
+      complete: true,
+    });
+    // A relation made by a firing that reported no reads is no complete answer.
+    const [q] = g.record([RELATE, 8, 4 * 9 + 1], null);
+    const [s] = g.record([PLACE, 6, 1], {
+      cells: [],
+      edges: [],
+      relations: [relationKey(8, 9)],
+    });
+    expect(g.facts[q].parents).toBeNull();
+    expect(g.restsOn(s).complete).toBe(false);
   });
 
   it("says it is not complete where a firing reported no reads", () => {

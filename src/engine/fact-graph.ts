@@ -18,10 +18,10 @@
  * no known parents and an answer that passes through it is `complete: false`:
  * the engine says so rather than answering from less.
  *
- * Relation facts (`RELATE`) are about no readable element yet: `Reads` does
- * not record a relation read, so they are kept as facts with no parents and
- * nothing rests on them (`explain-a-firing-by-its-witness-and-parents` 3.4,
- * Loopy, decides what the relation needs).
+ * A relation fact (`RELATE`) is about the pair of edges it relates
+ * ({@link relationKey}), so a firing that used a relation says so in
+ * `Reads.relations`; the game says which, since a relation holds through a
+ * chain of facts and only the game knows the chain it narrates.
  */
 
 import {
@@ -30,13 +30,14 @@ import {
   PLACE,
   RELATE,
   type Reads,
+  relationKey,
   STRIKE,
   STRIKE_EDGE,
 } from "./describe-runtime.ts";
 import type { Firing } from "./ladder-runtime.ts";
 
 /** Which of {@link Reads}' two spaces an element is in. */
-export type Space = "cells" | "edges";
+export type Space = "cells" | "edges" | "relations";
 
 export interface Fact {
   /** The fact's place in the walk, from 0: the order it was made. */
@@ -48,8 +49,8 @@ export interface Fact {
   /** The value it is about: the one placed, the candidate struck, the mark
    * struck from an edge. */
   readonly value: number;
-  /** What it is about, `null` for a relation. */
-  readonly about: { readonly space: Space; readonly at: number } | null;
+  /** What it is about: for a relation, its {@link relationKey}. */
+  readonly about: { readonly space: Space; readonly at: number };
   /** The facts it rests on, by id, in the order made; `null` where its
    * firing reported no reads. */
   readonly parents: readonly number[] | null;
@@ -65,17 +66,18 @@ export interface Rests {
   readonly roots: {
     readonly cells: readonly number[];
     readonly edges: readonly number[];
+    readonly relations: readonly number[];
   };
   /** Whether every firing in the chain reported its reads. */
   readonly complete: boolean;
 }
 
-const spaceOf = (kind: number): Space | null =>
+const spaceOf = (kind: number): Space =>
   kind === STRIKE || kind === PLACE || kind === MARK
     ? "cells"
     : kind === STRIKE_EDGE
       ? "edges"
-      : null;
+      : "relations";
 
 /** The reads a firing reports, from the reason of any of its facts. */
 export function readsOf(firing: Pick<Firing, "reasons">): Reads | null {
@@ -94,6 +96,7 @@ export class FactGraph {
   private readonly about: Record<Space, Map<number, number[]>> = {
     cells: new Map(),
     edges: new Map(),
+    relations: new Map(),
   };
 
   /**
@@ -111,6 +114,9 @@ export class FactGraph {
             ...new Set([
               ...reads.cells.flatMap((x) => this.about.cells.get(x) ?? []),
               ...reads.edges.flatMap((x) => this.about.edges.get(x) ?? []),
+              ...(reads.relations ?? []).flatMap(
+                (x) => this.about.relations.get(x) ?? [],
+              ),
             ]),
           ].sort((a, b) => a - b);
     const made: number[] = [];
@@ -122,16 +128,21 @@ export class FactGraph {
         id,
         firing,
         kind,
-        value: facts[i + 2],
-        about: space === null ? null : { space, at: facts[i + 1] },
-        parents: kind === RELATE ? null : parents,
+        value: kind === RELATE ? facts[i + 2] & 3 : facts[i + 2],
+        about: {
+          space,
+          at:
+            kind === RELATE
+              ? relationKey(facts[i + 1], facts[i + 2] >> 2)
+              : facts[i + 1],
+        },
+        parents,
       });
       made.push(id);
     }
     // After all of them: a firing's facts do not rest on each other.
     for (const id of made) {
       const { about } = this.facts[id];
-      if (about === null) continue;
       const list = this.about[about.space].get(about.at);
       if (list === undefined) this.about[about.space].set(about.at, [id]);
       else list.push(id);
@@ -148,13 +159,15 @@ export class FactGraph {
    * read in turn, from the position the fact was made at. */
   restsOn(id: number): Rests {
     const seen = new Set<number>();
-    const roots = { cells: new Set<number>(), edges: new Set<number>() };
+    const roots = {
+      cells: new Set<number>(),
+      edges: new Set<number>(),
+      relations: new Set<number>(),
+    };
     let complete = true;
     const visit = (f: Fact): void => {
       if (f.parents === null) {
-        // A relation has no reads to report and is not an incomplete chain's
-        // fault; a reads-less firing is.
-        if (f.kind !== RELATE) complete = false;
+        complete = false;
         return;
       }
       for (const p of f.parents) {
@@ -175,8 +188,8 @@ export class FactGraph {
     for (const firing of firings) {
       const reads = this.reads[firing];
       if (reads === null) continue;
-      for (const space of ["cells", "edges"] as const)
-        for (const x of reads[space]) {
+      for (const space of ["cells", "edges", "relations"] as const)
+        for (const x of reads[space] ?? []) {
           const first = this.about[space].get(x)?.[0];
           if (first === undefined || this.facts[first].firing >= firing)
             roots[space].add(x);
@@ -184,7 +197,11 @@ export class FactGraph {
     }
     return {
       facts: [...seen].sort((a, b) => a - b).map((p) => this.facts[p]),
-      roots: { cells: [...roots.cells], edges: [...roots.edges] },
+      roots: {
+        cells: [...roots.cells],
+        edges: [...roots.edges],
+        relations: [...roots.relations],
+      },
       complete,
     };
   }
