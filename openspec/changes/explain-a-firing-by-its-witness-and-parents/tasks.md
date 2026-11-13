@@ -29,4 +29,5 @@
 ## 5. Close
 
 - [ ] 5.1 Update `docs/hints-marks.md`, `docs/hints-candidates.md`, `docs/descriptions.md`; every hint walk still finishes, words equal or accepted by the owner, a solve costs what it did
+- [ ] 5.0 Check that CI's deploy job goes green on the next push: the CI runs of 2026-11-13 15:23 and 15:43 (`43452142104`, `43455411273`) failed only in "Publish to Cloudflare Pages" ("Unknown internal error occurred"; then "malformed response from the API" after `npx` could not resolve wrangler 4.161.0 under `--no-install`-like rules), with the Gate green. If it fails again, read `.github/workflows` and pin or install wrangler
 - [ ] 5.2 Note in `build-hint-steps-in-the-engine` that Slant and Net are unblocked
