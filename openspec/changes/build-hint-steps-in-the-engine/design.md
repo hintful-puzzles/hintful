@@ -564,6 +564,33 @@ defect found in the game, said which.
 - **Changes of behavior**: the plan holds 40 steps; a contradiction found mid-walk
   is the unlocalized refusal (the old plan ended there with the steps so far).
 
+### What Pearl, Tracks, Path and Spokes need beyond `describedEdgeHint` (2026-11-13, read, not built)
+
+- **Pearl and Tracks are on the older plan engine** (`deduceHintPlan`, plan cap
+  24, `trackTargets` for keep-track, a `reasonOf(binding)` callback and a
+  `premise` for what the walk continues from), not the border grid's. Each
+  firing's step also *carries on* lines the game's own rules imply (Pearl's
+  `carryOn`: a line leaving a black pearl runs straight on, one entering a white
+  pearl leaves by its opposite), drawn on the working board in the same step and
+  said per carried line. That is state the walk updates between steps, so the
+  engine needs a hook after a firing (`carry(marks, fired)`: extra facts applied
+  to the marks and told to the sentence), the same shape Slant, Net, Magnets
+  and Map need; design it once there, then do Pearl and Tracks on it.
+- **Their sentences read the binding's directions** (`dirOf(edge)` of a bound
+  edge, `axis`, a piece of line through a square): terms over the space's
+  `edgeSide` and a `through` over lines, which Pearl's `says` has to state; read
+  `pearl.description.yaml`'s techniques for which exist.
+- **Dominosa's two additions are the first two of these**: a walk that may
+  refuse, and `reads(taken, ctx)` for what a firing continues from that no mark
+  says. Expect Pearl's `premise` (the pearl and the squares along a direction) to
+  be a `reads` mark or that hook.
+- **Path** is on `deduceHintPlan` too with a clash (`clashOf`) in its words;
+  **Spokes** has no `hint.ts` and builds its steps in `index.ts`. Neither was
+  read past this.
+- **Each of the four has a fingerprint snapshot at `HEAD` already**
+  (`src/engine/__snapshots__/hint-walk-<game>.txt`, in `MOVED`): they hold the
+  words of the old walk until the game is moved.
+
 ### What blocks the rest (2026-11-13, a survey by reading, to be re-checked per game)
 
 The first read of the remaining games found one that is a plain Clusters-shaped
