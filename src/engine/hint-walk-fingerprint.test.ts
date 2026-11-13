@@ -12,7 +12,15 @@ import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { fingerprint, walkLines } from "./testing/hint-walk-fingerprint.ts";
 
 /** The games moved onto the engine's steps so far. */
-const MOVED = ["unruly", "singles", "boats", "bridges", "lightup", "mosaic"];
+const MOVED = [
+  "unruly",
+  "singles",
+  "boats",
+  "bridges",
+  "lightup",
+  "mosaic",
+  "clusters",
+];
 
 /** The boards dealt a preset: more than one, so a rare rung is more likely met. */
 const DEALS = [0, 1, 2, 3];

@@ -10,6 +10,7 @@
  */
 
 import { searchTiers } from "../../engine/answer-search.ts";
+import { assertNever } from "../../engine/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
@@ -217,8 +218,27 @@ export function newState(p: ClustersParams, desc: string): ClustersState {
   return { w: p.w, h: p.h, grid: descValue(parseDesc(p, desc)) };
 }
 
-export function cloneState(s: ClustersState): ClustersState {
+function cloneState(s: ClustersState): ClustersState {
   return { ...s, grid: s.grid.slice() };
+}
+
+export function executeMove(state: ClustersState, move: ClustersMove): ClustersState {
+  const next = cloneState(state);
+  const { grid } = next;
+  if (move.kind === "solve") {
+    for (let i = 0; i < grid.length; i++) {
+      if (grid[i] & F_SINGLE) continue; // keep givens
+      grid[i] = move.fills[i];
+    }
+  } else if (move.kind === "paint") {
+    for (const { index, fill } of move.cells) {
+      if (grid[index] & F_SINGLE) continue; // never overwrite a given
+      grid[index] = fill;
+    }
+  } else {
+    return assertNever(move, "clusters: executeMove");
+  }
+  return next;
 }
 
 // --- text format (upstream game_text_format) -------------------------------

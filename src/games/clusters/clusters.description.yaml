@@ -90,6 +90,24 @@ techniques:
       where ((n = x or e != d) and (r < 1 or (dot(n) = 0 and r < 2)))
       or (n != x and e = d and dot(n) = 1 and same(n) >= 1)
     conclude: "place(x, flip(d))"
+    # The hint names the color the square must be and the one that breaks, and
+    # how: at the square itself or at the tile beside it (outlined), by having
+    # no room or too little, or by a dot that has its one. It reads the squares
+    # round the square and round that tile.
+    says:
+      terms: { fill: flip(d), refuted: d }
+      marks: { outline: "{n}", reads: "{x} + adj4(x) + {n} + adj4(n)" }
+      arms:
+        selfSurrounded:
+          when: "n = x and r < 1"
+        selfReach:
+          when: "n = x"
+        nearSurrounded:
+          when: "e != d and r < 1"
+        nearReach:
+          when: "e != d"
+        dotOvercount:
+          when: "true"
   # Two tiles over the empty squares both touch, S: b's count says at least
   # so many of them take a's color, and that is all a may take, so a's other
   # empty neighbors take the other color.
@@ -104,6 +122,13 @@ techniques:
       and ((value(b) = value(a) and lo(b) - bo >= hi(a))
       or (value(b) != value(a) and |S| - hi(b) >= hi(a)))
     conclude: "forall u in R: place(u, flip(value(a)))"
+    # The hint names both tiles, each by its color and whether it is a dot, and
+    # outlines them; every square it colors is a step of its own. It reads the
+    # squares round both tiles and round each square it colors.
+    says:
+      shown: each
+      terms: { fill: flip(value(a)), a: a, aValue: value(a), aDot: dot(a), b: b, bValue: value(b), bDot: dot(b) }
+      marks: { outline: "{a} + {b}", reads: "{a} + adj4(a) + {b} + adj4(b) + set(m over u in R, m in {u} + adj4(u))" }
   # Two tiles over the empty squares both touch, S: b's count says at most
   # `most` of them take a's color, fewer than all, and a needs every other
   # empty neighbor of its color too.
@@ -118,3 +143,9 @@ techniques:
       most = alike * hi(b) + (1 - alike) * (|S| - lo(b) + bo)
       where |S| > 0 and |R| > 0 and most < |S| and lo(a) - most >= |R|
     conclude: "forall u in R: place(u, value(a))"
+    # As the other, and how many of the shared squares may take the first
+    # tile's color.
+    says:
+      shown: each
+      terms: { fill: value(a), a: a, aValue: value(a), aDot: dot(a), b: b, bValue: value(b), bDot: dot(b), most: most }
+      marks: { outline: "{a} + {b}", reads: "{a} + adj4(a) + {b} + adj4(b) + set(m over u in R, m in {u} + adj4(u))" }

@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/clusters/clusters.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, cluesValued, freshBinding, keptStore, rangeMask, sameSet, setOf, staleChecking, type Kept, union, within } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, cluesValued, freshBinding, keptStore, rangeMask, sameSet, setOf, staleChecking, stamps, type Kept, union, within } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -17,6 +17,20 @@ export const units: readonly string[] = [];
 
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "broken" | "refute" | "countFull" | "countShort";
+
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  refute: RefuteSays;
+  countFull: CountFullSays;
+  countShort: CountShortSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["refute.selfSurrounded","refute.selfReach","refute.nearSurrounded","refute.nearReach","refute.dotOvercount","countFull","countShort"] as const;
+
+/** The techniques whose step is made for each square the firing decides. */
+export const SAYS_EACH: readonly (keyof SaysById)[] = ["countFull","countShort"];
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
@@ -187,10 +201,19 @@ export interface RefuteBinding {
   r: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type RefuteSays =
+  | { arm: "selfSurrounded"; terms: { fill: number; refuted: number; }; marks: { outline: readonly number[]; reads: readonly number[]; } }
+  | { arm: "selfReach"; terms: { fill: number; refuted: number; }; marks: { outline: readonly number[]; reads: readonly number[]; } }
+  | { arm: "nearSurrounded"; terms: { fill: number; refuted: number; }; marks: { outline: readonly number[]; reads: readonly number[]; } }
+  | { arm: "nearReach"; terms: { fill: number; refuted: number; }; marks: { outline: readonly number[]; reads: readonly number[]; } }
+  | { arm: "dotOvercount"; terms: { fill: number; refuted: number; }; marks: { outline: readonly number[]; reads: readonly number[]; } }
+;
+
 const refuteFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBinding> | null): number {
+export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBinding, RefuteSays> | null): number {
   const facts = refuteFacts;
   let fired = 0;
   let changed = false;
@@ -266,7 +289,28 @@ export function refute(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RefuteBind
             if (!(true)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ x: v_x, d: v_d, n: v_n, e: v_e, r: v_r }, facts)) return 1;
+              if (fire !== null) {
+                let _arm = -1;
+                if ((_h24 && (v_r < 1))) _arm = 0; else if (_h24) _arm = 1; else if (((v_e !== v_d) && (v_r < 1))) _arm = 2; else if ((v_e !== v_d)) _arm = 3; else if (true) _arm = 4;
+                let _says: RefuteSays | null = null;
+                if (_arm === 0) {
+                  _says = { arm: "selfSurrounded", terms: { fill: _h43, refuted: v_d }, marks: { outline: setOf(v_n).slice(), reads: union(union(union(setOf(v_x), sp.adj4[v_x]), setOf(v_n)), sp.adj4[v_n]).slice() } };
+                }
+                if (_arm === 1) {
+                  _says = { arm: "selfReach", terms: { fill: _h43, refuted: v_d }, marks: { outline: setOf(v_n).slice(), reads: union(union(union(setOf(v_x), sp.adj4[v_x]), setOf(v_n)), sp.adj4[v_n]).slice() } };
+                }
+                if (_arm === 2) {
+                  _says = { arm: "nearSurrounded", terms: { fill: _h43, refuted: v_d }, marks: { outline: setOf(v_n).slice(), reads: union(union(union(setOf(v_x), sp.adj4[v_x]), setOf(v_n)), sp.adj4[v_n]).slice() } };
+                }
+                if (_arm === 3) {
+                  _says = { arm: "nearReach", terms: { fill: _h43, refuted: v_d }, marks: { outline: setOf(v_n).slice(), reads: union(union(union(setOf(v_x), sp.adj4[v_x]), setOf(v_n)), sp.adj4[v_n]).slice() } };
+                }
+                if (_arm === 4) {
+                  _says = { arm: "dotOvercount", terms: { fill: _h43, refuted: v_d }, marks: { outline: setOf(v_n).slice(), reads: union(union(union(setOf(v_x), sp.adj4[v_x]), setOf(v_n)), sp.adj4[v_n]).slice() } };
+                }
+                if (_says === null) throw new Error("refute: no arm of says holds");
+                if (!fire({ x: v_x, d: v_d, n: v_n, e: v_e, r: v_r }, facts, _says)) return 1;
+              }
             }
           }
         }
@@ -284,16 +328,24 @@ export interface CountFullBinding {
   bo: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CountFullSays {
+  terms: { fill: number; a: number; aValue: number; aDot: number; b: number; bValue: number; bDot: number; };
+  marks: { outline: readonly number[]; reads: readonly number[]; };
+}
+
 const countFullFacts: number[] = [];
+const countFull_st291 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFullBinding> | null): number {
+export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFullBinding, CountFullSays> | null): number {
   const _g108: number[] = [];
   const _g117: number[] = [];
   const _g129: number[] = [];
   const _g143: number[] = [];
   const _g163: number[] = [];
   const _g176: number[] = [];
+  const _g285: number[] = [];
   const facts = countFullFacts;
   let fired = 0;
   let changed = false;
@@ -302,7 +354,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
   R1:
   for (let _i102 = 0; _i102 < _a101.length; _i102++) {
     const v_a = _a101[_i102];
-    const _m284_0 = b.made[0];
+    const _m297_0 = b.made[0];
     let _c114: boolean = (b.grid[v_a] !== 0);
     if (_c114) {
       let _g104 = 0;
@@ -416,7 +468,7 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
           _c171 = _c170;
         }
         if (!(_c171)) break L151;
-        if (b.made[0] !== _m284_0) {
+        if (b.made[0] !== _m297_0) {
           let _c182: boolean = (b.grid[v_a] !== 0);
           if (_c182) {
             let _g172 = 0;
@@ -618,7 +670,25 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
         if (!(_q278)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ a: v_a, b: v_b, S: v_S.slice(), R: v_R.slice(), bo: v_bo }, facts)) return 1;
+          if (fire !== null) {
+            const _t284 = (b.grid[v_a] || -1);
+            _g285.length = 0;
+            countFull_st291.pass++;
+            G286: {
+              const _a292 = v_R;
+              for (let _i293 = 0; _i293 < _a292.length; _i293++) {
+                const v_u = _a292[_i293];
+                const _a294 = union(setOf(v_u), sp.adj4[v_u]);
+                for (let _i295 = 0; _i295 < _a294.length; _i295++) {
+                  const v_m = _a294[_i295];
+                  const _t296 = v_m;
+                  if (_g285.length < 16) { if (!_g285.includes(_t296)) _g285.push(_t296); } else addOnce(_g285, countFull_st291, _t296);
+                }
+              }
+            }
+            const _says = { terms: { fill: (3 - _t284), a: v_a, aValue: (b.grid[v_a] || -1), aDot: (_k103[v_a] ?? dot(sp, cl, v_a)), b: v_b, bValue: (b.grid[v_b] || -1), bDot: (_k103[v_b] ?? dot(sp, cl, v_b)) }, marks: { outline: union(setOf(v_a), setOf(v_b)).slice(), reads: union(union(union(union(setOf(v_a), sp.adj4[v_a]), setOf(v_b)), sp.adj4[v_b]), _g285).slice() } };
+            if (!fire({ a: v_a, b: v_b, S: v_S.slice(), R: v_R.slice(), bo: v_bo }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -636,14 +706,22 @@ export interface CountShortBinding {
   most: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CountShortSays {
+  terms: { fill: number; a: number; aValue: number; aDot: number; b: number; bValue: number; bDot: number; most: number; };
+  marks: { outline: readonly number[]; reads: readonly number[]; };
+}
+
 const countShortFacts: number[] = [];
+const countShort_st224 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountShortBinding> | null): number {
+export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountShortBinding, CountShortSays> | null): number {
   const _g89: number[] = [];
   const _g101: number[] = [];
   const _g115: number[] = [];
   const _g130: number[] = [];
+  const _g218: number[] = [];
   const facts = countShortFacts;
   let fired = 0;
   let changed = false;
@@ -652,7 +730,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
   R1:
   for (let _i80 = 0; _i80 < _a79.length; _i80++) {
     const v_a = _a79[_i80];
-    const _m218_0 = b.made[0];
+    const _m230_0 = b.made[0];
     let _c86: boolean = (b.grid[v_a] !== 0);
     if (_c86) {
       let _g82 = 0;
@@ -742,7 +820,7 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
       L137: {
         const v_most = ((v_alike * (((_k81[v_b] ?? dot(sp, cl, v_b)) * ((2 - (_k81[v_b] ?? dot(sp, cl, v_b))) - _g126)) + ((1 - (_k81[v_b] ?? dot(sp, cl, v_b))) * _g130.length))) + ((1 - v_alike) * ((_h136 - ((2 - (_k81[v_b] ?? dot(sp, cl, v_b))) - _g126)) + v_bo)));
         if (!(((((_h136 > 0) && (_h138 > 0)) && (v_most < _h136)) && ((lo(b, sp, cl, v_a) - v_most) >= _h138)))) break L137;
-        if (b.made[0] !== _m218_0) {
+        if (b.made[0] !== _m230_0) {
           let _c143: boolean = (b.grid[v_a] !== 0);
           if (_c143) {
             let _g139 = 0;
@@ -885,7 +963,24 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
         if (!(_q213)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ a: v_a, b: v_b, S: v_S.slice(), R: v_R.slice(), bo: v_bo, alike: v_alike, most: v_most }, facts)) return 1;
+          if (fire !== null) {
+            _g218.length = 0;
+            countShort_st224.pass++;
+            G219: {
+              const _a225 = v_R;
+              for (let _i226 = 0; _i226 < _a225.length; _i226++) {
+                const v_u = _a225[_i226];
+                const _a227 = union(setOf(v_u), sp.adj4[v_u]);
+                for (let _i228 = 0; _i228 < _a227.length; _i228++) {
+                  const v_m = _a227[_i228];
+                  const _t229 = v_m;
+                  if (_g218.length < 16) { if (!_g218.includes(_t229)) _g218.push(_t229); } else addOnce(_g218, countShort_st224, _t229);
+                }
+              }
+            }
+            const _says = { terms: { fill: (b.grid[v_a] || -1), a: v_a, aValue: (b.grid[v_a] || -1), aDot: (_k81[v_a] ?? dot(sp, cl, v_a)), b: v_b, bValue: (b.grid[v_b] || -1), bDot: (_k81[v_b] ?? dot(sp, cl, v_b)), most: v_most }, marks: { outline: union(setOf(v_a), setOf(v_b)).slice(), reads: union(union(union(union(setOf(v_a), sp.adj4[v_a]), setOf(v_b)), sp.adj4[v_b]), _g218).slice() } };
+            if (!fire({ a: v_a, b: v_b, S: v_S.slice(), R: v_R.slice(), bo: v_bo, alike: v_alike, most: v_most }, facts, _says)) return 1;
+          }
         }
       }
     }

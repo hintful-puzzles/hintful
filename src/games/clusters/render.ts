@@ -34,7 +34,7 @@ import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
-import type { ClustersHintHighlights, ClustersMistake } from "./index.ts";
+import type { ClustersMistake } from "./index.ts";
 import { findErrors } from "./solver.ts";
 import {
   type ClustersMove,
@@ -288,12 +288,9 @@ export function redraw(
   // The displayed hint step's overlay, repacked each frame (cleared when no
   // hint is on display, so a dropped hint repaints too).
   const marks = stepMarks(hint);
-  const hl = hint?.highlights as ClustersHintHighlights | undefined;
-  const outlined = new Set(marks.of("outline", CELL).map((p) => p.y * w + p.x));
   ds.hint.clear();
   for (const p of marks.of("ring", CELL)) ds.hint.add(p.y * w + p.x, HB_TARGET);
-  for (const p of hl?.outlined ?? [])
-    if (outlined.has(p.y * w + p.x)) ds.hint.add(p.y * w + p.x, HB_DANGER);
+  for (const p of marks.of("outline", CELL)) ds.hint.add(p.y * w + p.x, HB_DANGER);
 
   const targets: MarkCell[] = [];
   for (let i = 0; i < w * h; i++)

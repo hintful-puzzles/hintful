@@ -331,6 +331,40 @@ defect found in the game, said which.
   callbacks and `mosaicWalk`'s glue), the description +21 of `says`,
   `hint-text.ts` +25 of sentence glue.
 
+### Clusters, built (2026-11-13)
+
+- **`describedFiringHint` with `shown: each`**: `refute` is one fact a firing
+  and its five arms (`selfSurrounded`, `selfReach`, `nearSurrounded`,
+  `nearReach`, `dotOvercount`) are the old reason's `starved(r)` and `n = x`
+  tests in the same order, the last `when: "true"`; `countFull` and `countShort`
+  place a set of squares and `shown: each` makes a step of each, as the old plan
+  did. The kinds were `direct` and `count`; they are the arms' and the
+  techniques' ids now.
+- **The tile a count names is a term** (`aValue`, `aDot`, `bValue`, `bDot`),
+  read on the marks as the firing found them, where the old plan read a copy of
+  the grid it updated a deduction at a time.
+- **The walk reads squares the outline does not**: the old `reads` took each
+  square a firing colors and each tile it reads, with its four neighbors, so
+  each technique says `reads` as that set (`{x} + adj4(x) + {n} + adj4(n)`;
+  `set(m over u in R, m in {u} + adj4(u))` for the squares a count colors).
+- **No highlights of its own**: the renderer intersected the words' outline
+  marks with `highlights.outlined`, which were the same squares, so it reads the
+  marks and `ClustersHintHighlights` is gone. `executeMove` moved into
+  `state.ts`, which the hint needs and `index.ts` imports.
+- **A change of behavior**: a walk that meets a contradiction after some steps
+  shows those steps, where the old plan refused with the unlocalized
+  contradiction. The midend asks for a hint only of a board `findMistakes`
+  finds nothing wrong with, which a contradiction needs not to be; a first step
+  that meets one is the exhaustion refusal now.
+- **The comparison.** 8,655 steps over 120 boards (5x5 to 16x16, Easy and
+  Normal-or-Unreasonable, 12 a size), HEAD against the new tree: the words, marks
+  and move of every line are the same, and all seven kinds met (the least, 11
+  `countShort`). The fingerprint's hash holds the highlights, whose shape
+  changed, so its snapshot was taken again.
+- **Lines.** `index.ts` -114, `solver.ts` -133 (`ClustersReason`, `ClustersDeduction`,
+  `deduceHintPlan` and the reasons gone), `hint.ts` 66 and the description +31
+  of `says`; `hint-text.ts` -9.
+
 ### Read off Boats (2026-11-12, `boats/solver.ts` and `index.ts`), before it was built
 
 Sixteen of its nineteen techniques are what `says` already carries (terms,

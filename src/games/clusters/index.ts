@@ -13,23 +13,15 @@
  */
 
 import { type Answer, solveFromAnswer } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
-  type HintResult,
   type HintStep,
-  type HintTrackVerdict,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
-import {
-  CONTRADICTION_UNLOCALIZED,
-  DEDUCTION_EXHAUSTED,
-} from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   gridCursorMove,
@@ -58,7 +50,13 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
-import { colorName, say, type Tile } from "./hint-text.ts";
+import {
+  type ClustersHint,
+  clustersHint,
+  clustersKeepTrack,
+  clustersRefreshHintStep,
+} from "./hint.ts";
+import { colorName } from "./hint-text.ts";
 import {
   border,
   type ClustersDrawState,
@@ -71,12 +69,9 @@ import {
 import {
   answerSearch,
   CLUSTERS_RUNGS,
-  type ClustersDeduction,
   type ClustersRung,
   COMPLETE,
-  deduceHintPlan,
   findErrors,
-  INVALID,
   isAnswer,
   solveGame,
 } from "./solver.ts";
@@ -87,10 +82,10 @@ import {
   type ClustersState,
   type ClustersUi,
   COLMASK,
-  cloneState,
   decodeParams,
   defaultParams,
   encodeParams,
+  executeMove,
   F_COLOR_0,
   F_COLOR_1,
   F_SINGLE,
@@ -271,25 +266,6 @@ function interpretMove(
   return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
-function executeMove(state: ClustersState, move: ClustersMove): ClustersState {
-  const next = cloneState(state);
-  const { grid } = next;
-  if (move.kind === "solve") {
-    for (let i = 0; i < grid.length; i++) {
-      if (grid[i] & F_SINGLE) continue; // keep givens
-      grid[i] = move.fills[i];
-    }
-  } else if (move.kind === "paint") {
-    for (const { index, fill } of move.cells) {
-      if (grid[index] & F_SINGLE) continue; // never overwrite a given
-      grid[index] = fill;
-    }
-  } else {
-    return assertNever(move, "clusters: executeMove");
-  }
-  return next;
-}
-
 function status(s: ClustersState): GameStatus {
   return isAnswer(s.grid, s.w, s.h) ? "solved" : "ongoing";
 }
@@ -354,111 +330,20 @@ function revealOne(state: ClustersState, solved: ClustersState): ClustersMove | 
   };
 }
 
-// --- hint ------------------------------------------------------------------
-
-/** What a Clusters hint step's marks carry beyond the cells its words name
- * (see the hint marks block in render.ts's palette): the tiles the step
- * reasons from, each framed thin where the words outline it. That is the tile
- * the refuted coloring would break, where it isn't the target itself, or the
- * two tiles whose counts a Normal step reads. No other premise needs a
- * highlight or a palette role: every tile the rules read sits orthogonally
- * adjacent to the target or to those, so it is already in view. */
-export interface ClustersHintHighlights {
-  outlined: Point[];
-}
-
-/** A tile the words name: where it is, its color and whether it is a dot. */
-const tileAt = (grid: Uint8Array, w: number, i: number): Tile => ({
-  at: { x: i % w, y: (i / w) | 0 },
-  fill: (grid[i] & COLMASK) as ClustersFill,
-  dot: (grid[i] & F_SINGLE) !== 0,
-});
-
-/** Narrate the step, ringing `target` and outlining the tiles it reasons
- * from. The words, and how each ties "this cell" to an outlined tile, are
- * [`hint-text.ts`](./hint-text.ts)'s. `grid` is the board the deduction read. */
-function narrate(
-  d: ClustersDeduction,
-  target: Point,
-  grid: Uint8Array,
-  w: number,
-): Sentence {
-  const { reason } = d;
-  if (reason.kind === "count")
-    return say.count(d, target, tileAt(grid, w, reason.a), tileAt(grid, w, reason.b));
-  const danger =
-    reason.at.cell !== d.index
-      ? { x: reason.at.cell % w, y: (reason.at.cell / w) | 0 }
-      : null;
-  return say.direct(d, { target, danger });
-}
-
-function buildHighlights(d: ClustersDeduction, w: number): ClustersHintHighlights {
-  const pt = (i: number): Point => ({ x: i % w, y: (i / w) | 0 });
-  const { reason } = d;
-  if (reason.kind === "count") return { outlined: [pt(reason.a), pt(reason.b)] };
-  return { outlined: reason.at.cell !== d.index ? [pt(reason.at.cell)] : [] };
-}
-
-function hint(
-  state: ClustersState,
-): HintResult<ClustersMove, ClustersHintHighlights, ClustersRung> {
-  const plan = deduceHintPlan(state.grid, state.w, state.h);
-  // INVALID means some tile already placed must be wrong, and hinting would
-  // lead deeper in. `findMistakes` names that tile wherever the board has one
-  // answer, so this is reached only on a board without one. A plan that stops
-  // short is an Unreasonable board's, whose steps up to the stall are
-  // deductions all the same: the midend hints only a board with no mistake.
-  if (plan.verdict === INVALID) return { ok: false, error: CONTRADICTION_UNLOCALIZED };
-  if (plan.deductions.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  // The board each step was found on, for the tiles its words name.
-  const board = state.grid.slice();
-  const steps: HintStep<ClustersMove, ClustersHintHighlights, ClustersRung>[] =
-    plan.deductions.map((d) => {
-      const highlights = buildHighlights(d, state.w);
-      const target = { x: d.index % state.w, y: (d.index / state.w) | 0 };
-      const words = narrate(d, target, board, state.w);
-      board[d.index] = d.fill;
-      return {
-        move: { kind: "paint", cells: [{ index: d.index, fill: d.fill }] },
-        rung: d.reason.kind,
-        explanation: words.text,
-        words,
-        highlights,
-      };
-    });
-  return { ok: true, steps };
-}
-
-/** A move completes the step iff it paints exactly the hinted cell with the
- * hinted color. A multi-cell drag (even one covering the target) changes
- * cells the plan didn't account for, so it drops the plan to recompute. */
-function hintKeepTrack(
-  m: ClustersMove,
-  step: HintStep<ClustersMove>,
-  _state: ClustersState,
-): HintTrackVerdict {
-  if (m.kind !== "paint" || step.move.kind !== "paint") return "off";
-  if (m.cells.length !== 1) return "off";
-  const want = step.move.cells[0];
-  const got = m.cells[0];
-  return got.index === want.index && got.fill === want.fill ? "completed" : "off";
-}
-
 /** A tap on each cell the step colors. */
 function hintGesture(
   state: ClustersState,
   ui: ClustersUi,
   ds: ClustersDrawState,
   move: ClustersMove,
-  step: HintStep<ClustersMove>,
+  step: HintStep<ClustersMove, ClustersHint>,
 ): readonly PointerAction[] {
   if (move.kind !== "paint") return [];
   const { w } = state;
   const cells = move.cells.map(({ index }) => ({ x: index % w, y: (index / w) | 0 }));
   return verbClicks(
     targetVerbs,
-    { executeMove, hintKeepTrack },
+    { executeMove, hintKeepTrack: clustersKeepTrack },
     state,
     ui,
     ds,
@@ -483,7 +368,7 @@ export const clustersGame: Game<
   ClustersUi,
   ClustersDrawState,
   ClustersMistake,
-  ClustersHintHighlights,
+  ClustersHint,
   ClustersRung
 > = {
   id: "clusters",
@@ -507,7 +392,7 @@ export const clustersGame: Game<
 
   solve,
   difficulty,
-  hint,
+  hint: clustersHint,
   hintMarks: {
     roles: {
       ring: "the square the step colors. It is drawn empty: the sentence says which color it must be.",
@@ -516,7 +401,8 @@ export const clustersGame: Game<
     },
   },
   hintRungs: CLUSTERS_RUNGS,
-  hintKeepTrack,
+  hintKeepTrack: clustersKeepTrack,
+  refreshHintStep: clustersRefreshHintStep,
   hintGesture,
   findMistakes,
   clearMistakes,
