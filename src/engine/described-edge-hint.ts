@@ -98,10 +98,12 @@ export interface EdgeHintSpec<
   /** Brings the marks up to what the board shows before each firing is
    * taken (links the player can read at a glance, say), where that is more
    * than the steps made so far have left on them. `false` where the board
-   * contradicts itself, which ends the hint as a contradiction does. */
+   * contradicts itself, which ends the hint as a contradiction does. It may
+   * also note the board as it stands in `ctx`, for the step that follows the
+   * firing to tell what the firing changed (Magnets). */
   settle?(marks: CellMarks, ctx: Ctx): boolean;
-  /** The most firings a plan holds: a player rarely follows more, and a
-   * recompute yields the next batch. */
+  /** The most steps a plan holds, a firing's last leg included: a player rarely
+   * follows more, and a recompute yields the next batch. */
   plan: number;
   /** The elements a firing writes, which the walk continues from. Left out, a
    * firing writes the two cells each of its edges lies between. */

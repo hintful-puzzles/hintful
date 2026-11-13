@@ -127,6 +127,9 @@ techniques:
     tier: Easy
     for: "c in cells where |cand(c)| < 2"
     conclude: "|cand(c)| = 1 and (known(c) or place(c, first(cand(c))))"
+    says:
+      terms: { c: c }
+      marks: { reads: "cells(tile(c))" }
   # Upstream scans the columns, then the rows, reading each count of a line
   # in turn. A line holding all of a value its count asks has no room for
   # another; one with just as many open squares able to take it as it still
@@ -141,6 +144,20 @@ techniques:
       holds(L, d) <= v and |O| >= v - holds(L, d)
       and (holds(L, d) < v or (forall c in O: strike(c, d)))
       and (holds(L, d) = v or |O| > v - holds(L, d) or (forall c in O: place(c, d)))
+    says:
+      terms: { L: L, d: d }
+      marks: { reads: "cells(L)" }
+      arms:
+        # The line holds all of the value its count asks.
+        full:
+          when: "holds(L, d) = v"
+          terms: {}
+          marks: {}
+        # The line needs as many more as it has squares able to take them.
+        exact:
+          when: "holds(L, d) < v"
+          terms: {}
+          marks: {}
   # Where a line's neutral squares are all placed, its open squares are
   # poles, alternating along each stretch, so an even stretch holds as many
   # + as −. A line needing one more of a pole than of the other has it from
@@ -155,6 +172,9 @@ techniques:
       S = {c in O where index(c, stretch(L, c, O)) = 0 and |stretch(L, c, O)| mod 2 = 1}
       where |S| = 1
     conclude: "place(first(S), d)"
+    says:
+      terms: { L: L, d: d }
+      marks: { reads: "cells(L)" }
   # A magnet lying along a line brings it one + and one −, whichever way
   # round, so where the line's magnets, both ends of each in M, make up its
   # count of a pole, no other open square of it holds that pole.
@@ -165,6 +185,9 @@ techniques:
       d in range(1, 3) where d != 2, v = clue(count, L, d)
       where v >= 0 and 2 * (v - holds(L, d)) = |M|
     conclude: "forall c in cells(L) where not known(c) and c not in M: strike(c, d)"
+    says:
+      terms: { L: L }
+      marks: { reads: "cells(L)" }
   # An open tile lying along a line, neutral, would bring it two neutral
   # squares, so a line with room for one more has none.
   - id: oneNeutral
@@ -174,6 +197,9 @@ techniques:
       forall c in cells(L) where not known(c),
       p in others(c) where p in cells(L) and not known(p):
       strike(c, 2)
+    says:
+      terms: { L: L }
+      marks: { reads: "cells(L)" }
   # A tile brings a line at most one of a pole, so a line needing as many of
   # one as it has open tiles has a pole from each, and none is neutral.
   - id: everyTile
@@ -183,6 +209,9 @@ techniques:
       T = set(tile(c) over c in cells(L) where not known(c))
       where |T| > 0 and v - holds(L, d) = |T|
     conclude: "forall c in cells(L) where not known(c): strike(c, 2)"
+    says:
+      terms: { L: L, d: d }
+      marks: { reads: "cells(L)" }
   # A line needing as many of a pole as it has tiles able to bring one has
   # it from each, so a tile with one end able to holds it there.
   - id: onlyEnd
@@ -193,3 +222,6 @@ techniques:
       T = set(tile(c) over c in O)
       where |T| > 0 and v - holds(L, d) = |T|
     conclude: "forall c in O where not (exists p in others(c): p in O): place(c, d)"
+    says:
+      terms: { L: L, d: d }
+      marks: { reads: "cells(L)" }

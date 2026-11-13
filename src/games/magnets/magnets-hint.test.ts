@@ -14,10 +14,10 @@ import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import {
+  changesOf,
   type MagnetsHighlights,
   magnetsKeepTrack,
-  recordingPass,
-  seedMarks,
+  walkFirings,
 } from "./hint.ts";
 import {
   type Axis,
@@ -115,12 +115,12 @@ const pinned = describeHintPins({
     /** Held on 365 of 1022 positions walked. */
     mark: "5x6de:23322,213222,23232,212322,TTLRTBBLRBTLRTTBTTBBTBBLRBLRLR",
     /** Held on 1015 of 1022 positions walked. */
-    force:
+    single:
       "7x8dt:3231433,33212314,3323332,33303133,TTTLRTTBBBLRBBTLRLRLRBLRTLRTTTTBLRBBBBTTLRTLRBBLRBLRLRLR",
     /** Held on 819 of 1022 positions walked. */
-    lineFull: "5x6de:23322,213222,23232,212322,TTLRTBBLRBTLRTTBTTBBTBBLRBLRLR",
+    "count.full": "5x6de:23322,213222,23232,212322,TTLRTBBLRBTLRTTBTTBBTBBLRBLRLR",
     /** Held on 858 of 1022 positions walked. */
-    lineExact: {
+    "count.exact": {
       id: "5x6de:21312,112302,21222,113130,LRLRTTTLRBBBTTTTTBBBBBTTTLRBBB",
       moves:
         '[{"type":"flag","idx":5,"mode":"notneutral"},{"type":"flag","idx":6,"mode":"notneutral"}]',
@@ -132,14 +132,14 @@ const pinned = describeHintPins({
         '[{"type":"flag","idx":20,"mode":"notneutral"},{"type":"flag","idx":21,"mode":"notneutral"},{"type":"flag","idx":23,"mode":"notneutral"}]',
     },
     /** Held on 383 of 1022 positions walked. */
-    oneNeutralLeft: "5x6dtS:..22.,3....2,..22.,.1.1.2,TLRLRBLRLRTTTLRBBBLRTTLRTBBLRB",
+    oneNeutral: "5x6dtS:..22.,3....2,..22.,.1.1.2,TLRLRBLRLRTTTLRBBBLRTTLRTBBLRB",
     /** Held on 100 of 1022 positions walked. */
-    everyDominoNeeded: {
+    everyTile: {
       id: "5x6dtS:..22.,3....2,..22.,.1.1.2,TLRLRBLRLRTTTLRBBBLRTTLRTBBLRB",
       moves: [{ type: "flag", idx: 27, mode: "notneutral" }],
     },
     /** Held on 187 of 1022 positions walked. */
-    onlyEndLeft: {
+    onlyEnd: {
       id: "5x6dtS:..22.,3....2,..22.,.1.1.2,TLRLRBLRLRTTTLRBBBLRTTLRTBBLRB",
       moves:
         '[{"type":"flag","idx":27,"mode":"notneutral"},{"type":"flag","idx":0,"mode":"notneutral"},{"type":"flag","idx":1,"mode":"notneutral"},{"type":"flag","idx":3,"mode":"notneutral"}]',
@@ -184,18 +184,18 @@ describe("magnets hint", () => {
     const shown = new Set<string>();
     const hidden = new Set<string>();
     for (const { state } of CORPUS) {
-      const seeded = seedMarks(state);
-      if (!seeded) throw new Error("a fresh board failed to seed");
-      const pass = recordingPass(seeded, stepBudget("magnets census"));
-      for (let f = pass.next(); f; f = pass.next()) {
-        const visible = f.placed.length > 0 || f.marked.length > 0;
+      const next = walkFirings(state, stepBudget("magnets census"));
+      for (let f = next(); f !== null; f = next()) {
+        if (f === "contradiction") throw new Error("a fresh board contradicted");
+        const { placed, marked } = changesOf(f.before, f.after, f.reason);
+        const visible = placed.length > 0 || marked.length > 0;
         const key =
           f.reason.kind === "lineFull"
             ? `lineFull/${f.reason.which === NEUTRAL ? "neutral" : "pole"}`
             : f.reason.kind;
         (visible ? shown : hidden).add(key);
         // A firing places or marks, never both: the legs are one kind of move.
-        expect(f.placed.length > 0 && f.marked.length > 0).toBe(false);
+        expect(placed.length > 0 && marked.length > 0).toBe(false);
       }
     }
     // The rungs that set only "cannot be +/−" bits are hidden, always: the

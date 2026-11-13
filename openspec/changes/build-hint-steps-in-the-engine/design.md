@@ -801,6 +801,35 @@ defect found in the game, said which.
 - **A test changed**: the one that read the plan's count of hidden firings reads
   that the reported board has a dot inside a cell, which is the class.
 
+### Magnets, built (2026-11-13): `settle` takes the board before, and no hook was added
+
+- **As read.** `describedEdgeHint` took Magnets as it stood: `settle` stores the
+  `Snapshot` in the walk's `ctx` before every firing (`noteBoard`), `step` takes
+  the second one from the live marks, derives what the firing placed or marked
+  (`changesOf`) and returns no legs where it did neither (the old `showable`, the
+  hidden firings of `marked` and of a pole's `count.full`). The sentences, the
+  journey's legs and `reading.ts` are the game's, unchanged.
+- **`says`** is `terms` of the binding for all seven techniques, `marks: { reads }`
+  of the squares the old walk read (the line, or the tile), and `count` has two
+  arms, `full` (`holds(L, d) = v`) and `exact` (`holds(L, d) < v`), which are the
+  old `lineFull` and `lineExact`. `reasonOf(sp, kind, terms)` is the old reason
+  callbacks in one switch; no `holds` term was needed, because the arm reads it.
+- **Rungs are the module's kinds** (`SAYS_KINDS` less `marked`, which is never
+  shown): `single`, `count.full`, `count.exact`, `oddGap`, `oneNeutral`,
+  `everyTile`, `onlyEnd`. The pins' keys, the ledger and `hint-quality`'s follow.
+- **Comparison.** 10,597 lines at `HEAD` (every preset, 12 boards each, the plan
+  recomputed and listed after each first step applied, plan cap lifted on both):
+  byte-identical but the rung census. The fingerprint's hashes, taken at `HEAD`,
+  equal the new tree's with the cap lifted; at the new cap one board (`5x6
+  Normal #1`) differs, since the plan now holds 24 steps and its recompute begins
+  elsewhere.
+- **Changes of behavior**: the plan holds 24 steps (it held 24 firings, a journey's
+  legs not counted); the marks clashing, or a contradiction mid-walk, is
+  `DEDUCTION_EXHAUSTED` or the unlocalized refusal (it was `PUZZLE_NOT_REASONABLE`).
+- **The two tests that read `recordingPass`** read `walkFirings` (`{ reason,
+  before, after }`) and `changesOf`: the reading test's claim is about each
+  firing's board, and is held as it was.
+
 ### Magnets, read before it was built (2026-11-13, by reading `magnets/hint.ts`, `solver.ts` and the yaml)
 
 - **The shape is `describedEdgeHint`'s, with `settle` taking the "before".** The

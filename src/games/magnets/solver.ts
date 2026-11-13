@@ -31,7 +31,6 @@ import {
   strikingRung,
   TIERS,
   uncluedPlacingRung,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import * as magnets from "./magnets.compiled.ts";
@@ -134,68 +133,41 @@ export function magnetsLadder(dl: magnets.Dealt): Ladder {
     pair: placingRung(magnets.pair, dl),
     repel: uncluedPlacingRung(magnets.repel),
     tile: strikingRung(magnets.tile, dl),
-    single: uncluedRung(
-      magnets.single,
-      ({ c }): MagnetsReason => ({ kind: "force", cell: c }),
-    ),
-    count: compiledRung(
-      magnets.count,
-      dl,
-      ({ L, d, v }, _c, _n, m): MagnetsReason => ({
-        // A line's count read as met strikes; read as just reachable, it
-        // places.
-        kind:
-          m.sp.lineCells[L].filter((c) => m.grid[c] === d).length < v
-            ? "lineExact"
-            : "lineFull",
-        line: lineOf(m.sp, L),
-        which: whichOf(d),
-      }),
-    ),
-    oddGap: compiledRung(
-      magnets.oddGap,
-      dl,
-      ({ L, d }, _c, _n, m): MagnetsReason => ({
-        kind: "oddGap",
-        line: lineOf(m.sp, L),
-        which: whichOf(d),
-      }),
-    ),
-    marked: compiledRung(
-      magnets.marked,
-      dl,
-      ({ L }, _c, _n, m): MagnetsReason => ({
-        kind: "magnetsFill",
-        line: lineOf(m.sp, L),
-      }),
-    ),
-    oneNeutral: compiledRung(
-      magnets.oneNeutral,
-      dl,
-      ({ L }, _c, _n, m): MagnetsReason => ({
-        kind: "oneNeutralLeft",
-        line: lineOf(m.sp, L),
-      }),
-    ),
-    everyTile: compiledRung(
-      magnets.everyTile,
-      dl,
-      ({ L, d }, _c, _n, m): MagnetsReason => ({
-        kind: "everyDominoNeeded",
-        line: lineOf(m.sp, L),
-        which: whichOf(d),
-      }),
-    ),
-    onlyEnd: compiledRung(
-      magnets.onlyEnd,
-      dl,
-      ({ L, d }, _c, _n, m): MagnetsReason => ({
-        kind: "onlyEndLeft",
-        line: lineOf(m.sp, L),
-        which: whichOf(d),
-      }),
-    ),
+    single: compiledRung(magnets.single, dl),
+    count: compiledRung(magnets.count, dl),
+    oddGap: compiledRung(magnets.oddGap, dl),
+    marked: compiledRung(magnets.marked, dl),
+    oneNeutral: compiledRung(magnets.oneNeutral, dl),
+    everyTile: compiledRung(magnets.everyTile, dl),
+    onlyEnd: compiledRung(magnets.onlyEnd, dl),
   });
+}
+
+/** The premise a firing acted on, from what its technique said. */
+export function reasonOf(
+  sp: GridSpace,
+  kind: (typeof magnets.SAYS_KINDS)[number],
+  terms: magnets.SaysById[keyof magnets.SaysById]["terms"],
+): MagnetsReason {
+  const { c, L, d } = terms as { c: number; L: number; d: number };
+  switch (kind) {
+    case "single":
+      return { kind: "force", cell: c };
+    case "count.full":
+      return { kind: "lineFull", line: lineOf(sp, L), which: whichOf(d) };
+    case "count.exact":
+      return { kind: "lineExact", line: lineOf(sp, L), which: whichOf(d) };
+    case "oddGap":
+      return { kind: "oddGap", line: lineOf(sp, L), which: whichOf(d) };
+    case "marked":
+      return { kind: "magnetsFill", line: lineOf(sp, L) };
+    case "oneNeutral":
+      return { kind: "oneNeutralLeft", line: lineOf(sp, L) };
+    case "everyTile":
+      return { kind: "everyDominoNeeded", line: lineOf(sp, L), which: whichOf(d) };
+    case "onlyEnd":
+      return { kind: "onlyEndLeft", line: lineOf(sp, L), which: whichOf(d) };
+  }
 }
 
 /** The marks over `values`, every open square holding what its tile allows

@@ -11,21 +11,18 @@
  * it re-derives it from the board, in the board's own terms.
  */
 
+import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
+import { spokenOf } from "../../engine/described-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  type HintRefusal,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import {
   type CellMarks,
   type Ladder,
   ladderWalk,
+  type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import { type StepBudget, stepBudget } from "../../engine/step-budget.ts";
+import type { StepBudget } from "../../engine/step-budget.ts";
 import {
   type Axis,
   type Cause,
@@ -34,6 +31,7 @@ import {
   SQUARE,
   say,
 } from "./hint-text.ts";
+import * as magnets from "./magnets.compiled.ts";
 import {
   lineCells,
   lineTarget,
@@ -51,6 +49,7 @@ import {
   magnetsMarks,
   magnetsSpace,
   placedValues,
+  reasonOf,
   whichOf,
 } from "./solver.ts";
 import {
@@ -71,9 +70,9 @@ import {
 } from "./state.ts";
 
 /**
- * How far ahead the plan is computed: a UX bound, not a correctness one. A
- * player rarely follows more than a handful of steps before going their own
- * way, and the plan is recomputed then anyway; it also keeps `hint()` cheap
+ * How many steps ahead the plan is computed: a UX bound, not a correctness
+ * one. A player rarely follows more than a handful of steps before going their
+ * own way, and the plan is recomputed then anyway; it also keeps `hint()` cheap
  * enough to call after every move, which the cross-game resume walk does.
  */
 const PLAN_CAP = 24;
@@ -84,8 +83,8 @@ export interface Snapshot extends ReadableBoard {
   readonly flags: Int32Array;
 }
 
-/** One deduction, and what it decided. */
-export interface MagnetsFiring {
+/** One deduction, and what it decided, as the sentences read it. */
+interface MagnetsFiring {
   reason: MagnetsReason;
   /** The board as the deduction found it, which is what its sentence cites. */
   before: Snapshot;
@@ -96,7 +95,7 @@ export interface MagnetsFiring {
 }
 
 /** The compiled ladder's marks where the player stands, and what reads them. */
-export interface HintBoard {
+interface HintBoard {
   readonly w: number;
   readonly h: number;
   readonly common: MagnetsCommon;
@@ -111,7 +110,7 @@ export interface HintBoard {
  * board `findMistakes` passed, which re-solves and checks both, so none of
  * this can contradict; `null` if it somehow does.
  */
-export function seedMarks(state: MagnetsState): HintBoard | null {
+function seedMarks(state: MagnetsState): HintBoard | null {
   const { w, h, wh, flags, common } = state;
   const dl = dealtOf(w, h, common);
   const ladder = magnetsLadder(dl);
@@ -125,7 +124,7 @@ export function seedMarks(state: MagnetsState): HintBoard | null {
 
 /** The marks as the sentences read them: a placed square's value and set
  * bit, and a "cannot be" bit for each value a square has lost. */
-export function snapshot(b: HintBoard): Snapshot {
+function snapshot(b: HintBoard): Snapshot {
   const { m } = b;
   const n = m.grid.length;
   const grid = new Int32Array(n);
@@ -161,66 +160,109 @@ function endOf(s: Snapshot, reason: MagnetsReason, first: number): number {
   return first;
 }
 
-/**
- * The next firing from the board's marks, or `null` when the ladder is
- * exhausted (`impossible` says whether it stopped on a contradiction). Every
- * tier's techniques are tried: a shared game ID carries no difficulty. The
- * walk takes the firing that carries on from the squares and lines it has
- * just decided, never a harder one than the ladder's own next.
- */
-export function recordingPass(
-  b: HintBoard,
-  budget: StepBudget,
-): { next: () => MagnetsFiring | null; impossible: () => boolean } {
-  const { w, h, m } = b;
-  m.budget = budget;
-  const lineCells = ({ roworcol, num }: MagnetsLine): number[] =>
-    roworcol === ROW
-      ? Array.from({ length: w }, (_, x) => num * w + x)
-      : Array.from({ length: h }, (_, y) => y * w + num);
-  // The square and its partner, or the line whose clue it counts, and what
-  // the firing decides.
-  const walk = ladderWalk(m, b.ladder.entries, { [TIERS]: DIFF_TRICKY }, (f) => {
-    const r = f.reasons[0] as MagnetsReason;
-    return [
-      ...(r.kind === "force" ? [r.cell, b.common.dominoes[r.cell]] : lineCells(r.line)),
-      ...f.facts.filter((_, i) => i % 3 === 1),
-    ];
-  });
-  let contradiction = false;
+/** What the walk reads a firing by: the marks, and the board as the player's
+ * sentences read it, taken before each firing ({@link noteBoard}). */
+interface MagnetsWalkContext {
+  board: HintBoard;
+  before: Snapshot;
+}
 
-  const next = (): MagnetsFiring | null => {
-    const before = snapshot(b);
+/**
+ * What the hint walks: the marks where the player stands and the whole
+ * ladder over them (every tier: a shared game ID carries no difficulty), or
+ * `null` where the marks clash.
+ */
+function magnetsWalk(
+  state: MagnetsState,
+): { marks: CellMarks; entries: Ladder["entries"]; ctx: MagnetsWalkContext } | null {
+  const board = seedMarks(state);
+  if (!board) return null;
+  return {
+    marks: board.m,
+    entries: board.ladder.entries,
+    ctx: { board, before: snapshot(board) },
+  };
+}
+
+/** Before each firing, the board as it stands: what the firing's sentence
+ * cites, and what its placements are told from. */
+function noteBoard(_m: CellMarks, ctx: MagnetsWalkContext): boolean {
+  ctx.before = snapshot(ctx.board);
+  return true;
+}
+
+/** What a firing did to the board the player writes on: a domino placed (the
+ * end the reason is about), or marked `?`. A firing that sets only the
+ * solver's "cannot be + / −" bits does neither. */
+export function changesOf(
+  before: Snapshot,
+  after: Snapshot,
+  reason: MagnetsReason,
+): { placed: { idx: number; which: number }[]; marked: number[] } {
+  const placed = new Set<number>();
+  const marked = new Set<number>();
+  for (let i = 0; i < after.grid.length; i++) {
+    if (after.flags[i] === before.flags[i]) continue;
+    const d = dominoOf(after, i);
+    if (after.flags[i] & GS_SET && !(before.flags[i] & GS_SET)) placed.add(d);
+    else if (
+      !(after.flags[i] & GS_SET) &&
+      after.flags[i] & GS_NOTNEUTRAL &&
+      !(before.flags[i] & GS_NOTNEUTRAL)
+    )
+      marked.add(d);
+  }
+  return {
+    placed: [...placed].map((d) => {
+      const idx = endOf(after, reason, d);
+      return { idx, which: after.grid[idx] };
+    }),
+    marked: [...marked],
+  };
+}
+
+/** The kind of a firing the walk took: its technique, and the arm that held. */
+function kindOf(taken: Taken): (typeof magnets.SAYS_KINDS)[number] {
+  const { arm } = spokenOf<{ arm?: string }>(taken).says;
+  return (
+    arm === undefined ? taken.entry.id : `${taken.entry.id}.${arm}`
+  ) as ReturnType<typeof kindOf>;
+}
+
+/**
+ * The ladder's firings from the board `state` shows, each with the board
+ * before and after it, `null` when none is left and `"contradiction"` where
+ * the marks clash: the engine's walk, for a test to read each firing's board.
+ */
+export function walkFirings(
+  state: MagnetsState,
+  budget: StepBudget,
+): () =>
+  | { reason: MagnetsReason; before: Snapshot; after: Snapshot }
+  | null
+  | "contradiction" {
+  const walked = magnetsWalk(state);
+  if (walked === null) throw new Error("magnets hint: the board's marks clash");
+  const { marks: m, entries, ctx } = walked;
+  m.budget = budget;
+  const walk = ladderWalk(m, entries, { [TIERS]: DIFF_TRICKY }, (taken) => [
+    ...spokenOf<{ marks: { reads: readonly number[] } }>(taken).says.marks.reads,
+  ]);
+  return () => {
+    const before = snapshot(ctx.board);
     const taken = walk.next();
-    if (taken === "contradiction") contradiction = true;
-    if (taken === null || taken === "contradiction") return null;
-    const after = snapshot(b);
-    const placed = new Set<number>();
-    const marked = new Set<number>();
-    for (let i = 0; i < w * h; i++) {
-      if (after.flags[i] === before.flags[i]) continue;
-      const d = dominoOf(after, i);
-      if (after.flags[i] & GS_SET && !(before.flags[i] & GS_SET)) placed.add(d);
-      else if (
-        !(after.flags[i] & GS_SET) &&
-        after.flags[i] & GS_NOTNEUTRAL &&
-        !(before.flags[i] & GS_NOTNEUTRAL)
-      )
-        marked.add(d);
-    }
-    const reason = taken.reasons[0] as MagnetsReason;
+    if (taken === null || taken === "contradiction") return taken;
     return {
-      reason,
+      reason: reasonOf(
+        m.sp,
+        kindOf(taken),
+        spokenOf<{ terms: magnets.SaysById[keyof magnets.SaysById]["terms"] }>(taken)
+          .says.terms,
+      ),
       before,
-      placed: [...placed].map((d) => {
-        const idx = endOf(after, reason, d);
-        return { idx, which: after.grid[idx] };
-      }),
-      marked: [...marked],
+      after: snapshot(ctx.board),
     };
   };
-
-  return { next, impossible: () => contradiction };
 }
 
 // --- narration ------------------------------------------------------------
@@ -749,25 +791,35 @@ function legsOf(f: MagnetsFiring): Leg[] {
   }));
 }
 
-/** The premises a step can speak, by the `kind` of the solver's reason.
- * `magnetsFill` is not one: it sets only bits the board already says, so
- * `magnetsHint` shows none of its firings. */
-export const MAGNETS_RUNGS = [
-  "force",
-  "lineFull",
-  "lineExact",
-  "oddGap",
-  "oneNeutralLeft",
-  "everyDominoNeeded",
-  "onlyEndLeft",
-] as const satisfies readonly Exclude<MagnetsReason["kind"], "magnetsFill">[];
-export type MagnetsRung = (typeof MAGNETS_RUNGS)[number];
+/** The kinds of step a hint can speak: the description's, less `marked`,
+ * which sets only bits the board already says, so none of its firings is
+ * shown. */
+export type MagnetsRung = Exclude<(typeof magnets.SAYS_KINDS)[number], "marked">;
+export const MAGNETS_RUNGS = magnets.SAYS_KINDS.filter(
+  (k): k is MagnetsRung => k !== "marked",
+);
 
-type MagnetsStep = HintStep<MagnetsMove, MagnetsHighlights, MagnetsRung>;
+/** What a step's sentence is told of it: the words its firing's reading made
+ * for the leg. */
+interface MagnetsMarked {
+  words: Sentence;
+}
 
 /** A firing as the journey the player is shown: one leg per domino, every leg
- * speaking the firing's one sentence, the rings shrinking as legs are done. */
-function stepsOf(f: MagnetsFiring): MagnetsStep[] {
+ * speaking the firing's one sentence, the rings shrinking as legs are done. A
+ * firing that changes nothing the player writes is no step. */
+function stepOf(
+  fired: Fired<magnets.SaysById[keyof magnets.SaysById], MagnetsWalkContext>,
+): { move: MagnetsMove; highlights: MagnetsHighlights; marked: MagnetsMarked }[] {
+  const { taken, says, ctx, marks } = fired;
+  const reason = reasonOf(marks.sp, kindOf(taken), says.terms);
+  const before = ctx.before;
+  const f: MagnetsFiring = {
+    reason,
+    before,
+    ...changesOf(before, snapshot(ctx.board), reason),
+  };
+  if (f.placed.length === 0 && f.marked.length === 0) return [];
   const legs = legsOf(f);
   const r = f.reason;
   if (r.kind === "magnetsFill")
@@ -799,37 +851,48 @@ function stepsOf(f: MagnetsFiring): MagnetsStep[] {
     );
     return {
       move: leg.move,
-      rung: r.kind,
-      explanation: words.text,
-      words,
       highlights: { reasonClues: [...new Set(told.reasonClues)] },
-      ...(k > 0 ? { continuesPrevious: true } : {}),
+      marked: { words },
     };
   });
 }
 
-/** Deduce the plan from the player's board. */
-export function magnetsHint(
-  state: MagnetsState,
-): { ok: true; steps: MagnetsStep[] } | { ok: false; error: HintRefusal } {
-  const board = seedMarks(state);
-  if (!board) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  const pass = recordingPass(board, stepBudget("magnets hint"));
-  const { plan } = deduceHintPlan<HintBoard, MagnetsFiring, string>({
-    board,
-    status: (b) =>
-      pass.impossible() ? "broken" : b.m.grid.includes(0) ? "open" : "done",
-    incomplete: "open",
-    next: () => pass.next(),
-    showable: (_, f) => f.placed.length > 0 || f.marked.length > 0,
-    planCap: PLAN_CAP,
-  });
-  // A contradiction on a board `findMistakes` called clean would mean the
-  // deduction is unsound, not that the player went wrong.
-  if (pass.impossible()) return { ok: false, error: PUZZLE_NOT_REASONABLE };
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps: plan.flatMap(stepsOf) };
-}
+const sentence = (_spoken: unknown, { words }: MagnetsMarked): Sentence => words;
+
+/**
+ * The plan from the player's own board, by the engine's walk: every tier's
+ * techniques, the firing that carries on from the squares and lines the walk
+ * has just decided. A contradiction on a board `findMistakes` called clean
+ * would mean the deduction is unsound, not that the player went wrong.
+ */
+export const magnetsHint = describedEdgeHint<
+  MagnetsState,
+  MagnetsMove,
+  MagnetsHighlights,
+  MagnetsMarked,
+  MagnetsWalkContext,
+  magnets.SaysById,
+  MagnetsRung
+>({
+  name: "magnets hint",
+  walk: magnetsWalk,
+  settle: noteBoard,
+  tiers: { lowest: () => DIFF_TRICKY, count: DIFF_TRICKY + 1 },
+  plan: PLAN_CAP,
+  done: (m) => !m.grid.includes(0),
+  step: stepOf,
+  say: {
+    single: sentence,
+    count: sentence,
+    oddGap: sentence,
+    marked: () => {
+      throw new Error("magnets hint: a hidden premise reached narration");
+    },
+    oneNeutral: sentence,
+    everyTile: sentence,
+    onlyEnd: sentence,
+  },
+});
 
 // --- following the plan ---------------------------------------------------
 

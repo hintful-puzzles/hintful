@@ -13,7 +13,7 @@ import { presetMenu } from "../../engine/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { newMagnetsDesc } from "./generator.ts";
-import { recordingPass, seedMarks, snapshot } from "./hint.ts";
+import { walkFirings } from "./hint.ts";
 import { magnetsGame } from "./index.ts";
 import { type ReadableBoard, whyNot } from "./reading.ts";
 import {
@@ -44,12 +44,12 @@ describe("magnets board reading", () => {
       for (let seed = 0; seed < SEEDS; seed++) {
         const label = `${p.w}x${p.h}d${p.diff}${p.stripclues ? "s" : ""}#${seed}`;
         const { desc } = newMagnetsDesc(p, randomNew(`magnets-reading-${label}`));
-        const seeded = seedMarks(newState(p, desc));
-        if (!seeded) throw new Error(`${label}: a fresh board failed to seed`);
-        const pass = recordingPass(seeded, stepBudget("magnets reading"));
+        const next = walkFirings(newState(p, desc), stepBudget("magnets reading"));
         boards++;
-        while (pass.next()) {
-          const now = snapshot(seeded);
+        for (let f = next(); f !== null; f = next()) {
+          expect(f, label).not.toBe("contradiction");
+          if (f === "contradiction") break;
+          const now = f.after;
           for (let i = 0; i < now.grid.length; i++) {
             if (now.flags[i] & GS_SET) continue;
             for (const [bit, pole] of [
@@ -65,7 +65,6 @@ describe("magnets board reading", () => {
             }
           }
         }
-        expect(pass.impossible(), label).toBe(false);
       }
     }
     expect(unread).toEqual([]);

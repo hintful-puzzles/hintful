@@ -19,6 +19,21 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "single" | "count" | "oddGap" | "marked" | "oneNeutral" | "everyTile" | "onlyEnd";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  single: SingleSays;
+  count: CountSays;
+  oddGap: OddGapSays;
+  marked: MarkedSays;
+  oneNeutral: OneNeutralSays;
+  everyTile: EveryTileSays;
+  onlyEnd: OnlyEndSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["single","count.full","count.exact","oddGap","marked","oneNeutral","everyTile","onlyEnd"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "pair" | "repel";
 
@@ -260,11 +275,17 @@ export interface SingleBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SingleSays {
+  terms: { c: number; };
+  marks: { reads: readonly number[]; };
+}
+
 const singleFacts: number[] = [];
 let singleCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null): number {
+export function single(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SingleBinding, SingleSays> | null): number {
   const facts = singleFacts;
   let fired = 0;
   let changed = false;
@@ -293,7 +314,10 @@ export function single(b: Marks, sp: GridSpace, fire: Fire<SingleBinding> | null
     if (!(_c7)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { c: v_c }, marks: { reads: cl.tile.cells[cl.tile.of[v_c]].slice() } };
+        if (!fire({ c: v_c }, facts, _says)) return 1;
+      }
       cands.fill(-1);
     }
   }
@@ -307,10 +331,16 @@ export interface CountBinding {
   O: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type CountSays =
+  | { arm: "full"; terms: { L: number; d: number; }; marks: { reads: readonly number[]; } }
+  | { arm: "exact"; terms: { L: number; d: number; }; marks: { reads: readonly number[]; } }
+;
+
 const countFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBinding> | null): number {
+export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBinding, CountSays> | null): number {
   const _g14: number[] = [];
   const facts = countFacts;
   let fired = 0;
@@ -409,7 +439,28 @@ export function count(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountBindin
         if (!(_c46)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, O: v_O.slice() }, facts)) return 1;
+          if (fire !== null) {
+            let _g47 = 0;
+            G48: {
+              const _a49 = sp.lineCells[v_L];
+              for (let _i50 = 0; _i50 < _a49.length; _i50++) {
+                const v_c = _a49[_i50];
+                if (!(((b.grid[v_c] || -1) === v_d))) continue;
+                _g47++;
+              }
+            }
+            let _arm = -1;
+            if ((_g47 === v_v)) _arm = 0; else if ((_g47 < v_v)) _arm = 1;
+            let _says: CountSays | null = null;
+            if (_arm === 0) {
+              _says = { arm: "full", terms: { L: v_L, d: v_d }, marks: { reads: sp.lineCells[v_L].slice() } };
+            }
+            if (_arm === 1) {
+              _says = { arm: "exact", terms: { L: v_L, d: v_d }, marks: { reads: sp.lineCells[v_L].slice() } };
+            }
+            if (_says === null) throw new Error("count: no arm of says holds");
+            if (!fire({ L: v_L, d: v_d, v: v_v, O: v_O.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -425,10 +476,16 @@ export interface OddGapBinding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OddGapSays {
+  terms: { L: number; d: number; };
+  marks: { reads: readonly number[]; };
+}
+
 const oddGapFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function oddGap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OddGapBinding> | null): number {
+export function oddGap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OddGapBinding, OddGapSays> | null): number {
   const _g53: number[] = [];
   const _g59: number[] = [];
   const facts = oddGapFacts;
@@ -587,7 +644,10 @@ export function oddGap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OddGapBind
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, n: v_n, d: v_d, O: v_O.slice(), S: v_S.slice() }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { L: v_L, d: v_d }, marks: { reads: sp.lineCells[v_L].slice() } };
+              if (!fire({ L: v_L, n: v_n, d: v_d, O: v_O.slice(), S: v_S.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -603,11 +663,17 @@ export interface MarkedBinding {
   v: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface MarkedSays {
+  terms: { L: number; };
+  marks: { reads: readonly number[]; };
+}
+
 const markedFacts: number[] = [];
 let markedCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n^0.5. */
-export function marked(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MarkedBinding> | null): number {
+export function marked(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MarkedBinding, MarkedSays> | null): number {
   const _g22: number[] = [];
   const _g38: number[] = [];
   const facts = markedFacts;
@@ -723,7 +789,10 @@ export function marked(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MarkedBind
           if (!(_q55)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, M: v_M.slice(), d: v_d, v: v_v }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { L: v_L }, marks: { reads: sp.lineCells[v_L].slice() } };
+              if (!fire({ L: v_L, M: v_M.slice(), d: v_d, v: v_v }, facts, _says)) return 1;
+            }
             cands.fill(-1);
             inMagnetMarkedKept.clear();
           }
@@ -739,10 +808,16 @@ export interface OneNeutralBinding {
   n: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OneNeutralSays {
+  terms: { L: number; };
+  marks: { reads: readonly number[]; };
+}
+
 const oneNeutralFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function oneNeutral(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneNeutralBinding> | null): number {
+export function oneNeutral(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneNeutralBinding, OneNeutralSays> | null): number {
   const facts = oneNeutralFacts;
   let fired = 0;
   let changed = false;
@@ -809,7 +884,10 @@ export function oneNeutral(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneNeu
       if (!(_q24)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L, n: v_n }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { L: v_L }, marks: { reads: sp.lineCells[v_L].slice() } };
+          if (!fire({ L: v_L, n: v_n }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -823,11 +901,17 @@ export interface EveryTileBinding {
   T: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface EveryTileSays {
+  terms: { L: number; d: number; };
+  marks: { reads: readonly number[]; };
+}
+
 const everyTileFacts: number[] = [];
 const everyTile_st25 = stamps();
 
 /** Its dearest read grows with the board as n^0.5. */
-export function everyTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EveryTileBinding> | null): number {
+export function everyTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EveryTileBinding, EveryTileSays> | null): number {
   const _g21: number[] = [];
   const facts = everyTileFacts;
   let fired = 0;
@@ -917,7 +1001,10 @@ export function everyTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EveryTi
           if (!(_q51)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, T: v_T.slice() }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { L: v_L, d: v_d }, marks: { reads: sp.lineCells[v_L].slice() } };
+              if (!fire({ L: v_L, d: v_d, v: v_v, T: v_T.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -934,11 +1021,17 @@ export interface OnlyEndBinding {
   T: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OnlyEndSays {
+  terms: { L: number; d: number; };
+  marks: { reads: readonly number[]; };
+}
+
 const onlyEndFacts: number[] = [];
 const onlyEnd_st37 = stamps();
 
 /** Its dearest read grows with the board as n^0.5. */
-export function onlyEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyEndBinding> | null): number {
+export function onlyEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyEndBinding, OnlyEndSays> | null): number {
   const _g27: number[] = [];
   const _g33: number[] = [];
   const facts = onlyEndFacts;
@@ -1055,7 +1148,10 @@ export function onlyEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyEndBi
           if (!(_q67)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, d: v_d, v: v_v, O: v_O.slice(), T: v_T.slice() }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { L: v_L, d: v_d }, marks: { reads: sp.lineCells[v_L].slice() } };
+              if (!fire({ L: v_L, d: v_d, v: v_v, O: v_O.slice(), T: v_T.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }

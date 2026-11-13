@@ -174,7 +174,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["magnets"],
-    rungs: ["onlyEndLeft"],
+    rungs: ["onlyEnd"],
     why:
       "Where a tile lies along the line, its count premise carries three: the " +
       "line's count of tiles, why each other square of it cannot take the pole, " +
@@ -188,7 +188,7 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["magnets"],
-    rungs: ["lineExact"],
+    rungs: ["count.exact"],
     why:
       "The count premise and why every other empty square of the line can't " +
       "take the pole are two premises, already cut to one clause per kind of " +
