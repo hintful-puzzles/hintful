@@ -2,12 +2,48 @@ import { describe, expect, it } from "vitest";
 import { pathGame } from "../games/path/index.ts";
 import { pathWalk } from "../games/path/solver.ts";
 import { DIFF_NORMAL, MODE_PATH, newState } from "../games/path/state.ts";
+import { newDesc as newSlantDesc } from "../games/slant/generator.ts";
+import { deduceHintPlan } from "../games/slant/solver.ts";
+import { DIFF_HARD, newState as slantNewState } from "../games/slant/state.ts";
 import { MARK, PLACE, STRIKE, STRIKE_EDGE } from "./describe-runtime.ts";
 import { FactGraph, placeNotes, readsOf } from "./fact-graph.ts";
 import { ladderWalk, TIERS } from "./ladder-runtime.ts";
 import { randomNew } from "./random/index.ts";
 
 const reads = (cells: number[], edges: number[] = []) => ({ cells, edges });
+
+describe("a placing hook's facts", () => {
+  it("are a firing of their own, resting on the placed cell, with the value struck", () => {
+    let hooks = 0;
+    for (const seed of ["a", "b", "c", "d", "e", "f"]) {
+      const p = { w: 7, h: 7, diff: DIFF_HARD };
+      const state = slantNewState(p, newSlantDesc(p, randomNew(`h${seed}`)).desc);
+      const { graph } = deduceHintPlan(
+        state.w,
+        state.h,
+        state.clues,
+        state.soln,
+        state.alike,
+      );
+      for (const f of graph.facts) {
+        if (f.kind !== STRIKE_EDGE || f.parents === null) continue;
+        const rests = graph.restsOn(f.id);
+        // A strike made by a placement rests on the fact placing the cell.
+        const placed = f.parents
+          .map((id) => graph.facts[id])
+          .filter((q) => q.kind === PLACE);
+        if (placed.length === 0) continue;
+        hooks++;
+        expect(rests.facts.some((q) => q.kind === PLACE)).toBe(true);
+        expect([1, 2]).toContain(f.value);
+        // The hook's firing is not the placement's own.
+        expect(placed.every((q) => q.firing < f.firing)).toBe(true);
+      }
+    }
+    // Seven boards of seven squares a side draw dozens of diagonals.
+    expect(hooks).toBeGreaterThan(20);
+  });
+});
 
 describe("what a fact rests on", () => {
   it("is the facts about what its firing read, transitively, and the elements no fact made", () => {

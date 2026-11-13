@@ -30,6 +30,7 @@ import {
   MARK,
   type Marks,
   RELATE,
+  type Reads,
   STRIKE,
   STRIKE_EDGE,
 } from "./describe-runtime.ts";
@@ -122,6 +123,10 @@ export class CellMarks implements Marks {
   recorder?: DeductionRecorder;
   /** The hint path's fixpoint budget, set with {@link recorder}. */
   budget?: StepBudget;
+  /** The facts a walk keeps ({@link ladderWalk}), where one is walking: a
+   * placing technique's strikes are made inside the placement, so it records
+   * them here as a firing of their own. */
+  graph?: FactGraph;
   /** Whether a recorded run takes every firing of a technique's pass, as the
    * solve path does, rather than one a pass. For a caller that asks which
    * firings a solve made and not the order a hint would make them in: one
@@ -786,8 +791,14 @@ export function placingRung<B, C>(
       m.sp,
       cl,
       c,
-      m.recorder
-        ? (_, facts) => {
+      m.recorder || m.graph
+        ? (_, facts, says?: { reads?: Reads }) => {
+            // The strikes follow the placed cell, which the technique reads
+            // whether or not it says what else it does.
+            m.graph?.record(facts, {
+              cells: [c, ...(says?.reads?.cells ?? [])],
+              edges: says?.reads?.edges ?? [],
+            });
             m.applyFacts(facts, (i) => m.cullReason(c, facts[i + 1]));
             return true;
           }
@@ -1146,6 +1157,7 @@ export function ladderWalk<S extends CellMarks>(
   };
   let taken: Taken<S> | null = null;
   const graph = new FactGraph();
+  m.graph = graph;
   const techniques = entries
     .filter((e) => admits(e, caps))
     .map((entry): DeductionTechnique => {

@@ -17,6 +17,7 @@ import {
   rangeMask,
   slash,
 } from "../../engine/describe-runtime.ts";
+import type { FactGraph } from "../../engine/fact-graph.ts";
 import {
   CellMarks,
   compiledRung,
@@ -336,7 +337,7 @@ export function deduceHintPlan(
   clues: Int8Array,
   soln: Int8Array,
   alike: Uint8Array,
-): { firings: SlantFiring[]; trace: SlantTrace } {
+): { firings: SlantFiring[]; trace: SlantTrace; graph: FactGraph } {
   const dl = dealtOf(clues);
   const ladder = slantLadder(dl);
   const sp = describedSpace(slant.units, w, h);
@@ -440,7 +441,7 @@ export function deduceHintPlan(
       before[e] &= ~(1 << n);
     }
   }
-  return { firings, trace };
+  return { firings, trace, graph: walk.graph };
 }
 
 /**

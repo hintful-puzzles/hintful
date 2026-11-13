@@ -45,6 +45,9 @@ export interface Fact {
   readonly firing: number;
   /** The fact's kind: `STRIKE`, `PLACE`, `STRIKE_EDGE`, `MARK` or `RELATE`. */
   readonly kind: number;
+  /** The value it is about: the one placed, the candidate struck, the mark
+   * struck from an edge. */
+  readonly value: number;
   /** What it is about, `null` for a relation. */
   readonly about: { readonly space: Space; readonly at: number } | null;
   /** The facts it rests on, by id, in the order made; `null` where its
@@ -119,6 +122,7 @@ export class FactGraph {
         id,
         firing,
         kind,
+        value: facts[i + 2],
         about: space === null ? null : { space, at: facts[i + 1] },
         parents: kind === RELATE ? null : parents,
       });
