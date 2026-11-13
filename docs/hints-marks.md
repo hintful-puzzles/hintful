@@ -560,6 +560,14 @@ is drawn over the bands.
   grid is a kind of its own (requirement "A recolored clue is an outline
   reference"). Its hatch, where its line is striped, follows the stripes and
   not the clue: hiding the clue's reference must leave the stripes drawn.
+- **Stripe a line only for a claim about what it holds now.** A fact of the
+  layout that holds in every position (a line that never slides, an area of
+  one cell) is said in words with no mark. Where a step has no outline, its
+  stripes are the Hint button's first beat (requirement "A hint's first beat
+  shows one mark, chosen by the engine"), and a stripe on a fact of the
+  layout would point there at nothing about the board. No guard can tell the
+  two apart, since a Sudoku row is just as fixed a set of squares: what
+  differs is the claim, so read each rung that stripes.
 - **No line is named by a number the board does not draw.** Say "this row"
   over the stripes, or name a destination by the mark on it;
   `hint-quality.test.ts` rejects "row 3" in any sentence.

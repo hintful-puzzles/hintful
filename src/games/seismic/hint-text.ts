@@ -91,11 +91,14 @@ export const say = {
     });
   },
 
-  /** An area of one cell owes only a 1, and needs no notes to say so. */
+  /** An area of one cell owes only a 1, and needs no notes to say so. That the
+   * area is one cell holds in every position, so it is said, not striped: the
+   * first beat shows the ring (`docs/hints-marks.md` § "Hatch the line the
+   * sentence names"). */
   singleton: (at: Point): Sentence =>
     so({
-      look: phrase`${mark.this("stripes", whole(CELL), [at], "area")} is a single cell`,
-      move: phrase`${thisCell(at)} can only be 1`,
+      look: phrase`${thisCell(at)} is an area by itself`,
+      move: phrase`it can only be 1`,
     }),
 
   naked: (at: Note, w: number): Sentence =>

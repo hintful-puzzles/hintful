@@ -1,6 +1,2 @@
-# Scaffolded without a delta: the session that takes it writes the
-# `engine-hints` requirement (a first-beat mark depends on the position) once
-# the census has found what the rule must cover, and removes skip_specs.
 schema: spec-driven
 created: 2026-11-13
-skip_specs: true

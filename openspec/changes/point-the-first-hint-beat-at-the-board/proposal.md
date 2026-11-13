@@ -32,6 +32,42 @@ sanity check that the census, run on the tree before that commit
 old stripe back to see the new guard fail, and take the other games from the
 census.
 
+## The census (2026-11-13)
+
+Over every hinting game's gate presets, up to 40 steps a board, each step
+with a first beat: 4,982 steps, whose first beat is an outline in 3,297,
+stripes in 442 and the ring in 1,243. The query is a throwaway vitest file
+that walks the plan as `src/engine/hint-look.test.ts` does and groups
+`whereToLook()`'s mark by game, rung and role, with an example sentence.
+Every rung found (44 stripe-first, 204 outline-first) was read.
+
+- **Its power**: run on the tree before `e483be152`, it lists Netslide's
+  `frozenLine` stripe-first in 7 of 14 steps, with "This row never slides".
+- **One case in today's tree**: Seismic's `singleton`, "This area is a single
+  cell" over a striped area of one cell (2 steps). Fixed here: the cell is
+  ringed and the sentence says it ("This cell is an area by itself, so it can
+  only be 1.").
+- **Every other stripe** is the scope of a claim about what the line holds
+  now ("No other cell in this row can be 2", "This row already has its one
+  boat square"). Galaxies' `mirrorWall` outlines the board's edge, a layout
+  fact, but never as its first beat: the dot it names first is one element.
+- **Pearl's `square`** ("This white pearl sits on the board's edge") is a
+  deduction from the layout alone, but its first beat is the pearl the line
+  is drawn at, not the fact.
+
+## No guard: why (2026-11-13)
+
+What the proposal asked for was a guard that reads the rule off the step. No
+property of a step separates Netslide's old stripe from a Sudoku row's: both
+are a set of squares fixed by the layout, both hold the step's target, and
+both recur across a board's steps. What differs is the claim made about
+them, which only the sentence says. A guard keyed on a set's recurrence or
+on the words would be a heuristic that misconvicts the rows of every Latin
+game, or a scan of prose. So the rule binds where a game author reads it:
+the first-beat requirement in `engine-hints`, and `docs/hints-marks.md` §
+"Hatch the line the sentence names", which says to read each rung that
+stripes.
+
 ## What Changes
 
 - **A rule**: a step's first beat shows something that depends on the board's
