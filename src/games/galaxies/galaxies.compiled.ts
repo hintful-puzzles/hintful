@@ -18,6 +18,21 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "dotTile" | "split" | "separate" | "enclosed" | "soleOwner" | "onlyReach" | "exclave" | "mirrorWall";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  dotTile: DotTileSays;
+  separate: SeparateSays;
+  enclosed: EnclosedSays;
+  soleOwner: SoleOwnerSays;
+  onlyReach: OnlyReachSays;
+  exclave: ExclaveSays;
+  mirrorWall: MirrorWallSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["dotTile","separate","enclosed","soleOwner","onlyReach","exclave","mirrorWall"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -182,10 +197,16 @@ export interface DotTileBinding {
   q: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface DotTileSays {
+  terms: { q: number; };
+  marks: {  };
+}
+
 const dotTileFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function dotTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DotTileBinding> | null): number {
+export function dotTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DotTileBinding, DotTileSays> | null): number {
   const facts = dotTileFacts;
   let fired = 0;
   let changed = false;
@@ -234,7 +255,10 @@ export function dotTile(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<DotTileBi
     if (!(_q13)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ q: v_q }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { q: v_q }, marks: {  } };
+        if (!fire({ q: v_q }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -281,10 +305,16 @@ export interface SeparateBinding {
   q: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SeparateSays {
+  terms: { e: number; p: number; q: number; };
+  marks: {  };
+}
+
 const separateFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function separate(b: Marks, sp: GridSpace, fire: Fire<SeparateBinding> | null): number {
+export function separate(b: Marks, sp: GridSpace, fire: Fire<SeparateBinding, SeparateSays> | null): number {
   const facts = separateFacts;
   let fired = 0;
   let changed = false;
@@ -307,7 +337,10 @@ export function separate(b: Marks, sp: GridSpace, fire: Fire<SeparateBinding> | 
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ e: v_e, p: v_p, q: v_q }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { e: v_e, p: v_p, q: v_q }, marks: {  } };
+            if (!fire({ e: v_e, p: v_p, q: v_q }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -321,10 +354,16 @@ export interface EnclosedBinding {
   q: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface EnclosedSays {
+  terms: { c: number; N: readonly number[]; q: number; };
+  marks: {  };
+}
+
 const enclosedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
-export function enclosed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EnclosedBinding> | null): number {
+export function enclosed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EnclosedBinding, EnclosedSays> | null): number {
   const _g21: number[] = [];
   const facts = enclosedFacts;
   let fired = 0;
@@ -432,7 +471,10 @@ export function enclosed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Enclosed
         if (!(_c56)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, N: v_N.slice(), q: v_q }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { c: v_c, N: v_N.slice(), q: v_q }, marks: {  } };
+            if (!fire({ c: v_c, N: v_N.slice(), q: v_q }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -446,10 +488,16 @@ export interface SoleOwnerBinding {
   K: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SoleOwnerSays {
+  terms: { c: number; K: readonly number[]; };
+  marks: {  };
+}
+
 const soleOwnerFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^3. */
-export function soleOwner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SoleOwnerBinding> | null): number {
+export function soleOwner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SoleOwnerBinding, SoleOwnerSays> | null): number {
   const _g87: number[] = [];
   const _g124: number[] = [];
   const _g180: number[] = [];
@@ -860,7 +908,10 @@ export function soleOwner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SoleOwn
       if (!(_c277)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ O: v_O.slice(), c: v_c, K: v_K.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c, K: v_K.slice() }, marks: {  } };
+          if (!fire({ O: v_O.slice(), c: v_c, K: v_K.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -872,10 +923,16 @@ export interface OnlyReachBinding {
   K: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OnlyReachSays {
+  terms: { c: number; K: readonly number[]; };
+  marks: {  };
+}
+
 const onlyReachFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function onlyReach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyReachBinding> | null): number {
+export function onlyReach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyReachBinding, OnlyReachSays> | null): number {
   const _g12: number[] = [];
   const facts = onlyReachFacts;
   let fired = 0;
@@ -939,7 +996,10 @@ export function onlyReach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRea
       if (!(_c35)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, K: v_K.slice() }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c, K: v_K.slice() }, marks: {  } };
+          if (!fire({ c: v_c, K: v_K.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -953,11 +1013,17 @@ export interface ExclaveBinding {
   L: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ExclaveSays {
+  terms: { q: number; G: readonly number[]; L: readonly number[]; };
+  marks: {  };
+}
+
 const exclaveFacts: number[] = [];
 const exclave_st28 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
-export function exclave(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExclaveBinding> | null): number {
+export function exclave(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExclaveBinding, ExclaveSays> | null): number {
   const _g22: number[] = [];
   const facts = exclaveFacts;
   let fired = 0;
@@ -1037,7 +1103,10 @@ export function exclave(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExclaveBi
           if (!(_c57)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ c: v_c, q: v_q, G: v_G.slice(), L: v_L.slice() }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { q: v_q, G: v_G.slice(), L: v_L.slice() }, marks: {  } };
+              if (!fire({ c: v_c, q: v_q, G: v_G.slice(), L: v_L.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -1055,10 +1124,16 @@ export interface MirrorWallBinding {
   b2: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface MirrorWallSays {
+  terms: { e: number; a: number; q: number; a2: number; };
+  marks: {  };
+}
+
 const mirrorWallFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function mirrorWall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MirrorWallBinding> | null): number {
+export function mirrorWall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MirrorWallBinding, MirrorWallSays> | null): number {
   const facts = mirrorWallFacts;
   let fired = 0;
   let changed = false;
@@ -1095,7 +1170,10 @@ export function mirrorWall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Mirror
             if (!(true)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ e: v_e, a: v_a, q: v_q, b: v_b, a2: v_a2, b2: v_b2 }, facts)) return 1;
+              if (fire !== null) {
+                const _says = { terms: { e: v_e, a: v_a, q: v_q, a2: v_a2 }, marks: {  } };
+                if (!fire({ e: v_e, a: v_a, q: v_q, b: v_b, a2: v_a2, b2: v_b2 }, facts, _says)) return 1;
+              }
             }
           }
         }

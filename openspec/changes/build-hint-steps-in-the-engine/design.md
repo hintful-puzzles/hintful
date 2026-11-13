@@ -772,6 +772,35 @@ defect found in the game, said which.
   and the claim itself is `settle`'s by construction. The pins' positions moved
   with the plan cap (`hint-scan`).
 
+### Galaxies, built (2026-11-13): the hidden-firings shape needs no hook
+
+- **A firing the board would not take is a step with no legs.** Galaxies' old
+  `showable` filter (a dot inside its own cell forces that cell, the game draws
+  no arrow there, so the firing recurs on every recompute) is what `step`
+  returning `[]` already does for Pearl's `closed` and Rect's drawn rectangles:
+  the walk makes the firing, the game's working board follows it, and the plan
+  counts steps, so a hidden firing costs the cap nothing. The "hook for hidden
+  firings" the read expected is therefore not an addition; Magnets, which has the
+  same `showable`, takes it the same way.
+- **No engine addition.** `describedEdgeHint` took Galaxies as it stood, with
+  `says` the terms of the binding for the seven techniques that fire (`split`
+  makes no fact, only a contradiction, and says nothing) and `marks: {}`.
+  `reasonOf(m, dl, kind, terms)` is the old `perFiring` callbacks in one switch,
+  read on the marks as they stood before the firing: `marksBefore` is a copy of the
+  live marks with the walk's candidates from before the firing and its facts
+  undone (an arrow back to none, a line back to open). The sentence is told the
+  highlights the game made; the walk's reads are the game's `readsOf` on the
+  reason, asked before the firing, on the live marks.
+- **Comparison.** 104,842 lines at `HEAD` (2 presets, 12 boards each, 0/15/35/60% of
+  the solution's lines and half as many arrows played, every recomputed plan
+  listed, plan cap lifted): byte-identical, all seven rungs met, 19 refusals at
+  the same places. The fingerprint's snapshot (taken at `HEAD`) matches.
+- **Changes of behavior**: a contradiction mid-walk is the unlocalized refusal
+  (the old plan ended there with its steps so far). The plan holds 20 steps, as
+  it held 20 showable ones.
+- **A test changed**: the one that read the plan's count of hidden firings reads
+  that the reported board has a dot inside a cell, which is the class.
+
 ### What Pearl, Tracks, Path and Spokes needed beyond `describedEdgeHint` (2026-11-13, read before they were built)
 
 *All four are built (above); this is what the read expected. The carry-on hook it predicted was not needed.*

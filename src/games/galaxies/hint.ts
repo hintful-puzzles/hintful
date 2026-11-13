@@ -14,14 +14,26 @@
  *    plan teaches the reasoning and then cashes it in.
  */
 
-import { deduceHintPlan, type HintPlanResult } from "../../engine/hint-plan.ts";
+import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
+import { spokenOf } from "../../engine/described-hint.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import type { HintStep } from "../../engine/index.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+import type { CellMarks } from "../../engine/ladder-runtime.ts";
 import type { Point } from "../../engine/types.ts";
+import type * as galaxies from "./galaxies.compiled.ts";
 import { type GalaxiesSaid, say } from "./hint-text.ts";
 import type { GalaxiesMove } from "./index.ts";
 import { okToAddAssocWithOpposite } from "./moves.ts";
-import { type GalaxiesFiring, type GalaxiesRung, hintWalk } from "./solver.ts";
+import {
+  type GalaxiesFiring,
+  type GalaxiesRung,
+  galaxiesWalk,
+  HINT_ROLES,
+  HINT_TIER,
+  marksBefore,
+  readsOf,
+  reasonOf,
+} from "./solver.ts";
 import {
   addAssoc,
   checkComplete,
@@ -92,8 +104,8 @@ export interface GalaxiesHint {
  *
  * Showable, not firings: a dot inside its own cell forces that cell, but the
  * game draws no arrow there, so the firing recurs on every recompute and is
- * never shown. `deduceHintPlan` counts shown steps once a `showable` is given,
- * and the step budget catches a firing that decides nothing.
+ * never shown. The engine counts steps, which a firing the board would not
+ * take makes none of.
  */
 const PLAN_CAP = 20;
 
@@ -161,36 +173,97 @@ function applyFiring(b: GalaxiesState, f: GalaxiesFiring): void {
   }
 }
 
-/** Deduce as far as the plan cap allows, from the player's own board. `plan`
- * holds only showable firings; `hidden` counts the ones that advanced the
- * board without being shown. Nothing beyond the ladder: trying a square's
- * dot and following it until something breaks would settle more boards, and
- * was removed on owner acceptance, since it teaches no technique. The hint
- * refuses instead. */
-export function galaxiesHintPlan(
-  state: GalaxiesState,
-): HintPlanResult<Planned, string> {
-  const budget = stepBudget("galaxies hint");
-  const walk = hintWalk(state, budget);
-  return deduceHintPlan<GalaxiesState, Planned, string>({
-    board: cloneState(state),
-    status: (b) => (checkComplete(b, false).complete ? "solved" : "unfinished"),
-    incomplete: "unfinished",
-    // The walk makes each firing on its own marks; the board follows it, so
-    // whether the game would take an arrow is asked of the lines drawn so
-    // far.
-    next: (b) => {
-      const step = walk();
-      if (step === null) return null;
-      const p = planned(b, step.firing);
-      applyFiring(b, step.firing);
-      return p;
-    },
-    showable: (_b, p) => p.showable,
-    planCap: PLAN_CAP,
-    budget,
-  });
+/** What the walk reads a firing by: the board the plan's steps have drawn on,
+ * which says whether the game would take an arrow, and the dots. */
+interface GalaxiesWalkContext {
+  board: GalaxiesState;
+  dl: galaxies.Dealt;
+  marks: CellMarks;
 }
+
+/** What a step's sentence is told of it: the highlights it is read from. */
+interface GalaxiesMarked {
+  highlights: GalaxiesHint;
+}
+
+/** A firing's step, if the player's board would take it: the walk makes each
+ * firing on its own marks and the board follows it, so whether the game would
+ * take an arrow is asked of the lines drawn so far. One it would not take
+ * advances the board and is no step. */
+function stepOf(
+  fired: Fired<galaxies.SaysById[keyof galaxies.SaysById], GalaxiesWalkContext>,
+  state: GalaxiesState,
+): { move: GalaxiesMove; highlights: GalaxiesHint; marked: GalaxiesMarked }[] {
+  const { taken, ctx, before, marks } = fired;
+  const firing = reasonOf(
+    marksBefore(marks, before, taken),
+    ctx.dl,
+    taken.entry.id as keyof galaxies.SaysById,
+    fired.says.terms,
+  );
+  const p = planned(ctx.board, firing);
+  applyFiring(ctx.board, firing);
+  if (!p.showable) return [];
+  const highlights = highlightsOf(state, p.firing);
+  return [{ move: moveOf(p.firing), highlights, marked: { highlights } }];
+}
+
+const sentence = (_spoken: unknown, { highlights }: GalaxiesMarked): Sentence =>
+  say(highlights);
+
+/**
+ * The plan from the player's own board: the deduction as far as the plan cap
+ * allows, a step for each firing the board would take. Nothing beyond the
+ * ladder: trying a square's dot and following it until something breaks would
+ * settle more boards, and was removed on owner acceptance, since it teaches no
+ * technique. The hint refuses instead.
+ *
+ * A dot inside its own cell forces that cell, but the game draws no arrow
+ * there, so the firing recurs on every recompute and is never shown; the
+ * engine's walk takes it without a step, and the step budget catches a firing
+ * that decides nothing.
+ */
+export const galaxiesHint = describedEdgeHint<
+  GalaxiesState,
+  GalaxiesMove,
+  GalaxiesHint,
+  GalaxiesMarked,
+  GalaxiesWalkContext,
+  galaxies.SaysById,
+  GalaxiesRung
+>({
+  name: "galaxies hint",
+  walk: (state) => {
+    const { marks, entries, dl } = galaxiesWalk(state);
+    return { marks, entries, ctx: { board: cloneState(state), dl, marks } };
+  },
+  tiers: { lowest: () => HINT_TIER, count: HINT_TIER + 1 },
+  roles: HINT_ROLES,
+  plan: PLAN_CAP,
+  done: (_marks, { board }) => checkComplete(board, false).complete,
+  // The walk asks before a firing is made, so the live marks are the ones it
+  // was found on.
+  reads: (taken, { dl, marks }) =>
+    readsOf(
+      marks.sp,
+      reasonOf(
+        marks,
+        dl,
+        taken.entry.id as keyof galaxies.SaysById,
+        spokenOf<galaxies.SaysById[keyof galaxies.SaysById]>(taken).says.terms,
+      ),
+    ),
+  step: stepOf,
+  say: {
+    dotTile: sentence,
+    separate: sentence,
+    enclosed: sentence,
+    soleOwner: sentence,
+    onlyReach: sentence,
+    exclave: sentence,
+    mirrorWall: sentence,
+  },
+});
 
 // --- narration --------------------------------------------------------
 
@@ -341,22 +414,6 @@ function moveOf(firing: GalaxiesFiring): GalaxiesMove {
     ops: [{ kind: "assoc", x: at.x, y: at.y, ax: firing.dot.x, ay: firing.dot.y }],
     solving: false,
   };
-}
-
-export function galaxiesHintSteps(
-  state: GalaxiesState,
-): HintStep<GalaxiesMove, GalaxiesHint, GalaxiesRung>[] {
-  return galaxiesHintPlan(state).plan.map((p) => {
-    const highlights = highlightsOf(state, p.firing);
-    const words = say(highlights);
-    return {
-      move: moveOf(p.firing),
-      rung: p.firing.kind,
-      explanation: words.text,
-      words,
-      highlights,
-    };
-  });
 }
 
 // --- following the plan -----------------------------------------------

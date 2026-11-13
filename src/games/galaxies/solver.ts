@@ -23,6 +23,7 @@ import {
   clueList,
   describedSpace,
   type GridSpace,
+  MARK,
   opp,
   rangeMask,
 } from "../../engine/describe-runtime.ts";
@@ -32,14 +33,11 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
-  type ReasonOf,
   runLadder,
   type Taken,
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import * as galaxies from "./galaxies.compiled.ts";
 import {
@@ -175,121 +173,108 @@ export type GalaxiesFiring =
 export const GALAXIES_RUNGS = galaxies.ladder.map((e) => e.id);
 export type GalaxiesRung = galaxies.LadderId;
 
-/** A reason built once a firing, from its binding, and shared by each of its
- * facts: a firing claims a square and its partner, or a dot's squares. */
-function perFiring<B extends object>(
-  build: (binding: B, m: CellMarks) => GalaxiesFiring,
-): ReasonOf<B> {
-  let last: B | null = null;
-  let reason: GalaxiesFiring | null = null;
-  return (binding, _at, _n, m) => {
-    if (binding !== last || reason === null) {
-      last = binding;
-      reason = build(binding, m);
-    }
-    return reason;
-  };
-}
-
-/** The ladder over the dealt board, each technique with its reason, built
- * from the binding on the marks before the firing. */
-function galaxiesLadder(dl: galaxies.Dealt): Ladder {
-  const dot = (sp: GridSpace, q: number): Point => centerPoint(sp, dl.dot.at[q]);
+/**
+ * A firing in the player's terms, from the terms its technique said and the
+ * marks `m` as they stood before it: what a reason reads of the marks is the
+ * arrows and lines it was found on, not the ones it made.
+ */
+export function reasonOf(
+  m: CellMarks,
+  dl: galaxies.Dealt,
+  kind: keyof galaxies.SaysById,
+  terms: galaxies.SaysById[keyof galaxies.SaysById]["terms"],
+): GalaxiesFiring {
+  const { sp } = m;
+  const dot = (q: number): Point => centerPoint(sp, dl.dot.at[q]);
   /** A square claimed for dot `q`, with the partner the move brings. */
-  const claim = (sp: GridSpace, c: number, q: number) => {
+  const claim = (c: number, q: number) => {
     const o = opp(sp, c, dl.dot.at[q]);
     return {
       tile: cellPoint(sp, c),
       opp: o < 0 ? null : cellPoint(sp, o),
-      dot: dot(sp, q),
+      dot: dot(q),
     };
   };
-  const cells = (sp: GridSpace, xs: readonly number[]): Point[] =>
-    xs.map((c) => cellPoint(sp, c));
+  const cells = (xs: readonly number[]): Point[] => xs.map((c) => cellPoint(sp, c));
+  const t = <K extends keyof galaxies.SaysById>(): galaxies.SaysById[K]["terms"] =>
+    terms as galaxies.SaysById[K]["terms"];
+  switch (kind) {
+    case "dotTile": {
+      const { q } = t<"dotTile">();
+      return {
+        kind,
+        dot: dot(q),
+        tiles: cells(sp.centerCells[dl.dot.at[q]].filter((c) => m.markOf(c) !== q)),
+      };
+    }
+    case "separate": {
+      const { e, p, q } = t<"separate">();
+      return {
+        kind,
+        edge: edgePoint(sp, e),
+        tiles: [
+          cellPoint(sp, sp.edgeEnds[2 * e]),
+          cellPoint(sp, sp.edgeEnds[2 * e + 1]),
+        ],
+        dots: [dot(p), dot(q)],
+      };
+    }
+    case "enclosed": {
+      const { c, N, q } = t<"enclosed">();
+      return {
+        kind,
+        ...claim(c, q),
+        openings: cells(N),
+        galaxy: cells(sp.cells.filter((x) => m.markOf(x) === q)),
+      };
+    }
+    case "soleOwner": {
+      const { c, K } = t<"soleOwner">();
+      return { kind, ...claim(c, K[0]) };
+    }
+    case "onlyReach": {
+      const { c, K } = t<"onlyReach">();
+      return {
+        kind,
+        ...claim(c, K[0]),
+        region: cells(galaxies.reach(m, sp, dl, K[0])),
+      };
+    }
+    case "exclave": {
+      const { q, G, L } = t<"exclave">();
+      return { kind, ...claim(L[0], q), component: cells(G) };
+    }
+    case "mirrorWall": {
+      const { e, a, q, a2 } = t<"mirrorWall">();
+      const at = edgePoint(sp, e);
+      const d = dot(q);
+      return {
+        kind,
+        edge: at,
+        // The edge `e` turns to about the dot: a line, or the grid's rim.
+        from: { x: 2 * d.x - at.x, y: 2 * d.y - at.y },
+        tile: cellPoint(sp, a2),
+        opp: cellPoint(sp, a),
+        dot: d,
+      };
+    }
+  }
+}
+
+/** The ladder over the dealt board: each technique as the description states
+ * it, a firing recording what it says. */
+function galaxiesLadder(dl: galaxies.Dealt): Ladder {
   return describedLadder(galaxies, {
-    dotTile: compiledRung(
-      galaxies.dotTile,
-      dl,
-      perFiring(({ q }: galaxies.DotTileBinding, m) => ({
-        kind: "dotTile",
-        dot: dot(m.sp, q),
-        tiles: cells(
-          m.sp,
-          m.sp.centerCells[dl.dot.at[q]].filter((c) => m.markOf(c) !== q),
-        ),
-      })),
-    ),
+    dotTile: compiledRung(galaxies.dotTile, dl),
     split: uncluedRung(galaxies.split, () => {
       throw new Error("a line inside a galaxy makes no fact, only a contradiction");
     }),
-    separate: uncluedRung(
-      galaxies.separate,
-      perFiring(({ e, p, q }: galaxies.SeparateBinding, m) => ({
-        kind: "separate",
-        edge: edgePoint(m.sp, e),
-        tiles: [
-          cellPoint(m.sp, m.sp.edgeEnds[2 * e]),
-          cellPoint(m.sp, m.sp.edgeEnds[2 * e + 1]),
-        ],
-        dots: [dot(m.sp, p), dot(m.sp, q)],
-      })),
-    ),
-    enclosed: compiledRung(
-      galaxies.enclosed,
-      dl,
-      perFiring(({ c, N, q }: galaxies.EnclosedBinding, m) => ({
-        kind: "enclosed",
-        ...claim(m.sp, c, q),
-        openings: cells(m.sp, N),
-        galaxy: cells(
-          m.sp,
-          m.sp.cells.filter((x) => m.markOf(x) === q),
-        ),
-      })),
-    ),
-    soleOwner: compiledRung(
-      galaxies.soleOwner,
-      dl,
-      perFiring(({ c, K }: galaxies.SoleOwnerBinding, m) => ({
-        kind: "soleOwner",
-        ...claim(m.sp, c, K[0]),
-      })),
-    ),
-    onlyReach: compiledRung(
-      galaxies.onlyReach,
-      dl,
-      perFiring(({ c, K }: galaxies.OnlyReachBinding, m) => ({
-        kind: "onlyReach",
-        ...claim(m.sp, c, K[0]),
-        region: cells(m.sp, galaxies.reach(m, m.sp, dl, K[0])),
-      })),
-    ),
-    exclave: compiledRung(
-      galaxies.exclave,
-      dl,
-      perFiring(({ q, G, L }: galaxies.ExclaveBinding, m) => ({
-        kind: "exclave",
-        ...claim(m.sp, L[0], q),
-        component: cells(m.sp, G),
-      })),
-    ),
-    mirrorWall: compiledRung(
-      galaxies.mirrorWall,
-      dl,
-      perFiring(({ e, a, q, a2 }: galaxies.MirrorWallBinding, m) => {
-        const at = edgePoint(m.sp, e);
-        const d = dot(m.sp, q);
-        return {
-          kind: "mirrorWall",
-          edge: at,
-          // The edge `e` turns to about the dot: a line, or the grid's rim.
-          from: { x: 2 * d.x - at.x, y: 2 * d.y - at.y },
-          tile: cellPoint(m.sp, a2),
-          opp: cellPoint(m.sp, a),
-          dot: d,
-        };
-      }),
-    ),
+    separate: uncluedRung(galaxies.separate),
+    enclosed: compiledRung(galaxies.enclosed, dl),
+    soleOwner: compiledRung(galaxies.soleOwner, dl),
+    onlyReach: compiledRung(galaxies.onlyReach, dl),
+    exclave: compiledRung(galaxies.exclave, dl),
+    mirrorWall: compiledRung(galaxies.mirrorWall, dl),
   });
 }
 
@@ -467,13 +452,9 @@ export function solverState(
 
 // --- the hint's walk ---------------------------------------------------------
 
-/** One firing in the player's terms, and the marks it made: `MARK` facts
- * for arrows, `PLACE` for lines. */
-export type GalaxiesStep = { firing: GalaxiesFiring; facts: readonly number[] };
-
 /** The squares a firing's reason turns on, which a plan continues from: a
  * player follows a galaxy as it grows. */
-function readsOf(sp: GridSpace, f: GalaxiesFiring): number[] {
+export function readsOf(sp: GridSpace, f: GalaxiesFiring): number[] {
   const out: number[] = [];
   const walk = (v: unknown): void => {
     if (Array.isArray(v)) v.forEach(walk);
@@ -489,38 +470,43 @@ function readsOf(sp: GridSpace, f: GalaxiesFiring): number[] {
   return out;
 }
 
-/**
- * The ladder's firings from the marks `s` holds (the player's lines and
- * arrows), one a call, each the one that carries on from the galaxy the plan
- * is working on (`ladderWalk`), or `null` when the ladder has nothing left.
- */
-export function hintWalk(
-  s: GalaxiesState,
-  budget: StepBudget,
-): () => GalaxiesStep | null {
-  const { m, ladder } = deduction(s);
-  m.budget = budget;
-  const walk = ladderWalk(
-    m,
-    ladder.entries,
-    { [TIERS]: TOP },
-    (f: Taken) => readsOf(m.sp, f.reasons[0] as GalaxiesFiring),
-    {
-      // Every rung after it reads a dot's own squares as its own.
-      prerequisite: ["dotTile"] satisfies GalaxiesRung[],
-      // Mirroring a line is Galaxies' signature technique, but as the
-      // routine source of lines it buried everything else (58% of a 7x7
-      // plan's steps, measured), while the lines it drew early are the ones
-      // "these two squares are in different galaxies" says later in the
-      // game's plainest terms. So it fires only where nothing else does.
-      fallback: ["mirrorWall"] satisfies GalaxiesRung[],
-    },
-  );
-  return () => {
-    const taken = walk.next();
-    if (taken === null || taken === "contradiction") return null;
-    return { firing: taken.reasons[0] as GalaxiesFiring, facts: taken.facts };
-  };
+/** The tier the hint's walk runs at: the whole ladder. */
+export const HINT_TIER = TOP;
+
+/** The techniques the hint takes first, and only where nothing else follows. */
+export const HINT_ROLES = {
+  // Every rung after it reads a dot's own squares as its own.
+  prerequisite: ["dotTile"] satisfies GalaxiesRung[],
+  // Mirroring a line is Galaxies' signature technique, but as the
+  // routine source of lines it buried everything else (58% of a 7x7
+  // plan's steps, measured), while the lines it drew early are the ones
+  // "these two squares are in different galaxies" says later in the
+  // game's plainest terms. So it fires only where nothing else does.
+  fallback: ["mirrorWall"] satisfies GalaxiesRung[],
+};
+
+/** What the hint walks: the marks `s` holds (the player's lines and arrows),
+ * the ladder over them, and the board's dots. */
+export function galaxiesWalk(s: GalaxiesState): {
+  marks: CellMarks;
+  entries: Ladder["entries"];
+  dl: galaxies.Dealt;
+} {
+  const { m, ladder, dl } = deduction(s);
+  return { marks: m, entries: ladder.entries, dl };
+}
+
+/** The marks as they stood before `taken` was made, given the candidates
+ * `before` the walk saw: a copy with the firing's lines and arrows undone. */
+export function marksBefore(m: CellMarks, before: Int32Array, taken: Taken): CellMarks {
+  const c = new CellMarks(m.sp, m.domain, m.grid.slice(), null, "edge");
+  c.cands.set(before);
+  c.marked.set(m.marked);
+  for (let i = 0; i < taken.facts.length; i += 3) {
+    if (taken.facts[i] === MARK) c.marked[taken.facts[i + 1]] = -1;
+    else c.grid[taken.facts[i + 1]] = 0;
+  }
+  return c;
 }
 
 /** Upstream's `clear_game(state, false)`: clear everything but the dots and the

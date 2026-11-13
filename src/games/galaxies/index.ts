@@ -26,13 +26,9 @@ import {
 } from "../../engine/difficulty.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
-import {
-  DEDUCTION_EXHAUSTED,
-  PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   type Game,
-  type HintResult,
   type HintStep,
   type HintTrackVerdict,
   type ParamConfigItem,
@@ -78,7 +74,7 @@ import {
   GALAXIES_RUNGS,
   type GalaxiesHint,
   type GalaxiesRung,
-  galaxiesHintSteps,
+  galaxiesHint,
   outstanding,
   stepSatisfied,
 } from "./hint.ts";
@@ -1011,22 +1007,6 @@ function revealOne(s: GalaxiesState, solved: GalaxiesState): GalaxiesMove | null
 // --- the explained hint ---------------------------------------------
 
 /**
- * The whole remaining deduction, narrated. See `hint.ts` for the rules and
- * their wording; the refusals live here because they are about the board the
- * player is looking at, not about the deduction.
- */
-function hint(s: GalaxiesState): HintResult<GalaxiesMove, GalaxiesHint, GalaxiesRung> {
-  const steps = galaxiesHintSteps(s);
-  if (steps.length === 0) {
-    // On an Unreasonable board this is the expected end of the road: what
-    // remains needs a cell tried and followed until something breaks, and the
-    // hint does not teach guessing (see `nextPlanFiring`).
-    return { ok: false, error: DEDUCTION_EXHAUSTED };
-  }
-  return { ok: true, steps };
-}
-
-/**
  * Did this move do what the step asked?
  *
  * Judged by *effect* rather than by matching ops: the same association is
@@ -1242,7 +1222,7 @@ export const galaxiesGame: Game<
   findMistakes,
   clearMistakes,
   revealOne,
-  hint,
+  hint: galaxiesHint,
   hintRungs: GALAXIES_RUNGS,
   hintKeepTrack,
   hintGesture,

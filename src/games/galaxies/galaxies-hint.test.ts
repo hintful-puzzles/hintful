@@ -16,12 +16,7 @@ import type { HintStep } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import {
-  type GalaxiesHint,
-  type GalaxiesRung,
-  galaxiesHintPlan,
-  narrate,
-} from "./hint.ts";
+import { type GalaxiesHint, type GalaxiesRung, narrate } from "./hint.ts";
 import { type GalaxiesMove, galaxiesGame } from "./index.ts";
 import { legalDotsFor } from "./moves.ts";
 import { clearForSolve, GalaxiesDiff, solverState } from "./solver.ts";
@@ -387,9 +382,9 @@ describe("a deduction the player cannot act on never costs the plan a step", () 
     // the same mid-game depth in a few calls instead of dozens, and the plan
     // machinery is what is under test, not the walk.
     for (let batch = 0; batch < 6 && galaxiesGame.status(s) === "ongoing"; batch++) {
-      // The hidden firings no longer sit in the plan: the shared loop drops
-      // them and counts them, which is the number this probe needs.
-      sawUnshowable ||= galaxiesHintPlan(s).hidden > 0;
+      // The class is a dot inside its own cell: its cell is forced and no
+      // arrow is drawable there.
+      sawUnshowable ||= s.dots.some((d) => d.x % 2 === 1 && d.y % 2 === 1);
       const res = galaxiesGame.hint?.(s);
       // A refusal *deep* in an Unreasonable board is legitimate — deduction
       // can genuinely run out there. Refusing at the first ask, on a board
