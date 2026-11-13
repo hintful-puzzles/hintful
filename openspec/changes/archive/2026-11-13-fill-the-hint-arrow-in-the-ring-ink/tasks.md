@@ -25,3 +25,7 @@
 ## 3. Show
 
 - [x] 3.1 Run the app: each game's hint arrow is blue with no ring, and the old arrow goes back to plain when the hint moves on; bring it to the owner
+
+  Accepted by the owner 2026-11-13, with Blackbox's reveal button and
+  Numgame's operators left ringed: the rule in `docs/hints-marks.md` names an
+  arrow in the margin, not every control.

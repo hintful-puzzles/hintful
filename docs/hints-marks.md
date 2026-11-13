@@ -50,7 +50,7 @@ already does it.
 | Section | Read it when |
 | --- | --- |
 | Highlight, never perform | your renderer draws the cell a step acts on |
-| Echo the move's shape in the hint color | your game's moves come in more than one visible kind, decide something that is not a cell, or are made by pressing a control |
+| Echo the move's shape in the hint color | your game's moves come in more than one visible kind, decide something that is not a cell, or are made by pressing an arrow in the margin |
 | Shade vs ring | you choose the mark for a target or for evidence |
 | – A mark on something that is not a cell | your game decides edges, spans, regions or faces |
 | – A piece is ringed as one shape | a step's target or evidence is a piece of several squares |
@@ -123,11 +123,17 @@ rule-out says "connect these", the opposite of its sentence.
 
 The shape goes in `drawRing`'s `inside`, which is clipped to the ring, so it
 adds to the ring and never stands in for it: "ringed" names the round mark
-round it (requirement "A move's shape is shown inside its ring").
+round it (requirement "A move's shape is shown inside its ring"). The hint
+shows where and which action without performing it (§ "Highlight, never
+perform"); a uniform tint cannot express an orientation or a kind.
+Exemplar: `drawHintMarks` in
+[`tracks/render.ts`](../src/games/tracks/render.ts), a pill across a side
+with its rail stubs or cross inside, and a square's ring with the "must be
+empty" cross inside.
 
-**A control the player presses is filled; an element the step acts on is
-ringed.** A control is an arrow or button in the board's margin that the
-player clicks to make the move, such as Netslide's and Sixteen's arrows. The
+**An arrow the player presses is filled; an element the step acts on is
+ringed.** Such an arrow sits in the board's margin and the player clicks it
+to make the move, as in Netslide and Sixteen. The
 hint draws it in its own shape filled with the ring ink
 (`GameDrawing.drawRingInkPolygon`), with no ring round it. A ring with the
 arrow drawn again inside it is two marks for one thing (the owner,
@@ -135,12 +141,9 @@ arrow drawn again inside it is two marks for one thing (the owner,
 `hintControl`, and the stray-ink guard reads that flag, not a list of games.
 An arrow drawn in a cell to give the move's direction (Inertia's ball,
 Twiddle's rotation) is the move's shape, not a control, and stays inside its
-cell's ring. The hint shows where and which action without
-performing it (§ "Highlight, never perform"); a uniform tint cannot express
-an orientation or a kind. Exemplar: `drawHintMarks` in
-[`tracks/render.ts`](../src/games/tracks/render.ts), a pill across a side
-with its rail stubs or cross inside, and a square's ring with the "must be
-empty" cross inside.
+cell's ring. A button with a body of its own (Blackbox's reveal button,
+Numgame's operators) is ringed like any element: its ring doubles nothing,
+and its own color still says what it does.
 
 ## Shade vs ring
 
