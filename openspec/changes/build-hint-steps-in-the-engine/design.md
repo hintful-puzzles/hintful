@@ -715,6 +715,29 @@ defect found in the game, said which.
   (kinds of line step are told by their marks, a plan is asked again as it runs
   out).
 
+### Tents and Galaxies, read before they were built (2026-11-13, by reading)
+
+- **Tents** (`tents/hint.ts`, `solver.ts` `tentsHintWalk`): not Rect's shape.
+  The hint's ladder is not the description's: `hintEntries` swaps its two link
+  techniques for `linkForNear` and `linkForAny` (`keptRung`, which put a
+  `serves` on the reason), and the links the board shows are read afresh
+  (`readLinks`, mutating `m.marked` and `drawn`) before every firing. Both are
+  state kept beside the marks: `walk` can return those entries, `readLinks`
+  can run in `step` after each firing (and in `walk` first), the ctx holding
+  `drawn`. A contradiction from `readLinks` has no way out of `step` yet: the
+  old walk set `broken` and returned null, the plan ending there with
+  `PUZZLE_NOT_REASONABLE`; `step` needs a way to end the walk (a thrown
+  refusal, or `done`) before Tents moves. The reasons are `TentsReason` per
+  binding, `before` is a `gameOf(b, m)` board per firing, and `stepsOf` reads
+  both (~200 lines, the legs: a link, or cells; `lineCount` is two legs). The
+  rung names (`TENTS_RUNGS`) are reason kinds, and `linkForNear`/`linkForAny`
+  are entry ids, not a technique's: the rung of their steps is `tentLink` or
+  `treeLink` (the reason's kind). `PLAN_CAP` is 24 firings.
+- **Galaxies** (`galaxies/hint.ts` 404 lines, `solver.ts` `hintWalk`): the plan
+  has a `showable` filter (hidden firings that are not steps, counted once
+  shown), which is Magnets' hidden-firings shape; read it with Magnets and
+  design the hook once.
+
 ### What Pearl, Tracks, Path and Spokes needed beyond `describedEdgeHint` (2026-11-13, read before they were built)
 
 *All four are built (above); this is what the read expected. The carry-on hook it predicted was not needed.*
