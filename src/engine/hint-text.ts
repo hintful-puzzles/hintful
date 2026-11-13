@@ -279,8 +279,8 @@ export function candidateConclusions(vocab: {
  * A reason names the units it reads where they are not a row and a column
  * (Solo's blocks and diagonals), so every game speaks these arms here but
  * where its words differ, measured against the arms: **Towers** qualifies the
- * value in its hidden single and set and leaves it bare after ("every other
- * cell in this row rules out height 5, so this cell must be 5"), and **Solo**
+ * value in its hidden single and set and leaves it bare after ("no other
+ * cell in this row can be height 5, so this cell must be 5"), and **Solo**
  * says a set's cells as "other cells in this block". One vocabulary can't
  * express a per-arm difference, and forcing it would read worse than the
  * duplication (docs/hints-candidates.md § "Persist, populate, and the moves"'s

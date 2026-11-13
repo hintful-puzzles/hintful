@@ -191,7 +191,7 @@ describe("salad hint — the three signature techniques", () => {
     // The standing bar: no "just because" fallback (docs/solver-and-generator.md § "Guess-free generation"). Every
     // narration must match one of the arms the game knows how to say.
     const KNOWN =
-      /(sees [A-C1-9] first|fit \S+ only in the outlined squares|empty squares?, so this square and the rest|and the rest of it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|(?:their|its) empty-square marks? must go|ruled out in this square|square in this (?:row|column) rules out|too, for the same (?:row|column)|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
+      /(sees [A-C1-9] first|fit \S+ only in the outlined squares|empty squares?, so this square and the rest|and the rest of it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|(?:their|its) empty-square marks? must go|ruled out in this square|square in this (?:row|column) can be|too, for the same (?:row|column)|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
     for (const p of [LETTERS, NUMBERS, { ...LETTERS, diff: DIFF_HARD }]) {
       for (const t of walk(p, "bar-1").texts) {
         expect(t, `unnamed technique: ${t}`).toMatch(KNOWN);

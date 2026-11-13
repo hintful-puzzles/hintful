@@ -3,8 +3,8 @@
  *
  * Towers speaks the generic Latin arms in the engine's words
  * (`engine/hint-text.ts`, by {@link TOWERS_VOCAB}) but its hidden single and
- * set, whose values it qualifies in one clause and not the other ("every other
- * cell in this row rules out height 5, so this cell must be 5"), which one
+ * set, whose values it qualifies in one clause and not the other ("no other
+ * cell in this row can be height 5, so this cell must be 5"), which one
  * vocabulary cannot say. Its two setup steps
  * are built by the row/column preset from the two words Towers gives it
  * (`index.ts`'s `notes`).
