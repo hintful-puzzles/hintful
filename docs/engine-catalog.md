@@ -70,6 +70,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `hint-finishes.ts` — whether deduction finishes a board |
 | – `answer-search.ts` — a deductive game's Unreasonable tier |
 | – `sections.ts` — contract sections and the draft label |
+| – `fact-graph.ts` — what a fact rests on |
 | – `deduction-record.ts` — the recorded-firing shape |
 | – `wing.ts` — the XY- and XYZ-wing |
 | – `firing-replay.ts` — the premise audit |
@@ -689,6 +690,15 @@ help's "Not in this game" section. **A guard that would excuse a game for
 lacking a section reads `sectionState`** and keeps no ledger. See
 [`mechanics.md`](./mechanics.md) § "Contract sections, and what makes a
 draft".
+
+### `fact-graph.ts` — what a fact rests on
+
+`ladderWalk` keeps a `FactGraph` of the facts a hint's walk made, each with
+its firing. A fact's parents are derived from the firing's `says.reads`
+(the earlier facts about any element read), so no game writes a parent list;
+`restsOn(id)` gives the facts it rests on, the board's own marks it reached
+(roots), and whether every firing in the chain reported its reads. Read it
+before building a trace, a note's placement or a verdict's explanation.
 
 ### `deduction-record.ts` — the recorded-firing shape
 

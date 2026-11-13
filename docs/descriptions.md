@@ -1103,6 +1103,14 @@ not a read of the board and is not recorded. Cost (Path's `lineBreaks`,
 way), about 980 lines of compiled module, so opt in only where the engine
 consumes it. Exemplar: `path-witness.test.ts`.
 
+**What a fact rests on is the engine's, derived from the reads**: `ladderWalk`
+keeps a `FactGraph` (`engine/fact-graph.ts`, `walk.graph`) of every fact the
+walk made, with its firing, and a fact's parents are the earlier facts about
+any element its firing read. `restsOn(id)` answers from any fact: what it
+rests on transitively, the elements read that no fact made (the board's own
+marks), and `complete: false` where a firing in the chain did not say `reads`.
+A game writes no parent list. Relation facts have no readable element yet.
+
 **The witness is read where the sentence is built, by the name of what it
 holds**, not written into a term: `witnessOfDef(w, "shortNear")` finds the
 definition's node (null where that part of the formula did not hold, so its

@@ -33,6 +33,7 @@ import {
   STRIKE,
   STRIKE_EDGE,
 } from "./describe-runtime.ts";
+import { FactGraph, readsOf } from "./fact-graph.ts";
 import { type CellBoard, FiringReplay } from "./firing-replay.ts";
 import { MADE } from "./marks-made.ts";
 import { type StepBudget, stepBudget } from "./step-budget.ts";
@@ -1091,6 +1092,9 @@ export interface LadderWalk<S extends CellMarks = CellMarks> {
   /** The firing taken and made, `null` once none is left, or
    * `"contradiction"` where a technique finds the marks inconsistent. */
   next(): Taken<S> | null | "contradiction";
+  /** The facts the firings taken so far made, each with its firing and
+   * parents, and what any of them rests on. */
+  readonly graph: FactGraph;
 }
 
 /**
@@ -1141,6 +1145,7 @@ export function ladderWalk<S extends CellMarks>(
     return out;
   };
   let taken: Taken<S> | null = null;
+  const graph = new FactGraph();
   const techniques = entries
     .filter((e) => admits(e, caps))
     .map((entry): DeductionTechnique => {
@@ -1160,6 +1165,7 @@ export function ladderWalk<S extends CellMarks>(
               reads: () => reads(f),
               writes: () => (roles.writes ? roles.writes(f) : cellsOf(f.facts)),
               take: () => {
+                graph.record(f.facts, readsOf(f));
                 m.group++;
                 m.applyFacts(f.facts, (i) => f.reasons[i / 3]);
                 taken = f;
@@ -1175,6 +1181,7 @@ export function ladderWalk<S extends CellMarks>(
     continuing: true,
   });
   return {
+    graph,
     next() {
       taken = null;
       if (driver.next() === null) return driver.impossible() ? "contradiction" : null;
