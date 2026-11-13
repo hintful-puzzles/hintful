@@ -19,7 +19,7 @@ already does it.
 1. Write every sentence in `hint-text.ts` with `phrase` and a `mark`
    reference wherever it points at the board: a ring on what the step
    decides, an outline on what it reasons from, stripes on the line or region
-   it names, a strike on a note it rules out (`hints.md` § "Bind the words to
+   whose contents it reasons from, a strike on a note it rules out (`hints.md` § "Bind the words to
    the marks").
 2. Declare the roles the steps name as `hintMarks.roles` in `index.ts`, and
    put `{{hint-marks}}` in the `hints` of the game's description.
@@ -325,8 +325,9 @@ comes out as one contour and a scattered set as one ring a cell.
   mark another some other way.
 - **Never drop the evidence mark.** Where a sentence says "this cage" and the
   target sits in a different one, the mark is the only thing saying which.
-- **A line or region the sentence names is not evidence**: it is striped
-  (§ "Hatch the line the sentence names").
+- **A whole line or region whose contents the step reads is striped, not
+  outlined** (§ "Hatch the line the sentence names"): an outline marks
+  particular things.
 - **A cell a step strikes notes in is outlined where the sentence names it.**
   The step decides the notes, which their strikes mark, and reasons from what
   can go in the cell; a ring keeps its one meaning, what a step decides
@@ -560,14 +561,15 @@ is drawn over the bands.
   grid is a kind of its own (requirement "A recolored clue is an outline
   reference"). Its hatch, where its line is striped, follows the stripes and
   not the clue: hiding the clue's reference must leave the stripes drawn.
-- **Stripe a line only for a claim about what it holds now.** A fact of the
-  layout that holds in every position (a line that never slides, an area of
-  one cell) is said in words with no mark. Where a step has no outline, its
-  stripes are the Hint button's first beat (requirement "A hint's first beat
-  shows one mark, chosen by the engine"), and a stripe on a fact of the
-  layout would point there at nothing about the board. No guard can tell the
-  two apart, since a Sudoku row is just as fixed a set of squares: what
-  differs is the claim, so read each rung that stripes.
+- **Stripe a line only for a claim about what it holds now**: stripes mark
+  the line or region whose contents the step reasons from (requirement "The
+  engine SHALL own the hint mark roles and the words for them"). A fact of
+  the layout that holds in every position (a line that never slides, an area
+  of one cell) takes no mark and is said in words. Where a step has no
+  outline its stripes are the Hint button's first beat, and a stripe on a
+  fact of the layout would point there at nothing about the board. No guard
+  can tell the two apart, since a Sudoku row is just as fixed a set of
+  squares: what differs is the claim, so read each rung that stripes.
 - **No line is named by a number the board does not draw.** Say "this row"
   over the stripes, or name a destination by the mark on it;
   `hint-quality.test.ts` rejects "row 3" in any sentence.

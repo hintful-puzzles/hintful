@@ -38,40 +38,30 @@ export const NARRATION_LIMIT = 120;
  * (`make-rings-round`, D6). */
 export type MarkRole = "ring" | "outline" | "stripes" | "strike";
 
+/** A role's words. What each role marks is the `engine-hints` requirement "The
+ * engine SHALL own the hint mark roles and the words for them". */
 interface MarkRoleWords {
-  /** The mark, as a thing: "ring". */
-  readonly noun: string;
   /** A marked element, described: "the ringed square". */
   readonly adjective: string;
-  /** What the mark says about the element, in every game. */
-  readonly means: string;
   /** How the help's list of marks opens its entry: "**A ring** marks …". */
   readonly listed: readonly [lead: string, verb: string];
 }
 
 const MARK_ROLES: Readonly<Record<MarkRole, MarkRoleWords>> = {
   ring: {
-    noun: "ring",
     adjective: "ringed",
-    means: "what the step decides",
     listed: ["A ring", "marks"],
   },
   outline: {
-    noun: "outline",
     adjective: "outlined",
-    means: "what the step reasons from",
     listed: ["An outline", "marks"],
   },
   stripes: {
-    noun: "stripes",
     adjective: "striped",
-    means: "the line or region the sentence names",
     listed: ["Stripes", "mark"],
   },
   strike: {
-    noun: "strike",
     adjective: "struck",
-    means: "a note the step rules out",
     // How it looks is the engine's (`drawStrike`), so the legend says it here
     // and a game's entry says only what it marks.
     listed: ["A strike through a note", "marks"],

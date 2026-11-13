@@ -11,4 +11,5 @@
 - [x] 2.2 Add the guard, deriving its population from each game's `hint()`, and see it fail on Netslide's striped fixed line before trusting it — declined, with the reason in the proposal § "No guard: why"; the census found the old Netslide stripe instead
 - [x] 2.3 For each game the census finds, drop the structural stripe from its marks: Seismic's `singleton`
 - [x] 2.4 Run the app: the first click lands on the tile to move in Netslide, and on board state in each other game found (Seismic's single-cell area: the ring on the cell, then "This cell is an area by itself, so it can only be 1.")
-- [ ] 2.5 The owner sees the result before the change is archived
+- [x] 2.5 The owner sees the result before the change is archived — waived by the owner (2026-11-13)
+- [x] 2.6 Define stripes in the roles requirement as the line or region whose contents the step reasons from, and delete the unread role-meaning copies

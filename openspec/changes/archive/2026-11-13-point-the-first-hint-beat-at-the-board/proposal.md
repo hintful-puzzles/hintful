@@ -63,10 +63,19 @@ are a set of squares fixed by the layout, both hold the step's target, and
 both recur across a board's steps. What differs is the claim made about
 them, which only the sentence says. A guard keyed on a set's recurrence or
 on the words would be a heuristic that misconvicts the rows of every Latin
-game, or a scan of prose. So the rule binds where a game author reads it:
-the first-beat requirement in `engine-hints`, and `docs/hints-marks.md` §
-"Hatch the line the sentence names", which says to read each rung that
-stripes.
+game, or a scan of prose. So the rule binds where a game author chooses a mark: in the
+role itself. The `engine-hints` requirement on the roles defines stripes as
+the line or region whose contents the step reasons from (it was "the line or
+region the sentence names"), and a fact of the layout takes no role.
+`docs/hints-marks.md` § "Hatch the line the sentence names" says to read
+each rung that stripes. The role table's unread `means` and `noun` copies in
+`hint-words.ts` are deleted, so the definition has one home.
+
+The owner (2026-11-13), asked between this and dropping stripes from the
+first beat (the outline, else the ring; 442 steps would point at the cell
+rather than its row): either, whichever works best across the catalog, and
+no acceptance needed. Kept stripes in the first beat: a row is the better
+nudge, and the role's definition is one standard every game already shares.
 
 ## What Changes
 

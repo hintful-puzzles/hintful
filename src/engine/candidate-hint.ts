@@ -144,8 +144,8 @@ export interface CandidateHighlights {
   area: Point[];
   targets: Cell[];
   marks: Mark[];
-  /** The cells of the line or region the sentence names, hatched rather
-   * than outlined; left out when it names none. */
+  /** The cells of the line or region whose contents the step reasons from,
+   * hatched rather than outlined; left out when it names none. */
   hatch?: Cell[];
   /** The cells the step rests on beyond `area`: those whose candidates it
    * reads (`candidate-plan.ts`'s `StepWords.reads`), and the placed values a

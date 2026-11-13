@@ -971,7 +971,8 @@ Write every step's words through it. Exemplar:
 `src/skeleton/grid/hint-text.ts`.
 
 - **The three mark roles** are ring (what the step decides), outline (what
-  it reasons from) and stripes (the line or region the sentence names). The
+  it reasons from) and stripes (the line or region whose contents it reasons
+  from). The
   element kinds a mark is drawn on are `CELL`, `NOTE` and a mechanic's own,
   such as `EDGE`.
 - **`phrase` composes a `Narration`** from literal words and `mark.this`,

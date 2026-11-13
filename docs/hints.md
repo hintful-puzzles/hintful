@@ -266,7 +266,7 @@ every hint mark from those references. The roles mean the same in every game:
 |---|---|---|
 | ring | ringed | what the step decides |
 | outline | outlined | what the step reasons from |
-| stripes | striped | the line or region the sentence names |
+| stripes | striped | the line or region whose contents the step reasons from |
 
 **The words.** Write with `phrase` and a reference wherever the sentence
 points: `mark.this("ring", CELL, [c], "cell")` for "this cell",
