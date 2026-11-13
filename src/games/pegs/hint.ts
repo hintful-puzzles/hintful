@@ -156,7 +156,7 @@ export function hasNoSolution(state: PegsState): false | MarkedDeadEnd {
   if (frozen.length === 0) return false;
   const many = frozen.length > 1;
   return markedDeadEnd(
-    phrase`${mark.the("outline", PEG, frozen, "peg").capitalized()} ${many ? "are" : "is"} cut off, so the game can never finish with one peg. Undo until a peg can still land beside ${many ? "each" : "it"}.`,
+    phrase`${mark.the("outline", PEG, frozen, "peg").capitalized()} ${many ? "are" : "is"} cut off, so the game can never finish with one peg. Undo.`,
   );
 }
 

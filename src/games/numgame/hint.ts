@@ -38,7 +38,7 @@ type Plan = HintStep<NumgameMove, unknown, NumgameRung>;
 export function hasNoSolution(state: NumgameState): false | MarkedDeadEnd {
   if (reachOf(state.slots).fewestOps(state.target) !== null) return false;
   return markedDeadEnd(
-    phrase`The numbers left can no longer make ${String(state.target)}. Undo until they can.`,
+    phrase`The numbers left can no longer make ${String(state.target)}. Undo.`,
   );
 }
 

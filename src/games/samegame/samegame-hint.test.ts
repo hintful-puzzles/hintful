@@ -225,7 +225,7 @@ describe("samegame hint", () => {
     const r = hasNoSolution(s);
     if (typeof r === "boolean") throw new Error("expected a marked dead end");
     expect(r.error).toBe(
-      "The outlined square is the last of its color, so the board can never be cleared. Undo until it has another square of its color.",
+      "The outlined square is the last of its color, so the board can never be cleared. Undo.",
     );
     expect(isDeadEnd(r.error)).toBe(true);
     expect(stepMarks(r).of("outline", CELL)).toEqual([{ x: 0, y: 1 }]);

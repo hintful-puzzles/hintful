@@ -174,14 +174,12 @@ export function hasNoSolution(state: SokobanState): false | MarkedDeadEnd {
   const it = stuckBarrel(c);
   if (why === "corner")
     return markedDeadEnd(
-      phrase`${it.capitalized()} is wedged in a corner it can never leave. Undo until it is out.`,
+      phrase`${it.capitalized()} is wedged in a corner it can never leave. Undo.`,
     );
   if (why === "dead")
-    return markedDeadEnd(
-      phrase`No push can bring ${it} to a target. Undo until one can.`,
-    );
+    return markedDeadEnd(phrase`No push can bring ${it} to a target. Undo.`);
   return markedDeadEnd(
-    phrase`${it.capitalized()} is jammed where it can never move again. Undo until it can.`,
+    phrase`${it.capitalized()} is jammed where it can never move again. Undo.`,
   );
 }
 

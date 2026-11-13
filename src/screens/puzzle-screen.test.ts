@@ -180,7 +180,7 @@ describe("puzzle-screen: Check-&-Save command", () => {
   });
 
   it("refuses to save a dead end, in the hint's words, in a modal", async () => {
-    const reason = "The outlined peg is cut off. Undo until it is not.";
+    const reason = "The outlined peg is cut off. Undo.";
     const { host } = makeScreen({
       canCheck: true,
       verdict: { kind: "dead-end", reason },

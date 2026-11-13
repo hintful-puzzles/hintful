@@ -274,12 +274,12 @@ describe("pegs hint", () => {
       expect(deadEndBindingDefects(G, s, G.newUi(s), r)).toEqual([]);
       return [...stepMarks(r).of("outline", PEG)];
     };
-    expect(
-      outlined(TWO_CUT_OFF, /^The outlined pegs are cut off.* beside each\.$/),
-    ).toEqual(frozenPegs(load(TWO_CUT_OFF)));
-    expect(
-      outlined(ONE_CUT_OFF, /^The outlined peg is cut off.* beside it\.$/),
-    ).toEqual([6]);
+    expect(outlined(TWO_CUT_OFF, /^The outlined pegs are cut off.* Undo\.$/)).toEqual(
+      frozenPegs(load(TWO_CUT_OFF)),
+    );
+    expect(outlined(ONE_CUT_OFF, /^The outlined peg is cut off.* Undo\.$/)).toEqual([
+      6,
+    ]);
   });
 
   it("proves nothing of a board with no peg cut off, lost or not", () => {

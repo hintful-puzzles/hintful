@@ -150,7 +150,7 @@ export function hasNoSolution(state: SamegameState): boolean | MarkedDeadEnd {
     "square",
   );
   return markedDeadEnd(
-    phrase`${squares.capitalized()} ${many ? "are each" : "is"} the last of ${many ? "their" : "its"} color, so the board can never be cleared. Undo until ${many ? "each has" : "it has"} another square of its color.`,
+    phrase`${squares.capitalized()} ${many ? "are each" : "is"} the last of ${many ? "their" : "its"} color, so the board can never be cleared. Undo.`,
   );
 }
 
