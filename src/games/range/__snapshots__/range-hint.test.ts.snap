@@ -2,7 +2,7 @@
 
 exports[`range: pinned hint positions > says, at each pin 1`] = `
 {
-  "besideShaded": "This cell touches the outlined purple square, and no two purple squares may touch, so it must be clear.",
+  "besideShaded": "This cell touches the outlined purple square, so it must be clear.",
   "capped.overrun": "If this cell, just past the outlined cells, were clear, this 4 would see more than 4, so it must be purple.",
   "capped.satisfied": "This 2 already sees both of its clear cells (outlined), so the ringed cell just past them must be purple.",
   "cut": "Making this cell purple would cut some of the outlined cells around it off from the rest, so it must stay clear.",

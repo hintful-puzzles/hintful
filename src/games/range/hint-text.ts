@@ -61,7 +61,7 @@ const theClue = (m: Marked, n: number): Narration =>
 export const say = {
   adjacency: (m: Marked): Sentence =>
     so({
-      look: phrase`${thisCell(m)} touches ${mark.the("outline", CELL, m.blacks, `${SHADED_NAME} square`)}, and no two ${SHADED_NAME} squares may touch`,
+      look: phrase`${thisCell(m)} touches ${mark.the("outline", CELL, m.blacks, `${SHADED_NAME} square`)}`,
       move: phrase`it must be ${UNSHADED_NAME}`,
     }),
 
