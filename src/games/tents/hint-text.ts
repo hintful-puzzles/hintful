@@ -96,7 +96,7 @@ export const say = {
   /** Squares no tree is beside. */
   noTree: (cells: readonly Point[]): Sentence =>
     so({
-      look: phrase`Every tent sits beside a tree, and no tree is beside ${these(cells)}`,
+      look: phrase`No tree is beside ${these(cells)}`,
       move: eachMust(cells, "grass"),
     }),
 
