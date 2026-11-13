@@ -1091,6 +1091,17 @@ path's code is the same as without it (`compile.test.ts`, "a witness is
 written for a hint only"). Exemplar: Path's `lineBreaks`
 (`path-witness.test.ts`).
 
+**The witness is read where the sentence is built, by the name of what it
+holds**, not written into a term: `witnessOfDef(w, "shortNear")` finds the
+definition's node (null where that part of the formula did not hold, so its
+absence says which arm held), `witnessNodes(w)` lists every node, outermost
+first, and a `member` node's record is keyed by the binders' own names. A
+game's reason callback that re-read the board to find what broke reads this
+instead (Path's `brokeOf`, `solver.ts`, moved `lineBreaks` and `pairBreaks`
+off `clashOf`: the hint-walk fingerprint, `hint-walk-fingerprint.test.ts`, is
+unchanged, and fails when `brokeOf` names another member or arm). Count and geometry stay the
+game's: the witness names the square, the board says how many ways it has.
+
 A rule that only a run of the validator can name
 (Boats' three trials) stays a reason callback, which receives what the
 technique says and returns it with the rule added: the description cannot

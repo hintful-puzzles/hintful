@@ -327,6 +327,12 @@ export function witnessAll(...parts: (Witness | null)[]): Witness | null {
   return some.length === 1 ? some[0] : { held: "all", of: some };
 }
 
+/** Every node of `w`, outermost first: `w` itself, then what held under it. */
+export function witnessNodes(w: Witness | null): Witness[] {
+  if (w === null) return [];
+  return [w, ...(w.held === "all" ? w.of.flatMap(witnessNodes) : witnessNodes(w.of))];
+}
+
 /** The first node of `w`, outermost first, that is the definition `name`'s. */
 export function witnessOfDef(w: Witness | null, name: string): Witness | null {
   if (w === null) return null;

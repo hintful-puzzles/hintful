@@ -9,8 +9,8 @@
 ## 2. The witness
 
 - [x] 2.1 `compile.ts`: on the hint path a compiled technique reports the held arm of an `or`, the member an `exists` held for, the `with` rule that broke and where; the solve path emits nothing extra (see it fail on a planted change). Opt-in by `says.witness`; planted: arms swapped (`path-witness.test.ts` fails), buffers hoisted out of the hint block (`compile.test.ts` fails). Path's `lineBreaks` is the exemplar. A refutation witness for `not exists fill` is step 4's
-- [ ] 2.2 `says` can name the witness in a term, and `docs/descriptions.md` says how
-- [ ] 2.3 Move one game's `clashOf`-style reason callback onto it (Path, then Spokes), compared by the hint-walk fingerprint
+- [x] 2.2 The witness is named where the sentence is built (`witnessOfDef`, `witnessNodes`, a `member` record keyed by binder names), not in a yaml term: a term is an expression over the board, and what held is not a fact of the board. `docs/descriptions.md` says how
+- [ ] 2.3 Move one game's `clashOf`-style reason callback onto it (Path, then Spokes), compared by the hint-walk fingerprint. Done: Path's `lineBreaks` and `pairBreaks` (`brokeOf`; fingerprint unchanged, fails when the stuck member or the closed/joined arms are planted wrong). Open: `weighed` (its `bothBreak`s are in aggregates, which have no witness: it keeps `clashOf`), Spokes
 
 ## 3. Reads and the fact graph
 

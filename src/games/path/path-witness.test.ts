@@ -7,7 +7,7 @@
  * closes it is placed, so no firing of `lineBreaks` is left to name it.
  */
 import { describe, expect, it } from "vitest";
-import { type Witness, witnessOfDef } from "../../engine/describe-runtime.ts";
+import { witnessNodes, witnessOfDef } from "../../engine/describe-runtime.ts";
 import {
   ladderTechniques,
   runLadder,
@@ -20,12 +20,6 @@ import { pathGame } from "./index.ts";
 import type { LineBreaksBinding, LineBreaksSays } from "./path.compiled.ts";
 import { pathWalk } from "./solver.ts";
 import { DIFF_NORMAL, MODE_PAIRS, MODE_PATH, newState } from "./state.ts";
-
-/** Every node of `w`, outermost first. */
-function nodes(w: Witness | null): Witness[] {
-  if (w === null) return [];
-  return [w, ...(w.held === "all" ? w.of.flatMap(nodes) : nodes(w.of))];
-}
 
 describe("a lineBreaks firing's witness", () => {
   it("names the edge supposed, and the squares read under it", () => {
@@ -57,7 +51,7 @@ describe("a lineBreaks firing's witness", () => {
             expect(arm.arm).toBe(1);
             seen++;
             // The edge the firing crosses out is the one supposed to hold a line.
-            const [s] = nodes(arm).filter((x) => x.held === "supposing");
+            const [s] = witnessNodes(arm).filter((x) => x.held === "supposing");
             if (s === undefined || s.held !== "supposing") throw new Error("no with");
             expect(s.cell).toBe(said.binding.e);
             expect(s.value).toBe(1);

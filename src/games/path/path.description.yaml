@@ -250,6 +250,7 @@ techniques:
     says:
       terms: { c: c, i: i, j: j }
       marks: {}
+      witness: true
   # A square that takes two more lines from four edges left, weighed whole:
   # of its six pairs of edges, those that would not break the board are
   # left. N is the edges some pair left holds. An edge every pair left

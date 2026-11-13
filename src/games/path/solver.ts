@@ -27,6 +27,9 @@ import {
   describedSpace,
   type GridSpace,
   rangeMask,
+  type Witness,
+  witnessNodes,
+  witnessOfDef,
 } from "../../engine/describe-runtime.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
@@ -64,10 +67,10 @@ export type PathReason =
   /** The square has only as many live edges as it still needs lines. */
   | { kind: "forced"; cell: number; need: number }
   /** A line on `tried` would break the board at once, so it is crossed out. */
-  | { kind: "lineBreaks"; tried: number[] }
+  | { kind: "lineBreaks"; tried: number[]; broke: Broke }
   /** Lines on `tried`, two of the three edges square `cell` has left, would
    * break the board at once, so it takes the third. */
-  | { kind: "pairBreaks"; cell: number; tried: number[] }
+  | { kind: "pairBreaks"; cell: number; tried: number[]; broke: Broke }
   /** Square `cell` takes two of its four edges, and every pair of them that
    * leaves the firing's mark unmet is `ruledOut`. */
   | { kind: "weighed"; cell: number; ruledOut: number[][] };
@@ -426,6 +429,36 @@ function numbersWritten(d: Deduction, firing: PathFiring): number[] {
   );
 }
 
+/** What broke where lines are tried: a loop closed, two numbers joined that
+ * may not meet, or a square left short. */
+export type Broke = "closed" | "joined" | { stuck: number };
+
+/**
+ * What the lines a Check tried broke, from its witness. A square left short is
+ * `shortNear`'s: `exists t ...: stuck(t) or (exists s ...: stuck(s))`, so the
+ * member `t` is the square, unless the arm that held is the second, and then
+ * the member under it, `s`. Where `shortNear` was not reached the board broke
+ * earlier: in `bothBreak`'s `(closed or joined) or short` the arms say which;
+ * `lineBreaks` has no `bothBreak` and only closes a loop.
+ */
+function brokeOf(witness: Witness | null): Broke {
+  const near = witnessOfDef(witness, "shortNear");
+  if (near !== null) {
+    const members = witnessNodes(near).flatMap((w) =>
+      w.held === "member" ? [w.member] : [],
+    );
+    const last = members.at(-1);
+    const square = last === undefined ? undefined : (last["s"] ?? last["t"]);
+    if (typeof square !== "number") throw new Error("path: shortNear has no square");
+    return { stuck: square };
+  }
+  const both = witnessOfDef(witness, "bothBreak");
+  if (both === null) return "closed";
+  const arms = witnessNodes(both).flatMap((w) => (w.held === "arm" ? [w.arm] : []));
+  if (arms.length < 2 || arms[0] !== 0) throw new Error("path: bothBreak's arms");
+  return arms[1] === 0 ? "closed" : "joined";
+}
+
 /** Why a taken firing decided its edges, from the terms its technique says. */
 function reasonOf(d: Deduction, taken: Taken): PathReason {
   const { sp, toGame } = d.geo;
@@ -438,11 +471,18 @@ function reasonOf(d: Deduction, taken: Taken): PathReason {
     }
     case "lineBreaks": {
       const { e } = terms as PathSays["lineBreaks"]["terms"];
-      return { kind: "lineBreaks", tried: [toGame[e]] };
+      const { witness } = spokenOf<PathSays["lineBreaks"]>(taken).says;
+      return { kind: "lineBreaks", tried: [toGame[e]], broke: brokeOf(witness) };
     }
     case "pairBreaks": {
       const { c, i, j } = terms as PathSays["pairBreaks"]["terms"];
-      return { kind: "pairBreaks", cell: c, tried: [edge(c, i), edge(c, j)] };
+      const { witness } = spokenOf<PathSays["pairBreaks"]>(taken).says;
+      return {
+        kind: "pairBreaks",
+        cell: c,
+        tried: [edge(c, i), edge(c, j)],
+        broke: brokeOf(witness),
+      };
     }
     case "weighed": {
       const { c, U, P, X } = terms as PathSays["weighed"]["terms"];

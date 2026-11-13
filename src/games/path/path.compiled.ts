@@ -4241,6 +4241,7 @@ export interface PairBreaksBinding {
 export interface PairBreaksSays {
   terms: { c: number; i: number; j: number; };
   marks: {  };
+  witness: Witness | null;
 }
 
 const pairBreaksFacts: number[] = [];
@@ -4285,7 +4286,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
   R1:
   for (let _i520 = 0; _i520 < _a519.length; _i520++) {
     const v_c = _a519[_i520];
-    const _m1672_0 = b.made[0];
+    const _m2852_0 = b.made[0];
     let _g522 = 0;
     G523: {
       const _a524 = sp.adj4[v_c];
@@ -4299,7 +4300,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
     const _h533 = (_h532 !== -1);
     const _h534 = _h533;
     const _h535 = !(_h534);
-    const _m1673_1 = b.made[1];
+    const _m2853_1 = b.made[1];
     L526: {
       const v_U = ways(b, sp, cl, v_c);
       const _h527 = v_U.length;
@@ -5301,7 +5302,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
             _c1154 = _q540;
           }
           if (!(_c1154)) break L530;
-          if (b.made[0] !== _m1672_0 || b.made[1] !== _m1673_1) {
+          if (b.made[0] !== _m2852_0 || b.made[1] !== _m2853_1) {
             let _g1155 = 0;
             G1156: {
               const _a1157 = sp.adj4[v_c];
@@ -6210,7 +6211,1907 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: { c: v_c, i: v_i, j: v_j }, marks: {  } };
+              let _wo1672: Witness | null = null;
+              const _t1674 = ((throughWhere(sp, v_i, (_te1673: number): boolean => {  return ((b.grid[_te1673] || -1) === 1); }).includes(v_j)) || (_h535 && !(meetsMarked(b, sp, cl, cands, v_i, v_j))));
+              if (_t1674) {
+                let _wo1675: Witness | null = null;
+                const _t1677 = (throughWhere(sp, v_i, (_te1676: number): boolean => {  return ((b.grid[_te1676] || -1) === 1); }).includes(v_j));
+                if (_t1677) {
+                  _wo1675 = { held: "arm", arm: 0, of: null };
+                }
+                if (!_t1677) {
+                  _wo1675 = { held: "arm", arm: 1, of: null };
+                }
+                _wo1672 = { held: "arm", arm: 0, of: _wo1675 };
+              }
+              if (!_t1674) {
+                const _wc1678 = sp.edgeOf(v_c, v_i);
+                const _wd1679 = 1;
+                const _wc1680 = sp.edgeOf(v_c, v_j);
+                const _wd1681 = 1;
+                let _wm1682: Witness | null = null;
+                W1683: {
+                  const _a1685 = throughWhere(sp, v_c, (_te1684: number): boolean => {  return ((_te1684 === _wc1680 ? _wd1681 : (_te1684 === _wc1678 ? _wd1679 : (b.grid[_te1684] || -1))) === 1); });
+                  for (let _i1686 = 0; _i1686 < _a1685.length; _i1686++) {
+                    const v_t = _a1685[_i1686];
+                    let _c1705: boolean = (((v_t === v_c) || (v_t === v_i)) || (v_t === v_j));
+                    if (!_c1705) {
+                      let _g1687 = 0;
+                      G1688: {
+                        const _a1689 = sp.adj4[v_t];
+                        for (let _i1690 = 0; _i1690 < _a1689.length; _i1690++) {
+                          const _t1691 = sp.adj4Edges[v_t][_i1690];
+                          if (!(((_t1691 === _wc1680 ? _wd1681 : (_t1691 === _wc1678 ? _wd1679 : (b.grid[_t1691] || -1))) === 1))) continue;
+                          _g1687++;
+                        }
+                      }
+                      let _g1692 = 0;
+                      G1693: {
+                        for (let _i1694 = 0; _i1694 < 1; _i1694++) {
+                          const v_k = v_t;
+                          const _h1695 = clueAt(cl.number, v_k);
+                          const _h1702 = (_h1695 + 1);
+                          let _c1704: boolean = (_h1695 !== -1);
+                          if (_c1704) {
+                            let _c1703: boolean = (_h554 || (_h1695 === 1));
+                            if (!_c1703) {
+                              let _g1696 = 0;
+                              G1697: {
+                                const _t1698 = (_h1695 + 1);
+                                const _a1699 = cluesValued(cl.number, _t1698);
+                                for (let _i1700 = 0; _i1700 < _a1699.length; _i1700++) {
+                                  const v_x = _a1699[_i1700];
+                                  const _h1701 = clueAt(cl.number, v_x);
+                                  if (!((_h1701 === _h1702))) continue;
+                                  _g1696++;
+                                }
+                              }
+                              _c1703 = (_g1696 === 0);
+                            }
+                            _c1704 = _c1703;
+                          }
+                          if (!(_c1704)) continue;
+                          _g1692++;
+                        }
+                      }
+                      _c1705 = (_g1687 < (2 - _g1692));
+                    }
+                    if (!(_c1705)) continue;
+                    let _g1706 = 0;
+                    G1707: {
+                      const _a1708 = sp.adj4[v_t];
+                      for (let _i1709 = 0; _i1709 < _a1708.length; _i1709++) {
+                        const _t1710 = sp.adj4Edges[v_t][_i1709];
+                        if (!(((_t1710 === _wc1680 ? _wd1681 : (_t1710 === _wc1678 ? _wd1679 : (b.grid[_t1710] || -1))) === 1))) continue;
+                        _g1706++;
+                      }
+                    }
+                    let _g1711 = 0;
+                    G1712: {
+                      for (let _i1713 = 0; _i1713 < 1; _i1713++) {
+                        const v_k = v_t;
+                        const _h1714 = clueAt(cl.number, v_k);
+                        const _h1721 = (_h1714 + 1);
+                        let _c1723: boolean = (_h1714 !== -1);
+                        if (_c1723) {
+                          let _c1722: boolean = (_h554 || (_h1714 === 1));
+                          if (!_c1722) {
+                            let _g1715 = 0;
+                            G1716: {
+                              const _t1717 = (_h1714 + 1);
+                              const _a1718 = cluesValued(cl.number, _t1717);
+                              for (let _i1719 = 0; _i1719 < _a1718.length; _i1719++) {
+                                const v_x = _a1718[_i1719];
+                                const _h1720 = clueAt(cl.number, v_x);
+                                if (!((_h1720 === _h1721))) continue;
+                                _g1715++;
+                              }
+                            }
+                            _c1722 = (_g1715 === 0);
+                          }
+                          _c1723 = _c1722;
+                        }
+                        if (!(_c1723)) continue;
+                        _g1711++;
+                      }
+                    }
+                    let _c1991: boolean = (_g1706 < (2 - _g1711));
+                    if (_c1991) {
+                      let _q1724 = false;
+                      Q1725: {
+                        const _a1726 = sp.adj4[v_t];
+                        for (let _i1727 = 0; _i1727 < _a1726.length; _i1727++) {
+                          const v_y = _a1726[_i1727];
+                          const _t1728 = sp.adj4Edges[v_t][_i1727];
+                          let _c1747: boolean = !((_t1728 === _wc1680 ? true : (_t1728 === _wc1678 ? true : (b.grid[_t1728] !== 0))));
+                          if (_c1747) {
+                            let _g1729 = 0;
+                            G1730: {
+                              const _a1731 = sp.adj4[v_t];
+                              for (let _i1732 = 0; _i1732 < _a1731.length; _i1732++) {
+                                const _t1733 = sp.adj4Edges[v_t][_i1732];
+                                if (!(((_t1733 === _wc1680 ? _wd1681 : (_t1733 === _wc1678 ? _wd1679 : (b.grid[_t1733] || -1))) === 1))) continue;
+                                _g1729++;
+                              }
+                            }
+                            let _g1734 = 0;
+                            G1735: {
+                              for (let _i1736 = 0; _i1736 < 1; _i1736++) {
+                                const v_k = v_t;
+                                const _h1737 = clueAt(cl.number, v_k);
+                                const _h1744 = (_h1737 + 1);
+                                let _c1746: boolean = (_h1737 !== -1);
+                                if (_c1746) {
+                                  let _c1745: boolean = (_h554 || (_h1737 === 1));
+                                  if (!_c1745) {
+                                    let _g1738 = 0;
+                                    G1739: {
+                                      const _t1740 = (_h1737 + 1);
+                                      const _a1741 = cluesValued(cl.number, _t1740);
+                                      for (let _i1742 = 0; _i1742 < _a1741.length; _i1742++) {
+                                        const v_x = _a1741[_i1742];
+                                        const _h1743 = clueAt(cl.number, v_x);
+                                        if (!((_h1743 === _h1744))) continue;
+                                        _g1738++;
+                                      }
+                                    }
+                                    _c1745 = (_g1738 === 0);
+                                  }
+                                  _c1746 = _c1745;
+                                }
+                                if (!(_c1746)) continue;
+                                _g1734++;
+                              }
+                            }
+                            _c1747 = (_g1729 < (2 - _g1734));
+                          }
+                          let _c1767: boolean = _c1747;
+                          if (_c1767) {
+                            let _g1748 = 0;
+                            G1749: {
+                              const _a1751 = sp.adj4[v_y];
+                              for (let _i1752 = 0; _i1752 < _a1751.length; _i1752++) {
+                                const _t1753 = sp.adj4Edges[v_y][_i1752];
+                                if (!(((_t1753 === _wc1680 ? _wd1681 : (_t1753 === _wc1678 ? _wd1679 : (b.grid[_t1753] || -1))) === 1))) continue;
+                                _g1748++;
+                              }
+                            }
+                            let _g1754 = 0;
+                            G1755: {
+                              for (let _i1756 = 0; _i1756 < 1; _i1756++) {
+                                const v_k = v_y;
+                                const _h1757 = clueAt(cl.number, v_k);
+                                const _h1764 = (_h1757 + 1);
+                                let _c1766: boolean = (_h1757 !== -1);
+                                if (_c1766) {
+                                  let _c1765: boolean = (_h554 || (_h1757 === 1));
+                                  if (!_c1765) {
+                                    let _g1758 = 0;
+                                    G1759: {
+                                      const _t1760 = (_h1757 + 1);
+                                      const _a1761 = cluesValued(cl.number, _t1760);
+                                      for (let _i1762 = 0; _i1762 < _a1761.length; _i1762++) {
+                                        const v_x = _a1761[_i1762];
+                                        const _h1763 = clueAt(cl.number, v_x);
+                                        if (!((_h1763 === _h1764))) continue;
+                                        _g1758++;
+                                      }
+                                    }
+                                    _c1765 = (_g1758 === 0);
+                                  }
+                                  _c1766 = _c1765;
+                                }
+                                if (!(_c1766)) continue;
+                                _g1754++;
+                              }
+                            }
+                            _c1767 = (_g1748 < (2 - _g1754));
+                          }
+                          let _c1846: boolean = _c1767;
+                          if (_c1846) {
+                            let _q1768 = true;
+                            Q1769: {
+                              const _g1770: number[] = [];
+                              G1771: {
+                                for (let _i1773 = 0; _i1773 < 1; _i1773++) {
+                                  const v_x = v_t;
+                                  const _h1774 = clueAt(cl.number, v_x);
+                                  if (!((_h1774 !== -1))) continue;
+                                  _g1770.push(v_x);
+                                }
+                              }
+                              const _g1775: number[] = [];
+                              G1776: {
+                                const _a1795 = throughWhere(sp, v_t, (_te1790: number): boolean => { let _c1792: boolean = ((_te1790 === _wc1680 ? _wd1681 : (_te1790 === _wc1678 ? _wd1679 : (b.grid[_te1790] || -1))) === 1); if (_c1792) {   const _t1791 = sp.edgeEnds[2 * _te1790];   _c1792 = !((clueAt(cl.number, _t1791) !== -1)); } let _c1794: boolean = _c1792; if (_c1794) {   const _t1793 = sp.edgeEnds[2 * _te1790 + 1];   _c1794 = !((clueAt(cl.number, _t1793) !== -1)); } return _c1794; });
+                                for (let _i1796 = 0; _i1796 < _a1795.length; _i1796++) {
+                                  const v_t_1789 = _a1795[_i1796];
+                                  const _h1799 = clueAt(cl.number, v_t_1789);
+                                  const _h1800 = (_h1799 !== -1);
+                                  const _h1801 = _h1800;
+                                  const _h1802 = !(_h1801);
+                                  const _a1797 = sp.adj4[v_t_1789];
+                                  for (let _i1798 = 0; _i1798 < _a1797.length; _i1798++) {
+                                    const v_x = _a1797[_i1798];
+                                    const _h1803 = clueAt(cl.number, v_x);
+                                    let _c1805: boolean = (_h1802 && (_h1803 !== -1));
+                                    if (_c1805) {
+                                      const _t1804 = sp.adj4Edges[v_t_1789][_i1798];
+                                      _c1805 = ((_t1804 === _wc1680 ? _wd1681 : (_t1804 === _wc1678 ? _wd1679 : (b.grid[_t1804] || -1))) === 1);
+                                    }
+                                    if (!(_c1805)) continue;
+                                    if (!_g1775.includes(v_x)) _g1775.push(v_x);
+                                  }
+                                }
+                              }
+                              const _a1806 = union(_g1770, _g1775);
+                              for (let _i1807 = 0; _i1807 < _a1806.length; _i1807++) {
+                                const v_p = _a1806[_i1807];
+                                const _h1844 = clueAt(cl.number, v_p);
+                                const _g1808: number[] = [];
+                                G1809: {
+                                  for (let _i1811 = 0; _i1811 < 1; _i1811++) {
+                                    const v_x = v_y;
+                                    const _h1812 = clueAt(cl.number, v_x);
+                                    if (!((_h1812 !== -1))) continue;
+                                    _g1808.push(v_x);
+                                  }
+                                }
+                                const _g1813: number[] = [];
+                                G1814: {
+                                  const _a1831 = throughWhere(sp, v_y, (_te1826: number): boolean => { let _c1828: boolean = ((_te1826 === _wc1680 ? _wd1681 : (_te1826 === _wc1678 ? _wd1679 : (b.grid[_te1826] || -1))) === 1); if (_c1828) {   const _t1827 = sp.edgeEnds[2 * _te1826];   _c1828 = !((clueAt(cl.number, _t1827) !== -1)); } let _c1830: boolean = _c1828; if (_c1830) {   const _t1829 = sp.edgeEnds[2 * _te1826 + 1];   _c1830 = !((clueAt(cl.number, _t1829) !== -1)); } return _c1830; });
+                                  for (let _i1832 = 0; _i1832 < _a1831.length; _i1832++) {
+                                    const v_t = _a1831[_i1832];
+                                    const _h1835 = clueAt(cl.number, v_t);
+                                    const _h1836 = (_h1835 !== -1);
+                                    const _h1837 = _h1836;
+                                    const _h1838 = !(_h1837);
+                                    const _a1833 = sp.adj4[v_t];
+                                    for (let _i1834 = 0; _i1834 < _a1833.length; _i1834++) {
+                                      const v_x = _a1833[_i1834];
+                                      const _h1839 = clueAt(cl.number, v_x);
+                                      let _c1841: boolean = (_h1838 && (_h1839 !== -1));
+                                      if (_c1841) {
+                                        const _t1840 = sp.adj4Edges[v_t][_i1834];
+                                        _c1841 = ((_t1840 === _wc1680 ? _wd1681 : (_t1840 === _wc1678 ? _wd1679 : (b.grid[_t1840] || -1))) === 1);
+                                      }
+                                      if (!(_c1841)) continue;
+                                      if (!_g1813.includes(v_x)) _g1813.push(v_x);
+                                    }
+                                  }
+                                }
+                                const _a1842 = union(_g1808, _g1813);
+                                for (let _i1843 = 0; _i1843 < _a1842.length; _i1843++) {
+                                  const v_q = _a1842[_i1843];
+                                  const _h1845 = clueAt(cl.number, v_q);
+                                  if (!((Math.abs((_h1844 - _h1845)) === cl.step))) {
+                                    _q1768 = false;
+                                    break Q1769;
+                                  }
+                                }
+                              }
+                            }
+                            _c1846 = _q1768;
+                          }
+                          if (!((_c1846 && (_h554 || !(throughWhere(sp, v_t, (_te1847: number): boolean => {  return ((_te1847 === _wc1680 ? _wd1681 : (_te1847 === _wc1678 ? _wd1679 : (b.grid[_te1847] || -1))) === 1); }).includes(v_y)))))) continue;
+                          let _g1848 = 0;
+                          G1849: {
+                            const _a1850 = sp.adj4[v_t];
+                            for (let _i1851 = 0; _i1851 < _a1850.length; _i1851++) {
+                              const _t1852 = sp.adj4Edges[v_t][_i1851];
+                              if (!(((_t1852 === _wc1680 ? _wd1681 : (_t1852 === _wc1678 ? _wd1679 : (b.grid[_t1852] || -1))) === 1))) continue;
+                              _g1848++;
+                            }
+                          }
+                          let _g1853 = 0;
+                          G1854: {
+                            for (let _i1855 = 0; _i1855 < 1; _i1855++) {
+                              const v_k = v_t;
+                              const _h1856 = clueAt(cl.number, v_k);
+                              const _h1863 = (_h1856 + 1);
+                              let _c1865: boolean = (_h1856 !== -1);
+                              if (_c1865) {
+                                let _c1864: boolean = (_h554 || (_h1856 === 1));
+                                if (!_c1864) {
+                                  let _g1857 = 0;
+                                  G1858: {
+                                    const _t1859 = (_h1856 + 1);
+                                    const _a1860 = cluesValued(cl.number, _t1859);
+                                    for (let _i1861 = 0; _i1861 < _a1860.length; _i1861++) {
+                                      const v_x = _a1860[_i1861];
+                                      const _h1862 = clueAt(cl.number, v_x);
+                                      if (!((_h1862 === _h1863))) continue;
+                                      _g1857++;
+                                    }
+                                  }
+                                  _c1864 = (_g1857 === 0);
+                                }
+                                _c1865 = _c1864;
+                              }
+                              if (!(_c1865)) continue;
+                              _g1853++;
+                            }
+                          }
+                          let _c1990: boolean = ((_g1848 + 1) === (2 - _g1853));
+                          if (!_c1990) {
+                            let _q1866 = false;
+                            Q1867: {
+                              const _a1868 = sp.adj4[v_t];
+                              const _n1869 = _i1727;
+                              for (let _i1870 = 0; _i1870 < _n1869; _i1870++) {
+                                const v_z = _a1868[_i1870];
+                                const _t1871 = sp.adj4Edges[v_t][_i1870];
+                                let _c1890: boolean = !((_t1871 === _wc1680 ? true : (_t1871 === _wc1678 ? true : (b.grid[_t1871] !== 0))));
+                                if (_c1890) {
+                                  let _g1872 = 0;
+                                  G1873: {
+                                    const _a1874 = sp.adj4[v_t];
+                                    for (let _i1875 = 0; _i1875 < _a1874.length; _i1875++) {
+                                      const _t1876 = sp.adj4Edges[v_t][_i1875];
+                                      if (!(((_t1876 === _wc1680 ? _wd1681 : (_t1876 === _wc1678 ? _wd1679 : (b.grid[_t1876] || -1))) === 1))) continue;
+                                      _g1872++;
+                                    }
+                                  }
+                                  let _g1877 = 0;
+                                  G1878: {
+                                    for (let _i1879 = 0; _i1879 < 1; _i1879++) {
+                                      const v_k = v_t;
+                                      const _h1880 = clueAt(cl.number, v_k);
+                                      const _h1887 = (_h1880 + 1);
+                                      let _c1889: boolean = (_h1880 !== -1);
+                                      if (_c1889) {
+                                        let _c1888: boolean = (_h554 || (_h1880 === 1));
+                                        if (!_c1888) {
+                                          let _g1881 = 0;
+                                          G1882: {
+                                            const _t1883 = (_h1880 + 1);
+                                            const _a1884 = cluesValued(cl.number, _t1883);
+                                            for (let _i1885 = 0; _i1885 < _a1884.length; _i1885++) {
+                                              const v_x = _a1884[_i1885];
+                                              const _h1886 = clueAt(cl.number, v_x);
+                                              if (!((_h1886 === _h1887))) continue;
+                                              _g1881++;
+                                            }
+                                          }
+                                          _c1888 = (_g1881 === 0);
+                                        }
+                                        _c1889 = _c1888;
+                                      }
+                                      if (!(_c1889)) continue;
+                                      _g1877++;
+                                    }
+                                  }
+                                  _c1890 = (_g1872 < (2 - _g1877));
+                                }
+                                let _c1909: boolean = _c1890;
+                                if (_c1909) {
+                                  let _g1891 = 0;
+                                  G1892: {
+                                    const _a1893 = sp.adj4[v_z];
+                                    for (let _i1894 = 0; _i1894 < _a1893.length; _i1894++) {
+                                      const _t1895 = sp.adj4Edges[v_z][_i1894];
+                                      if (!(((_t1895 === _wc1680 ? _wd1681 : (_t1895 === _wc1678 ? _wd1679 : (b.grid[_t1895] || -1))) === 1))) continue;
+                                      _g1891++;
+                                    }
+                                  }
+                                  let _g1896 = 0;
+                                  G1897: {
+                                    for (let _i1898 = 0; _i1898 < 1; _i1898++) {
+                                      const v_k = v_z;
+                                      const _h1899 = clueAt(cl.number, v_k);
+                                      const _h1906 = (_h1899 + 1);
+                                      let _c1908: boolean = (_h1899 !== -1);
+                                      if (_c1908) {
+                                        let _c1907: boolean = (_h554 || (_h1899 === 1));
+                                        if (!_c1907) {
+                                          let _g1900 = 0;
+                                          G1901: {
+                                            const _t1902 = (_h1899 + 1);
+                                            const _a1903 = cluesValued(cl.number, _t1902);
+                                            for (let _i1904 = 0; _i1904 < _a1903.length; _i1904++) {
+                                              const v_x = _a1903[_i1904];
+                                              const _h1905 = clueAt(cl.number, v_x);
+                                              if (!((_h1905 === _h1906))) continue;
+                                              _g1900++;
+                                            }
+                                          }
+                                          _c1907 = (_g1900 === 0);
+                                        }
+                                        _c1908 = _c1907;
+                                      }
+                                      if (!(_c1908)) continue;
+                                      _g1896++;
+                                    }
+                                  }
+                                  _c1909 = (_g1891 < (2 - _g1896));
+                                }
+                                let _c1988: boolean = _c1909;
+                                if (_c1988) {
+                                  let _q1910 = true;
+                                  Q1911: {
+                                    const _g1912: number[] = [];
+                                    G1913: {
+                                      for (let _i1915 = 0; _i1915 < 1; _i1915++) {
+                                        const v_x = v_t;
+                                        const _h1916 = clueAt(cl.number, v_x);
+                                        if (!((_h1916 !== -1))) continue;
+                                        _g1912.push(v_x);
+                                      }
+                                    }
+                                    const _g1917: number[] = [];
+                                    G1918: {
+                                      const _a1937 = throughWhere(sp, v_t, (_te1932: number): boolean => { let _c1934: boolean = ((_te1932 === _wc1680 ? _wd1681 : (_te1932 === _wc1678 ? _wd1679 : (b.grid[_te1932] || -1))) === 1); if (_c1934) {   const _t1933 = sp.edgeEnds[2 * _te1932];   _c1934 = !((clueAt(cl.number, _t1933) !== -1)); } let _c1936: boolean = _c1934; if (_c1936) {   const _t1935 = sp.edgeEnds[2 * _te1932 + 1];   _c1936 = !((clueAt(cl.number, _t1935) !== -1)); } return _c1936; });
+                                      for (let _i1938 = 0; _i1938 < _a1937.length; _i1938++) {
+                                        const v_t_1931 = _a1937[_i1938];
+                                        const _h1941 = clueAt(cl.number, v_t_1931);
+                                        const _h1942 = (_h1941 !== -1);
+                                        const _h1943 = _h1942;
+                                        const _h1944 = !(_h1943);
+                                        const _a1939 = sp.adj4[v_t_1931];
+                                        for (let _i1940 = 0; _i1940 < _a1939.length; _i1940++) {
+                                          const v_x = _a1939[_i1940];
+                                          const _h1945 = clueAt(cl.number, v_x);
+                                          let _c1947: boolean = (_h1944 && (_h1945 !== -1));
+                                          if (_c1947) {
+                                            const _t1946 = sp.adj4Edges[v_t_1931][_i1940];
+                                            _c1947 = ((_t1946 === _wc1680 ? _wd1681 : (_t1946 === _wc1678 ? _wd1679 : (b.grid[_t1946] || -1))) === 1);
+                                          }
+                                          if (!(_c1947)) continue;
+                                          if (!_g1917.includes(v_x)) _g1917.push(v_x);
+                                        }
+                                      }
+                                    }
+                                    const _a1948 = union(_g1912, _g1917);
+                                    for (let _i1949 = 0; _i1949 < _a1948.length; _i1949++) {
+                                      const v_p = _a1948[_i1949];
+                                      const _h1986 = clueAt(cl.number, v_p);
+                                      const _g1950: number[] = [];
+                                      G1951: {
+                                        for (let _i1953 = 0; _i1953 < 1; _i1953++) {
+                                          const v_x = v_z;
+                                          const _h1954 = clueAt(cl.number, v_x);
+                                          if (!((_h1954 !== -1))) continue;
+                                          _g1950.push(v_x);
+                                        }
+                                      }
+                                      const _g1955: number[] = [];
+                                      G1956: {
+                                        const _a1973 = throughWhere(sp, v_z, (_te1968: number): boolean => { let _c1970: boolean = ((_te1968 === _wc1680 ? _wd1681 : (_te1968 === _wc1678 ? _wd1679 : (b.grid[_te1968] || -1))) === 1); if (_c1970) {   const _t1969 = sp.edgeEnds[2 * _te1968];   _c1970 = !((clueAt(cl.number, _t1969) !== -1)); } let _c1972: boolean = _c1970; if (_c1972) {   const _t1971 = sp.edgeEnds[2 * _te1968 + 1];   _c1972 = !((clueAt(cl.number, _t1971) !== -1)); } return _c1972; });
+                                        for (let _i1974 = 0; _i1974 < _a1973.length; _i1974++) {
+                                          const v_t = _a1973[_i1974];
+                                          const _h1977 = clueAt(cl.number, v_t);
+                                          const _h1978 = (_h1977 !== -1);
+                                          const _h1979 = _h1978;
+                                          const _h1980 = !(_h1979);
+                                          const _a1975 = sp.adj4[v_t];
+                                          for (let _i1976 = 0; _i1976 < _a1975.length; _i1976++) {
+                                            const v_x = _a1975[_i1976];
+                                            const _h1981 = clueAt(cl.number, v_x);
+                                            let _c1983: boolean = (_h1980 && (_h1981 !== -1));
+                                            if (_c1983) {
+                                              const _t1982 = sp.adj4Edges[v_t][_i1976];
+                                              _c1983 = ((_t1982 === _wc1680 ? _wd1681 : (_t1982 === _wc1678 ? _wd1679 : (b.grid[_t1982] || -1))) === 1);
+                                            }
+                                            if (!(_c1983)) continue;
+                                            if (!_g1955.includes(v_x)) _g1955.push(v_x);
+                                          }
+                                        }
+                                      }
+                                      const _a1984 = union(_g1950, _g1955);
+                                      for (let _i1985 = 0; _i1985 < _a1984.length; _i1985++) {
+                                        const v_q = _a1984[_i1985];
+                                        const _h1987 = clueAt(cl.number, v_q);
+                                        if (!((Math.abs((_h1986 - _h1987)) === cl.step))) {
+                                          _q1910 = false;
+                                          break Q1911;
+                                        }
+                                      }
+                                    }
+                                  }
+                                  _c1988 = _q1910;
+                                }
+                                if ((_c1988 && (_h554 || !(throughWhere(sp, v_t, (_te1989: number): boolean => {  return ((_te1989 === _wc1680 ? _wd1681 : (_te1989 === _wc1678 ? _wd1679 : (b.grid[_te1989] || -1))) === 1); }).includes(v_z))))) {
+                                  _q1866 = true;
+                                  break Q1867;
+                                }
+                              }
+                            }
+                            _c1990 = _q1866;
+                          }
+                          if (_c1990) {
+                            _q1724 = true;
+                            break Q1725;
+                          }
+                        }
+                      }
+                      _c1991 = !(_q1724);
+                    }
+                    let _c2278: boolean = _c1991;
+                    if (!_c2278) {
+                      let _q1992 = false;
+                      Q1993: {
+                        const _a1994 = sp.adj4[v_t];
+                        for (let _i1995 = 0; _i1995 < _a1994.length; _i1995++) {
+                          const v_s = _a1994[_i1995];
+                          let _g1996 = 0;
+                          G1997: {
+                            const _a1998 = sp.adj4[v_s];
+                            for (let _i1999 = 0; _i1999 < _a1998.length; _i1999++) {
+                              const _t2000 = sp.adj4Edges[v_s][_i1999];
+                              if (!(((_t2000 === _wc1680 ? _wd1681 : (_t2000 === _wc1678 ? _wd1679 : (b.grid[_t2000] || -1))) === 1))) continue;
+                              _g1996++;
+                            }
+                          }
+                          let _g2001 = 0;
+                          G2002: {
+                            for (let _i2003 = 0; _i2003 < 1; _i2003++) {
+                              const v_k = v_s;
+                              const _h2004 = clueAt(cl.number, v_k);
+                              const _h2011 = (_h2004 + 1);
+                              let _c2013: boolean = (_h2004 !== -1);
+                              if (_c2013) {
+                                let _c2012: boolean = (_h554 || (_h2004 === 1));
+                                if (!_c2012) {
+                                  let _g2005 = 0;
+                                  G2006: {
+                                    const _t2007 = (_h2004 + 1);
+                                    const _a2008 = cluesValued(cl.number, _t2007);
+                                    for (let _i2009 = 0; _i2009 < _a2008.length; _i2009++) {
+                                      const v_x = _a2008[_i2009];
+                                      const _h2010 = clueAt(cl.number, v_x);
+                                      if (!((_h2010 === _h2011))) continue;
+                                      _g2005++;
+                                    }
+                                  }
+                                  _c2012 = (_g2005 === 0);
+                                }
+                                _c2013 = _c2012;
+                              }
+                              if (!(_c2013)) continue;
+                              _g2001++;
+                            }
+                          }
+                          let _c2277: boolean = (_g1996 < (2 - _g2001));
+                          if (_c2277) {
+                            let _q2014 = false;
+                            Q2015: {
+                              const _a2016 = sp.adj4[v_s];
+                              for (let _i2017 = 0; _i2017 < _a2016.length; _i2017++) {
+                                const v_y = _a2016[_i2017];
+                                const _t2018 = sp.adj4Edges[v_s][_i2017];
+                                let _c2037: boolean = !((_t2018 === _wc1680 ? true : (_t2018 === _wc1678 ? true : (b.grid[_t2018] !== 0))));
+                                if (_c2037) {
+                                  let _g2019 = 0;
+                                  G2020: {
+                                    const _a2021 = sp.adj4[v_s];
+                                    for (let _i2022 = 0; _i2022 < _a2021.length; _i2022++) {
+                                      const _t2023 = sp.adj4Edges[v_s][_i2022];
+                                      if (!(((_t2023 === _wc1680 ? _wd1681 : (_t2023 === _wc1678 ? _wd1679 : (b.grid[_t2023] || -1))) === 1))) continue;
+                                      _g2019++;
+                                    }
+                                  }
+                                  let _g2024 = 0;
+                                  G2025: {
+                                    for (let _i2026 = 0; _i2026 < 1; _i2026++) {
+                                      const v_k = v_s;
+                                      const _h2027 = clueAt(cl.number, v_k);
+                                      const _h2034 = (_h2027 + 1);
+                                      let _c2036: boolean = (_h2027 !== -1);
+                                      if (_c2036) {
+                                        let _c2035: boolean = (_h554 || (_h2027 === 1));
+                                        if (!_c2035) {
+                                          let _g2028 = 0;
+                                          G2029: {
+                                            const _t2030 = (_h2027 + 1);
+                                            const _a2031 = cluesValued(cl.number, _t2030);
+                                            for (let _i2032 = 0; _i2032 < _a2031.length; _i2032++) {
+                                              const v_x = _a2031[_i2032];
+                                              const _h2033 = clueAt(cl.number, v_x);
+                                              if (!((_h2033 === _h2034))) continue;
+                                              _g2028++;
+                                            }
+                                          }
+                                          _c2035 = (_g2028 === 0);
+                                        }
+                                        _c2036 = _c2035;
+                                      }
+                                      if (!(_c2036)) continue;
+                                      _g2024++;
+                                    }
+                                  }
+                                  _c2037 = (_g2019 < (2 - _g2024));
+                                }
+                                let _c2057: boolean = _c2037;
+                                if (_c2057) {
+                                  let _g2038 = 0;
+                                  G2039: {
+                                    const _a2041 = sp.adj4[v_y];
+                                    for (let _i2042 = 0; _i2042 < _a2041.length; _i2042++) {
+                                      const _t2043 = sp.adj4Edges[v_y][_i2042];
+                                      if (!(((_t2043 === _wc1680 ? _wd1681 : (_t2043 === _wc1678 ? _wd1679 : (b.grid[_t2043] || -1))) === 1))) continue;
+                                      _g2038++;
+                                    }
+                                  }
+                                  let _g2044 = 0;
+                                  G2045: {
+                                    for (let _i2046 = 0; _i2046 < 1; _i2046++) {
+                                      const v_k = v_y;
+                                      const _h2047 = clueAt(cl.number, v_k);
+                                      const _h2054 = (_h2047 + 1);
+                                      let _c2056: boolean = (_h2047 !== -1);
+                                      if (_c2056) {
+                                        let _c2055: boolean = (_h554 || (_h2047 === 1));
+                                        if (!_c2055) {
+                                          let _g2048 = 0;
+                                          G2049: {
+                                            const _t2050 = (_h2047 + 1);
+                                            const _a2051 = cluesValued(cl.number, _t2050);
+                                            for (let _i2052 = 0; _i2052 < _a2051.length; _i2052++) {
+                                              const v_x = _a2051[_i2052];
+                                              const _h2053 = clueAt(cl.number, v_x);
+                                              if (!((_h2053 === _h2054))) continue;
+                                              _g2048++;
+                                            }
+                                          }
+                                          _c2055 = (_g2048 === 0);
+                                        }
+                                        _c2056 = _c2055;
+                                      }
+                                      if (!(_c2056)) continue;
+                                      _g2044++;
+                                    }
+                                  }
+                                  _c2057 = (_g2038 < (2 - _g2044));
+                                }
+                                let _c2134: boolean = _c2057;
+                                if (_c2134) {
+                                  let _q2058 = true;
+                                  Q2059: {
+                                    const _g2060: number[] = [];
+                                    G2061: {
+                                      for (let _i2063 = 0; _i2063 < 1; _i2063++) {
+                                        const v_x = v_s;
+                                        const _h2064 = clueAt(cl.number, v_x);
+                                        if (!((_h2064 !== -1))) continue;
+                                        _g2060.push(v_x);
+                                      }
+                                    }
+                                    const _g2065: number[] = [];
+                                    G2066: {
+                                      const _a2083 = throughWhere(sp, v_s, (_te2078: number): boolean => { let _c2080: boolean = ((_te2078 === _wc1680 ? _wd1681 : (_te2078 === _wc1678 ? _wd1679 : (b.grid[_te2078] || -1))) === 1); if (_c2080) {   const _t2079 = sp.edgeEnds[2 * _te2078];   _c2080 = !((clueAt(cl.number, _t2079) !== -1)); } let _c2082: boolean = _c2080; if (_c2082) {   const _t2081 = sp.edgeEnds[2 * _te2078 + 1];   _c2082 = !((clueAt(cl.number, _t2081) !== -1)); } return _c2082; });
+                                      for (let _i2084 = 0; _i2084 < _a2083.length; _i2084++) {
+                                        const v_t = _a2083[_i2084];
+                                        const _h2087 = clueAt(cl.number, v_t);
+                                        const _h2088 = (_h2087 !== -1);
+                                        const _h2089 = _h2088;
+                                        const _h2090 = !(_h2089);
+                                        const _a2085 = sp.adj4[v_t];
+                                        for (let _i2086 = 0; _i2086 < _a2085.length; _i2086++) {
+                                          const v_x = _a2085[_i2086];
+                                          const _h2091 = clueAt(cl.number, v_x);
+                                          let _c2093: boolean = (_h2090 && (_h2091 !== -1));
+                                          if (_c2093) {
+                                            const _t2092 = sp.adj4Edges[v_t][_i2086];
+                                            _c2093 = ((_t2092 === _wc1680 ? _wd1681 : (_t2092 === _wc1678 ? _wd1679 : (b.grid[_t2092] || -1))) === 1);
+                                          }
+                                          if (!(_c2093)) continue;
+                                          if (!_g2065.includes(v_x)) _g2065.push(v_x);
+                                        }
+                                      }
+                                    }
+                                    const _a2094 = union(_g2060, _g2065);
+                                    for (let _i2095 = 0; _i2095 < _a2094.length; _i2095++) {
+                                      const v_p = _a2094[_i2095];
+                                      const _h2132 = clueAt(cl.number, v_p);
+                                      const _g2096: number[] = [];
+                                      G2097: {
+                                        for (let _i2099 = 0; _i2099 < 1; _i2099++) {
+                                          const v_x = v_y;
+                                          const _h2100 = clueAt(cl.number, v_x);
+                                          if (!((_h2100 !== -1))) continue;
+                                          _g2096.push(v_x);
+                                        }
+                                      }
+                                      const _g2101: number[] = [];
+                                      G2102: {
+                                        const _a2119 = throughWhere(sp, v_y, (_te2114: number): boolean => { let _c2116: boolean = ((_te2114 === _wc1680 ? _wd1681 : (_te2114 === _wc1678 ? _wd1679 : (b.grid[_te2114] || -1))) === 1); if (_c2116) {   const _t2115 = sp.edgeEnds[2 * _te2114];   _c2116 = !((clueAt(cl.number, _t2115) !== -1)); } let _c2118: boolean = _c2116; if (_c2118) {   const _t2117 = sp.edgeEnds[2 * _te2114 + 1];   _c2118 = !((clueAt(cl.number, _t2117) !== -1)); } return _c2118; });
+                                        for (let _i2120 = 0; _i2120 < _a2119.length; _i2120++) {
+                                          const v_t = _a2119[_i2120];
+                                          const _h2123 = clueAt(cl.number, v_t);
+                                          const _h2124 = (_h2123 !== -1);
+                                          const _h2125 = _h2124;
+                                          const _h2126 = !(_h2125);
+                                          const _a2121 = sp.adj4[v_t];
+                                          for (let _i2122 = 0; _i2122 < _a2121.length; _i2122++) {
+                                            const v_x = _a2121[_i2122];
+                                            const _h2127 = clueAt(cl.number, v_x);
+                                            let _c2129: boolean = (_h2126 && (_h2127 !== -1));
+                                            if (_c2129) {
+                                              const _t2128 = sp.adj4Edges[v_t][_i2122];
+                                              _c2129 = ((_t2128 === _wc1680 ? _wd1681 : (_t2128 === _wc1678 ? _wd1679 : (b.grid[_t2128] || -1))) === 1);
+                                            }
+                                            if (!(_c2129)) continue;
+                                            if (!_g2101.includes(v_x)) _g2101.push(v_x);
+                                          }
+                                        }
+                                      }
+                                      const _a2130 = union(_g2096, _g2101);
+                                      for (let _i2131 = 0; _i2131 < _a2130.length; _i2131++) {
+                                        const v_q = _a2130[_i2131];
+                                        const _h2133 = clueAt(cl.number, v_q);
+                                        if (!((Math.abs((_h2132 - _h2133)) === cl.step))) {
+                                          _q2058 = false;
+                                          break Q2059;
+                                        }
+                                      }
+                                    }
+                                  }
+                                  _c2134 = _q2058;
+                                }
+                                if (!((_c2134 && (_h554 || !(throughWhere(sp, v_s, (_te2135: number): boolean => {  return ((_te2135 === _wc1680 ? _wd1681 : (_te2135 === _wc1678 ? _wd1679 : (b.grid[_te2135] || -1))) === 1); }).includes(v_y)))))) continue;
+                                let _g2136 = 0;
+                                G2137: {
+                                  const _a2138 = sp.adj4[v_s];
+                                  for (let _i2139 = 0; _i2139 < _a2138.length; _i2139++) {
+                                    const _t2140 = sp.adj4Edges[v_s][_i2139];
+                                    if (!(((_t2140 === _wc1680 ? _wd1681 : (_t2140 === _wc1678 ? _wd1679 : (b.grid[_t2140] || -1))) === 1))) continue;
+                                    _g2136++;
+                                  }
+                                }
+                                let _g2141 = 0;
+                                G2142: {
+                                  for (let _i2143 = 0; _i2143 < 1; _i2143++) {
+                                    const v_k = v_s;
+                                    const _h2144 = clueAt(cl.number, v_k);
+                                    const _h2151 = (_h2144 + 1);
+                                    let _c2153: boolean = (_h2144 !== -1);
+                                    if (_c2153) {
+                                      let _c2152: boolean = (_h554 || (_h2144 === 1));
+                                      if (!_c2152) {
+                                        let _g2145 = 0;
+                                        G2146: {
+                                          const _t2147 = (_h2144 + 1);
+                                          const _a2148 = cluesValued(cl.number, _t2147);
+                                          for (let _i2149 = 0; _i2149 < _a2148.length; _i2149++) {
+                                            const v_x = _a2148[_i2149];
+                                            const _h2150 = clueAt(cl.number, v_x);
+                                            if (!((_h2150 === _h2151))) continue;
+                                            _g2145++;
+                                          }
+                                        }
+                                        _c2152 = (_g2145 === 0);
+                                      }
+                                      _c2153 = _c2152;
+                                    }
+                                    if (!(_c2153)) continue;
+                                    _g2141++;
+                                  }
+                                }
+                                let _c2276: boolean = ((_g2136 + 1) === (2 - _g2141));
+                                if (!_c2276) {
+                                  let _q2154 = false;
+                                  Q2155: {
+                                    const _a2156 = sp.adj4[v_s];
+                                    const _n2157 = _i2017;
+                                    for (let _i2158 = 0; _i2158 < _n2157; _i2158++) {
+                                      const v_z = _a2156[_i2158];
+                                      const _t2159 = sp.adj4Edges[v_s][_i2158];
+                                      let _c2178: boolean = !((_t2159 === _wc1680 ? true : (_t2159 === _wc1678 ? true : (b.grid[_t2159] !== 0))));
+                                      if (_c2178) {
+                                        let _g2160 = 0;
+                                        G2161: {
+                                          const _a2162 = sp.adj4[v_s];
+                                          for (let _i2163 = 0; _i2163 < _a2162.length; _i2163++) {
+                                            const _t2164 = sp.adj4Edges[v_s][_i2163];
+                                            if (!(((_t2164 === _wc1680 ? _wd1681 : (_t2164 === _wc1678 ? _wd1679 : (b.grid[_t2164] || -1))) === 1))) continue;
+                                            _g2160++;
+                                          }
+                                        }
+                                        let _g2165 = 0;
+                                        G2166: {
+                                          for (let _i2167 = 0; _i2167 < 1; _i2167++) {
+                                            const v_k = v_s;
+                                            const _h2168 = clueAt(cl.number, v_k);
+                                            const _h2175 = (_h2168 + 1);
+                                            let _c2177: boolean = (_h2168 !== -1);
+                                            if (_c2177) {
+                                              let _c2176: boolean = (_h554 || (_h2168 === 1));
+                                              if (!_c2176) {
+                                                let _g2169 = 0;
+                                                G2170: {
+                                                  const _t2171 = (_h2168 + 1);
+                                                  const _a2172 = cluesValued(cl.number, _t2171);
+                                                  for (let _i2173 = 0; _i2173 < _a2172.length; _i2173++) {
+                                                    const v_x = _a2172[_i2173];
+                                                    const _h2174 = clueAt(cl.number, v_x);
+                                                    if (!((_h2174 === _h2175))) continue;
+                                                    _g2169++;
+                                                  }
+                                                }
+                                                _c2176 = (_g2169 === 0);
+                                              }
+                                              _c2177 = _c2176;
+                                            }
+                                            if (!(_c2177)) continue;
+                                            _g2165++;
+                                          }
+                                        }
+                                        _c2178 = (_g2160 < (2 - _g2165));
+                                      }
+                                      let _c2197: boolean = _c2178;
+                                      if (_c2197) {
+                                        let _g2179 = 0;
+                                        G2180: {
+                                          const _a2181 = sp.adj4[v_z];
+                                          for (let _i2182 = 0; _i2182 < _a2181.length; _i2182++) {
+                                            const _t2183 = sp.adj4Edges[v_z][_i2182];
+                                            if (!(((_t2183 === _wc1680 ? _wd1681 : (_t2183 === _wc1678 ? _wd1679 : (b.grid[_t2183] || -1))) === 1))) continue;
+                                            _g2179++;
+                                          }
+                                        }
+                                        let _g2184 = 0;
+                                        G2185: {
+                                          for (let _i2186 = 0; _i2186 < 1; _i2186++) {
+                                            const v_k = v_z;
+                                            const _h2187 = clueAt(cl.number, v_k);
+                                            const _h2194 = (_h2187 + 1);
+                                            let _c2196: boolean = (_h2187 !== -1);
+                                            if (_c2196) {
+                                              let _c2195: boolean = (_h554 || (_h2187 === 1));
+                                              if (!_c2195) {
+                                                let _g2188 = 0;
+                                                G2189: {
+                                                  const _t2190 = (_h2187 + 1);
+                                                  const _a2191 = cluesValued(cl.number, _t2190);
+                                                  for (let _i2192 = 0; _i2192 < _a2191.length; _i2192++) {
+                                                    const v_x = _a2191[_i2192];
+                                                    const _h2193 = clueAt(cl.number, v_x);
+                                                    if (!((_h2193 === _h2194))) continue;
+                                                    _g2188++;
+                                                  }
+                                                }
+                                                _c2195 = (_g2188 === 0);
+                                              }
+                                              _c2196 = _c2195;
+                                            }
+                                            if (!(_c2196)) continue;
+                                            _g2184++;
+                                          }
+                                        }
+                                        _c2197 = (_g2179 < (2 - _g2184));
+                                      }
+                                      let _c2274: boolean = _c2197;
+                                      if (_c2274) {
+                                        let _q2198 = true;
+                                        Q2199: {
+                                          const _g2200: number[] = [];
+                                          G2201: {
+                                            for (let _i2203 = 0; _i2203 < 1; _i2203++) {
+                                              const v_x = v_s;
+                                              const _h2204 = clueAt(cl.number, v_x);
+                                              if (!((_h2204 !== -1))) continue;
+                                              _g2200.push(v_x);
+                                            }
+                                          }
+                                          const _g2205: number[] = [];
+                                          G2206: {
+                                            const _a2223 = throughWhere(sp, v_s, (_te2218: number): boolean => { let _c2220: boolean = ((_te2218 === _wc1680 ? _wd1681 : (_te2218 === _wc1678 ? _wd1679 : (b.grid[_te2218] || -1))) === 1); if (_c2220) {   const _t2219 = sp.edgeEnds[2 * _te2218];   _c2220 = !((clueAt(cl.number, _t2219) !== -1)); } let _c2222: boolean = _c2220; if (_c2222) {   const _t2221 = sp.edgeEnds[2 * _te2218 + 1];   _c2222 = !((clueAt(cl.number, _t2221) !== -1)); } return _c2222; });
+                                            for (let _i2224 = 0; _i2224 < _a2223.length; _i2224++) {
+                                              const v_t = _a2223[_i2224];
+                                              const _h2227 = clueAt(cl.number, v_t);
+                                              const _h2228 = (_h2227 !== -1);
+                                              const _h2229 = _h2228;
+                                              const _h2230 = !(_h2229);
+                                              const _a2225 = sp.adj4[v_t];
+                                              for (let _i2226 = 0; _i2226 < _a2225.length; _i2226++) {
+                                                const v_x = _a2225[_i2226];
+                                                const _h2231 = clueAt(cl.number, v_x);
+                                                let _c2233: boolean = (_h2230 && (_h2231 !== -1));
+                                                if (_c2233) {
+                                                  const _t2232 = sp.adj4Edges[v_t][_i2226];
+                                                  _c2233 = ((_t2232 === _wc1680 ? _wd1681 : (_t2232 === _wc1678 ? _wd1679 : (b.grid[_t2232] || -1))) === 1);
+                                                }
+                                                if (!(_c2233)) continue;
+                                                if (!_g2205.includes(v_x)) _g2205.push(v_x);
+                                              }
+                                            }
+                                          }
+                                          const _a2234 = union(_g2200, _g2205);
+                                          for (let _i2235 = 0; _i2235 < _a2234.length; _i2235++) {
+                                            const v_p = _a2234[_i2235];
+                                            const _h2272 = clueAt(cl.number, v_p);
+                                            const _g2236: number[] = [];
+                                            G2237: {
+                                              for (let _i2239 = 0; _i2239 < 1; _i2239++) {
+                                                const v_x = v_z;
+                                                const _h2240 = clueAt(cl.number, v_x);
+                                                if (!((_h2240 !== -1))) continue;
+                                                _g2236.push(v_x);
+                                              }
+                                            }
+                                            const _g2241: number[] = [];
+                                            G2242: {
+                                              const _a2259 = throughWhere(sp, v_z, (_te2254: number): boolean => { let _c2256: boolean = ((_te2254 === _wc1680 ? _wd1681 : (_te2254 === _wc1678 ? _wd1679 : (b.grid[_te2254] || -1))) === 1); if (_c2256) {   const _t2255 = sp.edgeEnds[2 * _te2254];   _c2256 = !((clueAt(cl.number, _t2255) !== -1)); } let _c2258: boolean = _c2256; if (_c2258) {   const _t2257 = sp.edgeEnds[2 * _te2254 + 1];   _c2258 = !((clueAt(cl.number, _t2257) !== -1)); } return _c2258; });
+                                              for (let _i2260 = 0; _i2260 < _a2259.length; _i2260++) {
+                                                const v_t = _a2259[_i2260];
+                                                const _h2263 = clueAt(cl.number, v_t);
+                                                const _h2264 = (_h2263 !== -1);
+                                                const _h2265 = _h2264;
+                                                const _h2266 = !(_h2265);
+                                                const _a2261 = sp.adj4[v_t];
+                                                for (let _i2262 = 0; _i2262 < _a2261.length; _i2262++) {
+                                                  const v_x = _a2261[_i2262];
+                                                  const _h2267 = clueAt(cl.number, v_x);
+                                                  let _c2269: boolean = (_h2266 && (_h2267 !== -1));
+                                                  if (_c2269) {
+                                                    const _t2268 = sp.adj4Edges[v_t][_i2262];
+                                                    _c2269 = ((_t2268 === _wc1680 ? _wd1681 : (_t2268 === _wc1678 ? _wd1679 : (b.grid[_t2268] || -1))) === 1);
+                                                  }
+                                                  if (!(_c2269)) continue;
+                                                  if (!_g2241.includes(v_x)) _g2241.push(v_x);
+                                                }
+                                              }
+                                            }
+                                            const _a2270 = union(_g2236, _g2241);
+                                            for (let _i2271 = 0; _i2271 < _a2270.length; _i2271++) {
+                                              const v_q = _a2270[_i2271];
+                                              const _h2273 = clueAt(cl.number, v_q);
+                                              if (!((Math.abs((_h2272 - _h2273)) === cl.step))) {
+                                                _q2198 = false;
+                                                break Q2199;
+                                              }
+                                            }
+                                          }
+                                        }
+                                        _c2274 = _q2198;
+                                      }
+                                      if ((_c2274 && (_h554 || !(throughWhere(sp, v_s, (_te2275: number): boolean => {  return ((_te2275 === _wc1680 ? _wd1681 : (_te2275 === _wc1678 ? _wd1679 : (b.grid[_te2275] || -1))) === 1); }).includes(v_z))))) {
+                                        _q2154 = true;
+                                        break Q2155;
+                                      }
+                                    }
+                                  }
+                                  _c2276 = _q2154;
+                                }
+                                if (_c2276) {
+                                  _q2014 = true;
+                                  break Q2015;
+                                }
+                              }
+                            }
+                            _c2277 = !(_q2014);
+                          }
+                          if (_c2277) {
+                            _q1992 = true;
+                            break Q1993;
+                          }
+                        }
+                      }
+                      _c2278 = _q1992;
+                    }
+                    if (_c2278) {
+                      let _wo2279: Witness | null = null;
+                      let _g2280 = 0;
+                      G2281: {
+                        const _a2282 = sp.adj4[v_t];
+                        for (let _i2283 = 0; _i2283 < _a2282.length; _i2283++) {
+                          const _t2284 = sp.adj4Edges[v_t][_i2283];
+                          if (!(((_t2284 === _wc1680 ? _wd1681 : (_t2284 === _wc1678 ? _wd1679 : (b.grid[_t2284] || -1))) === 1))) continue;
+                          _g2280++;
+                        }
+                      }
+                      let _g2285 = 0;
+                      G2286: {
+                        for (let _i2287 = 0; _i2287 < 1; _i2287++) {
+                          const v_k = v_t;
+                          const _h2288 = clueAt(cl.number, v_k);
+                          const _h2295 = (_h2288 + 1);
+                          let _c2297: boolean = (_h2288 !== -1);
+                          if (_c2297) {
+                            let _c2296: boolean = (_h554 || (_h2288 === 1));
+                            if (!_c2296) {
+                              let _g2289 = 0;
+                              G2290: {
+                                const _t2291 = (_h2288 + 1);
+                                const _a2292 = cluesValued(cl.number, _t2291);
+                                for (let _i2293 = 0; _i2293 < _a2292.length; _i2293++) {
+                                  const v_x = _a2292[_i2293];
+                                  const _h2294 = clueAt(cl.number, v_x);
+                                  if (!((_h2294 === _h2295))) continue;
+                                  _g2289++;
+                                }
+                              }
+                              _c2296 = (_g2289 === 0);
+                            }
+                            _c2297 = _c2296;
+                          }
+                          if (!(_c2297)) continue;
+                          _g2285++;
+                        }
+                      }
+                      let _c2565: boolean = (_g2280 < (2 - _g2285));
+                      if (_c2565) {
+                        let _q2298 = false;
+                        Q2299: {
+                          const _a2300 = sp.adj4[v_t];
+                          for (let _i2301 = 0; _i2301 < _a2300.length; _i2301++) {
+                            const v_y = _a2300[_i2301];
+                            const _t2302 = sp.adj4Edges[v_t][_i2301];
+                            let _c2321: boolean = !((_t2302 === _wc1680 ? true : (_t2302 === _wc1678 ? true : (b.grid[_t2302] !== 0))));
+                            if (_c2321) {
+                              let _g2303 = 0;
+                              G2304: {
+                                const _a2305 = sp.adj4[v_t];
+                                for (let _i2306 = 0; _i2306 < _a2305.length; _i2306++) {
+                                  const _t2307 = sp.adj4Edges[v_t][_i2306];
+                                  if (!(((_t2307 === _wc1680 ? _wd1681 : (_t2307 === _wc1678 ? _wd1679 : (b.grid[_t2307] || -1))) === 1))) continue;
+                                  _g2303++;
+                                }
+                              }
+                              let _g2308 = 0;
+                              G2309: {
+                                for (let _i2310 = 0; _i2310 < 1; _i2310++) {
+                                  const v_k = v_t;
+                                  const _h2311 = clueAt(cl.number, v_k);
+                                  const _h2318 = (_h2311 + 1);
+                                  let _c2320: boolean = (_h2311 !== -1);
+                                  if (_c2320) {
+                                    let _c2319: boolean = (_h554 || (_h2311 === 1));
+                                    if (!_c2319) {
+                                      let _g2312 = 0;
+                                      G2313: {
+                                        const _t2314 = (_h2311 + 1);
+                                        const _a2315 = cluesValued(cl.number, _t2314);
+                                        for (let _i2316 = 0; _i2316 < _a2315.length; _i2316++) {
+                                          const v_x = _a2315[_i2316];
+                                          const _h2317 = clueAt(cl.number, v_x);
+                                          if (!((_h2317 === _h2318))) continue;
+                                          _g2312++;
+                                        }
+                                      }
+                                      _c2319 = (_g2312 === 0);
+                                    }
+                                    _c2320 = _c2319;
+                                  }
+                                  if (!(_c2320)) continue;
+                                  _g2308++;
+                                }
+                              }
+                              _c2321 = (_g2303 < (2 - _g2308));
+                            }
+                            let _c2341: boolean = _c2321;
+                            if (_c2341) {
+                              let _g2322 = 0;
+                              G2323: {
+                                const _a2325 = sp.adj4[v_y];
+                                for (let _i2326 = 0; _i2326 < _a2325.length; _i2326++) {
+                                  const _t2327 = sp.adj4Edges[v_y][_i2326];
+                                  if (!(((_t2327 === _wc1680 ? _wd1681 : (_t2327 === _wc1678 ? _wd1679 : (b.grid[_t2327] || -1))) === 1))) continue;
+                                  _g2322++;
+                                }
+                              }
+                              let _g2328 = 0;
+                              G2329: {
+                                for (let _i2330 = 0; _i2330 < 1; _i2330++) {
+                                  const v_k = v_y;
+                                  const _h2331 = clueAt(cl.number, v_k);
+                                  const _h2338 = (_h2331 + 1);
+                                  let _c2340: boolean = (_h2331 !== -1);
+                                  if (_c2340) {
+                                    let _c2339: boolean = (_h554 || (_h2331 === 1));
+                                    if (!_c2339) {
+                                      let _g2332 = 0;
+                                      G2333: {
+                                        const _t2334 = (_h2331 + 1);
+                                        const _a2335 = cluesValued(cl.number, _t2334);
+                                        for (let _i2336 = 0; _i2336 < _a2335.length; _i2336++) {
+                                          const v_x = _a2335[_i2336];
+                                          const _h2337 = clueAt(cl.number, v_x);
+                                          if (!((_h2337 === _h2338))) continue;
+                                          _g2332++;
+                                        }
+                                      }
+                                      _c2339 = (_g2332 === 0);
+                                    }
+                                    _c2340 = _c2339;
+                                  }
+                                  if (!(_c2340)) continue;
+                                  _g2328++;
+                                }
+                              }
+                              _c2341 = (_g2322 < (2 - _g2328));
+                            }
+                            let _c2420: boolean = _c2341;
+                            if (_c2420) {
+                              let _q2342 = true;
+                              Q2343: {
+                                const _g2344: number[] = [];
+                                G2345: {
+                                  for (let _i2347 = 0; _i2347 < 1; _i2347++) {
+                                    const v_x = v_t;
+                                    const _h2348 = clueAt(cl.number, v_x);
+                                    if (!((_h2348 !== -1))) continue;
+                                    _g2344.push(v_x);
+                                  }
+                                }
+                                const _g2349: number[] = [];
+                                G2350: {
+                                  const _a2369 = throughWhere(sp, v_t, (_te2364: number): boolean => { let _c2366: boolean = ((_te2364 === _wc1680 ? _wd1681 : (_te2364 === _wc1678 ? _wd1679 : (b.grid[_te2364] || -1))) === 1); if (_c2366) {   const _t2365 = sp.edgeEnds[2 * _te2364];   _c2366 = !((clueAt(cl.number, _t2365) !== -1)); } let _c2368: boolean = _c2366; if (_c2368) {   const _t2367 = sp.edgeEnds[2 * _te2364 + 1];   _c2368 = !((clueAt(cl.number, _t2367) !== -1)); } return _c2368; });
+                                  for (let _i2370 = 0; _i2370 < _a2369.length; _i2370++) {
+                                    const v_t_2363 = _a2369[_i2370];
+                                    const _h2373 = clueAt(cl.number, v_t_2363);
+                                    const _h2374 = (_h2373 !== -1);
+                                    const _h2375 = _h2374;
+                                    const _h2376 = !(_h2375);
+                                    const _a2371 = sp.adj4[v_t_2363];
+                                    for (let _i2372 = 0; _i2372 < _a2371.length; _i2372++) {
+                                      const v_x = _a2371[_i2372];
+                                      const _h2377 = clueAt(cl.number, v_x);
+                                      let _c2379: boolean = (_h2376 && (_h2377 !== -1));
+                                      if (_c2379) {
+                                        const _t2378 = sp.adj4Edges[v_t_2363][_i2372];
+                                        _c2379 = ((_t2378 === _wc1680 ? _wd1681 : (_t2378 === _wc1678 ? _wd1679 : (b.grid[_t2378] || -1))) === 1);
+                                      }
+                                      if (!(_c2379)) continue;
+                                      if (!_g2349.includes(v_x)) _g2349.push(v_x);
+                                    }
+                                  }
+                                }
+                                const _a2380 = union(_g2344, _g2349);
+                                for (let _i2381 = 0; _i2381 < _a2380.length; _i2381++) {
+                                  const v_p = _a2380[_i2381];
+                                  const _h2418 = clueAt(cl.number, v_p);
+                                  const _g2382: number[] = [];
+                                  G2383: {
+                                    for (let _i2385 = 0; _i2385 < 1; _i2385++) {
+                                      const v_x = v_y;
+                                      const _h2386 = clueAt(cl.number, v_x);
+                                      if (!((_h2386 !== -1))) continue;
+                                      _g2382.push(v_x);
+                                    }
+                                  }
+                                  const _g2387: number[] = [];
+                                  G2388: {
+                                    const _a2405 = throughWhere(sp, v_y, (_te2400: number): boolean => { let _c2402: boolean = ((_te2400 === _wc1680 ? _wd1681 : (_te2400 === _wc1678 ? _wd1679 : (b.grid[_te2400] || -1))) === 1); if (_c2402) {   const _t2401 = sp.edgeEnds[2 * _te2400];   _c2402 = !((clueAt(cl.number, _t2401) !== -1)); } let _c2404: boolean = _c2402; if (_c2404) {   const _t2403 = sp.edgeEnds[2 * _te2400 + 1];   _c2404 = !((clueAt(cl.number, _t2403) !== -1)); } return _c2404; });
+                                    for (let _i2406 = 0; _i2406 < _a2405.length; _i2406++) {
+                                      const v_t = _a2405[_i2406];
+                                      const _h2409 = clueAt(cl.number, v_t);
+                                      const _h2410 = (_h2409 !== -1);
+                                      const _h2411 = _h2410;
+                                      const _h2412 = !(_h2411);
+                                      const _a2407 = sp.adj4[v_t];
+                                      for (let _i2408 = 0; _i2408 < _a2407.length; _i2408++) {
+                                        const v_x = _a2407[_i2408];
+                                        const _h2413 = clueAt(cl.number, v_x);
+                                        let _c2415: boolean = (_h2412 && (_h2413 !== -1));
+                                        if (_c2415) {
+                                          const _t2414 = sp.adj4Edges[v_t][_i2408];
+                                          _c2415 = ((_t2414 === _wc1680 ? _wd1681 : (_t2414 === _wc1678 ? _wd1679 : (b.grid[_t2414] || -1))) === 1);
+                                        }
+                                        if (!(_c2415)) continue;
+                                        if (!_g2387.includes(v_x)) _g2387.push(v_x);
+                                      }
+                                    }
+                                  }
+                                  const _a2416 = union(_g2382, _g2387);
+                                  for (let _i2417 = 0; _i2417 < _a2416.length; _i2417++) {
+                                    const v_q = _a2416[_i2417];
+                                    const _h2419 = clueAt(cl.number, v_q);
+                                    if (!((Math.abs((_h2418 - _h2419)) === cl.step))) {
+                                      _q2342 = false;
+                                      break Q2343;
+                                    }
+                                  }
+                                }
+                              }
+                              _c2420 = _q2342;
+                            }
+                            if (!((_c2420 && (_h554 || !(throughWhere(sp, v_t, (_te2421: number): boolean => {  return ((_te2421 === _wc1680 ? _wd1681 : (_te2421 === _wc1678 ? _wd1679 : (b.grid[_te2421] || -1))) === 1); }).includes(v_y)))))) continue;
+                            let _g2422 = 0;
+                            G2423: {
+                              const _a2424 = sp.adj4[v_t];
+                              for (let _i2425 = 0; _i2425 < _a2424.length; _i2425++) {
+                                const _t2426 = sp.adj4Edges[v_t][_i2425];
+                                if (!(((_t2426 === _wc1680 ? _wd1681 : (_t2426 === _wc1678 ? _wd1679 : (b.grid[_t2426] || -1))) === 1))) continue;
+                                _g2422++;
+                              }
+                            }
+                            let _g2427 = 0;
+                            G2428: {
+                              for (let _i2429 = 0; _i2429 < 1; _i2429++) {
+                                const v_k = v_t;
+                                const _h2430 = clueAt(cl.number, v_k);
+                                const _h2437 = (_h2430 + 1);
+                                let _c2439: boolean = (_h2430 !== -1);
+                                if (_c2439) {
+                                  let _c2438: boolean = (_h554 || (_h2430 === 1));
+                                  if (!_c2438) {
+                                    let _g2431 = 0;
+                                    G2432: {
+                                      const _t2433 = (_h2430 + 1);
+                                      const _a2434 = cluesValued(cl.number, _t2433);
+                                      for (let _i2435 = 0; _i2435 < _a2434.length; _i2435++) {
+                                        const v_x = _a2434[_i2435];
+                                        const _h2436 = clueAt(cl.number, v_x);
+                                        if (!((_h2436 === _h2437))) continue;
+                                        _g2431++;
+                                      }
+                                    }
+                                    _c2438 = (_g2431 === 0);
+                                  }
+                                  _c2439 = _c2438;
+                                }
+                                if (!(_c2439)) continue;
+                                _g2427++;
+                              }
+                            }
+                            let _c2564: boolean = ((_g2422 + 1) === (2 - _g2427));
+                            if (!_c2564) {
+                              let _q2440 = false;
+                              Q2441: {
+                                const _a2442 = sp.adj4[v_t];
+                                const _n2443 = _i2301;
+                                for (let _i2444 = 0; _i2444 < _n2443; _i2444++) {
+                                  const v_z = _a2442[_i2444];
+                                  const _t2445 = sp.adj4Edges[v_t][_i2444];
+                                  let _c2464: boolean = !((_t2445 === _wc1680 ? true : (_t2445 === _wc1678 ? true : (b.grid[_t2445] !== 0))));
+                                  if (_c2464) {
+                                    let _g2446 = 0;
+                                    G2447: {
+                                      const _a2448 = sp.adj4[v_t];
+                                      for (let _i2449 = 0; _i2449 < _a2448.length; _i2449++) {
+                                        const _t2450 = sp.adj4Edges[v_t][_i2449];
+                                        if (!(((_t2450 === _wc1680 ? _wd1681 : (_t2450 === _wc1678 ? _wd1679 : (b.grid[_t2450] || -1))) === 1))) continue;
+                                        _g2446++;
+                                      }
+                                    }
+                                    let _g2451 = 0;
+                                    G2452: {
+                                      for (let _i2453 = 0; _i2453 < 1; _i2453++) {
+                                        const v_k = v_t;
+                                        const _h2454 = clueAt(cl.number, v_k);
+                                        const _h2461 = (_h2454 + 1);
+                                        let _c2463: boolean = (_h2454 !== -1);
+                                        if (_c2463) {
+                                          let _c2462: boolean = (_h554 || (_h2454 === 1));
+                                          if (!_c2462) {
+                                            let _g2455 = 0;
+                                            G2456: {
+                                              const _t2457 = (_h2454 + 1);
+                                              const _a2458 = cluesValued(cl.number, _t2457);
+                                              for (let _i2459 = 0; _i2459 < _a2458.length; _i2459++) {
+                                                const v_x = _a2458[_i2459];
+                                                const _h2460 = clueAt(cl.number, v_x);
+                                                if (!((_h2460 === _h2461))) continue;
+                                                _g2455++;
+                                              }
+                                            }
+                                            _c2462 = (_g2455 === 0);
+                                          }
+                                          _c2463 = _c2462;
+                                        }
+                                        if (!(_c2463)) continue;
+                                        _g2451++;
+                                      }
+                                    }
+                                    _c2464 = (_g2446 < (2 - _g2451));
+                                  }
+                                  let _c2483: boolean = _c2464;
+                                  if (_c2483) {
+                                    let _g2465 = 0;
+                                    G2466: {
+                                      const _a2467 = sp.adj4[v_z];
+                                      for (let _i2468 = 0; _i2468 < _a2467.length; _i2468++) {
+                                        const _t2469 = sp.adj4Edges[v_z][_i2468];
+                                        if (!(((_t2469 === _wc1680 ? _wd1681 : (_t2469 === _wc1678 ? _wd1679 : (b.grid[_t2469] || -1))) === 1))) continue;
+                                        _g2465++;
+                                      }
+                                    }
+                                    let _g2470 = 0;
+                                    G2471: {
+                                      for (let _i2472 = 0; _i2472 < 1; _i2472++) {
+                                        const v_k = v_z;
+                                        const _h2473 = clueAt(cl.number, v_k);
+                                        const _h2480 = (_h2473 + 1);
+                                        let _c2482: boolean = (_h2473 !== -1);
+                                        if (_c2482) {
+                                          let _c2481: boolean = (_h554 || (_h2473 === 1));
+                                          if (!_c2481) {
+                                            let _g2474 = 0;
+                                            G2475: {
+                                              const _t2476 = (_h2473 + 1);
+                                              const _a2477 = cluesValued(cl.number, _t2476);
+                                              for (let _i2478 = 0; _i2478 < _a2477.length; _i2478++) {
+                                                const v_x = _a2477[_i2478];
+                                                const _h2479 = clueAt(cl.number, v_x);
+                                                if (!((_h2479 === _h2480))) continue;
+                                                _g2474++;
+                                              }
+                                            }
+                                            _c2481 = (_g2474 === 0);
+                                          }
+                                          _c2482 = _c2481;
+                                        }
+                                        if (!(_c2482)) continue;
+                                        _g2470++;
+                                      }
+                                    }
+                                    _c2483 = (_g2465 < (2 - _g2470));
+                                  }
+                                  let _c2562: boolean = _c2483;
+                                  if (_c2562) {
+                                    let _q2484 = true;
+                                    Q2485: {
+                                      const _g2486: number[] = [];
+                                      G2487: {
+                                        for (let _i2489 = 0; _i2489 < 1; _i2489++) {
+                                          const v_x = v_t;
+                                          const _h2490 = clueAt(cl.number, v_x);
+                                          if (!((_h2490 !== -1))) continue;
+                                          _g2486.push(v_x);
+                                        }
+                                      }
+                                      const _g2491: number[] = [];
+                                      G2492: {
+                                        const _a2511 = throughWhere(sp, v_t, (_te2506: number): boolean => { let _c2508: boolean = ((_te2506 === _wc1680 ? _wd1681 : (_te2506 === _wc1678 ? _wd1679 : (b.grid[_te2506] || -1))) === 1); if (_c2508) {   const _t2507 = sp.edgeEnds[2 * _te2506];   _c2508 = !((clueAt(cl.number, _t2507) !== -1)); } let _c2510: boolean = _c2508; if (_c2510) {   const _t2509 = sp.edgeEnds[2 * _te2506 + 1];   _c2510 = !((clueAt(cl.number, _t2509) !== -1)); } return _c2510; });
+                                        for (let _i2512 = 0; _i2512 < _a2511.length; _i2512++) {
+                                          const v_t_2505 = _a2511[_i2512];
+                                          const _h2515 = clueAt(cl.number, v_t_2505);
+                                          const _h2516 = (_h2515 !== -1);
+                                          const _h2517 = _h2516;
+                                          const _h2518 = !(_h2517);
+                                          const _a2513 = sp.adj4[v_t_2505];
+                                          for (let _i2514 = 0; _i2514 < _a2513.length; _i2514++) {
+                                            const v_x = _a2513[_i2514];
+                                            const _h2519 = clueAt(cl.number, v_x);
+                                            let _c2521: boolean = (_h2518 && (_h2519 !== -1));
+                                            if (_c2521) {
+                                              const _t2520 = sp.adj4Edges[v_t_2505][_i2514];
+                                              _c2521 = ((_t2520 === _wc1680 ? _wd1681 : (_t2520 === _wc1678 ? _wd1679 : (b.grid[_t2520] || -1))) === 1);
+                                            }
+                                            if (!(_c2521)) continue;
+                                            if (!_g2491.includes(v_x)) _g2491.push(v_x);
+                                          }
+                                        }
+                                      }
+                                      const _a2522 = union(_g2486, _g2491);
+                                      for (let _i2523 = 0; _i2523 < _a2522.length; _i2523++) {
+                                        const v_p = _a2522[_i2523];
+                                        const _h2560 = clueAt(cl.number, v_p);
+                                        const _g2524: number[] = [];
+                                        G2525: {
+                                          for (let _i2527 = 0; _i2527 < 1; _i2527++) {
+                                            const v_x = v_z;
+                                            const _h2528 = clueAt(cl.number, v_x);
+                                            if (!((_h2528 !== -1))) continue;
+                                            _g2524.push(v_x);
+                                          }
+                                        }
+                                        const _g2529: number[] = [];
+                                        G2530: {
+                                          const _a2547 = throughWhere(sp, v_z, (_te2542: number): boolean => { let _c2544: boolean = ((_te2542 === _wc1680 ? _wd1681 : (_te2542 === _wc1678 ? _wd1679 : (b.grid[_te2542] || -1))) === 1); if (_c2544) {   const _t2543 = sp.edgeEnds[2 * _te2542];   _c2544 = !((clueAt(cl.number, _t2543) !== -1)); } let _c2546: boolean = _c2544; if (_c2546) {   const _t2545 = sp.edgeEnds[2 * _te2542 + 1];   _c2546 = !((clueAt(cl.number, _t2545) !== -1)); } return _c2546; });
+                                          for (let _i2548 = 0; _i2548 < _a2547.length; _i2548++) {
+                                            const v_t = _a2547[_i2548];
+                                            const _h2551 = clueAt(cl.number, v_t);
+                                            const _h2552 = (_h2551 !== -1);
+                                            const _h2553 = _h2552;
+                                            const _h2554 = !(_h2553);
+                                            const _a2549 = sp.adj4[v_t];
+                                            for (let _i2550 = 0; _i2550 < _a2549.length; _i2550++) {
+                                              const v_x = _a2549[_i2550];
+                                              const _h2555 = clueAt(cl.number, v_x);
+                                              let _c2557: boolean = (_h2554 && (_h2555 !== -1));
+                                              if (_c2557) {
+                                                const _t2556 = sp.adj4Edges[v_t][_i2550];
+                                                _c2557 = ((_t2556 === _wc1680 ? _wd1681 : (_t2556 === _wc1678 ? _wd1679 : (b.grid[_t2556] || -1))) === 1);
+                                              }
+                                              if (!(_c2557)) continue;
+                                              if (!_g2529.includes(v_x)) _g2529.push(v_x);
+                                            }
+                                          }
+                                        }
+                                        const _a2558 = union(_g2524, _g2529);
+                                        for (let _i2559 = 0; _i2559 < _a2558.length; _i2559++) {
+                                          const v_q = _a2558[_i2559];
+                                          const _h2561 = clueAt(cl.number, v_q);
+                                          if (!((Math.abs((_h2560 - _h2561)) === cl.step))) {
+                                            _q2484 = false;
+                                            break Q2485;
+                                          }
+                                        }
+                                      }
+                                    }
+                                    _c2562 = _q2484;
+                                  }
+                                  if ((_c2562 && (_h554 || !(throughWhere(sp, v_t, (_te2563: number): boolean => {  return ((_te2563 === _wc1680 ? _wd1681 : (_te2563 === _wc1678 ? _wd1679 : (b.grid[_te2563] || -1))) === 1); }).includes(v_z))))) {
+                                    _q2440 = true;
+                                    break Q2441;
+                                  }
+                                }
+                              }
+                              _c2564 = _q2440;
+                            }
+                            if (_c2564) {
+                              _q2298 = true;
+                              break Q2299;
+                            }
+                          }
+                        }
+                        _c2565 = !(_q2298);
+                      }
+                      if (_c2565) {
+                        _wo2279 = { held: "arm", arm: 0, of: { held: "def", name: "stuck", of: { held: "def", name: "spare", of: null } } };
+                      }
+                      if (!_c2565) {
+                        let _wm2566: Witness | null = null;
+                        W2567: {
+                          const _a2568 = sp.adj4[v_t];
+                          for (let _i2569 = 0; _i2569 < _a2568.length; _i2569++) {
+                            const v_s = _a2568[_i2569];
+                            let _g2570 = 0;
+                            G2571: {
+                              const _a2572 = sp.adj4[v_s];
+                              for (let _i2573 = 0; _i2573 < _a2572.length; _i2573++) {
+                                const _t2574 = sp.adj4Edges[v_s][_i2573];
+                                if (!(((_t2574 === _wc1680 ? _wd1681 : (_t2574 === _wc1678 ? _wd1679 : (b.grid[_t2574] || -1))) === 1))) continue;
+                                _g2570++;
+                              }
+                            }
+                            let _g2575 = 0;
+                            G2576: {
+                              for (let _i2577 = 0; _i2577 < 1; _i2577++) {
+                                const v_k = v_s;
+                                const _h2578 = clueAt(cl.number, v_k);
+                                const _h2585 = (_h2578 + 1);
+                                let _c2587: boolean = (_h2578 !== -1);
+                                if (_c2587) {
+                                  let _c2586: boolean = (_h554 || (_h2578 === 1));
+                                  if (!_c2586) {
+                                    let _g2579 = 0;
+                                    G2580: {
+                                      const _t2581 = (_h2578 + 1);
+                                      const _a2582 = cluesValued(cl.number, _t2581);
+                                      for (let _i2583 = 0; _i2583 < _a2582.length; _i2583++) {
+                                        const v_x = _a2582[_i2583];
+                                        const _h2584 = clueAt(cl.number, v_x);
+                                        if (!((_h2584 === _h2585))) continue;
+                                        _g2579++;
+                                      }
+                                    }
+                                    _c2586 = (_g2579 === 0);
+                                  }
+                                  _c2587 = _c2586;
+                                }
+                                if (!(_c2587)) continue;
+                                _g2575++;
+                              }
+                            }
+                            let _c2851: boolean = (_g2570 < (2 - _g2575));
+                            if (_c2851) {
+                              let _q2588 = false;
+                              Q2589: {
+                                const _a2590 = sp.adj4[v_s];
+                                for (let _i2591 = 0; _i2591 < _a2590.length; _i2591++) {
+                                  const v_y = _a2590[_i2591];
+                                  const _t2592 = sp.adj4Edges[v_s][_i2591];
+                                  let _c2611: boolean = !((_t2592 === _wc1680 ? true : (_t2592 === _wc1678 ? true : (b.grid[_t2592] !== 0))));
+                                  if (_c2611) {
+                                    let _g2593 = 0;
+                                    G2594: {
+                                      const _a2595 = sp.adj4[v_s];
+                                      for (let _i2596 = 0; _i2596 < _a2595.length; _i2596++) {
+                                        const _t2597 = sp.adj4Edges[v_s][_i2596];
+                                        if (!(((_t2597 === _wc1680 ? _wd1681 : (_t2597 === _wc1678 ? _wd1679 : (b.grid[_t2597] || -1))) === 1))) continue;
+                                        _g2593++;
+                                      }
+                                    }
+                                    let _g2598 = 0;
+                                    G2599: {
+                                      for (let _i2600 = 0; _i2600 < 1; _i2600++) {
+                                        const v_k = v_s;
+                                        const _h2601 = clueAt(cl.number, v_k);
+                                        const _h2608 = (_h2601 + 1);
+                                        let _c2610: boolean = (_h2601 !== -1);
+                                        if (_c2610) {
+                                          let _c2609: boolean = (_h554 || (_h2601 === 1));
+                                          if (!_c2609) {
+                                            let _g2602 = 0;
+                                            G2603: {
+                                              const _t2604 = (_h2601 + 1);
+                                              const _a2605 = cluesValued(cl.number, _t2604);
+                                              for (let _i2606 = 0; _i2606 < _a2605.length; _i2606++) {
+                                                const v_x = _a2605[_i2606];
+                                                const _h2607 = clueAt(cl.number, v_x);
+                                                if (!((_h2607 === _h2608))) continue;
+                                                _g2602++;
+                                              }
+                                            }
+                                            _c2609 = (_g2602 === 0);
+                                          }
+                                          _c2610 = _c2609;
+                                        }
+                                        if (!(_c2610)) continue;
+                                        _g2598++;
+                                      }
+                                    }
+                                    _c2611 = (_g2593 < (2 - _g2598));
+                                  }
+                                  let _c2631: boolean = _c2611;
+                                  if (_c2631) {
+                                    let _g2612 = 0;
+                                    G2613: {
+                                      const _a2615 = sp.adj4[v_y];
+                                      for (let _i2616 = 0; _i2616 < _a2615.length; _i2616++) {
+                                        const _t2617 = sp.adj4Edges[v_y][_i2616];
+                                        if (!(((_t2617 === _wc1680 ? _wd1681 : (_t2617 === _wc1678 ? _wd1679 : (b.grid[_t2617] || -1))) === 1))) continue;
+                                        _g2612++;
+                                      }
+                                    }
+                                    let _g2618 = 0;
+                                    G2619: {
+                                      for (let _i2620 = 0; _i2620 < 1; _i2620++) {
+                                        const v_k = v_y;
+                                        const _h2621 = clueAt(cl.number, v_k);
+                                        const _h2628 = (_h2621 + 1);
+                                        let _c2630: boolean = (_h2621 !== -1);
+                                        if (_c2630) {
+                                          let _c2629: boolean = (_h554 || (_h2621 === 1));
+                                          if (!_c2629) {
+                                            let _g2622 = 0;
+                                            G2623: {
+                                              const _t2624 = (_h2621 + 1);
+                                              const _a2625 = cluesValued(cl.number, _t2624);
+                                              for (let _i2626 = 0; _i2626 < _a2625.length; _i2626++) {
+                                                const v_x = _a2625[_i2626];
+                                                const _h2627 = clueAt(cl.number, v_x);
+                                                if (!((_h2627 === _h2628))) continue;
+                                                _g2622++;
+                                              }
+                                            }
+                                            _c2629 = (_g2622 === 0);
+                                          }
+                                          _c2630 = _c2629;
+                                        }
+                                        if (!(_c2630)) continue;
+                                        _g2618++;
+                                      }
+                                    }
+                                    _c2631 = (_g2612 < (2 - _g2618));
+                                  }
+                                  let _c2708: boolean = _c2631;
+                                  if (_c2708) {
+                                    let _q2632 = true;
+                                    Q2633: {
+                                      const _g2634: number[] = [];
+                                      G2635: {
+                                        for (let _i2637 = 0; _i2637 < 1; _i2637++) {
+                                          const v_x = v_s;
+                                          const _h2638 = clueAt(cl.number, v_x);
+                                          if (!((_h2638 !== -1))) continue;
+                                          _g2634.push(v_x);
+                                        }
+                                      }
+                                      const _g2639: number[] = [];
+                                      G2640: {
+                                        const _a2657 = throughWhere(sp, v_s, (_te2652: number): boolean => { let _c2654: boolean = ((_te2652 === _wc1680 ? _wd1681 : (_te2652 === _wc1678 ? _wd1679 : (b.grid[_te2652] || -1))) === 1); if (_c2654) {   const _t2653 = sp.edgeEnds[2 * _te2652];   _c2654 = !((clueAt(cl.number, _t2653) !== -1)); } let _c2656: boolean = _c2654; if (_c2656) {   const _t2655 = sp.edgeEnds[2 * _te2652 + 1];   _c2656 = !((clueAt(cl.number, _t2655) !== -1)); } return _c2656; });
+                                        for (let _i2658 = 0; _i2658 < _a2657.length; _i2658++) {
+                                          const v_t = _a2657[_i2658];
+                                          const _h2661 = clueAt(cl.number, v_t);
+                                          const _h2662 = (_h2661 !== -1);
+                                          const _h2663 = _h2662;
+                                          const _h2664 = !(_h2663);
+                                          const _a2659 = sp.adj4[v_t];
+                                          for (let _i2660 = 0; _i2660 < _a2659.length; _i2660++) {
+                                            const v_x = _a2659[_i2660];
+                                            const _h2665 = clueAt(cl.number, v_x);
+                                            let _c2667: boolean = (_h2664 && (_h2665 !== -1));
+                                            if (_c2667) {
+                                              const _t2666 = sp.adj4Edges[v_t][_i2660];
+                                              _c2667 = ((_t2666 === _wc1680 ? _wd1681 : (_t2666 === _wc1678 ? _wd1679 : (b.grid[_t2666] || -1))) === 1);
+                                            }
+                                            if (!(_c2667)) continue;
+                                            if (!_g2639.includes(v_x)) _g2639.push(v_x);
+                                          }
+                                        }
+                                      }
+                                      const _a2668 = union(_g2634, _g2639);
+                                      for (let _i2669 = 0; _i2669 < _a2668.length; _i2669++) {
+                                        const v_p = _a2668[_i2669];
+                                        const _h2706 = clueAt(cl.number, v_p);
+                                        const _g2670: number[] = [];
+                                        G2671: {
+                                          for (let _i2673 = 0; _i2673 < 1; _i2673++) {
+                                            const v_x = v_y;
+                                            const _h2674 = clueAt(cl.number, v_x);
+                                            if (!((_h2674 !== -1))) continue;
+                                            _g2670.push(v_x);
+                                          }
+                                        }
+                                        const _g2675: number[] = [];
+                                        G2676: {
+                                          const _a2693 = throughWhere(sp, v_y, (_te2688: number): boolean => { let _c2690: boolean = ((_te2688 === _wc1680 ? _wd1681 : (_te2688 === _wc1678 ? _wd1679 : (b.grid[_te2688] || -1))) === 1); if (_c2690) {   const _t2689 = sp.edgeEnds[2 * _te2688];   _c2690 = !((clueAt(cl.number, _t2689) !== -1)); } let _c2692: boolean = _c2690; if (_c2692) {   const _t2691 = sp.edgeEnds[2 * _te2688 + 1];   _c2692 = !((clueAt(cl.number, _t2691) !== -1)); } return _c2692; });
+                                          for (let _i2694 = 0; _i2694 < _a2693.length; _i2694++) {
+                                            const v_t = _a2693[_i2694];
+                                            const _h2697 = clueAt(cl.number, v_t);
+                                            const _h2698 = (_h2697 !== -1);
+                                            const _h2699 = _h2698;
+                                            const _h2700 = !(_h2699);
+                                            const _a2695 = sp.adj4[v_t];
+                                            for (let _i2696 = 0; _i2696 < _a2695.length; _i2696++) {
+                                              const v_x = _a2695[_i2696];
+                                              const _h2701 = clueAt(cl.number, v_x);
+                                              let _c2703: boolean = (_h2700 && (_h2701 !== -1));
+                                              if (_c2703) {
+                                                const _t2702 = sp.adj4Edges[v_t][_i2696];
+                                                _c2703 = ((_t2702 === _wc1680 ? _wd1681 : (_t2702 === _wc1678 ? _wd1679 : (b.grid[_t2702] || -1))) === 1);
+                                              }
+                                              if (!(_c2703)) continue;
+                                              if (!_g2675.includes(v_x)) _g2675.push(v_x);
+                                            }
+                                          }
+                                        }
+                                        const _a2704 = union(_g2670, _g2675);
+                                        for (let _i2705 = 0; _i2705 < _a2704.length; _i2705++) {
+                                          const v_q = _a2704[_i2705];
+                                          const _h2707 = clueAt(cl.number, v_q);
+                                          if (!((Math.abs((_h2706 - _h2707)) === cl.step))) {
+                                            _q2632 = false;
+                                            break Q2633;
+                                          }
+                                        }
+                                      }
+                                    }
+                                    _c2708 = _q2632;
+                                  }
+                                  if (!((_c2708 && (_h554 || !(throughWhere(sp, v_s, (_te2709: number): boolean => {  return ((_te2709 === _wc1680 ? _wd1681 : (_te2709 === _wc1678 ? _wd1679 : (b.grid[_te2709] || -1))) === 1); }).includes(v_y)))))) continue;
+                                  let _g2710 = 0;
+                                  G2711: {
+                                    const _a2712 = sp.adj4[v_s];
+                                    for (let _i2713 = 0; _i2713 < _a2712.length; _i2713++) {
+                                      const _t2714 = sp.adj4Edges[v_s][_i2713];
+                                      if (!(((_t2714 === _wc1680 ? _wd1681 : (_t2714 === _wc1678 ? _wd1679 : (b.grid[_t2714] || -1))) === 1))) continue;
+                                      _g2710++;
+                                    }
+                                  }
+                                  let _g2715 = 0;
+                                  G2716: {
+                                    for (let _i2717 = 0; _i2717 < 1; _i2717++) {
+                                      const v_k = v_s;
+                                      const _h2718 = clueAt(cl.number, v_k);
+                                      const _h2725 = (_h2718 + 1);
+                                      let _c2727: boolean = (_h2718 !== -1);
+                                      if (_c2727) {
+                                        let _c2726: boolean = (_h554 || (_h2718 === 1));
+                                        if (!_c2726) {
+                                          let _g2719 = 0;
+                                          G2720: {
+                                            const _t2721 = (_h2718 + 1);
+                                            const _a2722 = cluesValued(cl.number, _t2721);
+                                            for (let _i2723 = 0; _i2723 < _a2722.length; _i2723++) {
+                                              const v_x = _a2722[_i2723];
+                                              const _h2724 = clueAt(cl.number, v_x);
+                                              if (!((_h2724 === _h2725))) continue;
+                                              _g2719++;
+                                            }
+                                          }
+                                          _c2726 = (_g2719 === 0);
+                                        }
+                                        _c2727 = _c2726;
+                                      }
+                                      if (!(_c2727)) continue;
+                                      _g2715++;
+                                    }
+                                  }
+                                  let _c2850: boolean = ((_g2710 + 1) === (2 - _g2715));
+                                  if (!_c2850) {
+                                    let _q2728 = false;
+                                    Q2729: {
+                                      const _a2730 = sp.adj4[v_s];
+                                      const _n2731 = _i2591;
+                                      for (let _i2732 = 0; _i2732 < _n2731; _i2732++) {
+                                        const v_z = _a2730[_i2732];
+                                        const _t2733 = sp.adj4Edges[v_s][_i2732];
+                                        let _c2752: boolean = !((_t2733 === _wc1680 ? true : (_t2733 === _wc1678 ? true : (b.grid[_t2733] !== 0))));
+                                        if (_c2752) {
+                                          let _g2734 = 0;
+                                          G2735: {
+                                            const _a2736 = sp.adj4[v_s];
+                                            for (let _i2737 = 0; _i2737 < _a2736.length; _i2737++) {
+                                              const _t2738 = sp.adj4Edges[v_s][_i2737];
+                                              if (!(((_t2738 === _wc1680 ? _wd1681 : (_t2738 === _wc1678 ? _wd1679 : (b.grid[_t2738] || -1))) === 1))) continue;
+                                              _g2734++;
+                                            }
+                                          }
+                                          let _g2739 = 0;
+                                          G2740: {
+                                            for (let _i2741 = 0; _i2741 < 1; _i2741++) {
+                                              const v_k = v_s;
+                                              const _h2742 = clueAt(cl.number, v_k);
+                                              const _h2749 = (_h2742 + 1);
+                                              let _c2751: boolean = (_h2742 !== -1);
+                                              if (_c2751) {
+                                                let _c2750: boolean = (_h554 || (_h2742 === 1));
+                                                if (!_c2750) {
+                                                  let _g2743 = 0;
+                                                  G2744: {
+                                                    const _t2745 = (_h2742 + 1);
+                                                    const _a2746 = cluesValued(cl.number, _t2745);
+                                                    for (let _i2747 = 0; _i2747 < _a2746.length; _i2747++) {
+                                                      const v_x = _a2746[_i2747];
+                                                      const _h2748 = clueAt(cl.number, v_x);
+                                                      if (!((_h2748 === _h2749))) continue;
+                                                      _g2743++;
+                                                    }
+                                                  }
+                                                  _c2750 = (_g2743 === 0);
+                                                }
+                                                _c2751 = _c2750;
+                                              }
+                                              if (!(_c2751)) continue;
+                                              _g2739++;
+                                            }
+                                          }
+                                          _c2752 = (_g2734 < (2 - _g2739));
+                                        }
+                                        let _c2771: boolean = _c2752;
+                                        if (_c2771) {
+                                          let _g2753 = 0;
+                                          G2754: {
+                                            const _a2755 = sp.adj4[v_z];
+                                            for (let _i2756 = 0; _i2756 < _a2755.length; _i2756++) {
+                                              const _t2757 = sp.adj4Edges[v_z][_i2756];
+                                              if (!(((_t2757 === _wc1680 ? _wd1681 : (_t2757 === _wc1678 ? _wd1679 : (b.grid[_t2757] || -1))) === 1))) continue;
+                                              _g2753++;
+                                            }
+                                          }
+                                          let _g2758 = 0;
+                                          G2759: {
+                                            for (let _i2760 = 0; _i2760 < 1; _i2760++) {
+                                              const v_k = v_z;
+                                              const _h2761 = clueAt(cl.number, v_k);
+                                              const _h2768 = (_h2761 + 1);
+                                              let _c2770: boolean = (_h2761 !== -1);
+                                              if (_c2770) {
+                                                let _c2769: boolean = (_h554 || (_h2761 === 1));
+                                                if (!_c2769) {
+                                                  let _g2762 = 0;
+                                                  G2763: {
+                                                    const _t2764 = (_h2761 + 1);
+                                                    const _a2765 = cluesValued(cl.number, _t2764);
+                                                    for (let _i2766 = 0; _i2766 < _a2765.length; _i2766++) {
+                                                      const v_x = _a2765[_i2766];
+                                                      const _h2767 = clueAt(cl.number, v_x);
+                                                      if (!((_h2767 === _h2768))) continue;
+                                                      _g2762++;
+                                                    }
+                                                  }
+                                                  _c2769 = (_g2762 === 0);
+                                                }
+                                                _c2770 = _c2769;
+                                              }
+                                              if (!(_c2770)) continue;
+                                              _g2758++;
+                                            }
+                                          }
+                                          _c2771 = (_g2753 < (2 - _g2758));
+                                        }
+                                        let _c2848: boolean = _c2771;
+                                        if (_c2848) {
+                                          let _q2772 = true;
+                                          Q2773: {
+                                            const _g2774: number[] = [];
+                                            G2775: {
+                                              for (let _i2777 = 0; _i2777 < 1; _i2777++) {
+                                                const v_x = v_s;
+                                                const _h2778 = clueAt(cl.number, v_x);
+                                                if (!((_h2778 !== -1))) continue;
+                                                _g2774.push(v_x);
+                                              }
+                                            }
+                                            const _g2779: number[] = [];
+                                            G2780: {
+                                              const _a2797 = throughWhere(sp, v_s, (_te2792: number): boolean => { let _c2794: boolean = ((_te2792 === _wc1680 ? _wd1681 : (_te2792 === _wc1678 ? _wd1679 : (b.grid[_te2792] || -1))) === 1); if (_c2794) {   const _t2793 = sp.edgeEnds[2 * _te2792];   _c2794 = !((clueAt(cl.number, _t2793) !== -1)); } let _c2796: boolean = _c2794; if (_c2796) {   const _t2795 = sp.edgeEnds[2 * _te2792 + 1];   _c2796 = !((clueAt(cl.number, _t2795) !== -1)); } return _c2796; });
+                                              for (let _i2798 = 0; _i2798 < _a2797.length; _i2798++) {
+                                                const v_t = _a2797[_i2798];
+                                                const _h2801 = clueAt(cl.number, v_t);
+                                                const _h2802 = (_h2801 !== -1);
+                                                const _h2803 = _h2802;
+                                                const _h2804 = !(_h2803);
+                                                const _a2799 = sp.adj4[v_t];
+                                                for (let _i2800 = 0; _i2800 < _a2799.length; _i2800++) {
+                                                  const v_x = _a2799[_i2800];
+                                                  const _h2805 = clueAt(cl.number, v_x);
+                                                  let _c2807: boolean = (_h2804 && (_h2805 !== -1));
+                                                  if (_c2807) {
+                                                    const _t2806 = sp.adj4Edges[v_t][_i2800];
+                                                    _c2807 = ((_t2806 === _wc1680 ? _wd1681 : (_t2806 === _wc1678 ? _wd1679 : (b.grid[_t2806] || -1))) === 1);
+                                                  }
+                                                  if (!(_c2807)) continue;
+                                                  if (!_g2779.includes(v_x)) _g2779.push(v_x);
+                                                }
+                                              }
+                                            }
+                                            const _a2808 = union(_g2774, _g2779);
+                                            for (let _i2809 = 0; _i2809 < _a2808.length; _i2809++) {
+                                              const v_p = _a2808[_i2809];
+                                              const _h2846 = clueAt(cl.number, v_p);
+                                              const _g2810: number[] = [];
+                                              G2811: {
+                                                for (let _i2813 = 0; _i2813 < 1; _i2813++) {
+                                                  const v_x = v_z;
+                                                  const _h2814 = clueAt(cl.number, v_x);
+                                                  if (!((_h2814 !== -1))) continue;
+                                                  _g2810.push(v_x);
+                                                }
+                                              }
+                                              const _g2815: number[] = [];
+                                              G2816: {
+                                                const _a2833 = throughWhere(sp, v_z, (_te2828: number): boolean => { let _c2830: boolean = ((_te2828 === _wc1680 ? _wd1681 : (_te2828 === _wc1678 ? _wd1679 : (b.grid[_te2828] || -1))) === 1); if (_c2830) {   const _t2829 = sp.edgeEnds[2 * _te2828];   _c2830 = !((clueAt(cl.number, _t2829) !== -1)); } let _c2832: boolean = _c2830; if (_c2832) {   const _t2831 = sp.edgeEnds[2 * _te2828 + 1];   _c2832 = !((clueAt(cl.number, _t2831) !== -1)); } return _c2832; });
+                                                for (let _i2834 = 0; _i2834 < _a2833.length; _i2834++) {
+                                                  const v_t = _a2833[_i2834];
+                                                  const _h2837 = clueAt(cl.number, v_t);
+                                                  const _h2838 = (_h2837 !== -1);
+                                                  const _h2839 = _h2838;
+                                                  const _h2840 = !(_h2839);
+                                                  const _a2835 = sp.adj4[v_t];
+                                                  for (let _i2836 = 0; _i2836 < _a2835.length; _i2836++) {
+                                                    const v_x = _a2835[_i2836];
+                                                    const _h2841 = clueAt(cl.number, v_x);
+                                                    let _c2843: boolean = (_h2840 && (_h2841 !== -1));
+                                                    if (_c2843) {
+                                                      const _t2842 = sp.adj4Edges[v_t][_i2836];
+                                                      _c2843 = ((_t2842 === _wc1680 ? _wd1681 : (_t2842 === _wc1678 ? _wd1679 : (b.grid[_t2842] || -1))) === 1);
+                                                    }
+                                                    if (!(_c2843)) continue;
+                                                    if (!_g2815.includes(v_x)) _g2815.push(v_x);
+                                                  }
+                                                }
+                                              }
+                                              const _a2844 = union(_g2810, _g2815);
+                                              for (let _i2845 = 0; _i2845 < _a2844.length; _i2845++) {
+                                                const v_q = _a2844[_i2845];
+                                                const _h2847 = clueAt(cl.number, v_q);
+                                                if (!((Math.abs((_h2846 - _h2847)) === cl.step))) {
+                                                  _q2772 = false;
+                                                  break Q2773;
+                                                }
+                                              }
+                                            }
+                                          }
+                                          _c2848 = _q2772;
+                                        }
+                                        if ((_c2848 && (_h554 || !(throughWhere(sp, v_s, (_te2849: number): boolean => {  return ((_te2849 === _wc1680 ? _wd1681 : (_te2849 === _wc1678 ? _wd1679 : (b.grid[_te2849] || -1))) === 1); }).includes(v_z))))) {
+                                          _q2728 = true;
+                                          break Q2729;
+                                        }
+                                      }
+                                    }
+                                    _c2850 = _q2728;
+                                  }
+                                  if (_c2850) {
+                                    _q2588 = true;
+                                    break Q2589;
+                                  }
+                                }
+                              }
+                              _c2851 = !(_q2588);
+                            }
+                            if (_c2851) {
+                              _wm2566 = { held: "member", member: { s: v_s }, of: { held: "def", name: "stuck", of: { held: "def", name: "spare", of: null } } };
+                              break W2567;
+                            }
+                          }
+                        }
+                        _wo2279 = { held: "arm", arm: 1, of: _wm2566 };
+                      }
+                      _wm1682 = { held: "member", member: { t: v_t }, of: _wo2279 };
+                      break W1683;
+                    }
+                  }
+                }
+                _wo1672 = { held: "arm", arm: 1, of: { held: "supposing", cell: _wc1678, value: _wd1679, of: { held: "supposing", cell: _wc1680, value: _wd1681, of: { held: "def", name: "shortNear", of: _wm1682 } } } };
+              }
+              const _w: Witness | null = { held: "def", name: "bothBreak", of: _wo1672 };
+              const _says = { terms: { c: v_c, i: v_i, j: v_j }, marks: {  }, witness: _w };
               if (!fire({ c: v_c, U: v_U.slice(), k: v_k, I: v_I.slice(), i: v_i, j: v_j }, facts, _says)) return 1;
             }
             cands.fill(-1);

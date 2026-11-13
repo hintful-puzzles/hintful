@@ -8,7 +8,8 @@
  * words outline them, and never played.
  *
  * A Check's firing says which lines it tried; what they break, which its
- * words name (a loop, two numbers, a square left short), is read here off
+ * words name (a loop, two numbers, a square left short), is the witness's
+ * for `lineBreaks` and `pairBreaks` (`brokeOf`, solver.ts) and, for `weighed`, read here off
  * the board with those lines drawn ({@link clashOf}), in the order a player
  * looks: what the lines join first, then the squares round them.
  * `path-hint.test.ts` holds every Check a walk takes to finding one.
@@ -32,6 +33,7 @@ import {
 import type { Point } from "../../engine/types.ts";
 import { type Clash, type Square, say, type Why } from "./hint-text.ts";
 import {
+  type Broke,
   type PathFiring,
   type PathRung,
   type PathSays,
@@ -197,6 +199,18 @@ function wordsOf(state: PathState, edges: Uint8Array, firing: PathFiring): Sente
     if (found === null) throw new Error(`path: lines on ${tried} break nothing`);
     return clashWords(state, edges, tried, found, square);
   };
+  // What broke is the technique's witness; the board says only how it looks.
+  // The last line tried is the one that closes a loop or joins two numbers.
+  const witnessed = (tried: readonly number[], broke: Broke): Clash =>
+    clashWords(
+      state,
+      edges,
+      tried,
+      typeof broke === "object"
+        ? { kind: "stuck", cell: broke.stuck }
+        : { kind: broke, edge: tried[tried.length - 1] },
+      square,
+    );
   const { reason } = firing;
   switch (reason.kind) {
     case "forced":
@@ -207,9 +221,13 @@ function wordsOf(state: PathState, edges: Uint8Array, firing: PathFiring): Sente
         firing.edges,
       );
     case "lineBreaks":
-      return say.lineBreaks(firing.edges[0], clash(reason.tried));
+      return say.lineBreaks(firing.edges[0], witnessed(reason.tried, reason.broke));
     case "pairBreaks":
-      return say.pairBreaks(reason.tried, firing.edges[0], clash(reason.tried));
+      return say.pairBreaks(
+        reason.tried,
+        firing.edges[0],
+        witnessed(reason.tried, reason.broke),
+      );
     case "weighed": {
       const whys = reason.ruledOut.map((tried) => whyOf(clash(tried)));
       const s = square(reason.cell);
