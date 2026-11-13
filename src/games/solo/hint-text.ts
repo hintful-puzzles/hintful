@@ -30,7 +30,7 @@ import {
   noteText,
   placedRulesOut,
   populateText,
-  thisCell,
+  thisCellNamed,
 } from "../../engine/hint-text.ts";
 import {
   CELL,
@@ -80,21 +80,27 @@ const all = (ns: number[]): string => joinWith(ns.map(g));
 /** Values of which any one would do, or none can ("no room for 1 or 2"). */
 const any = (ns: number[]): string => joinOr(ns.map(g));
 
+/** Sudoku's board position is a cell: its help says so, and a square is also
+ * the whole grid ("Latin square"). */
+const CELL_WORD = "cell";
+const thisCell = thisCellNamed(CELL_WORD);
+
 /** Solo's values are numbers, printed as the board prints them, and a wing's
  * ends each share a row, column, diagonal ("a line") or block with the struck
  * cell: what the solver's wing counts, which a cage is not. */
 export const SOLO_VOCAB: LatinVocab = {
   noun: "number",
+  cell: CELL_WORD,
   value: digitChar,
   beside: "in a line or block with",
 };
 
 export const say = {
-  populate: populateText("number"),
+  populate: populateText("number", CELL_WORD),
 
   /** `regions` names every kind of region a digit may not repeat in. */
   cleanObvious: (regions: string[]) =>
-    cleanObviousText("number", "placed", joinOr(regions)),
+    cleanObviousText("number", "placed", joinOr(regions), CELL_WORD),
 
   /** A note step under the implicit reading at `at`; `regions` names the
    * kinds of region the cell lies in. */
@@ -103,6 +109,7 @@ export const say = {
       noun: "number",
       placedVerb: "placed",
       regions: joinOr(regions),
+      cell: CELL_WORD,
     }),
 
   // The strike arms below are premises, which the walk concludes with the move

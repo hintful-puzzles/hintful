@@ -109,21 +109,21 @@ export function edgeContinuation(
  * games modulo the game's own noun ("number", "height", …). Undead's opener
  * ("penciling every monster into…") is structurally different and stays
  * game-local. */
-export function populateText(noun: string, cell = "cell"): string {
+export function populateText(noun: string, cell = "square"): string {
   return `Start by penciling every candidate ${noun} into each empty ${cell}.`;
 }
 
 /** Narration for the obvious-cleanup step, parameterized by the game's noun,
  * its placement verb ("standing", "placed"), its region phrase ("row or
  * column", "row, column or block") — and what it calls a board position, which
- * defaults to "cell" but is Salad's "square" (see {@link populateText}: the two
+ * defaults to "square" and is "cell" where the game's genre says so (see {@link populateText}: the two
  * setup strings and the generic narration arms must agree, or one game's hints
  * read in two vocabularies). */
 export function cleanObviousText(
   noun: string,
   placedVerb: string,
   regions: string,
-  cell = "cell",
+  cell = "square",
 ): (marks: readonly Note[]) => Sentence {
   // Says nothing about the "fill all pencil marks" button doing this same
   // cleanup: help/features.md says so once (docs/hints.md § "Rules belong
@@ -167,7 +167,7 @@ export function noteText(
 }
 
 /** "this cell": the ringed cell a step decides, in the game's word for it. */
-export function thisCell(at: Point, cell = "cell"): Narration {
+export function thisCell(at: Point, cell = "square"): Narration {
   return mark.this("ring", CELL, [at], cell);
 }
 
@@ -228,6 +228,13 @@ export interface Conclusions {
   keep(values: readonly number[]): string;
 }
 
+/** {@link thisCell} for a game whose board position is not the default
+ * "square": `const thisCell = thisCellNamed("cell")`, once, in its hint text. */
+export const thisCellNamed =
+  (cell: string) =>
+  (at: Point): Narration =>
+    thisCell(at, cell);
+
 /** The {@link Conclusions} of a game whose values print one way everywhere, in
  * its value vocabulary. A value struck in several cells is named once. */
 export function candidateConclusions(vocab: {
@@ -235,7 +242,7 @@ export function candidateConclusions(vocab: {
   cell?: string;
 }): Conclusions {
   const v = vocab.value;
-  const cell = vocab.cell ?? "cell";
+  const cell = vocab.cell ?? "square";
   return {
     cell,
     strike: ({ where, struck }) => {
@@ -287,8 +294,9 @@ export interface LatinVocab {
   noun: string;
   /** How one value prints. */
   value(n: number): string;
-  /** What the game calls a board position. Default "cell"; Salad's board is
-   * squares, and mixing the two words inside one game's hints reads as sloppy. */
+  /** What the game calls a board position. Default "square"; a game whose
+   * genre says "cell" declares it here, and mixing the two words inside one
+   * game's hints reads as sloppy. */
   cell?: string;
   /** How a wing's ends share a unit with the struck cell, in the game's
    * units. Default "in line with". */
@@ -316,7 +324,7 @@ export function narrateLatinReason(
 ): Sentence {
   const { noun } = vocab;
   const v = vocab.value;
-  const cell = vocab.cell ?? "cell";
+  const cell = vocab.cell ?? "square";
   const here = thisCell(at, cell);
   switch (reason.kind) {
     case "single":
@@ -367,7 +375,7 @@ function confinedPremise(
   },
   set: readonly Point[],
   value: string,
-  cell = "cell",
+  cell = "square",
 ): Narration {
   const [along, across] =
     lines.axis === "row" ? ["rows", "columns"] : ["columns", "rows"];
@@ -394,7 +402,7 @@ function wingPremise(
   wing: { middle: Point; ends: readonly Point[]; self: boolean },
   at: Point,
   value: string,
-  cell = "cell",
+  cell = "square",
   beside = "in line with",
 ): Narration {
   // "Another": the struck cell is outlined too, and an end is any outlined
@@ -412,7 +420,7 @@ export function latinPremise(
   vocab: LatinVocab = NUMBER_VOCAB,
 ): Premise {
   const v = vocab.value;
-  const cell = vocab.cell ?? "cell";
+  const cell = vocab.cell ?? "square";
   switch (reason.kind) {
     case "dup":
       return {

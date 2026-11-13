@@ -573,7 +573,7 @@ function buildSteps(
     // The narration names one height ("a tower of height 5 can't go here"), so
     // a clue firing that rules out 4 and 5 along its line is one leg per height.
     strikeAxis: (op) => op.n,
-    notes: { noun: "height", placedVerb: "standing" },
+    notes: { noun: "height", placedVerb: "standing", cell: "cell" },
     // clue == w fills the whole line 1..w in order as one journey; clue == 1
     // places the tallest tower next to the clue.
     rungs: [

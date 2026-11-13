@@ -82,7 +82,7 @@ import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import type { Point } from "../../engine/types.ts";
 import { newMathraxDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { MATHRAX_VOCAB, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -379,14 +379,14 @@ function premise(
     // The generic Latin arms (dup / set) read identically to Keen's
     // and Unequal's — narrated once, shared.
     default:
-      return latinPremise(reason, marks);
+      return latinPremise(reason, marks, MATHRAX_VOCAB);
   }
 }
 
 /** Why a placement is forced: always a generic single, since no clue places. */
 function narrate(reason: HintReason, m: Mark, o: number): Sentence {
   if (reason.kind === "clue") throw new Error("a clue deduction strikes");
-  return narrateLatinReason(reason, m, o);
+  return narrateLatinReason(reason, m, o, MATHRAX_VOCAB);
 }
 
 /** Every rung a Mathrax step can be: the Latin family's, and the one kind of
@@ -418,7 +418,7 @@ function buildSteps(
     record: () => recordMathraxDeductions(o, state.clues, wGrid, maxdiff),
     placeWords: (m, reason) => ({ words: narrate(reason, m, o) }),
     strikeWords: (marks, reason) => premise(reason, marks, wGrid, o),
-    notes: { noun: "number", placedVerb: "standing" },
+    notes: { noun: "number", placedVerb: "standing", cell: "cell" },
   });
   return steps;
 }

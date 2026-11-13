@@ -54,7 +54,8 @@ export interface Marked {
   clue: Point | null;
 }
 
-const thisCell = (m: Marked): Narration => mark.this("ring", CELL, [m.target], "cell");
+const thisCell = (m: Marked): Narration =>
+  mark.this("ring", CELL, [m.target], "square");
 const theClue = (m: Marked, n: number): Narration =>
   mark.as("outline", CLUE, m.clue ? [m.clue] : [], `this ${n}`);
 
@@ -72,19 +73,19 @@ export const say = {
   satisfied: (m: Marked, n: number): Sentence => {
     const seen =
       n === 1
-        ? `its one ${UNSHADED_NAME} cell`
+        ? `its one ${UNSHADED_NAME} square`
         : n === 2
-          ? `both of its ${UNSHADED_NAME} cells`
-          : `all ${n} of its ${UNSHADED_NAME} cells`;
+          ? `both of its ${UNSHADED_NAME} squares`
+          : `all ${n} of its ${UNSHADED_NAME} squares`;
     return so({
       look: phrase`${theClue(m, n)} already sees ${mark.paren("outline", CELL, m.area, seen)}`,
-      move: phrase`${mark.as("ring", CELL, [m.target], `the ringed cell just past ${pronoun(CELL, m.area)}`)} must be ${SHADED_NAME}`,
+      move: phrase`${mark.as("ring", CELL, [m.target], `the ringed square just past ${pronoun(CELL, m.area)}`)} must be ${SHADED_NAME}`,
     });
   },
 
   overrun: (m: Marked, n: number): Sentence =>
     so({
-      look: phrase`if ${thisCell(m)}, just past ${mark.the("outline", CELL, m.area, "cell")}, were ${UNSHADED_NAME}, ${theClue(m, n)} would see more than ${n}`,
+      look: phrase`if ${thisCell(m)}, just past ${mark.the("outline", CELL, m.area, "square")}, were ${UNSHADED_NAME}, ${theClue(m, n)} would see more than ${n}`,
       move: phrase`it must be ${SHADED_NAME}`,
     }),
 
@@ -93,16 +94,16 @@ export const say = {
   // the bare arm, whose other directions see nothing yet, says that outright.
   reach: (m: Marked, n: number): Sentence => {
     const run = mark.the("stripes", whole(CELL), m.run, "run");
-    const target = mark.the("ring", CELL, [m.target], "cell");
+    const target = mark.the("ring", CELL, [m.target], "square");
     return m.area.length > 0
       ? so({
-          look: phrase`${theClue(m, n)} needs more than ${mark.the("outline", CELL, m.area, "cell")}`,
+          look: phrase`${theClue(m, n)} needs more than ${mark.the("outline", CELL, m.area, "square")}`,
           follows: phrase`it must see along ${run}`,
           move: phrase`${target} must be ${UNSHADED_NAME}`,
         })
       : so({
           look: phrase`${theClue(m, n)} can't see ${n} without seeing along ${run} to ${target}`,
-          move: phrase`that cell must be ${UNSHADED_NAME}`,
+          move: phrase`that square must be ${UNSHADED_NAME}`,
         });
   },
 
@@ -111,7 +112,7 @@ export const say = {
   // forced *clear*, never shaded.
   connect: (m: Marked): Sentence =>
     so({
-      look: phrase`making ${thisCell(m)} ${SHADED_NAME} would cut some of ${mark.the("outline", CELL, m.area, "cell")} around it off from the rest`,
+      look: phrase`making ${thisCell(m)} ${SHADED_NAME} would cut some of ${mark.the("outline", CELL, m.area, "square")} around it off from the rest`,
       move: phrase`it must stay ${UNSHADED_NAME}`,
     }),
 };

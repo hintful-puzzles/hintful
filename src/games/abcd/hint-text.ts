@@ -17,7 +17,7 @@ import {
   type LatinVocab,
   narrateLatinReason,
   populateText,
-  thisCell,
+  thisCellNamed,
 } from "../../engine/hint-text.ts";
 import {
   CELL,
@@ -38,6 +38,7 @@ import type { Point } from "../../engine/types.ts";
 /** The letters as a hint prints them: candidate `n` is the `n`th letter. */
 export const LETTERS: LatinVocab = {
   noun: "letter",
+  cell: "cell",
   value: (n) => String.fromCharCode(64 + n),
 };
 const L = LETTERS.value;
@@ -73,8 +74,12 @@ const thisLine = (line: LineMarks): Narration =>
 const count = (line: LineMarks, words: string): Narration =>
   mark.as("outline", CLUE, [line.clue], words);
 
+/** Abcd's help calls a board position a cell, as the genre of a letters-in-a-grid
+ * puzzle does. */
+const thisCell = thisCellNamed("cell");
+
 export const say = {
-  populate: populateText("letter"),
+  populate: populateText("letter", "cell"),
 
   clean:
     (diag: boolean) =>

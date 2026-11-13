@@ -17,7 +17,7 @@ import {
   joinWith,
   narrateLatinReason,
   populateText,
-  thisCell,
+  thisCellNamed,
 } from "../../engine/hint-text.ts";
 import {
   CELL,
@@ -32,6 +32,9 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+
+/** Seismic's board position is a cell, as its help says. */
+const thisCell = thisCellNamed("cell");
 
 /** "1 cell", "3 cells". */
 const cells = (n: number): string => (n === 1 ? "1 cell" : `${n} cells`);
@@ -49,7 +52,7 @@ const stripedArea = (area: readonly Point[]): Narration =>
   mark.the("stripes", whole(CELL), area, "area");
 
 export const say = {
-  populate: populateText("number"),
+  populate: populateText("number", "cell"),
 
   /** The one-off setup strike, over the notes it strikes. "Within N cells" is the
    * rule's own reach: two equal numbers N need at least N cells *between*
@@ -96,7 +99,11 @@ export const say = {
     }),
 
   naked: (at: Note, w: number): Sentence =>
-    narrateLatinReason({ kind: "single" }, at, w),
+    narrateLatinReason({ kind: "single" }, at, w, {
+      noun: "number",
+      cell: "cell",
+      value: String,
+    }),
 
   /** A note-less cell every other number is ruled out of. */
   regionsFull: (at: Point, n: number, tectonic: boolean): Sentence =>

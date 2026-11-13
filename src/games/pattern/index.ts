@@ -507,7 +507,7 @@ export const patternGame: Game<
   hint,
   hintMarks: {
     roles: {
-      ring: `the cells the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,
+      ring: `the squares the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,
       outline: `what the step reasons from: the numbers of its row or column, drawn in the hint color, and any squares already marked ${SHADED_NAME} or ${UNSHADED_NAME} that hold a run in place, outlined.`,
       stripes: "the row or column the sentence names, running on through its numbers.",
     },

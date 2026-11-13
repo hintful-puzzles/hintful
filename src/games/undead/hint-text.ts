@@ -51,7 +51,7 @@ function joinMonsters(bits: number, conj: "or" | "and" = "or"): string {
 const bitsOf = (notes: readonly Note[]): number => notes.reduce((b, k) => b | k.n, 0);
 
 /** The cells the step decides, as "this cell" / "these cells". */
-const thisCell = (m: Marked): Narration => mark.this("ring", CELL, m.targets, "cell");
+const thisCell = (m: Marked): Narration => mark.this("ring", CELL, m.targets, "square");
 
 /** The cells a step strikes notes in, striped: the step decides the notes,
  * which their strikes mark, and a cell on the sightline lies inside its
@@ -61,7 +61,7 @@ const struckCell = (m: Marked): Narration =>
     "stripes",
     CELL,
     [...new Map(m.notes.map((k) => [CELL.key(k), { x: k.x, y: k.y }])).values()],
-    "cell",
+    "square",
   );
 
 /** The struck pencil marks, "the struck ghost and vampire", in words that
@@ -80,7 +80,7 @@ export const say = {
   // Undead's opener is its own: it pencils monsters, not the candidate games'
   // values (`engine/hint-text.ts`'s `populateText`).
   populate: unshaped(
-    Narration.plain("Start by penciling every monster into each empty cell."),
+    Narration.plain("Start by penciling every monster into each empty square."),
     "setup",
   ),
 
@@ -105,7 +105,7 @@ export const say = {
     const name = monsterName(monster);
     return so({
       look: phrase`No ${name}s are left to place`,
-      follows: phrase`no undecided cell can be one`,
+      follows: phrase`no undecided square can be one`,
       move: phrase`${struck(m)} in ${struckCell(m)} must go`,
     });
   },
@@ -113,7 +113,7 @@ export const say = {
   onlyCells: (monster: number, m: Marked): Sentence => {
     const name = monsterName(monster);
     return so({
-      look: phrase`Exactly as many cells can still hold a ${name} as there are ${name}s left to place`,
+      look: phrase`Exactly as many squares can still hold a ${name} as there are ${name}s left to place`,
       move: phrase`${thisCell(m)} can only be a ${name}`,
     });
   },

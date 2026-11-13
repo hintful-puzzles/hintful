@@ -48,7 +48,7 @@ help:
     in this cell, and when every way of filling a cage puts, say, a 4 in one
     row, no other cell of that row can be 4.
 
-    {{wing}}
+    {{wing:cell}}
 
     If you've turned on the preference that removes a number from pencil
     marks in its row and column when you place it, the hint leaves that

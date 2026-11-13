@@ -63,7 +63,7 @@ help:
       shorter behind it, so it can leave the clue unable to see as many
       towers as it says.
 
-    {{wing}}
+    {{wing:cell}}
 
     If you've turned on the preference that removes a height from pencil
     marks in its row and column when you place a tower, the hint leaves

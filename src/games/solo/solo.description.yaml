@@ -65,7 +65,7 @@ help:
       and placed digits are counted, what's left over belongs to the cells
       that remain.
 
-    {{wing}}
+    {{wing:cell}}
 
     If you've turned on the preference that removes a number from the
     pencil marks it rules out when you place it, the hint leaves that

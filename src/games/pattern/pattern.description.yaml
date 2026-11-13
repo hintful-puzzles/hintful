@@ -25,26 +25,25 @@ help:
     works along one row or column at a time, from its numbers and the
     squares you have already marked {{pair:0}} or clear, so it carries on
     from wherever you are, as long as none of those is wrong; if one is, it
-    asks you to fix the highlighted mistakes first. Its sentences call a
-    square a *cell*.
+    asks you to fix the highlighted mistakes first.
 
     {{hint-marks}}
 
     A few ideas are worth learning by name:
 
-    * **Overlap.** A run that can slide only a few cells along its line
-      always covers the cells in the middle of its range, so they must be
+    * **Overlap.** A run that can slide only a few squares along its line
+      always covers the squares in the middle of its range, so they must be
       {{pair:0}}. A run with nowhere to slide covers all of them.
-    * **Out of reach.** A cell no run can reach in its line must be clear.
+    * **Out of reach.** A square no run can reach in its line must be clear.
       A line with no clues has no runs, so all of it is clear.
     * **Every fit agrees.** Try every way a line's runs can fit around what
-      is already marked: a cell that comes out the same in all of them is
+      is already marked: a square that comes out the same in all of them is
       settled.
 
     On an Unreasonable board there comes a point where no row or column
-    settles another cell on its own, and the hint says that nothing further
+    settles another square on its own, and the hint says that nothing further
     follows by deduction instead of choosing for you. Save your position,
-    try a cell, and it carries on from whatever you mark.
+    try a square, and it carries on from whatever you mark.
 name: Pattern
 family: shading
 sizes:

@@ -962,7 +962,7 @@ export const undeadGame: Game<
       outline:
         "the *sightline* the step reasons from, in a second color: the squares, mirrors included, that a line of sight passes through between the two numbers at its ends.",
       stripes:
-        "“this cell” or “these cells”, the squares whose pencil marks the step crosses out.",
+        "“this square” or “these squares”, the squares whose pencil marks the step crosses out.",
     },
   },
   hintKeepTrack,

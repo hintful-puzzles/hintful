@@ -189,7 +189,7 @@ describe("pattern hint — narration", () => {
     const t = pinned("intersection").step.explanation;
     expect(t, `bad intersection narration: "${t}"`).toMatch(
       new RegExp(
-        `^Every way this (row|column)'s outlined runs can fit (covers|leaves out) .*, so (that cell|those cells) must be (${SHADED_NAME}|${UNSHADED_NAME})\\.$`,
+        `^Every way this (row|column)'s outlined runs can fit (covers|leaves out) .*, so (that square|those squares) must be (${SHADED_NAME}|${UNSHADED_NAME})\\.$`,
       ),
     );
     expect(t).not.toMatch(/only one arrangement/i);
@@ -207,16 +207,16 @@ describe("pattern hint — narration", () => {
     // The ninth row; then the fifth column, through the shaded cell 84.
     expect(at(0)).toEqual({
       cells: [84, 85],
-      says: `This row's run of 6 can slide only 4 cells, so these cells must be ${SHADED_NAME}.`,
+      says: `This row's run of 6 can slide only 4 squares, so these squares must be ${SHADED_NAME}.`,
     });
     expect(at(1).cells).toEqual([24, 34]);
     expect(at(6)).toEqual({
       cells: [2, 12, 22, 32],
-      says: `This column's run of 4 has nowhere to slide, so these cells must be ${SHADED_NAME}.`,
+      says: `This column's run of 4 has nowhere to slide, so these squares must be ${SHADED_NAME}.`,
     });
     expect(at(18)).toEqual({
       cells: [5, 15, 25],
-      says: "No run of this column's outlined clue can reach the ringed cells, so those cells must be clear.",
+      says: "No run of this column's outlined clue can reach the ringed squares, so those squares must be clear.",
     });
   });
 });
@@ -300,7 +300,7 @@ describe("pattern hint — keep track", () => {
     expect(
       bindingDefects(patternGame, filled, patternGame.newUi(filled), clone),
     ).toEqual([]);
-    if (h.cells.length === 2) expect(clone.explanation).toMatch(/\bthis cell\b/);
+    if (h.cells.length === 2) expect(clone.explanation).toMatch(/\bthis square\b/);
 
     // Filling all cells at once → completed.
     const all: PatternMove = {

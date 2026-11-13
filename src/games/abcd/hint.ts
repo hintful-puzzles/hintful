@@ -320,7 +320,7 @@ export function buildSteps(
           throw new Error(`abcd: a ${reason.kind} strikes nothing`);
       }
     },
-    conclude: candidateConclusions({ value: LETTERS.value }),
+    conclude: candidateConclusions({ value: LETTERS.value, cell: "cell" }),
     notes: {
       populate: say.populate,
       cleanObvious: say.clean(diag),

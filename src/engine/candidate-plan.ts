@@ -457,7 +457,7 @@ export type LatinCandidatePlan<
    * game's singular noun for a cell's value ("number", "height", "element"), its
    * verb for one already on the board ("standing", "placed"), how a value prints
    * where it is not a plain number (Group's letters), and what it calls a cell
-   * where that is not "cell" (Salad's squares). The region phrase is not among
+   * where that is not "square" (Keen's cells). The region phrase is not among
    * them — a game whose regions are a row and a column has no other answer. */
   notes: {
     noun: string;
@@ -521,7 +521,7 @@ export function runLatinCandidatePlan<
 ): void {
   const { w, notes, placeWords, ...rest } = plan;
   const value = notes.value ?? String;
-  const cell = notes.cell ?? "cell";
+  const cell = notes.cell ?? "square";
   const vocab = {
     noun: notes.noun,
     placedVerb: notes.placedVerb,

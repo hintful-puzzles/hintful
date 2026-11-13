@@ -263,7 +263,7 @@ describe("hint", () => {
       // neighbor that does not touch the second.
       if (outlined.length > 0) {
         expect(
-          /beside this cell|its outlined \w+ neighbor|from it|also touch|beside the/.test(
+          /beside this square|its outlined \w+ neighbor|from it|also touch|beside the/.test(
             step.explanation,
           ),
           `${step.explanation} — a second mark is shown but "this cell" is not tied to it`,

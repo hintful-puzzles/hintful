@@ -2709,6 +2709,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
 
 exports[`pattern: pinned hint positions > says, at each pin 1`] = `
 {
-  "citesBlack": "This column's run of 6 has nowhere to slide, given the outlined cell, so these cells must be purple.",
+  "citesBlack": "This column's run of 6 has nowhere to slide, given the outlined square, so these squares must be purple.",
 }
 `;

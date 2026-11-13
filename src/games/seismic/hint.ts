@@ -259,7 +259,7 @@ export function buildSteps(
           throw new Error(`seismic: a ${reason.kind} strikes nothing`);
       }
     },
-    conclude: candidateConclusions({ value: String }),
+    conclude: candidateConclusions({ value: String, cell: "cell" }),
     notes: {
       populate: say.populate,
       cleanObvious: say.clean(tectonic),

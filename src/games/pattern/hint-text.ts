@@ -30,13 +30,13 @@ export interface Marked {
   orient: "row" | "column";
 }
 
-const theseCells = (m: Marked): Narration => mark.this("ring", CELL, m.cells, "cell");
-const ringedCells = (m: Marked): Narration => mark.the("ring", CELL, m.cells, "cell");
+const theseCells = (m: Marked): Narration => mark.this("ring", CELL, m.cells, "square");
+const ringedCells = (m: Marked): Narration => mark.the("ring", CELL, m.cells, "square");
 /** "that cell" or "those cells" for the decided cells once the sentence has
  * named them, re-rendered when a step shrinks. */
 const those = (m: Marked): Narration =>
   mark.as("ring", CELL, m.cells, (els) =>
-    pronoun(CELL, els) === "it" ? "that cell" : "those cells",
+    pronoun(CELL, els) === "it" ? "that square" : "those squares",
   );
 const thisLine = (m: Marked): Narration =>
   mark.this("stripes", LINE, [m.line], m.orient);
@@ -44,7 +44,9 @@ const clue = (m: Marked, words: string): Narration =>
   mark.as("outline", CLUE, [m.line], words);
 /** ", given the outlined cells" when the step cites placed cells. */
 const given = (m: Marked): Narration | string =>
-  m.refs.length > 0 ? phrase`, given ${mark.the("outline", CELL, m.refs, "cell")}` : "";
+  m.refs.length > 0
+    ? phrase`, given ${mark.the("outline", CELL, m.refs, "square")}`
+    : "";
 
 export const say = {
   /** A run of `run` that can slide only `slack` cells along the line. */
@@ -53,7 +55,7 @@ export const say = {
       look:
         slack === 0
           ? phrase`${thisLine(m)}'s ${clue(m, `run of ${run}`)} has nowhere to slide${given(m)}`
-          : phrase`${thisLine(m)}'s ${clue(m, `run of ${run}`)} can slide only ${slack} cell${
+          : phrase`${thisLine(m)}'s ${clue(m, `run of ${run}`)} can slide only ${slack} square${
               slack > 1 ? "s" : ""
             }${given(m)}`,
       move: phrase`${theseCells(m)} must be ${SHADED_NAME}`,

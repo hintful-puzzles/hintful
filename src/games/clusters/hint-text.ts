@@ -73,7 +73,7 @@ function count(s: Spoken<"countFull"> | Spoken<"countShort">): Sentence {
   const noun = a.dot ? "dot" : "tile";
   const tileA = (words: string) => mark.as("outline", CELL, [a.at], words);
   const tileB = (words: string) => mark.as("outline", CELL, [b.at], words);
-  const move = phrase`${mark.this("ring", CELL, s.targets, "cell")} must be ${colorName(t.fill as ClustersFill)}`;
+  const move = phrase`${mark.this("ring", CELL, s.targets, "square")} must be ${colorName(t.fill as ClustersFill)}`;
   // "Also touch" and "beside" are the squares the two share.
   if (!("most" in t)) {
     const other = same ? `the other outlined ${noun}` : `the outlined ${kindOf(b)}`;
@@ -96,7 +96,7 @@ function count(s: Spoken<"countFull"> | Spoken<"countShort">): Sentence {
 function refute(s: Spoken<"refute">): Sentence {
   const f = colorName(s.terms.fill as ClustersFill);
   const t = colorName(s.terms.refuted as ClustersFill);
-  const thisCell: Narration = mark.this("ring", CELL, s.targets, "cell");
+  const thisCell: Narration = mark.this("ring", CELL, s.targets, "square");
   const itMust = phrase`it must be ${f}`;
   const thisMust = phrase`${thisCell} must be ${f}`;
   if (s.arm === "selfSurrounded") {

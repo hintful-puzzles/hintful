@@ -21,7 +21,7 @@
  * desc reader in `state.ts` refuses a quotient of 1.
  */
 
-import { joinOr, thisCell } from "../../engine/hint-text.ts";
+import { joinOr, type LatinVocab, thisCellNamed } from "../../engine/hint-text.ts";
 import { CELL, mark, type Narration, phrase } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import {
@@ -33,6 +33,17 @@ import {
   clueNum,
   clueType,
 } from "./state.ts";
+
+/** Mathrax's board position is a cell: its help says so, and a square is also
+ * the whole grid ("Latin square"). */
+const thisCell = thisCellNamed("cell");
+
+/** Mathrax's numbers print as numbers; the generic Latin arms say "cell". */
+export const MATHRAX_VOCAB: LatinVocab = {
+  noun: "number",
+  cell: "cell",
+  value: String,
+};
 
 /**
  * What the two cells on a clue's diagonal must do, as a clause following them:

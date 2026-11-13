@@ -247,12 +247,12 @@ export const adjacentGame: Game<
   hintRungs: ADJACENT_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the cell the step fills in with a number.",
+      ring: "the square the step fills in with a number.",
       strike: "the pencil marks the step crosses out.",
       outline:
-        'what the step reasons from: the two cells either side of a bar, or of no bar at all (the one whose marks are struck, and "its neighbor"), the cells that already account for the numbers being crossed out, the number just placed, or "the middle cell" a step weighs and the cells it reads.',
+        'what the step reasons from: the two squares either side of a bar, or of no bar at all (the one whose marks are struck, and "its neighbor"), the squares that already account for the numbers being crossed out, the number just placed, or "the middle square" a step weighs and the squares it reads.',
       stripes:
-        'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
+        'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined squares.',
     },
   },
   hintKeepTrack,

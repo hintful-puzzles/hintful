@@ -43,7 +43,7 @@ const els = (p: Point | null): Point[] => (p ? [p] : []);
 
 /** "this cell": the ringed square a step opens on. */
 const thisCell = (p: Painted): Narration =>
-  mark.as("ring", CELL, els(p.focus), "this cell");
+  mark.as("ring", CELL, els(p.focus), "this square");
 const partner = (p: Painted, words = "its partner"): Narration | string =>
   p.others.length > 0 ? phrase` and ${mark.as("ring", CELL, p.others, words)}` : "";
 /** "it", with its partner when there is one: the cell itself is named by
@@ -57,10 +57,10 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
     case "dotTile": {
       const cells = mark.as("ring", CELL, p.others, (cs) =>
         cs.length === 1
-          ? "the ringed cell"
+          ? "the ringed square"
           : cs.length === 2
-            ? "both ringed cells"
-            : `the ${cs.length} ringed cells`,
+            ? "both ringed squares"
+            : `the ${cs.length} ringed squares`,
       );
       // Named by where it is: the dot is *on* the cells being filled, so it is
       // ringed only where a cell around it is not.
@@ -82,7 +82,7 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
     // settled: one shows an arrow, the other shows the dot.
     case "separate":
       return so({
-        look: phrase`${mark.as("outline", CELL, p.area, "These two cells")} ${said.points ? "point at" : "go with"} ${mark.as("outline", DOT, p.refDots, "different outlined dots")}`,
+        look: phrase`${mark.as("outline", CELL, p.area, "These two squares")} ${said.points ? "point at" : "go with"} ${mark.as("outline", DOT, p.refDots, "different outlined dots")}`,
         follows: phrase`they belong to different galaxies`,
         move: phrase`${mark.the("ring", WALL, p.targetWalls, "edge")} must be a wall`,
       });
@@ -101,8 +101,8 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
       );
       const pair =
         p.area.length === 1
-          ? phrase`${mark.as("outline", CELL, p.area, "The outlined cell")} is its own partner across ${across}`
-          : phrase`${mark.the("outline", CELL, p.area, "cell")} are partners across ${across}`;
+          ? phrase`${mark.as("outline", CELL, p.area, "The outlined square")} is its own partner across ${across}`
+          : phrase`${mark.the("outline", CELL, p.area, "square")} are partners across ${across}`;
       const wall = mark.this("ring", WALL, p.targetWalls, "wall");
       return said.edge
         ? so({
@@ -151,7 +151,7 @@ function sentenceOf(p: Painted, said: GalaxiesSaid): Sentence {
 
     case "exclave":
       return so({
-        look: phrase`${mark.the("stripes", CELL, p.hatch, "cell")} can reach ${ringedDot(p, p.hatch.length === 1 ? "its ringed dot" : "their ringed dot")} only through ${thisCell(p)}`,
+        look: phrase`${mark.the("stripes", CELL, p.hatch, "square")} can reach ${ringedDot(p, p.hatch.length === 1 ? "its ringed dot" : "their ringed dot")} only through ${thisCell(p)}`,
         move: phrase`${itAnd(p)} must be that dot's too`,
       });
   }

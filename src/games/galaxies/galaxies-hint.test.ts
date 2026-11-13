@@ -275,7 +275,7 @@ describe("each deduction is narrated in its own vocabulary", () => {
         galaxy: [{ x: 5, y: 3 }],
       }).replace("black dot", "white dot"),
     ).toBe(
-      "This cell's only way out (outlined) leads into the striped galaxy, so it must join the ringed white dot.",
+      "This square's only way out (outlined) leads into the striped galaxy, so it must join the ringed white dot.",
     );
   });
 });
@@ -599,7 +599,7 @@ describe("following the plan", () => {
     const live = galaxiesGame.refreshHintStep?.(found.step, s);
     if (!live) throw new Error("the step was left half made");
     expect(live.highlights?.targets).toHaveLength(2);
-    expect(live.explanation).toMatch(/^Both ringed cells must belong to/);
+    expect(live.explanation).toMatch(/^Both ringed squares must belong to/);
     expect(bindingDefects(galaxiesGame, s, galaxiesGame.newUi(s), live)).toEqual([]);
   });
 

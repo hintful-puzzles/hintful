@@ -252,7 +252,7 @@ describe("group hint — placements on a note-free board", () => {
         if (mv.type === "pencilAll") break;
         if (mv.type !== "set") continue;
         const { x, y } = mv.cells[0];
-        const line = /^Every other cell in this (row|column) rules out/.exec(
+        const line = /^Every other square in this (row|column) rules out/.exec(
           st.explanation,
         )?.[1];
         if (line) {

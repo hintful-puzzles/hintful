@@ -1247,7 +1247,7 @@ export const galaxiesGame: Game<
   prefs: [
     {
       kw: "galaxies-show-drag-candidates",
-      name: "While dragging from a cell, ring the dots it could belong to",
+      name: "While dragging from a square, ring the dots it could belong to",
       type: "boolean",
       get: (ui) => ui.showDragCandidates,
       set: (ui, v) => {

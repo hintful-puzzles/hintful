@@ -78,7 +78,7 @@ import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newKeenDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { KEEN_VOCAB, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -325,7 +325,7 @@ function premise(reason: HintReason, marks: readonly Mark[]): Premise {
         ),
       };
     default:
-      return latinPremise(reason, marks);
+      return latinPremise(reason, marks, KEEN_VOCAB);
   }
 }
 
@@ -334,7 +334,7 @@ function premise(reason: HintReason, marks: readonly Mark[]): Premise {
 function narrate(reason: HintReason, m: Mark, w: number): Sentence {
   if (reason.kind === "cage" || reason.kind === "cageLine")
     throw new Error(`a ${reason.kind} deduction strikes`);
-  return narrateLatinReason(reason, m, w);
+  return narrateLatinReason(reason, m, w, KEEN_VOCAB);
 }
 
 /** What a cage deduction reads beyond the marks its words name: what the cage
@@ -378,7 +378,7 @@ function buildSteps(
     // A cage's narration is about "this cell", with the whole cage hatched on
     // every leg, so a firing is one leg per cell.
     strikeAxis: (op) => op.y * w + op.x,
-    notes: { noun: "number", placedVerb: "standing" },
+    notes: { noun: "number", placedVerb: "standing", cell: "cell" },
   });
   return steps;
 }

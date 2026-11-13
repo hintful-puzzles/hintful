@@ -74,13 +74,13 @@ help:
   hints: |-
     **Hint** explains the next step rather than simply making it. It works
     from your own letters and pencil marks, so it carries on from wherever
-    you are; if a letter you've placed is wrong, or a cell's pencil marks
+    you are; if a letter you've placed is wrong, or a square's pencil marks
     have crossed out its answer, it asks you to fix the highlighted
-    mistakes first. It pencils in only as it needs to: a cell
+    mistakes first. It pencils in only as it needs to: a square
     with no marks counts as holding every element its row and column don't
-    already hold, and the hint writes a cell's marks only when its next
+    already hold, and the hint writes a square's marks only when its next
     step crosses one out or reasons from them. If you would rather it
-    filled in every cell's marks first (the same as pressing **Fill marks**), set
+    filled in every square's marks first (the same as pressing **Fill marks**), set
     **Hints pencil in** to **Every candidate first** in the preferences.
 
     {{hint-marks}}
@@ -93,7 +93,7 @@ help:
     yourself, a product like *a·b* = *a* shows that *b* is the identity,
     and a product that changes a letter rules its partner out as the
     identity; the hint then crosses out that element's *identity marks*,
-    the pencil mark in each cell of its row and column that would have
+    the pencil mark in each square of its row and column that would have
     made it the identity there.
 
     {{wing}}

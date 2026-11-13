@@ -255,10 +255,10 @@ export const rangeGame: Game<
   hintRungs: RANGE_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the cell the step decides.",
-      outline: `what the step reasons from: the cells a clue already sees, the cells around one that ${SHADED_NAME} would cut off, or a ${SHADED_NAME} square beside it, which takes a doubled outline. The clue the step counts from has its number drawn in the hint color.`,
+      ring: "the square the step decides.",
+      outline: `what the step reasons from: the squares a clue already sees, the squares around one that ${SHADED_NAME} would cut off, or a ${SHADED_NAME} square beside it, which takes a doubled outline. The clue the step counts from has its number drawn in the hint color.`,
       stripes:
-        "the run a clue has to see along, from the clue as far as the ringed cell.",
+        "the run a clue has to see along, from the clue as far as the ringed square.",
     },
   },
   hintKeepTrack: rangeKeepTrack,

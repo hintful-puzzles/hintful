@@ -202,7 +202,7 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
   it("narrates each generic placement arm with the shared wording, bound to its marks", () => {
     const single = narrateLatinReason({ kind: "single" }, { x: 1, y: 2, n: 3 }, 4);
     expect(single.text).toBe(
-      "Every other number has been ruled out in this cell, so it can only be 3.",
+      "Every other number has been ruled out in this square, so it can only be 3.",
     );
     expect(keys(single)).toEqual(["ring|cell|1,2"]);
     const hidden = narrateLatinReason(
@@ -211,9 +211,9 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
       3,
     );
     expect(hidden.text).toBe(
-      "Every other cell in this column rules out 2, so this cell must be 2.",
+      "Every other square in this column rules out 2, so this square must be 2.",
     );
-    // "this column" stripes the whole column; "this cell" rings the one.
+    // "this column" stripes the whole column; "this square" rings the one.
     expect(keys(hidden)).toEqual([
       "ring|cell|1,0",
       "stripes|cell|1,0",
@@ -233,7 +233,7 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
     );
     // The value just placed is outlined: it is what the cull reasons from.
     expect(keys(dup.premise)).toEqual(["outline|cell|0,2"]);
-    expect(dup.where).toBe("from the other cells");
+    expect(dup.where).toBe("from the other squares");
     const set = latinPremise(
       {
         kind: "set",
@@ -245,7 +245,7 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
       struck(3, 2, 3),
     );
     expect(set.premise.text).toBe(
-      "The outlined cells already account for 2 and 3 between them",
+      "The outlined squares already account for 2 and 3 between them",
     );
     expect(() => latinPremise({ kind: "single" }, struck(3))).toThrow(
       /narrateLatinReason/,

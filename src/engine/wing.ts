@@ -15,13 +15,13 @@
 
 /** Where the help page of a game whose hint can be a wing (`"wing"` among
  * its `hintRungs`) writes {@link wingHelp}, among the ideas its hint teaches:
- * `{{wing}}`, or `{{wing:square}}` where the game calls a cell a square. */
+ * `{{wing}}`, or `{{wing:cell}}` where the game calls a square a cell. */
 export const WING_PLACEHOLDER = /\{\{wing(?::([a-z]+))?\}\}/g;
 
 /** What a help page says of the wing, in words every game's cells and values
  * fit: "can't repeat a value with" is a row and column in one game and a
  * block too in another. `cell` is what the game calls one. */
-export function wingHelp(cell = "cell"): string {
+export function wingHelp(cell = "square"): string {
   return (
     "On the hardest boards that need no guessing, a step may be a **wing**. " +
     `Take a ${cell} whose pencil marks are down to two values, say *a* or ` +

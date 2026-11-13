@@ -8,10 +8,27 @@
  * `narrate`); this file decides only how it reads.
  */
 
-import { indefinite, joinOr, joinWith, thisCell } from "../../engine/hint-text.ts";
+import {
+  indefinite,
+  joinOr,
+  joinWith,
+  type LatinVocab,
+  thisCellNamed,
+} from "../../engine/hint-text.ts";
 import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { C_ADD, C_DIV, C_MUL, C_SUB } from "./state.ts";
+
+/** Keen's board position is a cell: its help says so, and a square is also the
+ * whole grid ("Latin square"). */
+const thisCell = thisCellNamed("cell");
+
+/** Keen's numbers print as numbers; the generic Latin arms say "cell". */
+export const KEEN_VOCAB: LatinVocab = {
+  noun: "number",
+  cell: "cell",
+  value: String,
+};
 
 /** The cage's arithmetic goal as a verb phrase, read off its packed clue — the
  * indication a cage deduction leads with (docs/hints.md § "Lead with the indication"). Reads across the

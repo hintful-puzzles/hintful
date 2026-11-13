@@ -1169,25 +1169,20 @@ describe("candidateGesture", () => {
 describe("the shared setup narration", () => {
   it("says what the game calls a board position, in both strings", () => {
     // The two setup strings and the generic narration arms must agree, or one
-    // game's hints read in two vocabularies (Salad says "square", the Latin
-    // family says "cell").
-    const fill = populateText("letter", "square");
+    // game's hints read in two vocabularies (the default is "square"; a game
+    // whose genre says "cell" declares it).
+    const fill = populateText("letter");
     expect(fill).toContain("into each empty square");
     expect(fill).not.toContain("cell");
 
-    const clean = cleanObviousText(
-      "letter",
-      "standing",
-      "row or column",
-      "square",
-    )([]).text;
+    const clean = cleanObviousText("letter", "standing", "row or column")([]).text;
     expect(clean).toContain("its square's");
     expect(clean).not.toContain("cell");
     expect(clean).toContain("already standing in its square's row or column");
 
-    expect(populateText("number")).toContain("into each empty cell");
+    expect(populateText("number", "cell")).toContain("into each empty cell");
     expect(
-      cleanObviousText("number", "placed", "row, column or block")([]).text,
+      cleanObviousText("number", "placed", "row, column or block", "cell")([]).text,
     ).toContain("its cell's row, column or block");
   });
 });

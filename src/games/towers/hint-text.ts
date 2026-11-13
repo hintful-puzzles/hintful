@@ -18,7 +18,11 @@
  * `narrate`); this file decides only how it reads.
  */
 
-import { type LatinVocab, placedRulesOut, thisCell } from "../../engine/hint-text.ts";
+import {
+  type LatinVocab,
+  placedRulesOut,
+  thisCellNamed,
+} from "../../engine/hint-text.ts";
 import {
   CELL,
   derived,
@@ -31,6 +35,10 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+
+/** Towers' board position is a cell: its help says so, and a square is also the
+ * whole grid ("Latin square"). */
+const thisCell = thisCellNamed("cell");
 
 /** A clue and the line it sees along, as the sentence names them: the clue's
  * slot (`at`, outlined) and its line of sight through both clue slots
@@ -138,4 +146,4 @@ export const say = {
 /** Towers' values in the engine's sentences: heights, bare where a confined
  * height or a wing's is said twice, since the qualified sentence runs past
  * the narration limit. */
-export const TOWERS_VOCAB: LatinVocab = { noun: "height", value: String };
+export const TOWERS_VOCAB: LatinVocab = { noun: "height", cell: "cell", value: String };
