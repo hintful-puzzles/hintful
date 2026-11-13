@@ -143,3 +143,7 @@ function refute(s: Spoken<"refute">): Sentence {
 /** Each technique's sentence, from what its description says of a firing
  * (`engine/described-firing-hint.ts`). */
 export const sentences = { refute, countFull: count, countShort: count };
+
+/** The game's sentence builders (`hint-text-convention.test.ts`: every text
+ * module exports its sentences as `say`). */
+export const say = { refute, count };
