@@ -111,4 +111,94 @@ technique is restated, or it stays an override.
 
 ## What the trial found
 
-To be filled in as each game is stated.
+### Unequal (2026-11-14, `59c6af093`)
+
+- **Stated whole, no override.** Its two sentences became four fact arms,
+  because which sentence a struck square takes is a fact of that square
+  (which end of the sign it is, and whether the bound is the value's
+  extreme). The technique was restated so the struck end is a `forall`
+  binder (`forall c in {big, small}`); the word dump stayed byte-identical.
+- **The sign's two cells are a per-fact term** (`{c, the(p in {big, small}
+  where p != c)}`), so the outline lists the struck end first as before; a
+  firing term `{big, small}` moved the highlight's cell order on every
+  `lesser` step, which is invisible but moves the fingerprint.
+- **The compiler cannot import `hint-words.ts`** (the describe script runs
+  under Node's type stripping, which refuses parameter properties), so the
+  clause grammar is its own module, `stated-clauses.ts`.
+- **Library modules carry no `STATED`**: a library technique's words are for
+  later, when a library technique brings one wording to every game.
+
+### Singles, read before it is stated (2026-11-14)
+
+Every Singles sentence fits the form with one growth: **wordings**, an
+ordered list of clause sets, each with an optional `when` over the binding,
+the technique's terms and its marks (by role name), the first that holds
+winning, and **not a new step kind**. An arm is a different deduction (its
+own rung, `corner.apex`); a wording is the same deduction said for what the
+board shows. Singles needs it three ways:
+
+- `sameLine`: whether a line is striped (`when: "|stripes| > 0"`).
+- `corner.four`: which of the corner and the square across the firing
+  decides (`not known(c)`, `not known(i)`), which picks ring or outline for
+  each and whether the move says "like the outlined …".
+- `offset`: whether the two pairs' numbers are equal ("the outlined 3s"
+  against "the outlined 3s and 4s"), and whether the two ringed squares'
+  are ("both 3s" against "the 3 and 4").
+
+The fact `arms` Unequal uses are the same thing at the fact, so they become
+the fact's `wordings`, and `STATED` holds a kind's wordings by index
+(`says.wording`, `fact.wording`). Terms must be in scope for a `when`, so the
+compiler binds each term and mark to a `const` where a technique has
+wordings. The engine side: `describedFiringHint` takes the module's `STATED`
+and the game's words (`shows`: the number a square shows; `unit`: row or
+column), speaks every kind the table states, and the game's `sentences`
+keeps only overrides.
+
+The clauses, drafted against `singles/hint-text.ts`:
+
+```yaml
+besideCovered:
+  look: "{outline: a {shaded} square (outlined)} touches {ring: this {each} | these squares ({each})}"
+  move: "{ring: that {each} | those squares} must be {unshaded}"
+sameLine:
+  wordings:
+    - when: "|stripes| > 0"
+      look: "{outline: the outlined {unshaded} {n}} already holds {stripes}'s {n}"
+      move: "{ring: the ringed {n} | the ringed {n}s} must be {shaded}"
+    - look: "{outline: the outlined {unshaded} {n}} shares a line with {ring: the ringed {n} | each ringed {n}}"
+      move: "{ring: that {n} | those {n}s} must be {shaded}"
+sandwich:
+  look: "{outline: the outlined {n} | the outlined {n}s} sit one square apart"
+  follows: "one of them must be {shaded}"
+  move: "{ring: the {each} between them | the squares between them} must be {unshaded}"
+pair:
+  look: "{outline: the outlined {n} | the outlined {n}s} touch"
+  follows: "one of them stays {unshaded} and uses up the {n} in {stripes}"
+  move: "{ring: the ringed {n} | the ringed {n}s} must be {shaded}"
+corner.four:            # terms n, corner, sides, inner
+  wordings:
+    - when: "not known(c) and not known(i)"
+      look: "Left {unshaded}, {ring corner: this corner {n}} would box itself in with {outline sides: its two {n}s} {shaded}"
+      move: "it and {ring inner: the {n} diagonally inside} must be {shaded}"
+    - when: "not known(c)"
+      look: "(the same)"
+      move: "it must be {shaded}, like {outline inner: the outlined {n} diagonally inside}"
+    - look: "Left {unshaded}, {outline corner: the outlined corner {n}} would box itself in with {outline sides: its two {n}s} {shaded}"
+      move: "{ring inner: the {n} diagonally inside} must be {shaded}"
+corner.apex:
+  look: "Left {unshaded}, {ring: this corner {corner}} would box itself in with {outline: both {beside}s beside it} {shaded}"
+  move: "it must be {shaded}"
+corner.across:
+  look: "Left {unshaded}, {ring: this inner {inner}} would make {outline: both {beside}s} flanking {strand: corner {corner}} {shaded} and box the corner in"
+  move: "it must be {shaded}"
+corner.pairAtS/T:
+  look: "{outline pair: the corner's {number}s} need a {shaded}; shading {ring: this {each}} forces {outline side: the side {number}}, boxing {strand: the corner} in"
+  move: "it must stay {unshaded}"
+boxedIn:
+  look: "{ring: this {number}} is {outline: the outlined {unshaded} square}'s last neighbor that isn't {shaded}"
+  move: "it must be {unshaded} to keep that square joined"
+split:
+  look: "Shading {ring: this {number}} would cut some of {outline: the outlined square | the outlined squares} off from the rest of the {unshaded} region"
+  move: "it must be {unshaded}"
+offset:                 # wordings by first = second, and by the ringed pair's numbers
+```
