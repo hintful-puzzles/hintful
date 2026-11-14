@@ -1,0 +1,6 @@
+# Scaffolded without a delta: `engine-hints` already states the behavior; the
+# session that takes it up adds a scenario if the fix shows one missing, and
+# removes skip_specs then.
+schema: spec-driven
+created: 2026-11-14
+skip_specs: true
