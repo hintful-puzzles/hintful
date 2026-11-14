@@ -1,5 +1,5 @@
 /**
- * Group hint tests: the recorded deductions, the plan the hint builds, its
+ * Group hint tests: the plan the hint builds, its
  * refusals, and the keep-track verdicts.
  *
  * The cross-game guards (`hint-resume` / `hint-quality` / `hint-overlay`) already
@@ -17,9 +17,7 @@ import {
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
 import { groupGame } from "./index.ts";
-import { type HintReason, recordGroupDeductions } from "./solver.ts";
 import {
-  DIFF_EXTREME,
   type GroupMove,
   type GroupParams,
   type GroupState,
@@ -156,31 +154,8 @@ const pinnedPopulate = describeHintKindPins({
   },
 });
 
-describe("group hint — recorded deductions", () => {
-  it("records each Group technique across generated boards", () => {
-    const kinds = new Set<string>();
-    for (const [p, seeds] of [
-      [NORMAL, ["a1", "a2", "a3", "a4", "a5"]],
-      [HARD_HIDDEN, ["h1", "h2", "h3", "h4", "h5", "h6"]],
-    ] as const) {
-      for (const seed of seeds) {
-        const state = board(p, seed);
-        const ops = recordGroupDeductions(
-          state.grid.slice(),
-          p.w,
-          Math.min(p.diff, DIFF_EXTREME),
-        );
-        for (const op of ops) kinds.add((op.reason as HintReason).kind);
-      }
-    }
-    // Group's own three deductions plus the generic Latin single are all fired.
-    expect(kinds.has("associativity")).toBe(true);
-    expect(kinds.has("identityFill")).toBe(true);
-    expect(kinds.has("identityElim")).toBe(true);
-    expect(kinds.has("single")).toBe(true);
-  });
-
-  it("an associativity record names its triple and the forced fourth product", () => {
+describe("group hint — associativity", () => {
+  it("an associativity step names its triple and the forced fourth product", () => {
     // The narration states the law with concrete element letters.
     const text = pinned("associativity").step.explanation;
     // "In any group, (a·b)·c = a·(b·c), and … so <fourth> must also be <v>."

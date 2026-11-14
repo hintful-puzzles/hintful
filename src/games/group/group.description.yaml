@@ -151,6 +151,10 @@ techniques:
     conclude: >-
       ((known(l) and value(l) in cand(r)) implies place(r, value(l)))
       and ((known(r) and value(r) in cand(l)) implies place(l, value(r)))
+    # The hint names the three factors and the products' cells.
+    says:
+      terms: { a: a, b: b, c: c, p: p, q: q, l: l, r: r }
+      marks: {}
   # The first placed product, in reading order, that is one of its own
   # factors shows the other factor is the identity, e, so e's row and column
   # are the elements in order: for each j, j·e and then e·j. A cell that can
@@ -166,6 +170,10 @@ techniques:
     conclude: >-
       forall j in domain, c in {mul(j, e), mul(e, j)} where not known(c):
       j in cand(c) and place(c, j)
+    # The hint names the revealing product and the identity.
+    says:
+      terms: { w0: w0, e: e }
+      marks: {}
   # A placed product of a with some j that is not j shows a is not the
   # identity, so no j·a or a·j can be j. The witness, o, is the least such j.
   - id: notIdentity
@@ -177,6 +185,10 @@ techniques:
       or (known(mul(a, j)) and value(mul(a, j)) != j))
       where o != none
     conclude: "forall j in domain: strike(mul(j, a), j) and (j = a or strike(mul(a, j), j))"
+    # The hint names the element and the least witness.
+    says:
+      terms: { a: a, o: o }
+      marks: {}
   - { use: latin.set, tier: Tricky, rung: set }
   - { use: latin.fish, tier: Hard, rung: set }
   - { use: latin.wing, tier: Hard, rung: wing }

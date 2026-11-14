@@ -27,6 +27,19 @@ waits, a firing that continues the plan's latest steps.
   cell the last step decided
 - **THEN** the plan may take that firing before the single
 
+### Requirement: A game's placing technique may lead
+
+A game whose signature deductions are placements MAY mark such a technique as
+leading. A leading technique SHALL be offered wherever the board supports it,
+from the note-free opening on, waiting neither for the notes to be set up nor
+for an earlier rung; the board's tier still bounds it.
+
+#### Scenario: A leading placement before any note
+
+- **WHEN** a hint is asked on a board with no notes where a leading
+  technique's firing is supported by the values placed
+- **THEN** the plan may take that placement before any note is written
+
 ## MODIFIED Requirements
 
 ### Requirement: The game keeps what carries its meaning

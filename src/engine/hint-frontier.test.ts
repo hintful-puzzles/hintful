@@ -153,7 +153,8 @@ const PLAN_IMPORTERS: readonly string[] = (() => {
  * that passed over an available firing which did read it, read off the plans by
  * `planContinuity` and not by the games' own candidate lists.
  *
- * On this corpus (every leaf preset, two seeds) the frontier's share sits
+ * On this corpus (every leaf preset, two seeds, more where the plans jump
+ * too seldom to judge) the frontier's share sits
  * below the bound and plain solver scan order's sits well above it. The
  * residual is firings the frontier is deliberately not offered —
  * strikes whose premise holds a mark the board has yet to show, and singles it
@@ -164,6 +165,11 @@ const PLAN_IMPORTERS: readonly string[] = (() => {
  * guard that fails on a forced jump gets switched off rather than fixed.
  */
 const MAX_AVOIDABLE = 0.1;
+
+/** The jumps below which a share is too few to judge, and the boards a
+ * preset dealt at most to reach them. */
+const MIN_JUMPS = 50;
+const MAX_DEALS = 6;
 
 /**
  * The readings each game's plan is walked under: both, for a game whose `Ui`
@@ -291,8 +297,11 @@ describe("hint plans continue from their previous step where they can", () => {
         if (!game) throw new Error(`${id} is not a hint game`);
         let jumps = 0;
         let avoidable = 0;
-        for (const p of leafPresets(game)) {
-          for (let s = 0; s < 2; s++) {
+        // Two boards a preset, and more while the plans have jumped too
+        // seldom for a share to mean anything: a plan that continues well
+        // jumps rarely (Group's, 36 times on two boards a preset).
+        for (let s = 0; s < 2 || (jumps <= MIN_JUMPS && s < MAX_DEALS); s++) {
+          for (const p of leafPresets(game)) {
             const { desc } = dealt(game, p.params, s);
             const state = game.newState(p.params, desc);
             const ui = reading
@@ -303,7 +312,7 @@ describe("hint plans continue from their previous step where they can", () => {
             avoidable += c.avoidable;
           }
         }
-        expect(jumps).toBeGreaterThan(50);
+        expect(jumps).toBeGreaterThan(MIN_JUMPS);
         // An excused reading must still be over, so fixing it retires the entry.
         if (key in OVER_BOUND)
           expect(avoidable / jumps, OVER_BOUND[key]).toBeGreaterThanOrEqual(

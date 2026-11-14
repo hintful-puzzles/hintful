@@ -1,9 +1,8 @@
 /**
- * Group solver: the ladder `group.description.yaml` states, compiled, with the
- * reason each technique records for the hint, and the answer check its rules
- * compile to, on the shared `LatinSolver` (`engine/latin.ts`), whose forcing
- * chains and recursion are the search above the ladder. The tiers, by display
- * name and constant:
+ * Group solver: the ladder `group.description.yaml` states, compiled, and the
+ * answer check its rules compile to, on the shared `LatinSolver`
+ * (`engine/latin.ts`), whose forcing chains and recursion are the search above
+ * the ladder. The tiers, by display name and constant:
  *
  *   Easy (`DIFF_TRIVIAL`)   → the library's singles.
  *   Normal (`DIFF_NORMAL`)  → associativity, and the identity's row and column.
@@ -16,10 +15,10 @@
  */
 
 import { latinSpace } from "../../engine/describe-runtime.ts";
-import { type CellMarks, uncluedRung } from "../../engine/ladder-runtime.ts";
+import { type Ladder, uncluedRung } from "../../engine/ladder-runtime.ts";
 import {
-  type DeductionRecord,
   type LatinReason,
+  type LatinSolver,
   latinLadder,
   latinSolver,
 } from "../../engine/latin.ts";
@@ -27,10 +26,9 @@ import type { Point } from "../../engine/types.ts";
 import * as group from "./group.compiled.ts";
 import { DIFF_UNREASONABLE } from "./state.ts";
 
-/** Why a Group-specific deduction placed or eliminated — the premise the hint
- * narrates and highlights. Combined with {@link LatinReason} (the generic
- * positional/set deductions) it covers every technique the recording
- * solver fires; the `kind` fields never collide with the Latin ones.
+/** Why a Group-specific step placed or struck, as the hint narrates and
+ * highlights it. Combined with {@link LatinReason} (the generic positional
+ * and set steps) it covers every technique; the `kind` fields never collide.
  *
  * All cell fields are **grid** coordinates (`{x = col, y = row}`); the value
  * fields (`a`/`b`/`c`/…) are 1-based element numbers.
@@ -81,77 +79,74 @@ export type GroupReason =
       left: boolean;
     };
 
-/** A reason attached to a recorded Group deduction. */
+/** A reason a Group hint step gives. */
 export type HintReason = GroupReason | LatinReason;
 
-/** One recorded Group deduction op (a {@link DeductionRecord} with a narrowed
- * reason). */
-export interface HintOp extends DeductionRecord {
-  reason: HintReason;
+const cellAt = (w: number, c: number): Point => ({ x: c % w, y: (c / w) | 0 });
+
+/** An associativity firing's reason, for its placement in `cell`, on `grid`
+ * as it stood before the placement. */
+export function associativityReason(
+  { a, b, c, p, q, l, r }: group.AssociativitySays["terms"],
+  cell: number,
+  grid: ArrayLike<number>,
+  w: number,
+): GroupReason {
+  const knownLeft = cell === r;
+  return {
+    kind: "associativity",
+    a,
+    b,
+    c,
+    ab: grid[p],
+    bc: grid[q],
+    v: grid[knownLeft ? l : r],
+    knownLeft,
+    abCell: cellAt(w, p),
+    bcCell: cellAt(w, q),
+    thirdCell: cellAt(w, knownLeft ? l : r),
+  };
+}
+
+/** An identity firing's reason: the product in `w0` revealed `e`. */
+export function identityFillReason(
+  { w0, e }: group.IdentitySays["terms"],
+  grid: ArrayLike<number>,
+  w: number,
+): GroupReason {
+  const { x, y } = cellAt(w, w0);
+  return {
+    kind: "identityFill",
+    e,
+    viaX: x,
+    viaY: y,
+    a: y + 1,
+    b: x + 1,
+    prod: grid[w0],
+  };
+}
+
+/** A notIdentity firing's reason: which way `a` fails as the identity,
+ * `o·a ≠ o` first, else `a·o ≠ o`. */
+export function identityElimReason(
+  { a, o }: group.NotIdentitySays["terms"],
+  grid: ArrayLike<number>,
+  w: number,
+): GroupReason {
+  const right = (o - 1) * w + (a - 1);
+  const left = !(grid[right] !== 0 && grid[right] !== o);
+  const c = left ? (a - 1) * w + (o - 1) : right;
+  const { x: wx, y: wy } = cellAt(w, c);
+  return { kind: "identityElim", elem: a, other: o, product: grid[c], wx, wy, left };
 }
 
 // --- the described ladder ----------------------------------------------------
 
-const cellAt = (o: number, c: number): Point => ({ x: c % o, y: (c / o) | 0 });
-
-/** Which way an element fails as the identity, for the reason of the
- * firing that rules it out: `o·a ≠ o` first, else `a·o ≠ o`. */
-function identityElim(
-  { a, o }: group.NotIdentityBinding,
-  solver: CellMarks,
-): GroupReason {
-  const w = solver.sp.w;
-  const right = (o - 1) * w + (a - 1);
-  const left = !(solver.known(right) && solver.value(right) !== o);
-  const c = left ? (a - 1) * w + (o - 1) : right;
-  const { x: wx, y: wy } = cellAt(w, c);
-  return {
-    kind: "identityElim",
-    elem: a,
-    other: o,
-    product: solver.value(c),
-    wx,
-    wy,
-    left,
-  };
-}
-
-const describedLadder = latinLadder(group, {
-  associativity: uncluedRung(
-    group.associativity,
-    ({ a, b, c, p, q, l, r }, cell, n, solver): GroupReason => {
-      const o = solver.sp.w;
-      const knownLeft = cell === r;
-      return {
-        kind: "associativity",
-        a,
-        b,
-        c,
-        ab: solver.value(p),
-        bc: solver.value(q),
-        v: n,
-        knownLeft,
-        abCell: cellAt(o, p),
-        bcCell: cellAt(o, q),
-        thirdCell: cellAt(o, knownLeft ? l : r),
-      };
-    },
-  ),
-  identity: uncluedRung(group.identity, ({ w0, e }, _c, _n, solver): GroupReason => {
-    const { x, y } = cellAt(solver.sp.w, w0);
-    return {
-      kind: "identityFill",
-      e,
-      viaX: x,
-      viaY: y,
-      a: y + 1,
-      b: x + 1,
-      prod: solver.value(w0),
-    };
-  }),
-  notIdentity: uncluedRung(group.notIdentity, (binding, _c, _n, solver) =>
-    identityElim(binding, solver),
-  ),
+/** The ladder `group.description.yaml` states. */
+export const groupLadder: Ladder<LatinSolver> = latinLadder(group, {
+  associativity: uncluedRung(group.associativity),
+  identity: uncluedRung(group.identity),
+  notIdentity: uncluedRung(group.notIdentity),
 });
 
 // --- driver ----------------------------------------------------------------
@@ -160,35 +155,13 @@ const describedLadder = latinLadder(group, {
  * Solve a Group Cayley table in place up to difficulty `maxdiff`: `grid` holds
  * the givens (0 = blank) and receives the first solution found. Returns the
  * difficulty reached or one of latin.ts's sentinels, as `group.c`'s `solver()`
- * does. `recorder` (hint path only) captures every deduction in solver order.
+ * does.
  */
-export function solveGroup(
-  grid: Uint8Array,
-  w: number,
-  maxdiff: number,
-  recorder?: (rec: DeductionRecord) => void,
-): number {
+export function solveGroup(grid: Uint8Array, w: number, maxdiff: number): number {
   return latinSolver(grid, w, {
     maxdiff,
     diffRecursive: DIFF_UNREASONABLE,
     isAnswer: (g) => group.isAnswer(g, latinSpace(w)),
-    recorder,
-    ladder: describedLadder,
+    ladder: groupLadder,
   });
-}
-
-/**
- * Every candidate elimination and placement the recording solver makes from
- * `grid`'s placed values (never the player's notes), up to `maxdiff`, in solver
- * order, each tagged with the rule and premise that forced it: the script a hint
- * narrates. `grid` is not modified.
- */
-export function recordGroupDeductions(
-  grid: Uint8Array,
-  w: number,
-  maxdiff: number,
-): HintOp[] {
-  const ops: HintOp[] = [];
-  solveGroup(grid.slice(), w, maxdiff, (rec) => ops.push(rec as HintOp));
-  return ops;
 }

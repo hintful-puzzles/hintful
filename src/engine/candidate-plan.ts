@@ -140,11 +140,11 @@ export interface RungContext<R, F = unknown> {
    * fire only as the plan's last resort is allowed to (`availablePlacements`'
    * `nothingElse`, which only the classification of a skipped single reads). */
   nothingEarlier: boolean;
-  /** The recorded placements the plan could take now, as the walk's own
-   * placement rung builds them: the singles the board shows, and (`recorded`)
-   * each placement with a reason of its own whose premise the board supports.
-   * For a game whose deductions are placements and should lead (Group). */
-  placements: () => readonly { firing: F; recorded: boolean }[];
+  /** The placements the plan could take now, as the walk's own placement rung
+   * builds them: the singles the board shows, and each recorded placement
+   * whose premise the board supports. For a game whose placements lead
+   * before its notes are set up (Group). */
+  placements: () => readonly F[];
   /** The recording of the working board as it stands. */
   ops: readonly R[];
   /** Whether the notes have been set up: penciled in and cleaned under the
@@ -199,21 +199,28 @@ export interface NotesLadder<S extends CellMarks = CellMarks> {
  * outright, a plan leaves the work in hand for a single elsewhere and comes
  * back: a seventh of Adjacent's jumps passed over a bar step that continued.
  * A technique past the board's `caps` offers nothing.
+ *
+ * A technique that `leads` places, and is the game's signature step, so it
+ * waits for neither: it is offered from the note-free opening on, beside the
+ * singles, wherever the board supports it (docs/hints-candidates.md
+ * § "Placements lead when the deductions are placements"; Group's
+ * associativity and identity).
  */
 export function techniqueRung<M, H, R, Reason, S extends CellMarks = CellMarks>(
   on: NotesLadder<S>,
   id: string,
   legs: (f: LadderFiring, shown: ArrayLike<number>) => Firing<M, H, Reason> | null,
+  { leads = false }: { leads?: boolean } = {},
 ): CandidateRung<M, H, R, Reason> {
   const entries = on.ladder.entries;
   const at = entries.findIndex((e) => e.id === id);
   if (at < 0) throw new Error(`no technique ${id} in the ladder`);
   if (!admits(entries[at], on.caps)) return () => [];
-  const last = at > 0;
+  const last = at > 0 && !leads;
   const harder = entries[at].tier > Math.min(...entries.map((e) => e.tier));
   const bit = on.enc.bit ?? ((n: number): number => 1 << n);
   return ({ populated, nothingEarlier, shown, continues }) => {
-    if (!populated) return [];
+    if (!populated && !leads) return [];
     const waits = last && !nothingEarlier;
     if (waits && !harder) return [];
     const m = on.marks();
@@ -430,9 +437,6 @@ export interface CandidatePlan<
   /** Which cells a recorded placement counts as already made in, where that
    * differs from `grid` (`availableFirings`). */
   placed?: () => ArrayLike<number>;
-  /** The firing a placement belongs to, where one placement forces others
-   * (Group's identity row and column). Default: the placement alone. */
-  placement?: (m: Mark, reason: Reason, ops: readonly R[]) => Firing<M, H, Reason>;
   /** Called after a placement is written to the working board: where a game
    * keeps state of its own beside `grid` that a placement also settles
    * (Salad marks the square as no hole). */
@@ -764,7 +768,7 @@ class CandidateWalk<
     const singles: CandidateRung<M, H, R, Reason> = () => this.singles();
     const strikes: CandidateRung<M, H, R, Reason> = () => this.strikes();
     const places: CandidateRung<M, H, R, Reason> = (ctx) =>
-      this.placements(ctx.nothingEarlier).map((p) => p.firing);
+      this.placements(ctx.nothingEarlier);
     const opening = [singles, ...own];
     const ladder = [singles, ...own, strikes, places];
     const listed = (
@@ -991,9 +995,7 @@ class CandidateWalk<
     }));
   }
 
-  private placements(
-    nothingEarlier: boolean,
-  ): { firing: Firing<M, H, Reason>; recorded: boolean }[] {
+  private placements(nothingEarlier: boolean): Firing<M, H, Reason>[] {
     const { plan } = this;
     const placeable = plan.placeable;
     const ops = placeable
@@ -1010,13 +1012,13 @@ class CandidateWalk<
       { enc: plan.enc, placed: plan.placed?.(), written: plan.pencil },
     ).map(({ op, why }) =>
       why.kind === "recorded"
-        ? { firing: this.placing(op, op.reason as Reason), recorded: true }
-        : { firing: this.single(op, why), recorded: false },
+        ? this.placing(op, op.reason as Reason)
+        : this.single(op, why),
     );
   }
 
   private placing(m: Mark, reason: Reason): Firing<M, H, Reason> {
-    return this.plan.placement?.(m, reason, this.ops) ?? [{ place: m, reason }];
+    return [{ place: m, reason }];
   }
 
   // --- building and taking a firing ----------------------------------------

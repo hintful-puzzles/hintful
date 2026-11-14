@@ -841,19 +841,19 @@ within that:
 ## Placements lead when the deductions are placements
 
 Where a game's signature deductions place values, lead with them and
-populate only when an elimination is the next thing to teach: a rung of the
-game's own offers `RungContext.placements()` ahead of the strikes, in the
-note-free opening too ("A game's rung reads the walk's recorded
-placements"). That list is every recorded placement whose premise the board
-supports and, until the notes are set up, every single the board shows.
-Exemplar: `leads` in [`group/index.ts`](../src/games/group/index.ts).
+populate only when an elimination is the next thing to teach: each such
+technique is a `techniqueRung` with `leads`, which waits neither for the
+setup nor for earlier rungs, and a rung of the game's own offers
+`RungContext.placements()` (every single the board shows) until the notes
+are set up. Exemplar: [`group/index.ts`](../src/games/group/index.ts).
 
 - **Never gate populate on a strike being available.** A strike counts only
   where its candidate is in the notes, so with no notes there is none, and
   the plan deadlocks.
-- **A placement that forces others is one firing.** Give the plan a
-  `placement` hook returning the whole journey, the cell that revealed it
-  shaded on every leg, not one hint per forced cell.
+- **A placement that forces others is one firing.** A technique whose
+  firing places several cells (Group's identity row and column) makes them
+  one journey, a leg a cell, the cell that revealed it shaded on every leg,
+  not one hint per forced cell.
 - **Placing first means classifying on a board with few notes**: the obvious
   clean runs ahead of the placement arm, and a note-less cell reads by what
   its regions leave it (§ "Re-derive a placement's why").

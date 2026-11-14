@@ -27,7 +27,11 @@ import {
   type PlanRung,
   type RungContext,
   runLatinCandidatePlan,
+  strikesOf,
+  techniqueRung,
 } from "../../engine/candidate-plan.ts";
+import type { DeductionRecord } from "../../engine/deduction-record.ts";
+import { PLACE } from "../../engine/describe-runtime.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import {
   clearEntries,
@@ -53,8 +57,15 @@ import {
 } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
-import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/latin.ts";
+import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
+import {
+  DIFF_AMBIGUOUS,
+  DIFF_IMPOSSIBLE,
+  type LatinSolver,
+  latinVerdict,
+} from "../../engine/latin.ts";
 import { rowColRegions, type SingleReason } from "../../engine/latin-hint.ts";
+import { latinNotesLadder, latinStrikeRungs } from "../../engine/latin-notes.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
@@ -86,6 +97,7 @@ import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newGameDesc } from "./generator.ts";
+import type * as group from "./group.compiled.ts";
 import { groupVocab, say } from "./hint-text.ts";
 import {
   colors,
@@ -99,9 +111,11 @@ import {
   redraw,
 } from "./render.ts";
 import {
-  type HintOp,
+  associativityReason,
+  groupLadder,
   type HintReason,
-  recordGroupDeductions,
+  identityElimReason,
+  identityFillReason,
   solveGroup,
 } from "./solver.ts";
 import {
@@ -583,14 +597,13 @@ function premise(
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
- * solves it (`runLatinCandidatePlan`), placement-first: Group's own rung teaches a
- * placement the solver makes before any elimination (associativity, an identity
- * row and column, or a single the board already shows) with no notes at all,
- * so notes are penciled in only when an elimination needs them. Group has no
- * auto-pencil, so every placement teaches its row/column cull: a later single
- * is narrated from the notes, and a cull skipped here would leave it resting on
- * strikes the board does not show. Capped below recursion (a guess is not
- * teachable). */
+ * solves it (`runLatinCandidatePlan`), placement-first: Group's own placing
+ * techniques (associativity, an identity row and column) lead, with no notes
+ * at all, so notes are penciled in only when an elimination needs them. Group
+ * has no auto-pencil, so every placement teaches its row/column cull: a later
+ * single is narrated from the notes, and a cull skipped here would leave it
+ * resting on strikes the board does not show. Capped below recursion (a guess
+ * is not teachable). */
 function buildSteps(
   state: GroupState,
   { reading }: CandidatePlanPrefs,
@@ -600,34 +613,79 @@ function buildSteps(
   const steps: HintStep<GroupMove, GroupHint, PlanRung<NarratableReason>>[] = [];
   const wGrid = Uint8Array.from(state.grid);
   const wPen = Int32Array.from(state.pencil);
-  const maxdiff = Math.min(state.diff, DIFF_EXTREME);
+  const on = latinNotesLadder(
+    groupLadder,
+    w,
+    wGrid,
+    Math.min(state.diff, DIFF_EXTREME),
+  );
   type Legs = Firing<GroupMove, GroupHint, NarratableReason>;
-
-  /** A placement's firing. Learning the identity forces every empty cell of its
-   * row and column at once, so those placements are one journey, not `2w − 1`
-   * hints, with the revealing cell shaded on every leg. */
-  const placing = (m: Mark, reason: NarratableReason, ops: readonly HintOp[]): Legs => {
-    if (reason.kind !== "identityFill") return [{ place: m, reason }];
-    const group = ops.find(
-      (op) => op.kind === "place" && op.x === m.x && op.y === m.y,
-    )?.group;
-    return ops
-      .filter(
-        (op) =>
-          op.kind === "place" && op.group === group && wGrid[op.y * w + op.x] === 0,
-      )
-      .map((op) => ({ place: op, reason: op.reason }));
+  const places = (f: LadderFiring, reason: (c: number) => NarratableReason): Legs => {
+    const legs: Legs[number][] = [];
+    for (let k = 0; k < f.facts.length; k += 3) {
+      if (f.facts[k] !== PLACE) throw new Error("a placing technique that strikes");
+      const c = f.facts[k + 1];
+      if (wGrid[c]) continue;
+      legs.push({
+        place: { x: c % w, y: (c / w) | 0, n: f.facts[k + 2] },
+        reason: reason(c),
+      });
+    }
+    return legs;
   };
-  // Group's deductions are placements, so the ones the board supports lead the
-  // strikes: associativity and the identity fill wherever their premise holds,
-  // and, before the notes are set up, every single the board shows. Once they
-  // are, singles wait behind the strikes like any other game's.
-  const leads = ({ placements, populated }: RungContext<HintOp, Legs>): Legs[] =>
-    placements()
-      .filter((p) => p.recorded || !populated)
-      .map((p) => p.firing);
+  // Group's signature deductions are placements, so they lead the strikes
+  // wherever the board supports them, in the note-free opening too.
+  const associativity = techniqueRung<
+    GroupMove,
+    GroupHint,
+    DeductionRecord,
+    NarratableReason,
+    LatinSolver
+  >(
+    on,
+    "associativity",
+    (f) => {
+      const { terms } = (f.reasons[0] as Said<unknown, group.AssociativitySays>).says;
+      return places(f, (c) => associativityReason(terms, c, wGrid, w));
+    },
+    { leads: true },
+  );
+  // Learning the identity forces every empty cell of its row and column at
+  // once: one journey, the revealing cell shaded on every leg.
+  const identity = techniqueRung<
+    GroupMove,
+    GroupHint,
+    DeductionRecord,
+    NarratableReason,
+    LatinSolver
+  >(
+    on,
+    "identity",
+    (f) => {
+      const { terms } = (f.reasons[0] as Said<unknown, group.IdentitySays>).says;
+      const reason = identityFillReason(terms, wGrid, w);
+      return places(f, () => reason);
+    },
+    { leads: true },
+  );
+  const notIdentity = techniqueRung<
+    GroupMove,
+    GroupHint,
+    DeductionRecord,
+    NarratableReason,
+    LatinSolver
+  >(on, "notIdentity", (f) => {
+    const { terms } = (f.reasons[0] as Said<unknown, group.NotIdentitySays>).says;
+    return [{ strike: strikesOf(f, w), reason: identityElimReason(terms, wGrid, w) }];
+  });
+  // Before the notes are set up, every single the board shows leads too.
+  const singlesFirst = ({
+    placements,
+    populated,
+  }: RungContext<DeductionRecord, Legs>): readonly Legs[] =>
+    populated ? [] : placements();
 
-  runLatinCandidatePlan<GroupMove, GroupHint, HintOp, NarratableReason>({
+  runLatinCandidatePlan<GroupMove, GroupHint, DeductionRecord, NarratableReason>({
     w,
     steps,
     grid: wGrid,
@@ -636,7 +694,6 @@ function buildSteps(
     autoClean: false,
     reading,
     label: "group hint plan",
-    record: () => recordGroupDeductions(wGrid, w, maxdiff),
     placeWords: (m, reason, continues) => ({
       words: narrate(reason, m, w, id, continues),
     }),
@@ -647,8 +704,16 @@ function buildSteps(
       cell: "cell",
       value: (n) => toChar(n, id),
     },
-    rungs: [leads],
-    placement: placing,
+    rungs: [
+      singlesFirst,
+      associativity,
+      identity,
+      notIdentity,
+      ...latinStrikeRungs<GroupMove, GroupHint, DeductionRecord, NarratableReason>(
+        on,
+        w,
+      ),
+    ],
   });
   return steps;
 }

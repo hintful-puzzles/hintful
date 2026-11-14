@@ -11,6 +11,17 @@ export const units: readonly string[] = ["rows","cols"];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "latin.hiddenSingle" | "latin.single" | "associativity" | "identity" | "notIdentity" | "latin.set" | "latin.fish" | "latin.wing";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  associativity: AssociativitySays;
+  identity: IdentitySays;
+  notIdentity: NotIdentitySays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["associativity","identity","notIdentity"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
 
@@ -109,10 +120,16 @@ export interface AssociativityBinding {
   r: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface AssociativitySays {
+  terms: { a: number; b: number; c: number; p: number; q: number; l: number; r: number; };
+  marks: {  };
+}
+
 const associativityFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityBinding> | null): number {
+export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityBinding, AssociativitySays> | null): number {
   const facts = associativityFacts;
   let fired = 0;
   let changed = false;
@@ -167,7 +184,10 @@ export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityB
               if (!(_c25)) return -1;
               if (changed || facts.length > 0) {
                 fired = 1;
-                if (fire !== null && !fire({ a: v_a, b: v_b, p: v_p, c: v_c, q: v_q, l: v_l, r: v_r }, facts)) return 1;
+                if (fire !== null) {
+                  const _says = { terms: { a: v_a, b: v_b, c: v_c, p: v_p, q: v_q, l: v_l, r: v_r }, marks: {  } };
+                  if (!fire({ a: v_a, b: v_b, p: v_p, c: v_c, q: v_q, l: v_l, r: v_r }, facts, _says)) return 1;
+                }
               }
             }
           }
@@ -183,10 +203,16 @@ export interface IdentityBinding {
   e: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface IdentitySays {
+  terms: { w0: number; e: number; };
+  marks: {  };
+}
+
 const identityFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | null): number {
+export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding, IdentitySays> | null): number {
   const _g9: number[] = [];
   const _g23: number[] = [];
   const facts = identityFacts;
@@ -266,7 +292,10 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding> | 
       if (!(_q35)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ w0: v_w0, e: v_e }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { w0: v_w0, e: v_e }, marks: {  } };
+          if (!fire({ w0: v_w0, e: v_e }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -278,10 +307,16 @@ export interface NotIdentityBinding {
   o: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NotIdentitySays {
+  terms: { a: number; o: number; };
+  marks: {  };
+}
+
 const notIdentityFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBinding> | null): number {
+export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBinding, NotIdentitySays> | null): number {
   const facts = notIdentityFacts;
   let fired = 0;
   let changed = false;
@@ -341,7 +376,10 @@ export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBindi
       if (!(_q19)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ a: v_a, o: v_o }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { a: v_a, o: v_o }, marks: {  } };
+          if (!fire({ a: v_a, o: v_o }, facts, _says)) return 1;
+        }
       }
     }
   }

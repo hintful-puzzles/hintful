@@ -269,3 +269,35 @@ wing steps on Tricky boards where there were none). The avoidable-jump
 share is unchanged (implicit reading 2.1% to 2.2%, populated 0.8% to
 0.4%). Two Tricky fingerprint walks lengthen (73 to 88 and 54 to 68
 steps), taking singles where a line's last cell was filled whole.
+
+## Group, moved: a placing technique leads (2026-11-14)
+
+The recorder and the three techniques' reason callbacks are gone;
+`associativity` says its triple and the products' cells, `identity` the
+revealing product and the identity, `notIdentity` the element and its
+witness, and the hint builds the reasons from them off the working grid.
+
+Group's `leads` rung offered the recorded placements whose premise held,
+ahead of the strikes and in the note-free opening. With nothing recorded,
+what leads is the techniques themselves: `techniqueRung` takes `leads`, and
+a leading technique waits neither for the setup nor for earlier rungs. It is
+the game's word, not read off the ladder, because Towers' `facing` places
+too and waits behind the singles by design (§ "Towers, moved"). Until the
+setup the game's own rung still offers every single the board shows
+(`RungContext.placements()`). The identity's row and column are one firing,
+so they are one journey without the plan's `placement` hook, which had no
+other user and went, with the `recorded` flag on `placements()`, which only
+Group read.
+
+Compared by `research/hint-walk-dump/` as for Unequal: every walk ends as at
+HEAD (160 solved, 32 refused). Associativity steps rise (35556 to 48544) and
+identity fills (2876 to 4404), as every firing the board supports is offered
+where the recording held only those its solve reached before a single did;
+singles fall (27232 to 18596, regions-full 77008 to 70464). The frontier
+takes a single first unless the placement continues, so the plans jump less:
+over the leaf presets, avoidable jumps 0 of 36 implicit and 0 of 77
+populated, against 0 of 142 and 2 of 154 at HEAD. Under 50 jumps
+`hint-frontier.test.ts` cannot judge a share, so it now deals further boards
+a preset, up to six, until a game's plans have jumped enough. The 84 obvious-clean steps
+under the implicit reading are gone: a stale note's opening now always has a
+placement to take first.
