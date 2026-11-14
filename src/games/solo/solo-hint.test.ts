@@ -1,9 +1,7 @@
 /**
  * Solo explained-hint tests.
  *
- * Tier 1 — the recording solver records a reason per technique (incl. a killer
- * deduction and an X-diagonal deduction) and its replayed placements complete a
- * generated board; `hint` populates, strikes (deductive eliminations + basic
+ * Tier 1 — `hint` populates, strikes (deductive eliminations + basic
  * region culls) and places with quality-bar narration; refusal on solved / on
  * mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario snapshot of a
  * deductive elimination journey frame (struck candidate `COL_PENCIL`
@@ -676,8 +674,8 @@ describe("solo hint", () => {
     // Never the longer reading of the two.
     expect(lines.length * 2).toBeLessThanOrEqual(state.cr);
     // The outlined cells are places in the striped lines. That the lines leave
-    // the digit no other is the premise audit's to hold
-    // (`engine/firing-replay.test.ts`).
+    // the digit no other is the technique's own condition, which it tests on
+    // the notes the step rests on.
     expect(area.length).toBeGreaterThanOrEqual(2 * lines.length);
     for (const c of area)
       expect(lines.includes(c[along]), "outlined outside the stripes").toBe(true);

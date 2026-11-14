@@ -35,7 +35,6 @@ import {
   STRIKE_EDGE,
 } from "./describe-runtime.ts";
 import { FactGraph, readsOf } from "./fact-graph.ts";
-import { type CellBoard, FiringReplay } from "./firing-replay.ts";
 import { MADE } from "./marks-made.ts";
 import { type StepBudget, stepBudget } from "./step-budget.ts";
 
@@ -136,9 +135,6 @@ export class CellMarks implements Marks {
   /** The firing being made: bumped before each technique is tried, so every
    * record of one firing shares it. */
   group = 0;
-  /** The premise audit's replay of this run, only while one runs
-   * ({@link ladderReplay}). */
-  replay: FiringReplay<string> | null = null;
 
   /** Whether the answer's values sit on the edges between cells
    * (Separate's walls), so that a "cell" here is an edge's index and its
@@ -1045,53 +1041,11 @@ export function runLadder(
     techniques,
     budget: m.budget,
     firings: opts.firings,
-    beforeTechnique: (t) => {
+    beforeTechnique: () => {
       m.group++;
-      m.replay?.before(t.id);
-      m.replay?.open(m.group);
     },
   });
   return impossible;
-}
-
-/**
- * The premise audit's replay of the recording run about to be made on `m`
- * (`firing-replay.ts`), set as `m.replay` for {@link runLadder} to mark each
- * firing on: a firing's technique is run alone on fresh marks holding the
- * edited state. `fresh` builds marks from the values placed, as the recording
- * run's were built, and `techniquesOn` the run's techniques on them, at the
- * run's caps. Call it once the recorder is on, so the replay starts where the
- * recording does.
- */
-export function ladderReplay<S extends CellMarks>(
-  m: S,
-  fresh: (values: Int32Array) => S,
-  techniquesOn: (fresh: S) => readonly DeductionTechnique[],
-): FiringReplay<string> {
-  const capture = (from: CellMarks): CellBoard => ({
-    values: Int32Array.from(from.grid),
-    cands: from.snapshot(),
-  });
-  const replay = new FiringReplay<string>({
-    w: m.sp.w,
-    h: m.sp.h,
-    capture: () => capture(m),
-    name: (id) => id,
-    run: (board, id) => {
-      const run = fresh(board.values);
-      for (let c = 0; c < run.cands.length; c++) run.cands[c] &= board.cands[c];
-      // The recording path's techniques behave as recorded only with a recorder.
-      run.recorder = () => {};
-      const technique = techniquesOn(run).find((t) => t.id === id);
-      if (!technique) throw new Error(`ladder replay: no technique ${id}`);
-      return () => {
-        const ret = technique.run();
-        return { after: capture(run), ret };
-      };
-    },
-  });
-  m.replay = replay;
-  return replay;
 }
 
 /** A firing a walk took, with the ladder entry that made it. */

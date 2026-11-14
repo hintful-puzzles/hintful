@@ -42,3 +42,29 @@ candidate hint plan reads an unmarked cell the way the player chose").
   region rule
 - **THEN** no step of the plan places or strikes by what a row, column or
   block leaves
+
+## ADDED Requirements
+
+### Requirement: Solver: Solo's ladder runs a rung alone as the hint does
+
+Solo's solver SHALL run its techniques as a `runDeductionFixpoint` ladder of
+named rungs, in the order its description states them, then the forcing
+chain. A rung SHALL read nothing a rung before it left behind in the same
+pass, so that the hint, which runs each technique alone on marks built from
+the board's values and notes, finds what the ladder finds. No hand-written
+technique loop SHALL be kept beside it.
+
+#### Scenario: A rung run alone
+
+- **WHEN** the hint runs one of Solo's techniques alone on marks built from a
+  board's values and notes
+- **THEN** its firings are the ones it makes from the same marks inside the
+  ladder
+
+## REMOVED Requirements
+
+### Requirement: Solver: Solo's solver is a certified deduction ladder whose rungs run alone
+
+**Reason**: It named the premise audit's replay, which is gone with the
+recording it replayed; its scenario was the audit's.
+**Migration**: "Solver: Solo's ladder runs a rung alone as the hint does".

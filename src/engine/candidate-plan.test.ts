@@ -8,7 +8,6 @@ import {
   runCandidatePlan,
   runLatinCandidatePlan,
 } from "./candidate-plan.ts";
-import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintStep } from "./game.ts";
 import { type Conclusions, narrateLatinReason } from "./hint-text.ts";
 import { CELL, mark, Narration, phrase, unshaped } from "./hint-words.ts";
@@ -21,7 +20,6 @@ type Step = HintStep<Move, CandidateHighlights>;
 type Plan<Reading extends CandidateReading = CandidateReading> = CandidatePlan<
   Move,
   CandidateHighlights,
-  DeductionRecord,
   Reason,
   RowColRegion,
   Reading
@@ -43,14 +41,27 @@ const conclude: Conclusions = {
   keep: (ns) => `kept ${ns.join("")}`,
 };
 
-const place = (x: number, y: number, n: number): DeductionRecord => ({
-  kind: "place",
-  x,
-  y,
-  n,
-  reason: { kind: "clue" },
-  group: 0,
-});
+/** A rung offering firing `f` until the board shows it made: every cell it
+ * places filled, and every note it strikes gone from a cell that has notes
+ * (under the implicit reading a strike from a note-less cell is folded into
+ * the notes it leaves). */
+function until(grid: Uint8Array, pencil: Int32Array, w: number, f: Legs): () => Legs[] {
+  const made = (x: number, y: number, n?: number): boolean => {
+    const i = y * w + x;
+    if (grid[i] !== 0) return true;
+    return n !== undefined && pencil[i] !== 0 && (pencil[i] & bits(n)) === 0;
+  };
+  return () =>
+    f.every((leg) =>
+      "place" in leg
+        ? made(leg.place.x, leg.place.y)
+        : "strike" in leg
+          ? leg.strike.every((m) => made(m.x, m.y, m.n))
+          : true,
+    )
+      ? []
+      : [f];
+}
 
 /** `s`, outlining the reason's `near` cell (by a reference with no words of
  * its own) when it has one: the walk reads a step's area off its words. */
@@ -68,7 +79,6 @@ const hooks = (
   Plan,
   | "autoClean"
   | "label"
-  | "record"
   | "regionsOf"
   | "singleReason"
   | "placeWords"
@@ -77,7 +87,6 @@ const hooks = (
 > => ({
   autoClean: false,
   label: "test plan",
-  record: () => [],
   regionsOf: (x, y) => rowColRegions(x, y, w),
   singleReason: (_n, why) => ({ kind: why.kind }),
   placeWords: (m, r, continues) => ({
@@ -96,14 +105,7 @@ const hooks = (
  * gives another: a plan on the populate reading alone. `over` supplies the
  * board and whatever else the case needs. */
 function walk(over: Partial<Plan<"populate">> & Board): void {
-  runCandidatePlan<
-    Move,
-    CandidateHighlights,
-    DeductionRecord,
-    Reason,
-    RowColRegion,
-    "populate"
-  >({
+  runCandidatePlan<Move, CandidateHighlights, Reason, RowColRegion, "populate">({
     ...hooks(over.w),
     setUp: { done: () => true, step: () => false },
     ...over,
@@ -112,16 +114,16 @@ function walk(over: Partial<Plan<"populate">> & Board): void {
 
 /** Walk a plan on the default setup, under the reading `over` names. */
 function walkDefault(over: Partial<Plan> & Board & Pick<Plan, "notes">): void {
-  runCandidatePlan<Move, CandidateHighlights, DeductionRecord, Reason, RowColRegion>({
+  runCandidatePlan<Move, CandidateHighlights, Reason, RowColRegion>({
     ...hooks(over.w),
     ...over,
   });
 }
 
 describe("runCandidatePlan", () => {
-  /** A 4×1 board whose solver records a clue placement in every cell, so the
-   * ladder's last rung places them one by one, and whose own rung places cell
-   * 0 with no notes. */
+  /** A 4×1 board with a rung that places cell 0 with no notes, and one that
+   * waits for the setup and then places a clue in each other cell up to
+   * `stuckAt`, one by one. */
   function phases(opts: { setUpSteps: number; stuckAt?: number }): string[] {
     const steps: Step[] = [];
     const grid = new Uint8Array(4);
@@ -131,15 +133,20 @@ describe("runCandidatePlan", () => {
       steps,
       grid,
       pencil: new Int32Array(4),
-      record: () =>
-        [0, 1, 2, 3]
-          .filter((x) => x < (opts.stuckAt ?? 4))
-          .map((x) => place(x, 0, x + 1)),
       rungs: [
         () =>
           grid[0]
             ? []
             : [[{ place: { x: 0, y: 0, n: 1 }, reason: { kind: "opening" } }]],
+        ({ populated }) =>
+          populated
+            ? [1, 2, 3]
+                .filter((x) => x < (opts.stuckAt ?? 4) && !grid[x])
+                .slice(0, 1)
+                .map((x) => [
+                  { place: { x, y: 0, n: x + 1 }, reason: { kind: "clue" } },
+                ])
+            : [],
       ],
       setUp: {
         done: () => setUps >= opts.setUpSteps,
@@ -153,8 +160,6 @@ describe("runCandidatePlan", () => {
           return true;
         },
       },
-      stuck: () =>
-        steps.push({ move: { type: "none" }, rung: "populate", explanation: "stuck" }),
     });
     return steps.map((s) => s.explanation);
   }
@@ -174,31 +179,27 @@ describe("runCandidatePlan", () => {
     expect(phases({ setUpSteps: 0 })[0]).toBe("opening 0,0");
   });
 
-  it("calls stuck when nothing fires on an unfinished board", () => {
-    expect(phases({ setUpSteps: 0, stuckAt: 2 })).toEqual([
-      "opening 0,0",
-      "clue 1,0",
-      "stuck",
-    ]);
+  it("ends when nothing fires on an unfinished board", () => {
+    expect(phases({ setUpSteps: 0, stuckAt: 2 })).toEqual(["opening 0,0", "clue 1,0"]);
   });
 
-  /** A 3×3 board noting 1–3 everywhere, whose solver's one deduction places 1
-   * in the corner. */
+  /** A 3×3 board noting 1–3 everywhere, whose one deduction places 1 in the
+   * corner. */
   function corner(autoClean: boolean): { steps: Step[]; pencil: Int32Array } {
     const steps: Step[] = [];
+    const grid = new Uint8Array(9);
     const pencil = new Int32Array(9).fill(bits(1, 2, 3));
-    let recorded = false;
     walk({
       w: 3,
       steps,
-      grid: new Uint8Array(9),
+      grid,
       pencil,
       autoClean,
-      record: () => {
-        if (recorded) return [];
-        recorded = true;
-        return [place(0, 0, 1)];
-      },
+      rungs: [
+        until(grid, pencil, 3, [
+          { place: { x: 0, y: 0, n: 1 }, reason: { kind: "clue" } },
+        ]),
+      ],
     });
     return { steps, pencil };
   }
@@ -236,38 +237,57 @@ describe("runCandidatePlan", () => {
   });
 
   /** One firing striking 2 and 3 from (1,0) and 2 from (2,0), leaving neither
-   * down to one note. */
-  function cage(axis?: (op: DeductionRecord) => unknown): {
-    steps: Step[];
-    pencil: Int32Array;
-  } {
+   * down to one note: a leg a cell, or one leg for the whole. */
+  function cage(byCell: boolean): { steps: Step[]; pencil: Int32Array } {
     const steps: Step[] = [];
+    const grid = Uint8Array.from([3, 0, 0, 0]);
     const pencil = Int32Array.from([0, bits(1, 2, 3, 4), bits(1, 2, 4), bits(1, 2)]);
-    const elim = (x: number, n: number): DeductionRecord => ({
-      kind: "elim",
-      x,
-      y: 0,
-      n,
-      reason: { kind: "cage" },
-      group: 0,
-    });
+    const reason = { kind: "cage" };
+    const one = { x: 1, y: 0 };
+    const two = { x: 2, y: 0 };
+    const legs: Legs = byCell
+      ? [
+          {
+            strike: [
+              { ...one, n: 2 },
+              { ...one, n: 3 },
+            ],
+            reason,
+          },
+          { strike: [{ ...two, n: 2 }], reason },
+        ]
+      : [
+          {
+            strike: [
+              { ...one, n: 2 },
+              { ...one, n: 3 },
+              { ...two, n: 2 },
+            ],
+            reason,
+          },
+        ];
     walk({
       w: 4,
       steps,
-      grid: Uint8Array.from([3, 0, 0, 0]),
+      grid,
       pencil,
-      strikeAxis: axis,
-      record: () => [elim(1, 2), elim(1, 3), elim(2, 2)],
+      // The board is one row: a column of one cell would hold a hidden single
+      // of every note in it.
+      regionsOf: () => [rowColRegions(0, 0, 4)[0]],
+      rungs: [until(grid, pencil, 4, legs)],
     });
     return { steps, pencil };
   }
 
-  it("splits a firing's strikes on the game's axis, the later legs continuing", () => {
-    const { steps, pencil } = cage((op) => op.x);
+  it("plays a firing's legs as one journey, the later legs continuing", () => {
+    const { steps, pencil } = cage(true);
+    // The strikes leave 2 one home in the row, which the walk then places.
     expect(steps.map((s) => s.explanation)).toEqual([
       "Cage strike 2, so struck 23 gone.",
       "Cage strike 1 (cont), so struck 2 gone.",
+      "hidden 3,0",
     ]);
+    expect(steps[2].continuesPrevious).toBeUndefined();
     expect(steps[0].continuesPrevious).toBeUndefined();
     expect(steps[1].continuesPrevious).toBe(true);
     expect(steps[0].highlights?.targets).toEqual([{ x: 1, y: 0 }]);
@@ -275,11 +295,9 @@ describe("runCandidatePlan", () => {
     expect(pencil[2]).toBe(bits(1, 4));
   });
 
-  it("keeps a firing whole without an axis, each cell a target once", () => {
-    const { steps } = cage();
-    expect(steps.map((s) => s.explanation)).toEqual([
-      "Cage strike 3, so struck 223 gone.",
-    ]);
+  it("strikes a leg over several cells in one step, each cell a target once", () => {
+    const { steps } = cage(false);
+    expect(steps[0].explanation).toBe("Cage strike 3, so struck 223 gone.");
     expect(steps[0].highlights?.targets).toEqual([
       { x: 1, y: 0 },
       { x: 2, y: 0 },
@@ -287,13 +305,16 @@ describe("runCandidatePlan", () => {
   });
 
   describe("under the implicit reading", () => {
-    const elim = (x: number, y: number, n: number, near?: Point): DeductionRecord => ({
-      kind: "elim",
-      x,
-      y,
-      n,
-      reason: { kind: "pair", near },
-      group: 0,
+    /** A leg striking `ns` from `(x, y)`, its reason outlining `near`. */
+    const strike = (
+      x: number,
+      y: number,
+      ns: number[],
+      near?: Point,
+      kind = "pair",
+    ): Legs[number] => ({
+      strike: ns.map((n) => ({ x, y, n })),
+      reason: { kind, near },
     });
     const notes = {
       populate: "populate",
@@ -306,22 +327,23 @@ describe("runCandidatePlan", () => {
           "bare",
         ),
     };
-    /** Walk a 3×3 board whose solver's one firing is `ops`. */
-    function implicitWalk(grid: Uint8Array, ops: DeductionRecord[]): Step[] {
+    /** Walk a 3×3 board whose one firing is `legs`, with `over`'s hooks. */
+    function implicitWalk(
+      grid: Uint8Array,
+      legs: Legs,
+      over: Partial<Plan> = {},
+    ): Step[] {
       const steps: Step[] = [];
-      let recorded = false;
+      const pencil = new Int32Array(9);
       walkDefault({
         w: 3,
         steps,
         grid,
-        pencil: new Int32Array(9),
+        pencil,
         reading: "implicit",
         notes,
-        record: () => {
-          if (recorded) return [];
-          recorded = true;
-          return ops;
-        },
+        rungs: legs.length > 0 ? [until(grid, pencil, 3, legs)] : [],
+        ...over,
       });
       return steps;
     }
@@ -331,7 +353,7 @@ describe("runCandidatePlan", () => {
       // striking 3 leaves 1, which the step places rather than noting 1 and 3
       // for a second step to cross 3 out.
       const steps = implicitWalk(Uint8Array.from([0, 2, 0, 0, 0, 0, 0, 0, 0]), [
-        elim(0, 0, 3),
+        strike(0, 0, [3]),
       ]);
       expect(steps[0].explanation).toBe("Pair strike 1, so this cell placed 1.");
       expect(steps[0].move).toMatchObject({ type: "set", x: 0, y: 0, n: 1 });
@@ -341,7 +363,7 @@ describe("runCandidatePlan", () => {
     });
 
     it("folds it into a note of the values left when several are", () => {
-      const steps = implicitWalk(new Uint8Array(9), [elim(0, 0, 3)]);
+      const steps = implicitWalk(new Uint8Array(9), [strike(0, 0, [3])]);
       expect(steps[0].explanation).toBe("Pair strike 1, so this cell kept 12.");
       expect(steps[0].move).toEqual({
         type: "pencilAdd",
@@ -354,7 +376,9 @@ describe("runCandidatePlan", () => {
     });
 
     it("notes a blank cell the firing outlines, but not a filled one", () => {
-      const blank = implicitWalk(new Uint8Array(9), [elim(0, 0, 3, { x: 1, y: 1 })]);
+      const blank = implicitWalk(new Uint8Array(9), [
+        strike(0, 0, [3], { x: 1, y: 1 }),
+      ]);
       expect(blank.slice(0, 2).map((s) => s.explanation)).toEqual([
         "note 1,1 123 every",
         "Pair strike 1, so this cell kept 12.",
@@ -363,33 +387,18 @@ describe("runCandidatePlan", () => {
       expect(blank[1].continuesPrevious).toBe(true);
       const filled = new Uint8Array(9);
       filled[4] = 2;
-      expect(implicitWalk(filled, [elim(0, 0, 3, { x: 1, y: 1 })])[0].explanation).toBe(
-        "Pair strike 1, so this cell kept 12.",
-      );
+      expect(
+        implicitWalk(filled, [strike(0, 0, [3], { x: 1, y: 1 })])[0].explanation,
+      ).toBe("Pair strike 1, so this cell kept 12.");
     });
 
     it("notes a struck cell an earlier leg reads, and strikes it as written", () => {
       // Two legs: the first strikes (1,1) reading (0,0); the second strikes
       // (0,0). (0,0) is premise before it is struck, so it is noted, not folded.
-      const steps: Step[] = [];
-      let recorded = false;
-      walkDefault({
-        w: 3,
-        steps,
-        grid: new Uint8Array(9),
-        pencil: new Int32Array(9),
-        reading: "implicit",
-        notes,
-        strikeAxis: (op) => op.x,
-        record: () => {
-          if (recorded) return [];
-          recorded = true;
-          return [
-            elim(1, 1, 3, { x: 0, y: 0 }),
-            { ...elim(0, 0, 3), reason: { kind: "later" } },
-          ];
-        },
-      });
+      const steps = implicitWalk(new Uint8Array(9), [
+        strike(1, 1, [3], { x: 0, y: 0 }),
+        strike(0, 0, [3], undefined, "later"),
+      ]);
       expect(steps.slice(0, 3).map((s) => s.explanation)).toEqual([
         "note 0,0 123 every",
         "Pair strike 1, so this cell kept 12.",
@@ -401,22 +410,10 @@ describe("runCandidatePlan", () => {
       // The view is taken before the firing: (1,0) reads 1, 2 or 3 in it. The
       // first leg places 1 at (0,0), in the same row, so striking 3 from (1,0)
       // leaves only 2, not "1 or 2". A Rome board threw on exactly this.
-      const steps: Step[] = [];
-      let recorded = false;
-      walkDefault({
-        w: 3,
-        steps,
-        grid: new Uint8Array(9),
-        pencil: new Int32Array(9),
-        reading: "implicit",
-        notes,
-        strikeAxis: (op) => op.x,
-        record: () => {
-          if (recorded) return [];
-          recorded = true;
-          return [elim(0, 0, 2), elim(0, 0, 3), elim(1, 0, 3)];
-        },
-      });
+      const steps = implicitWalk(new Uint8Array(9), [
+        strike(0, 0, [2, 3]),
+        strike(1, 0, [3]),
+      ]);
       expect(steps.slice(0, 2).map((s) => s.explanation)).toEqual([
         "Pair strike 2, so this cell placed 1.",
         "Pair strike 1 (cont), so this cell placed 2.",
@@ -424,20 +421,7 @@ describe("runCandidatePlan", () => {
     });
 
     it("never folds a strike that speaks for other cells", () => {
-      const steps: Step[] = [];
-      let recorded = false;
-      walkDefault({
-        w: 3,
-        steps,
-        grid: new Uint8Array(9),
-        pencil: new Int32Array(9),
-        reading: "implicit",
-        notes,
-        record: () => {
-          if (recorded) return [];
-          recorded = true;
-          return [elim(0, 0, 3)];
-        },
+      const steps = implicitWalk(new Uint8Array(9), [strike(0, 0, [3])], {
         strikeWords: (marks, r) => ({
           premise: Narration.plain(`${r.kind} strike ${marks.length}`),
           where: "from the rest",
@@ -450,20 +434,7 @@ describe("runCandidatePlan", () => {
     });
 
     it("notes the cells a step reads beyond its outline, as a cage deduction does", () => {
-      const steps: Step[] = [];
-      let recorded = false;
-      walkDefault({
-        w: 3,
-        steps,
-        grid: new Uint8Array(9),
-        pencil: new Int32Array(9),
-        reading: "implicit",
-        notes,
-        record: () => {
-          if (recorded) return [];
-          recorded = true;
-          return [elim(0, 0, 3)];
-        },
+      const steps = implicitWalk(new Uint8Array(9), [strike(0, 0, [3])], {
         strikeWords: (marks, r) => ({
           premise: phrase`${r.kind} strike ${marks.length}${mark.as("stripes", CELL, [{ x: 1, y: 0 }], "")}`,
           reads: [{ x: 1, y: 0 }],
@@ -582,13 +553,9 @@ describe("runLatinCandidatePlan", () => {
    * words; it passes no regions, no single-reason function and no evidence for
    * a hidden single, because a row/column square cannot answer those
    * differently. */
-  function latinWalk(over: {
-    grid: Uint8Array;
-    pencil: Int32Array;
-    record: () => readonly DeductionRecord[];
-  }): LatinStep[] {
+  function latinWalk(over: { grid: Uint8Array; pencil: Int32Array }): LatinStep[] {
     const steps: LatinStep[] = [];
-    runLatinCandidatePlan<Move, CandidateHighlights, DeductionRecord, LatinReason>({
+    runLatinCandidatePlan<Move, CandidateHighlights, LatinReason>({
       w: 3,
       steps,
       autoClean: false,
@@ -618,9 +585,6 @@ describe("runLatinCandidatePlan", () => {
     const steps = latinWalk({
       grid: new Uint8Array(9),
       pencil,
-      record: () => [
-        { kind: "place", x: 0, y: 0, n: 1, reason: { kind: "single" }, group: 0 },
-      ],
     });
     expect(steps[0].explanation).toBe(
       "No other square in this row can be 1, so this square must be 1.",
@@ -639,7 +603,6 @@ describe("runLatinCandidatePlan", () => {
     const steps = latinWalk({
       grid: Uint8Array.from([1, 0, 0, 0, 0, 0, 0, 0, 0]),
       pencil: new Int32Array(9),
-      record: () => [],
     });
     const [populate, clean] = steps.map((s) => s.explanation);
     expect(populate).toContain("number");
@@ -656,7 +619,6 @@ describe("runLatinCandidatePlan", () => {
     const steps = latinWalk({
       grid: new Uint8Array(9),
       pencil: new Int32Array(9).fill(bits(1)),
-      record: () => [],
     });
     expect(steps[0].explanation).toBe("single 0,0");
   });
@@ -694,7 +656,6 @@ function blockRegionGame(): void {
   runLatinCandidatePlan<
     Move,
     CandidateHighlights,
-    DeductionRecord,
     BlockReason,
     "populate"
     // @ts-expect-error the reason union cannot hold a row/column hidden single.
@@ -705,7 +666,6 @@ function blockRegionGame(): void {
     pencil: new Int32Array(9),
     autoClean: false,
     label: "refused",
-    record: () => [],
     placeWords: () => ({ explanation: "", area: [] }),
     strikeWords: () => ({ premise: "", area: [] }),
     notes: { noun: "number", placedVerb: "standing" },
@@ -722,7 +682,7 @@ function blockRegionGame(): void {
  * under the implicit reading and the second has no setup to run.
  */
 function setUpAgainstReadings(board: Board): void {
-  runCandidatePlan<Move, CandidateHighlights, DeductionRecord, Reason, RowColRegion>({
+  runCandidatePlan<Move, CandidateHighlights, Reason, RowColRegion>({
     ...hooks(board.w),
     ...board,
     // @ts-expect-error a plan on both readings takes the default setup.
@@ -731,7 +691,6 @@ function setUpAgainstReadings(board: Board): void {
   runCandidatePlan<
     Move,
     CandidateHighlights,
-    DeductionRecord,
     Reason,
     RowColRegion,
     "populate"

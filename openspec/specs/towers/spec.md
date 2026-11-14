@@ -214,9 +214,9 @@ Towers' hint SHALL be the collection's candidate-elimination plan, taken
 through its row/column preset (`engine-candidate-hints`, "A shared
 candidate-elimination hint plan" and "A row/column Latin square answers no
 question its regions already settle"), with no departure. Towers SHALL supply
-its recording solver, one rung of its own and its words, which the
-requirements below state. What its marks stand for SHALL be the legend's
-(`hintMarks`).
+its clue techniques as rungs over the notes, each saying its clue, one rung of
+its own and its words, which the requirements below state. What its marks
+stand for SHALL be the legend's (`hintMarks`).
 
 #### Scenario: A single on a Towers board
 

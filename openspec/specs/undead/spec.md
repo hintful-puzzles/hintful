@@ -348,8 +348,9 @@ style has no in-play toggle.
 
 ### Requirement: Hint: Undead's hint is a plan of the game's own
 
-Undead's hint plan SHALL be the game's own, built from its solver's record
-and the player's pencil marks.
+Undead's hint plan SHALL be the game's own, built from its ladder's `total` and
+`sightline` techniques run on the player's pencil marks, a cell with none
+reading as every monster.
 
 #### Scenario: Naked single is surfaced first as a placement
 
@@ -368,14 +369,14 @@ and the player's pencil marks.
 ### Requirement: Hint: The forcing rung never reaches an Undead hint
 
 The forcing rung is a search: it assumes a candidate and runs the
-arc-consistency and counting fixpoint from it. The hint's recorder SHALL NOT
-emit it on any tier, while the solver SHALL retain it, so that grading and
-generation are the same with the hint as without.
+arc-consistency and counting fixpoint from it. The hint SHALL NOT read it on
+any tier, while the solver SHALL retain it, so that grading and generation are
+the same with the hint as without.
 
 #### Scenario: The forcing rung never reaches a narration
 
-- **WHEN** hint plans are recorded across every tier and many seeds
-- **THEN** no recorded deduction is a forcing one, on any tier
+- **WHEN** hint plans are walked across every tier and many seeds
+- **THEN** no step is a forcing one, on any tier
 
 ### Requirement: Hint: An Unreasonable Undead board's plan is neither empty nor complete
 

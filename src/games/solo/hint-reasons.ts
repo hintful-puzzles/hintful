@@ -12,7 +12,6 @@ import {
   strikesOf,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import type { GridSpace } from "../../engine/describe-runtime.ts";
 import { PLACE, valuesOf } from "../../engine/describe-runtime.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
@@ -250,7 +249,7 @@ function said<T>(f: LadderFiring): T {
 export function soloRungs<M, H>(
   state: SoloState,
   grid: ArrayLike<number>,
-): CandidateRung<M, H, DeductionRecord, SoloReason>[] {
+): CandidateRung<M, H, SoloReason>[] {
   const on = soloNotesLadder(state, grid);
   const b = new SoloBoard(state, grid);
   const cr = state.cr;
@@ -258,7 +257,7 @@ export function soloRungs<M, H>(
   const rung = (
     id: string,
     legs: (f: LadderFiring, shown: ArrayLike<number>) => Legs | null,
-  ): CandidateRung<M, H, DeductionRecord, SoloReason> => techniqueRung(on, id, legs);
+  ): CandidateRung<M, H, SoloReason> => techniqueRung(on, id, legs);
   const byCellLegs = (f: LadderFiring, reason: SoloReason): Legs =>
     byCell(strikesOf(f, cr)).map((strike) => ({ strike, reason }));
   const placed = (f: LadderFiring): Mark => {

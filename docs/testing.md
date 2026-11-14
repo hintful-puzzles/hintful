@@ -768,13 +768,6 @@ reads; no list is edited. What each asks of the game's author:
   `HINT_GAMES` (`git grep -l HINT_GAMES -- src scripts`): plans resume from
   any position, the overlay reaches the render cache, narration form, and the
   rest. Recipe: [`hints.md`](./hints.md).
-- **Recorded premises**: a game whose hint calls the candidate walk is in
-  [`firing-replay.test.ts`](../src/engine/firing-replay.test.ts), which
-  audits that every recorded firing follows from its premise. A `latinSolver`
-  game has its replay already; a bespoke recording solver writes a
-  `ReplayAdapter`, and one that records without offering a replay is
-  reported. See [`hints-candidates.md`](./hints-candidates.md) § "A premise
-  names everything its deduction reads".
 - **Difficulty tiers**: declaring `Game.difficulty`
   ([`difficulty.ts`](../src/engine/difficulty.ts)) enrolls the game in
   [`difficulty-contract.test.ts`](../src/engine/difficulty-contract.test.ts):

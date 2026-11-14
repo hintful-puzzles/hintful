@@ -1,8 +1,7 @@
 /**
  * Towers explained-hint tests.
  *
- * Tier 1 — the recording solver records a reason per technique and its replayed
- * placements complete a generated board; `hint` populates, strikes and places
+ * Tier 1 — `hint` populates, strikes and places
  * with quality-bar narration (indication → necessity voice); refusal on
  * solved / on mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario
  * snapshot of a clue-elimination journey frame (struck candidates in their ink,

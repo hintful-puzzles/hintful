@@ -413,12 +413,12 @@ mark is gone from its notes.
 ### Requirement: Hint: Salad's hint counts a line before it asks for pencil marks
 
 Salad's own steps SHALL sit in the walk's ladder in this order: a line
-whose empty squares, or whose symbols, are all found, the rows before the
-columns; a square whose marks are down to the empty-square mark or have lost
-it; and the leftover empty-square mark of a circled square. They read no
-pencil mark the board lacks, so the hint SHALL take them before it pencils in
-the candidates. The border-clue deductions and the Latin ones are the solver's
-record and SHALL wait for the candidates.
+whose empty squares, or whose symbols, are all found, rows before columns; a
+square whose marks are down to the empty-square mark or have lost it; and a
+circled square's leftover empty-square mark. They read no pencil mark the
+board lacks, so the hint SHALL take them before it pencils in the
+candidates. The border and Latin deductions, run on the notes, SHALL wait
+for the candidates.
 
 #### Scenario: A Number Ball board opens on a count
 

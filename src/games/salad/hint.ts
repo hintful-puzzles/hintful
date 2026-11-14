@@ -59,7 +59,6 @@ import {
   runLatinCandidatePlan,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import {
   type HintResult,
   type HintStep,
@@ -263,7 +262,7 @@ export function premise(
   const at = marks[0];
   switch (reason.kind) {
     case "set": {
-      // A strike is one square's (`strikeAxis`), so the marks are its notes.
+      // A strike is one square's (`byCell`), so the marks are its notes.
       // One mark confined across several lines is the shared sentence whichever
       // mark it is: an X fits a line as often as the line has empty squares, and
       // "no other X" is as true of those.
@@ -419,8 +418,7 @@ interface MarkerFiring {
 
 /** The cheap marker deductions available on the board *as the player sees it*
  * — a line's counts first (visible and countable), then a note collapse. When
- * there are none, the caller falls through to the recorded strikes/placements
- * and finally to the cube's own verdict. */
+ * there are none, the plan's later rungs strike. */
 function cheapMarkers(w: Working, o: number, nums: number): MarkerFiring[] {
   const out: MarkerFiring[] = [];
   const lines: { line: "row" | "col"; index: number; cells: number[] }[] = [];
@@ -758,60 +756,57 @@ function buildSteps(
 
   const on = notesLadder(state, w);
   const cl = dealtOf(board());
-  type Rung = CandidateRung<SaladMove, SaladHint, DeductionRecord, SaladReason>;
+  type Rung = CandidateRung<SaladMove, SaladHint, SaladReason>;
   const border: Rung = techniqueRung(on, "border", (f) => borderLegs(f, cl, o));
   // A set's sentence is one square's notes (`premise`).
-  const library: Rung[] = latinStrikeRungs<
-    SaladMove,
-    SaladHint,
-    DeductionRecord,
-    SaladReason
-  >(on, o, byCell);
-
-  runLatinCandidatePlan<SaladMove, SaladHint, DeductionRecord, SaladReason, "populate">(
-    {
-      w: o,
-      steps,
-      grid: w.grid,
-      pencil: w.pencil,
-      enc,
-      moves: saladCandidateMoves(nums),
-      autoClean,
-      label: "salad hint plan",
-      cap: o * o * (nums + 4) + 8,
-      finished: () => isComplete(board()),
-      // The walk reads the outline and the stripes off the words; the clues they
-      // light are Salad's, read the same way.
-      placeWords: (m, reason) => {
-        const words = narrate(reason, m, state);
-        return { words, clues: cluesNamed(words), ghost: m.n };
-      },
-      strikeWords: (marks, reason) => {
-        const p = premise(reason, marks, state);
-        return { ...p, clues: cluesNamed(p.premise) };
-      },
-      setUp,
-      // The setup is Salad's own; the vocabulary still words the conclusions.
-      notes: { placedVerb: "placed", ...saladVocab(state.mode, nums) },
-      // The cheapest emptiness deductions: a line's counts, or a collapse onto
-      // the empty-square mark. Both need no notes beyond what is on screen, so a
-      // Number Ball board opens on them rather than on "pencil everything in".
-      // Then the strikes, in the ladder's order.
-      rungs: [
-        () => cheapMarkers(w, o, nums).map((f) => markerFiring(f, w, state)),
-        () => circledEmptyNotes(w, o, nums),
-        border,
-        ...library,
-      ],
-      // A lone "might be empty" note is a marker, not a symbol to place.
-      singles: () => nakedSymbols(w, o, nums),
-      // So is the last X a line's notes have room for.
-      placeable: (m) => m.n <= nums,
-      onPlace: (x, y) => {
-        w.holes[y * o + x] = CIRCLE;
-      },
-    },
+  const library: Rung[] = latinStrikeRungs<SaladMove, SaladHint, SaladReason>(
+    on,
+    o,
+    byCell,
   );
+
+  runLatinCandidatePlan<SaladMove, SaladHint, SaladReason, "populate">({
+    w: o,
+    steps,
+    grid: w.grid,
+    pencil: w.pencil,
+    enc,
+    moves: saladCandidateMoves(nums),
+    autoClean,
+    label: "salad hint plan",
+    cap: o * o * (nums + 4) + 8,
+    finished: () => isComplete(board()),
+    // The walk reads the outline and the stripes off the words; the clues they
+    // light are Salad's, read the same way.
+    placeWords: (m, reason) => {
+      const words = narrate(reason, m, state);
+      return { words, clues: cluesNamed(words), ghost: m.n };
+    },
+    strikeWords: (marks, reason) => {
+      const p = premise(reason, marks, state);
+      return { ...p, clues: cluesNamed(p.premise) };
+    },
+    setUp,
+    // The setup is Salad's own; the vocabulary still words the conclusions.
+    notes: { placedVerb: "placed", ...saladVocab(state.mode, nums) },
+    // The cheapest emptiness deductions: a line's counts, or a collapse onto
+    // the empty-square mark. Both need no notes beyond what is on screen, so a
+    // Number Ball board opens on them rather than on "pencil everything in".
+    // Then the strikes, in the ladder's order.
+    rungs: [
+      () => cheapMarkers(w, o, nums).map((f) => markerFiring(f, w, state)),
+      () => circledEmptyNotes(w, o, nums),
+      border,
+      ...library,
+    ],
+    // A lone "might be empty" note is a marker, not a symbol to place.
+    singles: () => nakedSymbols(w, o, nums),
+    // So is the last X a line's notes have room for.
+    placeable: (m) => m.n <= nums,
+    onPlace: (x, y) => {
+      w.holes[y * o + x] = CIRCLE;
+    },
+  });
   return steps;
 }
 

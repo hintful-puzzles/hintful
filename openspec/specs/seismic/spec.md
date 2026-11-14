@@ -212,7 +212,7 @@ out, one in the same area or one near enough under the board's ruleset.
 
 ### Requirement: Hint: The hint walks the shared candidate plan with the keep-apart reach
 
-The plan SHALL be walked by the shared candidate walk (`runCandidatePlan`) over the solver's recording, from the numbers placed, with Seismic's keep-apart rule as the walk's `reach`: an `n` rules `n` out of the cells the description's `cull` strikes. Its placements SHALL lead its strikes, so a single on the board is never passed over for a starved area.
+The plan SHALL be walked by the shared candidate walk (`runCandidatePlan`) with its ladder's `starve` technique as a rung over the notes, and with Seismic's keep-apart rule as the walk's `reach`: an `n` rules `n` out of the cells the description's `cull` strikes. Its placements SHALL lead its strikes, so a single on the board is never passed over for a starved area.
 
 #### Scenario: A note-less cell reads as what the rule leaves it
 

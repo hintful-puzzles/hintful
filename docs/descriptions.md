@@ -926,10 +926,6 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   deal asks which numbers it read, sets `wholePasses` and takes every firing
   of a pass, as the solve path does: one a pass reads the board again for
   each.
-- **A recording run offers the premise audit its replay** through
-  `ladderReplay`: the game says how to build fresh marks from the values
-  placed and its techniques on them, and `runLadder` marks each firing. A
-  candidate game that records and offers none fails `firing-replay.test.ts`.
 
 ## A statement's order is behavior
 

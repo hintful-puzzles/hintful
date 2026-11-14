@@ -368,3 +368,31 @@ solved, 32 refused on Unreasonable), and differs on one board, where a
 `total` now strikes three vampires at once where HEAD struck one by a
 sightline first (21928 lines against 21968). The walk fingerprint is
 unchanged for both. Undead's dump ran in 5.3 s against 8.9 s at HEAD.
+
+## Recording retired (2026-11-14)
+
+With no plan passing `record`, what only a recording fed went: the walk's
+recorded strike and placement rungs and what built them (`availableFirings`,
+`nextPlace`, `availablePlacements`, the placement classifiers), the plan's
+`record`, `strikeAxis`, `placed` and `stuck`, `RungContext`'s `ops` and
+`placements`, the premise audit (`firing-replay.ts`) with its hooks in
+`ladder-runtime.ts` and `latin.ts`, and `LatinSolverConfig.recorder`. The
+record type parameter every plan carried went with them, so a plan's types
+are its moves, highlights, reasons and regions.
+
+- **Group's opening rung was empty.** It offered `RungContext.placements()`
+  before the setup, which with nothing recorded is the walk's own singles
+  rung over again; the walk's rung offers them, so Group lists its
+  techniques alone. Its walk fingerprint is unchanged.
+- **A step's `reads` from its reason stays**: Rome's reach and Solo's
+  killer sums carry the cells their words do not name, and the walk adds
+  them to the premise.
+- **The premise rule stays and its audit goes.** A technique runs on the
+  notes the walk shows, so what it finds rests on nothing the board has yet
+  to show; the audit replayed a recording, which no plan makes. The
+  soundness check holds the technique, and a game's hint test holds what its
+  step claims.
+- **The plan's own tests drive the walk through rungs**: a rung offering a
+  firing until the board shows it made stands where a recording stood. The
+  walk now reads hidden singles in them too, so a test on a one-row board
+  declares its row as its only region.

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   adaptiveMarkAllMove,
   anyEmptyLacksNotes,
-  availableFirings,
   type CandidateHighlights,
   type CandidateMove,
   type CandidateMoveAdapter,
@@ -17,7 +16,6 @@ import {
   lazyPopulate,
   type Mark,
   nakedSingle,
-  nextPlace,
   obviousCandidateMarks,
   populateStep,
   refreshCandidateHintStep,
@@ -38,7 +36,6 @@ import {
   so,
   unshaped,
 } from "./hint-words.ts";
-import type { DeductionRecord } from "./latin.ts";
 import { rowColRegions } from "./latin-hint.ts";
 import { PENCIL_MODE_BUTTON } from "./pointer.ts";
 
@@ -346,217 +343,6 @@ describe("adaptiveMarkAllMove", () => {
     const grid = [1, 0, 0, 2];
     const pencil = [0, bits(2), bits(1), 0];
     expect(adaptiveMarkAllMove(grid, pencil, 2, rc(2))).toBeNull();
-  });
-});
-
-/** A recorded op with a typed reason `kind`. */
-function op(
-  kind: "place" | "elim",
-  x: number,
-  y: number,
-  n: number,
-  group: number,
-  reasonKind = "single",
-): DeductionRecord {
-  return { kind, x, y, n, group, reason: { kind: reasonKind } };
-}
-
-describe("availableFirings", () => {
-  /** What each firing reads: its own cells, the premise a strike's evidence
-   * would name in a game. */
-  const ownCells = (live: readonly DeductionRecord[]) => live;
-  /** What a placed value culls on these 2×2 boards: its row and column. */
-  const reach = regionReach(2, (x, y) => rowColRegions(x, y, 2));
-  const strikes = (...a: Parameters<typeof availableFirings<DeductionRecord>>) =>
-    availableFirings(...a).strikes;
-  /** The firing a plan with no frontier takes: the first available one. */
-  const nextStrike = (
-    ops: DeductionRecord[],
-    grid: ArrayLike<number>,
-    pencil: ArrayLike<number>,
-    w: number,
-  ) => strikes(ops, grid, pencil, w, ownCells, reach)[0] ?? null;
-
-  it("returns one firing's still-live elims and excludes dup-reason bookkeeping", () => {
-    const [grid, pencil] = board(
-      [0, 0, 0, 0],
-      [bits(1, 2), bits(1, 2), bits(1, 2), bits(1, 2)],
-    );
-    const ops = [
-      op("elim", 0, 0, 1, 0, "set"), // live
-      op("elim", 1, 0, 2, 0, "dup"), // excluded (placement bookkeeping)
-    ];
-    const fired = nextStrike(ops, grid, pencil, 2);
-    expect(fired?.map((o) => ({ x: o.x, y: o.y, n: o.n }))).toEqual([
-      { x: 0, y: 0, n: 1 },
-    ]);
-  });
-
-  it("skips a firing whose marks are already struck and advances to the next live one", () => {
-    // (0,0) no longer carries candidate 1 → first firing dead; (1,0) carries 2 → live.
-    const [grid, pencil] = board([0, 0, 0, 0], [bits(2), bits(1, 2), 0, 0]);
-    const ops = [op("elim", 0, 0, 1, 0, "set"), op("elim", 1, 0, 2, 1, "set")];
-    const fired = nextStrike(ops, grid, pencil, 2);
-    expect(fired?.map((o) => o.group)).toEqual([1]);
-  });
-
-  it("returns null when no firing is still live", () => {
-    const [grid, pencil] = board([0, 0, 0, 0], [0, 0, 0, 0]);
-    expect(nextStrike([op("elim", 0, 0, 1, 0, "set")], grid, pencil, 2)).toBeNull();
-  });
-
-  it("withholds a firing that reads a placement the board has not made, or its cull", () => {
-    // The recording past an unmade placement ran on a board with that cell
-    // decided and its cull struck, so a firing reading either rests on a state
-    // the player has not reached (docs/hints-candidates.md § "Solve the way a human
-    // does").
-    const [grid, pencil] = board(
-      [0, 0, 0, 0],
-      [bits(1), bits(1, 2), bits(1, 2), bits(1, 2)],
-    );
-    const ops = [
-      op("place", 1, 0, 1, 0), // unmade: (1,0) is still empty
-      op("elim", 1, 1, 1, 0, "dup"), // its cull, still live at (1,1)
-      op("elim", 0, 1, 2, 1, "set"), // reads (0,1) and the placed cell
-      op("elim", 0, 1, 2, 2, "set"), // reads (0,1) and the cull
-    ];
-    const readsPlaced = () => [
-      { x: 0, y: 1 },
-      { x: 1, y: 0 },
-    ];
-    const readsCull = () => [
-      { x: 0, y: 1 },
-      { x: 1, y: 1 },
-    ];
-    expect(strikes(ops.slice(0, 3), grid, pencil, 2, readsPlaced, reach)).toEqual([]);
-    expect(
-      strikes([...ops.slice(0, 2), ops[3]], grid, pencil, 2, readsCull, reach),
-    ).toEqual([]);
-    // A solver need not record the cull at all (Solo's does not): what the
-    // placement clears is read off the reach, not the recording.
-    expect(strikes([ops[0], ops[3]], grid, pencil, 2, readsCull, reach)).toEqual([]);
-  });
-
-  it("offers a firing past an unmade placement whose premise does not touch it", () => {
-    // A clue strike far from the solver's next placement is as true now as
-    // after it, and withholding it makes the plan jump away from the line it is
-    // working.
-    const [grid, pencil] = board(
-      [0, 0, 0, 0],
-      [bits(1), bits(1, 2), bits(1, 2), bits(1, 2)],
-    );
-    const ops = [
-      op("place", 1, 0, 1, 0), // unmade
-      op("elim", 1, 1, 1, 0, "dup"),
-      op("elim", 0, 1, 2, 1, "set"), // reads only (0,1)
-    ];
-    expect(
-      strikes(ops, grid, pencil, 2, ownCells, reach).map((f) => f[0].group),
-    ).toEqual([1]);
-    // No firing past it is "first": one naming no premise cannot be vouched for.
-    expect(strikes(ops, grid, pencil, 2, () => [], reach)).toEqual([]);
-  });
-
-  it("ignores an elimination on a cell the player has already filled", () => {
-    // A strike is advice to cross a note out; on a filled cell there is nothing
-    // to cross out, whatever notes were left behind there.
-    const [grid, pencil] = board([0, 3, 0, 0], [bits(1, 2), bits(1, 2), 0, 0]);
-    expect(nextStrike([op("elim", 1, 0, 1, 0, "set")], grid, pencil, 2)).toBeNull();
-  });
-
-  it("offers a later firing whose premise no earlier firing has yet to strike", () => {
-    const [grid, pencil] = board([0, 0, 0, 0], [bits(1, 2), bits(1, 2), bits(1, 2), 0]);
-    const ops = [
-      op("elim", 0, 0, 1, 0, "set"), // first: always available
-      op("elim", 1, 0, 1, 1, "set"), // reads only (1,0): independent
-    ];
-    expect(
-      strikes(ops, grid, pencil, 2, ownCells, reach).map((f) => f[0].group),
-    ).toEqual([0, 1]);
-  });
-
-  it("withholds a later firing that reads a cell an earlier one has yet to strike", () => {
-    const [grid, pencil] = board([0, 0, 0, 0], [bits(1, 2), bits(1, 2), 0, 0]);
-    const ops = [op("elim", 0, 0, 1, 0, "set"), op("elim", 1, 0, 2, 1, "set")];
-    const readsBoth = () => [
-      { x: 0, y: 0 },
-      { x: 1, y: 0 },
-    ];
-    expect(
-      strikes(ops, grid, pencil, 2, readsBoth, reach).map((f) => f[0].group),
-    ).toEqual([0]);
-  });
-
-  it("withholds a later firing that names no premise, and ignores one off the board", () => {
-    const [grid, pencil] = board([0, 0, 0, 0], [bits(1, 2), bits(1, 2), 0, 0]);
-    const ops = [op("elim", 0, 0, 1, 0, "set"), op("elim", 1, 0, 2, 1, "set")];
-    expect(strikes(ops, grid, pencil, 2, () => [], reach).length).toBe(1);
-    // A clue at x = 2 would alias (0,1) if indexed blindly; (0,0) is pending.
-    const clueAndSelf = (live: readonly DeductionRecord[]) => [
-      { x: 2, y: -1 },
-      ...live,
-    ];
-    expect(strikes(ops, grid, pencil, 2, clueAndSelf, reach).length).toBe(2);
-  });
-});
-
-describe("availableFirings: placements", () => {
-  const reach = regionReach(2, (x, y) => rowColRegions(x, y, 2));
-  const at = (x: number, y: number) => ({ x, y });
-  const full = () =>
-    board([0, 0, 0, 0], [bits(1, 2), bits(1, 2), bits(1, 2), bits(1, 2)]);
-
-  it("vouches the first unmade placement, and a later one reading nothing pending", () => {
-    // A clue-forced placement rests on the cube, not the notes; with nothing
-    // unmade before it, the cube and the board agree on everything it reads.
-    const [grid, pencil] = full();
-    const first = op("place", 0, 0, 1, 0, "facing");
-    const later = op("place", 1, 1, 1, 1, "facing");
-    const vouched = (reads: { x: number; y: number }[]) =>
-      availableFirings(
-        [first, later],
-        grid,
-        pencil,
-        2,
-        (f) => (f[0] === later ? reads : []),
-        reach,
-      ).placements;
-    // (1,1) shares no line with (0,0), so the first placement leaves it alone.
-    expect([...vouched([at(1, 1)])]).toEqual([first, later]);
-    // (0,1) still shows the 1 the first placement culls from it.
-    expect([...vouched([at(0, 1)])]).toEqual([first]);
-    // A placement naming no premise past the first cannot be vouched for.
-    expect([...vouched([])]).toEqual([first]);
-  });
-
-  it("holds a placement behind a live strike its evidence reads", () => {
-    const [grid, pencil] = full();
-    const strike = op("elim", 0, 0, 2, 0, "set"); // live: (0,0) still notes 2
-    const place = op("place", 1, 1, 1, 1, "facing");
-    const vouched = (reads: { x: number; y: number }[]) =>
-      availableFirings(
-        [strike, place],
-        grid,
-        pencil,
-        2,
-        (f) => (f[0] === place ? reads : [f[0]]),
-        reach,
-      ).placements;
-    expect(vouched([at(0, 0)]).size).toBe(0);
-    expect([...vouched([at(1, 0)])]).toEqual([place]);
-  });
-});
-
-describe("nextPlace", () => {
-  it("returns the first recorded placement whose cell is still empty, whole", () => {
-    const [grid] = board([1, 0, 0, 0], [0, 0, 0, 0]);
-    const ops = [op("place", 0, 0, 1, 0, "single"), op("place", 1, 0, 2, 1, "cage")];
-    expect(nextPlace(ops, grid, 2)).toMatchObject({
-      x: 1,
-      y: 0,
-      n: 2,
-      reason: { kind: "cage" },
-    });
   });
 });
 

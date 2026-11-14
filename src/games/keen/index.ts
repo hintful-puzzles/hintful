@@ -31,7 +31,6 @@ import {
   valuesOf,
 } from "../../engine/candidate-plan.ts";
 import { digitValue } from "../../engine/decimal.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import {
   clearEntries,
@@ -398,10 +397,10 @@ function buildSteps(
     wGrid,
     Math.min(diffToLevel(state.params.diff), DIFF_EXTREME),
   );
-  type Rung = CandidateRung<KeenMove, KeenHint, DeductionRecord, HintReason>;
+  type Rung = CandidateRung<KeenMove, KeenHint, HintReason>;
   const cageRung = (id: "cageEasy" | "cage" | "cageLine"): Rung =>
     techniqueRung(on, id, (f) => cageLegs(f, w, cages));
-  runLatinCandidatePlan<KeenMove, KeenHint, DeductionRecord, HintReason>({
+  runLatinCandidatePlan<KeenMove, KeenHint, HintReason>({
     w,
     steps,
     grid: wGrid,
@@ -418,11 +417,7 @@ function buildSteps(
       cageRung("cageEasy"),
       cageRung("cage"),
       cageRung("cageLine"),
-      ...latinStrikeRungs<KeenMove, KeenHint, DeductionRecord, HintReason>(
-        on,
-        w,
-        byCell,
-      ),
+      ...latinStrikeRungs<KeenMove, KeenHint, HintReason>(on, w, byCell),
     ],
     notes: { noun: "number", placedVerb: "standing", cell: "cell" },
   });

@@ -131,11 +131,11 @@ count, SHALL be refused.
 ### Requirement: Generation: Rome's rules are met in one order, Easy first
 
 The solver SHALL try its rules in this order, each only where those before it
-find nothing, and the hint SHALL record that solver: a square down to one
-arrow, an arrow its area already holds, and an arrow that would close a loop,
-at Easy; the squares an area's arrows must go in, a pair, and the one mark
-that leads to a goal, at Normal; and an arrow into a square that could only
-point back, at Tricky.
+find nothing, and the hint SHALL offer them in that order: a square down to
+one arrow, an arrow its area already holds, and an arrow that would close a
+loop, at Easy; the squares an area's arrows must go in, a pair, and the one
+mark that leads to a goal, at Normal; and an arrow into a square that could
+only point back, at Tricky.
 
 #### Scenario: A Tricky rule on an Easy board
 
@@ -423,13 +423,14 @@ from that neighbor's square, and the two SHALL be one journey.
 
 ### Requirement: Hint: Rome's hint teaches the solve the generator graded
 
-The hint SHALL record the ladder the solve runs, one firing at a time, and
-the arrows it places SHALL be the arrows the solve places.
+The hint SHALL run the techniques of the ladder the solve runs, over the
+player's notes, and the arrows it places SHALL be the arrows the solve
+places.
 
 #### Scenario: The recording places what the solve places
 
-- **WHEN** a board is solved, and its deductions are recorded from its clues
-- **THEN** the arrows the recording places, with the clues, are the solved grid
+- **WHEN** a board's hint is followed from its dealt position until it stops
+- **THEN** the arrows placed, with the clues, are the solved grid
 
 ### Requirement: Look: What Rome draws
 

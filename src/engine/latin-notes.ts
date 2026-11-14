@@ -71,15 +71,15 @@ const LIBRARY_STRIKES: readonly string[] = ["latin.set", "latin.fish", "latin.wi
  * gives it. `split` cuts a firing's strikes into legs; one leg by default.
  * `Reason` is the game's reason union, which holds these.
  */
-export function latinStrikeRungs<M, H, R, Reason = LatinStrikeReason>(
+export function latinStrikeRungs<M, H, Reason = LatinStrikeReason>(
   on: NotesLadder<LatinSolver>,
   o: number,
   split: (marks: Mark[]) => Mark[][] = (marks) => [marks],
-): CandidateRung<M, H, R, Reason | LatinStrikeReason>[] {
+): CandidateRung<M, H, Reason | LatinStrikeReason>[] {
   return on.ladder.entries
     .filter((e) => LIBRARY_STRIKES.includes(e.id))
     .map((e) =>
-      techniqueRung<M, H, R, Reason | LatinStrikeReason, LatinSolver>(on, e.id, (f) => {
+      techniqueRung<M, H, Reason | LatinStrikeReason, LatinSolver>(on, e.id, (f) => {
         const reason = f.reasons[0] as LatinStrikeReason;
         return split(strikesOf(f, o)).map((strike) => ({ strike, reason }));
       }),

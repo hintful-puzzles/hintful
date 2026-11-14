@@ -2256,12 +2256,11 @@ thing under test.
 ### Requirement: The solver and the hint are two projections of one deduction engine
 
 A logic game's deductive solver and its hint SHALL be two projections of one
-deduction engine. The generator runs the techniques to a fixpoint with the
-recorder off and SHALL accept a board only when the techniques fully solve it;
-the hint runs the same techniques with the recorder on. Deductive completion
-implies uniqueness, so no separate uniqueness pass SHALL be required. The
-difficulty grade SHALL be the highest **tier** reached, never a technique's
-position in the ladder.
+deduction engine. The generator runs the techniques to a fixpoint and SHALL
+accept a board only when they fully solve it; the hint runs the same
+techniques a firing at a time. Deductive completion implies uniqueness, so
+no separate uniqueness pass SHALL be required. The difficulty grade SHALL be
+the highest **tier** reached, never a technique's position in the ladder.
 
 #### Scenario: A board is graded by tier and not by position
 
@@ -2276,8 +2275,8 @@ board as dealt, and the hint SHALL make its plan from it: an entry the player
 placed is never a step, and a step may rest on it. Which marks a step may rest
 on, and a step drawn from the clues alone, are the game's to state.
 `deduceHintPlan` SHALL deduce on the board it is handed and copy nothing. Of
-pencil notes: `engine-candidate-hints`, "A recording solve reads the placed
-entries and never the notes".
+pencil notes: `engine-candidate-hints`, "A hint deduces from the notes only
+where the mistake check vouches for them".
 
 #### Scenario: A right entry the deduction had not reached
 

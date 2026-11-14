@@ -107,46 +107,6 @@ classifier SHALL throw an error saying so and SHALL NOT return a reason for it.
 - **THEN** it throws an error naming the placement and the skipped strike, and returns no
   reason
 
-### Requirement: No narration exists for a placement the notes cannot explain
-
-No hint narration SHALL exist for a placement the notes show as neither a naked
-nor a hidden single: the family has no `forcedSingle` reason, and Salad no
-`forcedCross` or `forcedCircle`. Salad's plan SHALL likewise throw when, with
-every recorded strike and placement on its working board, the solver still
-forces a marker the board lacks. The cross-game hint walks are the guard, since
-every plan that classifies a placement passes through the classifier: a game
-joins by calling it.
-
-#### Scenario: A plan that skips a strike fails the hint walks
-
-- **WHEN** a Latin-family plan places a value without striking it from its lines' notes and
-  a later placement reads those notes
-- **THEN** walking hints over that game throws from the classifier, so the gate fails
-
-### Requirement: A placement is classified against the candidates the board shows
-
-A hint plan SHALL classify a placement against the candidates the board shows: a
-written note as written, stale or not, and a blank cell with no notes as every
-value not already placed in its regions, so that a hidden single is claimed only
-where the board shows one. The plan SHALL strike every stale note, the player's
-or its own, before it takes a recorded strike, and SHALL strike each value it
-places, including every leg of a multi-leg placement journey, from its lines'
-notes.
-
-#### Scenario: A player's stale note is struck before a recorded strike
-
-- **WHEN** a Group hint is requested on a board whose notes still carry a value
-  the player has since placed in the same row
-- **THEN** a single the plan places first is a naked or hidden single in the
-  notes as written, and the plan strikes the stale note before it takes any
-  recorded strike
-
-#### Scenario: A note-free board's placements are narrated by what the board shows
-
-- **WHEN** a Group hint places values before any notes exist
-- **THEN** every "In this row" or "In this column" placement is one where no other empty
-  cell of that line could take the value given its own row and column
-
 ### Requirement: A candidate hint plan continues from its latest steps where it can
 
 When several firings are available at one position of a candidate-elimination
@@ -188,44 +148,15 @@ firing wrote from the `targets` of the steps it pushed.
 ### Requirement: A firing is offered only when the board shows its premise
 
 The game SHALL own which firings of its own rungs are available, and the walk
-SHALL own which recorded firings are. A firing SHALL be offered to the frontier
-only when the working board already shows its premise. A recorded firing SHALL
-be judged by one rule whether it strikes or places: it is available when nothing
-the board does not show yet comes before it in the recording, or when its
-premise cells hold none of the marks the board does not show yet.
+which singles are. A firing SHALL be offered to the frontier only when the
+working board already shows its premise: a technique's rung SHALL run it on
+the notes the walk shows and the values placed, so what it finds rests on
+nothing the board has yet to show.
 
 #### Scenario: a firing is offered only when the board shows its premise
 
-- **WHEN** a strike's premise cells still hold a mark an earlier recorded firing has
-  yet to strike
-- **THEN** the strike is not offered to the frontier until that mark is struck
-
-### Requirement: The marks a recorded firing waits on
-
-The marks the board does not show yet SHALL be a live mark an earlier recorded
-firing has yet to strike, and the cell of a recorded placement the board has not
-made with every cell its value rules out that still shows the value. A strike's
-premise SHALL be its steps' whole premise; a placement's SHALL leave out the
-cells it places.
-
-#### Scenario: a strike past an unmade placement is offered by its premise
-
-- **WHEN** the solver records a strike after a placement the board has not made
-- **THEN** the strike is offered when its premise reads neither that placement's cell
-  nor a cell holding one of its live culls, and withheld when it reads either
-
-### Requirement: No recorded firing waits on its place in the recording
-
-A placement the notes show as a naked or hidden single SHALL be offered as the
-notes show it. No recorded firing SHALL be withheld only because of its position
-in the recording, or held back as a last resort while its premise holds.
-
-#### Scenario: a clue-forced placement is offered where its premise holds
-
-- **WHEN** the solver records a placement with a reason of its own, and a strike the
-  board supports is also available
-- **THEN** the placement is offered beside the strike when its evidence reads no mark
-  the board does not show yet, and withheld when it reads one
+- **WHEN** a technique's strike would rest on a note a premise cell still shows
+- **THEN** the strike is not offered to the frontier until that note is struck
 
 ### Requirement: A single reads the placed cells it rests on through a note-less cell
 
@@ -325,18 +256,16 @@ declared as whole.
 
 ### Requirement: A candidate hint distinguishes naked and hidden singles
 
-Every game on the candidate walk SHALL narrate a forced single placement by
-the deduction that forces it, which the walk re-derives from the working board
-and hands the game's `singleReason`, and not by the solver's recorded reason.
-The classifier SHALL consider only empty cells as competitors for a value.
-Only a recorded `single` placement SHALL be reclassified: a game's own
-clue-driven or region-driven forced placements keep their own reasons.
+Every game on the candidate walk SHALL narrate a single by the deduction that
+forces it, which the walk reads off the notes it shows and hands the game's
+`singleReason`. The walk SHALL consider only empty cells as competitors for a
+value. A placement a technique of the game makes SHALL keep that technique's
+reason.
 
 #### Scenario: A clue-forced placement keeps its reason
 
-- **WHEN** a Towers plan takes a recorded facing-clue placement
-- **THEN** the step narrates the recorded reason and is not reclassified as a
-  single
+- **WHEN** a Towers plan takes a facing-clue placement
+- **THEN** the step narrates the facing clue and is not narrated as a single
 
 #### Scenario: The naked-single phrasing is never used on a multi-candidate cell
 
@@ -382,22 +311,6 @@ because of it.
 - **THEN** the step's move is the game's own placement or strike move, its `targets`
   are the cells that move acts on, each once, and its `marks` are the candidates it
   strikes
-
-### Requirement: The walk owns the ladder
-
-The walk SHALL own the ladder: the naked singles, then the game's own rungs,
-then the recorded strikes a plan could take now, then the recorded placements.
-Until the setup is done it SHALL offer the note-free opening, which is the
-singles and the game's own rungs, and after it the whole ladder. It SHALL own
-the last-resort signal a rung needs, that every earlier rung came up empty, and
-the step budget and the iteration cap.
-
-#### Scenario: The opening holds the recorded strikes back
-
-- **WHEN** a plan starts on a board whose notes are not set up, and a rung of
-  the game's own has a firing
-- **THEN** a firing of the opening is taken before the setup's next step, and
-  no recorded strike is taken until the setup is done
 
 ### Requirement: The walk owns the setup
 
@@ -448,9 +361,9 @@ no game tracks which firing a step belongs to.
 
 #### Scenario: A firing is one journey
 
-- **WHEN** one recorded firing strikes candidates the game's narration must show as
-  several legs (several heights in Towers, both ends of a link in Unequal, several
-  cells of a cage in Keen)
+- **WHEN** one firing of a technique strikes candidates the game's narration
+  must show as several legs (several heights in Towers, both ends of a sign in
+  Unequal, several cells of a cage in Keen)
 - **THEN** the legs are consecutive steps, the first unflagged and the rest flagged
   `continuesPrevious`, with no other firing's step between them
 
@@ -469,69 +382,20 @@ empty a cell a step filled.
 
 ### Requirement: The game keeps what carries its meaning
 
-A game on the walk SHALL keep what carries its meaning: its recording solver,
-the words and evidence of its steps, the axis its strikes split into legs on,
-which what the narration names singular dictates, its own rungs, the deviations
-the walk names as optional hooks, each stating the game-shaped fact that needs
-it, and its regions where those are a decision the game makes and not one its
-family has already answered.
+A game on the walk SHALL keep what carries its meaning: its ladder's
+techniques, as rungs over the notes, the words and evidence of its steps,
+how a firing splits into legs, which what the narration names singular
+dictates, its own rungs, the
+deviations the walk names as optional hooks, each stating the game-shaped
+fact that needs it, and its regions where those are a decision the game
+makes and not one its family has already answered.
 
 #### Scenario: The strike axis follows the narration
 
-- **WHEN** a game's narration names one cell at a time and its strike axis keys
-  a firing's strikes by cell
+- **WHEN** a game's narration names one cell at a time and it splits a firing's
+  strikes by cell
 - **THEN** the firing becomes one leg per cell, in the order the cells first
   appear in it
-
-### Requirement: A recording solve reads the placed entries and never the notes
-
-A game on the candidate walk whose plan records (`CandidatePlan.record`) SHALL
-run its recording solver on the working board's placed entries and the
-puzzle's clues alone, and never on the pencil notes, since a note can be
-wrong. The notes the board shows SHALL decide which recorded firings are still
-to make and when each is offered, and never what is recorded.
-
-#### Scenario: Narrowed notes do not change the recording
-
-- **WHEN** a hint is asked for on two boards with the same placed entries, one
-  with no notes and one whose notes the player has narrowed
-- **THEN** the solver records the same firings for both, and the notes decide
-  which of them each plan still has to make
-
-### Requirement: A recording solve stops below the tier that searches
-
-A game with an `Unreasonable` tier whose plan records SHALL cap its recording
-solver beneath that tier on every board, so no recorded firing is a trial
-(`engine-hints`, "A Search is refused and never narrated"). `candidateHint`
-SHALL give the plan the capped solve yields, and SHALL refuse with
-`DEDUCTION_EXHAUSTED` only where that plan holds no step. How far beneath a
-game caps is its own: at the board's own tier, where a step is to be one that
-tier promises.
-
-#### Scenario: A hint on an Unreasonable board
-
-- **WHEN** a hint is asked for on a board of the `Unreasonable` tier
-- **THEN** the recording solver runs no higher than the highest tier beneath
-  it, and the plan holds what it records up to where a trial would be needed
-
-#### Scenario: Nothing left to record
-
-- **WHEN** the capped solve records nothing from the player's board and the
-  plan has no setup step to make
-- **THEN** `candidateHint` refuses with `DEDUCTION_EXHAUSTED`
-
-### Requirement: A placement's bookkeeping is not a firing to teach
-
-The recorded strike firings a plan could take now (`availableFirings`) SHALL
-be the still-live ones, and SHALL leave out the placement-bookkeeping `dup`
-eliminations, which the walk strikes as the placement's own cull.
-
-#### Scenario: A placement's bookkeeping is not a firing to teach
-
-- **WHEN** a recording holds a live `dup` elimination and a live elimination
-  with a reason of another kind
-- **THEN** the strike firings a plan could take now hold the second and not the
-  first
 
 ### Requirement: The shared track and refresh read a game's move dialect
 
@@ -573,12 +437,13 @@ move SHALL be `off`.
 
 ### Requirement: A row/column Latin square answers no question its regions already settle
 
-The engine SHALL provide a preset over the candidate-elimination plan walk
-(`runLatinCandidatePlan`) supplying every plan field whose answer is forced once
-a game's cells' no-repeat regions are exactly a row and a column, so that a
-plain Latin game supplies its recording solver, its own rungs and its own words
-and nothing else. Every game SHALL remain free to call the general entry point,
-and a game that does SHALL say why.
+The engine SHALL provide a preset over the candidate plan walk
+(`runLatinCandidatePlan`) supplying every plan field whose answer is forced
+once a game's no-repeat regions are exactly a row and a column, so a plain
+Latin game supplies its techniques' rungs and its words alone; the library's
+set, fish and wing are rungs the engine builds (`latinStrikeRungs`). Every
+game SHALL remain free to call the general entry point, and one that does
+SHALL say why.
 
 #### Scenario: A plain Latin game declares no regions
 
@@ -980,7 +845,7 @@ ending with the clean.
 
 - **WHEN** an implicit-reading plan is built on a board whose notes hold nothing a
   placed value rules out
-- **THEN** a recorded strike may be taken before the singles and clue lines are
+- **THEN** a technique's strike may be taken before the singles and clue lines are
   exhausted
 
 #### Scenario: a stale note still lets a single go first
@@ -988,94 +853,6 @@ ending with the clean.
 - **WHEN** an implicit-reading plan is built on a board whose notes still carry values
   the placed ones rule out, and a naked single is on the board
 - **THEN** the plan places the single before it cleans the stale notes
-
-### Requirement: A game's rung reads the walk's recorded placements
-
-The candidate-plan walk SHALL hand every rung the placements its own placement rung
-would offer (`RungContext.placements`): the singles the board shows, and each recorded
-placement with a reason of its own that the walk judged available, marked as such. A
-game whose deductions are placements and should lead the strikes SHALL take them from
-there, choosing which to offer when, and SHALL NOT decide a recorded placement's
-availability itself.
-
-#### Scenario: Group's placements lead without a rule of Group's own
-
-- **WHEN** a Group plan's recording holds an associativity placement whose three
-  products are on the board, behind other unmade placements
-- **THEN** Group's rung offers it, read from the walk's placements, ahead of the
-  strikes
-
-### Requirement: A recorded firing's premise SHALL name every cell its deduction reads
-
-The premise of every recorded firing a candidate hint plan offers SHALL name
-every cell whose candidates or placed value its deduction reads, including a
-cell read for what it does not hold: a hidden set or a fish reads the rest of
-its lines, and a claim that only one mark leads somewhere reads every mark that
-could.
-
-#### Scenario: a fish names the rest of its lines
-
-- **WHEN** a set in the value slice strikes a value because, in some columns, the value
-  can only sit in cells of certain rows
-- **THEN** the step's premise holds every other cell of those columns, and the walk does
-  not offer it while one of them still shows the value
-
-### Requirement: A recorded reason carries the cells its words do not name
-
-Where the game's words for a step do not name a cell its deduction reads, the
-recorded reason SHALL carry it in `reads`, and the walk SHALL add those cells to
-the step's premise as it adds the game's own. The cells a placement leaves out
-of its premise SHALL be the cells its legs act on, never the cells a note leg
-writes because the firing reads them.
-
-#### Scenario: a note leg does not remove a premise cell
-
-- **WHEN** under the implicit reading a placement rests on a cell the board has not
-  filled, so the firing writes that cell's notes first
-- **THEN** the cell is still in the placement's premise, and the placement is not offered
-  while the solver's value there is one the board has not placed
-
-### Requirement: The engine audits a premise by replaying its firing
-
-The engine SHALL hold the premise rule with an audit, idle in production, that
-takes the solver's state at each firing the walk offers, returns every cell
-outside the premise to the state the recording started from, and runs the
-firing's own technique again, making the changes of any earlier firing that
-technique finds first on returned cells. It SHALL report a firing that no longer
-follows.
-
-#### Scenario: a premise cut short turns the guard red
-
-- **WHEN** a game's words for a clue deduction stop naming the line the clue reads
-- **THEN** the guard reports the firings that no longer follow from their premise
-
-### Requirement: A guard runs the premise audit over every game on the walk
-
-A guard SHALL run the audit over every game whose hint is the candidate walk,
-derived from the games' sources, under every reading of an unmarked cell the
-game offers, on one board per leaf preset and any board a game adds for a rung
-those boards leave untested. A game whose recording offers no replay, whose
-replay tests no cell, or whose plan records nothing SHALL be named in a ledger,
-with why, that the guard holds exactly.
-
-#### Scenario: a solver that offers no replay is reported
-
-- **WHEN** a candidate walk records firings through a solver that offers the audit no
-  replay
-- **THEN** the guard fails for that game unless the ledger names it with why
-
-### Requirement: A technique that reads more than its conclusion rests on is pinned
-
-A technique flagged because it reads more to decide whether to fire than its
-conclusion rests on SHALL be named in a ledger, with why, and pinned to a board
-that still shows it; a fix such an entry could hide SHALL be held by a test of
-its own.
-
-#### Scenario: A ledgered flag is still shown by its board
-
-- **WHEN** the board pinned to a ledger entry no longer makes the audit flag
-  that technique
-- **THEN** the guard fails until the entry is removed
 
 ### Requirement: A value confined across several lines shows the lines
 
@@ -1096,16 +873,16 @@ step.
 
 ### Requirement: The solver says which lines confine a value
 
-The solver that records such a firing SHALL say which lines confine the value.
+The technique that makes such a firing SHALL say which lines confine the value.
 Where a firing can be read two ways, as some columns confined to as many rows or
 as the remaining rows confined to the remaining columns, a solver without
-repeated values SHALL record whichever is fewer lines.
+repeated values SHALL name whichever is fewer lines.
 
 #### Scenario: The fewer lines are named
 
 - **WHEN** the shared Latin solver confines a value in two columns of a board
   five cells wide, which is also three rows confined to three columns
-- **THEN** the recorded reason names the two columns
+- **THEN** the step's reason names the two columns
 
 ### Requirement: A set outlines the cells it rests on
 
@@ -1221,3 +998,156 @@ premise, so under the implicit reading the walk writes their notes first.
 - **WHEN** a game's hint can be a wing
 - **THEN** its help page writes `{{wing}}` in its Hints section, and the build
   fails a page that leaves it out or a page of another game that writes it
+
+### Requirement: A described technique is a rung read off the notes
+
+A game whose description states its techniques SHALL offer each as a rung of
+the walk that runs the compiled technique over the marks the board's notes
+show (`techniqueRung`), once the notes are set up, and SHALL build a step's
+reason from the terms the technique says. A technique the board's tier would
+not run SHALL offer nothing.
+
+#### Scenario: A technique past the board's tier
+
+- **WHEN** a hint is asked on a board whose tier is below a technique's
+- **THEN** no step of the plan is a firing of that technique
+
+### Requirement: A technique waits in its ladder's order
+
+A technique after its ladder's first SHALL wait until every earlier rung of
+the walk is empty, as the solver reaches it only once those before it are
+spent. One of a tier harder than the ladder's easiest MAY offer, while it
+waits, a firing that continues the plan's latest steps.
+
+#### Scenario: A harder technique continues the work in hand
+
+- **WHEN** a single is on the board, and a technique of a harder tier than the
+  ladder's easiest, within the board's tier, has a firing that rests on the
+  cell the last step decided
+- **THEN** the plan may take that firing before the single
+
+### Requirement: A game's placing technique may lead
+
+A game whose signature deductions are placements MAY mark such a technique as
+leading. A leading technique SHALL be offered wherever the board supports it,
+from the note-free opening on, waiting neither for the notes to be set up nor
+for an earlier rung; the board's tier still bounds it.
+
+#### Scenario: A leading placement before any note
+
+- **WHEN** a hint is asked on a board with no notes where a leading
+  technique's firing is supported by the values placed
+- **THEN** the plan may take that placement before any note is written
+
+### Requirement: A hint deduces from the notes only where the mistake check vouches for them
+
+A game on the candidate walk SHALL run its techniques on the player's notes
+only where its `findMistakes` flags every empty cell whose notes have crossed
+out its answer, so that wherever a hint is given every cell's notes still hold
+its answer. A note outside the cell's full note set SHALL be read as no
+candidate.
+
+#### Scenario: A note that crossed out the answer
+
+- **WHEN** a cell's notes no longer hold its answer and the player asks for a
+  hint
+- **THEN** the hint refuses as on any board with a mistake, and no step rests
+  on those notes
+
+### Requirement: A plan stops below the tier that searches
+
+No rung of a candidate plan SHALL be a technique of the tier that searches,
+so no step is a trial (`engine-hints`, "A Search is refused and never
+narrated"). On a board of the `Unreasonable` tier the plan SHALL hold what
+the techniques beneath it make from the player's board, and `candidateHint`
+SHALL refuse with `DEDUCTION_EXHAUSTED` only where the plan holds no step.
+
+#### Scenario: A hint on an Unreasonable board
+
+- **WHEN** a hint is asked for on a board of the `Unreasonable` tier
+- **THEN** no step of the plan is a firing of the tier that searches, and the
+  plan holds what the techniques beneath it make up to where a trial would be
+  needed
+
+#### Scenario: Nothing left to deduce
+
+- **WHEN** no rung fires on the player's board and the plan has no setup step
+  to make
+- **THEN** `candidateHint` refuses with `DEDUCTION_EXHAUSTED`
+
+### Requirement: A step's premise names every cell its deduction reads
+
+The premise of every firing a candidate hint plan offers SHALL name every cell
+whose candidates or placed value its deduction reads, including a cell read
+for what it does not hold: a hidden set or a fish reads the rest of its lines,
+and a claim that only one mark leads somewhere reads every mark that could.
+
+#### Scenario: A fish names the rest of its lines
+
+- **WHEN** a set in the value slice strikes a value because, in some columns,
+  the value can only sit in cells of certain rows
+- **THEN** the step's premise holds every other cell of those columns
+
+### Requirement: A reason carries the cells its words do not name
+
+Where the game's words for a step do not name a cell its deduction reads, the
+step's reason SHALL carry it in `reads`, and the walk SHALL add those cells to
+the step's premise as it adds the game's own.
+
+#### Scenario: Only one mark leads into a group
+
+- **WHEN** a Rome step says only one mark leads into a group
+- **THEN** the step's `reads` hold every square around the group
+
+### Requirement: Every single a plan takes is one the notes show
+
+No hint narration SHALL exist for a single the notes show as neither a naked
+nor a hidden single: the walk reads every single it takes off the notes it
+shows, and a placement a technique makes carries that technique's reason. The
+family has no `forcedSingle` reason, and Salad no `forcedCross` or
+`forcedCircle`.
+
+#### Scenario: A single is one the notes show
+
+- **WHEN** a plan takes a single
+- **THEN** the notes the walk shows hold the value as the cell's only
+  candidate, or as the value's only home in a region that holds every value
+
+### Requirement: A placement is read against the candidates the board shows
+
+A hint plan SHALL read a placement against the candidates the board shows: a
+written note as written, stale or not, and a blank cell with no notes as every
+value not already placed in its regions, so that a hidden single is claimed only
+where the board shows one. The plan SHALL strike every stale note, the player's
+or its own, before it takes a technique's strike, and SHALL strike each value it
+places, including every leg of a multi-leg placement journey, from its lines'
+notes.
+
+#### Scenario: A player's stale note is struck before a technique's strike
+
+- **WHEN** a Group hint is requested on a board whose notes still carry a value
+  the player has since placed in the same row
+- **THEN** a single the plan places first is a naked or hidden single in the
+  notes as written, and the plan strikes the stale note before it takes any
+  technique's strike
+
+#### Scenario: A note-free board's placements are narrated by what the board shows
+
+- **WHEN** a Group hint places values before any notes exist
+- **THEN** every "In this row" or "In this column" placement is one where no other empty
+  cell of that line could take the value given its own row and column
+
+### Requirement: The walk owns a ladder of singles and the game's rungs
+
+The walk SHALL own the ladder: the singles the notes show, naked and hidden,
+then the game's own rungs. Until the setup is done it SHALL offer the
+note-free opening, in which a rung that reads the notes offers nothing, and
+after it the whole ladder. It SHALL own the signal a rung needs that every
+earlier rung came up empty, and the step budget and the iteration cap.
+
+#### Scenario: The opening holds the note-reading rungs back
+
+- **WHEN** a plan starts on a board whose notes are not set up, and a rung of
+  the game's own that needs no notes has a firing
+- **THEN** a firing of the opening is taken before the setup's next step, and
+  no technique reading the notes is taken until the setup is done

@@ -25,7 +25,6 @@ import {
   techniqueRung,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { edgeClueVocab } from "../../engine/edge-clue-latin/hint-text.ts";
@@ -163,19 +162,15 @@ function buildSteps(
   const barRung = <K extends keyof adjacent.SaysById>(
     id: K,
     reason: (terms: adjacent.SaysById[K]["terms"]) => BarReason,
-  ): CandidateRung<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason> =>
-    techniqueRung<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason, LatinSolver>(
-      on,
-      id,
-      (f) => [
-        {
-          strike: strikesOf(f, o),
-          reason: reason(
-            (f.reasons[0] as Said<unknown, adjacent.SaysById[K]>).says.terms,
-          ),
-        },
-      ],
-    );
+  ): CandidateRung<EdgeClueMove, EdgeClueHint, HintReason> =>
+    techniqueRung<EdgeClueMove, EdgeClueHint, HintReason, LatinSolver>(on, id, (f) => [
+      {
+        strike: strikesOf(f, o),
+        reason: reason(
+          (f.reasons[0] as Said<unknown, adjacent.SaysById[K]>).says.terms,
+        ),
+      },
+    ]);
   const across = (c: number) => ({ ox: c % o, oy: (c / o) | 0 });
   const adjacentRung = barRung("adjacent", ({ a, v, bar }) => ({
     kind: "adjacent",
@@ -188,7 +183,7 @@ function buildSteps(
     ...across(a),
     bar: bar === 1,
   }));
-  runLatinCandidatePlan<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>({
+  runLatinCandidatePlan<EdgeClueMove, EdgeClueHint, HintReason>({
     w: o,
     steps,
     grid: wGrid,
@@ -202,11 +197,7 @@ function buildSteps(
     rungs: [
       adjacentRung,
       adjacentSet,
-      ...latinStrikeRungs<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>(
-        on,
-        o,
-        byCell,
-      ),
+      ...latinStrikeRungs<EdgeClueMove, EdgeClueHint, HintReason>(on, o, byCell),
     ],
     notes: {
       noun: "number",

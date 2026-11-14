@@ -73,7 +73,6 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `fact-graph.ts` — what a fact rests on |
 | – `deduction-record.ts` — the recorded-firing shape |
 | – `wing.ts` — the XY- and XYZ-wing |
-| – `firing-replay.ts` — the premise audit |
 | Hint machinery |
 | – `hint-plan.ts` — the plan-accumulation loop |
 | – `described-hint.ts` — a described game's hint, built from its firings |
@@ -89,7 +88,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `entry-mistakes.ts` — Check & Save for one value or a set of marks per cell |
 | – `candidate-plan.ts` — the candidate-elimination plan walk |
 | – `hint-frontier.ts` — which available firing a plan takes next |
-| – `latin-hint.ts` — truthful Latin single classification |
+| – `latin-hint.ts` — regions and the reasons of a single |
 | – `latin-notes.ts` — a Latin ladder run on the player's notes |
 | – `hint-words.ts` — a hint's words bound to its marks |
 | – `hint-text.ts` — the sentences several games share |
@@ -558,8 +557,7 @@ Reach for `CellMarks` and `describedLadder` when a game's techniques are
 stated in a description: the engine's marks, the pairing of each technique
 with its reason, and `ladderTechniques` and `runLadder` to run it capped per
 scale. `ladderWalk` is a hint's walk over the same firings for a game with no
-notes, and `ladderReplay` the premise audit's replay of a recording run.
-`withSearch` puts a Search no description states after the ladder, and
+notes. `withSearch` puts a Search no description states after the ladder, and
 `keptRung` makes a hint rung of the compiled firings that serve another.
 Exemplars: `unruly/solver.ts`, `seismic/solver.ts`; the guide is
 [`descriptions.md`](./descriptions.md) § "The runtime a ladder runs on".
@@ -710,14 +708,13 @@ A game says only what a note is.
 
 ### `deduction-record.ts` — the recorded-firing shape
 
-Reach for it when your solver records firings for a candidate hint.
-`DeductionRecord` and `DeductionRecorder` are the seam between a game's
-recording deduction pass and the shared candidate-hint mechanics. `reason`
-is `unknown`, so each game attaches its own. `group` ties the records of
-one firing together, so one firing becomes one hint step. A reason's
-`reads` names the cells the deduction reads beyond what the game's words
-outline, and the candidate walk makes them premise. Exemplar:
-`rome/solver.ts`.
+Reach for it when your hint records its ladder's firings through
+`CellMarks.recorder`. `reason` is `unknown`, so each game attaches its own.
+`group` ties the records of one firing together, so one firing becomes one
+hint step. A candidate game records nothing: it runs its techniques on the
+notes ([`hints-candidates.md`](./hints-candidates.md) § "Deduce from the
+notes when the mistake check vouches for them"). Exemplar:
+`lightup/solver.ts`.
 
 ### `wing.ts` — the XY- and XYZ-wing
 
@@ -726,18 +723,6 @@ of one, and a game whose hint can be a wing writes `{{wing}}` on its help
 page. The technique is stated in a description, over whatever "sees" is
 there: the Latin library's `wing` over `peers`, worded by `wingPremise`
 (`hint-text.ts`), and Map's `weigh` over `borders`.
-
-### `firing-replay.ts` — the premise audit
-
-Read it when a candidate game has a solver of its own. Test-only, and idle
-unless `auditRecordedPremises` runs: it checks that
-each recorded firing the candidate walk offers still follows once every
-cell outside its premise is returned to the recording's start. A solver
-joins through a `ReplayAdapter`. `latinSolver` builds one for every Latin
-game; a game with its own solver writes one (`solo/solver.ts`). Guard:
-`firing-replay.test.ts`. See
-[`hints-candidates.md`](./hints-candidates.md) § "A premise names everything
-its deduction reads".
 
 ## Hint machinery
 
@@ -877,7 +862,7 @@ Exemplars: `pegs/solver.ts` (in place, one try) and `samegame/solver.ts`
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 
 Reach for it when your hint strikes pencil notes. These are the pure
-helpers of a pencil-notes game's hint: `availableFirings`,
+helpers of a pencil-notes game's hint: `nakedSingles`,
 `emitObviousCleanStep`, `Reach` and `regionReach` (what a placed value
 rules out), the move dialect `CandidateMoveAdapter`, and
 `keepCandidateHintTrack` and `refreshCandidateHintStep`. A board scan reads
@@ -919,11 +904,12 @@ without its cell's answer. Exemplar: `src/skeleton/grid/index.ts`.
 
 Reach for it when you write a notes game's `buildSteps`.
 `runCandidatePlan` is a pencil-notes game's whole `buildSteps` walk: the
-singles, the recorded strikes and placements as rungs around the game's
-own, populate and the obvious clean, a placement's cull, and each next
-firing taken through a `HintFrontier`. A rung returns firings as legs and
-the walk builds every step. The game supplies its recording solver,
-regions, words and strike-split axis. See
+singles the notes show, then the game's rungs, populate and the obvious
+clean, a placement's cull, and each next firing taken through a
+`HintFrontier`. A rung returns firings as legs and the walk builds every
+step. `techniqueRung` makes a technique of the game's ladder a rung run on
+the notes, gated by its place in the ladder and the board's tier. The game
+supplies its rungs, regions and words. See
 [`hints-candidates.md`](./hints-candidates.md) § "What every game does".
 
 - **Its `reading` is the player's.** Under the implicit one there is no
@@ -933,7 +919,7 @@ regions, words and strike-split axis. See
   is typed so (`PlanRung<Reason, "populate">`, `LATIN_POPULATE_RUNGS`). See
   [`hints.md`](./hints.md) § "Name the rung a step speaks".
 - **A plain row/column square calls `runLatinCandidatePlan`** and supplies
-  its solver, rungs and words alone. A game whose singles narrate otherwise
+  its rungs and words alone. A game whose singles narrate otherwise
   fails to type-check against it and calls `runCandidatePlan`
   (`solo/index.ts`). See [`hints-candidates.md`](./hints-candidates.md) §
   "The row/column preset".
@@ -964,20 +950,19 @@ the board needs; `fallback` and `prerequisite` on a technique keep a rung
 that presumes others ran dry from being asked before they have
 ([`hints.md`](./hints.md) § "Recording the deduction").
 
-### `latin-hint.ts` — truthful Latin single classification
+### `latin-hint.ts` — regions and the reasons of a single
 
-Reach for it when a Latin game's hint narrates a single. It re-derives
-from the working board whether a recorded `single` is naked
-or hidden, so a game never says every other number is ruled out of a cell
-that visibly holds several candidates. It throws on a placement that is
-neither, which is a strike the plan skipped. `availablePlacements` lists
-the recorded placements a plan could take now. The sentences are
-`hint-text.ts`'s.
+Reach for it when a game's hint narrates a single. `CellRegion` is a
+region a value may not repeat in, `rowColRegions` a Latin square's two,
+and `SingleWhy` the kind of single the walk read off the notes (naked,
+hidden in a region, or a note-less cell whose regions hold every other
+value), which `singleReasonOf` names for a row/column game. The sentences
+are `hint-text.ts`'s.
 
 ### `latin-notes.ts` — a Latin ladder run on the player's notes
 
-Reach for it when a Latin game's hint deduces from the notes rather than
-recording a solve. `latinNotesLadder` runs the game's ladder on
+Reach for it when a Latin game's hint deduces from the notes.
+`latinNotesLadder` runs the game's ladder on
 `LatinSolver` marks over the walk's grid, and `latinStrikeRungs` makes the
 library's set, fish and wing rungs of the plan, so the game writes legs
 only for its own techniques; `byCell` cuts a firing a leg a cell, for a

@@ -902,9 +902,7 @@ On the candidate walk the game writes no stamp
   `SingleReasonUnder<"populate">`, and a list that spreads
   `LATIN_POPULATE_RUNGS`. The argument does not compile without a `setUp`,
   and a plan on both readings does not compile with one. The walk throws
-  before it reads a single with no notes on such a plan. A game that wants
-  its own setup and an own rung that asks `RungContext.placements()` before
-  the setup is done lists `regionsFull` and widens `OwnSetUp`.
+  before it reads a single with no notes on such a plan.
 - **A candidate game's pin scan gives `ui` a rule that splits its boards
   between the two readings**, since `populate` is spoken only under one and
   `note` only under the other (`towers-hint.test.ts`).
@@ -987,8 +985,7 @@ themselves. Decide first where the record comes from:
 - **Parallel**: separate code over the solver's primitives that the generator
   never calls. Choose it where the hint needs the deduction in another order
   or at another grain than the generator, which needs only that it fires
-  (for a candidate game, `hints-candidates.md` § "Record off a bespoke
-  solver"). Exemplar:
+  Exemplar:
   Clusters, which restarts its scan after each firing and takes the shortest
   chain.
 
@@ -1333,9 +1330,11 @@ when both the plain frame and the frame with the step on it stand still, so
 a mark shown only for the square in focus is safe when the step brings its
 square into focus.
 
-No walk holds the second, so each game holds its own. The candidate walk has
-the premise audit (`hints-candidates.md` § "A premise names everything its
-deduction reads"). A game off that walk writes the property for its own nouns
+No walk holds the second, so each game holds its own. The candidate walk
+holds it by construction: its techniques run on the notes the copy shows, so
+they find nothing the board does not (`hints-candidates.md` § "Deduce from
+the notes when the mistake check vouches for them"). A game off that walk
+writes the property for its own nouns
 and sees it fail first; comparing a kept step with the first step of a fresh
 hint is not that test, since it fails for honest reasons (a journey's later
 leg, a sweep's order). The structural form is a plan loop that advances its

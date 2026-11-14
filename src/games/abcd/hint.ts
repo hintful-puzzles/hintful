@@ -35,7 +35,6 @@ import {
   runCandidatePlan,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { rangeMask } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
@@ -203,7 +202,7 @@ export function buildSteps(
     enc,
     caps: { [TIERS]: p.diff },
   };
-  const satisfied = techniqueRung<AbcdMove, AbcdHint, DeductionRecord, AbcdReason>(
+  const satisfied = techniqueRung<AbcdMove, AbcdHint, AbcdReason>(
     on,
     "satisfied",
     (f): AbcdFiring => {
@@ -216,7 +215,7 @@ export function buildSteps(
       ];
     },
   );
-  const packed = techniqueRung<AbcdMove, AbcdHint, DeductionRecord, AbcdReason>(
+  const packed = techniqueRung<AbcdMove, AbcdHint, AbcdReason>(
     on,
     "runs",
     (f, shown): AbcdFiring => {
@@ -248,7 +247,7 @@ export function buildSteps(
   });
 
   const steps: HintStep<AbcdMove, AbcdHint, PlanRung<AbcdReason>>[] = [];
-  runCandidatePlan<AbcdMove, AbcdHint, DeductionRecord, AbcdReason, CellRegion>({
+  runCandidatePlan<AbcdMove, AbcdHint, AbcdReason, CellRegion>({
     w,
     steps,
     grid,

@@ -24,7 +24,6 @@ import {
   strikesOf,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { edgeClueVocab } from "../../engine/edge-clue-latin/hint-text.ts";
@@ -175,9 +174,9 @@ function buildSteps(
     wGrid,
     Math.min(diffToLevel(state.diff), DIFF_EXTREME),
   );
-  type Rung = CandidateRung<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>;
+  type Rung = CandidateRung<EdgeClueMove, EdgeClueHint, HintReason>;
   const sign: Rung = techniqueRung(on, "sign", (f) => signLegs(f, o));
-  runLatinCandidatePlan<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>({
+  runLatinCandidatePlan<EdgeClueMove, EdgeClueHint, HintReason>({
     w: o,
     steps,
     grid: wGrid,
@@ -191,11 +190,7 @@ function buildSteps(
     // its neighbor, so a firing is a leg a cell: a sign's two ends are two.
     rungs: [
       sign,
-      ...latinStrikeRungs<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>(
-        on,
-        o,
-        byCell,
-      ),
+      ...latinStrikeRungs<EdgeClueMove, EdgeClueHint, HintReason>(on, o, byCell),
     ],
     notes: {
       noun: "number",

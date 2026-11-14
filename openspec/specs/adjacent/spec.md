@@ -163,7 +163,7 @@ A bar's sentence SHALL speak of being one away from N, and SHALL NOT say
 
 ### Requirement: Hint: Adjacent's hint reasons no harder than the board's tier
 
-The hint's recording solver SHALL be capped at the board's tier below
+The hint SHALL run only the techniques of the board's tier below
 Unreasonable, so a bar beside a placed number SHALL be offered from Normal
 up, and a bar read against an undecided neighbor and a set within one row or
 column from Tricky up.

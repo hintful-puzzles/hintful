@@ -29,7 +29,6 @@ import {
   strikesOf,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { latinSpace, PLACE } from "../../engine/describe-runtime.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
@@ -586,8 +585,7 @@ function buildSteps(
   const rung = (
     id: towers.LadderId,
     legs: (f: LadderFiring) => Legs | null,
-  ): CandidateRung<TowersMove, TowersHint, DeductionRecord, HintReason> =>
-    techniqueRung(on, id, legs);
+  ): CandidateRung<TowersMove, TowersHint, HintReason> => techniqueRung(on, id, legs);
   // A facing firing places every pair's tallest at once, a leg a cell: a row's
   // pair and a column's may both place in one corner.
   const facing = rung("facing", (f) => {
@@ -619,7 +617,7 @@ function buildSteps(
     const reason: HintReason = { kind: "arrangement", clue: s, clueVal: v };
     return byHeight(strikesOf(f, w)).map((strike) => ({ strike, reason }));
   });
-  runLatinCandidatePlan<TowersMove, TowersHint, DeductionRecord, HintReason>({
+  runLatinCandidatePlan<TowersMove, TowersHint, HintReason>({
     w,
     steps,
     grid: wGrid,
@@ -643,11 +641,7 @@ function buildSteps(
       facing,
       bounds,
       arrangement,
-      ...latinStrikeRungs<TowersMove, TowersHint, DeductionRecord, HintReason>(
-        on,
-        w,
-        byHeight,
-      ),
+      ...latinStrikeRungs<TowersMove, TowersHint, HintReason>(on, w, byHeight),
     ],
   });
   return steps;

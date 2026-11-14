@@ -55,7 +55,6 @@ import {
   strikesOf,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { describedSpace, rangeMask, step } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Premise } from "../../engine/hint-text.ts";
@@ -290,13 +289,12 @@ export function buildSteps(
   };
   const struck = (f: LadderFiring): Mark[] => strikesOf(f, w);
 
-  type Rung = CandidateRung<RomeMove, RomeHint, DeductionRecord, RomeHintReason>;
+  type Rung = CandidateRung<RomeMove, RomeHint, RomeHintReason>;
   type RomeFiring = Firing<RomeMove, RomeHint, RomeHintReason>;
   const rung = (
     id: keyof rome.SaysById,
     legs: (f: LadderFiring, shown: ArrayLike<number>) => RomeFiring | null,
-  ): Rung =>
-    techniqueRung<RomeMove, RomeHint, DeductionRecord, RomeHintReason>(on, id, legs);
+  ): Rung => techniqueRung<RomeMove, RomeHint, RomeHintReason>(on, id, legs);
 
   const loop = rung("loop", (f) => {
     const { c, q } = termsOf(f, "loop");
@@ -340,7 +338,7 @@ export function buildSteps(
     return [...bySquare.values()].map((strike) => ({ strike, reason }));
   });
 
-  runCandidatePlan<RomeMove, RomeHint, DeductionRecord, RomeHintReason, CellRegion>({
+  runCandidatePlan<RomeMove, RomeHint, RomeHintReason, CellRegion>({
     w,
     steps,
     grid,

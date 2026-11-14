@@ -202,14 +202,14 @@ associative. The search above them stays the engine's.
 
 - **WHEN** `a·b`, `b·c` and `(a·b)·c` are placed, `a·(b·c)` is open and can
   still hold `(a·b)·c`, at a cap of Normal or above
-- **THEN** the solver places `a·(b·c)` equal to `(a·b)·c`, recorded with the
-  triple and the three cells it read
+- **THEN** the solver places `a·(b·c)` equal to `(a·b)·c`, saying the triple
+  and the cells of the products it read
 
 #### Scenario: A product that changes a letter rules its partner out
 
 - **WHEN** `j·a` is placed and is not `j`, at a cap of Tricky or above
 - **THEN** the solver strikes, for every `k`, the letter `k` from the cells
-  `k·a` and `a·k`, in one firing, recorded with the least such `j` as its
+  `k·a` and `a·k`, in one firing, saying `a` and the least such `j` as its
   witness
 
 ### Requirement: Controls: Group selects a cell through the shared note-taking cell
@@ -332,12 +332,12 @@ for each element, in the order of their numbers, then Clear.
 ### Requirement: Hint: Group's own placements lead the eliminations
 
 Group's hint SHALL be the collection's candidate plan through its row/column
-preset, and its own rung of the walk's ladder SHALL be its placements
-(`engine-candidate-hints`, "A row/column Latin square answers no question its
-regions already settle" and "The walk owns the ladder"): an associativity
-placement or an identity fill wherever the board shows its premise, and, until
-the notes are set up, any single the board shows. Group SHALL start on the
-implicit reading, which has no populate step.
+preset, run on the player's notes (`engine-candidate-hints`, "A described
+technique is a rung read off the notes" and "A game's placing technique may
+lead"). Its associativity and identity techniques SHALL lead, offered
+wherever the board supports them from the note-free opening on, beside the
+singles the board shows. Group SHALL start on the implicit reading, which
+has no populate step.
 
 #### Scenario: Associativity is taught before any note is needed
 

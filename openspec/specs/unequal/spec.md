@@ -205,13 +205,13 @@ the other cells of its row and column.
 
 ### Requirement: Hint: Unequal's hint is the shared candidate plan over rows and columns
 
-Unequal's hint SHALL be the collection's candidate-elimination plan, taken
-through its row/column preset (`engine-candidate-hints`, "A shared
-candidate-elimination hint plan" and "A row/column Latin square answers no
-question its regions already settle"), departing only in the reading it starts
-on. Unequal SHALL supply its recording solver and the words of its sign
-deductions, which the requirements below state. What its marks stand for
-SHALL be the legend's (`hintMarks`).
+Unequal's hint SHALL be the collection's candidate plan through its
+row/column preset (`engine-candidate-hints`, "A row/column Latin square
+answers no question its regions already settle"), departing only in the
+reading it starts on. Unequal SHALL supply its sign technique as a rung over
+the notes, saying its two ends and the bound each is held to, and the words
+of its sign deductions, stated below. What its marks stand for SHALL be the
+legend's (`hintMarks`).
 
 #### Scenario: A single on an Unequal board
 
@@ -254,9 +254,9 @@ The hint's marks SHALL stay in the gap beside the box.
 ### Requirement: Hint: A sign's elimination is one firing of one sign
 
 A sign elimination SHALL be the greater-than bound deduction: a single
-technique firing, striking the candidates it rules out of one cell by one
-`pencilStrike` move. One recorded firing SHALL map to exactly one `group`, so
-a hint step never mixes signs.
+technique firing of one sign, whose strikes in each of the sign's two cells
+SHALL be a `pencilStrike` step of their own, so a hint step never mixes signs
+or cells.
 
 #### Scenario: A strike step stays in its narrated cell
 
@@ -275,11 +275,12 @@ a hint step never mixes signs.
 
 ### Requirement: Hint: Unequal's hint reasons no harder than its board's tier
 
-The hint's recording solver SHALL try a lower tier's technique before a
-higher one's and, on a board below Unreasonable, SHALL be capped at the
-board's own tier. So a sign's bound SHALL be offered from Normal up, a set
-within one row or column from Tricky up, and one number's places across
-several rows and columns at Hard.
+The hint SHALL offer a lower tier's technique before a higher one's, but for
+a harder one's firing that continues its latest steps, and, on a board below
+Unreasonable, SHALL run only the techniques of the board's own tier. So a
+sign's bound SHALL be offered from Normal up, a set within one row or column
+from Tricky up, and one number's places across several rows and columns at
+Hard.
 
 #### Scenario: An Easy board has no clue strikes
 

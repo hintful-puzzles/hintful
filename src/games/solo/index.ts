@@ -25,7 +25,6 @@ import {
   runCandidatePlan,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import {
   clearEntries,
@@ -453,11 +452,10 @@ export function noRepeatRegionNames(state: SoloState, at?: Point): string[] {
   return [...names];
 }
 
-/** The reason a single of `n` narrates as, once `availablePlacements` has
- * re-derived *why* it is forced from the working board (the recorded `place`
- * carries a bare `single`, conflating naked and hidden singles): a naked single
- * (the cell's notes collapsed to one), a note-less cell whose regions hold every
- * other digit, or a hidden single in a row/column/sub-block/diagonal. */
+/** The reason a single of `n` the walk reads off the notes narrates as: a
+ * naked single (the cell's notes collapsed to one), a note-less cell whose
+ * regions hold every other digit, or a hidden single in a
+ * row/column/sub-block/diagonal. */
 function soloSingleReason(
   n: number,
   why: SingleWhy<{ region: SoloRegion }>,
@@ -598,7 +596,7 @@ function buildSteps(
   const cr = state.cr;
   const steps: HintStep<SoloMove, SoloHint, PlanRung<SoloReason>>[] = [];
   const wGrid = Int8Array.from(state.grid);
-  runCandidatePlan<SoloMove, SoloHint, DeductionRecord, SoloReason, SoloCellRegion>({
+  runCandidatePlan<SoloMove, SoloHint, SoloReason, SoloCellRegion>({
     w: cr,
     steps,
     grid: wGrid,

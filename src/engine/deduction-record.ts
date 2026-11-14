@@ -1,28 +1,13 @@
 /**
- * The record shape a recording solver emits, and the callback it emits through.
- *
- * This is the seam between a game's *recording deduction pass* and the shared
- * hint-plan mechanics in [`candidate-hint.ts`](./candidate-hint.ts): every game
- * produces these from its own techniques, and the shared readers
- * (`availableFirings`, `nextPlace`) consume them
- * uniformly.
- *
- * Nothing here is Latin — the reason is `unknown` precisely so each game
- * attaches its own — so it lives apart from `latin.ts`, and a non-Latin
- * candidate game (Crossing) speaks it without importing the Latin solver.
- * `latin.ts` re-exports both names for the Latin games.
+ * The record shape a recording solver emits, and the callback it emits through
+ * (`CellMarks.recorder`): a game whose hint records its ladder's firings reads
+ * them back as these. The reason is `unknown` so each game attaches its own.
  */
 
 /** One recorded deduction operation. Emitted in solver order on the hint path;
  * `group` ties together every record of a single deduction *firing* (one
  * top-level deduction attempt), so a firing forcing several strikes becomes one
- * grouped hint step. `reason` is the game's own reason object (a `LatinReason`
- * for the generic Latin deductions).
- *
- * A reason may carry `reads`, the cells the deduction reads beyond what the
- * game's words for it outline: a fish reads that its value is absent from the
- * rest of its lines. The candidate walk adds them to the step's premise, so the
- * solver, which is the one place that knows what it read, can say so. */
+ * grouped hint step. `reason` is the game's own reason object. */
 export interface DeductionRecord {
   kind: "place" | "elim";
   x: number;

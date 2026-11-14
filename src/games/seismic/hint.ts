@@ -33,7 +33,6 @@ import {
   runCandidatePlan,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { describedSpace, rangeMask } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
@@ -192,7 +191,7 @@ export function buildSteps(
 
   const cellsOf = (area: readonly number[]): Point[] =>
     area.map((j) => cellOf(state, j));
-  type Rung = CandidateRung<SeismicMove, SeismicHint, DeductionRecord, SeismicReason>;
+  type Rung = CandidateRung<SeismicMove, SeismicHint, SeismicReason>;
   // A square that is a whole area needs no notes, so it leads before they are
   // set up; after, its note shows it.
   const singleton: Rung = ({ populated }) =>
@@ -203,27 +202,20 @@ export function buildSteps(
           .map(([i]) => [
             { place: { ...cellOf(state, i), n: 1 }, reason: { kind: "singleton" } },
           ]);
-  const starve = techniqueRung<
-    SeismicMove,
-    SeismicHint,
-    DeductionRecord,
-    SeismicReason
-  >(on, "starve", ({ facts, reasons }) => {
-    const { r, n } = (reasons[0] as Said<unknown, seismic.SaysById["starve"]>).says
-      .terms;
-    const strike: Mark[] = [];
-    for (let k = 0; k < facts.length; k += 3)
-      strike.push({ ...cellOf(state, facts[k + 1]), n });
-    return [{ strike, reason: { kind: "starve", n, area: area.cells[r] } }];
-  });
+  const starve = techniqueRung<SeismicMove, SeismicHint, SeismicReason>(
+    on,
+    "starve",
+    ({ facts, reasons }) => {
+      const { r, n } = (reasons[0] as Said<unknown, seismic.SaysById["starve"]>).says
+        .terms;
+      const strike: Mark[] = [];
+      for (let k = 0; k < facts.length; k += 3)
+        strike.push({ ...cellOf(state, facts[k + 1]), n });
+      return [{ strike, reason: { kind: "starve", n, area: area.cells[r] } }];
+    },
+  );
   const steps: HintStep<SeismicMove, SeismicHint, PlanRung<SeismicReason>>[] = [];
-  runCandidatePlan<
-    SeismicMove,
-    SeismicHint,
-    DeductionRecord,
-    SeismicReason,
-    CellRegion
-  >({
+  runCandidatePlan<SeismicMove, SeismicHint, SeismicReason, CellRegion>({
     w,
     steps,
     grid,

@@ -2,12 +2,12 @@
  * The candidate-elimination hint *plan*: the walk every pencil-notes game's
  * `buildSteps` takes, and the one place its steps are built and applied.
  *
- * A game hands {@link runCandidatePlan} what is its own — the recording solver,
- * its regions, its words for a placement and a strike, the axis its strikes
- * split on, and any rungs of its own — and the walk does the rest: the naked
- * singles, the recorded strikes and placements as rungs, populate and the
- * obvious clean, the row/column cull after each placement, the journey flags,
- * and each next firing taken through a `HintFrontier`. See docs/hints-candidates.md
+ * A game hands {@link runCandidatePlan} what is its own — its regions, its
+ * words for a placement and a strike, and its rungs, which run its ladder's
+ * techniques on the notes ({@link techniqueRung}) — and the walk does the
+ * rest: the naked and hidden singles, populate and the obvious clean, the
+ * row/column cull after each placement, the journey flags, and each next
+ * firing taken through a `HintFrontier`. See docs/hints-candidates.md
  * § "What every game does".
  *
  * **A firing is data, and its steps are built here.** A rung returns firings as
@@ -18,9 +18,7 @@
  */
 
 import {
-  type AvailableFirings,
   addMove,
-  availableFirings,
   type CandidateHighlights,
   type CandidateMoveAdapter,
   type CandidateReading,
@@ -38,9 +36,7 @@ import {
   regionDuplicateMarks,
   regionReach,
 } from "./candidate-hint.ts";
-import type { DeductionRecord } from "./deduction-record.ts";
 import { STRIKE } from "./describe-runtime.ts";
-import { checkPremise, type FiringReplay, takeReplay } from "./firing-replay.ts";
 import type { HintStep } from "./game.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import {
@@ -69,7 +65,6 @@ import {
   techniqueFirings,
 } from "./ladder-runtime.ts";
 import {
-  availablePlacements,
   type CellRegion,
   type RowColRegion,
   rowColRegions,
@@ -120,11 +115,10 @@ export type Leg<M, H, Reason> =
 /** One firing: its legs in order, read and played as one journey. */
 export type Firing<M, H, Reason> = readonly Leg<M, H, Reason>[];
 
-/** A step the walk has built, and how to play it on the working board:
- * `apply` says whether it decided a cell, which is when the solver reruns. */
+/** A step the walk has built, and how to play it on the working board. */
 interface Built<M, H, Rung extends string = string> {
   step: HintStep<M, H, Rung>;
-  apply(): boolean;
+  apply(): void;
 }
 
 /** A note-less cell a strike was folded into: the notes it now has, or the
@@ -135,18 +129,11 @@ interface Folded {
 }
 
 /** What a rung is told each time it is asked. `F` is the plan's firing. */
-export interface RungContext<R, F = unknown> {
-  /** Every earlier rung came up empty this time, which is where a rung that may
-   * fire only as the plan's last resort is allowed to (`availablePlacements`'
-   * `nothingElse`, which only the classification of a skipped single reads). */
+export interface RungContext<F = unknown> {
+  /** Every earlier rung came up empty this time: where a technique the solver
+   * reaches only once those before it are spent may fire
+   * ({@link techniqueRung}). */
   nothingEarlier: boolean;
-  /** The placements the plan could take now, as the walk's own placement rung
-   * builds them: the singles the board shows, and each recorded placement
-   * whose premise the board supports. For a game whose placements lead
-   * before its notes are set up (Group). */
-  placements: () => readonly F[];
-  /** The recording of the working board as it stands. */
-  ops: readonly R[];
   /** Whether the notes have been set up: penciled in and cleaned under the
    * `populate` reading, cleaned under the `implicit` one. */
   populated: boolean;
@@ -160,8 +147,8 @@ export interface RungContext<R, F = unknown> {
 }
 
 /** One rung of a plan's ladder: the firings of one kind it could take now. */
-export type CandidateRung<M, H, R, Reason> = (
-  ctx: RungContext<R, Firing<M, H, Reason>>,
+export type CandidateRung<M, H, Reason> = (
+  ctx: RungContext<Firing<M, H, Reason>>,
 ) => readonly Firing<M, H, Reason>[];
 
 /** A game's ladder, as a plan that deduces from the notes runs its
@@ -182,10 +169,9 @@ export interface NotesLadder<S extends CellMarks = CellMarks> {
 /**
  * A rung offering every firing technique `id` of the game's ladder makes on
  * the notes the walk shows, each as the legs `legs` makes of it (none where
- * it returns `null`). For a plan that records nothing because the mistake
- * check vouches for the notes (docs/hints-candidates.md § "Deduce from the
- * notes when the mistake check vouches for them"), so a step is the solver's
- * technique by construction.
+ * it returns `null`). The mistake check vouches for the notes
+ * (docs/hints-candidates.md § "Deduce from the notes when the mistake check
+ * vouches for them"), so a step is the solver's technique by construction.
  *
  * It reads the notes, so it waits for the setup (`populated`). Any technique
  * but the ladder's first waits for every earlier rung to come up empty, as
@@ -195,8 +181,7 @@ export interface NotesLadder<S extends CellMarks = CellMarks> {
  * A technique of a harder tier than the ladder's easiest is work the board
  * needs rather than another reading of the singles' difficulty, so while it
  * waits it still offers a firing that continues the plan's latest steps
- * (`continues`), as a recorded strike was offered beside the singles. Waiting
- * outright, a plan leaves the work in hand for a single elsewhere and comes
+ * (`continues`), beside the singles. Waiting outright, a plan leaves the work in hand for a single elsewhere and comes
  * back: a seventh of Adjacent's jumps passed over a bar step that continued.
  * A technique past the board's `caps` offers nothing.
  *
@@ -206,12 +191,12 @@ export interface NotesLadder<S extends CellMarks = CellMarks> {
  * § "Placements lead when the deductions are placements"; Group's
  * associativity and identity).
  */
-export function techniqueRung<M, H, R, Reason, S extends CellMarks = CellMarks>(
+export function techniqueRung<M, H, Reason, S extends CellMarks = CellMarks>(
   on: NotesLadder<S>,
   id: string,
   legs: (f: LadderFiring, shown: ArrayLike<number>) => Firing<M, H, Reason> | null,
   { leads = false }: { leads?: boolean } = {},
-): CandidateRung<M, H, R, Reason> {
+): CandidateRung<M, H, Reason> {
   const entries = on.ladder.entries;
   const at = entries.findIndex((e) => e.id === id);
   if (at < 0) throw new Error(`no technique ${id} in the ladder`);
@@ -339,7 +324,6 @@ export function populateThenClean(
 export interface CandidatePlan<
   M,
   H extends CandidateHighlights,
-  R extends DeductionRecord,
   Reason,
   Reg extends CellRegion,
   Reading extends CandidateReading = CandidateReading,
@@ -370,14 +354,8 @@ export interface CandidatePlan<
   /** Whether the working board is finished. Default: no cell is empty. A game
    * whose finished board leaves cells empty says so here (Salad's holes). */
   finished?: () => boolean;
-  /** Run the recording solver on the working board. Called at the start and
-   * after every firing that decides a cell. Absent where the plan deduces
-   * from the notes ({@link techniqueRung}): the walk then reads its hidden
-   * singles off them too, in the regions of `regionsOf` that hold every
-   * value. */
-  record?: () => readonly R[];
-  /** A cell's regions, in narration preference order. A single is classified in
-   * the ones that hold every value, and unless {@link reach} says otherwise, a
+  /** A cell's regions, in narration preference order. A hidden single is
+   * read in the ones that hold every value, and unless {@link reach} says otherwise, a
    * placed value rules itself out of all of them. */
   regionsOf: (x: number, y: number) => readonly Reg[];
   /** The cells a value rules itself out of, where that depends on the value (a
@@ -405,11 +383,6 @@ export interface CandidatePlan<
    * implicit reading a strike from one cell with no notes is not a strike at
    * all: its step writes the values left, or places the one left. */
   conclude: Conclusions;
-  /** The axis a firing's strikes split into legs on: the ones sharing a key are
-   * one leg, in the order their keys first appear. It follows what the
-   * narration names singular (docs/hints-candidates.md § "Solve the way a human
-   * does"). Default: the whole firing is one leg. */
-  strikeAxis?: (op: R) => unknown;
   /** The words of the default setup: pencil everything in, then clear the
    * obvious; and of a note leg under the implicit reading, which writes
    * `values` into the note-less `cell` (`every` when its regions rule nothing
@@ -424,26 +397,18 @@ export interface CandidatePlan<
    * walk cannot leave out, so it is also how a plan says it walks the populate
    * reading alone ({@link OwnSetUp}). */
   setUp?: "implicit" extends Reading ? never : PlanSetUp;
-  /** The game's own rungs, tried after the naked singles and before the
-   * recorded strikes and placements, in the note-free opening too. */
-  rungs?: readonly CandidateRung<M, H, R, Reason>[];
+  /** The game's rungs, tried after the singles, in the note-free opening too. */
+  rungs?: readonly CandidateRung<M, H, Reason>[];
   /** The naked singles, where the game's differ from `nakedSingles` (Salad's
    * lone "might be empty" note is a marker, not a value). */
   singles?: () => readonly Mark[];
-  /** Whether a placement, recorded or a hidden single the notes show, is one
-   * the plan places (Salad's hole symbol is settled by a marker instead).
-   * Default: all of them. */
+  /** Whether a hidden single the notes show is one the plan places (Salad's
+   * hole symbol is settled by a marker instead). Default: all of them. */
   placeable?: (m: Mark) => boolean;
-  /** Which cells a recorded placement counts as already made in, where that
-   * differs from `grid` (`availableFirings`). */
-  placed?: () => ArrayLike<number>;
   /** Called after a placement is written to the working board: where a game
    * keeps state of its own beside `grid` that a placement also settles
    * (Salad marks the square as no hole). */
   onPlace?: (x: number, y: number, n: number) => void;
-  /** Called when nothing fires, before the plan ends: the place for a check
-   * that the solver forces nothing the plan could not explain. */
-  stuck?: () => void;
 }
 
 /** The default dialect's placement and strike moves (Towers, Unequal, Keen, Solo). */
@@ -466,9 +431,9 @@ export function valuesOf(marks: readonly Mark[]): number[] {
   return marks.map((m) => m.n).sort((a, b) => a - b);
 }
 
-/** The cells a recorded reason says its deduction reads beyond what its words
- * outline (`DeductionRecord`); none when it says nothing. */
-function recordedReads(reason: unknown): readonly Point[] {
+/** The cells a reason says its deduction reads beyond what its words outline
+ * (a Rome reach reads its group's border); none when it says nothing. */
+function reasonReads(reason: unknown): readonly Point[] {
   return (reason as { reads?: readonly Point[] }).reads ?? [];
 }
 
@@ -504,24 +469,22 @@ function cellsOf(marks: readonly Mark[]): Point[] {
 /**
  * Walk a candidate plan: from the working board, take the note-free firings
  * while the notes are being set up, then every rung, until the board is
- * finished or nothing fires. The ladder is the naked singles, the game's own
- * rungs, the recorded strikes, then the recorded placements; which firing is
- * taken is the `HintFrontier`'s choice, so a plan continues from its latest
+ * finished or nothing fires. The ladder is the singles, then the game's
+ * rungs; which firing is taken is the `HintFrontier`'s choice, so a plan continues from its latest
  * steps where it can and otherwise follows the ladder.
  */
 export function runCandidatePlan<
   M,
   H extends CandidateHighlights,
-  R extends DeductionRecord,
   Reason,
   Reg extends CellRegion,
   Reading extends CandidateReading = CandidateReading,
->(plan: CandidatePlan<M, H, R, Reason, Reg, Reading> & OwnSetUp<Reading>): void {
+>(plan: CandidatePlan<M, H, Reason, Reg, Reading> & OwnSetUp<Reading>): void {
   // The walk is written once, for both readings. What a narrower `Reading`
   // takes out of the plan's types it refuses to do: `note` is spoken under the
   // implicit reading, which `reading` cannot then name, and `single` throws
   // before it reads a single off a cell with no notes.
-  new CandidateWalk(plan as unknown as CandidatePlan<M, H, R, Reason, Reg>).run();
+  new CandidateWalk(plan as unknown as CandidatePlan<M, H, Reason, Reg>).run();
 }
 
 /** What a plan on the populate reading alone must give: the setup of its own
@@ -549,11 +512,10 @@ type NarratesSingles<Reason, Reading extends CandidateReading> = [
 export type LatinCandidatePlan<
   M,
   H extends CandidateHighlights,
-  R extends DeductionRecord,
   Reason,
   Reading extends CandidateReading = CandidateReading,
 > = Omit<
-  CandidatePlan<M, H, R, Reason, RowColRegion, Reading>,
+  CandidatePlan<M, H, Reason, RowColRegion, Reading>,
   "regionsOf" | "singleReason" | "notes" | "conclude"
 > & {
   /** The words the shared setup sentences and conclusions are built from: the
@@ -571,7 +533,7 @@ export type LatinCandidatePlan<
 };
 
 /** The rungs every row/column Latin plan can speak: the walk's own, the three
- * singles, and the generic set elimination and wing `latin.ts` records. A
+ * singles, and the library's set elimination and wing (`latin-notes.ts`). A
  * game's list is these and its own reasons' kinds. */
 export const LATIN_RUNGS = [
   ...CANDIDATE_RUNGS,
@@ -592,8 +554,8 @@ export const LATIN_POPULATE_RUNGS = LATIN_RUNGS.filter(
 
 /**
  * The plain row/column Latin square's {@link runCandidatePlan}: a preset over
- * it, not a second entry point, so a game supplies its recording solver, its
- * rungs and its own words and nothing else.
+ * it, not a second entry point, so a game supplies its rungs and its own
+ * words and nothing else.
  *
  * **What it fills in is what a row and a column *force*** — the test being
  * docs/doctrine.md § "Convention over configuration"'s, *can we say what a game would
@@ -614,11 +576,10 @@ export const LATIN_POPULATE_RUNGS = LATIN_RUNGS.filter(
 export function runLatinCandidatePlan<
   M,
   H extends CandidateHighlights,
-  R extends DeductionRecord,
   Reason,
   Reading extends CandidateReading = CandidateReading,
 >(
-  plan: LatinCandidatePlan<M, H, R, Reason, Reading> &
+  plan: LatinCandidatePlan<M, H, Reason, Reading> &
     NarratesSingles<Reason, Reading> &
     OwnSetUp<Reading>,
 ): void {
@@ -631,7 +592,7 @@ export function runLatinCandidatePlan<
     regions: "row or column",
     cell,
   };
-  const full: CandidatePlan<M, H, R, Reason, RowColRegion, Reading> = {
+  const full: CandidatePlan<M, H, Reason, RowColRegion, Reading> = {
     ...rest,
     w,
     notes: {
@@ -647,7 +608,6 @@ export function runLatinCandidatePlan<
     singleReason: singleReasonOf as CandidatePlan<
       M,
       H,
-      R,
       Reason,
       RowColRegion,
       Reading
@@ -659,16 +619,7 @@ export function runLatinCandidatePlan<
   runCandidatePlan(full as typeof full & OwnSetUp<Reading>);
 }
 
-class CandidateWalk<
-  M,
-  H extends CandidateHighlights,
-  R extends DeductionRecord,
-  Reason,
-  Reg extends CellRegion,
-> {
-  private ops: readonly R[];
-  /** The recording's replay, offered only while a premise audit runs. */
-  private replay: FiringReplay | null;
+class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRegion> {
   private readonly bit: (n: number) => number;
   private readonly place: (x: number, y: number, n: number, autoElim: boolean) => M;
   private readonly strike: (marks: Mark[]) => M;
@@ -678,20 +629,14 @@ class CandidateWalk<
   /** The candidates as the player reads them (`impliedNotes`), taken afresh on
    * every turn of the walk. */
   private shown: Int32Array;
-  /** The recorded firings the board supports, taken with {@link shown}. */
-  private available: AvailableFirings<R> | null = null;
-  /** Each firing's strikes as legs, keyed by its live records, for the turn. */
-  private strikeFirings = new Map<readonly R[], Firing<M, H, Reason>>();
   /** Each firing's steps, built once whether the frontier or the take asks. */
   private readonly built = new WeakMap<
     Firing<M, H, Reason>,
     Built<M, H, PlanRung<Reason>>[]
   >();
 
-  constructor(private readonly plan: CandidatePlan<M, H, R, Reason, Reg>) {
+  constructor(private readonly plan: CandidatePlan<M, H, Reason, Reg>) {
     const { w, grid, pencil, steps, enc } = plan;
-    this.ops = plan.record?.() ?? [];
-    this.replay = takeReplay(plan.label, this.ops.length);
     this.bit = enc?.bit ?? ((n: number): number => 1 << n);
     const dialect = plan.moves;
     this.place = (dialect?.place ?? latinMoves.place) as typeof this.place;
@@ -765,26 +710,15 @@ class CandidateWalk<
     const budget = stepBudget(plan.label);
     const finished = plan.finished ?? (() => !plan.grid.includes(0));
     const own = plan.rungs ?? [];
-    const singles: CandidateRung<M, H, R, Reason> = () => this.singles();
-    const strikes: CandidateRung<M, H, R, Reason> = () => this.strikes();
-    const places: CandidateRung<M, H, R, Reason> = (ctx) =>
-      this.placements(ctx.nothingEarlier);
-    const opening = [singles, ...own];
-    const ladder = [singles, ...own, strikes, places];
-    const listed = (
-      rungs: readonly CandidateRung<M, H, R, Reason>[],
-    ): FrontierCandidate[][] => {
+    const singles: CandidateRung<M, H, Reason> = () => this.singles();
+    const ladder = [singles, ...own];
+    const listed = (): FrontierCandidate[][] => {
       const lists: FrontierCandidate[][] = [];
       let nothingEarlier = true;
       this.shown = this.view();
-      this.available = null;
-      this.strikeFirings = new Map();
-      const placements = () => this.placements(false);
-      for (const rung of rungs) {
+      for (const rung of ladder) {
         const firings = rung({
           nothingEarlier,
-          placements,
-          ops: this.ops,
           populated: this.setUp.done(),
           shown: this.shown,
           continues: (f) => frontier.continues(this.premise(f)),
@@ -799,13 +733,10 @@ class CandidateWalk<
       budget.tick();
       if (finished()) return;
       if (!this.setUp.done()) {
-        if (frontier.take(listed(opening), plan.steps)) continue;
+        if (frontier.take(listed(), plan.steps)) continue;
         if (this.setUp.step()) continue;
       }
-      if (!frontier.take(listed(ladder), plan.steps)) {
-        plan.stuck?.();
-        return;
-      }
+      if (!frontier.take(listed(), plan.steps)) return;
     }
   }
 
@@ -823,9 +754,9 @@ class CandidateWalk<
         kind: plan.pencil[m.y * plan.w + m.x] === 0 ? "regionsFull" : "naked",
       }),
     );
-    // A recording solver places the hidden singles; without one they are the
-    // notes' to show, once a note-less cell reads as something.
-    if (!plan.record && (this.implicit || this.setUp.done()))
+    // A hidden single is the notes' to show, once a note-less cell reads as
+    // something.
+    if (this.implicit || this.setUp.done())
       for (const { m, region } of this.hiddenSingles())
         out.push(this.single(m, { kind: "hidden", region }));
     return out;
@@ -876,9 +807,8 @@ class CandidateWalk<
    */
   private single(m: Mark, why: SingleWhy<WholeRegion<Reg>>): Firing<M, H, Reason> {
     // A plan with a setup of its own types its steps without this rung
-    // (`OwnSetUp`). Under the populate reading only the opening shows a single
-    // in a cell with no notes, and only to a rung that asks for
-    // `RungContext.placements` there.
+    // (`OwnSetUp`). Under the populate reading the walk reads no single in a
+    // cell with no notes, so only a game's own `singles` can name one.
     if (why.kind === "regionsFull" && this.plan.setUp)
       throw new Error(
         `${this.plan.label}: a single in a cell with no notes, on a plan that sets its own notes up`,
@@ -915,108 +845,6 @@ class CandidateWalk<
     }
   }
 
-  private strikes(): Firing<M, H, Reason>[] {
-    return this.availableNow().strikes.map((live) => this.strikeFiring(live));
-  }
-
-  private strikeFiring(live: readonly R[]): Firing<M, H, Reason> {
-    let f = this.strikeFirings.get(live);
-    if (!f) {
-      f = this.split(live);
-      this.strikeFirings.set(live, f);
-    }
-    return f;
-  }
-
-  /** The recorded firings the board supports this turn. A strike rests on its
-   * steps' whole premise; a placement on its evidence, since the cells it
-   * places are the ones it overwrites. A single needs no vouching: whether
-   * the board shows it is the question `availablePlacements` asks. */
-  private availableNow(): AvailableFirings<R> {
-    const { plan } = this;
-    this.available ??= availableFirings(
-      this.ops,
-      plan.grid,
-      this.shown,
-      plan.w,
-      (f) => {
-        const op = f[0];
-        if (op.kind !== "place") return this.premise(this.strikeFiring(f));
-        if ((op.reason as { kind?: string }).kind === "single") return [];
-        if (plan.placeable && !plan.placeable(op)) return [];
-        return this.evidence(this.placing(op, op.reason as Reason));
-      },
-      this.reach,
-      { enc: plan.enc, placed: plan.placed?.() },
-    );
-    if (this.replay) this.audit(this.replay, this.available);
-    return this.available;
-  }
-
-  /** Check that each firing offered follows from the premise its steps name
-   * (`firing-replay.ts`). A placement's own cell stays as the solver had it. */
-  private audit(replay: FiringReplay, available: AvailableFirings<R>): void {
-    const { label } = this.plan;
-    for (const live of available.strikes)
-      checkPremise(replay, {
-        label,
-        group: live[0].group,
-        reason: live[0].reason,
-        premise: this.premise(this.strikeFiring(live)),
-        targets: live.map(({ x, y, n }) => ({ kind: "elim", x, y, n })),
-      });
-    for (const op of available.placements) {
-      // A single is not offered by its premise: the board shows it or not.
-      if ((op.reason as { kind?: string }).kind === "single") continue;
-      const { x, y, n } = op;
-      checkPremise(replay, {
-        label,
-        group: op.group,
-        reason: op.reason,
-        premise: [...this.evidence(this.placing(op, op.reason as Reason)), { x, y }],
-        targets: [{ kind: "place", x, y, n }],
-      });
-    }
-  }
-
-  /** One firing's live strikes as legs, split on the game's axis. */
-  private split(live: readonly R[]): Firing<M, H, Reason> {
-    const axis = this.plan.strikeAxis ?? (() => null);
-    const buckets = new Map<unknown, R[]>();
-    for (const op of live) {
-      const key = axis(op);
-      const bucket = buckets.get(key);
-      if (bucket) bucket.push(op);
-      else buckets.set(key, [op]);
-    }
-    return [...buckets.values()].map((ops) => ({
-      strike: ops.map((op) => ({ x: op.x, y: op.y, n: op.n })),
-      reason: ops[0].reason as Reason,
-    }));
-  }
-
-  private placements(nothingEarlier: boolean): Firing<M, H, Reason>[] {
-    const { plan } = this;
-    const placeable = plan.placeable;
-    const ops = placeable
-      ? this.ops.filter((op) => op.kind !== "place" || placeable(op))
-      : this.ops;
-    return availablePlacements(
-      ops,
-      plan.grid,
-      this.shown,
-      plan.w,
-      plan.regionsOf,
-      nothingEarlier,
-      this.availableNow().placements,
-      { enc: plan.enc, placed: plan.placed?.(), written: plan.pencil },
-    ).map(({ op, why }) =>
-      why.kind === "recorded"
-        ? this.placing(op, op.reason as Reason)
-        : this.single(op, why),
-    );
-  }
-
   private placing(m: Mark, reason: Reason): Firing<M, H, Reason> {
     return [{ place: m, reason }];
   }
@@ -1038,29 +866,6 @@ class CandidateWalk<
     });
   }
 
-  /** What a firing reasons from, leaving out the cells its legs act on: a line
-   * it hatches may run through them (Towers' facing clues). A note leg acts on
-   * a cell only because the firing reads it, so its cell stays premise, or a
-   * placement resting on a product the board has not placed yet is offered
-   * (Group's associativity). */
-  private evidence(f: Firing<M, H, Reason>): Point[] {
-    const acted = new Set(
-      f
-        .flatMap((leg): readonly Point[] =>
-          "place" in leg
-            ? [leg.place]
-            : "strike" in leg
-              ? leg.strike
-              : (leg.step.highlights?.targets ?? []),
-        )
-        .map((p) => `${p.x},${p.y}`),
-    );
-    return this.stepsOf(f)
-      .map(({ step }) => step.highlights)
-      .flatMap((h) => (h ? [...h.area, ...(h.hatch ?? []), ...(h.reads ?? [])] : []))
-      .filter((p) => !acted.has(`${p.x},${p.y}`));
-  }
-
   /** A firing's steps: a step per leg, and under the implicit reading the note
    * legs its premise needs, with a strike from a note-less cell folded into its
    * conclusion ({@link implicitSteps}). */
@@ -1075,14 +880,14 @@ class CandidateWalk<
     return built;
   }
 
-  /** A strike's words, with the cells its recorded reason reads beyond them. */
+  /** A strike's words, with the cells its reason reads beyond them. */
   private strikeWords(
     marks: readonly Mark[],
     reason: Reason | DupReason,
     continues: boolean,
   ): RungStrikeWords<H, Reason> {
     const words = this.plan.strikeWords(marks, reason, continues);
-    const more = recordedReads(reason);
+    const more = reasonReads(reason);
     const reads = more.length > 0 ? [...(words.reads ?? []), ...more] : words.reads;
     return { ...words, ...(reads ? { reads } : {}), rung: rungOf<Reason>(reason) };
   }
@@ -1094,10 +899,7 @@ class CandidateWalk<
     if ("step" in leg)
       return {
         step: leg.step,
-        apply: () => {
-          leg.apply();
-          return true;
-        },
+        apply: () => leg.apply(),
       };
     if ("strike" in leg)
       return this.struck(
@@ -1113,7 +915,7 @@ class CandidateWalk<
     const reads = [
       ...(rest.reads ?? []),
       ...(leg.reads ?? []),
-      ...recordedReads(leg.reason),
+      ...reasonReads(leg.reason),
     ];
     return {
       step: {
@@ -1129,10 +931,7 @@ class CandidateWalk<
           marks: [],
         } as unknown as H,
       },
-      apply: () => {
-        this.placeOnBoard(leg.place);
-        return true;
-      },
+      apply: () => this.placeOnBoard(leg.place),
     };
   }
 
@@ -1262,7 +1061,7 @@ class CandidateWalk<
         targets: [{ x, y }],
         marks: [],
       }) as unknown as H;
-    // Unreachable while the recording is sound: a strike never takes the
+    // Unreachable while the techniques are sound: a strike never takes the
     // solution's value, and a cell's implied notes always hold it.
     if (left.length === 0)
       throw new Error(`${plan.label}: a strike empties (${x}, ${y})`);
@@ -1278,10 +1077,7 @@ class CandidateWalk<
           words: said,
           highlights: highlightsOf(said),
         },
-        apply: () => {
-          this.placeOnBoard({ x, y, n });
-          return true;
-        },
+        apply: () => this.placeOnBoard({ x, y, n }),
       };
     }
     folded.set(i, { bits, placed: null });
@@ -1299,7 +1095,6 @@ class CandidateWalk<
       },
       apply: () => {
         plan.pencil[i] = bits;
-        return false;
       },
     };
   }
@@ -1333,7 +1128,6 @@ class CandidateWalk<
       },
       apply: () => {
         plan.pencil[i] = bits;
-        return false;
       },
     };
   }
@@ -1345,10 +1139,7 @@ class CandidateWalk<
   ): Built<M, H, PlanRung<Reason>> {
     return {
       step: this.strikeStep(marks, words),
-      apply: () => {
-        this.clear(marks);
-        return false;
-      },
+      apply: () => this.clear(marks),
     };
   }
 
@@ -1385,17 +1176,11 @@ class CandidateWalk<
   /** Push a firing's steps, the later legs continuing the first, and play each
    * on the working board. */
   private take(f: Firing<M, H, Reason>): void {
-    const { plan } = this;
-    let decided = false;
     this.stepsOf(f).forEach(({ step, apply }, i) => {
       if (i > 0) step.continuesPrevious = true;
-      plan.steps.push(step);
-      if (apply()) decided = true;
+      this.plan.steps.push(step);
+      apply();
     });
-    if (decided) {
-      this.ops = plan.record?.() ?? [];
-      this.replay = takeReplay(plan.label, this.ops.length);
-    }
   }
 
   private clear(marks: readonly Mark[]): void {

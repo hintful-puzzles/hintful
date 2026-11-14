@@ -294,8 +294,9 @@ from the pencil marks of every other cell in its row and column.
 Keen's hint SHALL be the collection's candidate-elimination plan, taken through
 its row/column preset (`engine-candidate-hints`, "A shared candidate-elimination
 hint plan" and "A row/column Latin square answers no question its regions
-already settle"), with no departure. Keen SHALL supply its recording solver and
-the words of its two cage deductions, which the requirements below state.
+already settle"), with no departure. Keen SHALL supply its cage techniques as
+rungs over the notes, each saying its cage, and the words of its two cage
+deductions, which the requirements below state.
 
 #### Scenario: A single on a Keen board
 
@@ -308,7 +309,7 @@ A cage elimination SHALL be taught as one firing: no layout of the cage's
 digits consistent with its clue leaves a candidate possible in a cage cell, or,
 at the harder level, a digit the cage requires along a row or column is ruled
 out elsewhere in that line. A firing SHALL be one cage's, so a hint step never
-mixes cages.
+mixes cages, and its strikes SHALL be a step a cell.
 
 #### Scenario: A cage elimination is taught as a note strike
 
@@ -320,9 +321,9 @@ mixes cages.
 
 #### Scenario: Two cages could prune at once
 
-- **WHEN** the recording solver reaches a board on which two cages each rule a
-  candidate out
-- **THEN** each cage's eliminations are recorded under a `group` of their own
+- **WHEN** a board's notes let two cages each rule a candidate out
+- **THEN** each cage's strikes are a firing of their own, and no step strikes
+  for both
 
 ### Requirement: Hint: A cage deduction's sentence names the cage by its clue
 
@@ -343,15 +344,15 @@ A cage step's narration SHALL name the cage by its clue's goal ("sum to N",
 
 ### Requirement: Hint: Keen's hint deduces at the tier of the board's params
 
-On a board below Unreasonable the hint's recording solve SHALL run at the tier
-of the board's own params, so a hint step never rests on a deduction above the
-tier the board was dealt at.
+On a board below Unreasonable the hint SHALL run only the techniques of the
+board's own tier, so a hint step never rests on a deduction above the tier the
+board was dealt at.
 
 #### Scenario: A hint on a Normal board
 
 - **WHEN** a hint is asked for on a board of `6dn`
-- **THEN** the recording solver runs with its cap at Normal
-- **AND** no step it records is a set deduction or a forcing chain
+- **THEN** no step is a digit a cage requires along a line, a set deduction or
+  a forcing chain
 
 ### Requirement: Look: Keen draws a cell's digit or its pencil marks
 

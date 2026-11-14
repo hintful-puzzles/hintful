@@ -32,7 +32,6 @@ import {
   techniqueRung,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import {
   clearEntries,
@@ -422,15 +421,11 @@ function buildSteps(
   );
   // A firing is one clue's strikes in one cell, so it is one leg.
   const clueRung = (id: "clueEasy" | "clue" | "clueTricky") =>
-    techniqueRung<MathraxMove, MathraxHint, DeductionRecord, HintReason, LatinSolver>(
-      on,
-      id,
-      (f) => {
-        const { k } = (f.reasons[0] as Said<unknown, mathrax.ClueSays>).says.terms;
-        return [{ strike: strikesOf(f, o), reason: clueReason(state.clues, k, o) }];
-      },
-    );
-  runLatinCandidatePlan<MathraxMove, MathraxHint, DeductionRecord, HintReason>({
+    techniqueRung<MathraxMove, MathraxHint, HintReason, LatinSolver>(on, id, (f) => {
+      const { k } = (f.reasons[0] as Said<unknown, mathrax.ClueSays>).says.terms;
+      return [{ strike: strikesOf(f, o), reason: clueReason(state.clues, k, o) }];
+    });
+  runLatinCandidatePlan<MathraxMove, MathraxHint, HintReason>({
     w: o,
     steps,
     grid: wGrid,
@@ -444,7 +439,7 @@ function buildSteps(
       clueRung("clueEasy"),
       clueRung("clue"),
       clueRung("clueTricky"),
-      ...latinStrikeRungs<MathraxMove, MathraxHint, DeductionRecord, HintReason>(on, o),
+      ...latinStrikeRungs<MathraxMove, MathraxHint, HintReason>(on, o),
     ],
     notes: { noun: "number", placedVerb: "standing", cell: "cell" },
   });

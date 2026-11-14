@@ -1,8 +1,7 @@
 /**
  * Keen explained-hint tests.
  *
- * Tier 1 — the recording solver records a cage reason per firing and its replayed
- * placements complete a generated board; `hint` populates, strikes (cage
+ * Tier 1 — `hint` populates, strikes (cage
  * eliminations + basic-Latin culls) and places with quality-bar narration; refusal
  * on solved / on mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario
  * snapshot of a cage-elimination journey frame (struck candidate `COL_PENCIL`

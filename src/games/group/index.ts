@@ -25,12 +25,10 @@ import {
   type Firing,
   LATIN_RUNGS,
   type PlanRung,
-  type RungContext,
   runLatinCandidatePlan,
   strikesOf,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { PLACE } from "../../engine/describe-runtime.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import {
@@ -638,7 +636,6 @@ function buildSteps(
   const associativity = techniqueRung<
     GroupMove,
     GroupHint,
-    DeductionRecord,
     NarratableReason,
     LatinSolver
   >(
@@ -652,13 +649,7 @@ function buildSteps(
   );
   // Learning the identity forces every empty cell of its row and column at
   // once: one journey, the revealing cell shaded on every leg.
-  const identity = techniqueRung<
-    GroupMove,
-    GroupHint,
-    DeductionRecord,
-    NarratableReason,
-    LatinSolver
-  >(
+  const identity = techniqueRung<GroupMove, GroupHint, NarratableReason, LatinSolver>(
     on,
     "identity",
     (f) => {
@@ -671,21 +662,13 @@ function buildSteps(
   const notIdentity = techniqueRung<
     GroupMove,
     GroupHint,
-    DeductionRecord,
     NarratableReason,
     LatinSolver
   >(on, "notIdentity", (f) => {
     const { terms } = (f.reasons[0] as Said<unknown, group.NotIdentitySays>).says;
     return [{ strike: strikesOf(f, w), reason: identityElimReason(terms, wGrid, w) }];
   });
-  // Before the notes are set up, every single the board shows leads too.
-  const singlesFirst = ({
-    placements,
-    populated,
-  }: RungContext<DeductionRecord, Legs>): readonly Legs[] =>
-    populated ? [] : placements();
-
-  runLatinCandidatePlan<GroupMove, GroupHint, DeductionRecord, NarratableReason>({
+  runLatinCandidatePlan<GroupMove, GroupHint, NarratableReason>({
     w,
     steps,
     grid: wGrid,
@@ -705,14 +688,10 @@ function buildSteps(
       value: (n) => toChar(n, id),
     },
     rungs: [
-      singlesFirst,
       associativity,
       identity,
       notIdentity,
-      ...latinStrikeRungs<GroupMove, GroupHint, DeductionRecord, NarratableReason>(
-        on,
-        w,
-      ),
+      ...latinStrikeRungs<GroupMove, GroupHint, NarratableReason>(on, w),
     ],
   });
   return steps;

@@ -21,10 +21,8 @@ describe("a Latin ladder run on the notes", () => {
   );
   const context = (
     shown: ArrayLike<number>,
-  ): RungContext<never, Firing<never, never, LatinStrikeReason>> => ({
+  ): RungContext<Firing<never, never, LatinStrikeReason>> => ({
     nothingEarlier: true,
-    placements: () => [],
-    ops: [],
     populated: true,
     shown,
     continues: () => false,

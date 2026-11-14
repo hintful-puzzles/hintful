@@ -1,21 +1,15 @@
 /**
  * Shared hint-*plan* plumbing for the candidate-elimination games — every
  * pencil-notes puzzle whose hint sets and strikes candidate notes and places a
- * value when a cell's notes collapse to one. The games' *solvers* stay separate
- * on purpose (the Latin games ride `latin.ts`; Solo's is bespoke, for byte-match
- * fidelity); the shared seam at the solver boundary is the
- * {@link DeductionRecord} shape, which every game produces from its own
- * techniques and this module consumes uniformly.
+ * value when a cell's notes collapse to one.
  *
  * This module owns the pure plan helpers (the naked singles, lazy populate,
- * the unreflected-placement index, the available strikes, the next-place
- * lookup) and the generic `keepCandidateHintTrack` / `refreshCandidateHintStep`.
+ * the obvious clean, the implied notes) and the generic `keepCandidateHintTrack` / `refreshCandidateHintStep`.
  * The walk that composes them into a plan is `candidate-plan.ts`. See
  * `docs/hints-candidates.md` § "What every game does".
  */
 
 import { valueBit, valuesOneTo } from "./candidate-bits.ts";
-import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
 import { markAllPress, type PointerAction } from "./hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
@@ -287,136 +281,6 @@ export function anyEmptyLacksNotes(
     if (grid[i] === 0 && pencil[i] === 0) return true;
   }
   return false;
-}
-
-/** The recorded firings a plan could take now ({@link availableFirings}). */
-export interface AvailableFirings<R> {
-  /** Each strike firing's still-live teachable records, in solver order. */
-  strikes: R[][];
-  /** The unmade placements whose premise the board already supports. */
-  placements: ReadonlySet<R>;
-}
-
-/**
- * Every recorded firing a plan could take now, in solver order — the choices
- * `HintFrontier` picks among.
- *
- * The recording ran on the solver's candidates, which differ from the board the
- * player has by exactly the marks the solver made and the board has not: a
- * strike still live in the notes, and a placement whose cell is still empty
- * (its cell, and each cell `reach` says its value rules out that still shows
- * that value). A firing with nothing of either kind before it is available:
- * everything it could rest on is already on the board. A later one is available
- * when its premise, the cells `reads` names for it, holds none of those marks;
- * otherwise it may rest on one, and narrating it now would cite a board the
- * player does not have. A later firing whose `reads` is empty cannot be vouched
- * for and is not offered. The rule is the same for a strike and a placement,
- * so a placement a clue or a cage forces is offered where its premise holds,
- * not only once nothing else is left.
- *
- * `reads` is asked about a strike firing as its live teachable records, and
- * about a placement as the placement alone; for a placement it should leave
- * out the placement's own cell, whose notes the placement overwrites. A strike
- * firing is one `group` (one cage/line/region firing) that the caller splits
- * into a per-cell (or whole) journey. `dup` strikes are not offered — those are
- * placement bookkeeping handled by the placement emitter, not a technique to
- * teach.
- *
- * `placed` is which cells a recorded placement counts as already made in. For
- * most games that is the working grid; Salad's cube places a hole symbol in a
- * square the player settles with a marker, leaving the grid blank for ever, so
- * it passes a grid marked at those squares too.
- */
-export function availableFirings<R extends DeductionRecord>(
-  ops: readonly R[],
-  grid: ArrayLike<number>,
-  pencil: ArrayLike<number>,
-  w: number,
-  reads: (firing: readonly R[]) => readonly Point[],
-  reach: Reach,
-  opts?: {
-    /** The note encoding, when the game's is not `1 << n`. */
-    enc?: NoteEncoding;
-    /** Which cells a recorded placement counts as already made in. Defaults to
-     * `grid`. */
-    placed?: ArrayLike<number>;
-  },
-): AvailableFirings<R> {
-  const bit = noteBitOf(opts?.enc);
-  const placed = opts?.placed ?? grid;
-  const liveAt = (op: R): boolean =>
-    op.kind === "elim" &&
-    grid[op.y * w + op.x] === 0 &&
-    (pencil[op.y * w + op.x] & bit(op.n)) !== 0;
-  const rows = grid.length / w;
-  // A clue in the margin is premise too, but no firing ever marks one.
-  const onBoard = (ps: readonly Point[]): number[] =>
-    ps
-      .filter((p) => p.x >= 0 && p.y >= 0 && p.x < w && p.y < rows)
-      .map((p) => p.y * w + p.x);
-  /** Cells an earlier firing still has a live mark in, `dup` bookkeeping
-   * included: it is a strike the board does not show yet either. An unmade
-   * placement's cell is one too, and so is every cell it culls. */
-  const pending = new Set<number>();
-  const strikes: R[][] = [];
-  const placements = new Set<R>();
-  /** Nothing the board has yet to show comes before this firing. */
-  let first = true;
-  const vouched = (firing: readonly R[]): boolean => {
-    if (first) return true;
-    const premise = onBoard(reads(firing));
-    return premise.length > 0 && !premise.some((c) => pending.has(c));
-  };
-  let i = 0;
-  while (i < ops.length) {
-    const op = ops[i];
-    if (op.kind === "place") {
-      i++;
-      const c = op.y * w + op.x;
-      if (placed[c] !== 0) continue;
-      if (vouched([op])) placements.add(op);
-      pending.add(c);
-      // Read off `reach`, not the recording: a solver need not record the
-      // cull (Solo's does not), and a strike reading a cell it clears rests on
-      // a board the player does not have.
-      const culled = reach(c, op.n);
-      for (let k = 0; k < culled.length; k++) {
-        const j = culled[k];
-        if (grid[j] === 0 && (pencil[j] & bit(op.n)) !== 0) pending.add(j);
-      }
-      first = false;
-      continue;
-    }
-    const g = op.group;
-    const group: R[] = [];
-    while (i < ops.length && ops[i].group === g && ops[i].kind !== "place")
-      group.push(ops[i++]);
-    const live = group.filter(liveAt);
-    const teachable = live.filter(
-      (op) => (op.reason as { kind?: string }).kind !== "dup",
-    );
-    if (teachable.length > 0) {
-      if (vouched(teachable)) strikes.push(teachable);
-      first = false;
-    }
-    for (const op of live) pending.add(op.y * w + op.x);
-  }
-  return { strikes, placements };
-}
-
-/** The next forced placement the recording solver makes whose cell is still empty
- * — a cube collapse the working notes lag (a naked, hidden or otherwise forced
- * single). Returned whole so the caller can read its (possibly game-specific,
- * e.g. killer-cage) reason or re-derive the *why* from the working board. */
-export function nextPlace<R extends DeductionRecord>(
-  ops: readonly R[],
-  placed: ArrayLike<number>,
-  w: number,
-): R | null {
-  for (const op of ops) {
-    if (op.kind === "place" && placed[op.y * w + op.x] === 0) return op;
-  }
-  return null;
 }
 
 /**

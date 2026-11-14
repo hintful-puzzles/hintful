@@ -30,8 +30,8 @@
  * generator change while proving nothing the differentials do not already.
  */
 import { describe, expect, it } from "vitest";
+import type { DeductionRecord } from "./deduction-record.ts";
 import {
-  type DeductionRecord,
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
   DIFF_UNFINISHED,

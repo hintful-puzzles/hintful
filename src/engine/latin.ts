@@ -36,17 +36,14 @@
  */
 
 import type { CompiledTechniques } from "./deduction-fixpoint.ts";
-import type { DeductionRecorder } from "./deduction-record.ts";
 import { latinSpace, valuesOf } from "./describe-runtime.ts";
 import type { DifficultyVerdict } from "./difficulty.ts";
-import { auditingPremises, type FiringReplay, offerReplay } from "./firing-replay.ts";
 import {
   CellMarks,
   type CompiledLadder,
   describedLadder,
   type Ladder,
   type Library,
-  ladderReplay,
   ladderTechniques,
   type OwnRungs,
   type PlaceRung,
@@ -60,7 +57,6 @@ import {
 import * as compiled from "./latin.compiled.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { shuffle } from "./shuffle.ts";
-import { stepBudget } from "./step-budget.ts";
 
 /** Upstream `enum { diff_impossible = 10, diff_ambiguous, diff_unfinished }`
  * — positive sentinels larger than any real difficulty level, so a
@@ -86,9 +82,9 @@ export function latinVerdict(ret: number): DifficultyVerdict {
 }
 
 /** Why a *generic* Latin deduction forced a candidate change — the premise a
- * hint narrates. A game's user-solvers attach their own (game-specific) reason
- * objects via `solver.recorder`; the discriminating `kind` fields never collide
- * with these. Used on the hint path only. */
+ * hint narrates. A game's own reasons sit beside these in its reason union;
+ * the discriminating `kind` fields never collide with these. Used on the hint
+ * path only. */
 export type LatinReason =
   /** A cell's last remaining candidate, so it must take that height. */
   | { kind: "single" }
@@ -154,14 +150,6 @@ export interface LatinRepeats {
   /** How many times the last symbol appears in each row and each column. */
   times: number;
 }
-
-/** The recorded-deduction shape lives in its own module (nothing about it is
- * Latin — see [`deduction-record.ts`](./deduction-record.ts)); re-exported here
- * so the Latin games keep importing it from the solver they already import. */
-export type {
-  DeductionRecord,
-  DeductionRecorder,
-} from "./deduction-record.ts";
 
 /** The library's `placed`, run as each value is placed on a Latin square. */
 const LATIN_PLACING: readonly PlaceRung[] = [uncluedPlacingRung(compiled.placed)];
@@ -398,14 +386,6 @@ export interface LatinSolverConfig {
    * `isAnswer` over what it deals. A solve that fills the grid with one that
    * is not is impossible. */
   isAnswer: (grid: Uint8Array) => boolean;
-  /** Hint path only: record every candidate cleared / cell placed, in solver
-   * order. When set, a fixpoint step budget is also installed. Leaving it unset
-   * (generator/solve path) keeps that path byte-for-byte unchanged. */
-  recorder?: DeductionRecorder;
-  /** What the recorder's fixpoint budget calls itself if it trips. Defaults to
-   * the first consumer's label; a game that records passes its own so a runaway
-   * fixpoint names the game that owns it. */
-  budgetLabel?: string;
   /**
    * Extra candidate-cube constraints to apply *after* `alloc` and *before* the
    * deduction fixpoint — the slot upstream games use between
@@ -567,40 +547,11 @@ export function latinSolver(
     return DIFF_IMPOSSIBLE;
   }
   cfg.seed?.(solver);
-  // Enable recording only *after* alloc, so seeding the cube from the givens
-  // (a flurry of `place`s) is not mistaken for deductions the hint should teach.
-  if (cfg.recorder) {
-    solver.recorder = cfg.recorder;
-    solver.budget = stepBudget(cfg.budgetLabel ?? "towers hint");
-  }
-  const replay = cfg.recorder && auditingPremises() ? latinReplay(solver, cfg) : null;
   const ret = latinSolverTop(solver, cfg);
-  if (replay) offerReplay(replay);
   // Expose the final candidate cube (upstream's `memcpy(state->hints, ...)`),
   // for a generator that grades clues by remaining possibilities (Unequal).
   if (cfg.cubeOut) solver.writeCube(cfg.cubeOut);
   return ret;
-}
-
-/**
- * The premise audit's replay of a recording run (`ladderReplay`), installed on
- * the solver the recording uses before it runs.
- */
-function latinReplay(
-  solver: LatinSolver,
-  cfg: LatinSolverConfig,
-): FiringReplay<string> {
-  const { o } = solver;
-  return ladderReplay(
-    solver,
-    (values) => {
-      const run = new LatinSolver(o, cfg.repeats, cfg.ladder.placing);
-      if (!run.alloc(Uint8Array.from(values)))
-        throw new Error("latin replay: the edited state is inconsistent");
-      return run;
-    },
-    (run) => latinTechniques(run, cfg, { [TIERS]: 0 }),
-  );
 }
 
 // --- generator (matching.c / latin.c, RNG-faithful) ------------------------
