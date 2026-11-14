@@ -21,10 +21,16 @@ import {
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import {
+  type CandidateRung,
+  type Firing,
   LATIN_RUNGS,
   type PlanRung,
   runLatinCandidatePlan,
+  strikesOf,
+  techniqueRung,
 } from "../../engine/candidate-plan.ts";
+import type { DeductionRecord } from "../../engine/deduction-record.ts";
+import { latinSpace, PLACE } from "../../engine/describe-runtime.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   clearEntries,
@@ -48,8 +54,10 @@ import {
 } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
+import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { hiddenSingleLine, rowColRegions } from "../../engine/latin-hint.ts";
+import { latinNotesLadder, latinStrikeRungs } from "../../engine/latin-notes.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -101,10 +109,10 @@ import {
 import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
-  type HintOp,
+  facingReason,
   type HintReason,
-  recordTowersDeductions,
   solveTowers,
+  towersLadder,
 } from "./solver.ts";
 import {
   cloneState,
@@ -112,6 +120,7 @@ import {
   cluePos,
   DIFF_EXTREME,
   DIFF_UNREASONABLE,
+  dealtOf,
   decodeParams,
   defaultParams,
   diffToLevel,
@@ -129,6 +138,7 @@ import {
   textFormat,
   validateParams,
 } from "./state.ts";
+import type * as towers from "./towers.compiled.ts";
 
 /** A player marking that contradicts the unique solution:
  * - `"cell"` — a filled-in tower whose height is wrong;
@@ -476,6 +486,15 @@ function reasonReads(reason: HintReason, w: number): { reads?: Point[] } {
   return reason.kind === "arrangement" ? { reads: lineCells(reason.clue, w) } : {};
 }
 
+/** A firing's strikes a leg a height: the narration names one height ("a
+ * tower of height 5 can't go here"), so a clue firing that rules out 4 and 5
+ * along its line is two legs. */
+function byHeight(marks: readonly Mark[]): Mark[][] {
+  const out = new Map<number, Mark[]>();
+  for (const m of marks) out.set(m.n, [...(out.get(m.n) ?? []), m]);
+  return [...out.values()];
+}
+
 /** A clue's line of sight with the clue slots at both its ends. */
 function sightLine(clue: number, w: number): { x: number; y: number }[] {
   const cells = lineCells(clue, w);
@@ -555,8 +574,52 @@ function buildSteps(
   const w = state.w;
   const steps: HintStep<TowersMove, TowersHint, PlanRung<HintReason>>[] = [];
   const wGrid = Uint8Array.from(state.grid);
-  const maxdiff = Math.min(diffToLevel(state.diff), DIFF_EXTREME);
-  runLatinCandidatePlan<TowersMove, TowersHint, HintOp, HintReason>({
+  const cl = dealtOf(w, state.clues);
+  const sp = latinSpace(w);
+  const on = latinNotesLadder(
+    towersLadder(cl),
+    w,
+    wGrid,
+    Math.min(diffToLevel(state.diff), DIFF_EXTREME),
+  );
+  type Legs = Firing<TowersMove, TowersHint, HintReason>;
+  const rung = (
+    id: towers.LadderId,
+    legs: (f: LadderFiring) => Legs | null,
+  ): CandidateRung<TowersMove, TowersHint, DeductionRecord, HintReason> =>
+    techniqueRung(on, id, legs);
+  // A facing firing places every pair's tallest at once, a leg a cell: a row's
+  // pair and a column's may both place in one corner.
+  const facing = rung("facing", (f) => {
+    const { P } = (f.reasons[0] as Said<unknown, towers.FacingSays>).says.terms;
+    const legs: Legs[number][] = [];
+    const placed = new Set<number>();
+    for (let k = 0; k < f.facts.length; k += 3) {
+      if (f.facts[k] !== PLACE) throw new Error("a facing firing that strikes");
+      const c = f.facts[k + 1];
+      if (wGrid[c] || placed.has(c)) continue;
+      placed.add(c);
+      const place = { x: c % w, y: (c / w) | 0, n: f.facts[k + 2] };
+      legs.push({ place, reason: facingReason(P, c, cl, sp) });
+    }
+    return legs.length ? legs : null;
+  });
+  const bounds = rung("bounds", (f) => {
+    const { s, v, near } = (f.reasons[0] as Said<unknown, towers.BoundsSays>).says
+      .terms;
+    return byHeight(strikesOf(f, w)).map((strike) => ({
+      strike,
+      reason: near
+        ? { kind: "lineFull", clue: s, clueVal: v }
+        : { kind: "lowerBound", clue: s, clueVal: v, height: strike[0].n },
+    }));
+  });
+  const arrangement = rung("arrangement", (f) => {
+    const { s, v } = (f.reasons[0] as Said<unknown, towers.ArrangementSays>).says.terms;
+    const reason: HintReason = { kind: "arrangement", clue: s, clueVal: v };
+    return byHeight(strikesOf(f, w)).map((strike) => ({ strike, reason }));
+  });
+  runLatinCandidatePlan<TowersMove, TowersHint, DeductionRecord, HintReason>({
     w,
     steps,
     grid: wGrid,
@@ -564,15 +627,11 @@ function buildSteps(
     autoClean,
     reading,
     label: "towers hint plan",
-    record: () => recordTowersDeductions(w, state.clues, wGrid, maxdiff),
     placeWords: (m, reason, continues) => ({ words: narrate(reason, m, w, continues) }),
     strikeWords: (marks, reason) => ({
       ...premise(reason, marks, w),
       ...reasonReads(reason, w),
     }),
-    // The narration names one height ("a tower of height 5 can't go here"), so
-    // a clue firing that rules out 4 and 5 along its line is one leg per height.
-    strikeAxis: (op) => op.n,
     notes: { noun: "height", placedVerb: "standing", cell: "cell" },
     // clue == w fills the whole line 1..w in order as one journey; clue == 1
     // places the tallest tower next to the clue.
@@ -581,6 +640,14 @@ function buildSteps(
         extremeClueLines(state.clues, wGrid, w).map((f) =>
           f.cells.map((place) => ({ place, reason: f.reason })),
         ),
+      facing,
+      bounds,
+      arrangement,
+      ...latinStrikeRungs<TowersMove, TowersHint, DeductionRecord, HintReason>(
+        on,
+        w,
+        byHeight,
+      ),
     ],
   });
   return steps;

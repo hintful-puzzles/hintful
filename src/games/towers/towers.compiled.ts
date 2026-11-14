@@ -18,6 +18,17 @@ export const units: readonly string[] = ["rows","cols"];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "facing" | "bounds" | "latin.hiddenSingle" | "latin.single" | "arrangement" | "latin.set" | "latin.fish" | "latin.wing";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  facing: FacingSays;
+  bounds: BoundsSays;
+  arrangement: ArrangementSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["facing","bounds","arrangement"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
 
@@ -112,10 +123,16 @@ export interface FacingBinding {
   P: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface FacingSays {
+  terms: { P: readonly number[]; };
+  marks: {  };
+}
+
 const facingFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBinding> | null): number {
+export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBinding, FacingSays> | null): number {
   const _g8: number[] = [];
   const facts = facingFacts;
   let fired = 0;
@@ -172,7 +189,10 @@ export function facing(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FacingBind
     if (!(_q25)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ P: v_P.slice() }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { P: v_P.slice() }, marks: {  } };
+        if (!fire({ P: v_P.slice() }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -189,11 +209,17 @@ export interface BoundsBinding {
   near: boolean;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface BoundsSays {
+  terms: { s: number; v: number; near: boolean; };
+  marks: {  };
+}
+
 const boundsFacts: number[] = [];
 let boundsCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBinding> | null): number {
+export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBinding, BoundsSays> | null): number {
   const facts = boundsFacts;
   let fired = 0;
   let changed = false;
@@ -507,7 +533,10 @@ export function bounds(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BoundsBind
     if (!(_c236)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ k: v_k, s: v_s, v: v_v, L: v_L.slice(), c0: v_c0, P: v_P, R: v_R, near: v_near }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { s: v_s, v: v_v, near: v_near }, marks: {  } };
+        if (!fire({ k: v_k, s: v_s, v: v_v, L: v_L.slice(), c0: v_c0, P: v_P, R: v_R, near: v_near }, facts, _says)) return 1;
+      }
       cands.fill(-1);
     }
   }
@@ -522,6 +551,12 @@ export interface ArrangementBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ArrangementSays {
+  terms: { s: number; v: number; };
+  marks: {  };
+}
+
 const arrangementFacts: number[] = [];
 let arrangementCands = new Int32Array(0);
 let arrangement_p8 = new Int32Array(0);
@@ -530,7 +565,7 @@ let arrangement_f14 = new Int32Array(0);
 let arrangement_l15: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ArrangementBinding> | null): number {
+export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ArrangementBinding, ArrangementSays> | null): number {
   if (arrangement_p8.length < sp.cells.length) arrangement_p8 = new Int32Array(sp.cells.length);
   else arrangement_p8.fill(0);
   arrangement_l9 = [];
@@ -638,7 +673,10 @@ export function arrangement(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Arran
       if (!(_q5)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ k: v_k, s: v_s, v: v_v, L: v_L.slice(), c: v_c }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { s: v_s, v: v_v }, marks: {  } };
+          if (!fire({ k: v_k, s: v_s, v: v_v, L: v_L.slice(), c: v_c }, facts, _says)) return 1;
+        }
         cands.fill(-1);
         _epoch++;
       }

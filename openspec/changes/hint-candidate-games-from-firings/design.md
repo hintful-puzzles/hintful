@@ -233,3 +233,22 @@ appears below Tricky. On Tricky boards and up the line steps rise (28920 to
 that continues the last one is now offered beside the singles. The
 avoidable-jump share fell (implicit reading 2.8% to 2.6%, populated 1.0% to
 0%). Every fingerprint walk still solves, in a few steps fewer.
+
+## Towers, moved (2026-11-14)
+
+The recorder and the three techniques' reason callbacks are gone. `facing`
+says its pairs, and the hint finds the pair each placement is the tallest
+of (`facingReason`); a row's pair and a column's may place in one corner,
+which is one leg. `bounds` says its clue and which reading struck,
+`arrangement` its clue. Every strike is cut a leg a height, as the recorded
+ones were. The `lineFull` board `firing-replay.test.ts` swept went with the
+audit of Towers' recording.
+
+Compared by `research/hint-walk-dump/` as for Unequal: every walk ends as
+at HEAD (96 solved, 32 refused). The openings are HEAD's but for a hidden
+single the notes show sooner, and facing steps fall (232 to 60): `facing`
+is of the ladder's easiest tier, so it waits behind the singles, and the
+tower it pins is mostly a hidden single of its line by then. The other
+rungs are near the same (arrangement 5268 to 6244, lowerBound 3020 to
+3300, lineFull 1876 to 1552). The avoidable-jump share rose (implicit
+reading 3.4% to 5.2%, populated 0% to 0.6%), inside the 10% bound.

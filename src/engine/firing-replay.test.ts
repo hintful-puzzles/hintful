@@ -253,9 +253,6 @@ const PINNED: { key: string; id: string; board: string }[] = [
  * sweep red when that rung's premise is cut short.
  */
 const EXTRA_BOARDS: Record<string, readonly string[]> = {
-  // `lineFull` without its line: the presets' boards reach no such placement
-  // while a tower of its line is still unplaced.
-  towers: ["5dh:///3//2//3////2/////2/5/3/"],
   // `digitSet` without its lines: one digit confined across three columns,
   // two of whose other cells an earlier step struck it from.
   solo: ["3x3de:a7b9a3a8d2a4_5a4a1h9_6e1_3a9a8a2_5e2_9h8a3a5_4a6d8a2a1b4a"],
@@ -270,6 +267,7 @@ const RECORDS_NOTHING: Record<string, string> = {
   unequal: "its strikes are the compiled techniques run on the notes",
   adjacent: "its strikes are the compiled techniques run on the notes",
   keen: "its strikes are the compiled techniques run on the notes",
+  towers: "its steps are the compiled techniques run on the notes",
 };
 
 /**

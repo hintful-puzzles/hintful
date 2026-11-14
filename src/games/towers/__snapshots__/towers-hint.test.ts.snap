@@ -10752,9 +10752,9 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
 
 exports[`towers: pinned hint positions > says, at each pin 1`] = `
 {
-  "arrangement": "No way for clue 2 to show exactly 2 towers along its line puts height 4 in this cell, so this cell must be 2.",
+  "arrangement": "No way for clue 3 to show exactly 3 towers along its line puts height 2 in this cell, so the 2 must go.",
   "clean": "Now clear the easy ones: cross out any height already standing in its cell's row or column.",
-  "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells.",
+  "dup": "The 2 just placed can't repeat in its row and column, so the 2 must go from the other cells.",
   "facing": "These facing clues sum to one more than the grid size, so their line's tallest is pinned: this cell must be 5.",
   "fullLine": "Clue 5 sees every tower in this line, so heights must climb 1, 2, … from the clue: this cell must be 1.",
   "hiddenSingle": "No other cell in this row can be height 5, so this cell must be 5.",

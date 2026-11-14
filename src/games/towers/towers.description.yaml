@@ -125,6 +125,10 @@ techniques:
     conclude: >-
       forall s in P, c = nth(sight(s), clue(sees, s) - 1):
       w in cand(c) and place(c, w)
+    # The hint names the pair whose tallest each placement is.
+    says:
+      terms: { P: P }
+      marks: {}
   # Clue by clue, in the order dealt, two readings of the towers its line
   # already shows; the first that strikes anything is the firing.
   #
@@ -153,6 +157,10 @@ techniques:
       and not (exists c2 in before(c, L): value(c2) > value(c) + 1)),
       i in domain, h = w + 1 - i where h in K,
       j in range(0, v - |K - range(1, h)| - 2): strike(nth(L, j), h)))
+    # The hint names the clue, and which reading struck.
+    says:
+      terms: { s: s, v: v, near: near }
+      marks: {}
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
   # Clue by clue, and cell by cell along its line: a height no filling of the
@@ -166,6 +174,10 @@ techniques:
       forall d in cand(c) where not (exists fill f of L from cand
       where distinct(f(x) over x in L) and f(c) = d: seen(f, L) = v):
       strike(c, d)
+    # The hint names the clue.
+    says:
+      terms: { s: s, v: v }
+      marks: {}
   - { use: latin.set, tier: Normal, rung: set }
   - { use: latin.fish, tier: Tricky, rung: set }
   - { use: latin.wing, tier: Tricky, rung: wing }

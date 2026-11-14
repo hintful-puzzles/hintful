@@ -18,6 +18,7 @@ Each game is enrolled in `hint-walk-fingerprint.test.ts` at the commit before it
   - [x] 2.2a Unequal
   - [x] 2.2b Adjacent (the edge-clue recorder goes with it, and `research/describe/firings.test.ts`, which compared that recorder's firings against the stated techniques the hint now runs)
   - [x] 2.2c Keen
-  - [ ] 2.2d Towers, Group, Solo, Mathrax
+  - [x] 2.2d Towers
+  - [ ] 2.2e Group, Solo, Mathrax
 - [ ] 2.3 Undead, Crossing
 - [ ] 2.4 With the last recorder gone, retire what only recording needs: `docs/hints-candidates.md` § "The recorder and the soundness boundary" and § "Record off a bespoke solver" (or what of them a game still uses), `CandidatePlan.record`, `strikeAxis` and the replay audit (`firing-replay.ts`), each checked for a remaining caller first

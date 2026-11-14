@@ -28,11 +28,8 @@ import {
 import { newTowersDesc } from "./generator.ts";
 import { towersGame } from "./index.ts";
 import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
-import { type HintReason, recordTowersDeductions } from "./solver.ts";
 import {
-  DIFF_EXTREME,
   type Difficulty,
-  diffToLevel,
   newState,
   newUi,
   type TowersMove,
@@ -54,51 +51,6 @@ function solutionGrid(st: TowersState): number[] {
 
 // biome-ignore lint/suspicious/noExplicitAny: structural access to hint highlights/move in tests.
 type AnyStep = any;
-
-// --- tier 1: recording solver ----------------------------------------------
-
-describe("towers recording solver", () => {
-  it("records reasons and its placements complete the board", () => {
-    const { p, st } = gen(5, "easy", "rec-easy");
-    const grid = Uint8Array.from(st.grid);
-    const ops = recordTowersDeductions(
-      st.w,
-      st.clues,
-      grid,
-      Math.min(diffToLevel(p.diff), DIFF_EXTREME),
-    );
-    expect(ops.length).toBeGreaterThan(0);
-
-    // Every op carries a discriminated reason.
-    const kinds = new Set(ops.map((o) => (o.reason as HintReason).kind));
-    // An easy board exercises the basic Towers + Latin techniques.
-    expect(kinds.size).toBeGreaterThan(1);
-    expect(
-      [...kinds].some((k) => k === "facing" || k === "lineFull" || k === "lowerBound"),
-    ).toBe(true);
-
-    // Replaying the placements reconstructs the full (unique) solution.
-    const filled = Uint8Array.from(st.immutable);
-    for (const op of ops) if (op.kind === "place") filled[op.y * st.w + op.x] = op.n;
-    for (let i = 0; i < st.w * st.w; i++) expect(filled[i]).toBeGreaterThan(0);
-  });
-
-  it("records the harder techniques on a Normal board", () => {
-    const { p, st } = gen(6, "hard", "rec-hard");
-    const grid = Uint8Array.from(st.grid);
-    const ops = recordTowersDeductions(
-      st.w,
-      st.clues,
-      grid,
-      Math.min(diffToLevel(p.diff), DIFF_EXTREME),
-    );
-    const kinds = new Set(ops.map((o) => (o.reason as HintReason).kind));
-    // Normal boards (`"hard"`) engage the set (naked-subset) deduction at some
-    // point.
-    expect(ops.length).toBeGreaterThan(0);
-    expect(kinds.has("set") || kinds.has("arrangement")).toBe(true);
-  });
-});
 
 // --- tier 1: hint plan ------------------------------------------------------
 
