@@ -7,11 +7,7 @@
  * which the compiled ladder has checked.
  */
 
-import {
-  describedEdgeHint,
-  type EdgeSpoken,
-  type Fired,
-} from "../../engine/described-edge-hint.ts";
+import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import type { HintResult } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
@@ -31,11 +27,6 @@ import {
   type SpokesSpokeRef,
   type SpokesState,
 } from "./state.ts";
-
-/** How far ahead the plan is computed. A player rarely follows more than a
- * few steps before going their own way, and the plan is asked for again
- * then. */
-const PLAN_CAP = 40;
 
 /**
  * What a Spokes hint leg is about; its marks are the ones its words name.
@@ -103,24 +94,6 @@ function narrate(
   }
 }
 
-/** Every technique's sentence is `narrate`'s for its firing. */
-const sentence = (_spoken: unknown, leg: Leg, state: SpokesState): Sentence =>
-  narrate(leg, state);
-
-const sentences: {
-  [K in keyof SpokesSays]: (
-    spoken: EdgeSpoken<SpokesSays[K]>,
-    leg: Leg,
-    state: SpokesState,
-  ) => Sentence;
-} = {
-  saturation: sentence,
-  twoOnes: sentence,
-  exhaustion: sentence,
-  lineBreaks: sentence,
-  spareBreaks: sentence,
-};
-
 /** A firing's journey: a leg for each spoke it decides, each showing the
  * spokes still to settle, so whichever leg is asked for shows what is left of
  * the deduction. */
@@ -157,10 +130,10 @@ const spokesPlan = describedEdgeHint<
   // Up to Normal: the search beneath is not a deduction.
   tiers: { lowest: () => DIFF_TRICKY, count: DIFF_TRICKY + 1 },
   done: (_marks, ctx) => ctx.complete(),
-  plan: PLAN_CAP,
   reads: (taken, ctx) => ctx.reads(taken),
   step: stepOf,
-  say: sentences,
+  // Every technique's sentence is `narrate`'s for its firing.
+  say: (_spoken, leg, state) => narrate(leg, state),
 });
 
 /** The deduction from the player's lines to the end. A board with several

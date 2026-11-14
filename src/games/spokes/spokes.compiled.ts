@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/spokes/spokes.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, freshBinding, keptStore, rangeMask, sameSet, setOf, staleChecking, stamps, throughWhere, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, edgeGroups, freshBinding, keptStore, rangeMask, sameSet, setOf, staleChecking, stamps, throughWhere, type Kept, union } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -194,7 +194,7 @@ export interface SaturationBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SaturationSays {
   terms: { c: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const saturationFacts: number[] = [];
@@ -255,7 +255,7 @@ export function saturation(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Satura
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { c: v_c }, marks: {  } };
+          const _says = { terms: { c: v_c }, marks: { reads: union(setOf(v_c), v_U).slice() } };
           if (!fire({ c: v_c, n: v_n, U: v_U.slice() }, facts, _says)) return 1;
         }
       }
@@ -274,7 +274,7 @@ export interface TwoOnesBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface TwoOnesSays {
   terms: { a: number; b: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const twoOnesFacts: number[] = [];
@@ -390,7 +390,7 @@ export function twoOnes(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoOnesBi
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { a: v_a, b: v_b }, marks: {  } };
+            const _says = { terms: { a: v_a, b: v_b }, marks: { reads: setOf(v_a, v_b).slice() } };
             if (!fire({ N: v_N, e: v_e, a: v_a, b: v_b }, facts, _says)) return 1;
           }
         }
@@ -408,7 +408,7 @@ export interface ExhaustionBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ExhaustionSays {
   terms: { c: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const exhaustionFacts: number[] = [];
@@ -527,7 +527,7 @@ export function exhaustion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Exhaus
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { c: v_c }, marks: {  } };
+          const _says = { terms: { c: v_c }, marks: { reads: union(setOf(v_c), v_U).slice() } };
           if (!fire({ c: v_c, U: v_U.slice() }, facts, _says)) return 1;
         }
       }
@@ -546,7 +546,7 @@ export interface LineBreaksBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LineBreaksSays {
   terms: { e: number; a: number; b: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const lineBreaksFacts: number[] = [];
@@ -1357,7 +1357,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { e: v_e, a: v_a, b: v_b }, marks: {  } };
+          const _says = { terms: { e: v_e, a: v_a, b: v_b }, marks: { reads: setOf(v_a, v_b).slice() } };
           if (!fire({ e: v_e, a: v_a, b: v_b, H: v_H.slice() }, facts, _says)) return 1;
         }
       }
@@ -1376,7 +1376,7 @@ export interface SpareBreaksBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SpareBreaksSays {
   terms: { c: number; y: number; H: readonly number[]; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const spareBreaksFacts: number[] = [];
@@ -2214,7 +2214,7 @@ export function spareBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Spare
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: { c: v_c, y: v_y, H: v_H.slice() }, marks: {  } };
+              const _says = { terms: { c: v_c, y: v_y, H: v_H.slice() }, marks: { reads: setOf(v_c, v_y).slice() } };
               if (!fire({ c: v_c, U: v_U.slice(), y: v_y, H: v_H.slice() }, facts, _says)) return 1;
             }
           }

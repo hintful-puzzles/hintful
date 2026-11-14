@@ -512,7 +512,8 @@ export interface SpokesWalkContext {
   complete(): boolean;
   /** A taken firing in the game's terms. */
   firing(taken: Taken): SpokesFiring;
-  /** The hubs a firing's premise reads, which the walk continues from. */
+  /** The hubs a firing's premise reads beyond its declared `reads`, which the
+   * walk continues from too. */
   reads(taken: Taken): number[];
 }
 
@@ -529,21 +530,17 @@ export function spokesWalk(board: SpokesBoard): {
   ctx: SpokesWalkContext;
 } {
   const d = deduction(board);
-  const { sp } = d.geo;
   return {
     marks: d.m,
     entries: d.ladder.entries,
     ctx: {
       complete: () => !unfinished(d),
       firing: (taken) => firingOf(d, taken),
-      // Read before the firing is made, on the links as they stand.
+      // A Check's trial finds the hubs it breaks, which no term names. Read
+      // before the firing is made, on the links as they stand.
       reads: (taken) => {
-        const out = [...reasonOf(d, taken, d.m.grid).evidenceHubs];
-        for (let i = 0; i < taken.facts.length; i += 3) {
-          const e = taken.facts[i + 1];
-          out.push(sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]);
-        }
-        return out;
+        const reason = reasonOf(d, taken, d.m.grid);
+        return reason.breakKind === undefined ? [] : reason.evidenceHubs;
       },
     },
   };

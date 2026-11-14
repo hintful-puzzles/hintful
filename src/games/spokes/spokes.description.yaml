@@ -159,7 +159,7 @@ techniques:
     conclude: "n >= 0 and |U| = n and (forall y in U: place(edge(c, y), 1))"
     says:
       terms: { c: c }
-      marks: {}
+      marks: { reads: "{c} + U" }
   # A line between two 1-hubs would close the pair off from the other hubs.
   - id: twoOnes
     tier: Easy
@@ -169,7 +169,7 @@ techniques:
     conclude: "place(e, 2)"
     says:
       terms: { a: a, b: b }
-      marks: {}
+      marks: { reads: "{a, b}" }
   # A hub with all its lines takes none on its other edges: those to a hub
   # still short of lines are crossed out.
   - id: exhaustion
@@ -182,7 +182,7 @@ techniques:
     conclude: "forall y in U: place(edge(c, y), 2)"
     says:
       terms: { c: c }
-      marks: {}
+      marks: { reads: "{c} + U" }
   # A line on an edge would break the board at once, the hubs it fills
   # taking no more lines: the edge is crossed out.
   - id: lineBreaks
@@ -193,7 +193,8 @@ techniques:
     conclude: "place(e, 2)"
     says:
       terms: { e: e, a: a, b: b }
-      marks: {}
+      # The edge's hubs; the hubs its trial breaks are the game's to find.
+      marks: { reads: "{a, b}" }
   # A hub with one edge to spare: crossing one out would leave it lines on
   # all the others. Where those would break the board at once, it takes a
   # line.
@@ -207,4 +208,4 @@ techniques:
     conclude: "place(edge(c, y), 1)"
     says:
       terms: { c: c, y: y, H: H }
-      marks: {}
+      marks: { reads: "{c, y}" }
