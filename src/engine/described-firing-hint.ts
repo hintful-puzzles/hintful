@@ -14,8 +14,10 @@
  *
  * A game supplies what only it knows: its state as the description's marks, a
  * fact as the target its highlights hold and the move that makes some of them,
- * and each technique's sentence as a function of the technique's terms and the
- * squares its step marks. Nothing here is about a puzzle.
+ * and the words: its module's `STATED`, the clauses its description states,
+ * and for a technique that states none, a sentence as a function of the
+ * technique's terms and the squares its step marks. Nothing here is about a
+ * puzzle.
  *
  * Cell games only: a fact is a placement of a value on a cell.
  */
@@ -31,6 +33,7 @@ import {
   ladderWalk,
   TIERS,
 } from "./ladder-runtime.ts";
+import { type Clauses, statedSentence } from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
 import type { Point } from "./types.ts";
 
@@ -67,6 +70,8 @@ interface Journey<Move, Target extends Point, State> {
  * arms. */
 interface SaysOf {
   arm?: string;
+  /** The wording that held, where the technique states several. */
+  wording?: number;
   terms: object;
   marks: SaidMarks;
   /** What each square the firing decides has of its own (`says.fact`), by
@@ -168,9 +173,19 @@ interface FiringShape<
   target(at: Point, n: number): Target;
   /** The value a target asks its square to hold. */
   want(target: Target): number;
-  /** Each technique's sentence; the state is the board's numbers and the like. */
+  /** Each kind of step's words as the description states them: the compiled
+   * module's `STATED`. A technique none of whose kinds it states is said by
+   * `say`. */
+  stated?: Readonly<Record<string, { readonly step?: readonly Clauses[] }>>;
+  /** The number a square shows, for a stated clause's `{each}`. */
+  shows?(state: State, at: Point): number;
+  /** A number term as the board draws it; its numeral where absent. */
+  value?(n: number, state: State): string;
+  /** The sentences the description cannot state, each technique's an override
+   * of the stated form, with a comment saying why; the state is the board's
+   * numbers and the like. */
   say: {
-    [K in keyof Says & string]: (
+    [K in keyof Says & string]?: (
       spoken: FiringSpoken<Says[K]>,
       state: State,
     ) => Sentence;
@@ -212,6 +227,10 @@ export interface DescribedFiringHint<
   refreshHintStep(step: HintStep<Move, H>, state: State): HintStep<Move, H> | null;
 }
 
+/** A line of squares by its noun, for a stated clause's `{unit}`. */
+const lineName = (els: readonly Point[]): string =>
+  els[0]?.y === els[1]?.y ? "row" : "column";
+
 /** The hooks of a game whose hint is its ladder's firings, a step each. */
 export function describedFiringHint<
   State,
@@ -228,8 +247,15 @@ export function describedFiringHint<
   // firing's own record is the one that says it, so the match is by id.
   const say = spec.say as unknown as Record<
     string,
-    (spoken: unknown, state: State) => Sentence
+    ((spoken: unknown, state: State) => Sentence) | undefined
   >;
+  const stated = spec.stated ?? {};
+  const { shows } = spec;
+  // A technique is stated or overridden, never both: an override beside a
+  // stated kind would silently win or lose by the order of a lookup.
+  for (const id of Object.keys(say))
+    if (Object.keys(stated).some((k) => k === id || k.startsWith(`${id}.`)))
+      throw new Error(`${spec.name}: ${id} is both stated and overridden`);
 
   /** The steps of the firings the ladder makes from `state` at tier `cap`. */
   const stepsAt = (state: State, cap: number): Step[] => {
@@ -305,25 +331,48 @@ export function describedFiringHint<
           (c) => !fills.has(c) && !strand.includes(c),
         );
         const bare = (t: Point): Point => ({ x: t.x, y: t.y });
-        const words = say[f.entry.id](
-          {
-            terms: says.terms,
-            arm: says.arm,
-            facts: group.map((t) => ({
-              at: bare(t),
-              terms: own.get(t.y * w + t.x)?.terms,
-            })),
-            targets: group.map(bare),
-            outline: outline.map(pointOf),
-            stripes: stripes.map(pointOf),
-            strand: strand.map(pointOf),
-            later: continued && leg > 0,
-            at: pointOf,
-            consequences: followed.map(bare),
-            placing: (n: number) => group.filter((t) => spec.want(t) === n).map(bare),
-          },
-          state,
-        );
+        const clauses = stated[kind]?.step?.[says.wording ?? 0];
+        const override = say[f.entry.id];
+        if (clauses === undefined && override === undefined)
+          throw new Error(`${spec.name}: ${kind} is neither stated nor overridden`);
+        const words =
+          clauses !== undefined
+            ? statedSentence(clauses, {
+                kind: CELL,
+                at: pointOf,
+                ring: group.map(bare),
+                marks: {
+                  outline: outline.map(pointOf),
+                  stripes: stripes.map(pointOf),
+                  strand: strand.map(pointOf),
+                },
+                terms: says.terms as Record<string, unknown>,
+                value: (n) => spec.value?.(n, state) ?? String(n),
+                ...(shows === undefined
+                  ? {}
+                  : { shows: (p: Point) => shows(state, p) }),
+                unit: lineName,
+              })
+            : (override as NonNullable<typeof override>)(
+                {
+                  terms: says.terms,
+                  arm: says.arm,
+                  facts: group.map((t) => ({
+                    at: bare(t),
+                    terms: own.get(t.y * w + t.x)?.terms,
+                  })),
+                  targets: group.map(bare),
+                  outline: outline.map(pointOf),
+                  stripes: stripes.map(pointOf),
+                  strand: strand.map(pointOf),
+                  later: continued && leg > 0,
+                  at: pointOf,
+                  consequences: followed.map(bare),
+                  placing: (n: number) =>
+                    group.filter((t) => spec.want(t) === n).map(bare),
+                },
+                state,
+              );
         const marked: Marked<Target> = {
           targets,
           outline: outline.map(pointOf),

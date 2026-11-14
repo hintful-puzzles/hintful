@@ -140,7 +140,7 @@ function signLegs(
   const at = (c: number): Point => ({ x: c % o, y: (c / o) | 0 });
   return byCell(strikes).map((strike) => {
     const fact = facts[strikes.indexOf(strike[0])];
-    const { look } = statedParts(unequal.STATED.sign.fact[fact.arm], {
+    const { look } = statedParts(unequal.STATED.sign.fact[fact.wording], {
       kind: CELL,
       at,
       ring: [],
@@ -148,7 +148,8 @@ function signLegs(
       terms: { ...terms, ...fact.terms },
       value: (n) => displayChar(n, o),
     });
-    if (look === undefined) throw new Error(`sign's ${fact.arm} states no look`);
+    if (look === undefined)
+      throw new Error(`sign's wording ${fact.wording} states no look`);
     return {
       strike,
       reason: {

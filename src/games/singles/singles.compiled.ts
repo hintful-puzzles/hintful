@@ -34,6 +34,23 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["besideCovered","sameLine","sandwich","pair","corner.four","corner.apex","corner.across","corner.pairAtS","corner.pairAtT","boxedIn","offset","split"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "besideCovered": {"step":[{"look":"{outline: a {shaded} square (outlined)} touches {ring: this {each} | these {nouns} ({each})}","move":"{ring: that {each} | those {nouns}} must be {unshaded}"}]},
+  "sameLine": {"step":[{"look":"{outline: the outlined {unshaded} {n}} already holds {stripes}'s {n}","move":"{ring: the ringed {n} | the ringed {n}s} must be {shaded}"},{"look":"{outline: the outlined {unshaded} {n}} shares a line with {ring: the ringed {n} | each ringed {n}}","move":"{ring: that {n} | those {n}s} must be {shaded}"}]},
+  "sandwich": {"step":[{"look":"{outline: the outlined {n} | the outlined {n}s} sit one square apart","follows":"one of them must be {shaded}","move":"{ring: the {each} between them | the {nouns} between them} must be {unshaded}"}]},
+  "pair": {"step":[{"look":"{outline: the outlined {n} | the outlined {n}s} touch","follows":"one of them stays {unshaded} and uses up the {n} in {stripes}","move":"{ring: the ringed {n} | the ringed {n}s} must be {shaded}"}]},
+  "corner.four": {"step":[{"look":"Left {unshaded}, {ring corner: this corner {n}} would box itself in with {outline sides: its two {n}s} {shaded}","move":"it and {ring inner: the {n} diagonally inside} must be {shaded}"},{"look":"Left {unshaded}, {ring corner: this corner {n}} would box itself in with {outline sides: its two {n}s} {shaded}","move":"it must be {shaded}, like {outline inner: the outlined {n} diagonally inside}"},{"look":"Left {unshaded}, {outline corner: the outlined corner {n}} would box itself in with {outline sides: its two {n}s} {shaded}","move":"{ring inner: the {n} diagonally inside} must be {shaded}"}]},
+  "corner.apex": {"step":[{"look":"Left {unshaded}, {ring: this corner {corner}} would box itself in with {outline: both {beside}s beside it} {shaded}","move":"it must be {shaded}"}]},
+  "corner.across": {"step":[{"look":"Left {unshaded}, {ring: this inner {inner}} would make {outline: both {beside}s} flanking {strand: corner {corner}} {shaded} and box the corner in","move":"it must be {shaded}"}]},
+  "corner.pairAtS": {"step":[{"look":"{outline pair: the corner's {number}s} need a {shaded}; shading {ring: this {each}} forces {outline side: the side {number}}, boxing {strand: the corner} in","move":"it must stay {unshaded}"}]},
+  "corner.pairAtT": {"step":[{"look":"{outline pair: the corner's {number}s} need a {shaded}; shading {ring: this {each}} forces {outline side: the side {number}}, boxing {strand: the corner} in","move":"it must stay {unshaded}"}]},
+  "boxedIn": {"step":[{"look":"{ring: this {number}} is {outline: the outlined {unshaded} square}'s last neighbor that isn't {shaded}","move":"it must be {unshaded} to keep that square joined"}]},
+  "offset": {"step":[{"look":"{outline: the outlined {first}s} mean shading {ring: the ringed {each} | either ringed {noun}} makes two {shaded} squares touch","move":"{ring: that {each} | both {p}s} must be {unshaded}"},{"look":"{outline: the outlined {first}s} mean shading {ring: the ringed {each} | either ringed {noun}} makes two {shaded} squares touch","move":"{ring: that {each} | the {each}} must be {unshaded}"},{"look":"{outline: the outlined {first}s and {second}s} mean shading {ring: the ringed {each} | either ringed {noun}} makes two {shaded} squares touch","move":"{ring: that {each} | both {p}s} must be {unshaded}"},{"look":"{outline: the outlined {first}s and {second}s} mean shading {ring: the ringed {each} | either ringed {noun}} makes two {shaded} squares touch","move":"{ring: that {each} | the {each}} must be {unshaded}"}]},
+  "split": {"step":[{"look":"Shading {ring: this {number}} would cut some of {outline} off from the rest of the {unshaded} region","move":"it must be {unshaded}"}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -208,6 +225,8 @@ export interface SameLineBinding {
 export interface SameLineSays {
   terms: { n: number; };
   marks: { outline: readonly number[]; stripes: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const sameLineFacts: number[] = [];
@@ -255,6 +274,8 @@ export function sameLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SameLine
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null) {
+        const _sw_n = v_n;
+        const _sw_outline = setOf(v_c).slice();
         _g14.length = 0;
         G15: {
           const _a29 = union(sp.lineCells[sp.rowOf[v_c]], sp.lineCells[sp.colOf[v_c]]);
@@ -296,7 +317,8 @@ export function sameLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SameLine
             _g14.push(v_p);
           }
         }
-        const _says = { terms: { n: v_n }, marks: { outline: setOf(v_c).slice(), stripes: _g14.slice() } };
+        const _sw_stripes = _g14.slice();
+        const _says = { terms: { n: _sw_n }, marks: { outline: _sw_outline, stripes: _sw_stripes }, wording: ((_sw_stripes.length > 0) ? 0 : 1) };
         if (!fire({ c: v_c, n: v_n }, facts, _says)) return 1;
       }
     }
@@ -431,7 +453,7 @@ export interface CornerBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
 export type CornerSays =
-  | { arm: "four"; terms: { n: number; corner: number; sides: readonly number[]; inner: number; }; marks: { outline: readonly number[]; } }
+  | { arm: "four"; terms: { n: number; corner: number; sides: readonly number[]; inner: number; }; marks: { outline: readonly number[]; }; wording: number }
   | { arm: "apex"; terms: { corner: number; beside: number; }; marks: { outline: readonly number[]; } }
   | { arm: "across"; terms: { inner: number; beside: number; corner: number; }; marks: { outline: readonly number[]; strand: readonly number[]; } }
   | { arm: "pairAtS"; terms: { side: number; number: number; pair: readonly number[]; }; marks: { outline: readonly number[]; strand: readonly number[]; } }
@@ -547,7 +569,12 @@ export function corner(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CornerBind
         if ((((v_ns === v_n) && (v_nt === v_n)) && (v_ni === v_nt))) _arm = 0; else if (((v_ns === v_n) && (v_nt === v_n))) _arm = 1; else if (((v_ns === v_nt) && (v_ni === v_nt))) _arm = 2; else if (((v_ns === v_n) || (v_ns === v_ni))) _arm = 3; else if (((v_ns !== v_n) && (v_ns !== v_ni))) _arm = 4;
         let _says: CornerSays | null = null;
         if (_arm === 0) {
-          _says = { arm: "four", terms: { n: v_n, corner: v_c, sides: setOf(v_s, v_t).slice(), inner: v_i }, marks: { outline: setOf(v_c, v_s, v_t, v_i).slice() } };
+          const _sw_n = v_n;
+          const _sw_corner = v_c;
+          const _sw_sides = setOf(v_s, v_t).slice();
+          const _sw_inner = v_i;
+          const _sw_outline = setOf(v_c, v_s, v_t, v_i).slice();
+          _says = { arm: "four", terms: { n: _sw_n, corner: _sw_corner, sides: _sw_sides, inner: _sw_inner }, marks: { outline: _sw_outline }, wording: ((!((b.grid[v_c] !== 0)) && !((b.grid[v_i] !== 0))) ? 0 : !((b.grid[v_c] !== 0)) ? 1 : 2) };
         }
         if (_arm === 1) {
           _says = { arm: "apex", terms: { corner: v_n, beside: v_ns }, marks: { outline: setOf(v_c, v_s, v_t).slice() } };
@@ -691,14 +718,18 @@ export interface OffsetBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface OffsetSays {
-  terms: { first: number; second: number; along: readonly number[]; beside: readonly number[]; };
+  terms: { first: number; second: number; p: number; q: number; };
   marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const offsetFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^1.5. */
 export function offset(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OffsetBinding, OffsetSays> | null): number {
+  const _g46: number[] = [];
+  const _g52: number[] = [];
   const facts = offsetFacts;
   let fired = 0;
   let changed = false;
@@ -779,7 +810,30 @@ export function offset(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OffsetBind
             if (changed || facts.length > 0) {
               fired = 1;
               if (fire !== null) {
-                const _says = { terms: { first: v_n, second: v_m, along: setOf(v_a1, v_a).slice(), beside: setOf(v_b1, v_b).slice() }, marks: { outline: setOf(v_a1, v_b1, v_a, v_b).slice() } };
+                const _sw_first = v_n;
+                const _sw_second = v_m;
+                _g46.length = 0;
+                G47: {
+                  const _a50 = sp.adj4[v_a];
+                  for (let _i51 = 0; _i51 < _a50.length; _i51++) {
+                    const v_x = _a50[_i51];
+                    if (!((sp.adj4[v_b].includes(v_x)))) continue;
+                    _g46.push(v_x);
+                  }
+                }
+                const _sw_p = clueAt(cl.number, (_g46.length > 0 ? _g46[0] : -1));
+                _g52.length = 0;
+                G53: {
+                  const _a56 = sp.adj4[v_a];
+                  for (let _i57 = 0; _i57 < _a56.length; _i57++) {
+                    const v_x = _a56[_i57];
+                    if (!((sp.adj4[v_b].includes(v_x)))) continue;
+                    _g52.push(v_x);
+                  }
+                }
+                const _sw_q = clueAt(cl.number, (_g52[1] ?? -1));
+                const _sw_outline = setOf(v_a1, v_b1, v_a, v_b).slice();
+                const _says = { terms: { first: _sw_first, second: _sw_second, p: _sw_p, q: _sw_q }, marks: { outline: _sw_outline }, wording: (((_sw_first === _sw_second) && (_sw_p === _sw_q)) ? 0 : (_sw_first === _sw_second) ? 1 : (_sw_p === _sw_q) ? 2 : 3) };
                 if (!fire({ a: v_a, n: v_n, b: v_b, m: v_m, L: v_L, a1: v_a1, b1: v_b1 }, facts, _says)) return 1;
               }
             }

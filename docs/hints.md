@@ -618,7 +618,9 @@ the engine's [`hint-text.ts`](../src/engine/hint-text.ts). Exemplar:
 
 - **A described technique may state its words in its description**
   (`docs/descriptions.md` § "A firing's reason is built from its binding";
-  Unequal's `sign`), and its game then has no entry for it here. Moving a
+  Unequal's `sign`, and all of Singles, whose `sameLine`, `corner.four` and
+  `offset` say the one deduction by what the board shows, as `wordings`),
+  and its game then has no entry for it here. Moving a
   game's sentences there is held to the same census as a move between files.
 - **Values arrive as the board means them, never as words.** An axis, a
   count, a direction constant: the plural, "both" at two, "a" or "an" and a

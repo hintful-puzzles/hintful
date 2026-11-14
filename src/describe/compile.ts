@@ -35,6 +35,7 @@ import {
   type StatedClauses,
   type Technique,
   UNPLACED,
+  type Wording,
   withEveryVariation,
 } from "./description.ts";
 import { type Binder, type Expr, parse } from "./expr.ts";
@@ -4526,42 +4527,44 @@ function checkStated(
       }
     }
   };
-  for (const [i, v] of says.variants.entries()) {
-    if (v.clauses === null) continue;
-    check(
-      v.name === null ? "" : `${v.name} `,
-      v.clauses,
-      variants[i].sorts,
-      new Set(v.marks.map((m) => m.role)),
-    );
-  }
+  const wording = (words: readonly Wording[], i: number): string =>
+    words.length > 1 ? `wording ${i} ` : "";
+  for (const [i, v] of says.variants.entries())
+    for (const [j, w] of v.words.entries())
+      check(
+        `${v.name === null ? "" : `${v.name} `}${wording(v.words, j)}`,
+        w.clauses,
+        variants[i].sorts,
+        new Set(v.marks.map((m) => m.role)),
+      );
   if (says.fact !== null && factSorts !== null) {
     const sorts = new Map([...variants.flatMap((v) => [...v.sorts]), ...factSorts]);
     const roles = new Set([
       ...says.variants.flatMap((v) => v.marks.map((m) => m.role)),
       ...says.fact.marks.map((m) => m.role),
     ]);
-    for (const a of says.fact.arms)
-      check(`fact ${a.name === null ? "" : `${a.name} `}`, a.clauses, sorts, roles);
+    for (const [j, w] of says.fact.words.entries())
+      check(`fact ${wording(says.fact.words, j)}`, w.clauses, sorts, roles);
   }
 }
 
 /** The module's `STATED`: each kind of step's clauses as the description
- * states them, and each fact's by its arm (`""` where it has none), for
- * `engine/stated.ts` to render. Empty where nothing states a clause. */
+ * states them, by wording, and each fact's, for `engine/stated.ts` to render.
+ * A firing's `wording`, and a fact's, is the index of the one that held; it is
+ * absent where there is one. Empty where nothing states a clause. */
 function statedTable(own: readonly Technique[]): string[] {
   const rows: string[] = [];
   for (const t of own) {
     if (t.says === null) continue;
     const fact =
-      t.says.fact === null || t.says.fact.arms.length === 0
+      t.says.fact === null || t.says.fact.words.length === 0
         ? null
-        : Object.fromEntries(t.says.fact.arms.map((a) => [a.name ?? "", a.clauses]));
+        : t.says.fact.words.map((w) => w.clauses);
     for (const v of t.says.variants) {
-      if (v.clauses === null && fact === null) continue;
+      if (v.words.length === 0 && fact === null) continue;
       const kind = v.name === null ? t.id : `${t.id}.${v.name}`;
       const entry = {
-        ...(v.clauses === null ? {} : { step: v.clauses }),
+        ...(v.words.length === 0 ? {} : { step: v.words.map((w) => w.clauses) }),
         ...(fact === null ? {} : { fact }),
       };
       rows.push(`  ${JSON.stringify(kind)}: ${JSON.stringify(entry)},`);
@@ -4570,12 +4573,27 @@ function statedTable(own: readonly Technique[]): string[] {
   if (rows.length === 0) return [];
   return [
     "/** Each kind of step's words as the description states them, and each",
-    " * fact's by its arm (`engine/stated.ts`). */",
+    " * fact's, by wording (`engine/stated.ts`). */",
     "export const STATED = {",
     ...rows,
     "} as const;",
     "",
   ];
+}
+
+/** The index of the first of `words` whose `when` holds, as code; the last
+ * has none and holds always. */
+function wordingIndex(
+  words: readonly Wording[],
+  label: string,
+  compiled: (e: Expr) => Val,
+): string {
+  const holds = words.slice(0, -1).map((w, i) => {
+    const v = compiled(w.when as Expr);
+    expect(v, "bool", `${label} wording ${i} when`);
+    return `${v.code} ? ${i} : `;
+  });
+  return `(${holds.join("")}${words.length - 1})`;
 }
 
 /**
@@ -4616,25 +4634,14 @@ function factWithSays(
   const marks = site.says.marks.map((x) => read(x.expr, "marks", x.role));
   site.fields.terms = fields.terms;
   site.fields.marks = fields.marks;
-  // The arm that holds for this square, the first true one, read where the
-  // fact is made.
-  const named = site.says.arms.filter((a) => a.name !== null);
-  let arm = "";
-  if (named.length > 0) {
-    const holds = named.map((a) => {
-      const w = compileExpr(a.when as Expr, scope, inner, out);
-      expect(w, "bool", `says fact ${a.name} when`);
-      return w.code;
-    });
-    out.emit(
-      `const _fa = ${holds.map((h, i) => `${h} ? ${JSON.stringify(named[i].name)} : `).join("")}null;`,
-    );
-    out.emit(`if (_fa === null) throw new Error("no arm of says fact holds");`);
-    arm = "arm: _fa, ";
-  }
+  // The wording that holds for this square, read where the fact is made.
+  const wording =
+    site.says.words.length > 1
+      ? `wording: ${wordingIndex(site.says.words, "says fact", (e) => compileExpr(e, scope, inner, out))}, `
+      : "";
   out.emit(`facts.push(${fn === "strike" ? "STRIKE" : "PLACE"}, ${c}, ${d});`);
   out.emit(
-    `${site.buffer}.push({ ${arm}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} } });`,
+    `${site.buffer}.push({ ${wording}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} } });`,
   );
   out.close();
   out.close();
@@ -6407,6 +6414,8 @@ function techniqueFunction(
       terms: string[];
       marks: string[];
       sorts: Map<string, Sort>;
+      /** Whether a firing carries the `wording` that held. */
+      worded: boolean;
     }[],
   };
   const fire = (sc: Scope): void => {
@@ -6545,6 +6554,10 @@ function techniqueFunction(
         // A term read inside an arm is not in scope in another.
         const inArm: Shared = { made: new Map(shared.made) };
         if (arms) body.open(`if (_arm === ${i}) {`);
+        // Where the step has wordings, each term and mark is bound once, for
+        // their `when`s to read by name.
+        const worded = v.words.length > 1;
+        const named = new Map(sc);
         const read = (e: Expr, group: "terms" | "marks", name: string): string => {
           const r = compileExpr(e, sc, { ...tenv, shared: inArm }, body);
           if (group === "marks" && !isArray(r.sort))
@@ -6554,17 +6567,25 @@ function techniqueFunction(
           fields[group].push(`${name}: ${tsType(r.sort)};`);
           if (group === "terms") sorts.set(name, r.sort);
           // A set is a buffer the next binding refills.
-          return `${name}: ${isArray(r.sort) ? `${r.code}.slice()` : r.code}`;
+          const code = isArray(r.sort) ? `${r.code}.slice()` : r.code;
+          if (!worded) return `${name}: ${code}`;
+          const bound = `_sw_${name}`;
+          body.emit(`const ${bound} = ${code};`);
+          named.set(name, { code: bound, sort: r.sort });
+          return `${name}: ${bound}`;
         };
         const terms = v.terms.map((x) => read(x.expr, "terms", x.name));
         const marks = v.marks.map((x) => read(x.expr, "marks", x.role));
         const own =
           tenv.factSays === undefined ? "" : `, facts: ${tenv.factSays.buffer}.slice()`;
+        const wording = worded
+          ? `, wording: ${wordingIndex(v.words, `${t.id}: says${v.name === null ? "" : ` ${v.name}`}`, (e) => compileExpr(e, named, { ...tenv, shared: inArm }, body))}`
+          : "";
         body.emit(
-          `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} }${own}${t.says.witness ? ", witness: _w" : ""}${t.says.reads ? ", reads: _r" : ""} };`,
+          `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} }${wording}${own}${t.says.witness ? ", witness: _w" : ""}${t.says.reads ? ", reads: _r" : ""} };`,
         );
         if (arms) body.close();
-        saysFields.variants.push({ name: v.name, ...fields, sorts });
+        saysFields.variants.push({ name: v.name, ...fields, sorts, worded });
       }
       if (arms)
         body.emit(
@@ -6707,9 +6728,10 @@ function techniqueFunction(
             : [
                 `/** What a square the firing decides has of its own, read where it is made. */`,
                 `export interface ${saysType}Fact {`,
-                ...(tenv.factSays.says.arms.some((a) => a.name !== null)
+                ...(tenv.factSays.says.words.length > 1
                   ? [
-                      `  arm: ${tenv.factSays.says.arms.map((a) => JSON.stringify(a.name)).join(" | ")};`,
+                      "  /** The index of the wording that held (`STATED`). */",
+                      "  wording: number;",
                     ]
                   : []),
                 `  terms: { ${tenv.factSays.fields.terms.join(" ")} };`,
@@ -6723,6 +6745,12 @@ function techniqueFunction(
                 `export interface ${saysType} {`,
                 `  terms: { ${saysFields.variants[0].terms.join(" ")} };`,
                 `  marks: { ${saysFields.variants[0].marks.join(" ")} };`,
+                ...(saysFields.variants[0].worded
+                  ? [
+                      "  /** The index of the wording that held (`STATED`). */",
+                      "  wording: number;",
+                    ]
+                  : []),
                 ...(tenv.factSays === undefined ? [] : [`  facts: ${saysType}Fact[];`]),
                 ...(t.says.witness ? ["  witness: Witness | null;"] : []),
                 ...(t.says.reads ? ["  reads: Reads;"] : []),
@@ -6732,7 +6760,7 @@ function techniqueFunction(
                 `export type ${saysType} =`,
                 ...saysFields.variants.map(
                   (v) =>
-                    `  | { arm: ${JSON.stringify(v.name)}; terms: { ${v.terms.join(" ")} }; marks: { ${v.marks.join(" ")} }${tenv.factSays === undefined ? "" : `; facts: ${saysType}Fact[]`}${t.says?.witness ? "; witness: Witness | null" : ""}${t.says?.reads ? "; reads: Reads" : ""} }`,
+                    `  | { arm: ${JSON.stringify(v.name)}; terms: { ${v.terms.join(" ")} }; marks: { ${v.marks.join(" ")} }${v.worded ? "; wording: number" : ""}${tenv.factSays === undefined ? "" : `; facts: ${saysType}Fact[]`}${t.says?.witness ? "; witness: Witness | null" : ""}${t.says?.reads ? "; reads: Reads" : ""} }`,
                 ),
                 ";",
               ]),

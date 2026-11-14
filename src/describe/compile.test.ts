@@ -4,6 +4,7 @@ import {
   isFormal,
   isLibrary,
   isPlanning,
+  parseTechnique,
   planningWith,
   withEveryVariation,
 } from "./description.ts";
@@ -289,7 +290,7 @@ describe("a stated clause names only what its technique states", () => {
     expect(() => stated(says)).toThrow(error);
   });
 
-  it("a fact's arm is read where the fact is made, and typed", () => {
+  it("a fact's wording is read where the fact is made, and typed", () => {
     const code = compileLibrary(
       {
         library: "t",
@@ -302,13 +303,10 @@ describe("a stated clause names only what its technique states", () => {
               marks: {},
               fact: {
                 terms: { at: "d" },
-                arms: {
-                  across: {
-                    when: "x(d) = x(c)",
-                    look: "{outline at} is above or below",
-                  },
-                  beside: { when: "true", look: "{outline at} is beside" },
-                },
+                wordings: [
+                  { when: "x(d) = x(c)", look: "{outline at} is above or below" },
+                  { look: "{outline at} is beside" },
+                ],
               },
             },
           },
@@ -317,9 +315,51 @@ describe("a stated clause names only what its technique states", () => {
       "t",
       "./runtime.ts",
     );
-    expect(code).toContain('arm: "across" | "beside";');
-    expect(code).toMatch(/const _fa = .* \? "across" : true \? "beside" : null;/);
-    expect(code).toContain("xFactSays.push({ arm: _fa, terms: { at: v_d }");
+    expect(code).toContain("  wording: number;");
+    expect(code).toMatch(
+      /xFactSays\.push\(\{ wording: \(.* \? 0 : 1\), terms: \{ at: v_d \}/,
+    );
+  });
+
+  it("a firing's wording reads its terms and marks by name", () => {
+    const code = stated({
+      wordings: [
+        { when: "n > 2", look: "{outline: the crowded square}" },
+        { when: "|outline| > 1", look: "{outline: the squares}" },
+      ],
+      look: "{outline: the outlined {noun}}",
+      move: "{ring} must be {unshaded}",
+    });
+    expect(code).toContain("const _sw_n = ");
+    expect(code).toContain("const _sw_outline = ");
+    expect(code).toMatch(
+      /wording: \(\(_sw_n > 2\) \? 0 : \(_sw_outline\.length > 1\) \? 1 : 2\)/,
+    );
+  });
+
+  it("a wording takes the parts it leaves out from the clauses beside it", () => {
+    const { says } = parseTechnique("t", "x", {
+      for: "c in cells",
+      conclude: "strike(c, 1)",
+      says: {
+        wordings: [{ when: "true", look: "one" }, { move: "two" }],
+        look: "base look",
+        move: "base move",
+      },
+    });
+    expect(says?.variants[0].words.map((w) => w.clauses)).toEqual([
+      { look: "one", move: "base move" },
+      { look: "base look", move: "two" },
+    ]);
+  });
+
+  it("refuses a wording without a when before the last", () => {
+    expect(() =>
+      stated({
+        wordings: [{ look: "{n}" }, { when: "n > 2", look: "{n}" }],
+        move: "{n}",
+      }),
+    ).toThrow(/only the last wording may have no when/);
   });
 });
 

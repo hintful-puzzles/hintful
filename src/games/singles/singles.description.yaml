@@ -97,8 +97,12 @@ techniques:
     tier: Easy
     for: "c in cells where value(c) = 1"
     conclude: "forall p in adj4(c): place(p, 2)"
+    # The squares it decides are named by their numbers, though the numbers
+    # play no part, so the player finds them without hunting the rings.
     says:
       marks: { outline: "{c}" }
+      look: "{outline: a {shaded} square (outlined)} touches {ring: this {each} | these {nouns} ({each})}"
+      move: "{ring: that {each} | those {nouns}} must be {unshaded}"
   # A clear square's number is covered everywhere else in its row and column.
   - id: sameLine
     tier: Easy
@@ -116,6 +120,12 @@ techniques:
           {p in cells(row(c)) + cells(col(c)) where
           (p in cells(row(c)) and count(q in cells(col(c)) where q != c and clue(number, q) = n and not known(q)) = 0)
           or (p in cells(col(c)) and count(q in cells(row(c)) where q != c and clue(number, q) = n and not known(q)) = 0)}
+      wordings:
+        - when: "|stripes| > 0"
+          look: "{outline: the outlined {unshaded} {n}} already holds {stripes}'s {n}"
+          move: "{ring: the ringed {n} | the ringed {n}s} must be {shaded}"
+        - look: "{outline: the outlined {unshaded} {n}} shares a line with {ring: the ringed {n} | each ringed {n}}"
+          move: "{ring: that {n} | those {n}s} must be {shaded}"
   # Two equal numbers with one square between them: covering that square
   # would leave both clear, so it is clear.
   - id: sandwich
@@ -127,6 +137,9 @@ techniques:
     says:
       terms: { n: "clue(number, c)" }
       marks: { outline: "{c, e}" }
+      look: "{outline: the outlined {n} | the outlined {n}s} sit one square apart"
+      follows: "one of them must be {shaded}"
+      move: "{ring: the {each} between them | the {nouns} between them} must be {unshaded}"
   # Two equal numbers side by side cannot both be covered, so every other
   # copy of their number in the line is.
   - id: pair
@@ -140,6 +153,9 @@ techniques:
     says:
       terms: { n: "clue(number, c)" }
       marks: { outline: "{c, q}", stripes: "cells(L)" }
+      look: "{outline: the outlined {n} | the outlined {n}s} touch"
+      follows: "one of them stays {unshaded} and uses up the {n} in {stripes}"
+      move: "{ring: the ringed {n} | the ringed {n}s} must be {shaded}"
   # Matching numbers in a corner's two by two, upstream's chain: where the
   # corner square or the one across from it matches both squares beside the
   # corner, it is covered, since clear it would leave both beside it
@@ -164,17 +180,32 @@ techniques:
           when: "ns = n and nt = n and ni = nt"
           terms: { n: n, corner: c, sides: "{s, t}", inner: i }
           marks: { outline: "{c, s, t, i}" }
+          # Either end of the diagonal may be shaded already, and is then
+          # outlined, not ringed.
+          look: "Left {unshaded}, {ring corner: this corner {n}} would box itself in with {outline sides: its two {n}s} {shaded}"
+          wordings:
+            - when: "not known(c) and not known(i)"
+              move: "it and {ring inner: the {n} diagonally inside} must be {shaded}"
+            - when: "not known(c)"
+              move: "it must be {shaded}, like {outline inner: the outlined {n} diagonally inside}"
+            - look: "Left {unshaded}, {outline corner: the outlined corner {n}} would box itself in with {outline sides: its two {n}s} {shaded}"
+              move: "{ring inner: the {n} diagonally inside} must be {shaded}"
         # The corner matches both squares beside it, and is covered itself.
         apex:
           when: "ns = n and nt = n"
           terms: { corner: n, beside: ns }
           marks: { outline: "{c, s, t}" }
+          # "The corner" by name, so it never reads as the matching number.
+          look: "Left {unshaded}, {ring: this corner {corner}} would box itself in with {outline: both {beside}s beside it} {shaded}"
+          move: "it must be {shaded}"
         # The square across matches both beside it, and is covered; the corner
         # it saves is drawn apart.
         across:
           when: "ns = nt and ni = nt"
           terms: { inner: ni, beside: ns, corner: n }
           marks: { outline: "{s, t, i}", strand: "{c}" }
+          look: "Left {unshaded}, {ring: this inner {inner}} would make {outline: both {beside}s} flanking {strand: corner {corner}} {shaded} and box the corner in"
+          move: "it must be {shaded}"
         # One of the squares beside the corner is shaded, and the pair beside
         # the other would box the corner in: the pair is the corner and the
         # other square where they match, else that square and the one across.
@@ -187,6 +218,9 @@ techniques:
           marks:
             outline: "{x in {c, s, i} where x = s or (ns = n and x = c) or (ns != n and x = i)}"
             strand: "{c}"
+          # The pattern first, then the move ruled out and what it would force.
+          look: &pairLook "{outline pair: the corner's {number}s} need a {shaded}; shading {ring: this {each}} forces {outline side: the side {number}}, boxing {strand: the corner} in"
+          move: &pairMove "it must stay {unshaded}"
         pairAtT:
           when: "ns != n and ns != ni"
           terms:
@@ -196,6 +230,8 @@ techniques:
           marks:
             outline: "{x in {c, t, i} where x = t or (nt = n and x = c) or (nt != n and x = i)}"
             strand: "{c}"
+          look: *pairLook
+          move: *pairMove
   # A square with one neighbor not covered has that neighbor clear: covered
   # or clear, it needs one.
   - id: boxedIn
@@ -205,6 +241,8 @@ techniques:
     says:
       terms: { number: "clue(number, first(F))" }
       marks: { outline: "{c}" }
+      look: "{ring: this {number}} is {outline: the outlined {unshaded} square}'s last neighbor that isn't {shaded}"
+      move: "it must be {unshaded} to keep that square joined"
   # Two pairs of equal numbers in neighboring lines, one pair level with the
   # other at one end and a square off it at the other: covering either
   # square of the two by two they make there sets off a chain of covered
@@ -218,9 +256,27 @@ techniques:
       b1 = the(p in adj4(a1) where p not in cells(L) and (x(p) = x(b) or y(p) = y(b)))
       where clue(number, b1) = m
     conclude: "forall p in adj4(a) where p in adj4(b): place(p, 2)"
+    # The pattern by its numbers, then what follows. The pairs can sit
+    # anywhere along their lines, so the words never say "overlap" or
+    # "between them": the outlines show where. `p` and `q` are the numbers of
+    # the two squares it decides.
     says:
-      terms: { first: n, second: m, along: "{a1, a}", beside: "{b1, b}" }
+      terms:
+        first: n
+        second: m
+        p: "clue(number, first({x in adj4(a) where x in adj4(b)}))"
+        q: "clue(number, nth({x in adj4(a) where x in adj4(b)}, 1))"
       marks: { outline: "{a1, b1, a, b}" }
+      look: "{outline: the outlined {first}s and {second}s} mean shading {ring: the ringed {each} | either ringed {noun}} makes two {shaded} squares touch"
+      move: "{ring: that {each} | the {each}} must be {unshaded}"
+      wordings:
+        - when: "first = second and p = q"
+          look: "{outline: the outlined {first}s} mean shading {ring: the ringed {each} | either ringed {noun}} makes two {shaded} squares touch"
+          move: "{ring: that {each} | both {p}s} must be {unshaded}"
+        - when: "first = second"
+          look: "{outline: the outlined {first}s} mean shading {ring: the ringed {each} | either ringed {noun}} makes two {shaded} squares touch"
+        - when: "p = q"
+          move: "{ring: that {each} | both {p}s} must be {unshaded}"
   # A square without which the squares not covered would not be one group
   # is clear: covered, it would leave a group of them with no clear square
   # to join the rest by.
@@ -231,3 +287,5 @@ techniques:
     says:
       terms: { number: "clue(number, c)" }
       marks: { outline: "{q in adj4(c) where value(q) != 1}" }
+      look: "Shading {ring: this {number}} would cut some of {outline} off from the rest of the {unshaded} region"
+      move: "it must be {unshaded}"

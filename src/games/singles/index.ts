@@ -37,7 +37,6 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSinglesDesc } from "./generator.ts";
-import { sentences } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -47,7 +46,7 @@ import {
   redraw,
   type SinglesDrawState,
 } from "./render.ts";
-import { SAYS_KINDS, type SaysById } from "./singles.compiled.ts";
+import { SAYS_KINDS, type SaysById, STATED } from "./singles.compiled.ts";
 import {
   CLEAR,
   COVERED,
@@ -269,7 +268,9 @@ const described = describedFiringHint<
   target: (at, n) => ({ ...at, value: n === COVERED ? "black" : "circle" }),
   want: (t) => (t.value === "black" ? COVERED : CLEAR),
   move: (targets) => ({ sets: targets.map((t) => ({ ...t })) }),
-  say: sentences,
+  stated: STATED,
+  shows: (s, { x, y }) => s.nums[y * s.w + x],
+  say: {},
 });
 
 /** Singles' difficulty contract (`engine/difficulty.ts`). `solveSpecific`

@@ -118,19 +118,15 @@ techniques:
       fact:
         # The sign's two ends, the struck one first.
         terms: { sign: "{c, the(p in {big, small} where p != c)}" }
-        arms:
-          least:
-            when: "c = big and min(d2 in cand(small)) <= 1"
+        # The larger end, then the smaller, each at the value's extreme first.
+        wordings:
+          - when: "c = big and min(d2 in cand(small)) <= 1"
             look: "The larger side of {outline sign: this greater-than sign} can't hold the smallest number"
-          greater:
-            when: "c = big"
+          - when: "c = big"
             look: "{outline small: the outlined smaller side} of {outline sign: this greater-than sign} is at least {lo}"
-          most:
-            when: "max(d2 in cand(big)) >= order"
+          - when: "max(d2 in cand(big)) >= order"
             look: "The smaller side of {outline sign: this greater-than sign} can't hold the largest number"
-          lesser:
-            when: "c = small"
-            look: "{outline big: the outlined larger side} of {outline sign: this greater-than sign} is at most {hi}"
+          - look: "{outline big: the outlined larger side} of {outline sign: this greater-than sign} is at most {hi}"
   - { use: latin.set, tier: Tricky, rung: set }
   - { use: latin.fish, tier: Hard, rung: set }
   - { use: latin.wing, tier: Hard, rung: wing }

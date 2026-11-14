@@ -128,6 +128,29 @@ technique is restated, or it stays an override.
 - **Library modules carry no `STATED`**: a library technique's words are for
   later, when a library technique brings one wording to every game.
 
+### Singles, stated (2026-11-14)
+
+- **Stated whole, no override**; its `hint-text.ts` goes. The word dump is
+  byte-identical to HEAD's at 8 deals (10,584 lines) and at 80 (105,828
+  lines, every rung met, `corner.across` only at 80).
+- **Wordings, as read below, with one addition**: a part a wording leaves
+  out is the clauses beside the list. `corner.four` then states its look
+  once and `offset` its four combinations in three wordings. Unequal's fact
+  `arms` became fact `wordings`, and `STATED` holds both by index.
+- **`offset` gained two terms**, `p` and `q`, the numbers of the squares it
+  decides, for "both 3s": `{each}` lists every number ("3 and 3"), so an
+  equal pair needs its number named. Its `along` and `beside` terms went:
+  the words read its outline. A reference word that says "both 3s" for an
+  equal pair would make the two terms unneeded; not grown yet, one game
+  wants it.
+- **`{unit}` is the engine's**: a striped line of squares is a row or a
+  column by its squares, so no game declares it.
+- **`corner.four`'s second and third wordings are met by no walk** at 80
+  deals: when the corner or the square across is already decided,
+  `besideCovered` and `sameLine` fire first. The old code had the same
+  branches; the clauses were checked against it by reading.
+- **Nothing the form could not state.**
+
 ### Singles, read before it is stated (2026-11-14)
 
 Every Singles sentence fits the form with one growth: **wordings**, an

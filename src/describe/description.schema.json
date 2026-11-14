@@ -14,6 +14,21 @@
       "minLength": 1,
       "description": "A part of a hint step's sentence, whole, with slots: `{term}`, `{word}`, `{role}`, `{role: one | several}`, `{role term: words}` (`engine/stated.ts`)."
     },
+    "wordings": {
+      "type": "array",
+      "description": "The same deduction said for what the board shows: tried in order, the first whose `when` holds giving the step its clauses, a part it leaves out taken from the clauses beside the list. A firing's `when` reads the binding, the terms, and the marks by role. Only the last may leave out `when`.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "when": { "$ref": "#/$defs/formula" },
+          "look": { "$ref": "#/$defs/clause" },
+          "follows": { "$ref": "#/$defs/clause" },
+          "move": { "$ref": "#/$defs/clause" }
+        }
+      }
+    },
     "rung": {
       "description": "The game's hint rungs a firing of this is recorded under, among its hintRungs: one, or several where one firing records under more than one (an Unequal sign's two ends).",
       "oneOf": [
@@ -110,23 +125,13 @@
                 "look": { "$ref": "#/$defs/clause" },
                 "follows": { "$ref": "#/$defs/clause" },
                 "move": { "$ref": "#/$defs/clause" },
-                "arms": {
-                  "type": "object",
-                  "description": "Where a square's step reads differently by what holds where its fact is made: each arm a name, a condition read in the conclusion's scope, and the clauses it says; tried in order, the first true one winning.",
-                  "additionalProperties": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": ["when"],
-                    "properties": {
-                      "when": { "$ref": "#/$defs/formula" },
-                      "look": { "$ref": "#/$defs/clause" },
-                      "follows": { "$ref": "#/$defs/clause" },
-                      "move": { "$ref": "#/$defs/clause" }
-                    }
-                  }
+                "wordings": {
+                  "$ref": "#/$defs/wordings",
+                  "description": "Where a square's step reads differently by what holds where its fact is made, each `when` read in the conclusion's scope."
                 }
               }
             },
+            "wordings": { "$ref": "#/$defs/wordings" },
             "arms": {
               "type": "object",
               "description": "Where a step reads differently by what holds of the binding: each arm is a name and a condition, tried in order, the first true one winning, and adds its own `terms` and `marks` to the shared ones above. The step's kind is `<id>.<arm>`.",
@@ -139,6 +144,7 @@
                   "look": { "$ref": "#/$defs/clause" },
                   "follows": { "$ref": "#/$defs/clause" },
                   "move": { "$ref": "#/$defs/clause" },
+                  "wordings": { "$ref": "#/$defs/wordings" },
                   "terms": {
                     "type": "object",
                     "additionalProperties": { "$ref": "#/$defs/formula" }

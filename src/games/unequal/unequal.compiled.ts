@@ -28,9 +28,9 @@ export interface SaysById {
 export const SAYS_KINDS = ["sign"] as const;
 
 /** Each kind of step's words as the description states them, and each
- * fact's by its arm (`engine/stated.ts`). */
+ * fact's, by wording (`engine/stated.ts`). */
 export const STATED = {
-  "sign": {"fact":{"least":{"look":"The larger side of {outline sign: this greater-than sign} can't hold the smallest number"},"greater":{"look":"{outline small: the outlined smaller side} of {outline sign: this greater-than sign} is at least {lo}"},"most":{"look":"The smaller side of {outline sign: this greater-than sign} can't hold the largest number"},"lesser":{"look":"{outline big: the outlined larger side} of {outline sign: this greater-than sign} is at most {hi}"}}},
+  "sign": {"fact":[{"look":"The larger side of {outline sign: this greater-than sign} can't hold the smallest number"},{"look":"{outline small: the outlined smaller side} of {outline sign: this greater-than sign} is at least {lo}"},{"look":"The smaller side of {outline sign: this greater-than sign} can't hold the largest number"},{"look":"{outline big: the outlined larger side} of {outline sign: this greater-than sign} is at most {hi}"}]},
 } as const;
 
 /** Every technique run as each value is placed, by id. */
@@ -106,7 +106,8 @@ export interface SignBinding {
 
 /** What a square the firing decides has of its own, read where it is made. */
 export interface SignSaysFact {
-  arm: "least" | "greater" | "most" | "lesser";
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
   terms: { sign: readonly number[]; };
   marks: {  };
 }
@@ -149,7 +150,7 @@ export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding,
         const v_c = _i9 === 0 ? v_big : v_small;
         if (_i9 === 1 && (v_c === v_big)) continue;
         const _h11 = (v_c === v_big);
-        const _h27 = (v_c === v_small);
+        const _h28 = (v_c === v_small);
         for (let _m10 = b.domain; _m10 !== 0; _m10 &= _m10 - 1) {
           const v_d = 31 - Math.clz32(_m10 & -_m10);
           let _c15: boolean = _h11;
@@ -166,8 +167,8 @@ export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding,
             }
             _c15 = _q12;
           }
-          let _c28: boolean = !(_c15);
-          if (!_c28) {
+          let _c27: boolean = !(_c15);
+          if (!_c27) {
             if ((((b.cands[v_c] >> v_d) & 1) !== 0)) {
               if (fire === null) { b.strikeAt(v_c, v_d); changed = true; }
               if (fire !== null) {
@@ -203,17 +204,15 @@ export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding,
                     if (_g24 === -1 || v_d2 > _g24) _g24 = v_d2;
                   }
                 }
-                const _fa = _c23 ? "least" : _h11 ? "greater" : (_g24 >= sp.w) ? "most" : _h27 ? "lesser" : null;
-                if (_fa === null) throw new Error("no arm of says fact holds");
                 facts.push(STRIKE, v_c, v_d);
-                signFactSays.push({ arm: _fa, terms: { sign: setOf(v_c, _g16).slice() }, marks: {  } });
+                signFactSays.push({ wording: (_c23 ? 0 : _h11 ? 1 : (_g24 >= sp.w) ? 2 : 3), terms: { sign: setOf(v_c, _g16).slice() }, marks: {  } });
               }
             }
-            _c28 = true;
+            _c27 = true;
           }
-          let _c45: boolean = _c28;
+          let _c45: boolean = _c27;
           if (_c45) {
-            let _c32: boolean = _h27;
+            let _c32: boolean = _h28;
             if (_c32) {
               let _q29 = true;
               Q30: {
@@ -264,10 +263,8 @@ export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding,
                       if (_g41 === -1 || v_d2 > _g41) _g41 = v_d2;
                     }
                   }
-                  const _fa = _c40 ? "least" : _h11 ? "greater" : (_g41 >= sp.w) ? "most" : _h27 ? "lesser" : null;
-                  if (_fa === null) throw new Error("no arm of says fact holds");
                   facts.push(STRIKE, v_c, v_d);
-                  signFactSays.push({ arm: _fa, terms: { sign: setOf(v_c, _g33).slice() }, marks: {  } });
+                  signFactSays.push({ wording: (_c40 ? 0 : _h11 ? 1 : (_g41 >= sp.w) ? 2 : 3), terms: { sign: setOf(v_c, _g33).slice() }, marks: {  } });
                 }
               }
               _c44 = true;

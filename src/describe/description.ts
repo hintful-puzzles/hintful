@@ -205,8 +205,10 @@ export interface StatedTechnique {
 
 /** What a technique's hint step speaks of. `arms` splits the step by which
  * condition holds, first true winning, each arm adding its own terms and marks
- * to the shared ones (an arm's names win). */
-export interface StatedSays extends StatedClauses {
+ * to the shared ones (an arm's names win). An arm is a different deduction,
+ * with its own rung; a wording is the same deduction said for what the board
+ * shows. */
+export interface StatedSays extends Worded {
   /** `each`: a step for every square the firing decides, each its own argument
    * (Light Up's discounts); `legs`, the same with the later squares continuing
    * the first (Sticks: a number's one reason over several squares); absent, one
@@ -221,16 +223,15 @@ export interface StatedSays extends StatedClauses {
   terms?: Record<string, string>;
   marks?: Partial<Record<SaidRole, string>>;
   /** What each square the firing decides has of its own, read where the
-   * conclusion's `place` or `strike` makes it. Its arms are tried there, in
-   * order, the first true one giving the square's step its clauses. */
-  fact?: StatedClauses & {
+   * conclusion's `place` or `strike` makes it. Its wordings are tried there,
+   * in the conclusion's scope. */
+  fact?: Worded & {
     terms?: Record<string, string>;
     marks?: Partial<Record<SaidRole, string>>;
-    arms?: Record<string, StatedClauses & { when: string }>;
   };
   arms?: Record<
     string,
-    StatedClauses & {
+    Worded & {
       when: string;
       terms?: Record<string, string>;
       marks?: Partial<Record<SaidRole, string>>;
@@ -244,6 +245,15 @@ export interface StatedClauses {
   look?: string;
   follows?: string;
   move?: string;
+}
+
+/** Clauses, and the wordings tried before them in order, the first whose
+ * `when` holds giving the step its words; a part a wording does not state is
+ * the clauses'. A wording with no `when` holds always, and comes last. A
+ * firing's `when` reads the binding, the terms, and the marks by role; a
+ * fact's reads the conclusion's scope. */
+export interface Worded extends StatedClauses {
+  wordings?: (StatedClauses & { when?: string })[];
 }
 
 /** The roles a technique's `says` marks elements in; the firing's facts are
@@ -557,18 +567,24 @@ export interface Says {
   fact: {
     terms: { name: string; expr: Expr }[];
     marks: { role: SaidRole; expr: Expr }[];
-    /** The clauses a square's step says, by arm: one unnamed arm where the
-     * fact has none; empty where the fact states no clauses. */
-    arms: { name: string | null; when: Expr | null; clauses: StatedClauses }[];
+    /** The clauses a square's step says, by wording. */
+    words: Wording[];
   } | null;
   variants: {
     name: string | null;
     when: Expr | null;
     terms: { name: string; expr: Expr }[];
     marks: { role: SaidRole; expr: Expr }[];
-    /** The step's stated words; `null` where it states none. */
-    clauses: StatedClauses | null;
+    /** The step's stated words, by wording. */
+    words: Wording[];
   }[];
+}
+
+/** A step's words one way. The first wording whose `when` holds is said; the
+ * last one's is `null`, and the list is empty where nothing is stated. */
+export interface Wording {
+  when: Expr | null;
+  clauses: StatedClauses;
 }
 
 export interface Definition {
@@ -704,31 +720,42 @@ function clausesOf(part: StatedClauses): StatedClauses | null {
   };
 }
 
-function factArms(
-  fact: NonNullable<StatedSays["fact"]>,
+/** A part's wordings, each over the part's own clauses (over `base`), and
+ * those clauses last where the last wording has a `when`; empty where nothing
+ * is stated. */
+function wordingsOf(
+  part: Worded,
+  label: string,
   at: (part: string, src: string) => Expr,
-): NonNullable<Says["fact"]>["arms"] {
-  if (fact.arms === undefined) {
-    const own = clausesOf(fact);
-    return own === null ? [] : [{ name: null, when: null, clauses: own }];
-  }
-  if (clausesOf(fact) !== null)
-    throw new SyntaxError("says fact: clauses go on its arms where it has arms");
-  return Object.entries(fact.arms).map(([name, arm]) => ({
-    name,
-    when: at(`says fact ${name} when`, arm.when),
-    clauses: clausesOf(arm) ?? {},
-  }));
+  base: StatedClauses | null = null,
+): Wording[] {
+  const own = { ...base, ...clausesOf(part) };
+  const list = part.wordings ?? [];
+  const words: Wording[] = list.map((w, i) => {
+    if (w.when === undefined && i < list.length - 1)
+      throw new SyntaxError(
+        `${label} wording ${i}: only the last wording may have no when`,
+      );
+    return {
+      when: w.when === undefined ? null : at(`${label} wording ${i} when`, w.when),
+      clauses: { ...own, ...clausesOf(w) },
+    };
+  });
+  const last = words.at(-1);
+  if (last === undefined ? Object.keys(own).length > 0 : last.when !== null)
+    words.push({ when: null, clauses: own });
+  return words;
 }
 
 function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr): Says {
+  if (stated.arms !== undefined && stated.wordings !== undefined)
+    throw new SyntaxError("says: wordings go on its arms where it has arms");
   const variant = (
     name: string | null,
     when: Expr | null,
-    own: Pick<StatedSays, "terms" | "marks"> & StatedClauses,
+    own: Pick<StatedSays, "terms" | "marks"> & Worded,
   ): Says["variants"][number] => {
     const { terms, marks } = own;
-    const words = clausesOf(own) ?? clausesOf(stated);
     const label = `says${name === null ? "" : ` ${name}`}`;
     return {
       name,
@@ -740,7 +767,10 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
       marks: (
         Object.entries({ ...stated.marks, ...marks }) as [SaidRole, string][]
       ).map(([role, src]) => ({ role, expr: at(`${label} ${role}`, src) })),
-      clauses: words,
+      words:
+        name === null
+          ? wordingsOf(stated, label, at)
+          : wordingsOf(own, label, at, clausesOf(stated)),
     };
   };
   const witness = stated.witness === true;
@@ -758,7 +788,7 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
           marks: (Object.entries(stated.fact.marks ?? {}) as [SaidRole, string][]).map(
             ([role, src]) => ({ role, expr: at(`says fact ${role}`, src) }),
           ),
-          arms: factArms(stated.fact, at),
+          words: wordingsOf(stated.fact, "says fact", at),
         };
   if (stated.arms === undefined)
     return { each, legs, witness, reads, fact, variants: [variant(null, null, {})] };
