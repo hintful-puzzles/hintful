@@ -1,5 +1,2 @@
-# Scaffolded without a delta: the session that takes it up writes the
-# requirements from its design and removes skip_specs.
 schema: spec-driven
 created: 2026-11-13
-skip_specs: true
