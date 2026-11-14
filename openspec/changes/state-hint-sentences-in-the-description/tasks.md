@@ -8,10 +8,14 @@
 - [x] 1.4a Wordings (design.md § "Singles, read before it is stated"): `wordings` on a says, an arm and a fact, the fact's `arms` folded into them; `when` sees the terms and marks; `STATED` by wording index; `describedFiringHint` speaks a stated kind from the table, with the game's `shows` (`unit` is the engine's). With the first wording always taken, both games' walk fingerprints and pinned-hint tests fail, and so do the compile tests
 - [x] 1.4 Singles stated, from the drafted clauses: `hint-text.ts` goes; word dump byte-identical to HEAD's at 8 and 80 deals; design.md § "Singles, stated"
 - [ ] 1.5 Loopy's `says` (terms and marks), walk fingerprint unchanged
-- [ ] 1.6 Loopy stated
-- [ ] 1.7 Run the app on each of the three, and read the stated words against their frames
-- [ ] 1.8 The comparison page for the owner, and the list of what the form could not state with a decision for each; ask the owner before the catalog moves
+- [ ] 1.6 Loopy stated, its note-placing steps as declared step kinds (design.md § "Step kinds"); `hint-text.ts` goes; word dump compared with 1.1's
+- [ ] 1.7 Step kinds a planner emits (design.md § "Step kinds"): a description's declared kinds, compiled into `STATED` with their slots checked; a stated `relation` (`effect`); a count term; the game's nouns (§ "A game's nouns"). Each new check seen to fail before it is trusted
+- [ ] 1.8 Slide stated: its planner emits kinds; `hint-text.ts` goes; word dump byte-identical to HEAD's
+- [ ] 1.9 Run the app on each of the four, and read the stated words against their frames
+- [ ] 1.10 The comparison page for the owner (design.md § "Order of work", step 5), and the list of what the form could not state with a decision for each; ask the owner before the catalog moves
 
 ## 2. The catalog
 
-Written once the owner has answered 1.8.
+Written once the owner has answered 1.10. Library words first (design.md
+§ "Order of work", step 6); a game with no `says` waits for
+`give-the-remaining-games-their-says`.

@@ -59,10 +59,59 @@ says:
   names no term, role or lexicon word is a describe error, so a clause
   cannot read a value its technique does not state.
 
-The compiled module carries the clauses as data (`SENTENCES`, by kind and
-arm), and the engine's `stated.ts` renders them against a firing's
-`FiringSpoken`. The arms' `when` stays a compiled formula: which clause a
-firing speaks is the description's logic, the words are data.
+The compiled module carries the clauses as data (`STATED`, by kind, with a
+kind's wordings and its fact's wordings by index), and the engine's
+`stated.ts` renders them against a firing's `FiringSpoken`. A wording's
+`when` stays a compiled formula: which clause a firing speaks is the
+description's logic, the words are data. (As built at `bb82c9466`; the
+`arms` on a fact that Unequal first used became the fact's `wordings`,
+§ "Singles, stated".)
+
+## Step kinds: one mechanism for every game
+
+The owner's decision (2026-11-14): every game's words go through this one
+mechanism, the move and search puzzles included, whose steps a planner picks
+and no technique fires. The renderer already allows it: `StatedContext` asks
+for a mark kind, the ring, the other marks and named terms, and nothing of a
+technique. Only the describe side ties the clauses to a `says`.
+
+So what a description states is a **step kind**: its terms (each with a
+sort), its marks by role, its wordings, and its clauses. A technique's `says`
+is one source, the kind named by the technique, unchanged for Unequal and
+Singles. A game whose steps a planner picks declares its kinds itself:
+
+```yaml
+steps:                     # Slide; the name of the block is for the session to settle
+  makesRoom:
+    terms: { }
+    marks: { ring: block, stripes: cells, outline: block }
+    move: "slide {ring: the ringed {block}} into {stripes: the striped space}"
+    effect: "that makes room for {outline: the outlined block}"
+  keyBlock:
+    terms: { left: count }
+    move: (as makesRoom)
+    effect: "after that it can be out in {left: 1 move | {left} moves}"
+```
+
+The planner emits `{ kind, terms, marks }`, and the engine speaks it from
+`STATED`, with the slots checked at compile time as a technique's are. Which
+step is taken stays the planner's code, as a technique's `when` stays a
+compiled formula. The same declaration carries a plan's own steps in a logic
+game: Loopy's note-placing steps, which its plan writes and no single firing
+does, and any step a search certifies.
+
+What the form grows for it, each met in the trial before the catalog:
+
+- **A stated `relation`**: `effect` at least (every move puzzle's step is a
+  move and what it does); the others the engine knows as a game needs them.
+- **Term sorts outside the grid's elements**: a count with its one-or-several
+  forms, and a piece made of several cells (`whole(CELL)` in code today).
+- **A game's nouns** (§ "A game's nouns"), for "block", "key block" and the
+  like.
+
+Rejected: restating a planner's choices as techniques (a search outcome is
+not a local rule, and game logic is not bent to fit a contract), and a table
+of words without declared terms (its slots go unchecked).
 
 ## The closing clause comes from the fact
 
@@ -88,6 +137,11 @@ words:
 This replaces the per-game declarations `standardize-hint-vocabulary` left in
 code (`LatinVocab.cell`, `notes.cell`, `thisCellNamed("cell")`).
 
+**Not built yet** (2026-11-14): Singles hands `describedFiringHint` its
+`shows` in code. Slide's trial needs the block (it names a piece, not a
+square), so the block is built there; the Latin games need it for the
+library's words (§ "Order of work").
+
 ## What stays code
 
 A sentence the form cannot state is an override: the game's `sentences`
@@ -104,10 +158,23 @@ technique is restated, or it stays an override.
    after.
 2. Singles (arms, narrowing, line or no line, value naming).
 3. Loopy's `says` (terms and marks only, fingerprint unchanged), then its
-   clauses.
-4. The comparison for the owner: each trial game's steps, old words beside
-   new, on the walks, read in the running app; and the list of what the
-   form could not state.
+   clauses; its note-placing steps as declared step kinds, not overrides
+   (§ "Step kinds").
+4. Slide: its planner's steps as declared step kinds, with `effect`, a
+   count term and its nouns. Same check, a byte-identical word dump.
+5. The comparison for the owner: Loopy's and Slide's words where they move,
+   one game's source before and after (Unequal's and Singles' words did not
+   move, so old beside new would show nothing), read in the running app;
+   and the list of what the form could not state.
+6. The catalog, after the owner's answer. **The library's words first**: a
+   library technique carries no `STATED` today, and the Latin games that
+   `use` it (Towers, Keen, Solo, Group, Mathrax, Salad, Undead and others)
+   then take one wording each, which is the proposal's payoff. Then each
+   game by its word dump. A logic game with no `says` (Ascent, Black Box,
+   Filling, Guess, Mines, Net, Pattern, Slant, Subsets, at 2026-11-14)
+   takes its `says` first in `give-the-remaining-games-their-says`, judged
+   by its walk fingerprint before a word moves; this change states its words
+   after.
 
 ## What the trial found
 
