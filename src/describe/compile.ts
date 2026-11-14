@@ -6575,7 +6575,30 @@ function techniqueFunction(
           return `${name}: ${bound}`;
         };
         const terms = v.terms.map((x) => read(x.expr, "terms", x.name));
-        const marks = v.marks.map((x) => read(x.expr, "marks", x.role));
+        const marks: string[] = [];
+        for (const role of new Set(v.marks.map((m) => m.role))) {
+          const ofRole = v.marks.filter((m) => m.role === role);
+          if (ofRole[0].sort === null) {
+            marks.push(read(ofRole[0].expr, "marks", role));
+            continue;
+          }
+          // A role holding several sorts is an object of a set by sort, which
+          // a wording's `when` does not read.
+          const parts = ofRole.map((m) => {
+            const r = compileExpr(m.expr, sc, { ...tenv, shared: inArm }, body);
+            if (r.sort.k !== "set" || r.sort.of.k !== "elem" || r.sort.of.e !== m.sort)
+              throw new CompileError(
+                `${t.id}: says marks ${role} ${m.sort} is not a set of ${m.sort}s, but ${show(r.sort)}`,
+              );
+            return { sort: m.sort, code: `${r.code}.slice()` };
+          });
+          fields.marks.push(
+            `${role}: { ${parts.map((p) => `${JSON.stringify(p.sort)}: readonly number[];`).join(" ")} };`,
+          );
+          marks.push(
+            `${role}: { ${parts.map((p) => `${JSON.stringify(p.sort)}: ${p.code}`).join(", ")} }`,
+          );
+        }
         const own =
           tenv.factSays === undefined ? "" : `, facts: ${tenv.factSays.buffer}.slice()`;
         const wording = worded

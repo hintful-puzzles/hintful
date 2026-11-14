@@ -924,8 +924,11 @@ describe("Loopy hint: the words and the marks agree", () => {
       expect(lineSteps.length, b.name).toBe(plan.length);
       plan.forEach((p, i) => {
         if (p.reason.kind !== "clueBound") return;
-        const { witness, face } = p.reason;
+        const { witness, outline } = p.reason;
+        expect(outline.faces, b.name).toHaveLength(1);
+        const [face] = outline.faces;
         const clue = b.state.clues[face];
+        expect(p.reason.clue, b.name).toBe(clue);
         const line = p.ops[0].state === LINE_YES;
         expect(witness.edges.length + witness.corners.length, b.name).toBe(
           witness.total,

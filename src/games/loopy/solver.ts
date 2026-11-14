@@ -36,9 +36,8 @@ import {
   type Ladder,
   ladderTechniques,
   ladderWalk,
-  type ReasonOf,
-  type Rung,
   runLadder,
+  type Said,
   type Taken,
   TIERS,
   uncluedRung,
@@ -84,14 +83,43 @@ function dealtOf(state: LoopyState): loopy.Dealt {
 }
 
 /**
- * Why one firing of the ladder holds: its technique and its binding, and,
- * for a count of a clue's other edges, what the count rests on (see
- * {@link boundOf}), all read before the firing changes anything.
+ * One firing of the ladder as its technique says it (`loopy.description.yaml`),
+ * read before the firing changes anything: its binding, its terms and the
+ * elements it outlines, and, for a count of a clue's other edges, what the
+ * count rests on ({@link boundOf}), which no formula states.
  */
-interface Fired {
-  readonly kind: loopy.LadderId;
-  readonly b: Readonly<Record<string, unknown>>;
-  readonly witness?: Witness;
+type LoopySaid = {
+  [K in keyof loopy.SaysById]: {
+    readonly id: K;
+    readonly binding: Readonly<Record<string, unknown>>;
+    readonly says: loopy.SaysById[K];
+    readonly witness?: Witness;
+  };
+}[keyof loopy.SaysById];
+
+/** A taken firing's `fact`th reason, as its technique said it. */
+const saidOf = (got: Taken, fact = 0): LoopySaid =>
+  ({ id: got.entry.id, ...(got.reasons[fact] as Said<object, object>) }) as LoopySaid;
+
+/** What a step outlines, by the kind of element: a description states each
+ * by its sort. */
+export interface Outline {
+  readonly faces: readonly number[];
+  readonly dots: readonly number[];
+  readonly edges: readonly number[];
+  readonly corners: readonly number[];
+}
+
+function outlineOf(said: LoopySaid): Outline {
+  const marks: { outline?: Partial<Record<string, readonly number[]>> } =
+    said.says.marks;
+  const o = marks.outline ?? {};
+  return {
+    faces: o["face"] ?? [],
+    dots: o["cell"] ?? [],
+    edges: o["edge"] ?? [],
+    corners: o["angle"] ?? [],
+  };
 }
 
 /** What a clue's count of its other edges rests on: the edges counted one
@@ -102,10 +130,6 @@ export interface Witness {
   readonly corners: readonly number[];
   readonly total: number;
 }
-
-const fired =
-  <B extends object>(kind: loopy.LadderId): ReasonOf<B> =>
-  (b): Fired => ({ kind, b: { ...(b as Record<string, unknown>) } });
 
 /**
  * The fewest lines (`min`) or the most (`max`) the edges of face `f` from
@@ -156,77 +180,70 @@ const placeOf = (sp: GridSpace, f: number, e: number): number =>
 
 /** The ladder over the dealt numbers, each technique with its reason. */
 function loopyLadder(dl: loopy.Dealt): Ladder {
-  const face = <B extends object>(
-    kind: loopy.LadderId,
-    run: (b: never, sp: GridSpace, cl: loopy.Dealt, fire: never) => number,
-  ): Rung =>
-    compiledRung(
-      run as Parameters<typeof compiledRung<B, loopy.Dealt>>[0],
-      dl,
-      fired<B>(kind),
-    );
   return describedLadder(loopy, {
-    clueFull: face("clueFull", loopy.clueFull),
-    clueStarved: face("clueStarved", loopy.clueStarved),
-    clueBlockedPair: face("clueBlockedPair", loopy.clueBlockedPair),
-    clueOneShort: face("clueOneShort", loopy.clueOneShort),
-    deadEnd: uncluedRung(loopy.deadEnd, fired("deadEnd")),
-    lineContinues: uncluedRung(loopy.lineContinues, fired("lineContinues")),
-    dotFull: uncluedRung(loopy.dotFull, fired("dotFull")),
-    earlyLoop: face("earlyLoop", loopy.earlyLoop),
-    closed: uncluedRung(loopy.closed, fired("closed")),
-    cornerAtDot: uncluedRung(loopy.cornerAtDot, fired("cornerAtDot")),
-    cornerOther: uncluedRung(loopy.cornerOther, fired("cornerOther")),
-    cornerBoth: uncluedRung(loopy.cornerBoth, fired("cornerBoth")),
+    clueFull: compiledRung(loopy.clueFull, dl),
+    clueStarved: compiledRung(loopy.clueStarved, dl),
+    clueBlockedPair: compiledRung(loopy.clueBlockedPair, dl),
+    clueOneShort: compiledRung(loopy.clueOneShort, dl),
+    deadEnd: uncluedRung(loopy.deadEnd),
+    lineContinues: uncluedRung(loopy.lineContinues),
+    dotFull: uncluedRung(loopy.dotFull),
+    earlyLoop: compiledRung(loopy.earlyLoop, dl),
+    closed: uncluedRung(loopy.closed),
+    cornerAtDot: uncluedRung(loopy.cornerAtDot),
+    cornerOther: uncluedRung(loopy.cornerOther),
+    cornerBoth: uncluedRung(loopy.cornerBoth),
     // A count's witness: the clue's other edges, from the one after `e`
     // round to the one before it, for the bound that settles `e`.
-    clueBound: compiledRung(loopy.clueBound, dl, (b, _e, _d, m): Fired => {
+    clueBound: compiledRung(loopy.clueBound, dl, (binding, _e, _d, m, says) => {
       const sp = m.sp;
-      const p = placeOf(sp, b.f, b.e);
-      const N = sp.faceEdges[b.f].length;
+      const { f, e, P } = binding;
+      const p = placeOf(sp, f, e);
+      const N = sp.faceEdges[f].length;
       return {
-        kind: "clueBound",
-        b: { ...b },
-        witness: boundOf(sp, m, b.f, (p + 1) % N, (p + N - 1) % N, b.P ? "min" : "max"),
+        binding,
+        says,
+        witness: boundOf(sp, m, f, (p + 1) % N, (p + N - 1) % N, P ? "min" : "max"),
       };
     }),
     // The clue's edges other than the corner's two, from the one after its
     // second round to the one before its first, for the bound that narrows
-    // the corner: the fewest lines for at most one, the most for at least
-    // one.
-    cornerFromClue: compiledRung(loopy.cornerFromClue, dl, (b, _a, d, m): Fired => {
-      const sp = m.sp;
-      const N = sp.faceEdges[b.f].length;
-      const at = sp.faceAngles[b.f].indexOf(b.a);
-      return {
-        kind: "cornerFromClue",
-        b: { ...b, d },
-        witness: boundOf(
-          sp,
-          m,
-          b.f,
-          (at + 1) % N,
-          (at + N - 2) % N,
-          d === 2 ? "min" : "max",
-        ),
-      };
-    }),
-    cornerAcross: uncluedRung(loopy.cornerAcross, fired("cornerAcross")),
-    cornerExit: uncluedRung(loopy.cornerExit, fired("cornerExit")),
-    cornerOppositeExit: uncluedRung(
-      loopy.cornerOppositeExit,
-      fired("cornerOppositeExit"),
+    // the corner (`d`, the count it strikes): the fewest lines for at most
+    // one, the most for at least one.
+    cornerFromClue: compiledRung(
+      loopy.cornerFromClue,
+      dl,
+      (binding, _a, d, m, says) => {
+        const sp = m.sp;
+        const N = sp.faceEdges[binding.f].length;
+        const at = sp.faceAngles[binding.f].indexOf(binding.a);
+        return {
+          binding,
+          says,
+          witness: boundOf(
+            sp,
+            m,
+            binding.f,
+            (at + 1) % N,
+            (at + N - 2) % N,
+            d === 2 ? "min" : "max",
+          ),
+        };
+      },
     ),
-    matchingPair: face("matchingPair", loopy.matchingPair),
-    pairAtClue: face("pairAtClue", loopy.pairAtClue),
-    parityClue: face("parityClue", loopy.parityClue),
-    linkClue: face("linkClue", loopy.linkClue),
-    pairFromCorner: uncluedRung(loopy.pairFromCorner, fired("pairFromCorner")),
-    cornerFromPair: uncluedRung(loopy.cornerFromPair, fired("cornerFromPair")),
-    pairAtDot: uncluedRung(loopy.pairAtDot, fired("pairAtDot")),
-    parityDot: uncluedRung(loopy.parityDot, fired("parityDot")),
-    linkDot: uncluedRung(loopy.linkDot, fired("linkDot")),
-    related: uncluedRung(loopy.related, fired("related")),
+    cornerAcross: uncluedRung(loopy.cornerAcross),
+    cornerExit: uncluedRung(loopy.cornerExit),
+    cornerOppositeExit: uncluedRung(loopy.cornerOppositeExit),
+    matchingPair: compiledRung(loopy.matchingPair, dl),
+    pairAtClue: compiledRung(loopy.pairAtClue, dl),
+    parityClue: compiledRung(loopy.parityClue, dl),
+    linkClue: compiledRung(loopy.linkClue, dl),
+    pairFromCorner: uncluedRung(loopy.pairFromCorner),
+    cornerFromPair: uncluedRung(loopy.cornerFromPair),
+    pairAtDot: uncluedRung(loopy.pairAtDot),
+    parityDot: uncluedRung(loopy.parityDot),
+    linkDot: uncluedRung(loopy.linkDot),
+    related: uncluedRung(loopy.related),
   });
 }
 
@@ -356,14 +373,14 @@ export type CornerWhy =
   | { kind: "onlyWayOn" }
   /** A clued face's other edges already need, or can only hold, so many lines
    * that this corner of it is decided. */
-  | { kind: "clue"; face: number; witness: Witness }
-  /** The corner across the dot (`from`) carries at least one line, and a dot
-   * takes two lines at most. */
-  | { kind: "acrossTheDot"; from: number }
-  /** The corner across the dot (`from`) carries exactly one line, and this dot
-   * has no line yet and four open edges, so the loop's other line here is in
-   * this corner. */
-  | { kind: "exactlyOneAcross"; from: number }
+  | { kind: "clue"; face: number; clue: number; witness: Witness }
+  /** The corner across the dot (outlined) carries at least one line, and a
+   * dot takes two lines at most. */
+  | { kind: "acrossTheDot" }
+  /** The corner across the dot (outlined) carries exactly one line, and this
+   * dot has no line yet and four open edges, so the loop's other line here is
+   * in this corner. */
+  | { kind: "exactlyOneAcross" }
   /** Its two edges are opposites, so exactly one of them is a line: `path` is
    * the chain of relations between them. */
   | { kind: "opposites"; path: readonly Link[] };
@@ -372,16 +389,16 @@ export type CornerWhy =
 export type RelationWhy =
   /** Only these two of a clued face's edges are still open, so the clue's parity
    * decides whether they match. */
-  | { kind: "faceParity"; face: number }
+  | { kind: "faceParity"; face: number; clue: number }
   /** Only these two of a dot's edges are still open, so the dot's parity (it takes
    * zero or two lines) decides whether they match. */
   | { kind: "dotParity"; dot: number }
-  /** They make a corner (`from`) carrying exactly one line. */
-  | { kind: "exactlyOneAtCorner"; dot: number; from: number }
+  /** They make a corner (outlined) carrying exactly one line. */
+  | { kind: "exactlyOneAtCorner" }
   /** A clued face has four open edges and two of them are related, which relates
    * the other two by the clue's parity. `path` is the chain between the first
    * pair. */
-  | { kind: "faceLink"; face: number; path: readonly Link[] }
+  | { kind: "faceLink"; face: number; clue: number; path: readonly Link[] }
   /** The same, at a dot with four open edges. */
   | { kind: "dotLink"; dot: number; path: readonly Link[] };
 
@@ -396,6 +413,8 @@ export type CornerNote = {
   readonly edges: readonly [number, number];
   readonly bound: Bound;
   readonly why: CornerWhy;
+  /** What the firing that found it outlines. */
+  readonly outline: Outline;
 };
 
 export type RelationNote = {
@@ -404,6 +423,7 @@ export type RelationNote = {
   readonly edges: readonly [number, number];
   readonly opposite: boolean;
   readonly why: RelationWhy;
+  readonly outline: Outline;
 };
 
 export type Note = CornerNote | RelationNote;
@@ -412,47 +432,53 @@ export type Note = CornerNote | RelationNote;
  * rests on a corner, that is the dline, and where on pairs, their chain. */
 export type LoopyReason =
   /** A clue already has its lines, so its other edges are empty. */
-  | { kind: "clueFull"; face: number }
-  /** A clue has only as many edges left open as it needs, so all are lines. */
-  | { kind: "clueStarved"; face: number }
-  /** A clue needs all but one of its open edges, and two of them at a dot that
-   * already has a line cannot both be lines, so every other open edge is. */
-  | { kind: "clueOneShort"; face: number; dot: number; pair: readonly [number, number] }
-  /** A clue needs all but one of its open edges, and two dots next to each other
-   * around it already have a line, so the edge between them cannot be one and
-   * every other open edge must be. */
-  | {
-      kind: "clueBlockedPair";
-      face: number;
-      dots: readonly [number, number];
-      between: number;
-    }
-  /** A dot with no line and one open edge: a line there would dead-end. */
-  | { kind: "deadEnd"; dot: number }
-  /** A dot with one line and one open edge: the line must continue along it. */
-  | { kind: "lineContinues"; dot: number }
-  /** A dot with two lines takes no more. */
-  | { kind: "dotFull"; dot: number }
-  /** A clue's other edges already need all its lines (the edge is empty) or can
-   * hold one fewer (the edge is a line). */
-  | { kind: "clueBound"; face: number; edge: number; witness: Witness }
-  /** A corner settles its edges against the dot's lines, and the ops say what
-   * it forced. */
-  | { kind: "corner"; dot: number; dline: number; bound: Bound }
-  /** A dot with no line has three open edges and a corner carrying exactly one
-   * line, so the loop leaves along the third. */
-  | { kind: "cornerExit"; dot: number; dline: number }
-  /** Two matching open edges of a clue with room for one more line (both empty)
-   * or one more empty edge (both lines). `path` is the chain of relations. */
-  | { kind: "matchingPair"; face: number; path: readonly Link[] }
-  /** Three open edges of a clue or a dot, two of them related, so the parity
-   * decides the third. */
-  | { kind: "parity"; face: number | null; dot: number | null; path: readonly Link[] }
-  /** An edge related to one whose state is known takes the state the relation
-   * gives it. `from` is the known edge. */
-  | { kind: "related"; from: number; path: readonly Link[] }
-  /** The edge would close a loop that is not the whole answer. */
-  | { kind: "earlyLoop"; because: "strayLines" | "unmetClues" };
+  (
+    | { kind: "clueFull"; clue: number }
+    /** A clue has only as many edges left open as it needs, so all are lines. */
+    | { kind: "clueStarved"; clue: number }
+    /** A clue needs all but one of its open edges, and two of them at a dot that
+     * already has a line cannot both be lines, so every other open edge is. */
+    | { kind: "clueOneShort"; clue: number }
+    /** A clue needs all but one of its open edges, and two dots next to each other
+     * around it already have a line, so the edge between them cannot be one and
+     * every other open edge must be. */
+    | { kind: "clueBlockedPair"; clue: number; between: number }
+    /** A dot with no line and one open edge: a line there would dead-end. */
+    | { kind: "deadEnd" }
+    /** A dot with one line and one open edge: the line must continue along it. */
+    | { kind: "lineContinues" }
+    /** A dot with two lines takes no more. */
+    | { kind: "dotFull" }
+    /** A clue's other edges already need all its lines (the edge is empty) or can
+     * hold one fewer (the edge is a line). */
+    | { kind: "clueBound"; clue: number; witness: Witness }
+    /** A corner settles its edges against the dot's lines, and the ops say what
+     * it forced. */
+    | { kind: "corner"; dline: number; bound: Bound }
+    /** A dot with no line has three open edges and a corner carrying exactly one
+     * line, so the loop leaves along the third. */
+    | { kind: "cornerExit"; dline: number }
+    /** Two matching open edges of a clue with room for one more line (both empty)
+     * or one more empty edge (both lines). `path` is the chain of relations. */
+    | { kind: "matchingPair"; clue: number; path: readonly Link[] }
+    /** Three open edges of a clue or a dot, two of them related, so the parity
+     * decides the third. */
+    | {
+        kind: "parity";
+        face: number | null;
+        clue: number | null;
+        dot: number | null;
+        path: readonly Link[];
+      }
+    /** An edge related to one whose state is known takes the state the relation
+     * gives it. `from` is the known edge. */
+    | { kind: "related"; from: number; path: readonly Link[] }
+    /** The edge would close a loop that is not the whole answer. */
+    | { kind: "earlyLoop"; because: "strayLines" | "unmetClues" }
+  ) & {
+    /** What its technique outlines. */
+    readonly outline: Outline;
+  };
 
 export interface RecordedOp {
   edge: number;
@@ -563,10 +589,10 @@ export function hintWalk(
   const chains = new Map<Taken, readonly Link[]>();
   // The dots a firing reads, which a plan continues from: its face's, its
   // dot's or its corner's, and those of the lines it settles.
-  const reads = ({ facts, reasons }: Taken): number[] => {
+  const reads = (got: Taken): number[] => {
+    const { facts } = got;
     const out: number[] = [];
-    const r = reasons[0] as Fired;
-    const b = r.b;
+    const b = saidOf(got).binding;
     if (typeof b["f"] === "number") out.push(...sp.faceCells[b["f"]]);
     if (typeof b["c"] === "number") out.push(b["c"]);
     if (typeof b["a"] === "number") out.push(sp.angleCell[b["a"]]);
@@ -581,7 +607,7 @@ export function hintWalk(
   // chain of relations it narrates, asked before the firing's facts are made.
   // A line is no premise: the player sees it.
   const citing = (f: Taken): Reads | readonly Reads[] => {
-    const r = f.reasons[0] as Fired;
+    const r = saidOf(f);
     // A corner bit is the candidate struck from its angle: 0 for at least one
     // line, 2 for at most one. A firing rests on the bits it names, not on
     // the angle's other.
@@ -590,45 +616,49 @@ export function hintWalk(
       bits.push([a, AT_LEAST_ONE], [a, AT_MOST_ONE]);
     };
     let chain: readonly Link[] = [];
-    switch (r.kind) {
+    switch (r.id) {
       case "clueBound": {
         // Empty where the others already need every line, which counts the
         // fewest; a line where they can hold one fewer, which counts the most.
-        const bit = r.b["P"] ? AT_LEAST_ONE : AT_MOST_ONE;
-        for (const a of (r.witness as Witness).corners) bits.push([a, bit]);
+        const bit = r.binding["P"] ? AT_LEAST_ONE : AT_MOST_ONE;
+        for (const a of countOf(r).corners) bits.push([a, bit]);
         break;
       }
       case "cornerFromClue":
         // A strike each, each resting on its own count: the fewest lines
-        // where the corner takes at most one, the most where at least one.
+        // where the corner takes at most one (the 2 struck), the most where
+        // at least one.
         chains.set(f, chain);
-        return (f.reasons as readonly Fired[]).map((s) => ({
+        return f.reasons.map((_, i) => ({
           cells: [],
           edges: [],
-          edgeValues: (s.witness as Witness).corners.map((a): [number, number] => [
+          edgeValues: countOf(saidOf(f, i)).corners.map((a): [number, number] => [
             a,
-            s.b["d"] === 2 ? AT_LEAST_ONE : AT_MOST_ONE,
+            f.facts[3 * i + 2] === 2 ? AT_LEAST_ONE : AT_MOST_ONE,
           ]),
         }));
       case "cornerOther": {
         // At most one where a line is, at least one where an edge is empty.
-        const a = num(r, "a");
-        bits.push([a, m.grid[num(r, "e")] === LINE ? AT_MOST_ONE : AT_LEAST_ONE]);
+        const { a } = r.says.terms;
+        bits.push([
+          a,
+          m.grid[r.binding["e"] as number] === LINE ? AT_MOST_ONE : AT_LEAST_ONE,
+        ]);
         break;
       }
       case "cornerBoth": {
-        const a = num(r, "a");
+        const { a } = r.says.terms;
         // Both edges empty where at most one line, both lines where at least one.
         bits.push([a, (m.edgeCands[a] & 4) === 0 ? AT_MOST_ONE : AT_LEAST_ONE]);
         break;
       }
       case "cornerAcross":
-        bits.push([num(r, "a"), AT_LEAST_ONE]);
+        bits.push([r.says.terms.a, AT_LEAST_ONE]);
         break;
       case "cornerExit":
       case "cornerOppositeExit":
       case "pairFromCorner":
-        both(num(r, "a"));
+        both(r.says.terms.a);
         break;
       case "matchingPair":
       case "parityClue":
@@ -636,10 +666,10 @@ export function hintWalk(
       case "linkClue":
       case "linkDot":
       case "cornerFromPair":
-        chain = relations.path(num(r, "e"), num(r, "g"));
+        chain = relations.path(r.says.terms.e, r.says.terms.g);
         break;
       case "related":
-        chain = relations.path(num(r, "g"), num(r, "e"));
+        chain = relations.path(r.says.terms.from, r.says.terms.e);
         break;
     }
     chains.set(f, chain);
@@ -684,11 +714,11 @@ export function hintWalk(
           work.lines[e] = line;
           ops.push({ edge: e, state: line });
         }
-      const r = got.reasons[0] as Fired;
+      const r = saidOf(got);
       for (let i = 0; i < got.facts.length; i += 3) {
         const noting = got.facts[i] === STRIKE_EDGE || got.facts[i] === RELATE;
         if (noting === ops.length > 0)
-          throw new Error(`loopy hint: ${r.kind} both draws lines and makes notes`);
+          throw new Error(`loopy hint: ${r.id} both draws lines and makes notes`);
         if (!noting) continue;
         const note = noteOf(got, i, first + i / 3);
         notes.set(note.id, note);
@@ -697,7 +727,7 @@ export function hintWalk(
       }
       if (ops.length === 0) continue;
       return {
-        reason: lineReason(sp, r, before, ops, chains.get(got) ?? []),
+        reason: lineReason(r, ops, chains.get(got) ?? []),
         ops,
         tier: got.entry.tier,
         firing,
@@ -707,12 +737,20 @@ export function hintWalk(
   const noteOf = (got: Taken, i: number, id: number): Note => {
     const at = got.facts[i + 1];
     const v = got.facts[i + 2];
-    const s = got.reasons[i / 3] as Fired;
+    const s = saidOf(got, i / 3);
     const chain = chains.get(got) ?? [];
+    const outline = outlineOf(s);
     if (got.facts[i] === RELATE) {
       const edges: readonly [number, number] = [at, v >> 2];
       const opposite = (v & 3) === 2;
-      return { kind: "relation", id, edges, opposite, why: relationWhy(s, chain) };
+      return {
+        kind: "relation",
+        id,
+        edges,
+        opposite,
+        why: relationWhy(s, chain),
+        outline,
+      };
     }
     const bound: Bound = v === AT_MOST_ONE ? "atMostOne" : "atLeastOne";
     return {
@@ -723,123 +761,125 @@ export function hintWalk(
       edges: angleEdges(at),
       bound,
       why: cornerWhy(s, bound, chain),
+      outline,
     };
   };
-  const relationWhy = (s: Fired, chain: readonly Link[]): RelationWhy => {
-    switch (s.kind) {
+  const relationWhy = (s: LoopySaid, chain: readonly Link[]): RelationWhy => {
+    switch (s.id) {
       case "pairFromCorner":
-        return {
-          kind: "exactlyOneAtCorner",
-          dot: sp.angleCell[num(s, "a")],
-          from: num(s, "a"),
-        };
+        return { kind: "exactlyOneAtCorner" };
       case "pairAtClue":
-        return { kind: "faceParity", face: num(s, "f") };
+        return { kind: "faceParity", face: s.says.terms.f, clue: s.says.terms.n };
       case "pairAtDot":
-        return { kind: "dotParity", dot: num(s, "c") };
+        return { kind: "dotParity", dot: s.says.terms.c };
       case "linkClue":
-        return { kind: "faceLink", face: num(s, "f"), path: chain };
+        return {
+          kind: "faceLink",
+          face: s.says.terms.f,
+          clue: s.says.terms.n,
+          path: chain,
+        };
       case "linkDot":
-        return { kind: "dotLink", dot: num(s, "c"), path: chain };
+        return { kind: "dotLink", dot: s.says.terms.c, path: chain };
       default:
-        throw new Error(`loopy hint: ${s.kind} relates no edges`);
+        throw new Error(`loopy hint: ${s.id} relates no edges`);
     }
   };
-  const cornerWhy = (s: Fired, bound: Bound, chain: readonly Link[]): CornerWhy => {
-    switch (s.kind) {
+  const cornerWhy = (s: LoopySaid, bound: Bound, chain: readonly Link[]): CornerWhy => {
+    switch (s.id) {
       case "cornerAtDot":
         return { kind: bound === "atMostOne" ? "lineElsewhere" : "onlyWayOn" };
       case "cornerFromClue":
-        return { kind: "clue", face: num(s, "f"), witness: s.witness as Witness };
+        return {
+          kind: "clue",
+          face: s.says.terms.f,
+          clue: s.says.terms.n,
+          witness: countOf(s),
+        };
       case "cornerAcross":
-        return { kind: "acrossTheDot", from: num(s, "a") };
+        return { kind: "acrossTheDot" };
       case "cornerOppositeExit":
-        return { kind: "exactlyOneAcross", from: num(s, "a") };
+        return { kind: "exactlyOneAcross" };
       case "cornerFromPair":
         return { kind: "opposites", path: chain };
       default:
-        throw new Error(`loopy hint: ${s.kind} narrows no corner`);
+        throw new Error(`loopy hint: ${s.id} narrows no corner`);
     }
   };
   return { board, graph: walk.graph, notes, angleEdges, next };
 }
 
-const num = (r: Fired, k: string): number => r.b[k] as number;
+/** What a count of a clue's other edges rests on, which its rung reads
+ * beside what the technique says. */
+function countOf(said: LoopySaid): Witness {
+  if (said.witness === undefined)
+    throw new Error(`loopy hint: ${said.id} counts no clue's edges`);
+  return said.witness;
+}
 
 /** Why a firing that draws lines holds, in the hint's terms. */
 function lineReason(
-  sp: GridSpace,
-  r: Fired,
-  before: ArrayLike<number>,
+  r: LoopySaid,
   ops: readonly RecordedOp[],
   chain: readonly Link[],
 ): LoopyReason {
-  switch (r.kind) {
+  const outline = outlineOf(r);
+  switch (r.id) {
     case "clueFull":
     case "clueStarved":
-      return { kind: r.kind, face: num(r, "f") };
-    case "clueBlockedPair": {
-      const e = num(r, "e");
+    case "clueOneShort":
+      return { kind: r.id, clue: r.says.terms.n, outline };
+    case "clueBlockedPair":
       return {
         kind: "clueBlockedPair",
-        face: num(r, "f"),
-        dots: [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]],
-        between: e,
+        clue: r.says.terms.n,
+        between: r.says.terms.between,
+        outline,
       };
-    }
-    case "clueOneShort": {
-      const a = num(r, "a");
-      return {
-        kind: "clueOneShort",
-        face: num(r, "f"),
-        dot: sp.angleCell[a],
-        pair: [sp.angleEdges[a][0], sp.angleEdges[a][1]],
-      };
-    }
     case "deadEnd":
     case "lineContinues":
     case "dotFull":
-      return { kind: r.kind, dot: num(r, "c") };
-    case "earlyLoop": {
-      // A line left out of the loop it would close, or else a clue it
-      // would leave unmet.
-      const G = r.b["G"] as readonly number[];
-      const stray = sp.edges.some(
-        (g) => before[g] === LINE && !G.includes(sp.edgeEnds[2 * g]),
-      );
-      return { kind: "earlyLoop", because: stray ? "strayLines" : "unmetClues" };
-    }
+      return { kind: r.id, outline };
+    case "earlyLoop":
+      // The clues it outlines are the unmet ones, where no line is left out.
+      return {
+        kind: "earlyLoop",
+        because: outline.faces.length > 0 ? "unmetClues" : "strayLines",
+        outline,
+      };
     case "cornerOther":
     case "cornerBoth": {
-      const a = num(r, "a");
       // At most one where a line, or both edges, were made empty.
       const bound = ops[0].state === LINE_NO ? "atMostOne" : "atLeastOne";
-      return { kind: "corner", dot: sp.angleCell[a], dline: a, bound };
+      return { kind: "corner", dline: r.says.terms.a, bound, outline };
     }
     case "clueBound":
-      return {
-        kind: "clueBound",
-        face: num(r, "f"),
-        edge: num(r, "e"),
-        witness: r.witness as Witness,
-      };
-    case "cornerExit": {
-      const a = num(r, "a");
-      return { kind: "cornerExit", dot: sp.angleCell[a], dline: a };
-    }
+      return { kind: "clueBound", clue: r.says.terms.n, witness: countOf(r), outline };
+    case "cornerExit":
+      return { kind: "cornerExit", dline: r.says.terms.a, outline };
     case "matchingPair":
-      return { kind: "matchingPair", face: num(r, "f"), path: chain };
+      return { kind: "matchingPair", clue: r.says.terms.n, path: chain, outline };
     case "parityClue":
+      return {
+        kind: "parity",
+        face: r.says.terms.f,
+        clue: r.says.terms.n,
+        dot: null,
+        path: chain,
+        outline,
+      };
     case "parityDot":
       return {
         kind: "parity",
-        face: r.kind === "parityClue" ? num(r, "f") : null,
-        dot: r.kind === "parityDot" ? num(r, "c") : null,
+        face: null,
+        clue: null,
+        dot: r.says.terms.c,
         path: chain,
+        outline,
       };
     case "related":
-      return { kind: "related", from: num(r, "g"), path: chain };
+      return { kind: "related", from: r.says.terms.from, path: chain, outline };
     default:
-      throw new Error(`loopy hint: ${r.kind} draws no line a hint narrates`);
+      throw new Error(`loopy hint: ${r.id} draws no line a hint narrates`);
   }
 }

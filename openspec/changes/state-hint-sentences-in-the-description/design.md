@@ -14,7 +14,7 @@ relying on it.
 | Singles | `describedFiringHint`, `sentences[id](FiringSpoken)` | 9 functions, 7 techniques | arm (`corner`), how many ringed squares are left (narrowing), whether a line is striped, the numbers squares show |
 | Loopy | its own plan; `narrate` switches on a hand-built `LoopyReason` | 26 | the clue's value (0, 1, k), what a corner meets at its dot, opposite or matching pairs, how many cited corners |
 
-**Loopy has no `says` at all** (none of its techniques states terms or
+**Loopy had no `says` at all** (stated since, § "Loopy's says"; none of its techniques stated terms or
 marks; `build-hint-steps-in-the-engine` left it, with Slant, Net, Ascent,
 Mines, Filling, Pattern, Subsets, Guess and Black Box). So the trial's third
 game needs its `says` first: that is `build-hint-steps-in-the-engine`'s
@@ -177,6 +177,36 @@ technique is restated, or it stays an override.
    after.
 
 ## What the trial found
+
+### Loopy's says (2026-11-14)
+
+- **Every technique but `closed` says**, terms and marks; `closed` makes no
+  hint step (the plan stops at the finished board). The solver's reason
+  callbacks went, but for two, and the walk reads each firing's `says`.
+- **The form grew: a role may mark several sorts**, a set of each by the
+  sort's name (`outline: { face: "{f}", cell: "{apex(a)}" }`). A Loopy step
+  outlines a clue and a dot, or a clue and its corners, at once; one set a
+  role could not. Every Loopy outline is stated so, and the hint reads it by
+  sort (`outlineOf`), never by the technique. **1.6 needs the renderer to
+  match**: `StatedContext` draws every reference with one `MarkKind`, and a
+  Loopy reference must take the kind of the sort it names.
+- **`earlyLoop` is one deduction**, not two arms: a line left out of the loop,
+  or else clues left unmet. Its outline states the unmet clues only where no
+  line is left out, so the clues are empty exactly where the line is the
+  reason. A wording's `when` cannot read a role stated by sort yet, so 1.6
+  either lets it or states a count term for it.
+- **What stays code, each with its reason in the source:**
+  - the corners a clue's count leans on (`clueBound`, `cornerFromClue`):
+    `boundOf` pairs a face's edges greedily, as a player counts, which no
+    formula states; those two rungs keep a callback that adds it to `Said`;
+  - the chain of pairs relating two edges: the walk keeps what each relation
+    was found through (`Relations`), and a relation fact has no element a
+    formula reads;
+  - what a note's sentence quotes of the board (a clue's lines still needed,
+    a dot's lines): a note is placed later than it is found, so the plan
+    reads these where it places it.
+- The hint walk fingerprint is unchanged on both tiers. The word dump did not
+  finish one deal a preset of Loopy in ten minutes (tasks 1.5).
 
 ### Unequal (2026-11-14, `59c6af093`)
 

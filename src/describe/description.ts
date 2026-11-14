@@ -221,7 +221,7 @@ export interface StatedSays extends Worded {
    * (`Reads`). */
   reads?: boolean;
   terms?: Record<string, string>;
-  marks?: Partial<Record<SaidRole, string>>;
+  marks?: SaidMarksJson;
   /** What each square the firing decides has of its own, read where the
    * conclusion's `place` or `strike` makes it. Its wordings are tried there,
    * in the conclusion's scope. */
@@ -234,7 +234,7 @@ export interface StatedSays extends Worded {
     Worded & {
       when: string;
       terms?: Record<string, string>;
-      marks?: Partial<Record<SaidRole, string>>;
+      marks?: SaidMarksJson;
     }
   >;
 }
@@ -262,6 +262,19 @@ export interface Worded extends StatedClauses {
  * cells the premise reads that no other mark shows, which the hint's walk
  * counts as read (a line a firing fills whole, as against one it only hatches). */
 export type SaidRole = "outline" | "stripes" | "strike" | "strand" | "reads";
+
+/** A firing's marks as a description states them: a set by role, or where a
+ * step marks elements of several sorts in one role (Loopy's clue and dot), a
+ * set of each by its sort's name. */
+type SaidMarksJson = Partial<Record<SaidRole, string | Record<string, string>>>;
+
+/** One set a firing marks: its role, and where the role holds several sorts,
+ * the sort it is of (checked against the formula's when compiled). */
+export interface SaidMark {
+  role: SaidRole;
+  sort: string | null;
+  expr: Expr;
+}
 
 /** Techniques stated once, for every game that places them. */
 export interface LibraryJson {
@@ -566,7 +579,7 @@ export interface Says {
    * made; `null` where none does. */
   fact: {
     terms: { name: string; expr: Expr }[];
-    marks: { role: SaidRole; expr: Expr }[];
+    marks: SaidMark[];
     /** The clauses a square's step says, by wording. */
     words: Wording[];
   } | null;
@@ -574,7 +587,7 @@ export interface Says {
     name: string | null;
     when: Expr | null;
     terms: { name: string; expr: Expr }[];
-    marks: { role: SaidRole; expr: Expr }[];
+    marks: SaidMark[];
     /** The step's stated words, by wording. */
     words: Wording[];
   }[];
@@ -765,8 +778,19 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
         expr: at(`${label} ${n}`, src),
       })),
       marks: (
-        Object.entries({ ...stated.marks, ...marks }) as [SaidRole, string][]
-      ).map(([role, src]) => ({ role, expr: at(`${label} ${role}`, src) })),
+        Object.entries({ ...stated.marks, ...marks }) as [
+          SaidRole,
+          string | Record<string, string>,
+        ][]
+      ).flatMap(([role, src]): SaidMark[] =>
+        typeof src === "string"
+          ? [{ role, sort: null, expr: at(`${label} ${role}`, src) }]
+          : Object.entries(src).map(([sort, s]) => ({
+              role,
+              sort,
+              expr: at(`${label} ${role} ${sort}`, s),
+            })),
+      ),
       words:
         name === null
           ? wordingsOf(stated, label, at)
@@ -786,7 +810,11 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
             expr: at(`says fact ${n}`, src),
           })),
           marks: (Object.entries(stated.fact.marks ?? {}) as [SaidRole, string][]).map(
-            ([role, src]) => ({ role, expr: at(`says fact ${role}`, src) }),
+            ([role, src]): SaidMark => ({
+              role,
+              sort: null,
+              expr: at(`says fact ${role}`, src),
+            }),
           ),
           words: wordingsOf(stated.fact, "says fact", at),
         };

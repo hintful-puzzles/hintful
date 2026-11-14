@@ -18,6 +18,40 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "deadEnd" | "lineContinues" | "dotFull" | "clueFull" | "clueStarved" | "clueBlockedPair" | "clueOneShort" | "earlyLoop" | "closed" | "related" | "cornerAtDot" | "cornerOther" | "cornerBoth" | "clueBound" | "cornerFromClue" | "cornerAcross" | "cornerExit" | "cornerOppositeExit" | "matchingPair" | "pairAtClue" | "parityClue" | "linkClue" | "pairFromCorner" | "cornerFromPair" | "pairAtDot" | "parityDot" | "linkDot";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  deadEnd: DeadEndSays;
+  lineContinues: LineContinuesSays;
+  dotFull: DotFullSays;
+  clueFull: ClueFullSays;
+  clueStarved: ClueStarvedSays;
+  clueBlockedPair: ClueBlockedPairSays;
+  clueOneShort: ClueOneShortSays;
+  earlyLoop: EarlyLoopSays;
+  related: RelatedSays;
+  cornerAtDot: CornerAtDotSays;
+  cornerOther: CornerOtherSays;
+  cornerBoth: CornerBothSays;
+  clueBound: ClueBoundSays;
+  cornerFromClue: CornerFromClueSays;
+  cornerAcross: CornerAcrossSays;
+  cornerExit: CornerExitSays;
+  cornerOppositeExit: CornerOppositeExitSays;
+  matchingPair: MatchingPairSays;
+  pairAtClue: PairAtClueSays;
+  parityClue: ParityClueSays;
+  linkClue: LinkClueSays;
+  pairFromCorner: PairFromCornerSays;
+  cornerFromPair: CornerFromPairSays;
+  pairAtDot: PairAtDotSays;
+  parityDot: ParityDotSays;
+  linkDot: LinkDotSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["deadEnd","lineContinues","dotFull","clueFull","clueStarved","clueBlockedPair","clueOneShort","earlyLoop","related","cornerAtDot","cornerOther","cornerBoth","clueBound","cornerFromClue","cornerAcross","cornerExit","cornerOppositeExit","matchingPair","pairAtClue","parityClue","linkClue","pairFromCorner","cornerFromPair","pairAtDot","parityDot","linkDot"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -206,13 +240,19 @@ export interface DeadEndBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface DeadEndSays {
+  terms: { c: number; };
+  marks: { outline: { "cell": readonly number[]; }; };
+}
+
 const deadEndFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const deadEndFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function deadEnd(b: Marks, sp: GridSpace, fire: Fire<DeadEndBinding> | null): number {
+export function deadEnd(b: Marks, sp: GridSpace, fire: Fire<DeadEndBinding, DeadEndSays> | null): number {
   const facts = deadEndFacts;
   let fired = 0;
   let changed = false;
@@ -287,7 +327,10 @@ export function deadEnd(b: Marks, sp: GridSpace, fire: Fire<DeadEndBinding> | nu
     if (!(_q32)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { c: v_c }, marks: { outline: { "cell": setOf(v_c).slice() } } };
+        if (!fire({ c: v_c }, facts, _says)) return 1;
+      }
     }
   }
   return fired;
@@ -298,13 +341,19 @@ export interface LineContinuesBinding {
   o: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LineContinuesSays {
+  terms: { c: number; };
+  marks: { outline: { "cell": readonly number[]; }; };
+}
+
 const lineContinuesFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const lineContinuesFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function lineContinues(b: Marks, sp: GridSpace, fire: Fire<LineContinuesBinding> | null): number {
+export function lineContinues(b: Marks, sp: GridSpace, fire: Fire<LineContinuesBinding, LineContinuesSays> | null): number {
   const facts = lineContinuesFacts;
   let fired = 0;
   let changed = false;
@@ -377,7 +426,10 @@ export function lineContinues(b: Marks, sp: GridSpace, fire: Fire<LineContinuesB
       if (!(_c35)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, o: v_o }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c }, marks: { outline: { "cell": setOf(v_c).slice() } } };
+          if (!fire({ c: v_c, o: v_o }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -389,13 +441,19 @@ export interface DotFullBinding {
   k: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface DotFullSays {
+  terms: { c: number; };
+  marks: { outline: { "cell": readonly number[]; }; };
+}
+
 const dotFullFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const dotFullFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function dotFull(b: Marks, sp: GridSpace, fire: Fire<DotFullBinding> | null): number {
+export function dotFull(b: Marks, sp: GridSpace, fire: Fire<DotFullBinding, DotFullSays> | null): number {
   const facts = dotFullFacts;
   let fired = 0;
   let changed = false;
@@ -484,7 +542,10 @@ export function dotFull(b: Marks, sp: GridSpace, fire: Fire<DotFullBinding> | nu
       if (!(_c41)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, k: v_k }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c }, marks: { outline: { "cell": setOf(v_c).slice() } } };
+          if (!fire({ c: v_c, k: v_k }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -496,13 +557,19 @@ export interface ClueFullBinding {
   n: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClueFullSays {
+  terms: { f: number; n: number; };
+  marks: { outline: { "face": readonly number[]; }; };
+}
+
 const clueFullFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const clueFullFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFullBinding> | null): number {
+export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFullBinding, ClueFullSays> | null): number {
   const facts = clueFullFacts;
   let fired = 0;
   let changed = false;
@@ -593,7 +660,10 @@ export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFull
       if (!(_c42)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ f: v_f, n: v_n }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { f: v_f, n: _h16 }, marks: { outline: { "face": setOf(v_f).slice() } } };
+          if (!fire({ f: v_f, n: v_n }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -606,13 +676,19 @@ export interface ClueStarvedBinding {
   o: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClueStarvedSays {
+  terms: { f: number; n: number; };
+  marks: { outline: { "face": readonly number[]; }; };
+}
+
 const clueStarvedFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const clueStarvedFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function clueStarved(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueStarvedBinding> | null): number {
+export function clueStarved(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueStarvedBinding, ClueStarvedSays> | null): number {
   const facts = clueStarvedFacts;
   let fired = 0;
   let changed = false;
@@ -688,7 +764,10 @@ export function clueStarved(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueS
       if (!(_c36)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ f: v_f, n: v_n, o: v_o }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { f: v_f, n: _h14 }, marks: { outline: { "face": setOf(v_f).slice() } } };
+          if (!fire({ f: v_f, n: v_n, o: v_o }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -700,13 +779,19 @@ export interface ClueBlockedPairBinding {
   e: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClueBlockedPairSays {
+  terms: { f: number; n: number; between: number; };
+  marks: { outline: { "face": readonly number[]; "cell": readonly number[]; }; };
+}
+
 const clueBlockedPairFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const clueBlockedPairFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"},{"steps":["faceEdges","edgeEnds","cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function clueBlockedPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBlockedPairBinding> | null): number {
+export function clueBlockedPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBlockedPairBinding, ClueBlockedPairSays> | null): number {
   const facts = clueBlockedPairFacts;
   let fired = 0;
   let changed = false;
@@ -937,7 +1022,10 @@ export function clueBlockedPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<C
       if (!(_c112)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ f: v_f, e: v_e }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { f: v_f, n: _h35, between: v_e }, marks: { outline: { "face": setOf(v_f).slice(), "cell": [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].slice() } } };
+          if (!fire({ f: v_f, e: v_e }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -949,13 +1037,19 @@ export interface ClueOneShortBinding {
   a: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClueOneShortSays {
+  terms: { f: number; n: number; };
+  marks: { outline: { "face": readonly number[]; "cell": readonly number[]; }; };
+}
+
 const clueOneShortFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const clueOneShortFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"},{"steps":["faceAngles","angleEdges"],"kind":"answer"},{"steps":["faceAngles","angleCell","cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function clueOneShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueOneShortBinding> | null): number {
+export function clueOneShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueOneShortBinding, ClueOneShortSays> | null): number {
   const facts = clueOneShortFacts;
   let fired = 0;
   let changed = false;
@@ -1151,7 +1245,10 @@ export function clueOneShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Clue
       if (!(_q96)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ f: v_f, a: v_a }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { f: v_f, n: _h31 }, marks: { outline: { "face": setOf(v_f).slice(), "cell": setOf(sp.angleCell[v_a]).slice() } } };
+          if (!fire({ f: v_f, a: v_a }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -1164,16 +1261,24 @@ export interface EarlyLoopBinding {
   G: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface EarlyLoopSays {
+  terms: {  };
+  marks: { outline: { "edge": readonly number[]; "face": readonly number[]; }; };
+}
+
 const earlyLoopFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^2. */
-export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLoopBinding> | null): number {
+export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLoopBinding, EarlyLoopSays> | null): number {
   const _g28: number[] = [];
   const _g57: number[] = [];
+  const _g87: number[] = [];
+  const _g93: number[] = [];
   const facts = earlyLoopFacts;
   let fired = 0;
   let changed = false;
-  const _m87_0 = b.made[0];
+  const _m126_0 = b.made[0];
   _g28.length = 0;
   G29: {
     const _a32 = sp.edges;
@@ -1184,9 +1289,9 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
     }
   }
   const v_L = _g28;
-  const _m88_1 = b.made[1];
-  const _m89_2 = b.made[2];
-  const _m90_4 = b.made[4];
+  const _m127_1 = b.made[1];
+  const _m128_2 = b.made[2];
+  const _m129_4 = b.made[4];
   const _eg36 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a34 = sp.edges;
   for (let _i35 = 0; _i35 < _a34.length; _i35++) {
@@ -1245,7 +1350,7 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
         _c56 = _c55;
       }
       if (!(_c56)) break L37;
-      if (b.made[0] !== _m87_0 || b.made[1] !== _m88_1 || b.made[2] !== _m89_2 || b.made[4] !== _m90_4) {
+      if (b.made[0] !== _m126_0 || b.made[1] !== _m127_1 || b.made[2] !== _m128_2 || b.made[4] !== _m129_4) {
         _g57.length = 0;
         G58: {
           const _a61 = sp.edges;
@@ -1324,7 +1429,62 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ L: v_L.slice(), e: v_e, G: v_G.slice() }, facts)) return 1;
+        if (fire !== null) {
+          _g87.length = 0;
+          G88: {
+            const _a91 = v_L;
+            for (let _i92 = 0; _i92 < _a91.length; _i92++) {
+              const v_g = _a91[_i92];
+              if (!((_eg36.of(sp.edgeEnds[2 * v_g]) === v_G))) continue;
+              _g87.push(v_g);
+            }
+          }
+          _g93.length = 0;
+          G94: {
+            const _a110 = sp.faces;
+            for (let _i111 = 0; _i111 < _a110.length; _i111++) {
+              const v_f = _a110[_i111];
+              const _h116 = clueAt(cl.number, v_f);
+              let _q112 = false;
+              Q113: {
+                const _a114 = v_L;
+                for (let _i115 = 0; _i115 < _a114.length; _i115++) {
+                  const v_g = _a114[_i115];
+                  if (!(_eg36.of(sp.edgeEnds[2 * v_g]) === v_G)) {
+                    _q112 = true;
+                    break Q113;
+                  }
+                }
+              }
+              let _c125: boolean = (!(_q112) && (_h116 !== -1));
+              if (_c125) {
+                let _g117 = 0;
+                G118: {
+                  const _a119 = sp.faceEdges[v_f];
+                  for (let _i120 = 0; _i120 < _a119.length; _i120++) {
+                    const v_e = _a119[_i120];
+                    if (!(((b.grid[v_e] || -1) === 1))) continue;
+                    _g117++;
+                  }
+                }
+                let _g121 = 0;
+                G122: {
+                  const _a123 = sp.faceEdges[v_f];
+                  for (let _i124 = 0; _i124 < _a123.length; _i124++) {
+                    const v_x = _a123[_i124];
+                    if (!((v_x === v_e))) continue;
+                    _g121++;
+                  }
+                }
+                _c125 = ((_h116 - _g117) !== _g121);
+              }
+              if (!(_c125)) continue;
+              _g93.push(v_f);
+            }
+          }
+          const _says = { terms: {  }, marks: { outline: { "edge": _g87.slice(), "face": _g93.slice() } } };
+          if (!fire({ L: v_L.slice(), e: v_e, G: v_G.slice() }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -1508,10 +1668,16 @@ export interface RelatedBinding {
   g: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface RelatedSays {
+  terms: { e: number; from: number; };
+  marks: { outline: { "edge": readonly number[]; }; };
+}
+
 const relatedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function related(b: Marks, sp: GridSpace, fire: Fire<RelatedBinding> | null): number {
+export function related(b: Marks, sp: GridSpace, fire: Fire<RelatedBinding, RelatedSays> | null): number {
   const facts = relatedFacts;
   let fired = 0;
   let changed = false;
@@ -1557,7 +1723,10 @@ export function related(b: Marks, sp: GridSpace, fire: Fire<RelatedBinding> | nu
       if (!(_c15)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ e: v_e, g: v_g }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { e: v_e, from: v_g }, marks: { outline: { "edge": setOf(v_g).slice() } } };
+          if (!fire({ e: v_e, g: v_g }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -1569,13 +1738,19 @@ export interface CornerAtDotBinding {
   a: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CornerAtDotSays {
+  terms: { c: number; a: number; };
+  marks: { outline: { "cell": readonly number[]; }; };
+}
+
 const cornerAtDotFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const cornerAtDotFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"},{"steps":["cellAngles","angleEdges"],"kind":"answer"},{"steps":["cellAngles"],"kind":"edgeMark"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function cornerAtDot(b: Marks, sp: GridSpace, fire: Fire<CornerAtDotBinding> | null): number {
+export function cornerAtDot(b: Marks, sp: GridSpace, fire: Fire<CornerAtDotBinding, CornerAtDotSays> | null): number {
   const facts = cornerAtDotFacts;
   let fired = 0;
   let changed = false;
@@ -1663,7 +1838,10 @@ export function cornerAtDot(b: Marks, sp: GridSpace, fire: Fire<CornerAtDotBindi
       if (!(_c40)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, a: v_a }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { c: v_c, a: v_a }, marks: { outline: { "cell": setOf(v_c).slice() } } };
+          if (!fire({ c: v_c, a: v_a }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -1676,13 +1854,19 @@ export interface CornerOtherBinding {
   g: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CornerOtherSays {
+  terms: { a: number; c: number; };
+  marks: { outline: { "angle": readonly number[]; }; };
+}
+
 const cornerOtherFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const cornerOtherFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function cornerOther(b: Marks, sp: GridSpace, fire: Fire<CornerOtherBinding> | null): number {
+export function cornerOther(b: Marks, sp: GridSpace, fire: Fire<CornerOtherBinding, CornerOtherSays> | null): number {
   const facts = cornerOtherFacts;
   let fired = 0;
   let changed = false;
@@ -1692,9 +1876,10 @@ export function cornerOther(b: Marks, sp: GridSpace, fire: Fire<CornerOtherBindi
   R1:
   for (let _i8 = 0; _i8 < _a7.length; _i8++) {
     const v_a = _a7[_i8];
-    const _m15_2 = b.made[2];
+    const _m16_2 = b.made[2];
     if (_visit !== null) { if (_visit[v_a] === 0) continue; _visit[v_a] = 0; }
     if (!((b.edgeCand(v_a) !== _h9))) continue;
+    const _h15 = sp.angleCell[v_a];
     const _a10 = sp.angleEdges[v_a];
     for (let _i11 = 0; _i11 < _a10.length; _i11++) {
       const v_e = _a10[_i11];
@@ -1702,7 +1887,7 @@ export function cornerOther(b: Marks, sp: GridSpace, fire: Fire<CornerOtherBindi
       for (let _i13 = 0; _i13 < _a12.length; _i13++) {
         const v_g = _a12[_i13];
         if (!(((((v_g !== v_e) && (b.grid[v_e] !== 0)) && !((b.grid[v_g] !== 0))) && ((((b.grid[v_e] || -1) === 1) && !(((b.edgeCand(v_a) >> 2) & 1) !== 0)) || (((b.grid[v_e] || -1) === 2) && !(((b.edgeCand(v_a) >> 0) & 1) !== 0)))))) continue;
-        if (b.made[2] !== _m15_2) {
+        if (b.made[2] !== _m16_2) {
           if (!((b.edgeCand(v_a) !== ((1 << 0) | (1 << 1) | (1 << 2))))) { if (_visit !== null) _visit[v_a] = 1; continue R1; }
         }
         if (DEV && staleChecking) {
@@ -1715,7 +1900,10 @@ export function cornerOther(b: Marks, sp: GridSpace, fire: Fire<CornerOtherBindi
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ a: v_a, e: v_e, g: v_g }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { a: v_a, c: _h15 }, marks: { outline: { "angle": setOf(v_a).slice() } } };
+            if (!fire({ a: v_a, e: v_e, g: v_g }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -1728,13 +1916,19 @@ export interface CornerBothBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CornerBothSays {
+  terms: { a: number; c: number; };
+  marks: { outline: { "angle": readonly number[]; "cell": readonly number[]; }; };
+}
+
 const cornerBothFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const cornerBothFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"},{"steps":["angleCell","cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function cornerBoth(b: Marks, sp: GridSpace, fire: Fire<CornerBothBinding> | null): number {
+export function cornerBoth(b: Marks, sp: GridSpace, fire: Fire<CornerBothBinding, CornerBothSays> | null): number {
   const facts = cornerBothFacts;
   let fired = 0;
   let changed = false;
@@ -1870,7 +2064,10 @@ export function cornerBoth(b: Marks, sp: GridSpace, fire: Fire<CornerBothBinding
       if (!(_c61)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ a: v_a, c: v_c }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { a: v_a, c: v_c }, marks: { outline: { "angle": setOf(v_a).slice(), "cell": setOf(v_c).slice() } } };
+          if (!fire({ a: v_a, c: v_c }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -1886,6 +2083,12 @@ export interface ClueBoundBinding {
   Q: boolean;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClueBoundSays {
+  terms: { f: number; n: number; };
+  marks: { outline: { "face": readonly number[]; }; };
+}
+
 const clueBoundFacts: number[] = [];
 let clueBoundCands = new Int32Array(0);
 let clueBound_f86 = new Int32Array(0);
@@ -1897,7 +2100,7 @@ let clueBound_l117: readonly number[] = [];
 const clueBoundFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceAngles","angleEdges"],"kind":"answer"},{"steps":["faceAngles"],"kind":"edgeMark"},{"steps":["faceEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function clueBound(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBoundBinding> | null): number {
+export function clueBound(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBoundBinding, ClueBoundSays> | null): number {
   if (clueBound_f86.length < sp.edges.length) clueBound_f86 = new Int32Array(sp.edges.length).fill(-1);
   else clueBound_f86.fill(-1);
   clueBound_l87 = [];
@@ -2348,7 +2551,10 @@ export function clueBound(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBou
         if (!(_c215)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ f: v_f, n: v_n, e: v_e, S: v_S.slice(), P: v_P, Q: v_Q }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { f: v_f, n: v_n }, marks: { outline: { "face": setOf(v_f).slice() } } };
+            if (!fire({ f: v_f, n: v_n, e: v_e, S: v_S.slice(), P: v_P, Q: v_Q }, facts, _says)) return 1;
+          }
           cands.fill(-1);
         }
       }
@@ -2368,6 +2574,12 @@ export interface CornerFromClueBinding {
   Q: boolean;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CornerFromClueSays {
+  terms: { f: number; n: number; a: number; };
+  marks: { outline: { "face": readonly number[]; }; };
+}
+
 const cornerFromClueFacts: number[] = [];
 let cornerFromClueCands = new Int32Array(0);
 let cornerFromClue_f108 = new Int32Array(0);
@@ -2379,7 +2591,7 @@ let cornerFromClue_l138: readonly number[] = [];
 const cornerFromClueFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"},{"steps":["faceAngles"],"kind":"edgeMark"},{"steps":["faceAngles","angleEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function cornerFromClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CornerFromClueBinding> | null): number {
+export function cornerFromClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CornerFromClueBinding, CornerFromClueSays> | null): number {
   if (cornerFromClue_f108.length < sp.edges.length) cornerFromClue_f108 = new Int32Array(sp.edges.length).fill(-1);
   else cornerFromClue_f108.fill(-1);
   cornerFromClue_l109 = [];
@@ -2878,7 +3090,10 @@ export function cornerFromClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Co
           if (!(_c247)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ f: v_f, n: v_n, k: v_k, o: v_o, a: v_a, S: v_S.slice(), P: v_P, Q: v_Q }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { f: v_f, n: v_n, a: v_a }, marks: { outline: { "face": setOf(v_f).slice() } } };
+              if (!fire({ f: v_f, n: v_n, k: v_k, o: v_o, a: v_a, S: v_S.slice(), P: v_P, Q: v_Q }, facts, _says)) return 1;
+            }
             cands.fill(-1);
           }
         }
@@ -2893,13 +3108,19 @@ export interface CornerAcrossBinding {
   b: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CornerAcrossSays {
+  terms: { a: number; b: number; };
+  marks: { outline: { "angle": readonly number[]; "cell": readonly number[]; }; };
+}
+
 const cornerAcrossFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const cornerAcrossFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"},{"steps":["angleCell","cellAngles"],"kind":"edgeMark"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function cornerAcross(b: Marks, sp: GridSpace, fire: Fire<CornerAcrossBinding> | null): number {
+export function cornerAcross(b: Marks, sp: GridSpace, fire: Fire<CornerAcrossBinding, CornerAcrossSays> | null): number {
   const facts = cornerAcrossFacts;
   let fired = 0;
   let changed = false;
@@ -2908,8 +3129,8 @@ export function cornerAcross(b: Marks, sp: GridSpace, fire: Fire<CornerAcrossBin
   R1:
   for (let _i16 = 0; _i16 < _a15.length; _i16++) {
     const v_a = _a15[_i16];
-    const _m45_0 = b.made[0];
-    const _m46_2 = b.made[2];
+    const _m46_0 = b.made[0];
+    const _m47_2 = b.made[2];
     if (_visit !== null) { if (_visit[v_a] === 0) continue; _visit[v_a] = 0; }
     let _c22: boolean = !(((b.edgeCand(v_a) >> 0) & 1) !== 0);
     if (_c22) {
@@ -2928,6 +3149,7 @@ export function cornerAcross(b: Marks, sp: GridSpace, fire: Fire<CornerAcrossBin
       _c22 = _q17;
     }
     if (!(_c22)) continue;
+    const _h45 = sp.angleCell[v_a];
     const _a23 = sp.cellAngles[sp.angleCell[v_a]];
     for (let _i24 = 0; _i24 < _a23.length; _i24++) {
       const v_b = _a23[_i24];
@@ -2947,7 +3169,7 @@ export function cornerAcross(b: Marks, sp: GridSpace, fire: Fire<CornerAcrossBin
         _c29 = _q25;
       }
       if (!(_c29)) continue;
-      if (b.made[0] !== _m45_0 || b.made[2] !== _m46_2) {
+      if (b.made[0] !== _m46_0 || b.made[2] !== _m47_2) {
         let _c34: boolean = !(((b.edgeCand(v_a) >> 0) & 1) !== 0);
         if (_c34) {
           let _q30 = true;
@@ -3004,7 +3226,10 @@ export function cornerAcross(b: Marks, sp: GridSpace, fire: Fire<CornerAcrossBin
       if (!(true)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ a: v_a, b: v_b }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { a: v_a, b: v_b }, marks: { outline: { "angle": setOf(v_a).slice(), "cell": setOf(_h45).slice() } } };
+          if (!fire({ a: v_a, b: v_b }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -3016,13 +3241,19 @@ export interface CornerExitBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CornerExitSays {
+  terms: { a: number; c: number; };
+  marks: { outline: { "angle": readonly number[]; "cell": readonly number[]; }; };
+}
+
 const cornerExitFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const cornerExitFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"},{"steps":["angleCell","cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function cornerExit(b: Marks, sp: GridSpace, fire: Fire<CornerExitBinding> | null): number {
+export function cornerExit(b: Marks, sp: GridSpace, fire: Fire<CornerExitBinding, CornerExitSays> | null): number {
   const facts = cornerExitFacts;
   let fired = 0;
   let changed = false;
@@ -3131,7 +3362,10 @@ export function cornerExit(b: Marks, sp: GridSpace, fire: Fire<CornerExitBinding
       if (!(_q50)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ a: v_a, c: v_c }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { a: v_a, c: v_c }, marks: { outline: { "angle": setOf(v_a).slice(), "cell": setOf(v_c).slice() } } };
+          if (!fire({ a: v_a, c: v_c }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -3144,13 +3378,19 @@ export interface CornerOppositeExitBinding {
   b: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CornerOppositeExitSays {
+  terms: { a: number; b: number; c: number; };
+  marks: { outline: { "angle": readonly number[]; "cell": readonly number[]; }; };
+}
+
 const cornerOppositeExitFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const cornerOppositeExitFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"},{"steps":["angleCell","cellEdges"],"kind":"answer"},{"steps":["angleCell","cellAngles","angleEdges"],"kind":"answer"},{"steps":["angleCell","cellAngles"],"kind":"edgeMark"}],"relation":false};
 
 /** Its dearest read grows with the board as n. */
-export function cornerOppositeExit(b: Marks, sp: GridSpace, fire: Fire<CornerOppositeExitBinding> | null): number {
+export function cornerOppositeExit(b: Marks, sp: GridSpace, fire: Fire<CornerOppositeExitBinding, CornerOppositeExitSays> | null): number {
   const facts = cornerOppositeExitFacts;
   let fired = 0;
   let changed = false;
@@ -3356,7 +3596,10 @@ export function cornerOppositeExit(b: Marks, sp: GridSpace, fire: Fire<CornerOpp
         if (!(_c99)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ a: v_a, c: v_c, b: v_b }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { a: v_a, b: v_b, c: v_c }, marks: { outline: { "angle": setOf(v_a).slice(), "cell": setOf(v_c).slice() } } };
+            if (!fire({ a: v_a, c: v_c, b: v_b }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -3372,13 +3615,19 @@ export interface MatchingPairBinding {
   g: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface MatchingPairSays {
+  terms: { f: number; n: number; e: number; g: number; };
+  marks: { outline: { "face": readonly number[]; }; };
+}
+
 const matchingPairFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const matchingPairFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":true};
 
 /** Its dearest read grows with the board as n. */
-export function matchingPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MatchingPairBinding> | null): number {
+export function matchingPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MatchingPairBinding, MatchingPairSays> | null): number {
   const facts = matchingPairFacts;
   let fired = 0;
   let changed = false;
@@ -3512,7 +3761,10 @@ export function matchingPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Matc
           if (!(_c64)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ f: v_f, n: v_n, o: v_o, e: v_e, g: v_g }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { f: v_f, n: _h22, e: v_e, g: v_g }, marks: { outline: { "face": setOf(v_f).slice() } } };
+              if (!fire({ f: v_f, n: v_n, o: v_o, e: v_e, g: v_g }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -3528,13 +3780,19 @@ export interface PairAtClueBinding {
   g: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface PairAtClueSays {
+  terms: { f: number; n: number; e: number; g: number; };
+  marks: { outline: { "face": readonly number[]; }; };
+}
+
 const pairAtClueFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const pairAtClueFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":true};
 
 /** Its dearest read grows with the board as n. */
-export function pairAtClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairAtClueBinding> | null): number {
+export function pairAtClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairAtClueBinding, PairAtClueSays> | null): number {
   const _g25: number[] = [];
   const facts = pairAtClueFacts;
   let fired = 0;
@@ -3621,7 +3879,10 @@ export function pairAtClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairAt
         if (!(((b.pairOf(v_e, v_g) >> _t52) & 1) !== 0)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ f: v_f, O: v_O.slice(), e: v_e, g: v_g }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { f: v_f, n: _h18, e: v_e, g: v_g }, marks: { outline: { "face": setOf(v_f).slice() } } };
+            if (!fire({ f: v_f, O: v_O.slice(), e: v_e, g: v_g }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -3637,13 +3898,19 @@ export interface ParityClueBinding {
   k: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ParityClueSays {
+  terms: { f: number; n: number; e: number; g: number; };
+  marks: { outline: { "face": readonly number[]; }; };
+}
+
 const parityClueFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const parityClueFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":true};
 
 /** Its dearest read grows with the board as n. */
-export function parityClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ParityClueBinding> | null): number {
+export function parityClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ParityClueBinding, ParityClueSays> | null): number {
   const _g28: number[] = [];
   const _g47: number[] = [];
   const facts = parityClueFacts;
@@ -3753,7 +4020,10 @@ export function parityClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Parity
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ f: v_f, O: v_O.slice(), e: v_e, g: v_g, k: v_k }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { f: v_f, n: _h22, e: v_e, g: v_g }, marks: { outline: { "face": setOf(v_f).slice() } } };
+              if (!fire({ f: v_f, O: v_O.slice(), e: v_e, g: v_g, k: v_k }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -3772,13 +4042,19 @@ export interface LinkClueBinding {
   k: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LinkClueSays {
+  terms: { f: number; n: number; e: number; g: number; };
+  marks: { outline: { "face": readonly number[]; }; };
+}
+
 const linkClueFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const linkClueFootprint: Footprint = {"sort":"face","reads":[{"steps":["faceEdges"],"kind":"answer"}],"relation":true};
 
 /** Its dearest read grows with the board as n. */
-export function linkClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LinkClueBinding> | null): number {
+export function linkClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LinkClueBinding, LinkClueSays> | null): number {
   const _g29: number[] = [];
   const _g50: number[] = [];
   const facts = linkClueFacts;
@@ -3893,7 +4169,10 @@ export function linkClue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LinkClue
             if (!(((b.pairOf(v_h, v_k) >> _t67) & 1) !== 0)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ f: v_f, O: v_O.slice(), e: v_e, g: v_g, R: v_R.slice(), h: v_h, k: v_k }, facts)) return 1;
+              if (fire !== null) {
+                const _says = { terms: { f: v_f, n: _h22, e: v_e, g: v_g }, marks: { outline: { "face": setOf(v_f).slice() } } };
+                if (!fire({ f: v_f, O: v_O.slice(), e: v_e, g: v_g, R: v_R.slice(), h: v_h, k: v_k }, facts, _says)) return 1;
+              }
             }
           }
         }
@@ -3909,13 +4188,19 @@ export interface PairFromCornerBinding {
   g: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface PairFromCornerSays {
+  terms: { a: number; };
+  marks: { outline: { "angle": readonly number[]; }; };
+}
+
 const pairFromCornerFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const pairFromCornerFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"}],"relation":true};
 
 /** Its dearest read grows with the board as n. */
-export function pairFromCorner(b: Marks, sp: GridSpace, fire: Fire<PairFromCornerBinding> | null): number {
+export function pairFromCorner(b: Marks, sp: GridSpace, fire: Fire<PairFromCornerBinding, PairFromCornerSays> | null): number {
   const facts = pairFromCornerFacts;
   let fired = 0;
   let changed = false;
@@ -3971,7 +4256,10 @@ export function pairFromCorner(b: Marks, sp: GridSpace, fire: Fire<PairFromCorne
       if (!(((b.pairOf(v_e, v_g) >> 2) & 1) !== 0)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ a: v_a, e: v_e, g: v_g }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { a: v_a }, marks: { outline: { "angle": setOf(v_a).slice() } } };
+          if (!fire({ a: v_a, e: v_e, g: v_g }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -3984,13 +4272,19 @@ export interface CornerFromPairBinding {
   g: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CornerFromPairSays {
+  terms: { a: number; e: number; g: number; };
+  marks: {  };
+}
+
 const cornerFromPairFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const cornerFromPairFootprint: Footprint = {"sort":"angle","reads":[{"steps":[],"kind":"edgeMark"},{"steps":["angleEdges"],"kind":"answer"}],"relation":true};
 
 /** Its dearest read grows with the board as n. */
-export function cornerFromPair(b: Marks, sp: GridSpace, fire: Fire<CornerFromPairBinding> | null): number {
+export function cornerFromPair(b: Marks, sp: GridSpace, fire: Fire<CornerFromPairBinding, CornerFromPairSays> | null): number {
   const facts = cornerFromPairFacts;
   let fired = 0;
   let changed = false;
@@ -4051,7 +4345,10 @@ export function cornerFromPair(b: Marks, sp: GridSpace, fire: Fire<CornerFromPai
       if (!(_c25)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ a: v_a, e: v_e, g: v_g }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { a: v_a, e: v_e, g: v_g }, marks: {  } };
+          if (!fire({ a: v_a, e: v_e, g: v_g }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -4065,13 +4362,19 @@ export interface PairAtDotBinding {
   g: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface PairAtDotSays {
+  terms: { c: number; e: number; g: number; };
+  marks: { outline: { "cell": readonly number[]; }; };
+}
+
 const pairAtDotFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const pairAtDotFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":true};
 
 /** Its dearest read grows with the board as n. */
-export function pairAtDot(b: Marks, sp: GridSpace, fire: Fire<PairAtDotBinding> | null): number {
+export function pairAtDot(b: Marks, sp: GridSpace, fire: Fire<PairAtDotBinding, PairAtDotSays> | null): number {
   const _g13: number[] = [];
   const facts = pairAtDotFacts;
   let fired = 0;
@@ -4129,7 +4432,10 @@ export function pairAtDot(b: Marks, sp: GridSpace, fire: Fire<PairAtDotBinding> 
         if (!(((b.pairOf(v_e, v_g) >> _t35) & 1) !== 0)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, O: v_O.slice(), e: v_e, g: v_g }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { c: v_c, e: v_e, g: v_g }, marks: { outline: { "cell": setOf(v_c).slice() } } };
+            if (!fire({ c: v_c, O: v_O.slice(), e: v_e, g: v_g }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -4145,13 +4451,19 @@ export interface ParityDotBinding {
   k: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ParityDotSays {
+  terms: { c: number; e: number; g: number; };
+  marks: { outline: { "cell": readonly number[]; }; };
+}
+
 const parityDotFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const parityDotFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":true};
 
 /** Its dearest read grows with the board as n. */
-export function parityDot(b: Marks, sp: GridSpace, fire: Fire<ParityDotBinding> | null): number {
+export function parityDot(b: Marks, sp: GridSpace, fire: Fire<ParityDotBinding, ParityDotSays> | null): number {
   const _g17: number[] = [];
   const _g31: number[] = [];
   const facts = parityDotFacts;
@@ -4219,7 +4531,10 @@ export function parityDot(b: Marks, sp: GridSpace, fire: Fire<ParityDotBinding> 
           if (!(true)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ c: v_c, O: v_O.slice(), e: v_e, g: v_g, k: v_k }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { c: v_c, e: v_e, g: v_g }, marks: { outline: { "cell": setOf(v_c).slice() } } };
+              if (!fire({ c: v_c, O: v_O.slice(), e: v_e, g: v_g, k: v_k }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -4238,13 +4553,19 @@ export interface LinkDotBinding {
   k: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LinkDotSays {
+  terms: { c: number; e: number; g: number; };
+  marks: { outline: { "cell": readonly number[]; }; };
+}
+
 const linkDotFacts: number[] = [];
 
 /** What a binding at one element of its first binder reads. */
 const linkDotFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"}],"relation":true};
 
 /** Its dearest read grows with the board as n. */
-export function linkDot(b: Marks, sp: GridSpace, fire: Fire<LinkDotBinding> | null): number {
+export function linkDot(b: Marks, sp: GridSpace, fire: Fire<LinkDotBinding, LinkDotSays> | null): number {
   const _g17: number[] = [];
   const _g33: number[] = [];
   const facts = linkDotFacts;
@@ -4316,7 +4637,10 @@ export function linkDot(b: Marks, sp: GridSpace, fire: Fire<LinkDotBinding> | nu
             if (!(((b.pairOf(v_h, v_k) >> _t45) & 1) !== 0)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ c: v_c, O: v_O.slice(), e: v_e, g: v_g, R: v_R.slice(), h: v_h, k: v_k }, facts)) return 1;
+              if (fire !== null) {
+                const _says = { terms: { c: v_c, e: v_e, g: v_g }, marks: { outline: { "cell": setOf(v_c).slice() } } };
+                if (!fire({ c: v_c, O: v_O.slice(), e: v_e, g: v_g, R: v_R.slice(), h: v_h, k: v_k }, facts, _says)) return 1;
+              }
             }
           }
         }

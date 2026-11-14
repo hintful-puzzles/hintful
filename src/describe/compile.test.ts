@@ -241,6 +241,38 @@ describe("a technique states how its dearest read grows with the board", () => {
   });
 });
 
+describe("a role a step marks several sorts in holds a set of each", () => {
+  const marked = (outline: Record<string, string>): string =>
+    compileLibrary(
+      {
+        library: "t",
+        techniques: {
+          x: {
+            for: "c in cells where known(c)",
+            conclude: "forall d in adj4(c): strike(d, 1)",
+            says: { marks: { outline } },
+          },
+        },
+      },
+      "t",
+      "./runtime.ts",
+    );
+
+  it("by the sort's name, typed so", () => {
+    const code = marked({ cell: "{c}", line: "{row(c)}" });
+    expect(code).toContain(
+      'marks: { outline: { "cell": readonly number[]; "line": readonly number[]; }; };',
+    );
+    expect(code).toMatch(/marks: \{ outline: \{ "cell": .*\.slice\(\), "line": /);
+  });
+
+  it("and refuses a set named for a sort it is not of", () => {
+    expect(() => marked({ line: "{c}" })).toThrow(
+      /says marks outline line is not a set of lines/,
+    );
+  });
+});
+
 describe("a stated clause names only what its technique states", () => {
   const stated = (says: Record<string, unknown>): string =>
     compileLibrary(

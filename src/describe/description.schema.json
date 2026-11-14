@@ -8,6 +8,29 @@
   "else": { "$ref": "#/$defs/game" },
   "$defs": {
     "formula": { "type": "string", "minLength": 1, "description": "A formula." },
+    "saidMark": {
+      "description": "A set of elements, or where the step marks elements of several sorts in one role, a set of each by its sort's name (`{ face: \"{f}\", cell: \"{c}\" }`).",
+      "oneOf": [
+        { "$ref": "#/$defs/formula" },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/formula" }
+        }
+      ]
+    },
+    "saidMarks": {
+      "type": "object",
+      "description": "The elements a step marks, by the role they are marked in. The firing's own facts are ringed without being said; evidence is the outline's set less them.",
+      "additionalProperties": false,
+      "properties": {
+        "outline": { "$ref": "#/$defs/saidMark" },
+        "stripes": { "$ref": "#/$defs/saidMark" },
+        "strike": { "$ref": "#/$defs/saidMark" },
+        "strand": { "$ref": "#/$defs/saidMark" },
+        "reads": { "$ref": "#/$defs/saidMark" }
+      }
+    },
     "prose": { "type": "string", "minLength": 1, "description": "Markdown." },
     "clause": {
       "type": "string",
@@ -90,18 +113,7 @@
               "description": "Named values the step's sentence reads, by name.",
               "additionalProperties": { "$ref": "#/$defs/formula" }
             },
-            "marks": {
-              "type": "object",
-              "description": "The elements a step marks, by the role they are marked in: a set of cells. The firing's own facts are ringed without being said; evidence is the outline's set less them.",
-              "additionalProperties": false,
-              "properties": {
-                "outline": { "$ref": "#/$defs/formula" },
-                "stripes": { "$ref": "#/$defs/formula" },
-                "strike": { "$ref": "#/$defs/formula" },
-                "strand": { "$ref": "#/$defs/formula" },
-                "reads": { "$ref": "#/$defs/formula" }
-              }
-            },
+            "marks": { "$ref": "#/$defs/saidMarks" },
             "fact": {
               "type": "object",
               "description": "What a square the firing decides has of its own, read where the conclusion's `place` or `strike` makes it, in the conclusion's scope (a `forall` binder is live, and a `with` may be written): the step for that square takes these in place of the firing's, and a step for the firing takes the union of its squares' marks.",
@@ -149,17 +161,7 @@
                     "type": "object",
                     "additionalProperties": { "$ref": "#/$defs/formula" }
                   },
-                  "marks": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                      "outline": { "$ref": "#/$defs/formula" },
-                      "stripes": { "$ref": "#/$defs/formula" },
-                      "strike": { "$ref": "#/$defs/formula" },
-                      "strand": { "$ref": "#/$defs/formula" },
-                      "reads": { "$ref": "#/$defs/formula" }
-                    }
-                  }
+                  "marks": { "$ref": "#/$defs/saidMarks" }
                 }
               }
             }

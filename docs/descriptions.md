@@ -1033,6 +1033,14 @@ corner reads as four, apex, across or a pair by which of its numbers match.
 A mark that depends on the facts (Singles' hatch, the one line holding every
 cell it covers) is a set expression over the cells' own state, as `sameLine`'s.
 
+**A role that marks elements of several sorts states a set of each, by the
+sort's name**: `outline: { face: "{f}", cell: "{apex(a)}" }`, Loopy's clue and
+the dot beside it. The compiler refuses a set that is not of the sort it is
+named for, and the module types the role as an object of sets by sort, which a
+wording's `when` does not read. A game whose steps mark several kinds states
+every role this way, so its hint reads each kind by its sort and never by which
+technique fired (Loopy's `outlineOf`, `solver.ts`).
+
 **A technique whose squares are each their own argument says `shown: each`**:
 `describedFiringHint` then makes a step for every square the firing decides,
 the evidence of each being the outline less that square alone (Light Up's two

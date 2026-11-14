@@ -252,37 +252,33 @@ function placeCorner(pl: Planner, group: readonly CornerNote[]): void {
   const had = pl.notes.corners[f.dline];
   if ((had & bits) === bits) return;
   const bound: CornerBound = bits === 3 ? "exactlyOne" : f.bound;
-  const clue = (face: number): number => pl.state.clues[face];
 
   let rung: LoopyRung;
   let words: Words;
-  let marks: Partial<Marks>;
+  let marks: Partial<Marks> = f.outline;
   const why = f.why;
   switch (why.kind) {
     case "lineElsewhere":
     case "onlyWayOn":
       rung = "cornerAtDot";
       words = (m) => say.cornerAtDot(bound, m);
-      marks = { dots: [f.dot] };
       break;
     case "clue":
       rung = "cornerFromClue";
-      words = (m) => say.cornerFromClue(clue(why.face), why.witness.total, f.bound, m);
-      marks = { faces: [why.face], corners: [...why.witness.corners] };
+      words = (m) => say.cornerFromClue(why.clue, why.witness.total, f.bound, m);
+      marks = { ...marks, corners: [...why.witness.corners] };
       break;
     case "acrossTheDot":
       rung = "cornerAcross";
       words = say.cornerAcross;
-      marks = { dots: [f.dot], corners: [why.from] };
       break;
     case "exactlyOneAcross":
       rung = "cornerOppositeExit";
       words = say.cornerOppositeExit;
-      marks = { dots: [f.dot], corners: [why.from] };
       break;
     case "opposites":
       rung = "cornerFromPair";
-      marks = { pairs: [chainPair(pl, why.path)] };
+      marks = { ...marks, pairs: [chainPair(pl, why.path)] };
       words = (m) => say.cornerFromPair(bound, m);
       break;
   }
@@ -305,36 +301,33 @@ function placePair(pl: Planner, f: RelationNote, before: Uint8Array): void {
 
   let rung: LoopyRung;
   let words: Words;
-  let marks: Partial<Marks>;
+  let marks: Partial<Marks> = f.outline;
   const why = f.why;
+  // What the board shows of a clue or a dot is read where the note is placed,
+  // which may be later than where it was found: the sentence quotes the board.
   switch (why.kind) {
     case "faceParity": {
       rung = "pairAtClue";
-      const clue = pl.state.clues[why.face];
       const more = needed(why.face);
-      words = (m) => say.pairAtClue(clue, more, f.opposite, m);
-      marks = { faces: [why.face] };
+      words = (m) => say.pairAtClue(why.clue, more, f.opposite, m);
       break;
     }
     case "dotParity": {
       rung = "pairAtDot";
       const lines = dotLines(why.dot);
       words = (m) => say.pairAtDot(lines, f.opposite, m);
-      marks = { dots: [why.dot] };
       break;
     }
     case "exactlyOneAtCorner":
       rung = "pairAtCorner";
       words = say.pairAtCorner;
-      marks = { corners: [why.from] };
       break;
     case "faceLink": {
       rung = "pairAcrossClue";
       const pair = chainPair(pl, why.path);
-      const clue = pl.state.clues[why.face];
       const more = needed(why.face);
-      words = (m) => say.pairAcrossClue(clue, more, pair.opposite, f.opposite, m);
-      marks = { faces: [why.face], pairs: [pair] };
+      words = (m) => say.pairAcrossClue(why.clue, more, pair.opposite, f.opposite, m);
+      marks = { ...marks, pairs: [pair] };
       break;
     }
     case "dotLink": {
@@ -342,7 +335,7 @@ function placePair(pl: Planner, f: RelationNote, before: Uint8Array): void {
       const pair = chainPair(pl, why.path);
       const lines = dotLines(why.dot);
       words = (m) => say.pairAcrossDot(lines, pair.opposite, f.opposite, m);
-      marks = { dots: [why.dot], pairs: [pair] };
+      marks = { ...marks, pairs: [pair] };
       break;
     }
   }
@@ -357,94 +350,36 @@ function placePair(pl: Planner, f: RelationNote, before: Uint8Array): void {
   pl.notes.addPair(placed);
 }
 
-/** The lines of the drawn chain an edge's dots already belong to. */
-function chainThrough(state: LoopyState, lines: Uint8Array, edge: number): number[] {
-  const g = state.grid;
-  const seen = new Set<number>([g.edges[edge].dot1.index]);
-  const queue = [g.edges[edge].dot1.index];
-  const out: number[] = [];
-  for (let i = 0; i < queue.length; i++) {
-    for (const e of g.dots[queue[i]].edges) {
-      if (lines[e.index] !== LINE_YES) continue;
-      if (!out.includes(e.index)) out.push(e.index);
-      for (const d of [e.dot1.index, e.dot2.index]) {
-        if (seen.has(d)) continue;
-        seen.add(d);
-        queue.push(d);
-      }
-    }
-  }
-  return out;
-}
-
-/** The clues a loop closed by `edge` would leave unmet. */
-function unmetClues(state: LoopyState, lines: Uint8Array, edge: number): number[] {
-  const g = state.grid;
-  const out: number[] = [];
-  for (let i = 0; i < g.numFaces; i++) {
-    const clue = state.clues[i];
-    if (clue < 0) continue;
-    const f = g.faces[i];
-    const gains = f.edges.some((e) => e?.index === edge) ? 1 : 0;
-    if (yesAround(f.edges, lines) + gains !== clue) out.push(i);
-  }
-  return out;
-}
-
 /** The sentence and the marks for one line firing, placing first any pair its
  * chain of pairs comes to. */
 function narrate(pl: Planner, p: Planned): { words: Words; marks: Partial<Marks> } {
   const state = pl.state;
   const r = p.reason;
   const line = p.ops[0].state === LINE_YES;
-  const clue = (face: number): number => state.clues[face];
+  const marks = r.outline;
 
   switch (r.kind) {
     case "clueFull":
-      return {
-        words: (m) => say.clueFull(clue(r.face), m),
-        marks: { faces: [r.face] },
-      };
+      return { words: (m) => say.clueFull(r.clue, m), marks };
     case "clueStarved":
-      return {
-        words: (m) => say.clueStarved(clue(r.face), m),
-        marks: { faces: [r.face] },
-      };
+      return { words: (m) => say.clueStarved(r.clue, m), marks };
     case "clueOneShort":
-      return {
-        words: (m) => say.clueOneShort(clue(r.face), m),
-        marks: { faces: [r.face], dots: [r.dot] },
-      };
+      return { words: (m) => say.clueOneShort(r.clue, m), marks };
     case "clueBlockedPair":
-      // Both dots, because the sentence says "both outlined dots": with one ring
-      // the reader cannot tell which edge "joining them" means. The edges the
-      // step sets are banded by the move itself.
-      return {
-        words: (m) => say.clueBlockedPair(clue(r.face), r.between, m),
-        marks: { faces: [r.face], dots: [...r.dots] },
-      };
+      return { words: (m) => say.clueBlockedPair(r.clue, r.between, m), marks };
     case "deadEnd":
-      return { words: say.deadEnd, marks: { dots: [r.dot] } };
+      return { words: say.deadEnd, marks };
     case "lineContinues":
-      return { words: say.lineContinues, marks: { dots: [r.dot] } };
+      return { words: say.lineContinues, marks };
     case "dotFull":
-      return { words: say.dotFull, marks: { dots: [r.dot] } };
-
-    case "earlyLoop": {
-      const edge = p.ops[0].edge;
-      const unmet = r.because === "unmetClues" ? unmetClues(state, p.before, edge) : [];
+      return { words: say.dotFull, marks };
+    case "earlyLoop":
+      return { words: (m) => say.earlyLoop(r.because, m), marks };
+    case "clueBound":
       return {
-        words: (m) => say.earlyLoop(r.because, m),
-        marks: { edges: chainThrough(state, p.before, edge), faces: unmet },
+        words: (m) => (line ? say.boundLine(r.clue, m) : say.boundEmpty(r.clue, m)),
+        marks: { ...marks, corners: [...r.witness.corners] },
       };
-    }
-    case "clueBound": {
-      const c = clue(r.face);
-      return {
-        words: (m) => (line ? say.boundLine(c, m) : say.boundEmpty(c, m)),
-        marks: { faces: [r.face], corners: [...r.witness.corners] },
-      };
-    }
 
     case "corner":
     case "cornerExit": {
@@ -455,34 +390,30 @@ function narrate(pl: Planner, p: Planned): { words: Words; marks: Partial<Marks>
       if (r.kind === "cornerExit") then = "exit";
       else if (bound === "atLeastOne") then = bothOpen ? "bothLines" : "otherLine";
       else then = bothOpen ? "neither" : "otherEmpty";
-      const ringed = then === "bothLines" || then === "neither" || then === "exit";
-      return {
-        words: (m) => say.corner(bound, then, m),
-        marks: { corners: [r.dline], dots: ringed ? [r.dot] : [] },
-      };
+      return { words: (m) => say.corner(bound, then, m), marks };
     }
 
     case "matchingPair":
       return {
-        marks: { faces: [r.face], pairs: [chainPair(pl, r.path)] },
-        words: (m) => say.matchingPair(clue(r.face), line, m),
+        marks: { ...marks, pairs: [chainPair(pl, r.path)] },
+        words: (m) => say.matchingPair(r.clue, line, m),
       };
 
     case "parity": {
       const pair = chainPair(pl, r.path);
-      if (r.face !== null) {
-        const c = clue(r.face);
+      if (r.face !== null && r.clue !== null) {
+        const c = r.clue;
         const needed = c - yesAround(state.grid.faces[r.face].edges, p.before);
         return {
           words: (m) => say.parityFace(c, needed, pair.opposite, line, m),
-          marks: { faces: [r.face], pairs: [pair] },
+          marks: { ...marks, pairs: [pair] },
         };
       }
       const dot = r.dot ?? 0;
       const dotLines = yesAround(state.grid.dots[dot].edges, p.before);
       return {
         words: (m) => say.parityDot(dotLines, pair.opposite, line, m),
-        marks: { dots: [dot], pairs: [pair] },
+        marks: { ...marks, pairs: [pair] },
       };
     }
 
@@ -491,7 +422,7 @@ function narrate(pl: Planner, p: Planned): { words: Words; marks: Partial<Marks>
       const fromLine = p.before[r.from] === LINE_YES;
       return {
         words: (m) => say.related(pair.opposite, fromLine, line, m),
-        marks: { edges: [r.from], pairs: [pair] },
+        marks: { ...marks, pairs: [pair] },
       };
     }
   }

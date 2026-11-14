@@ -196,12 +196,18 @@ techniques:
     tier: Easy
     for: "c in cells where dotLines(c) = 0 and dotOpen(c) = 1"
     conclude: "forall e in edges(c) where not known(e): place(e, 2)"
+    says:
+      terms: { c: c }
+      marks: { outline: { cell: "{c}" } }
   # A dot with one line and one edge open: the line goes on along it. One
   # with no edge open is inconsistent.
   - id: lineContinues
     tier: Easy
     for: "c in cells, o = dotOpen(c) where dotLines(c) = 1 and o <= 1"
     conclude: "o = 1 and (forall e in edges(c) where not known(e): place(e, 1))"
+    says:
+      terms: { c: c }
+      marks: { outline: { cell: "{c}" } }
   # A dot with two lines: its other edges are empty. One with more is
   # inconsistent.
   - id: dotFull
@@ -209,6 +215,9 @@ techniques:
     for: >-
       c in cells, k = dotLines(c) where k > 2 or (k = 2 and dotOpen(c) > 0)
     conclude: "k = 2 and (forall e in edges(c) where not known(e): place(e, 2))"
+    says:
+      terms: { c: c }
+      marks: { outline: { cell: "{c}" } }
   # A clue with all its lines: its other edges are empty. One with more is
   # inconsistent.
   - id: clueFull
@@ -217,6 +226,9 @@ techniques:
       f in faces where clue(number, f) != none, n = need(f)
       where n < 0 or (n = 0 and faceOpen(f) > 0)
     conclude: "n = 0 and (forall e in edges(f) where not known(e): place(e, 2))"
+    says:
+      terms: { f: f, n: "clue(number, f)" }
+      marks: { outline: { face: "{f}" } }
   # A clue with only as many edges open as it still needs: each is a
   # line. One with fewer is inconsistent.
   - id: clueStarved
@@ -225,6 +237,9 @@ techniques:
       f in faces where clue(number, f) != none, n = need(f), o = faceOpen(f)
       where n > 0 and o <= n
     conclude: "o = n and (forall e in edges(f) where not known(e): place(e, 1))"
+    says:
+      terms: { f: f, n: "clue(number, f)" }
+      marks: { outline: { face: "{f}" } }
   # A clue that needs all but one of its open edges, and an open edge
   # whose dots both have a line from outside the face with the face's other
   # edges there open: a line on it would fill both dots, leave the edges
@@ -240,6 +255,11 @@ techniques:
       and (forall g in edges(f) where g != e and c in ends(g): not known(g)))
     conclude: >-
       place(e, 2) and (forall g in edges(f) where g != e and not known(g): place(g, 1))
+    says:
+      terms: { f: f, n: "clue(number, f)", between: e }
+      # Both dots: the words say "both outlined dots", and with one the
+      # reader cannot tell which edge joins them.
+      marks: { outline: { face: "{f}", cell: "ends(e)" } }
   # A clue that needs all but one of its open edges, two of which meet at
   # a dot with a line: they cannot both be lines, so every other open edge
   # is.
@@ -251,6 +271,9 @@ techniques:
       a in angles(f) where bare(a) and dotLines(apex(a)) > 0
     conclude: >-
       forall g in edges(f) where not known(g) and g not in edges(a): place(g, 1)
+    says:
+      terms: { f: f, n: "clue(number, f)" }
+      marks: { outline: { face: "{f}", cell: "{apex(a)}" } }
   # An open edge whose dots the lines already join: a line on it would
   # close a loop, which leaves a line out of it, or a clue unmet.
   - id: earlyLoop
@@ -263,6 +286,17 @@ techniques:
       or (exists f in faces where clue(number, f) != none:
       need(f) != count(x in edges(f) where x = e)))
     conclude: "place(e, 2)"
+    # The lines the edge would close into a loop, and where no line would
+    # be left out of it, the clues it would leave unmet: so the clues are
+    # none exactly where a line left out is the reason.
+    says:
+      marks:
+        outline:
+          edge: "{g in L where end1(g) in G}"
+          face: >-
+            {f in faces where not (exists g in L: end1(g) not in G)
+            and clue(number, f) != none
+            and need(f) != count(x in edges(f) where x = e)}
   # The lines are one closed loop: every other edge is empty.
   - id: closed
     tier: Easy
@@ -283,6 +317,9 @@ techniques:
     conclude: >-
       (pair(e, g) = {1} implies place(e, value(g)))
       and (pair(e, g) = {2} implies place(e, 3 - value(g)))
+    says:
+      terms: { e: e, from: g }
+      marks: { outline: { edge: "{g}" } }
   # A dot with one line, and a corner there whose edges are open: at most
   # one of them is a line, or the dot would have three. Where they are the
   # dot's only open edges, at least one is, or the line would end there.
@@ -290,6 +327,9 @@ techniques:
     tier: Normal
     for: "c in cells where dotLines(c) = 1, a in angles(c) where bare(a)"
     conclude: "strike(a, 2) and (dotOpen(c) = 2 implies strike(a, 0))"
+    says:
+      terms: { c: c, a: a }
+      marks: { outline: { cell: "{c}" } }
   # A corner with at most one line and one edge a line, or at least one
   # and one edge empty: the other edge is the other way.
   - id: cornerOther
@@ -299,6 +339,9 @@ techniques:
       where g != e and known(e) and not known(g)
       and ((value(e) = 1 and 2 not in corner(a)) or (value(e) = 2 and 0 not in corner(a)))
     conclude: "place(g, 3 - value(e))"
+    says:
+      terms: { a: a, c: "apex(a)" }
+      marks: { outline: { angle: "{a}" } }
   # A corner whose two edges are its dot's only open ones, at a dot with
   # no line: they are both lines or both empty, which at most one line
   # settles as empty, and at least one as lines. Exactly one is
@@ -312,6 +355,10 @@ techniques:
       (0 in corner(a) or 2 in corner(a))
       and (2 not in corner(a) implies (forall e in edges(a): place(e, 2)))
       and (0 not in corner(a) implies (forall e in edges(a): place(e, 1)))
+    # The dot too: the words say it takes both or neither.
+    says:
+      terms: { a: a, c: c }
+      marks: { outline: { angle: "{a}", cell: "{c}" } }
   # A clue's other edges, counted with what its corners say, cannot hold
   # the lines it needs without this edge, or can hold no fewer: the edge
   # is a line, or empty. A clue none of whose corners says anything is
@@ -328,6 +375,11 @@ techniques:
       where not P or not Q
     conclude: >-
       (P or Q) and (not P implies place(e, 1)) and (not Q implies place(e, 2))
+    # The corners the count leans on are the solver's (`boundOf`): a
+    # player's greedy pairing along the face, which no formula states.
+    says:
+      terms: { f: f, n: n }
+      marks: { outline: { face: "{f}" } }
   # A clue's other edges cannot hold all but two of its lines, or cannot
   # hold all of them: the corner of the face between its two open edges has
   # at most one line, or at least one. With no corner of the face marked,
@@ -346,6 +398,10 @@ techniques:
       P = holds(f, S, n - 2), Q = holds(f, S, n)
       where (not P and 2 in corner(a)) or (not Q and 0 in corner(a))
     conclude: "(not P implies strike(a, 2)) and (not Q implies strike(a, 0))"
+    # The corners the count leans on are the solver's, as `clueBound`'s.
+    says:
+      terms: { f: f, n: n, a: a }
+      marks: { outline: { face: "{f}" } }
   # A corner with at least one line: a dot takes two at most, so every
   # corner there sharing no edge with it has at most one.
   - id: cornerAcross
@@ -355,6 +411,9 @@ techniques:
       b in angles(apex(a)) where 2 in corner(b)
       and (forall e in edges(b): e not in edges(a))
     conclude: "strike(b, 2)"
+    says:
+      terms: { a: a, b: b }
+      marks: { outline: { angle: "{a}", cell: "{apex(a)}" } }
   # A corner with exactly one line, at a dot with no line and three edges
   # open: the loop leaves the dot along the third.
   - id: cornerExit
@@ -363,6 +422,9 @@ techniques:
       a in angles where corner(a) = {1} and bare(a), c = apex(a)
       where dotLines(c) = 0 and dotOpen(c) = 3
     conclude: "forall e in edges(c) where not known(e) and e not in edges(a): place(e, 1)"
+    says:
+      terms: { a: a, c: c }
+      marks: { outline: { angle: "{a}", cell: "{c}" } }
   # A corner with exactly one line, at a dot with no line and four edges
   # open: the corner of its other two holds the dot's other line, so
   # exactly one too.
@@ -374,6 +436,9 @@ techniques:
       b in angles(c) where bare(b) and corner(b) != {1}
       and (forall e in edges(b): e not in edges(a))
     conclude: "strike(b, 0) and strike(b, 2)"
+    says:
+      terms: { a: a, b: b, c: c }
+      marks: { outline: { angle: "{a}", cell: "{c}" } }
   # Two open edges of a clue that match, where it needs one more line, are
   # both empty; where it needs all but one of its open edges, both lines.
   - id: matchingPair
@@ -387,6 +452,11 @@ techniques:
     conclude: >-
       (n = 1 implies place(e, 2) and place(g, 2))
       and (n != 1 implies place(e, 1) and place(g, 1))
+    # Here and below, the chain of pairs relating two edges is the walk's,
+    # which keeps what each relation was found through.
+    says:
+      terms: { f: f, n: "clue(number, f)", e: e, g: g }
+      marks: { outline: { face: "{f}" } }
   # A clue with two edges open: they match where it needs none or both,
   # and are opposites where it needs one.
   - id: pairAtClue
@@ -396,6 +466,9 @@ techniques:
       O = {e in edges(f) where not known(e)} where |O| = 2,
       e = nth(O, 0), g = nth(O, 1) where pair(e, g) = {1, 2}
     conclude: "relate(e, g, 1 + need(f) mod 2)"
+    says:
+      terms: { f: f, n: "clue(number, f)", e: e, g: g }
+      marks: { outline: { face: "{f}" } }
   # A clue with three edges open, two of them related: what they hold
   # together decides the third.
   - id: parityClue
@@ -406,6 +479,9 @@ techniques:
       e in O, g in O where index(g, O) > index(e, O) and |pair(e, g)| = 1,
       k = first(O - {e, g})
     conclude: "place(k, 2 - (need(f) + first(pair(e, g)) - 1) mod 2)"
+    says:
+      terms: { f: f, n: "clue(number, f)", e: e, g: g }
+      marks: { outline: { face: "{f}" } }
   # A clue with four edges open, two of them related: the other two are
   # related too.
   - id: linkClue
@@ -416,6 +492,9 @@ techniques:
       e in O, g in O where index(g, O) > index(e, O) and |pair(e, g)| = 1,
       R = O - {e, g}, h = nth(R, 0), k = nth(R, 1) where pair(h, k) = {1, 2}
     conclude: "relate(h, k, 1 + (need(f) + first(pair(e, g)) - 1) mod 2)"
+    says:
+      terms: { f: f, n: "clue(number, f)", e: e, g: g }
+      marks: { outline: { face: "{f}" } }
   # A corner with exactly one line: its edges are opposites.
   - id: pairFromCorner
     tier: Hard
@@ -423,6 +502,9 @@ techniques:
       a in angles where corner(a) = {1} and bare(a),
       e = nth(edges(a), 0), g = nth(edges(a), 1) where pair(e, g) = {1, 2}
     conclude: "relate(e, g, 2)"
+    says:
+      terms: { a: a }
+      marks: { outline: { angle: "{a}" } }
   # A corner whose edges are opposites has exactly one line.
   - id: cornerFromPair
     tier: Hard
@@ -430,6 +512,8 @@ techniques:
       a in angles where corner(a) != {1} and bare(a),
       e = nth(edges(a), 0), g = nth(edges(a), 1) where pair(e, g) = {2}
     conclude: "strike(a, 0) and strike(a, 2)"
+    says:
+      terms: { a: a, e: e, g: g }
   # A dot with two edges open: they match where it has no line, and are
   # opposites where it has one.
   - id: pairAtDot
@@ -438,6 +522,9 @@ techniques:
       c in cells, O = {e in edges(c) where not known(e)} where |O| = 2,
       e = nth(O, 0), g = nth(O, 1) where pair(e, g) = {1, 2}
     conclude: "relate(e, g, 1 + dotLines(c) mod 2)"
+    says:
+      terms: { c: c, e: e, g: g }
+      marks: { outline: { cell: "{c}" } }
   # A dot with three edges open, two of them related: what they hold
   # together decides the third.
   - id: parityDot
@@ -447,6 +534,9 @@ techniques:
       e in O, g in O where index(g, O) > index(e, O) and |pair(e, g)| = 1,
       k = first(O - {e, g})
     conclude: "place(k, 2 - (dotLines(c) + first(pair(e, g)) - 1) mod 2)"
+    says:
+      terms: { c: c, e: e, g: g }
+      marks: { outline: { cell: "{c}" } }
   # A dot with four edges open, two of them related: the other two are
   # related too.
   - id: linkDot
@@ -456,3 +546,6 @@ techniques:
       e in O, g in O where index(g, O) > index(e, O) and |pair(e, g)| = 1,
       R = O - {e, g}, h = nth(R, 0), k = nth(R, 1) where pair(h, k) = {1, 2}
     conclude: "relate(h, k, 1 + (dotLines(c) + first(pair(e, g)) - 1) mod 2)"
+    says:
+      terms: { c: c, e: e, g: g }
+      marks: { outline: { cell: "{c}" } }
