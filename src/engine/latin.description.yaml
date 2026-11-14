@@ -66,7 +66,7 @@ techniques:
       and |S| = |V| - |T| + extra * |R - T|
       and (forall c in open where c not in S, d in V - T where d in cand(c): strike(c, d))
     says:
-      terms: { S: S }
+      terms: { u: u, S: S }
       marks: {}
 
   # One value d: the columns lacking it that have no place for it in a set T of

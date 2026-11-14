@@ -42,8 +42,8 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+import type { CageOrigin, SoloRegion } from "./hint-reasons.ts";
 import { digitChar } from "./render.ts";
-import type { CageOrigin, SoloRegion } from "./solver.ts";
 
 /** The reader-facing name of a region — the one statement of what a sentence
  * calls each region, read both by the sentences below and by `regionsOf`, which

@@ -243,7 +243,7 @@ export interface SetBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SetSays {
-  terms: { S: readonly number[]; };
+  terms: { u: number; S: readonly number[]; };
   marks: {  };
 }
 
@@ -427,7 +427,7 @@ export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding, SetSays> | n
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { S: v_S.slice() }, marks: {  } };
+            const _says = { terms: { u: v_u, S: v_S.slice() }, marks: {  } };
             if (!fire({ u: v_u, V: v_V, open: v_open.slice(), R: v_R, extra: v_extra, T: v_T, S: v_S.slice() }, facts, _says)) return 1;
           }
           cands.fill(-1);

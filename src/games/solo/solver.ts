@@ -13,17 +13,16 @@
  * `block_structure`; a cage keeps its index as its filled cells leave it.
  */
 
+import type { NotesLadder } from "../../engine/candidate-plan.ts";
 import type {
   CompiledTechniques,
   FiringTally,
 } from "../../engine/deduction-fixpoint.ts";
-import { valuesOf } from "../../engine/describe-runtime.ts";
-import { auditingPremises, offerReplay } from "../../engine/firing-replay.ts";
 import {
+  type Caps,
   CellMarks,
   compiledRung,
   type Ladder,
-  ladderReplay,
   ladderTechniques,
   runLadder,
   TIERS,
@@ -31,15 +30,7 @@ import {
   withSearch,
 } from "../../engine/ladder-runtime.ts";
 import { set as latinSet } from "../../engine/latin.compiled.ts";
-import {
-  type ConfinedLines,
-  confinedLines,
-  type DeductionRecord,
-  type DeductionRecorder,
-  type LatinWingReason,
-  latinLadder,
-} from "../../engine/latin.ts";
-import type { Point } from "../../engine/types.ts";
+import { latinLadder } from "../../engine/latin.ts";
 import * as solo from "./solo.compiled.ts";
 import type { BlockStructure, SoloState } from "./state.ts";
 import {
@@ -58,100 +49,6 @@ import {
   onDiag1,
   soloSpace,
 } from "./state.ts";
-
-// --- hint recording (opt-in; off for generate/solve) ------------------------
-
-/** A region the solver reasons over, for narration + evidence shading. `index`
- * is the row's y, the column's x, or the sub-block's block number; the two
- * diagonals carry no index. */
-export type SoloRegion =
-  | { kind: "row"; index: number }
-  | { kind: "col"; index: number }
-  | { kind: "block"; index: number }
-  | { kind: "diag0" }
-  | { kind: "diag1" };
-
-/** Why a Solo deduction forced a candidate change — the premise a hint narrates
- * and the cells it shades. Combined into {@link HintOp}'s `reason`.
- *
- * The placement reasons (`single` / `hiddenSingle`) are
- * re-derived from the working board at emit time, because the recorded `place`
- * carries a bare `single`: the solver's positional and numeric `elim` conflate
- * naked and hidden singles. The killer placement reason (`cageSingle`) is
- * recorded directly because the working board can't re-derive it. */
-export type SoloReason =
-  /** A forced single placement — re-derived to naked or hidden at emit. */
-  | { kind: "single" }
-  /** A single in a cell with no notes, whose regions already hold every other
-   * digit: re-derived at emit under the implicit candidate reading. */
-  | { kind: "regionsFull" }
-  /** A digit placed at `(px, py)`, struck from the rest of a shared group. */
-  | { kind: "dup"; n: number; px: number; py: number }
-  /** Every cell of `confined` that can still take `n` also lies in `target`, so
-   * `n` must sit in their overlap and is ruled out of the rest of `target`. One
-   * of the two is a sub-block, the other a row/column/diagonal. */
-  | { kind: "intersect"; n: number; confined: SoloRegion; target: SoloRegion }
-  /** A naked/hidden subset locks a set of digits to the `cells` of `region`. */
-  | { kind: "set"; region: SoloRegion; cells: Point[] }
-  /** One digit confined across several lines: every cell of the parallel
-   * `lines` that can still take it is in `cells`, which lie in as many lines
-   * the other way, so those have no other place for it. The deduction reads
-   * every cell of `lines`, the ones the digit is absent from too. */
-  | { kind: "set"; region?: undefined; lines: ConfinedLines; cells: Point[] }
-  /** A *hidden* single — digit `n` fits only one cell of `region`. */
-  | { kind: "hiddenSingle"; n: number; region: SoloRegion }
-  | LatinWingReason
-  /** Killer: the open cells of a {@link CageSum} come down to one, which must
-   * make its whole `clue`. */
-  | ({ kind: "cageSingle" } & CageSum)
-  /** Killer: even the extreme the other cells of a {@link CageSum} can reach
-   * leaves no room for `n` here. */
-  | ({ kind: "cageMinMax" } & CageSum)
-  /** Killer: no way to make a {@link CageSum}'s `clue` from different digits
-   * uses `n` in this cell. */
-  | ({ kind: "cageSums" } & CageSum);
-
-/** Open cells a killer deduction knows the total of: `cells` must make `clue`,
- * for the reason `origin` gives. `reads` is what that rests on beyond `cells`
- * and the region `origin` names (`DeductionRecord`): the cage's filled cells,
- * and the cells outside the region of any cage counted as inside it. */
-export interface CageSum {
-  cells: Point[];
-  clue: number;
-  origin: CageOrigin;
-  reads: Point[];
-}
-
-/** Why a {@link CageSum}'s cells must make its clue, each worked out from the
- * board in one step:
- *
- * - `cage`: they are a cage's open cells, whose digits so far make `placed`
- *   of its `total`.
- * - `region`: they are what a row, column or block leaves once its filled
- *   cells and the cages wholly inside it are taken out, so they make the rest
- *   of the region's total. They may span several cages.
- * - `outside`: they are a cage's open cells outside a region whose leftover
- *   cells, `inside`, all lie in that cage. The region says `inside` makes
- *   `insideSum`, so these make the cage's `total` less that and `placed`. */
-export type CageOrigin =
-  | { kind: "cage"; total: number; placed: number }
-  | { kind: "region"; region: SoloRegion }
-  | {
-      kind: "outside";
-      region: SoloRegion;
-      total: number;
-      placed: number;
-      inside: Point[];
-      insideSum: number;
-    };
-
-/** A reason attached to a recorded Solo deduction (the narrowed hint reason). */
-export type HintReason = SoloReason;
-
-/** One recorded Solo deduction op (a {@link DeductionRecord} with a Solo reason). */
-export interface HintOp extends DeductionRecord {
-  reason: HintReason;
-}
 
 // --- difficulty struct ------------------------------------------------------
 
@@ -179,9 +76,6 @@ interface KillerWork {
   kclues: number[];
 }
 
-/** A {@link CageSum} but its cells and clue, which the rung has already. */
-type CageNote = Pick<CageSum, "origin" | "reads">;
-
 function dupCages(src: BlockStructure): Cages {
   return {
     whichblock: src.whichblock.slice(),
@@ -194,6 +88,26 @@ function removeFromBlock(cages: Cages, b: number, n: number): void {
   cages.whichblock[n] = -1;
   const blk = cages.blocks[b];
   blk.splice(blk.indexOf(n), 1);
+}
+
+/**
+ * The ladder `solo.description.yaml` states over the board's cages. The
+ * library's set is paired here, where the engine would, so that its firing
+ * says its unit: the hint names the region it reads.
+ */
+function soloLadder(dealt: solo.Dealt): Ladder<SolverUsage> {
+  return latinLadder(solo, {
+    boxSingle: uncluedRung(solo.boxSingle),
+    cageSingle: compiledRung(solo.cageSingle, dealt),
+    regionRule: compiledRung(solo.regionRule, dealt),
+    cageMinMax: compiledRung(solo.cageMinMax, dealt),
+    partMinMax: compiledRung(solo.partMinMax, dealt),
+    cageSums: compiledRung(solo.cageSums, dealt),
+    partSums: compiledRung(solo.partSums, dealt),
+    intersect: uncluedRung(solo.intersect),
+    "latin.set": uncluedRung(latinSet),
+    digitSet: uncluedRung(solo.digitSet),
+  });
 }
 
 // --- solver usage -----------------------------------------------------------
@@ -211,7 +125,7 @@ class SolverUsage extends CellMarks {
   /** The killer working cages, null on a board without cages. */
   private readonly killer: KillerWork | null;
   /** The ladder over this board's cages. */
-  private readonly rungs: Ladder<SolverUsage>;
+  readonly rungs: Ladder<SolverUsage>;
   /** The grid we write deductions into (the caller's grid, mutated in place). */
   declare grid: Int8Array;
 
@@ -219,14 +133,6 @@ class SolverUsage extends CellMarks {
   private readonly sGrid: Uint8Array;
   private readonly sNeighbors: Int32Array;
   private readonly sBfsqueue: Int32Array;
-
-  /** Stashed by {@link recordSoloDeductions}; promoted to `recorder` after the
-   * givens are placed, so that seeding them is not mistaken for teachable
-   * deductions. */
-  pendingRecorder?: DeductionRecorder;
-  /** Called once the givens are placed and the recorder is on: where the
-   * premise audit starts its replay (`recordSoloDeductions`). */
-  onSeeded?: () => void;
 
   constructor(
     cr: number,
@@ -261,7 +167,7 @@ class SolverUsage extends CellMarks {
       this.killer = null;
       this.dealt = NO_CAGES;
     }
-    this.rungs = this.describedLadder();
+    this.rungs = soloLadder(this.dealt);
     this.placing = this.rungs.placing;
 
     this.sGrid = new Uint8Array(area);
@@ -362,17 +268,11 @@ class SolverUsage extends CellMarks {
     return 0;
   }
 
-  /** Cell indices → reading-order `{x, y}` (for a recorded cage reason). */
-  private cellsXY(cells: readonly number[]): Point[] {
-    const cr = this.cr;
-    return cells.map((c) => ({ x: c % cr, y: (c / cr) | 0 }));
-  }
-
   // --- the ladder ------------------------------------------------------------
   // Each rung runs once from the solver's state and says what it did as
   // `DeductionTechnique.run` does: `> 0` fired, `0` found nothing, `< 0` proved
   // the board inconsistent. A rung reads nothing but that state, so any one of
-  // them can run alone: the premise audit's replay does (`soloReplay`).
+  // them can run alone: the hint runs each on the player's notes.
 
   /** Take each cage's newly filled cells out of its working cage and its clue,
    * striking their digits from the rest of the cage; -1 if a digit is more
@@ -393,179 +293,6 @@ class SolverUsage extends CellMarks {
       }
     }
     return 0;
-  }
-
-  /** The region a sentence names for a unit of {@link sp}. */
-  private regionOf(u: number): SoloRegion {
-    const cr = this.cr;
-    if (u < cr) return { kind: "row", index: u };
-    if (u < 2 * cr) return { kind: "col", index: u - cr };
-    const diag = this.sp.diagonals.indexOf(u);
-    if (diag === 0) return { kind: "diag0" };
-    if (diag === 1) return { kind: "diag1" };
-    return { kind: "block", index: u - 2 * cr };
-  }
-
-  /** What cage `r`'s open cells rest on, its total less `owed` being what its
-   * filled cells make. */
-  private cageOf(r: number, owed: number): CageNote {
-    const cells = this.dealt.cage.cells[r];
-    const total = this.dealt.total.v[r];
-    return {
-      origin: { kind: "cage", total, placed: total - owed },
-      reads: this.cellsXY(cells.filter((c) => this.grid[c] !== 0)),
-    };
-  }
-
-  /** What the cells unit `u` leaves once its filled cells and the cages `W`
-   * whose open cells lie in it are taken out rest on: the unit, and those
-   * cages' cells outside it. */
-  private leftOf(u: number, W: readonly number[]): CageNote {
-    const inside = this.sp.lineCells[u];
-    const outside = W.flatMap((r) =>
-      this.dealt.cage.cells[r].filter((c) => !inside.includes(c)),
-    );
-    return {
-      origin: { kind: "region", region: this.regionOf(u) },
-      reads: this.cellsXY([...inside, ...outside]),
-    };
-  }
-
-  /** What the open cells of `L`'s cage outside unit `u` rest on, `L` being
-   * what `u` leaves, making `s`. */
-  private outsideOf(
-    u: number,
-    W: readonly number[],
-    L: readonly number[],
-    s: number,
-  ): CageNote {
-    const left = this.leftOf(u, W);
-    const r = this.dealt.cage.of[L[0]];
-    const cells = this.dealt.cage.cells[r];
-    let placed = 0;
-    for (const c of cells) placed += this.grid[c];
-    return {
-      origin: {
-        kind: "outside",
-        region: this.regionOf(u),
-        total: this.dealt.total.v[r],
-        placed,
-        inside: this.cellsXY([...L]),
-        insideSum: s,
-      },
-      reads: [...left.reads, ...this.cellsXY(cells)],
-    };
-  }
-
-  /** The reason of a reading of the cells `u` leaves, `L`, or of the rest of
-   * their cage, `R`: whichever holds `cell`. */
-  private partOf(
-    kind: "cageMinMax" | "cageSums",
-    { u, W, L, s, R, t }: solo.PartMinMaxBinding | solo.PartSumsBinding,
-    cell: number,
-  ): SoloReason {
-    return L.includes(cell)
-      ? { kind, cells: this.cellsXY([...L]), clue: s, ...this.leftOf(u, W) }
-      : { kind, cells: this.cellsXY([...R]), clue: t, ...this.outsideOf(u, W, L, s) };
-  }
-
-  /** A {@link digitSet} firing as the lines its value is confined in: the
-   * columns `T` hold it only in the rows `Y0 − Y`, and the rows `Y` only in
-   * the other columns, and the one over fewer lines is recorded. */
-  private digitSetReason({ d, Y0, X0, T, Y }: solo.DigitSetBinding): SoloReason {
-    const cr = this.cr;
-    const chosen = valuesOf(T);
-    const byColumn = chosen.length <= Y0.length - chosen.length;
-    const cells: Point[] = [];
-    for (const y of Y0) {
-      if (Y.includes(y) === byColumn) continue;
-      for (const x of valuesOf(X0))
-        if (((T >> x) & 1) === (byColumn ? 1 : 0) && this.has(y * cr + x, d))
-          cells.push({ x, y });
-    }
-    const lines = byColumn
-      ? confinedLines("col", chosen, cr)
-      : confinedLines("row", [...Y], cr);
-    return { kind: "set", lines, cells };
-  }
-
-  /**
-   * The ladder `solo.description.yaml` states, its own techniques paired
-   * here with the reason each records, the library's by the engine but its
-   * set, whose reason names the region it reads.
-   */
-  private describedLadder(): Ladder<SolverUsage> {
-    const { dealt } = this;
-    const at = (c: number): Point => ({ x: c % this.cr, y: (c / this.cr) | 0 });
-    const single = (): SoloReason => ({ kind: "single" });
-    return latinLadder(solo, {
-      boxSingle: uncluedRung(solo.boxSingle, single),
-      cageSingle: compiledRung(
-        solo.cageSingle,
-        dealt,
-        ({ r, c, t }): SoloReason => ({
-          kind: "cageSingle",
-          cells: [at(c)],
-          clue: t,
-          ...this.cageOf(r, t),
-        }),
-      ),
-      regionRule: compiledRung(
-        solo.regionRule,
-        dealt,
-        ({ u, W, L, s, t }, cell): SoloReason =>
-          cell === L[0] && L.length === 1
-            ? { kind: "cageSingle", cells: [at(cell)], clue: s, ...this.leftOf(u, W) }
-            : {
-                kind: "cageSingle",
-                cells: [at(cell)],
-                clue: t,
-                ...this.outsideOf(u, W, L, s),
-              },
-      ),
-      cageMinMax: compiledRung(
-        solo.cageMinMax,
-        dealt,
-        ({ r, K, t }): SoloReason => ({
-          kind: "cageMinMax",
-          cells: this.cellsXY([...K]),
-          clue: t,
-          ...this.cageOf(r, t),
-        }),
-      ),
-      partMinMax: compiledRung(solo.partMinMax, dealt, (b, cell) =>
-        this.partOf("cageMinMax", b, cell),
-      ),
-      cageSums: compiledRung(
-        solo.cageSums,
-        dealt,
-        ({ r, K, t }): SoloReason => ({
-          kind: "cageSums",
-          cells: this.cellsXY([...K]),
-          clue: t,
-          ...this.cageOf(r, t),
-        }),
-      ),
-      partSums: compiledRung(solo.partSums, dealt, (b, cell) =>
-        this.partOf("cageSums", b, cell),
-      ),
-      intersect: uncluedRung(solo.intersect, ({ L, b, d, first }): SoloReason => {
-        const line = this.regionOf(L);
-        const block = this.regionOf(b);
-        return first
-          ? { kind: "intersect", n: d, confined: line, target: block }
-          : { kind: "intersect", n: d, confined: block, target: line };
-      }),
-      "latin.set": uncluedRung(
-        latinSet,
-        ({ u, open, S }): SoloReason => ({
-          kind: "set",
-          region: this.regionOf(u),
-          cells: open.filter((c) => !S.includes(c)).map(at),
-        }),
-      ),
-      digitSet: uncluedRung(solo.digitSet, (b) => this.digitSetReason(b)),
-    });
   }
 
   /**
@@ -619,13 +346,6 @@ class SolverUsage extends CellMarks {
       finish(DIFF_IMPOSSIBLE);
       return;
     }
-    // Givens are seeded; from here every deduction is teachable, so enable the
-    // recorder (kept off through the given placement above so cube-seeding dups
-    // aren't mistaken for deductions — `docs/hints-candidates.md` § "The recorder
-    // and the soundness boundary").
-    this.recorder = this.pendingRecorder;
-    this.onSeeded?.();
-
     const impossible = runLadder(this, this.techniques(dlev, grades), { firings });
     if (impossible) {
       finish(DIFF_IMPOSSIBLE);
@@ -732,63 +452,25 @@ export function solveSolo(
 }
 
 /**
- * Run the recording solver on a sound candidate cube seeded from `s.grid` (the
- * placed entries only — never the player's notes), capped **below** recursion,
- * and return every candidate elimination and cell placement it makes, in solver
- * order, each tagged with the rule + premise that forced it. This is the raw
- * deduction script a hint narrates; the recorder-off path (`solveSolo`) makes
- * the same deductions. `s.grid` is treated read-only (a working copy is solved
- * internally).
+ * Solo's ladder as a hint that deduces from the notes runs it
+ * (`techniqueRung`): fresh marks each time, holding the values on the walk's
+ * working `grid` as it stands. The caps are the board's tiers, on each scale,
+ * below the search: a hint teaches nothing past what graded the board. A
+ * killer technique reads its cages less their filled cells off the grid
+ * (`owed`), so the working cages the solve keeps are not needed here; the
+ * walk's cull strikes a placed value from the rest of its cage.
  */
-export function recordSoloDeductions(
+export function soloNotesLadder(
   s: SoloState,
-  maxdiff: number = DIFF_EXTREME,
-  maxkdiff: number = DIFF_KINTERSECT,
-): HintOp[] {
-  const ops: HintOp[] = [];
-  const grid = s.grid.slice();
+  grid: ArrayLike<number>,
+): NotesLadder<SolverUsage> {
   const kblocks = s.killerData?.kblocks ?? null;
   const kgrid = s.killerData?.kgrid ?? null;
-  const dlev: Difficulty = {
-    maxdiff: Math.min(maxdiff, DIFF_EXTREME),
-    maxkdiff,
-    diff: DIFF_IMPOSSIBLE,
-    kdiff: DIFF_KSINGLE,
+  const marks = (): SolverUsage =>
+    new SolverUsage(s.cr, s.blocks, kblocks, s.xtype, Int8Array.from(grid), kgrid);
+  const caps: Caps = {
+    [TIERS]: Math.min(s.params.diff, DIFF_EXTREME),
+    ...(kblocks && kgrid ? { killer: s.params.kdiff } : {}),
   };
-  const usage = new SolverUsage(s.cr, s.blocks, kblocks, s.xtype, grid, kgrid);
-  usage.pendingRecorder = (rec) => ops.push(rec as HintOp);
-  if (auditingPremises()) {
-    const caps = { ...dlev };
-    usage.onSeeded = () => soloReplay(usage, s, caps);
-  }
-  usage.run(dlev);
-  if (usage.replay) offerReplay(usage.replay);
-  return ops;
-}
-
-/**
- * The premise audit's replay of a recording run (`ladderReplay`), with the
- * recording's caps.
- */
-function soloReplay(usage: SolverUsage, s: SoloState, dlev: Difficulty): void {
-  const { cr, blocks, xtype } = s;
-  const kblocks = s.killerData?.kblocks ?? null;
-  const kgrid = s.killerData?.kgrid ?? null;
-  ladderReplay(
-    usage,
-    (values) => {
-      const fresh = new SolverUsage(
-        cr,
-        blocks,
-        kblocks,
-        xtype,
-        Int8Array.from(values),
-        kgrid,
-      );
-      if (!fresh.seedGivens())
-        throw new Error("solo replay: the edited board's digits clash");
-      return fresh;
-    },
-    (fresh) => fresh.techniques(dlev, { [TIERS]: DIFF_BLOCK, killer: DIFF_KSINGLE }),
-  );
+  return { ladder: marks().rungs, marks, enc: { values: s.cr }, caps };
 }

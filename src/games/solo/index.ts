@@ -25,6 +25,7 @@ import {
   runCandidatePlan,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
+import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import {
   clearEntries,
@@ -79,6 +80,7 @@ import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newSoloDesc } from "./generator.ts";
+import { type SoloReason, type SoloRegion, soloRungs } from "./hint-reasons.ts";
 import { type RegionCells, regionName, SOLO_VOCAB, say } from "./hint-text.ts";
 import {
   border,
@@ -91,18 +93,11 @@ import {
   type SoloDrawState,
   type SoloHint,
 } from "./render.ts";
-import {
-  type HintOp,
-  recordSoloDeductions,
-  type SoloReason,
-  type SoloRegion,
-  solveSolo,
-} from "./solver.ts";
+import { solveSolo } from "./solver.ts";
 import {
   cloneState,
   DIFF_AMBIGUOUS,
   DIFF_BLOCK,
-  DIFF_EXTREME,
   DIFF_IMPOSSIBLE,
   DIFF_INTERSECT,
   DIFF_KINTERSECT,
@@ -603,9 +598,7 @@ function buildSteps(
   const cr = state.cr;
   const steps: HintStep<SoloMove, SoloHint, PlanRung<SoloReason>>[] = [];
   const wGrid = Int8Array.from(state.grid);
-  const maxdiff = Math.min(state.params.diff, DIFF_EXTREME);
-  const maxkdiff = state.params.kdiff;
-  runCandidatePlan<SoloMove, SoloHint, HintOp, SoloReason, SoloCellRegion>({
+  runCandidatePlan<SoloMove, SoloHint, DeductionRecord, SoloReason, SoloCellRegion>({
     w: cr,
     steps,
     grid: wGrid,
@@ -613,7 +606,7 @@ function buildSteps(
     autoClean,
     reading,
     label: "solo hint plan",
-    record: () => recordSoloDeductions({ ...state, grid: wGrid }, maxdiff, maxkdiff),
+    rungs: soloRungs(state, wGrid),
     regionsOf: (x, y) => regionsOf(state, x, y),
     singleReason: soloSingleReason,
     placeWords: (m, reason) => ({ words: narrate(reason, m, state) }),
@@ -622,10 +615,6 @@ function buildSteps(
       ...reasonReads(reason),
     }),
     conclude: say.conclude,
-    // A digit confined to one region crosses that digit from several cells in
-    // one sentence; every other firing's narration is about "this cell", so a
-    // multi-digit strike never shows a value crossed in the wrong place.
-    strikeAxis: (op) => (op.reason.kind === "intersect" ? null : op.y * cr + op.x),
     notes: {
       populate: say.populate,
       cleanObvious: say.cleanObvious(noRepeatRegionNames(state)),

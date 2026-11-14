@@ -59,7 +59,7 @@ each of these the shared way is
 | A rung of the game's own | a deduction of your game is not a recorded strike or placement |
 | Continue from the last step | a plan jumps across the board, or `hint-frontier.test.ts` fails |
 | The recorder and the soundness boundary | you thread a recorder through a solver, or decide what the solver may read |
-| Record off a bespoke solver: thread or parallel | your solver is not `engine/latin.ts` |
+| Record off a bespoke solver | your solver is not `engine/latin.ts` |
 | Deduce from the notes when the mistake check vouches for them | your hint would read the player's notes instead of a recording |
 | A premise names everything its deduction reads | you write a recorded reason or its words, or `firing-replay.test.ts` fails |
 | Persist, populate, and the moves | you add the note moves, the opening steps or the notes half of `findMistakes` |
@@ -439,38 +439,29 @@ them".
 Exemplar: `latinSolver`'s `recorder` in
 [`engine/latin.ts`](../src/engine/latin.ts).
 
-## Record off a bespoke solver: thread or parallel
+## Record off a bespoke solver
 
-A solver that is not `engine/latin.ts` records one of two ways. Pick by
-whether the deduction logic is cheap to run again.
+A solver that is not `engine/latin.ts` records through a parallel recorder:
+separate code from the grading path that reuses its building blocks. The
+generate, solve and `findMistakes` paths never call it, so they are
+unchanged by construction. Each ladder pass returns after its first firing
+and bumps the group; the recorder loops to a fixpoint. A described ladder is
+recorded so: `recordUndeadDeductions` in
+[`undead/solver.ts`](../src/games/undead/solver.ts) runs the compiled ladder
+again with the marks' `recorder` set. A bespoke solver whose ladder is
+described needs no recorder at all where the mistake check vouches for the
+notes: Solo's hint runs its techniques on them (§ "Deduce from the notes
+when the mistake check vouches for them").
 
-- **Cheap: write a parallel recorder**, separate code from the grading path
-  that reuses its building blocks. The generate, solve and `findMistakes`
-  paths never call it, so they are unchanged by construction and no flag is
-  threaded. Each ladder pass returns after its first firing and bumps the
-  group; the recorder loops to a fixpoint. A described ladder is recorded
-  so: `recordUndeadDeductions` in
-  [`undead/solver.ts`](../src/games/undead/solver.ts) runs the compiled
-  ladder again with the marks' `recorder` set.
-- **Not cheap: thread a gated recorder through the live solver.** Hold a
-  nullable `recorder`, set only after the givens are placed, and gate every
-  behavioral change on it. Exemplar:
-  [`solo/solver.ts`](../src/games/solo/solver.ts).
+When recording:
 
-When threading:
-
-- **Bump `group` at the top of the main loop** where the loop already
-  restarts after a technique's first firing. A pass that accumulates over
-  several regions before continuing breaks after the first when the recorder
-  is set, and only then.
 - **Record only the deduction whose premise the working board cannot
   recover.** A deduction the plan can re-derive from the board needs no
   recorder, which keeps the gated surface small.
 - **Record placements only; the walk recomputes each placement's cull** from
   `reach`, so a solver need not record `dup` strikes.
 - **More kinds of region mean a richer reason union and the game's own
-  `regionsOf`**, which the classifier runs over. Only a placement the board
-  cannot re-derive (a cage-sum forcing) keeps its recorded reason.
+  `regionsOf`**, which the classifier runs over.
 - **A slow variant's hint walk takes no timeout of its own**
   ([`testing.md`](./testing.md) § "Seed-deterministic, never clock-gated").
   Which presets `hint-resume.test.ts` walks, and which it leaves to the slow
@@ -591,7 +582,7 @@ the firing's technique again ("The engine audits a premise by replaying its
 firing"). What a game owes it:
 
 - **A solver on `latinSolver` takes part with no code.** A compiled ladder
-  offers its replay through `ladderReplay` (Solo's), and
+  offers its replay through `ladderReplay`, and
   a recording solver of a game's own writes a `ReplayAdapter`.
 - **The replay runs one technique, not the ladder**, so a rung reads nothing
   a rung before it left behind in the same pass: work such state out from

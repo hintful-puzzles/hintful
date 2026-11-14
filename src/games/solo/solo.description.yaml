@@ -159,6 +159,10 @@ techniques:
       K = {c in cells(r) where not known(c)} where |K| = 1,
       c = first(K), t = owed(r)
     conclude: "t >= 1 and t <= w and t in cand(c) and place(c, t)"
+    # The hint names the cage and the sum its open cell makes.
+    says:
+      terms: { r: r, c: c, t: t }
+      marks: {}
   # A row, column or box, the rows first and the boxes last, holds every
   # value once, so its open cells outside every cage whose open cells lie
   # within it, L, make the rest of its sum: one of them alone holds it. Where
@@ -182,6 +186,11 @@ techniques:
       and (|L| != 1 or (s <= w and s in cand(first(L)) and place(first(L), s)))
       and (|L| = 1 or |R| != 1 or (exists c in L: cage(c) != cage(first(L)))
       or (t >= 1 and t <= w and t in cand(first(R)) and place(first(R), t)))
+    # The hint names the unit, the cages counted inside it, what it leaves
+    # and its sum, and what that leaves the rest of their cage.
+    says:
+      terms: { u: u, W: W, L: L, s: s, t: t }
+      marks: {}
   # Cage by cage: a value too small or too large for its cell, with the least
   # or the greatest each other open cell can take, to make what the cage's
   # total leaves, is struck. One cage a firing.
@@ -191,6 +200,10 @@ techniques:
       r in cage, K = {c in cells(r) where not known(c)}, t = owed(r)
       where t != 0
     conclude: "forall c in K, d in cand(c) where beyond(K, t, c, d): strike(c, d)"
+    # The hint names the cage, its open cells and what they make.
+    says:
+      terms: { r: r, K: K, t: t }
+      marks: {}
   # The same reading of each partial cage the region rule works out, unit by
   # unit: the open cells it leaves the unit, L (i = 0), and where they lie in
   # one cage, that cage's other open cells, R (i = 1), K either. One partial
@@ -215,6 +228,11 @@ techniques:
       where |K| > 1 and v != 0
       and (i = 0 or (forall c in L: cage(c) = cage(first(L))))
     conclude: "forall c in K, d in cand(c) where beyond(K, v, c, d): strike(c, d)"
+    # The hint names the unit, the cages counted inside it, what it leaves
+    # and its sum, the rest of their cage and its sum, and which it reads.
+    says:
+      terms: { u: u, W: W, L: L, s: s, R: R, t: t, i: i }
+      marks: {}
   # Cage by cage, of two to four open cells: a value in no set of different
   # values that makes what the cage's total leaves, and that each open cell
   # can take one of, is struck. With none, or a cage filled short of its
@@ -227,6 +245,10 @@ techniques:
     conclude: >-
       |K| > 0 and (|K| < 2 or |K| > 4 or (forall P = sums(K, t):
       |P| > 0 and (forall c in K, d in cand(c) where d not in P: strike(c, d))))
+    # The hint names the cage, its open cells and what they make.
+    says:
+      terms: { r: r, K: K, t: t }
+      marks: {}
   # The same reading of each partial cage of two to four cells, as
   # `partMinMax` binds them. With no set of values left, the marks are
   # inconsistent.
@@ -251,6 +273,10 @@ techniques:
     conclude: >-
       forall P = sums(K, v): |P| > 0
       and (forall c in K, d in cand(c) where d not in P: strike(c, d))
+    # As `partMinMax` says.
+    says:
+      terms: { u: u, W: W, L: L, s: s, R: R, t: t, i: i }
+      marks: {}
   - { use: latin.hiddenSingle, tier: Normal }
   - { use: latin.single, tier: Normal }
   # A value whose places left in a row, column or diagonal all lie in one
@@ -269,6 +295,11 @@ techniques:
       (first implies (forall c in cells(b) where c not in cells(L) and d in cand(c): strike(c, d)))
       and (first or ((forall c in cells(b) where d in cand(c): c in cells(L))
       implies (forall c in cells(L) where box(c) != b and d in cand(c): strike(c, d))))
+    # The hint names the value, the line and the box, and which of the two
+    # confines it.
+    says:
+      terms: { L: L, b: b, d: d, first: first }
+      marks: {}
   - { use: latin.set, tier: Hard }
   # One value d: the rows lacking it that have no place for it in a set T of
   # the columns lacking it are as many as those columns' others, X0 - T, so
@@ -288,4 +319,8 @@ techniques:
       (|T| > 0 or (forall L in rows: exists c in cells(L): d in cand(c)))
       and |Y| = |Y0| - |T|
       and (forall L in Y0 - Y, c in cells(L) where x(c) in X0 - T and d in cand(c): strike(c, d))
+    # The hint names the value and the lines it is confined in, either way.
+    says:
+      terms: { d: d, Y0: Y0, X0: X0, T: T, Y: Y }
+      marks: {}
   - { use: latin.wing, tier: Extreme }

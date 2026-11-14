@@ -301,3 +301,45 @@ populated, against 0 of 142 and 2 of 154 at HEAD. Under 50 jumps
 a preset, up to six, until a game's plans have jumped enough. The 84 obvious-clean steps
 under the implicit reading are gone: a stale note's opening now always has a
 placement to take first.
+
+## Solo, moved (2026-11-14)
+
+The recorder threaded through `SolverUsage` (`pendingRecorder`), its premise
+replay and every reason method of the solver are gone; the ladder is
+board-static (`soloLadder`), and `soloNotesLadder` is Solo's `NotesLadder`
+over fresh `SolverUsage` marks, capped on both scales: the board's tier
+below the search, and its killer tier on a killer board. Each technique a
+step teaches says its terms (a cage's `r`, `K`, `t`; a unit's leftover `u`,
+`W`, `L`, `s`, the rest of its cage `t`, and which of the two a part reads,
+`i`; an intersection's line, box and direction; `digitSet`'s lines), and
+`solo/hint-reasons.ts` builds the reasons from them, with the reason types
+the solver no longer needs. The library's `set` now says its unit `u` too,
+which Solo's set names.
+
+- **No working cages on the hint path.** The killer techniques read a cage's
+  filled cells off the grid (`owed`), so the cages `reduceCages` keeps for the
+  solve are not read; the walk's cull already strikes a placed value from the
+  rest of its cage (a cage is one of `regionsOf`).
+- **`boxSingle` has no rung**: it is the walk's hidden single in a block, as
+  Rome's `onlyHome` was.
+- **The set step outlined the wrong cells.** It outlined the open cells
+  outside the set (`open − S`, the hidden set) under words that name the
+  naked one ("Other cells in this column already account for 3, so the 3
+  must go", the struck cell among those outlined); it outlines `S` now. At
+  HEAD too.
+- **The killer-sum test reads the rungs.** "works out every killer sum it
+  cites" checked the recording; it now reads every leg the rungs offer at
+  four positions on the way to each board's answer.
+
+Compared by `research/hint-walk-dump/` here and in a worktree of HEAD, two
+boards a preset (at eight the HEAD dump's text passes the string limit):
+every walk ends as at HEAD (112 solved, 8 refused on Unreasonable). The
+rungs: single 77684 to 59384, cageSingle 20716 to 13832, cageMinMax 45488
+to 51040, cageSums 0 to 4936 (a cage-sums strike that continues the last
+step is now offered beside the singles, where the recording solved by min
+and max first), set 1968 to 3176, intersect 1744 to 2200, note 26588 to
+35884, and the plans are shorter (350884 lines against 375032). The
+avoidable-jump share fell (four boards a preset: implicit 23 of 676 to 9
+of 518, populate 29 of 1089 to 16 of 916). The fingerprint's Killer Easy
+walk lengthens (247 to 297 steps, more of them min/max strikes); every
+other walk keeps its ending, within a few steps.

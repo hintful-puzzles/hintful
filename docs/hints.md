@@ -988,7 +988,7 @@ themselves. Decide first where the record comes from:
   never calls. Choose it where the hint needs the deduction in another order
   or at another grain than the generator, which needs only that it fires
   (for a candidate game, `hints-candidates.md` § "Record off a bespoke
-  solver: thread or parallel"). Exemplar:
+  solver"). Exemplar:
   Clusters, which restarts its scan after each firing and takes the shortest
   chain.
 

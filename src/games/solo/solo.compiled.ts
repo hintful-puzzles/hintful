@@ -19,6 +19,22 @@ export const units: readonly string[] = ["box","rows","cols","diagonals"];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "boxSingle" | "cageSingle" | "regionRule" | "cageMinMax" | "partMinMax" | "cageSums" | "partSums" | "latin.hiddenSingle" | "latin.single" | "intersect" | "latin.set" | "digitSet" | "latin.wing";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  cageSingle: CageSingleSays;
+  regionRule: RegionRuleSays;
+  cageMinMax: CageMinMaxSays;
+  partMinMax: PartMinMaxSays;
+  cageSums: CageSumsSays;
+  partSums: PartSumsSays;
+  intersect: IntersectSays;
+  digitSet: DigitSetSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["cageSingle","regionRule","cageMinMax","partMinMax","cageSums","partSums","intersect","digitSet"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
 
@@ -239,10 +255,16 @@ export interface CageSingleBinding {
   t: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CageSingleSays {
+  terms: { r: number; c: number; t: number; };
+  marks: {  };
+}
+
 const cageSingleFacts: number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function cageSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSingleBinding> | null): number {
+export function cageSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSingleBinding, CageSingleSays> | null): number {
   const _g16: number[] = [];
   const facts = cageSingleFacts;
   let fired = 0;
@@ -306,7 +328,10 @@ export function cageSingle(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSi
       if (!(_c39)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ r: v_r, K: v_K.slice(), c: v_c, t: v_t }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { r: v_r, c: v_c, t: v_t }, marks: {  } };
+          if (!fire({ r: v_r, K: v_K.slice(), c: v_c, t: v_t }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -322,11 +347,17 @@ export interface RegionRuleBinding {
   t: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface RegionRuleSays {
+  terms: { u: number; W: readonly number[]; L: readonly number[]; s: number; t: number; };
+  marks: {  };
+}
+
 const regionRuleFacts: number[] = [];
 const regionRule_st96 = stamps();
 
 /** Its dearest read grows with the board as n^0.5. */
-export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionRuleBinding> | null): number {
+export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<RegionRuleBinding, RegionRuleSays> | null): number {
   const _g66: number[] = [];
   const _g90: number[] = [];
   const _g120: number[] = [];
@@ -604,7 +635,10 @@ export function regionRule(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Region
       if (!(_c205)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, R: v_R.slice(), t: v_t }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, t: v_t }, marks: {  } };
+          if (!fire({ u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, R: v_R.slice(), t: v_t }, facts, _says)) return 1;
+        }
       }
     }
   }
@@ -617,11 +651,17 @@ export interface CageMinMaxBinding {
   t: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CageMinMaxSays {
+  terms: { r: number; K: readonly number[]; t: number; };
+  marks: {  };
+}
+
 const cageMinMaxFacts: number[] = [];
 let cageMinMaxCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as 1. */
-export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMinMaxBinding> | null): number {
+export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMinMaxBinding, CageMinMaxSays> | null): number {
   const _g16: number[] = [];
   const facts = cageMinMaxFacts;
   let fired = 0;
@@ -736,7 +776,10 @@ export function cageMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageMi
       if (!(_q41)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ r: v_r, K: v_K.slice(), t: v_t }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { r: v_r, K: v_K.slice(), t: v_t }, marks: {  } };
+          if (!fire({ r: v_r, K: v_K.slice(), t: v_t }, facts, _says)) return 1;
+        }
         cands.fill(-1);
       }
     }
@@ -756,13 +799,19 @@ export interface PartMinMaxBinding {
   v: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface PartMinMaxSays {
+  terms: { u: number; W: readonly number[]; L: readonly number[]; s: number; R: readonly number[]; t: number; i: number; };
+  marks: {  };
+}
+
 const partMinMaxFacts: number[] = [];
 let partMinMaxCands = new Int32Array(0);
 const partMinMax_st112 = stamps();
 const partMinMax_st203 = stamps();
 
 /** Its dearest read grows with the board as n^0.5. */
-export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMinMaxBinding> | null): number {
+export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMinMaxBinding, PartMinMaxSays> | null): number {
   const _g80: number[] = [];
   const _g106: number[] = [];
   const _g142: number[] = [];
@@ -1244,7 +1293,10 @@ export function partMinMax(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartMi
             if (!(_q307)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, R: v_R.slice(), t: v_t, i: v_i, K: v_K.slice(), v: v_v }, facts)) return 1;
+              if (fire !== null) {
+                const _says = { terms: { u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, R: v_R.slice(), t: v_t, i: v_i }, marks: {  } };
+                if (!fire({ u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, R: v_R.slice(), t: v_t, i: v_i, K: v_K.slice(), v: v_v }, facts, _says)) return 1;
+              }
               cands.fill(-1);
             }
           }
@@ -1261,11 +1313,17 @@ export interface CageSumsBinding {
   t: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CageSumsSays {
+  terms: { r: number; K: readonly number[]; t: number; };
+  marks: {  };
+}
+
 const cageSumsFacts: number[] = [];
 let cageSumsCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as 1. */
-export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSumsBinding> | null): number {
+export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSumsBinding, CageSumsSays> | null): number {
   const _g16: number[] = [];
   const facts = cageSumsFacts;
   let fired = 0;
@@ -1407,7 +1465,10 @@ export function cageSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageSums
       if (!(_c84)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ r: v_r, K: v_K.slice(), t: v_t }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { r: v_r, K: v_K.slice(), t: v_t }, marks: {  } };
+          if (!fire({ r: v_r, K: v_K.slice(), t: v_t }, facts, _says)) return 1;
+        }
         cands.fill(-1);
       }
     }
@@ -1427,13 +1488,19 @@ export interface PartSumsBinding {
   v: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface PartSumsSays {
+  terms: { u: number; W: readonly number[]; L: readonly number[]; s: number; R: readonly number[]; t: number; i: number; };
+  marks: {  };
+}
+
 const partSumsFacts: number[] = [];
 let partSumsCands = new Int32Array(0);
 const partSums_st112 = stamps();
 const partSums_st203 = stamps();
 
 /** Its dearest read grows with the board as n^0.5. */
-export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSumsBinding> | null): number {
+export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSumsBinding, PartSumsSays> | null): number {
   const _g80: number[] = [];
   const _g106: number[] = [];
   const _g142: number[] = [];
@@ -1933,7 +2000,10 @@ export function partSums(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PartSums
             if (!(_q307)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, R: v_R.slice(), t: v_t, i: v_i, K: v_K.slice(), v: v_v }, facts)) return 1;
+              if (fire !== null) {
+                const _says = { terms: { u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, R: v_R.slice(), t: v_t, i: v_i }, marks: {  } };
+                if (!fire({ u: v_u, W: v_W.slice(), L: v_L.slice(), s: v_s, R: v_R.slice(), t: v_t, i: v_i, K: v_K.slice(), v: v_v }, facts, _says)) return 1;
+              }
               cands.fill(-1);
             }
           }
@@ -1951,10 +2021,16 @@ export interface IntersectBinding {
   first: boolean;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface IntersectSays {
+  terms: { L: number; b: number; d: number; first: boolean; };
+  marks: {  };
+}
+
 const intersectFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> | null): number {
+export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding, IntersectSays> | null): number {
   const facts = intersectFacts;
   let fired = 0;
   let changed = false;
@@ -2163,7 +2239,10 @@ export function intersect(b: Marks, sp: GridSpace, fire: Fire<IntersectBinding> 
         if (!(_c94)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, b: v_b, d: v_d, first: v_first }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { L: v_L, b: v_b, d: v_d, first: v_first }, marks: {  } };
+            if (!fire({ L: v_L, b: v_b, d: v_d, first: v_first }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -2179,10 +2258,16 @@ export interface DigitSetBinding {
   Y: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface DigitSetSays {
+  terms: { d: number; Y0: readonly number[]; X0: number; T: number; Y: readonly number[]; };
+  marks: {  };
+}
+
 const digitSetFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | null): number {
+export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding, DigitSetSays> | null): number {
   const _g42: number[] = [];
   const _g73: number[] = [];
   const _g89: number[] = [];
@@ -2402,7 +2487,10 @@ export function digitSet(b: Marks, sp: GridSpace, fire: Fire<DigitSetBinding> | 
         if (!(_c161)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ d: v_d, Y0: v_Y0.slice(), X0: v_X0, T: v_T, Y: v_Y.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { d: v_d, Y0: v_Y0.slice(), X0: v_X0, T: v_T, Y: v_Y.slice() }, marks: {  } };
+            if (!fire({ d: v_d, Y0: v_Y0.slice(), X0: v_X0, T: v_T, Y: v_Y.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }

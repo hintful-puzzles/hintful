@@ -14,14 +14,14 @@ Each game is enrolled in `hint-walk-fingerprint.test.ts` at the commit before it
 - [x] 2.1 Rome (design § "Rome, moved")
 - [x] 2.1a The Latin library's `set`, `fish` and `wing` (`engine/latin.description.yaml`) say their terms, and a Latin `NotesLadder` builds `LatinSolver` marks from the notes (design § "The Latin library says"). The first game to move writes the legs of the library's three rungs; every Latin game's are the same, so they belong in the engine beside `latinNotesLadder`, not in the game
 - [x] 2.1b Salad (its own `border` says as well; a cross or ball is a seeded marker, and the X note is the hole symbol's candidate)
-- [ ] 2.2 The Latin games, a commit each (design § "Unequal, moved", § "Adjacent, moved")
+- [x] 2.2 The Latin games, a commit each (design § "Unequal, moved", § "Adjacent, moved")
   - [x] 2.2a Unequal
   - [x] 2.2b Adjacent (the edge-clue recorder goes with it, and `research/describe/firings.test.ts`, which compared that recorder's firings against the stated techniques the hint now runs)
   - [x] 2.2c Keen
   - [x] 2.2d Towers
   - [x] 2.2e Mathrax
   - [x] 2.2f Group (design § "Group, moved: a placing technique leads")
-  - [ ] 2.2g Solo. Its recorder is threaded through its bespoke solver (`usage.pendingRecorder`), which is a `CellMarks` but no `LatinSolver`, so it needs a `NotesLadder` of its own rather than `latinNotesLadder`. Its killer techniques read working cages that `reduceCages` brings up to date before each (the filled cells struck from the rest of their cage), and their reasons (`cageOf`, `leftOf`, `outsideOf`, `partOf`, `digitSetReason`) are methods of `SolverUsage`: the marks the ladder runs on must do that update, and the reasons must be built from what the techniques say. `boxSingle` and `cageSingle`/`regionRule` place; read whether the walk's hidden single in a box already is `boxSingle`, as Rome's `onlyHome` was
+  - [x] 2.2g Solo (design § "Solo, moved")
 - [ ] 2.3 Undead, Crossing
 - [x] 2.5 Spec deltas for every game moved so far, and the engine's rung over the notes (`specs/`); each later move updates its game's requirements that name a recording solver, and 2.4 the engine's that name `CandidatePlan.record`
 - [ ] 2.4 With the last recorder gone, retire what only recording needs: `docs/hints-candidates.md` § "The recorder and the soundness boundary" and § "Record off a bespoke solver" (or what of them a game still uses), `CandidatePlan.record`, `strikeAxis` and the replay audit (`firing-replay.ts`), each checked for a remaining caller first
