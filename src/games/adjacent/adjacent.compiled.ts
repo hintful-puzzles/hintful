@@ -18,6 +18,16 @@ export const units: readonly string[] = ["rows","cols"];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "latin.hiddenSingle" | "latin.single" | "adjacent" | "adjacentSet" | "latin.set" | "latin.fish" | "latin.wing";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  adjacent: AdjacentSays;
+  adjacentSet: AdjacentSetSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["adjacent","adjacentSet"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
 
@@ -91,11 +101,17 @@ export interface AdjacentBinding {
   e: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface AdjacentSays {
+  terms: { a: number; v: number; bar: number; };
+  marks: {  };
+}
+
 const adjacentFacts: number[] = [];
 let adjacentCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AdjacentBinding> | null): number {
+export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AdjacentBinding, AdjacentSays> | null): number {
   const facts = adjacentFacts;
   let fired = 0;
   let changed = false;
@@ -142,7 +158,10 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
         if (!(_q14)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { a: v_a, v: _h17, bar: _h18 }, marks: {  } };
+            if (!fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts, _says)) return 1;
+          }
           cands.fill(-1);
         }
       }
@@ -158,11 +177,17 @@ export interface AdjacentSetBinding {
   e: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface AdjacentSetSays {
+  terms: { a: number; bar: number; };
+  marks: {  };
+}
+
 const adjacentSetFacts: number[] = [];
 let adjacentSetCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AdjacentSetBinding> | null): number {
+export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AdjacentSetBinding, AdjacentSetSays> | null): number {
   const facts = adjacentSetFacts;
   let fired = 0;
   let changed = false;
@@ -211,7 +236,10 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjac
         if (!(_q13)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { a: v_a, bar: _h19 }, marks: {  } };
+            if (!fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts, _says)) return 1;
+          }
           cands.fill(-1);
         }
       }

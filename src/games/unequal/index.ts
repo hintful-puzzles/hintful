@@ -21,6 +21,7 @@ import {
   LATIN_RUNGS,
   type PlanRung,
   runLatinCandidatePlan,
+  strikesOf,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
@@ -143,23 +144,13 @@ function signLegs(
     f.reasons[0] as Said<unequal.SignBinding, unequal.SignSays>
   ).says.terms;
   const across = (c: number) => ({ ox: c % o, oy: (c / o) | 0 });
-  const legs = new Map<number, { strike: Mark[]; reason: HintReason }>();
-  for (let k = 0; k < f.facts.length; k += 3) {
-    const c = f.facts[k + 1];
-    let leg = legs.get(c);
-    if (!leg) {
-      leg = {
-        strike: [],
-        reason:
-          c === big
-            ? { kind: "greater", ...across(small), bound: lo }
-            : { kind: "lesser", ...across(big), bound: hi },
-      };
-      legs.set(c, leg);
-    }
-    leg.strike.push({ x: c % o, y: (c / o) | 0, n: f.facts[k + 2] });
-  }
-  return [...legs.values()];
+  return byCell(strikesOf(f, o)).map((strike) => ({
+    strike,
+    reason:
+      strike[0].y * o + strike[0].x === big
+        ? { kind: "greater", ...across(small), bound: lo }
+        : { kind: "lesser", ...across(big), bound: hi },
+  }));
 }
 
 /** Every rung an Unequal step can be: the Latin family's, and the kinds of

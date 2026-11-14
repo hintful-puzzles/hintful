@@ -17,11 +17,15 @@ import {
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import {
+  type CandidateRung,
   LATIN_RUNGS,
   type PlanRung,
   runLatinCandidatePlan,
+  strikesOf,
+  techniqueRung,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
+import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { edgeClueVocab } from "../../engine/edge-clue-latin/hint-text.ts";
@@ -49,9 +53,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "../../engine/edge-clue-latin/render.ts";
-import { recordEdgeClueDeductions } from "../../engine/edge-clue-latin/solver.ts";
 import {
-  DIFF_EXTREME,
   diffFromLevel,
   diffToLevel,
   type EdgeClueMove,
@@ -76,6 +78,13 @@ import {
   type Premise,
 } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import type { Said } from "../../engine/ladder-runtime.ts";
+import type { LatinSolver } from "../../engine/latin.ts";
+import {
+  byCell,
+  latinNotesLadder,
+  latinStrikeRungs,
+} from "../../engine/latin-notes.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   autoPencilPref,
@@ -87,7 +96,7 @@ import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import * as adjacent from "./adjacent.compiled.ts";
 import { say } from "./hint-text.ts";
-import type { HintOp, HintReason } from "./solver.ts";
+import type { BarReason, HintReason } from "./solver.ts";
 import { BARS, decodeParams, defaultParams, menu, validateParams } from "./state.ts";
 
 // --- hint ------------------------------------------------------------------
@@ -142,8 +151,38 @@ function buildSteps(
   const o = state.order;
   const steps: HintStep<EdgeClueMove, EdgeClueHint, PlanRung<HintReason>>[] = [];
   const wGrid = Int8Array.from(state.grid);
-  const maxdiff = Math.min(diffToLevel(state.diff), DIFF_EXTREME);
-  runLatinCandidatePlan<EdgeClueMove, EdgeClueHint, HintOp, HintReason>({
+  const on = latinNotesLadder(BARS.ladder(o, state.clueFlags), o, wGrid);
+  /** A bar firing strikes in one cell, toward one neighbor: one leg, its
+   * reason built from what the technique says. */
+  const barRung = <K extends keyof adjacent.SaysById>(
+    id: K,
+    reason: (terms: adjacent.SaysById[K]["terms"]) => BarReason,
+  ): CandidateRung<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason> =>
+    techniqueRung<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason, LatinSolver>(
+      on,
+      id,
+      (f) => [
+        {
+          strike: strikesOf(f, o),
+          reason: reason(
+            (f.reasons[0] as Said<unknown, adjacent.SaysById[K]>).says.terms,
+          ),
+        },
+      ],
+    );
+  const across = (c: number) => ({ ox: c % o, oy: (c / o) | 0 });
+  const adjacentRung = barRung("adjacent", ({ a, v, bar }) => ({
+    kind: "adjacent",
+    ...across(a),
+    v,
+    bar: bar === 1,
+  }));
+  const adjacentSet = barRung("adjacentSet", ({ a, bar }) => ({
+    kind: "adjacentSet",
+    ...across(a),
+    bar: bar === 1,
+  }));
+  runLatinCandidatePlan<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>({
     w: o,
     steps,
     grid: wGrid,
@@ -151,19 +190,18 @@ function buildSteps(
     autoClean,
     reading,
     label: "adjacent hint plan",
-    record: () =>
-      recordEdgeClueDeductions(
-        o,
-        BARS,
-        state.clueFlags,
-        Uint8Array.from(wGrid),
-        maxdiff,
-      ) as HintOp[],
     placeWords: (m, reason) => ({ words: narrate(reason, m, o) }),
     strikeWords: (marks, reason) => premise(reason, marks, o),
-    // The narration names a cell's relationship to its neighbor, so a firing is
-    // one leg per cell: a bar's two ends are two legs.
-    strikeAxis: (op) => op.y * o + op.x,
+    // The narration names one cell's notes, so a set firing is a leg a cell.
+    rungs: [
+      adjacentRung,
+      adjacentSet,
+      ...latinStrikeRungs<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>(
+        on,
+        o,
+        byCell,
+      ),
+    ],
     notes: {
       noun: "number",
       placedVerb: "standing",

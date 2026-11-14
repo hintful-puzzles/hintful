@@ -104,6 +104,11 @@ techniques:
     rung: adjacent
     for: "L in cols, a in cells(L) where known(a), b in adj4(a), e = edge(a, b)"
     conclude: "forall d in cand(b) where not fits(e, value(a), d): strike(b, d)"
+    # The hint names the placed neighbor, its number, and whether a bar joins
+    # them.
+    says:
+      terms: { a: a, v: "value(a)", bar: "clue(bar, e)" }
+      marks: {}
   # A number is struck across an edge when none of the other end's candidates
   # fits it, in the same order over every cell.
   - id: adjacentSet
@@ -113,6 +118,10 @@ techniques:
     conclude: >-
       forall d in cand(b) where not (exists d2 in cand(a): d2 != d and fits(e, d2, d)):
       strike(b, d)
+    # The hint names the neighbor and whether a bar joins them.
+    says:
+      terms: { a: a, bar: "clue(bar, e)" }
+      marks: {}
   - { use: latin.set, tier: Tricky, rung: set }
   - { use: latin.fish, tier: Hard, rung: set }
   - { use: latin.wing, tier: Hard, rung: wing }

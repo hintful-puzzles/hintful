@@ -10,9 +10,9 @@ import type { Mark, NoteEncoding } from "./candidate-hint.ts";
 import {
   type CandidateRung,
   type NotesLadder,
+  strikesOf,
   techniqueRung,
 } from "./candidate-plan.ts";
-import { STRIKE } from "./describe-runtime.ts";
 import type { Ladder } from "./ladder-runtime.ts";
 import { type LatinReason, type LatinRepeats, LatinSolver } from "./latin.ts";
 
@@ -77,14 +77,8 @@ export function latinStrikeRungs<M, H, R, Reason = LatinStrikeReason>(
     .filter((e) => LIBRARY_STRIKES.includes(e.id))
     .map((e) =>
       techniqueRung<M, H, R, Reason | LatinStrikeReason, LatinSolver>(on, e.id, (f) => {
-        const marks: Mark[] = [];
-        for (let k = 0; k < f.facts.length; k += 3) {
-          if (f.facts[k] !== STRIKE) throw new Error(`${e.id} does more than strike`);
-          const c = f.facts[k + 1];
-          marks.push({ x: c % o, y: (c / o) | 0, n: f.facts[k + 2] });
-        }
         const reason = f.reasons[0] as LatinStrikeReason;
-        return split(marks).map((strike) => ({ strike, reason }));
+        return split(strikesOf(f, o)).map((strike) => ({ strike, reason }));
       }),
     );
 }

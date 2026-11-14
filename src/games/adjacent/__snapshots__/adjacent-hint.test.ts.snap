@@ -2614,13 +2614,13 @@ exports[`adjacent: pinned hint positions > says, at each pin 1`] = `
   "adjacent": "No bar joins this cell to the 1 beside it: they can't differ by 1, so the 2 must go.",
   "adjacentSet": "A bar joins this cell to its neighbor with nothing open one away from 1, so the 1 must go.",
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
-  "dup": "The 2 just placed can't repeat in its row and column, so the 2 must go from the other cells.",
-  "hiddenSingle": "No other cell in this row can be 2, so this cell must be 2.",
+  "dup": "The 4 just placed can't repeat in its row and column, so the 4 must go from the other cells.",
+  "hiddenSingle": "No other cell in this row can be 1, so this cell must be 1.",
   "note": "Only 1, 3, 4 and 5 aren't already standing in this cell's row or column, so pencil them in.",
   "populate": "Start by penciling every candidate number into each empty cell.",
   "regionsFull": "This cell's row and column already hold every other number, so it can only be 2.",
   "set": "The outlined cells already account for 1 and 5 between them, so this cell can only be 2 or 4.",
-  "single": "Every other number has been ruled out in this cell, so it can only be 5.",
+  "single": "Every other number has been ruled out in this cell, so it can only be 4.",
   "wing": "Whatever goes in the middle cell, another outlined cell in line with this cell must have 4, so the 4 must go.",
 }
 `;

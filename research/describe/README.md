@@ -22,7 +22,6 @@ writes a line of progress per board.
 | --- | --- |
 | `answer-check` | each description's answer check on dealt boards, against the game's `status()` and `findMistakes`, and a planted defect in each clue's meaning; writes `results-answer.txt` |
 | `ladder` | the stated techniques to a fixpoint at every tier cap, against the game's own solver, cell by cell, and its grade, with three planted defects; writes `results-ladder.txt` |
-| `firings` | every firing of the game's recording solver, which its hint narrates, against the technique stated under the firing's rung on the same marks; writes `results-firings.txt` |
 | `measure` | the stated ladder's time against the game's solver's; writes `results-measure.txt` |
 | `speed-latin` | the generator's time per deal on every described game's presets (`SPEED_GAMES` narrows it), each run twice and the second kept: run it on two builds and compare the lines |
 | `trace-latin` | every Latin game's deals and hint walks, step by step, to `TRACE_OUT`: run it on two builds of the compiled modules and diff the files |

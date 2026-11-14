@@ -436,8 +436,8 @@ them".
   `hint-resume.test.ts`, which asks that asking change nothing: compress once
   when it is built.
 
-Exemplar: `recordEdgeClueDeductions` in
-[`engine/edge-clue-latin/solver.ts`](../src/engine/edge-clue-latin/solver.ts)
+Exemplar: `recordKeenDeductions` in
+[`games/keen/solver.ts`](../src/games/keen/solver.ts)
 over [`engine/latin.ts`](../src/engine/latin.ts).
 
 ## Record off a bespoke solver: thread or parallel

@@ -1,43 +1,28 @@
 /**
  * Adjacent's ladder: the techniques `adjacent.description.yaml` states,
- * compiled, with the reason each records for the hint. The shared edge-clue
- * solver (`engine/edge-clue-latin/solver.ts`) runs it on the `LatinSolver`.
+ * compiled. The shared edge-clue solver (`engine/edge-clue-latin/solver.ts`)
+ * runs it on the `LatinSolver`, and the hint runs it on the player's notes.
  */
 
-import { clueAt, clueList, latinSpace } from "../../engine/describe-runtime.ts";
+import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { ADJTHAN, type ClueKind } from "../../engine/edge-clue-latin/state.ts";
 import { compiledRung } from "../../engine/ladder-runtime.ts";
-import {
-  type DeductionRecord,
-  type LatinReason,
-  latinLadder,
-} from "../../engine/latin.ts";
+import { type LatinReason, latinLadder } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import * as adjacent from "./adjacent.compiled.ts";
 
 /** Why a bar, or its absence, ruled a candidate out — the premise the hint
- * narrates and highlights. Combined with {@link LatinReason} (the generic
- * positional/set deductions) it covers every technique the recording solver
- * fires. Each carries the constraining neighbor (`ox`,`oy`) and whether a bar
- * joins them (`bar`); `adjacent` also the number the neighbor holds. */
+ * narrates and highlights, built from what the technique says. Each carries
+ * the constraining neighbor (`ox`,`oy`) and whether a bar joins them (`bar`);
+ * `adjacent` also the number the neighbor holds. */
 export type BarReason =
   | { kind: "adjacent"; ox: number; oy: number; v: number; bar: boolean }
   | { kind: "adjacentSet"; ox: number; oy: number; bar: boolean }
-  /** The singles the hint plan re-derives from the working board at placement
-   * time (the recording solver records them all as `single`). */
+  /** The singles the hint plan reads off the working board. */
   | SingleReason;
 
-/** A reason attached to a recorded Adjacent deduction. */
+/** A reason an Adjacent hint step narrates. */
 export type HintReason = BarReason | LatinReason;
-
-/** One recorded Adjacent deduction op (a {@link DeductionRecord} with a
- * narrowed reason). */
-export interface HintOp extends DeductionRecord {
-  reason: HintReason;
-}
-
-/** The cell across a bar, as a reason names it. */
-const across = (c: number, o: number) => ({ ox: c % o, oy: (c / o) | 0 });
 
 /** The board's bars as the description deals them: every edge, a bar or
  * none, read from either end since a bar is flagged at both. */
@@ -62,24 +47,7 @@ export const barAnswer: ClueKind["isAnswer"] = (grid, o, flags) =>
 export const barLadder: ClueKind["ladder"] = (o, flags) => {
   const cl = dealtOf(o, flags);
   return latinLadder(adjacent, {
-    adjacent: compiledRung(
-      adjacent.adjacent,
-      cl,
-      ({ a, e }, _c, _n, m): BarReason => ({
-        kind: "adjacent",
-        ...across(a, m.sp.w),
-        v: m.value(a),
-        bar: clueAt(cl.bar, e) === 1,
-      }),
-    ),
-    adjacentSet: compiledRung(
-      adjacent.adjacentSet,
-      cl,
-      ({ a, e }, _c, _n, m): BarReason => ({
-        kind: "adjacentSet",
-        ...across(a, m.sp.w),
-        bar: clueAt(cl.bar, e) === 1,
-      }),
-    ),
+    adjacent: compiledRung(adjacent.adjacent, cl),
+    adjacentSet: compiledRung(adjacent.adjacentSet, cl),
   });
 };

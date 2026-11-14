@@ -5,11 +5,7 @@
  */
 
 import type { DescriptionJson } from "../../src/describe/description.ts";
-import type { DeductionRecord } from "../../src/engine/deduction-record.ts";
-import {
-  recordEdgeClueDeductions,
-  solveEdgeClues,
-} from "../../src/engine/edge-clue-latin/solver.ts";
+import { solveEdgeClues } from "../../src/engine/edge-clue-latin/solver.ts";
 import {
   ADJTHAN,
   type EdgeClueParams,
@@ -94,9 +90,6 @@ export interface Binding<P, S> {
   /** The game's own solver from the givens, capped at a tier: the level it
    * returns and the candidates it ends with, by cell, bit `1 << v`. */
   ownLadder?(s: S, cap: number): { level: number; masks: Int32Array };
-  /** The game's recording solver from the givens, capped at a tier: every
-   * firing its hint narrates from, in order. */
-  ownFirings?(s: S, cap: number): readonly DeductionRecord[];
   /** Whether the game refuses the player this value in this cell, which a
    * planted entry then leaves out (Salad's cross on a given ball). */
   refuses?(s: S, cell: number, v: number): boolean;
@@ -426,14 +419,6 @@ const edgeClueCommon = {
     );
     return { level, masks: cubeMasks(cube, o) };
   },
-  ownFirings: (s: EdgeClueState, cap: number) =>
-    recordEdgeClueDeductions(
-      s.order,
-      s.kind,
-      s.clueFlags,
-      Uint8Array.from(s.immutable),
-      cap,
-    ),
 };
 const edgeClueDiffs = ["trivial", "easy", "tricky", "extreme", "recursive"] as const;
 

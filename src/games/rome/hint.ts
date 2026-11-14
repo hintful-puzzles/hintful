@@ -52,6 +52,7 @@ import {
   type NotesLadder,
   type PlanRung,
   runCandidatePlan,
+  strikesOf,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
@@ -282,13 +283,7 @@ export function buildSteps(
     }
     throw new Error("rome: a loop with no chain back to its square");
   };
-  /** A firing's facts, as the marks it strikes. */
-  const struck = (f: LadderFiring): Mark[] => {
-    const out: Mark[] = [];
-    for (let k = 0; k < f.facts.length; k += 3)
-      out.push({ ...cellOf(f.facts[k + 1]), n: f.facts[k + 2] });
-    return out;
-  };
+  const struck = (f: LadderFiring): Mark[] => strikesOf(f, w);
 
   type Rung = CandidateRung<RomeMove, RomeHint, DeductionRecord, RomeHintReason>;
   type RomeFiring = Firing<RomeMove, RomeHint, RomeHintReason>;

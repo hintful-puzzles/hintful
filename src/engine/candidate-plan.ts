@@ -39,6 +39,7 @@ import {
   regionReach,
 } from "./candidate-hint.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
+import { STRIKE } from "./describe-runtime.ts";
 import { checkPremise, type FiringReplay, takeReplay } from "./firing-replay.ts";
 import type { HintStep } from "./game.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
@@ -209,6 +210,18 @@ export function techniqueRung<M, H, R, Reason, S extends CellMarks = CellMarks>(
     }
     return out;
   };
+}
+
+/** A firing's facts as the marks it strikes, on a board `w` cells wide, for a
+ * technique that only strikes. */
+export function strikesOf(f: LadderFiring, w: number): Mark[] {
+  const out: Mark[] = [];
+  for (let k = 0; k < f.facts.length; k += 3) {
+    if (f.facts[k] !== STRIKE) throw new Error("a firing that does more than strike");
+    const c = f.facts[k + 1];
+    out.push({ x: c % w, y: (c / w) | 0, n: f.facts[k + 2] });
+  }
+  return out;
 }
 
 /** What a step says. The walk adds the move, the `targets` (the cells the move

@@ -157,3 +157,28 @@ order where the notes show a hidden single before the recording placed it.
 The walk fingerprint's per-commit boards keep their step counts and rungs;
 on the slow tier a few walks move by a few steps, and an Unreasonable
 board's goes further before it refuses (62 to 77 steps).
+
+## Adjacent, moved (2026-11-14)
+
+The recorder and both bar techniques' reason callbacks are gone; `adjacent`
+says the placed neighbor, its number and whether a bar joins them, and
+`adjacentSet` the neighbor and the bar. A bar firing strikes in one cell, so
+it is one leg. The edge-clue recorder (`recordEdgeClueDeductions`) had no
+other caller and went, with `research/describe/firings.test.ts`, which read
+that recorder's firings against the stated techniques: the hint now runs
+the stated techniques, so there is no second copy to compare.
+
+`strikesOf` (`engine/candidate-plan.ts`) is a firing's facts as the marks
+it strikes. Rome, Unequal, Adjacent and the library's rungs each wrote that
+loop; they share it now, and Rome's, Unequal's and Salad's fingerprints are
+unchanged by it.
+
+Compared by `research/hint-walk-dump/` as for Unequal: every walk ends as
+at HEAD (128 solved, 32 refused), and every step's sentence has a shape
+HEAD spoke, but for a bar step striking three numbers at once (a neighbor
+left only odd numbers forces this cell even). The rungs are near the same in
+number (adjacent 20112 to 18056, adjacentSet 20152 to 21532, set 4180 to
+4860, hidden singles 10872 to 13516, naked singles 54108 to 46784). The
+fingerprint moves more than Unequal's: walks of a board's tier shift by up
+to a dozen steps either way (5x5 Tricky #3 49 to 60, more of them neighbor
+steps; #1 73 to 63), every one still solved.
