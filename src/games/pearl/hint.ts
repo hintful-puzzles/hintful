@@ -13,11 +13,10 @@ import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
-import { spokenOf } from "../../engine/described-hint.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
 import { keepTrackBy } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import type { CellMarks, Ladder, Taken } from "../../engine/ladder-runtime.ts";
+import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
 import {
   bitDirection,
   D,
@@ -174,22 +173,6 @@ function dirFrom(v: { w: number }, op: PearlEdgeOp, sq: number): number {
   return 0;
 }
 
-/** The squares the lines in `grid` join to `sq`, in reading order. */
-function pieceOf(v: View, grid: ArrayLike<number>, sq: number): number[] {
-  const seen = new Set([sq]);
-  const work = [sq];
-  for (let c = work.pop(); c !== undefined; c = work.pop())
-    for (const d of DIRECTIONS)
-      if (edgeState(v, grid, c, d) === 1) {
-        const n = step(v, c, d);
-        if (!seen.has(n)) {
-          seen.add(n);
-          work.push(n);
-        }
-      }
-  return [...seen].sort((a, b) => a - b);
-}
-
 /** Does anything a closed loop through `piece` (and `also`) would leave out
  * hold a pearl? Otherwise what it leaves out is lines: the technique fires
  * only when it leaves out a pearl or a line. */
@@ -201,51 +184,52 @@ function leftOut(v: View, piece: readonly number[], also: number | null): LeftOu
   return "lines";
 }
 
+/** A firing as its technique said it. */
+type Said = { [K in pearl.LadderId]: { id: K; says: PearlSays[K] } }[pearl.LadderId];
+
 /**
- * The firing's premise, as the narration names it, from its technique's
- * binding on the edges before it fired. `null` for the closed loop.
+ * The firing's premise, as the narration names it, from what its technique
+ * said on the edges before it fired. `null` for the closed loop.
  */
-function reasonOf(
-  v: View,
-  kind: pearl.LadderId,
-  terms: { c?: number; e?: number },
-  before: ArrayLike<number>,
-): PearlReason | null {
-  const c = terms.c as number;
-  const e = terms.e as number;
-  switch (kind) {
+function reasonOf(v: View, said: Said): PearlReason | null {
+  switch (said.id) {
     case "square":
     case "blackPearl":
-      return { kind: "square", sq: c };
+      return { kind: "square", sq: said.says.terms.c };
     case "blackRunsOn":
-      return { kind: "blackRunsOn", pearl: c, dir: dirOf(v, c, e) };
     case "blackCannotRunOn":
-      return { kind: "blackCannotRunOn", pearl: c, dir: dirOf(v, c, e) };
+    case "whiteTurnsOpposite": {
+      const { c, e } = said.says.terms;
+      return { kind: said.id, pearl: c, dir: dirOf(v, c, e) };
+    }
     case "whiteCannotTurn": {
+      const { c, e } = said.says.terms;
       const d = dirOf(v, c, e);
       return { kind: "whiteCannotTurn", pearl: c, axis: d === L || d === R ? R : U };
     }
-    case "whiteTurnsOpposite":
-      return { kind: "whiteTurnsOpposite", pearl: c, dir: dirOf(v, c, e) };
     case "closed":
       return null;
-    case "earlyLoop":
+    case "earlyLoop": {
+      const { e } = said.says.terms;
       return {
         kind: "closesEarly",
         sq: v.g.edgeSquare[e],
         dir: v.g.edgeSide[e],
-        piece: pieceOf(v, before, v.g.edgeSquare[e]),
+        piece: [...said.says.marks.outline],
       };
+    }
     case "earlyThrough": {
-      // The way through it rules out: two of its open edges into one piece.
-      const open = DIRECTIONS.filter((d) => edgeState(v, before, c, d) === 3);
-      for (const [i, x] of open.entries())
-        for (const y of open.slice(i + 1)) {
-          const piece = pieceOf(v, before, step(v, c, x));
-          if (piece.includes(step(v, c, y)))
-            return { kind: "closesEarlyThrough", sq: c, shape: x | y, piece };
-        }
-      throw new Error(`pearl hint: earlyThrough at ${c} joins no piece`);
+      // The way through it rules out: the first two of its open sides, in
+      // the order a square lists its sides, into the piece it shows.
+      const { c, F } = said.says.terms;
+      const piece = said.says.marks.outline;
+      const ways = F.map((e) => dirOf(v, c, e)).filter((d) =>
+        piece.includes(step(v, c, d)),
+      );
+      const [x, y] = DIRECTIONS.filter((d) => ways.includes(d));
+      if (y === undefined)
+        throw new Error(`pearl hint: earlyThrough at ${c} joins no piece`);
+      return { kind: "closesEarlyThrough", sq: c, shape: x | y, piece: [...piece] };
     }
   }
 }
@@ -470,17 +454,6 @@ interface PearlWalkContext {
   closed: boolean;
 }
 
-/** The firing's premise from what it says, on `grid` as the edges stood before
- * it fired. */
-function premiseOf(
-  view: View,
-  taken: Taken,
-  grid: ArrayLike<number>,
-): PearlReason | null {
-  const { says } = spokenOf<{ terms: { c?: number; e?: number } }>(taken);
-  return reasonOf(view, taken.entry.id as pearl.LadderId, says.terms, grid);
-}
-
 /** What a sentence is told of its step: the firing, why it holds, and the
  * board it reads. */
 interface PearlMarked {
@@ -496,12 +469,12 @@ function stepOf(fired: FiredOf<PearlSays[keyof PearlSays], PearlWalkContext>): {
   highlights: PearlHint;
   marked: PearlMarked;
 }[] {
-  const { taken, ctx, marks: m } = fired;
+  const { taken, says, ctx, marks: m } = fired;
   const { view } = ctx;
   // The edges as they stood before the firing: every edge it sets was open.
   const before = Uint8Array.from(m.grid);
   for (let i = 0; i < taken.facts.length; i += 3) before[taken.facts[i + 1]] = 0;
-  const reason = premiseOf(view, taken, before);
+  const reason = reasonOf(view, { id: taken.entry.id, says } as Said);
   if ((taken.entry.id as pearl.LadderId) === "closed") ctx.closed = true;
   const ops: PearlEdgeOp[] = [];
   for (let e = 0; e < m.grid.length; e++)

@@ -310,7 +310,7 @@ techniques:
     conclude: "place(e, 2)"
     says:
       terms: { e: e }
-      marks: { reads: "{end1(e), end2(e)} + G" }
+      marks: { reads: "{end1(e), end2(e)}", outline: "G" }
   # A square with no line whose ways through would join two squares the
   # lines already join, while a pearl or a line lies off them: those ways
   # would close a loop that leaves it out, and the rest agree.
@@ -327,9 +327,14 @@ techniques:
       forall e in F: (e in W or e in N)
       and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
     says:
-      terms: { c: c }
-      # The square and the piece of line its ways through would close.
+      # Its open sides, which the hint reads its way through from.
+      terms: { c: c, F: F }
+      # The square and the pieces of line its ways through would close; the
+      # piece shown is the one the first way that has one leads into.
       marks:
         reads: >-
           {c} + set(q over x in F, y in F where y != x
           and other(y, c) in through(other(x, c), L), q in through(other(x, c), L))
+        outline: >-
+          through(other(first({x in F where exists y in F where y != x:
+          other(y, c) in through(other(x, c), L)}), c), L)

@@ -2935,7 +2935,7 @@ export interface EarlyLoopBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface EarlyLoopSays {
   terms: { e: number; };
-  marks: { reads: readonly number[]; };
+  marks: { reads: readonly number[]; outline: readonly number[]; };
 }
 
 const earlyLoopFacts: number[] = [];
@@ -3056,7 +3056,7 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { e: v_e }, marks: { reads: union(setOf(sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]), v_G).slice() } };
+          const _says = { terms: { e: v_e }, marks: { reads: setOf(sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]).slice(), outline: v_G.slice() } };
           if (!fire({ L: v_L.slice(), e: v_e, G: v_G.slice() }, facts, _says)) return 1;
         }
       }
@@ -3076,8 +3076,8 @@ export interface EarlyThroughBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface EarlyThroughSays {
-  terms: { c: number; };
-  marks: { reads: readonly number[]; };
+  terms: { c: number; F: readonly number[]; };
+  marks: { reads: readonly number[]; outline: readonly number[]; };
 }
 
 const earlyThroughFacts: number[] = [];
@@ -3118,6 +3118,7 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
   const _g280: number[] = [];
   const _g286: number[] = [];
   const _g430: number[] = [];
+  const _g447: number[] = [];
   const facts = earlyThroughFacts;
   let fired = 0;
   let changed = false;
@@ -3125,7 +3126,7 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
   if (earlyThroughCands.length < sp.edges.length) earlyThroughCands = new Int32Array(sp.edges.length);
   const cands = earlyThroughCands;
   cands.fill(-1);
-  const _m447_0 = b.made[0];
+  const _m463_0 = b.made[0];
   _g145.length = 0;
   G146: {
     const _a149 = sp.edges;
@@ -3136,7 +3137,7 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
     }
   }
   const v_L = _g145;
-  const _m448_1 = b.made[1];
+  const _m464_1 = b.made[1];
   const _eg223 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   _g151.length = 0;
   G152: {
@@ -3339,7 +3340,7 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
           }
         }
         if (!(_q276)) break L275;
-        if (b.made[0] !== _m447_0 || b.made[1] !== _m448_1) {
+        if (b.made[0] !== _m463_0 || b.made[1] !== _m464_1) {
           _g280.length = 0;
           G281: {
             const _a284 = sp.edges;
@@ -3628,7 +3629,30 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
                 }
               }
             }
-            const _says = { terms: { c: v_c }, marks: { reads: union(setOf(v_c), _g430).slice() } };
+            _g447.length = 0;
+            G448: {
+              const _a455 = v_F;
+              for (let _i456 = 0; _i456 < _a455.length; _i456++) {
+                const v_x = _a455[_i456];
+                const _h461 = (sp.edgeEnds[2 * v_x] === v_c ? sp.edgeEnds[2 * v_x + 1] : sp.edgeEnds[2 * v_x]);
+                let _q457 = false;
+                Q458: {
+                  const _a459 = v_F;
+                  for (let _i460 = 0; _i460 < _a459.length; _i460++) {
+                    const v_y = _a459[_i460];
+                    if (!((v_y !== v_x))) continue;
+                    if ((_eg223.of((sp.edgeEnds[2 * v_y] === v_c ? sp.edgeEnds[2 * v_y + 1] : sp.edgeEnds[2 * v_y])) === _eg223.of(_h461))) {
+                      _q457 = true;
+                      break Q458;
+                    }
+                  }
+                }
+                if (!(_q457)) continue;
+                _g447.push(v_x);
+              }
+            }
+            const _t462 = (_g447.length > 0 ? _g447[0] : -1);
+            const _says = { terms: { c: v_c, F: v_F.slice() }, marks: { reads: union(setOf(v_c), _g430).slice(), outline: _eg223.of((sp.edgeEnds[2 * _t462] === v_c ? sp.edgeEnds[2 * _t462 + 1] : sp.edgeEnds[2 * _t462])).slice() } };
             if (!fire({ L: v_L.slice(), Q: v_Q.slice(), c: v_c, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts, _says)) return 1;
           }
           cands.fill(-1);

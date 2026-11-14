@@ -1076,7 +1076,10 @@ term, which the game reads off its geometry. **What a step shows is said
 too**: the squares it reasons from are its `outline` (the walk reads them),
 the sides a set-of-edges term (Tracks' `shut`, `set(edge(c, y) over y in
 adj4(c) where shut(c, y))`), and the game only places them. A side on the
-board's rim is no edge, so that is the game's geometry. **The squares a premise reads
+board's rim is no edge, so that is the game's geometry. Magnets is the
+exception: a count step's sentence reads each square's reason (`whyNot`)
+again on the board each of its legs leaves, and a term is read once, at the
+firing. **The squares a premise reads
 are `reads`, never a hook**, however far they lie from the binding (Pearl's
 square past the next, `set(other(x, j) over x in edges(j) where ...)`, and the
 piece of line a way would close, `through(...)`). Write a predicate only
