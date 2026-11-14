@@ -1,6 +1,7 @@
 /**
- * Every hint that speaks keeps its sentences in the game's `hint-text.ts`
- * (docs/hints.md § "The sentences live in one file per game").
+ * Every hint that speaks keeps its sentences in the game's `hint-text.ts`, or
+ * states them in its description (docs/hints.md § "The sentences live in one
+ * file per game").
  *
  * **Both populations are derived.** The games are the registry's hinting games
  * (`HINT_GAMES`), split by whether a hint on a real board says anything — which
@@ -18,6 +19,23 @@ import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 const WITH_TEXT = new Set(
   Object.keys(import.meta.glob("../games/*/hint-text.ts")).map((p) => p.split("/")[2]),
 );
+
+/** Game ids whose description states its sentences: a compiled `STATED` with
+ * an entry. The hint already loads these modules, so reading them here costs
+ * nothing. */
+const STATED_GAMES = new Set(
+  Object.entries(
+    import.meta.glob<object>("../games/*/*.compiled.ts", {
+      import: "STATED",
+      eager: true,
+    }),
+  )
+    .filter(([, stated]) => stated !== undefined && Object.keys(stated).length > 0)
+    .map(([p]) => p.split("/")[2]),
+);
+
+/** Where a game's sentences may live: its text module or its description. */
+const SPOKEN_FROM = new Set([...WITH_TEXT, ...STATED_GAMES]);
 
 const SEEDS = [0, 1, 2];
 
@@ -53,19 +71,23 @@ function speaks(id: string): boolean {
 }
 
 describe("hint sentences live in one file per game", () => {
-  it("every game whose hint speaks has a hint-text.ts, and no other game does", () => {
+  it("every game whose hint speaks has a hint-text.ts or stated words, and no other game does", () => {
     const speaking = HINT_GAMES.map(([id]) => id).filter(speaks);
     // Vacuity: a glob or a registry that found nothing would pass both checks.
     expect(speaking.length, "almost no hinting game spoke").toBeGreaterThan(25);
     expect(WITH_TEXT.size, "the glob found almost no text modules").toBeGreaterThan(25);
 
+    expect(STATED_GAMES.size, "the glob found no stated description").toBeGreaterThan(
+      0,
+    );
+
     expect(
-      speaking.filter((id) => !WITH_TEXT.has(id)),
-      "these hints speak, but keep their sentences outside a hint-text.ts",
+      speaking.filter((id) => !SPOKEN_FROM.has(id)),
+      "these hints speak, but keep their sentences outside a hint-text.ts or a stated description",
     ).toEqual([]);
     expect(
-      [...WITH_TEXT].filter((id) => !speaking.includes(id)),
-      "these games have a hint-text.ts, but their hint says nothing",
+      [...SPOKEN_FROM].filter((id) => !speaking.includes(id)),
+      "these games have a hint-text.ts or stated words, but their hint says nothing",
     ).toEqual([]);
   });
 
