@@ -1,14 +1,13 @@
 /**
  * Seismic's solver: the ladder `seismic.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`), with the reason
- * each technique records for the hint; the answer check its rules compile
- * to; and the error overlay.
+ * the engine's marks and runner (`engine/ladder-runtime.ts`); the answer check
+ * its rules compile to; and the error overlay.
  *
  * One ladder serves the generator (which strips a clue only while the board
  * still solves, so the solver's verdict on every intermediate board decides
  * which puzzles exist), `solve()`, `findMistakes` (a board the ladder drives to
  * completion is *forced*, hence uniquely solved: no rung supposes anything)
- * and the hint, which records it.
+ * and the hint, which runs its starved area on the player's notes.
  *
  * Easy is the singles, a square's and an area's; Normal adds the starved area,
  * which is upstream's trial placement as the deduction it always comes to once
@@ -16,27 +15,22 @@
  */
 
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { describedSpace, partition, rangeMask } from "../../engine/describe-runtime.ts";
 import type { Dsf } from "../../engine/dsf.ts";
-import { auditingPremises, offerReplay } from "../../engine/firing-replay.ts";
 import {
   CellMarks,
   compiledRung,
   describedLadder,
   type Ladder,
-  ladderReplay,
   ladderTechniques,
   placingRung,
   runLadder,
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import * as seismic from "./seismic.compiled.ts";
 import {
   DIFF_EASY,
-  DIFF_NORMAL,
   FM_ERRORDIST,
   FM_ERRORDUP,
   MODE_SEISMIC,
@@ -46,15 +40,6 @@ import {
 
 /** `solveGame` could not drive the board to a complete, valid solution. */
 export const SOLVE_FAILED = -1;
-
-/** Why a number is placed or ruled out, as the solver records it. */
-export type SeismicRecordReason =
-  /** Its square is down to one number. */
-  | { kind: "single" }
-  /** No other square of its area can hold the number. */
-  | { kind: "hidden"; area: readonly number[] }
-  /** Every home the area has left for `n` is near the struck squares. */
-  | { kind: "starve"; n: number; area: readonly number[] };
 
 const areasByDsf = new WeakMap<Dsf, ReturnType<typeof partition>>();
 
@@ -77,25 +62,14 @@ export function dealtOf(board: SeismicBoard): seismic.Dealt {
   return { area, mode: board.mode };
 }
 
-/** The ladder over the dealt areas, each technique with its reason. */
+/** The ladder over the dealt areas. A starved area's firing says the area and
+ * its number (`says` in the description). */
 export function seismicLadder(dl: seismic.Dealt): Ladder {
   return describedLadder(seismic, {
     cull: placingRung(seismic.cull, dl),
-    lone: uncluedRung(seismic.lone, (): SeismicRecordReason => ({ kind: "single" })),
-    areaSingle: compiledRung(
-      seismic.areaSingle,
-      dl,
-      ({ r }): SeismicRecordReason => ({ kind: "hidden", area: dl.area.cells[r] }),
-    ),
-    starve: compiledRung(
-      seismic.starve,
-      dl,
-      ({ r, n }): SeismicRecordReason => ({
-        kind: "starve",
-        n,
-        area: dl.area.cells[r],
-      }),
-    ),
+    lone: uncluedRung(seismic.lone),
+    areaSingle: compiledRung(seismic.areaSingle, dl),
+    starve: compiledRung(seismic.starve, dl),
   });
 }
 
@@ -153,42 +127,6 @@ export function isComplete(board: SeismicBoard): boolean {
     describedSpace(seismic.units, board.w, board.h),
     dealtOf(board),
   );
-}
-
-/**
- * The recording solver on the numbers `grid` holds (never the player's
- * notes), up to `maxDiff`: every number it places and rules out, in order,
- * each with the reason the hint narrates. `grid` is not modified.
- */
-export function recordSeismicDeductions(
-  board: SeismicBoard,
-  grid: Uint8Array,
-  maxDiff: number = DIFF_NORMAL,
-): DeductionRecord[] {
-  const ops: DeductionRecord[] = [];
-  const dl = dealtOf(board);
-  const ladder = seismicLadder(dl);
-  const m = marksOf(board, grid.slice(), dl, ladder);
-  if (m === null) return ops;
-  m.recorder = (rec) => ops.push(rec);
-  m.budget = stepBudget("seismic hint");
-  const techniquesOn = (on: CellMarks) =>
-    ladderTechniques(on, ladder.entries, { [TIERS]: maxDiff }, { [TIERS]: DIFF_EASY });
-  const replay = auditingPremises()
-    ? ladderReplay(
-        m,
-        (values) => {
-          const fresh = marksOf(board, Uint8Array.from(values), dl, ladder);
-          if (fresh === null)
-            throw new Error("seismic replay: the edited board clashes");
-          return fresh;
-        },
-        techniquesOn,
-      )
-    : null;
-  runLadder(m, techniquesOn(m));
-  if (replay) offerReplay(replay);
-  return ops;
 }
 
 /**

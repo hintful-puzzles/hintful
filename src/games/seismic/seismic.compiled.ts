@@ -19,6 +19,15 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "lone" | "areaSingle" | "starve";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  starve: StarveSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["starve"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "cull";
 
@@ -304,10 +313,16 @@ export interface StarveBinding {
   H: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface StarveSays {
+  terms: { r: number; n: number; };
+  marks: {  };
+}
+
 const starveFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBinding> | null): number {
+export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBinding, StarveSays> | null): number {
   const _g23: number[] = [];
   const facts = starveFacts;
   let fired = 0;
@@ -405,7 +420,10 @@ export function starve(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StarveBind
         if (!(_q42)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ r: v_r, n: v_n, H: v_H.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { r: v_r, n: v_n }, marks: {  } };
+            if (!fire({ r: v_r, n: v_n, H: v_H.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }

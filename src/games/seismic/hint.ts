@@ -1,14 +1,14 @@
 /**
- * Seismic's explained hint: the shared candidate walk (`runCandidatePlan`) over
- * the recording solver's deductions (`recordSeismicDeductions`), with Seismic's
- * reach: a placed number rules itself out as far as the mode says, which no
- * fixed region can.
+ * Seismic's explained hint: the shared candidate walk (`runCandidatePlan`),
+ * with Seismic's reach: a placed number rules itself out as far as the mode
+ * says, which no fixed region can.
  *
- * The solver records from the numbers placed, never the player's notes, as
- * every candidate game does (docs/hints-candidates.md § "The recorder and the
- * soundness boundary"), and the walk teaches each recorded strike the notes
- * still show. `seismic-hint.test.ts` holds the starved area to upstream's trial
- * placement, and every plan to finishing its board.
+ * **Deduced from the player's notes, as Abcd's is.** `findMistakes` refuses the
+ * hint on any note that has crossed out its square's answer, so the plan
+ * records nothing: the walk reads the singles off the notes it shows, an
+ * area's hidden one included, and the starved area is the compiled `starve`
+ * run on them (`techniqueRung`). `seismic-hint.test.ts` holds the starved area
+ * to upstream's trial placement, and every plan to finishing its board.
  */
 
 import {
@@ -27,26 +27,25 @@ import {
 } from "../../engine/candidate-hint.ts";
 import {
   CANDIDATE_RUNGS,
+  type CandidateRung,
+  type NotesLadder,
   type PlanRung,
   runCandidatePlan,
+  techniqueRung,
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
-import { describedSpace } from "../../engine/describe-runtime.ts";
+import { describedSpace, rangeMask } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { candidateConclusions } from "../../engine/hint-text.ts";
 import { digitKeyCode } from "../../engine/key-labels.ts";
-import { CellMarks } from "../../engine/ladder-runtime.ts";
+import { CellMarks, type Said } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
 import * as seismic from "./seismic.compiled.ts";
-import {
-  dealtOf,
-  recordSeismicDeductions,
-  type SeismicRecordReason,
-} from "./solver.ts";
+import { dealtOf, seismicLadder } from "./solver.ts";
 import {
   areaBits,
   MODE_TECTONIC,
@@ -58,14 +57,18 @@ import {
 
 export type SeismicHint = CandidateHighlights;
 
-/** Why a number is placed or ruled out: as the solver records it, or a single
- * the walk reads off the board. */
+/** Why a number is placed or ruled out. */
 type SeismicReason =
-  | SeismicRecordReason
+  /** Its square is down to one number. */
+  | { kind: "single" }
   /** It has no notes, and every other number is already within reach. */
   | { kind: "regionsFull" }
+  /** No other square of its area can hold the number. */
+  | { kind: "hidden"; area: readonly number[] }
   /** Its square is a whole area, so it is a 1 however the walk came to it. */
-  | { kind: "singleton" };
+  | { kind: "singleton" }
+  /** Every home the area has left for `n` is near the struck squares. */
+  | { kind: "starve"; n: number; area: readonly number[] };
 
 /** Every rung a Seismic step can be: the walk's own, and the kinds of
  * {@link SeismicReason}. */
@@ -171,16 +174,47 @@ export function buildSteps(
   const pencil = new Int32Array(grid.length);
   for (let i = 0; i < grid.length; i++)
     pencil[i] = grid[i] ? 0 : state.pencil[i] & areaBits(dsf.size(i));
-  const { area } = dealtOf(state);
+  const dl = dealtOf(state);
+  const { area } = dl;
   const reach = seismicReach(state);
-  const enc: NoteEncoding = {
+  const enc = {
     bit: numBit,
     values: 9,
-    all: (i) => areaBits(dsf.size(i)),
+    all: (i: number) => areaBits(dsf.size(i)),
+  } satisfies NoteEncoding;
+  const sp = describedSpace(seismic.units, state.w, state.h);
+  const on: NotesLadder = {
+    ladder: seismicLadder(dl),
+    marks: () => new CellMarks(sp, rangeMask(1, 9), grid),
+    enc,
   };
 
   const cellsOf = (area: readonly number[]): Point[] =>
     area.map((j) => cellOf(state, j));
+  type Rung = CandidateRung<SeismicMove, SeismicHint, DeductionRecord, SeismicReason>;
+  // A square that is a whole area needs no notes, so it leads before they are
+  // set up; after, its note shows it.
+  const singleton: Rung = ({ populated }) =>
+    populated
+      ? []
+      : area.cells
+          .filter((cells) => cells.length === 1 && grid[cells[0]] === 0)
+          .map(([i]) => [
+            { place: { ...cellOf(state, i), n: 1 }, reason: { kind: "singleton" } },
+          ]);
+  const starve = techniqueRung<
+    SeismicMove,
+    SeismicHint,
+    DeductionRecord,
+    SeismicReason
+  >(on, "starve", ({ facts, reasons }) => {
+    const { r, n } = (reasons[0] as Said<unknown, seismic.SaysById["starve"]>).says
+      .terms;
+    const strike: Mark[] = [];
+    for (let k = 0; k < facts.length; k += 3)
+      strike.push({ ...cellOf(state, facts[k + 1]), n });
+    return [{ strike, reason: { kind: "starve", n, area: area.cells[r] } }];
+  });
   const steps: HintStep<SeismicMove, SeismicHint, PlanRung<SeismicReason>>[] = [];
   runCandidatePlan<
     SeismicMove,
@@ -198,26 +232,9 @@ export function buildSteps(
     autoClean,
     reading,
     label: "seismic hint plan",
-    record: () => recordSeismicDeductions(state, grid),
     regionsOf: (x, y) => [{ cells: area.cells[area.of[y * w + x]], holdsEvery: true }],
     reach,
-    // Seismic's one strike is the starved area, Normal's, so its placements
-    // lead: an Easy board's singles certify it, and a single on the board is
-    // never passed over for a starve. A square that is a whole area needs no
-    // notes, so it leads before they are set up too.
-    rungs: [
-      ({ placements, populated }) =>
-        placements()
-          .filter(
-            ({ firing }) =>
-              populated ||
-              firing.some(
-                (leg) =>
-                  "place" in leg && dsf.size(leg.place.y * w + leg.place.x) === 1,
-              ),
-          )
-          .map(({ firing }) => firing),
-    ],
+    rungs: [singleton, starve],
     singleReason: (_n, why) =>
       why.kind === "hidden"
         ? { kind: "hidden", area: Array.from(why.region.cells) }

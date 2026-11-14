@@ -335,7 +335,8 @@ could take now, and the frontier chooses. Its duties:
   be taken over an easier one elsewhere and taught on a board the easier
   rungs certify. A recorded strike cannot do this, since the solver records
   the harder deduction only when the easier are spent; an own rung has to say
-  so.
+  so. `techniqueRung` takes both gates for a compiled technique, from its
+  tier.
 - **A hidden single of the game's own skips a cell whose notes are down to
   that value.** The shared classifier calls it naked, and the frontier would
   otherwise prefer the hidden one for its larger evidence.
@@ -488,16 +489,26 @@ the shape: where the mistake check ignores notes, § "The recorder and the
 soundness boundary" holds in full. A game adopting this adds the notes half
 of `findMistakes` in the same change.
 
-- **`record` returns nothing, and the game's rungs read
-  `RungContext.shown`**: the notes, or under the implicit reading what a
-  note-less cell's reach leaves it, which always holds the answer too.
-- **A rung's firings are the compiled technique's, run on the notes**: marks
-  built from the values placed and the notes shown, and the compiled rung's
-  `firings` asked of them (`lineFirings`). So what a step finds is the
-  solver's technique by construction, and the soundness check is what holds
-  it, not a test comparing two copies.
+- **The plan has no `record`, and its rungs read `RungContext.shown`**: the
+  notes, or under the implicit reading what a note-less cell's reach leaves
+  it, which always holds the answer too. The walk then reads the hidden
+  singles off them as well, in the regions of `regionsOf` that hold every
+  value.
+- **A rung is a compiled technique run on the notes**: `techniqueRung`
+  (`engine/candidate-plan.ts`) builds the marks from the values placed and
+  the notes shown, asks the ladder's technique for its firings, and hands
+  each to the game to make legs of, from what its `says` names. So what a
+  step finds is the solver's technique by construction, and the soundness
+  check is what holds it, not a test comparing two copies. The rung waits
+  for the setup, and a technique of a harder tier than the ladder's easiest
+  waits for every earlier rung to come up empty: the gate is read off the
+  ladder, so the game writes none.
+- **The firing-replay audit has nothing to replay** on such a plan; the
+  game's own hint test holds its technique to what it claims (Seismic's
+  starved area against upstream's trial placement).
 
-Exemplar: [`abcd/hint.ts`](../src/games/abcd/hint.ts).
+Exemplars: [`seismic/hint.ts`](../src/games/seismic/hint.ts),
+[`abcd/hint.ts`](../src/games/abcd/hint.ts).
 
 ## A premise names everything its deduction reads
 

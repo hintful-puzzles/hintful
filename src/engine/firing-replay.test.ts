@@ -272,6 +272,7 @@ const EXTRA_BOARDS: Record<string, readonly string[]> = {
 /** Walk games whose plan records nothing, so nothing is offered by premise. */
 const RECORDS_NOTHING: Record<string, string> = {
   abcd: "its rungs are its own and read the board",
+  seismic: "its starved area is the compiled technique run on the notes",
 };
 
 /**

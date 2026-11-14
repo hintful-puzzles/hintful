@@ -95,3 +95,6 @@ techniques:
     conclude: >-
       forall c in cells where area(c) != r and not known(c) and n in cand(c)
       and (forall h in H: near(c, h, n)): strike(c, n)
+    says:
+      terms: { r: r, n: n }
+      marks: {}

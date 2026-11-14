@@ -60,6 +60,12 @@ import {
   so,
 } from "./hint-words.ts";
 import {
+  type CellMarks,
+  type Ladder,
+  type Firing as LadderFiring,
+  techniqueFirings,
+} from "./ladder-runtime.ts";
+import {
   availablePlacements,
   type CellRegion,
   type RowColRegion,
@@ -151,6 +157,58 @@ export interface RungContext<R, F = unknown> {
 export type CandidateRung<M, H, R, Reason> = (
   ctx: RungContext<R, Firing<M, H, Reason>>,
 ) => readonly Firing<M, H, Reason>[];
+
+/** A game's ladder, as a plan that deduces from the notes runs its
+ * techniques: on fresh marks over the working grid, each blank cell's
+ * candidates the notes the walk shows, read through `enc`. */
+export interface NotesLadder {
+  ladder: Ladder;
+  /** Marks over the walk's working grid; their candidates are set here. */
+  marks: () => CellMarks;
+  enc: NoteEncoding & { values: number };
+}
+
+/**
+ * A rung offering every firing technique `id` of the game's ladder makes on
+ * the notes the walk shows, each as the legs `legs` makes of it (none where
+ * it returns `null`). For a plan that records nothing because the mistake
+ * check vouches for the notes (docs/hints-candidates.md § "Deduce from the
+ * notes when the mistake check vouches for them"), so a step is the solver's
+ * technique by construction.
+ *
+ * It reads the notes, so it waits for the setup (`populated`). A technique of
+ * a harder tier than the ladder's easiest waits for every earlier rung to come
+ * up empty, as the solver reaches it only once the easier ones are spent; one
+ * of the easiest tier competes on where the last step left off.
+ */
+export function techniqueRung<M, H, R, Reason>(
+  on: NotesLadder,
+  id: string,
+  legs: (f: LadderFiring) => Firing<M, H, Reason> | null,
+): CandidateRung<M, H, R, Reason> {
+  const { entries } = on.ladder;
+  const entry = entries.find((e) => e.id === id);
+  if (entry === undefined) throw new Error(`no technique ${id} in the ladder`);
+  const last = entry.tier > Math.min(...entries.map((e) => e.tier));
+  const bit = on.enc.bit ?? ((n: number): number => 1 << n);
+  return ({ populated, nothingEarlier, shown }) => {
+    if (!populated || (last && !nothingEarlier)) return [];
+    const m = on.marks();
+    for (let i = 0; i < m.cands.length; i++) {
+      let cands = 0;
+      if (m.grid[i]) cands = 1 << m.grid[i];
+      else
+        for (let n = 1; n <= on.enc.values; n++) if (shown[i] & bit(n)) cands |= 1 << n;
+      m.cands[i] = cands;
+    }
+    const out: Firing<M, H, Reason>[] = [];
+    for (const f of techniqueFirings(on.ladder, id, m)) {
+      const legged = legs(f);
+      if (legged) out.push(legged);
+    }
+    return out;
+  };
+}
 
 /** What a step says. The walk adds the move, the `targets` (the cells the move
  * acts on) and the `marks`, so none of those can disagree with the move, and it
@@ -269,8 +327,11 @@ export interface CandidatePlan<
    * whose finished board leaves cells empty says so here (Salad's holes). */
   finished?: () => boolean;
   /** Run the recording solver on the working board. Called at the start and
-   * after every firing that decides a cell. */
-  record: () => readonly R[];
+   * after every firing that decides a cell. Absent where the plan deduces
+   * from the notes ({@link techniqueRung}): the walk then reads its hidden
+   * singles off them too, in the regions of `regionsOf` that hold every
+   * value. */
+  record?: () => readonly R[];
   /** A cell's regions, in narration preference order. A single is classified in
    * the ones that hold every value, and unless {@link reach} says otherwise, a
    * placed value rules itself out of all of them. */
@@ -587,7 +648,7 @@ class CandidateWalk<
 
   constructor(private readonly plan: CandidatePlan<M, H, R, Reason, Reg>) {
     const { w, grid, pencil, steps, enc } = plan;
-    this.ops = plan.record();
+    this.ops = plan.record?.() ?? [];
     this.replay = takeReplay(plan.label, this.ops.length);
     this.bit = enc?.bit ?? ((n: number): number => 1 << n);
     const dialect = plan.moves;
@@ -714,11 +775,49 @@ class CandidateWalk<
     const { plan } = this;
     const notes = this.implicit ? this.shown : plan.pencil;
     const marks = plan.singles?.() ?? nakedSingles(plan.grid, notes, plan.w, plan.enc);
-    return marks.map((m) =>
+    const out = marks.map((m) =>
       this.single(m, {
         kind: plan.pencil[m.y * plan.w + m.x] === 0 ? "regionsFull" : "naked",
       }),
     );
+    // A recording solver places the hidden singles; without one they are the
+    // notes' to show, once a note-less cell reads as something.
+    if (!plan.record && (this.implicit || this.setUp.done()))
+      for (const { m, region } of this.hiddenSingles())
+        out.push(this.single(m, { kind: "hidden", region }));
+    return out;
+  }
+
+  /** Each value the shown notes leave one blank cell of a region that holds
+   * every value, where that cell is not down to it already. A cell is named
+   * once, in its first such region. */
+  private hiddenSingles(): { m: Mark; region: WholeRegion<Reg> }[] {
+    const { grid, w, regionsOf } = this.plan;
+    const shown = this.shown;
+    const out: { m: Mark; region: WholeRegion<Reg> }[] = [];
+    for (let i = 0; i < grid.length; i++) {
+      if (grid[i] !== 0) continue;
+      const x = i % w;
+      const y = (i / w) | 0;
+      for (const n of this.valuesIn(shown[i])) {
+        if (shown[i] === this.bit(n)) break;
+        const region = regionsOf(x, y).find(
+          (r): r is WholeRegion<Reg> =>
+            r.holdsEvery &&
+            Array.prototype.every.call(
+              r.cells,
+              (j: number) =>
+                j === i ||
+                (grid[j] !== n && (grid[j] !== 0 || !(shown[j] & this.bit(n)))),
+            ),
+        );
+        if (region) {
+          out.push({ m: { x, y, n }, region });
+          break;
+        }
+      }
+    }
+    return out;
   }
 
   /**
@@ -1252,7 +1351,7 @@ class CandidateWalk<
       if (apply()) decided = true;
     });
     if (decided) {
-      this.ops = plan.record();
+      this.ops = plan.record?.() ?? [];
       this.replay = takeReplay(plan.label, this.ops.length);
     }
   }
