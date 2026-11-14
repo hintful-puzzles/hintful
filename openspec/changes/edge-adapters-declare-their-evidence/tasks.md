@@ -23,6 +23,9 @@
 
 ## 2. The evidence
 
-- [ ] 2.1 Tracks: `shut`, `lineSquares`, `holds`, `empty` declared as terms
+- [x] 2.1 Tracks: `shut`, `lineSquares`, `holds`, `empty` declared as terms
+  - Each technique says its evidence (2026-11-14): the squares as `outline` (Parity's block as `stripes`), the sides as a set-of-edges term (`shut`, Parity's `crossing`), and the counts its sentence reads (`open`, `k`, finishEarly's `short` line). `reasonOf` reads `says` and only places it; `holds`, `empty`, `shut`, `lineSquares` and `rails` are gone. closeLoop's and strand's `reads` shrink to `{end1(e)}`, the walk reading their outline
+  - What stays the game's is the rim: the description's edges stop there, so a square's rim sides are added from where the ends leave (`exitOf`, `rimShut`)
+  - **The dump was blind to marks**: it listed words and moves only. It now lists each step's mark keys. With them, 34,267 lines are identical to `HEAD`, every rung reached. Planting a missing rim on sharedFate's square moved 520 lines. Planting a rim that ignored the exits, or a Parity block that dropped them, moved none: the ends are clue squares dealt whole, so no technique reasons at one on a dealt board. Both are kept for an entered game ID, and the second because the description's `k` counts exits
 - [ ] 2.2 Pearl: `pieceOf` from `through(...)`
 - [ ] 2.3 Record Magnets' `whyNot` as the one exception

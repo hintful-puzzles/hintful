@@ -6,13 +6,16 @@
  * share of the solve move's ops already played, and lists every recomputed
  * plan whole, so a rung the fingerprint's boards never reach, or a change in
  * which firing a plan continues with, shows. `DUMP_OUT.rungs` counts the
- * rungs met, which is what the comparison looked at.
+ * rungs met, which is what the comparison looked at. A step's line holds the
+ * marks its words draw, as the set of their keys, so a change to a step's
+ * evidence shows where its sentence reads the same.
  *
  * `DUMP_GAME` the game's id, `DUMP_OUT` the file, `DUMP_DEALS` the boards a
  * preset (8).
  */
 import { writeFileSync } from "node:fs";
 import { it } from "vitest";
+import { markKeys } from "../../src/engine/hint-words.ts";
 import { dealt } from "../../src/engine/testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "../../src/engine/testing/hint-games.ts";
 
@@ -70,6 +73,7 @@ it(`dumps every hint plan of ${id}`, () => {
                 s.rung,
                 s.continuesPrevious ? "+" : "",
                 s.explanation,
+                s.words ? [...markKeys(s.words.refs)].sort().join(" ") : "",
                 JSON.stringify(s.highlights),
                 JSON.stringify(s.move),
               ].join(" | "),

@@ -17,20 +17,10 @@ import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
-import { spokenOf } from "../../engine/described-hint.ts";
 import { keepTrackBy } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import type { CellMarks, Ladder, Taken } from "../../engine/ladder-runtime.ts";
-import {
-  D,
-  dirCount,
-  dirX,
-  dirY,
-  L,
-  opposite,
-  R,
-  U,
-} from "../../engine/square-edges.ts";
+import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
+import { D, dirX, dirY, L, opposite, R, U } from "../../engine/square-edges.ts";
 import { type Axis, type Marked, PIECE, type Piece, say } from "./hint-text.ts";
 import { executeMove } from "./moves.ts";
 import {
@@ -53,8 +43,6 @@ import {
   S_NOTRACK_SHIFT,
   S_TRACK,
   S_TRACK_SHIFT,
-  sEDirs,
-  sEFlags,
   sESet,
   stateToBoard,
   type TracksMove,
@@ -65,18 +53,17 @@ import * as tracks from "./tracks.compiled.ts";
 
 // --- why a firing holds ---------------------------------------------------
 
-/** What a firing's sentence points at: squares (`y * w + x`), sides (as
- * `(y * w + x) * 16 + dir`, the board's rim included), and clues (`0..w-1`
- * columns, `w..w+h-1` rows). */
+/** What a firing's sentence points at: squares (`y * w + x`), sides (the
+ * board's rim included), and clues (`0..w-1` columns, `w..w+h-1` rows). */
 export interface TracksEvidence {
   cells: number[];
-  edges: number[];
+  edges: TracksHintEdge[];
   clues: number[];
 }
 
 /**
- * Why one firing holds, as its sentence tells it, read off the technique's
- * binding on the board before the firing changed it.
+ * Why one firing holds, as its sentence tells it, read off what the technique
+ * says: its terms and marks, read on the board before the firing changed it.
  */
 export type TracksReason = { ev: TracksEvidence } & (
   | { kind: "onlyOneSideLeft"; x: number; y: number; open: number }
@@ -103,50 +90,20 @@ export type TracksReason = { ev: TracksEvidence } & (
 /** The four sides, in the order a step lists them. */
 const SIDES = [R, U, L, D] as const;
 
-const evEdge = (w: number, x: number, y: number, d: number): number =>
-  (y * w + x) * 16 + d;
+/** The side square `i` leaves the board by where an end of the track is
+ * given there, else 0: the ends are on the left and at the bottom. */
+const exitOf = (b: Board, i: number): number =>
+  (i === b.rowS * b.w ? L : 0) | (i === (b.h - 1) * b.w + b.colS ? D : 0);
 
-/** The sides of square `(x, y)` carrying track, the board's edge where the
- * track leaves it included. */
-const rails = (b: Board, x: number, y: number): number => sEDirs(b, x, y, E_TRACK);
-
-/** Whether a square is known to hold track: marked, or a rail on it. */
-const holds = (b: Board, i: number): boolean =>
-  (b.sflags[i] & S_TRACK) !== 0 || rails(b, i % b.w, (i / b.w) | 0) !== 0;
-
-const empty = (b: Board, i: number): boolean => (b.sflags[i] & S_NOTRACK) !== 0;
-
-/**
- * Whether the track is known not to cross side `d` of square `(x, y)`, as
- * the description's `shut` reads it: the board's edge where no end leaves,
- * a crossed-out side, a square either side marked empty, or one with both
- * its rails elsewhere.
- */
-function shut(b: Board, x: number, y: number, d: number): boolean {
-  const own = rails(b, x, y);
-  if (own & d) return false;
-  const nx = x + dirX(d);
-  const ny = y + dirY(d);
-  if (!inGrid(b, nx, ny)) return true;
-  return (
-    (sEFlags(b, x, y, d) & E_NOTRACK) !== 0 ||
-    empty(b, y * b.w + x) ||
-    empty(b, ny * b.w + nx) ||
-    dirCount(own) === 2 ||
-    dirCount(rails(b, nx, ny)) === 2
-  );
-}
-
-/** The sides of `(x, y)` the track is known not to cross, as evidence. */
-const shutSides = (b: Board, x: number, y: number, dirs = 15): number[] =>
-  SIDES.filter((d) => d & dirs && shut(b, x, y, d)).map((d) => evEdge(b.w, x, y, d));
-
-/** The squares of the game's line `line`, in order. */
-function lineSquares(b: Board, line: number): number[] {
-  const { w, h } = b;
-  return line < w
-    ? Array.from({ length: h }, (_, y) => y * w + line)
-    : Array.from({ length: w }, (_, x) => (line - w) * w + x);
+/** The sides of square `i` on the board's rim, among `dirs`, that the track
+ * does not leave by. The description's edges stop at the rim, so its `shut`
+ * terms hold none of these, and they are shut but where an end leaves. */
+function rimShut(b: Board, i: number, dirs = 15): TracksHintEdge[] {
+  const x = i % b.w;
+  const y = (i / b.w) | 0;
+  return SIDES.filter(
+    (d) => d & dirs && !(d & exitOf(b, i)) && !inGrid(b, x + dirX(d), y + dirY(d)),
+  ).map((dir) => ({ x, y, dir }));
 }
 
 /** The direction from square `i` to the square beside it, `j`. */
@@ -156,146 +113,110 @@ function towards(i: number, j: number): number {
   return j > i ? D : U;
 }
 
-/** A firing's premise, as its sentence tells it, from the technique's
- * binding on the board `b` before the firing. */
-function reasonOf(b: Board, kind: tracks.LadderId, bd: object): TracksReason {
+/** A firing as its technique said it. */
+type Said = { [K in TracksRung]: { id: K; says: TracksSays[K] } }[TracksRung];
+
+/** A firing's premise, as its sentence tells it, from what its technique
+ * said on the board `b` before the firing. */
+function reasonOf(b: Board, said: Said): TracksReason {
   const { w, h } = b;
+  const { sp } = ladderOf(b);
   const at = (i: number) => ({ x: i % w, y: (i / w) | 0 });
-  const terms = bd as Record<string, unknown>;
-  const num = (k: string): number => terms[k] as number;
-  const set = (k: string): readonly number[] => terms[k] as readonly number[];
-  const edgeAt = () => edgeSide(ladderOf(b).sp, num("e"));
-  switch (kind) {
+  const sides = (edges: readonly number[]) => edges.map((e) => edgeSide(sp, e));
+  switch (said.id) {
     case "oneWayIn": {
-      const { x, y } = at(num("c"));
-      const edges = shutSides(b, x, y);
+      const { c, open, shut } = said.says.terms;
       return {
         kind: "onlyOneSideLeft",
-        x,
-        y,
-        open: 4 - edges.length,
-        ev: { cells: [], edges, clues: [] },
+        ...at(c),
+        open,
+        ev: { cells: [], edges: [...sides(shut), ...rimShut(b, c)], clues: [] },
       };
     }
     case "bothSidesLeft": {
-      const { x, y } = at(num("c"));
+      const { c, shut } = said.says.terms;
       return {
         kind: "bothSidesLeft",
-        x,
-        y,
-        ev: { cells: [], edges: shutSides(b, x, y), clues: [] },
+        ...at(c),
+        ev: { cells: [], edges: [...sides(shut), ...rimShut(b, c)], clues: [] },
       };
     }
     case "clueFull":
     case "clueExact": {
-      const line = clueLine(w, h, num("L"));
-      const full = kind === "clueFull";
+      const line = clueLine(w, h, said.says.terms.L);
       return {
-        kind,
+        kind: said.id,
         line,
-        ev: {
-          cells: lineSquares(b, line).filter((i) => (full ? holds(b, i) : empty(b, i))),
-          edges: [],
-          clues: [line],
-        },
+        ev: { cells: [...said.says.marks.outline], edges: [], clues: [line] },
       };
     }
     case "closeLoop":
+    case "strand":
       return {
-        kind: "wouldCloseLoop",
-        ...edgeAt(),
-        ev: { cells: [...set("G")], edges: [], clues: [] },
+        kind: said.id === "closeLoop" ? "wouldCloseLoop" : "wouldStrandTrack",
+        ...edgeSide(sp, said.says.terms.e),
+        ev: { cells: [...said.says.marks.outline], edges: [], clues: [] },
       };
-    case "strand": {
-      const joined = new Set([...set("G"), ...set("H")]);
-      const stranded: number[] = [];
-      for (let i = 0; i < w * h; i++)
-        if (holds(b, i) && !joined.has(i)) stranded.push(i);
-      return {
-        kind: "wouldStrandTrack",
-        ...edgeAt(),
-        ev: { cells: stranded, edges: [], clues: [] },
-      };
-    }
     case "finishEarly": {
-      const joined = new Set([...set("G"), ...set("H")]);
-      let unmet = -1;
-      for (let line = 0; line < w + h && unmet < 0; line++)
-        if (lineSquares(b, line).filter((i) => joined.has(i)).length < b.numbers[line])
-          unmet = line;
-      if (unmet < 0) throw new Error("tracks hint: finishEarly with every clue met");
+      const [short] = said.says.terms.short;
+      if (short === undefined)
+        throw new Error("tracks hint: finishEarly with every clue met");
+      const unmet = clueLine(w, h, short);
       return {
         kind: "wouldFinishEarly",
-        ...edgeAt(),
+        ...edgeSide(sp, said.says.terms.e),
         unmet,
-        ev: {
-          cells: lineSquares(b, unmet).filter((i) => holds(b, i)),
-          edges: [],
-          clues: [unmet],
-        },
+        ev: { cells: [...said.says.marks.outline], edges: [], clues: [unmet] },
       };
     }
     case "looseEnd": {
-      const line = clueLine(w, h, num("L"));
-      // Every unfinished square has a side blocked across the line, which is
-      // why none can be crossed straight through: show those sides.
+      const line = clueLine(w, h, said.says.terms.L);
       const across = line < w ? R | L : U | D;
-      const unfinished = lineSquares(b, line).filter(
-        (i) => dirCount(rails(b, i % w, (i / w) | 0)) !== 2,
-      );
+      const { outline } = said.says.marks;
       return {
         kind: "looseEndSpans",
         line,
         ev: {
-          cells: unfinished,
-          edges: unfinished.flatMap((i) => shutSides(b, i % w, (i / w) | 0, across)),
+          cells: [...outline],
+          edges: [
+            ...sides(said.says.terms.shut),
+            ...outline.flatMap((i) => rimShut(b, i, across)),
+          ],
           clues: [line],
         },
       };
     }
     case "sharedFate":
     case "sharedFateEmpties": {
-      const line = clueLine(w, h, num("L"));
-      const p = num("p");
-      const { x, y } = at(p);
-      const fills = kind === "sharedFate";
+      const { L: l, p, q, shut } = said.says.terms;
+      const line = clueLine(w, h, l);
       return {
         kind: "sharedFate",
         line,
-        x,
-        y,
-        dir: towards(p, num("q")),
-        fills,
+        ...at(p),
+        dir: towards(p, q),
+        fills: said.id === "sharedFate",
         ev: {
-          cells: lineSquares(b, line).filter((i) =>
-            fills ? holds(b, i) : empty(b, i),
-          ),
-          edges: shutSides(b, x, y),
+          cells: [...said.says.marks.outline],
+          edges: [...sides(shut), ...rimShut(b, p)],
           clues: [line],
         },
       };
     }
     case "parity": {
       // The block and the crossings the sentence counts are the whole
-      // premise, so the picture is the argument.
-      const block = set("G");
-      const inside = new Set(block);
-      const edges: number[] = [];
-      for (const i of block) {
-        const { x, y } = at(i);
-        for (const d of SIDES) {
-          if (!(rails(b, x, y) & d)) continue;
-          const nx = x + dirX(d);
-          const ny = y + dirY(d);
-          if (!inGrid(b, nx, ny) || !inside.has(ny * w + nx))
-            edges.push(evEdge(w, x, y, d));
-        }
-      }
+      // premise, so the picture is the argument: the rails across its border,
+      // and where an end in it leaves the board.
+      const { e, k, crossing } = said.says.terms;
+      const block = said.says.marks.stripes;
+      const exits = block.flatMap((i) =>
+        SIDES.filter((d) => d & exitOf(b, i)).map((dir) => ({ ...at(i), dir })),
+      );
       return {
         kind: "crossingParity",
-        ...edgeAt(),
-        crossings: edges.length,
-        ev: { cells: [...block], edges, clues: [] },
+        ...edgeSide(sp, e),
+        crossings: k,
+        ev: { cells: [...block], edges: [...sides(crossing), ...exits], clues: [] },
       };
     }
   }
@@ -491,11 +412,7 @@ function pictureOf(
       .map((o) => ({ x: o.x, y: o.y, dir: o.dir ?? 0, track: o.track })),
     area: block ? [] : cells,
     hatch: block ? cells : [],
-    areaEdges: ev.edges.map((e) => ({
-      x: Math.floor(e / 16) % w,
-      y: Math.floor(Math.floor(e / 16) / w),
-      dir: e % 16,
-    })),
+    areaEdges: ev.edges,
     clues: ev.clues,
     line: namedLine(reason),
   };
@@ -518,14 +435,6 @@ interface TracksWalkContext {
   finished(): boolean;
 }
 
-/** A firing's premise, read off the board as it stood before the firing. */
-const premiseOf = (board: Board, taken: Taken): TracksReason =>
-  reasonOf(
-    board,
-    taken.entry.id as tracks.LadderId,
-    spokenOf<{ terms: object }>(taken).says.terms,
-  );
-
 /** What a sentence is told of its step: why it holds, and its picture. */
 interface TracksMarked {
   board: Board;
@@ -543,9 +452,9 @@ function stepOf(fired: FiredOf<TracksSays[keyof TracksSays], TracksWalkContext>)
   highlights: undefined;
   marked: TracksMarked;
 }[] {
-  const { taken, ctx } = fired;
+  const { taken, says, ctx } = fired;
   const { board } = ctx;
-  const reason = premiseOf(board, taken);
+  const reason = reasonOf(board, { id: taken.entry.id, says } as Said);
   const ops = opsOf(board, taken.facts);
   applyOps(board, ops);
   return [

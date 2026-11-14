@@ -1072,7 +1072,11 @@ with) gives `describedEdgeHint` (`engine/described-edge-hint.ts`) the walk,
 `step` that makes the move and the highlights from the marks as the firing found
 them and left them. Its `says` marks are cells (the islands outlined and the
 island read, `reads`), and what is an edge or a line (a group's bridges) is a
-term, which the game reads off its geometry. **The squares a premise reads
+term, which the game reads off its geometry. **What a step shows is said
+too**: the squares it reasons from are its `outline` (the walk reads them),
+the sides a set-of-edges term (Tracks' `shut`, `set(edge(c, y) over y in
+adj4(c) where shut(c, y))`), and the game only places them. A side on the
+board's rim is no edge, so that is the game's geometry. **The squares a premise reads
 are `reads`, never a hook**, however far they lie from the binding (Pearl's
 square past the next, `set(other(x, j) over x in edges(j) where ...)`, and the
 piece of line a way would close, `through(...)`). Write a predicate only
@@ -1080,7 +1084,7 @@ piece of line a way would close, `through(...)`). Write a predicate only
 statement, so each loses its soundness verdict, and `says` is not. **A
 change to what a firing reads is compared by
 [`research/hint-walk-dump/`](../research/hint-walk-dump/dump.test.ts)**, run
-here and in a worktree of `HEAD`: the hint-walk fingerprint's few boards miss
+here and in a worktree of `HEAD`, each step's marks listed with its words: the hint-walk fingerprint's few boards miss
 a rare rung, and a wrong `reads` set on Pearl's `earlyThrough` passed every
 test while the dump moved 1,349 lines. The game's own `hintKeepTrack`
 stays: a bridge is drawn a drag at a time, which no fact is.
