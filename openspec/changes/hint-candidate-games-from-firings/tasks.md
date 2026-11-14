@@ -22,6 +22,6 @@ Each game is enrolled in `hint-walk-fingerprint.test.ts` at the commit before it
   - [x] 2.2e Mathrax
   - [x] 2.2f Group (design § "Group, moved: a placing technique leads")
   - [x] 2.2g Solo (design § "Solo, moved")
-- [ ] 2.3 Undead, Crossing
+- [x] 2.3 Undead, Crossing (design § "Undead and Crossing keep their own walks")
 - [x] 2.5 Spec deltas for every game moved so far, and the engine's rung over the notes (`specs/`); each later move updates its game's requirements that name a recording solver, and 2.4 the engine's that name `CandidatePlan.record`
 - [ ] 2.4 With the last recorder gone, retire what only recording needs: `docs/hints-candidates.md` § "The recorder and the soundness boundary" and § "Record off a bespoke solver" (or what of them a game still uses), `CandidatePlan.record`, `strikeAxis` and the replay audit (`firing-replay.ts`), each checked for a remaining caller first

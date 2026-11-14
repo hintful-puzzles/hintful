@@ -36,11 +36,13 @@ import {
   CellMarks,
   compiledRung,
   describedLadder,
+  type Firing,
   type Ladder,
   type LadderEntry,
   ladderTechniques,
   ladderWalk,
   runLadder,
+  type Said,
   type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
@@ -139,68 +141,59 @@ type CrossingWhy =
     }
   | { kind: "check" };
 
-const CHECK: CrossingWhy = { kind: "check" };
-
-/** Each puzzle's ladder, made once. */
-const ladders = new WeakMap<CrossingPuzzle, Ladder>();
-
-/** The ladder over a puzzle's runs and numbers, each technique with its
- * reason. */
-function crossingLadder(p: CrossingPuzzle): Ladder {
-  const kept = ladders.get(p);
-  if (kept !== undefined) return kept;
-  const dl = dealtOf(p);
+/** What a firing of technique `id` says, read as the runs and numbers it
+ * names. */
+function whyOf(p: CrossingPuzzle, id: string, f: Firing): CrossingWhy {
   const sp = spaceOf(p.w, p.h);
-  const made = describedLadder(crossing, {
-    onlyNumber: compiledRung(
-      crossing.onlyNumber,
-      dl,
-      ({ L, c, K }): CrossingWhy => ({
-        kind: "onlyNumber",
-        run: runAt(p, sp, L, c),
-        number: K[0],
-      }),
-    ),
-    onlyRun: compiledRung(
-      crossing.onlyRun,
-      dl,
-      ({ k, L, c }): CrossingWhy => ({
-        kind: "onlyRun",
-        run: runAt(p, sp, L, c),
-        number: k,
-      }),
-    ),
-    sharedDigit: compiledRung(
-      crossing.sharedDigit,
-      dl,
-      ({ L, c, K }): CrossingWhy => ({
-        kind: "sharedDigit",
-        run: runAt(p, sp, L, c),
-        fitting: K,
-      }),
-    ),
-    crossRuns: compiledRung(
-      crossing.crossRuns,
-      dl,
-      ({ x, KA, KB }): CrossingWhy => ({
-        kind: "crossRuns",
+  const said = <T extends keyof crossing.SaysById>(
+    _: T,
+  ): crossing.SaysById[T]["terms"] =>
+    (f.reasons[0] as Said<unknown, crossing.SaysById[T]>).says.terms;
+  switch (id) {
+    case "onlyNumber": {
+      const { L, c, K } = said(id);
+      return { kind: id, run: runAt(p, sp, L, c), number: K[0] };
+    }
+    case "onlyRun": {
+      const { k, L, c } = said(id);
+      return { kind: id, run: runAt(p, sp, L, c), number: k };
+    }
+    case "sharedDigit":
+    case "narrow": {
+      const { L, c, K } = said(id);
+      return { kind: id, run: runAt(p, sp, L, c), fitting: K };
+    }
+    case "crossRuns": {
+      const { x, KA, KB } = said(id);
+      return {
+        kind: id,
         across: p.acrossRun[x],
         down: p.downRun[x],
         acrossFitting: KA,
         downFitting: KB,
-      }),
-    ),
-    narrow: compiledRung(
-      crossing.narrow,
-      dl,
-      ({ L, c, K }): CrossingWhy => ({
-        kind: "narrow",
-        run: runAt(p, sp, L, c),
-        fitting: K,
-      }),
-    ),
-    misread: compiledRung(crossing.misread, dl, () => CHECK),
-    twice: compiledRung(crossing.twice, dl, () => CHECK),
+      };
+    }
+    default:
+      return { kind: "check" };
+  }
+}
+
+/** Each puzzle's ladder, made once. */
+const ladders = new WeakMap<CrossingPuzzle, Ladder>();
+
+/** The ladder over a puzzle's runs and numbers. */
+function crossingLadder(p: CrossingPuzzle): Ladder {
+  const kept = ladders.get(p);
+  if (kept !== undefined) return kept;
+  const dl = dealtOf(p);
+  const made = describedLadder(crossing, {
+    onlyNumber: compiledRung(crossing.onlyNumber, dl),
+    onlyRun: compiledRung(crossing.onlyRun, dl),
+    sharedDigit: compiledRung(crossing.sharedDigit, dl),
+    crossRuns: compiledRung(crossing.crossRuns, dl),
+    narrow: compiledRung(crossing.narrow, dl),
+    misread: compiledRung(crossing.misread, dl),
+    twice: compiledRung(crossing.twice, dl),
   });
   ladders.set(p, made);
   return made;
@@ -491,7 +484,7 @@ function shown(board: PlanBoard, i: number): number {
  * step, or `null` where it changes nothing the board shows. */
 function firingOf(board: PlanBoard, t: Taken): CrossingFiring | null {
   const { puzzle, grid } = board;
-  const why = t.reasons[0] as CrossingWhy;
+  const why = whyOf(puzzle, t.entry.id, t);
   const struck: number[] = [];
   for (let i = 0; i < t.facts.length; i += 3)
     if (t.facts[i] === STRIKE) struck.push(t.facts[i + 2]);
@@ -624,7 +617,7 @@ export function applyCrossingFiring(
 /** The squares a firing's premise reads, which the walk continues from: the
  * runs whose numbers it counts, and the squares it writes. */
 function readsOf(p: CrossingPuzzle, t: Taken): number[] {
-  const why = t.reasons[0] as CrossingWhy;
+  const why = whyOf(p, t.entry.id, t);
   const out: number[] = [];
   for (let i = 0; i < t.facts.length; i += 3) out.push(t.facts[i + 1]);
   if (why.kind === "crossRuns")
@@ -749,13 +742,13 @@ function aimedNotes(board: PlanBoard, entries: readonly LadderEntry[]): Taken[] 
     if (j < 0 || j === STAYS || traced.has(key)) return;
     traced.add(key);
     needed.add(j);
-    const why = ahead[j].reasons[0] as CrossingWhy;
+    const why = whyOf(puzzle, ahead[j].entry.id, ahead[j]);
     if (why.kind !== "narrow") return;
     const pos = runs[why.run].cells.indexOf(key >> 4);
     for (const o of others(why.run, why.fitting))
       if (numbers[o][pos] === (key & 15)) ruledOut(why.run, o);
   };
-  const why = goal.reasons[0] as CrossingWhy;
+  const why = whyOf(puzzle, goal.entry.id, goal);
   switch (why.kind) {
     case "onlyNumber":
       for (const l of others(why.run, [why.number])) ruledOut(why.run, l);
@@ -781,8 +774,8 @@ function aimedNotes(board: PlanBoard, entries: readonly LadderEntry[]): Taken[] 
 }
 
 /** The run a `narrow` firing read. */
-const narrowRun = (t: { reasons: readonly object[] }): number => {
-  const why = t.reasons[0] as CrossingWhy;
+const narrowRun = (p: CrossingPuzzle, f: Firing): number => {
+  const why = whyOf(p, "narrow", f);
   return why.kind === "narrow" ? why.run : -1;
 };
 
@@ -841,7 +834,8 @@ export function deduceCrossingPlan(state: CrossingState): CrossingPlan {
         const now = entry.run.firings?.(m);
         if (now === undefined || now === "contradiction") break;
         const f = now.find(
-          (g) => g.facts[1] === n.facts[1] && narrowRun(g) === narrowRun(n),
+          (g) =>
+            g.facts[1] === n.facts[1] && narrowRun(puzzle, g) === narrowRun(puzzle, n),
         );
         if (f !== undefined) take({ ...f, entry });
       }

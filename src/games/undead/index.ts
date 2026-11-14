@@ -75,12 +75,12 @@ import {
 import {
   EASY_MAX_ARC_PASSES,
   findUndeadSolution,
-  type HintOp,
-  recordUndeadDeductions,
   solveDeductive,
   status,
   TIER_RUNG,
-  type UndeadReason,
+  type UndeadFact,
+  type UndeadFiring,
+  undeadFirings,
 } from "./solver.ts";
 import {
   cloneState,
@@ -99,6 +99,7 @@ import {
   newState,
   newUi,
   paramConfig,
+  rangeOfSlot,
   recomputeErrors,
   textFormat,
   type UndeadCommon,
@@ -440,6 +441,40 @@ function revealOne(state: UndeadState, solved: UndeadState): UndeadMove | null {
 
 // --- hint ------------------------------------------------------------------
 
+/** Why a candidate was eliminated, or a cell forced (docs/hints-candidates.md
+ * § "What every game does"):
+ * - `sightline` — one path's two count clues admit no filling leaving this
+ *   cell the eliminated monster (the core mirror-sighting deduction);
+ * - `total` — a monster type's full count is already placed, so it is struck
+ *   from every still-undecided cell;
+ * - `onlyCells` — exactly as many cells can still hold a type as remain to
+ *   place, so each of them is forced to it (counting's dual, a placement);
+ * - `single` — the cell's notes are down to one monster.
+ *
+ * There is no `forcing` reason, so a hint narrating the search is a compile
+ * error rather than a convention. */
+type UndeadReason =
+  | { kind: "sightline"; path: number }
+  | { kind: "total"; monster: number }
+  | { kind: "onlyCells"; monster: number; nCells: number }
+  | { kind: "single" };
+
+/** A firing's reason, from what its technique says: a sightline names the
+ * slot it is read from, which is one end of a path in the game's list. */
+function reasonOf(common: UndeadCommon, f: UndeadFiring): UndeadReason {
+  if (f.technique === "total") {
+    const monster = MONSTERS[f.says.terms.d - 1];
+    return f.facts[0].place
+      ? { kind: "onlyCells", monster, nCells: f.says.terms.n }
+      : { kind: "total", monster };
+  }
+  const end = rangeOfSlot(f.says.terms.s, common.w, common.h);
+  const path = common.paths
+    .slice(0, common.numPaths)
+    .findIndex((p) => p.gridStart === end || p.gridEnd === end);
+  return { kind: "sightline", path };
+}
+
 /** A sightline path's traced cells (mirrors and monster cells) as interior
  * coordinates, shaded as the evidence area. */
 function pathCells(common: UndeadCommon, p: number): Point[] {
@@ -539,57 +574,19 @@ function nakedSingle(
   return null;
 }
 
-/** A placement by a monster's count (counting's "only these cells" dual), read
- * off the board: the empty cells that can still hold the monster number
- * exactly those left to place, so the first of them holds one. A cell can hold
- * what its notes list, and anything while it has none, which is what the
- * player counts; the recorder's own candidates run ahead of the board, by
- * every strike no step has shown yet. Sound on a mistake-free board, where no
- * cell's notes leave out its monster. */
-function countedPlacement(
+/** The next firing the plan takes off the board as it stands: a placement by
+ * a monster's count first (counting's "only these cells" dual), which is the
+ * move a person makes next, else the first that strikes. A cell with no notes
+ * reads as holding every monster, so a strike surfaces before the populate
+ * step that fills its cells. */
+function nextFiring(
   common: UndeadCommon,
   wGuess: Uint8Array,
   wPen: Uint8Array,
-): { cell: number; monster: number; nCells: number } | null {
-  const totals = [common.numGhosts, common.numVampires, common.numZombies];
-  for (let t = 0; t < MONSTERS.length; t++) {
-    const monster = MONSTERS[t];
-    let left = totals[t];
-    let first = -1;
-    let open = 0;
-    for (let i = 0; i < wGuess.length; i++) {
-      if (wGuess[i] === monster) left--;
-      else if (wGuess[i] === MON_NONE && (wPen[i] || MON_NONE) & monster) {
-        if (first < 0) first = i;
-        open++;
-      }
-    }
-    if (open > 0 && open === left) return { cell: first, monster, nCells: totals[t] };
-  }
-  return null;
-}
-
-/** The next live elimination firing: the first still-applicable `elim` op, with
- * its whole firing's live ops gathered (one firing = one journey). "Live" treats
- * a not-yet-populated empty cell as carrying every note (populate will add them),
- * so the firing surfaces before the markAll step that fills its cells. */
-function nextFiring(
-  ops: HintOp[],
-  wGuess: Uint8Array,
-  wPen: Uint8Array,
-): { ops: HintOp[]; reason: UndeadReason } | null {
-  const effPen = (cell: number): number =>
-    wPen[cell] || (wGuess[cell] === MON_NONE ? MON_NONE : 0);
-  const live = (op: HintOp): boolean =>
-    op.kind === "elim" &&
-    wGuess[op.cell] === MON_NONE &&
-    (effPen(op.cell) & op.monster) !== 0;
-  for (let i = 0; i < ops.length; i++) {
-    if (!live(ops[i])) continue;
-    const g = ops[i].group;
-    return { ops: ops.filter((o) => o.group === g && live(o)), reason: ops[i].reason };
-  }
-  return null;
+): { facts: UndeadFact[]; reason: UndeadReason } | null {
+  const firings = undeadFirings(common, wGuess, wPen).filter((f) => f.facts.length > 0);
+  const f = firings.find((g) => g.facts[0].place) ?? firings[0];
+  return f === undefined ? null : { facts: f.facts, reason: reasonOf(common, f) };
 }
 
 /** Push the steps for one elimination firing. A `total` firing is one step
@@ -598,20 +595,20 @@ function nextFiring(
  * constant, each leg names one cell). */
 function emitFiring(
   steps: HintStep<UndeadMove, UndeadHint, UndeadRung>[],
-  firing: { ops: HintOp[]; reason: UndeadReason },
+  firing: { facts: UndeadFact[]; reason: UndeadReason },
   xyOf: Point[],
   common: UndeadCommon,
 ): void {
-  const { ops, reason } = firing;
-  const markOf = (op: HintOp) => ({
+  const { facts: ops, reason } = firing;
+  const markOf = (op: UndeadFact) => ({
     x: xyOf[op.cell].x,
     y: xyOf[op.cell].y,
     monster: op.monster,
   });
 
   if (reason.kind === "sightline") {
-    // Group the firing's ops by cell, preserving first-seen order.
-    const byCell = new Map<number, HintOp[]>();
+    // Group the firing's strikes by cell, preserving first-seen order.
+    const byCell = new Map<number, UndeadFact[]>();
     for (const op of ops) {
       const arr = byCell.get(op.cell);
       if (arr) arr.push(op);
@@ -660,13 +657,10 @@ function emitFiring(
 }
 
 /** Build the deductive hint plan by walking a working copy of the board the way
- * a person solves it: a naked single first, else a placement by a count, else
- * the next elimination firing (populating notes lazily, only when an
- * elimination first needs something to cross out). The strikes are re-derived
- * from the **placed grid only** (`recordUndeadDeductions`), never the player's
- * notes; the notes decide which already-valid elimination to surface and what
- * is done, and both placements are read off them. There is no solution walk:
- * where the deductions run out, the plan ends. */
+ * a person solves it: a naked single first, else the next firing of the
+ * ladder on the notes, a placement by a count ahead of any strike (populating
+ * notes lazily, only when a strike first needs something to cross out). There
+ * is no solution walk: where the deductions run out, the plan ends. */
 function buildSteps(
   state: UndeadState,
 ): HintStep<UndeadMove, UndeadHint, UndeadRung>[] {
@@ -675,7 +669,6 @@ function buildSteps(
   const steps: HintStep<UndeadMove, UndeadHint, UndeadRung>[] = [];
   const wGuess = state.guess.slice();
   const wPen = state.pencil.slice();
-  let ops = recordUndeadDeductions(common, wGuess);
 
   let populated = !anyEmptyLacksNotes(wGuess, wPen);
   const ensurePopulated = (): void => {
@@ -713,7 +706,6 @@ function buildSteps(
     );
     wGuess[cell] = monster;
     wPen[cell] = 0;
-    ops = recordUndeadDeductions(common, wGuess);
   };
 
   const budget = stepBudget("undead hint plan");
@@ -729,21 +721,19 @@ function buildSteps(
       continue;
     }
 
-    // 2. A placement by a count the board's own marks show.
-    const counted = countedPlacement(common, wGuess, wPen);
-    if (counted) {
-      const { cell, monster, nCells } = counted;
-      place(cell, monster, { kind: "onlyCells", monster, nCells });
+    // 2. The next firing: a placement by a count the board's own marks show,
+    //    one square of it a step, else the deduction worth teaching.
+    const firing = nextFiring(common, wGuess, wPen);
+    if (!firing) break; // the rest needs the forcing search (Unreasonable)
+    const [first] = firing.facts;
+    if (first.place) {
+      place(first.cell, first.monster, firing.reason);
       continue;
     }
-
-    // 3. The next elimination firing (the deduction worth teaching). Populate
-    //    lazily, the moment a strike first needs notes to cross out.
-    const firing = nextFiring(ops, wGuess, wPen);
-    if (!firing) break; // the rest needs the forcing search (Unreasonable)
+    // Populate lazily, the moment a strike first needs notes to cross out.
     ensurePopulated();
     emitFiring(steps, firing, xyOf, common);
-    for (const op of firing.ops) wPen[op.cell] &= ~op.monster;
+    for (const op of firing.facts) wPen[op.cell] &= ~op.monster;
   }
 
   return steps;

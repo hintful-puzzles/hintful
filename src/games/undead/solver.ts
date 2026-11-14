@@ -4,7 +4,7 @@
  * searches no description states.
  *
  * One ladder serves the generator's grading, the difficulty probe and the
- * hint, which records its firings ({@link recordUndeadDeductions}). Its Easy
+ * hint, which reads its firings off the player's notes ({@link undeadFirings}). Its Easy
  * rungs are upstream's iterative solver: each sightline narrowed to the
  * monsters some filling of it allows, which upstream counts in passes over
  * every sightline. Its Normal rung is this fork's exact counting. Above them
@@ -23,6 +23,7 @@ import {
   clueList,
   describedSpace,
   type GridSpace,
+  STRIKE,
 } from "../../engine/describe-runtime.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
@@ -32,11 +33,12 @@ import {
   type Ladder,
   ladderTechniques,
   runLadder,
+  type Said,
   TIERS,
+  techniqueFirings,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import {
   CELL_MIRROR_L,
@@ -159,16 +161,20 @@ const monsterValue = (bit: number): number => 31 - Math.clz32(bit) + 1;
  * candidates narrowed to its mask. `null` where the masks clash with the
  * mirrors (never, from a board's own masks).
  */
-function marksOf(board: Board, start: ArrayLike<number>): CellMarks | null {
+function marksOf(
+  board: Board,
+  start: ArrayLike<number>,
+  placed: (i: number) => boolean = (i) => isSingleton(start[i]),
+): CellMarks | null {
   const { sp, dl, squareOf } = board;
   const grid = new Uint8Array(sp.cells.length);
   for (const c of dl.mirror.at) grid[c] = D_MIRROR;
   for (let i = 0; i < squareOf.length; i++)
-    if (isSingleton(start[i])) grid[squareOf[i]] = monsterValue(start[i]);
+    if (placed(i)) grid[squareOf[i]] = monsterValue(start[i]);
   const m = new CellMarks(sp, DOMAIN, grid);
   if (!m.seed(grid, (c) => undead.domainOf(sp, dl, c))) return null;
   for (let i = 0; i < squareOf.length; i++) {
-    if (isSingleton(start[i])) continue;
+    if (placed(i)) continue;
     for (let d = 1; d <= 3; d++)
       if (!(start[i] & (1 << (d - 1)))) m.strikeAt(squareOf[i], d);
   }
@@ -198,52 +204,13 @@ export function status(state: UndeadState): GameStatus {
 
 // --- the ladder -------------------------------------------------------------
 
-/** Why a candidate was eliminated, or a cell forced (docs/hints-candidates.md
- * § "What every game does"):
- * - `sightline` — one path's two count clues admit no filling leaving this
- *   cell the eliminated monster (the core mirror-sighting deduction);
- * - `total` — a monster type's full count is already placed, so it is struck
- *   from every still-undecided cell;
- * - `onlyCells` — exactly as many cells can still hold a type as remain to
- *   place, so each of them is forced to it (counting's dual, a placement);
- * - `single` — the cell's notes are down to one monster.
- *
- * There is no `forcing` reason, so a hint narrating the search is a compile
- * error rather than a convention. */
-export type UndeadReason =
-  | { kind: "sightline"; path: number }
-  | { kind: "total"; monster: number }
-  | { kind: "onlyCells"; monster: number; nCells: number }
-  | { kind: "single" };
-
-/** The ladder over `board`, each technique with its reason. */
+/** The ladder over `board`. */
 function ladderOf(board: Board): Ladder {
-  const { common, dl } = board;
-  const { w, h } = common;
-  // A sightline's path in the game's list, by the slot it is read from.
-  const pathOf = new Map<number, number>();
-  common.paths.slice(0, common.numPaths).forEach((p, i) => {
-    pathOf.set(p.gridStart, i);
-    pathOf.set(p.gridEnd, i);
-  });
+  const { dl } = board;
   return describedLadder(undead, {
-    single: uncluedRung(undead.single, (): UndeadReason => ({ kind: "single" })),
-    sightline: compiledRung(
-      undead.sightline,
-      dl,
-      ({ s }): UndeadReason => ({
-        kind: "sightline",
-        path: pathOf.get(rangeOfSlot(s, w, h)) ?? -1,
-      }),
-    ),
-    total: compiledRung(
-      undead.total,
-      dl,
-      ({ d, n, P }): UndeadReason =>
-        P.length === n
-          ? { kind: "total", monster: MONSTERS[d - 1] }
-          : { kind: "onlyCells", monster: MONSTERS[d - 1], nCells: n },
-    ),
+    single: uncluedRung(undead.single),
+    sightline: compiledRung(undead.sightline, dl),
+    total: compiledRung(undead.total, dl),
   });
 }
 
@@ -486,49 +453,57 @@ export function isUniquelySolvable(common: UndeadCommon): boolean {
   return !grade.inconsistent && (grade.iterativeSolved || grade.bruteforceSolved);
 }
 
-// --- the hint's record ------------------------------------------------------
+// --- the hint's firings ------------------------------------------------------
 
-/** One recorded firing op. `kind: "elim"` removes `monster` from `cell`'s
- * candidates; `kind: "place"` forces `cell` to `monster`. `group` ties the ops
- * of a single firing together (one firing = one journey). */
-export interface HintOp {
-  kind: "elim" | "place";
+/** One fact of a firing, on the game's monsters: `monster` (a bit) struck from
+ * monster square `cell`, or placed there. */
+export interface UndeadFact {
+  place: boolean;
   cell: number;
   monster: number;
-  reason: UndeadReason;
-  group: number;
 }
 
+/** A firing of a technique the hint teaches, with what it says. */
+export type UndeadFiring =
+  | { technique: "total"; says: undead.SaysById["total"]; facts: UndeadFact[] }
+  | { technique: "sightline"; says: undead.SaysById["sightline"]; facts: UndeadFact[] };
+
+/** The techniques the hint reads, in the ladder's order. `single` is the
+ * plan's own step, and the forcing search is no technique: a board that needs
+ * it runs out of firings, and the hint stops where it would begin. */
+const TAUGHT = ["total", "sightline"] as const;
+
 /**
- * Run the ladder's Easy and Normal rungs over the candidates `placed`
- * implies (a placed cell's single monster, otherwise all three), recording
- * every firing in the order the ladder makes them, one a pass. A square the
- * ladder places because its candidates are down to one is the plan's own
- * step, read off the player's notes, so its record is left out. The forcing
- * search is not run: a board that needs it gives a short record, and the
- * hint stops where it would begin.
+ * Every firing of the taught techniques on the board as the player shows it,
+ * in the ladder's order: a placed square holds its monster, and any other
+ * holds what its notes list, or all three where it has none. The mistake check
+ * vouches for the notes, so each firing is the solver's technique on a sound
+ * board.
  */
-export function recordUndeadDeductions(
+export function undeadFirings(
   common: UndeadCommon,
-  placed: Uint8Array,
-): HintOp[] {
+  guess: ArrayLike<number>,
+  pencil: ArrayLike<number>,
+): UndeadFiring[] {
   const board = boardOf(common);
-  const start = placed.map((v) => (isSingleton(v) ? v : MON_NONE));
-  const m = marksOf(board, start);
+  const shown = Array.from(guess, (g, i) =>
+    g === MON_NONE ? pencil[i] || MON_NONE : g,
+  );
+  const m = marksOf(board, shown, (i) => guess[i] !== MON_NONE);
   if (m === null) return [];
-  const ops: HintOp[] = [];
-  m.recorder = (rec) => {
-    const reason = rec.reason as UndeadReason;
-    if (reason.kind === "single") return;
-    ops.push({
-      kind: rec.kind,
-      cell: board.monsterOf[rec.y * common.w + rec.x],
-      monster: MONSTERS[rec.n - 1],
-      reason,
-      group: rec.group,
-    });
-  };
-  m.budget = stepBudget("undead hint recorder");
-  runAt(ladderOf(board), m, DIFF_NORMAL);
-  return ops;
+  const ladder = ladderOf(board);
+  const out: UndeadFiring[] = [];
+  for (const technique of TAUGHT)
+    for (const f of techniqueFirings(ladder, technique, m)) {
+      const facts: UndeadFact[] = [];
+      for (let i = 0; i < f.facts.length; i += 3)
+        facts.push({
+          place: f.facts[i] !== STRIKE,
+          cell: board.monsterOf[f.facts[i + 1]],
+          monster: MONSTERS[f.facts[i + 2] - 1],
+        });
+      const { says } = f.reasons[0] as Said<unknown, undead.SaysById[typeof technique]>;
+      out.push({ technique, says, facts } as UndeadFiring);
+    }
+  return out;
 }

@@ -1,14 +1,11 @@
 /**
  * Undead explained-hint tests.
  *
- * Tier 1 — the recording solver records a reason per deduction kind; the plan
- * solves a generated board from empty *and* mid-game, naked-single-first, with
- * populate before the first strike and no sightline-strike mark bleeding off the
- * narrated path; refusal on solved / mistakes; `hintKeepTrack` verdicts. Tier 2.5
- * — a render-scenario snapshot of a sightline-elimination frame.
- *
- * Undead is the fork's first *non-Latin* candidate-elimination hint (its own
- * recorder off the sightline and counting rungs, not `latin.ts`).
+ * Tier 1 — the plan solves a generated board from empty *and* mid-game,
+ * naked-single-first, with populate before the first strike and no
+ * sightline-strike mark bleeding off the narrated path; refusal on solved /
+ * mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario snapshot of
+ * a sightline-elimination frame.
  */
 import { describe, expect, it } from "vitest";
 import { strikeReach } from "../../engine/draw.ts";
@@ -34,7 +31,6 @@ import {
   PREFERRED_TILE_SIZE,
   type UndeadHint,
 } from "./render.ts";
-import { recordUndeadDeductions } from "./solver.ts";
 import {
   MON_GHOST,
   MON_NONE,
@@ -106,60 +102,9 @@ const pinned = describeHintPins({
   },
 });
 
-describe("undead recording solver", () => {
-  it("records each deduction kind across generated boards", () => {
-    // Re-deriving exact crafted boards for each kind is brittle; instead scan a
-    // spread of tiers/seeds and assert every recorder reason kind appears.
-    const seen = new Set<string>();
-    const tiers: UndeadParams[] = [
-      { w: 5, h: 5, diff: "easy" },
-      { w: 5, h: 5, diff: "normal" },
-      { w: 5, h: 5, diff: "tricky" },
-    ];
-    for (const p of tiers) {
-      for (let i = 0; i < 30; i++) {
-        const st = gen(p, `rec-${p.diff}-${i}`);
-        const ops = recordUndeadDeductions(st.common, st.guess);
-        for (const op of ops) seen.add(op.reason.kind);
-      }
-    }
-    // `single` is a planner-derived placement reason, not a recorder one.
-    expect(seen.has("sightline")).toBe(true);
-    expect(seen.has("total")).toBe(true);
-    // `onlyCells` (counting's dual) is rarer but should appear in this spread.
-    expect(seen.has("onlyCells")).toBe(true);
-    // …and `forcing` never, on any tier: the recorder has no such rung, because
-    // it hypothesizes a candidate and runs the arc+counting fixpoint from it — a
-    // multi-step search, which belongs to an `Unreasonable` board and never to a
-    // hint. The solver keeps the rung (the generator grades on it), so this is
-    // about narration only.
-    expect(seen.has("forcing")).toBe(false);
-  });
-
-  it("recorded eliminations only narrow toward the true solution (sound)", () => {
-    // Every recorded elim removes a candidate the unique solution does not use.
-    for (let i = 0; i < 20; i++) {
-      const st = gen({ w: 5, h: 5, diff: "normal" }, `sound-${i}`);
-      const r = undeadGame.solve?.(st, st);
-      if (!r?.ok || r.move.type !== "solve") throw new Error("solve failed");
-      const sol = r.move.placements;
-      const ops = recordUndeadDeductions(st.common, st.guess);
-      for (const op of ops) {
-        if (op.kind === "elim") {
-          // never eliminate the solution monster
-          expect(op.monster).not.toBe(sol[op.cell]);
-        } else {
-          // a forced placement must be the solution monster
-          expect(op.monster).toBe(sol[op.cell]);
-        }
-      }
-    }
-  });
-});
-
 describe("undead hint plan", () => {
   it("a freshly-computed plan solves the board from empty (the deductive tiers)", () => {
-    // `Unreasonable` is deliberately absent: the recorder has no forcing rung,
+    // `Unreasonable` is deliberately absent: the hint reads no forcing rung,
     // and such a board needs it at least once by construction, so the plan
     // stops short there. That is asserted separately below — not silently
     // dropped.

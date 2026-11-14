@@ -160,6 +160,9 @@ techniques:
       |P| <= n and |O| >= n
       and (|P| < n or (forall c in O - P: strike(c, d)))
       and (|O| > n or (forall c in O - P: place(c, d)))
+    says:
+      terms: { d: d, n: n }
+      marks: {}
   # Sightline by sightline, the fewest squares first, as upstream sorts
   # them, each read from the end that comes first going round the grid: a
   # monster no filling of its squares puts in a square, showing both its
@@ -180,3 +183,6 @@ techniques:
       and count(x in L where f(x) = 2 and |cand(x)| > 1) <= v
       and count(x in L where f(x) = 3 and |cand(x)| > 1) <= z):
       strike(c, d)
+    says:
+      terms: { s: s }
+      marks: {}

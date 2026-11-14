@@ -22,6 +22,16 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "single" | "total" | "sightline";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  total: TotalSays;
+  sightline: SightlineSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["total","sightline"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -187,11 +197,17 @@ export interface TotalBinding {
   O: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface TotalSays {
+  terms: { d: number; n: number; };
+  marks: {  };
+}
+
 const totalFacts: number[] = [];
 let totalCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function total(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalBinding> | null): number {
+export function total(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalBinding, TotalSays> | null): number {
   const _g14: number[] = [];
   const _g21: number[] = [];
   const facts = totalFacts;
@@ -292,7 +308,10 @@ export function total(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TotalBindin
     if (!(_c52)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ d: v_d, n: v_n, P: v_P.slice(), O: v_O.slice() }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { d: v_d, n: v_n }, marks: {  } };
+        if (!fire({ d: v_d, n: v_n, P: v_P.slice(), O: v_O.slice() }, facts, _says)) return 1;
+      }
       cands.fill(-1);
     }
   }
@@ -312,6 +331,12 @@ export interface SightlineBinding {
   z: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SightlineSays {
+  terms: { s: number; };
+  marks: {  };
+}
+
 const sightlineFacts: number[] = [];
 let sightlineCands = new Int32Array(0);
 let sightline_p58 = new Int32Array(0);
@@ -320,7 +345,7 @@ let sightline_f64 = new Int32Array(0);
 let sightline_l65: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function sightline(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SightlineBinding> | null): number {
+export function sightline(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SightlineBinding, SightlineSays> | null): number {
   if (sightline_p58.length < sp.cells.length) sightline_p58 = new Int32Array(sp.cells.length);
   else sightline_p58.fill(0);
   sightline_l59 = [];
@@ -588,7 +613,10 @@ export function sightline(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sightli
         if (!(_q53)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ n: v_n, r: v_r, s: v_s, t: v_t, L: v_L.slice(), a: v_a, b: v_b, g: v_g, v: v_v, z: v_z }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { s: v_s }, marks: {  } };
+            if (!fire({ n: v_n, r: v_r, s: v_s, t: v_t, L: v_L.slice(), a: v_a, b: v_b, g: v_g, v: v_v, z: v_z }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           _epoch++;
         }

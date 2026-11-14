@@ -343,3 +343,28 @@ avoidable-jump share fell (four boards a preset: implicit 23 of 676 to 9
 of 518, populate 29 of 1089 to 16 of 916). The fingerprint's Killer Easy
 walk lengthens (247 to 297 steps, more of them min/max strikes); every
 other walk keeps its ending, within a few steps.
+
+## Undead and Crossing keep their own walks (2026-11-14)
+
+Neither is on `runCandidatePlan`, and neither moves onto it here. Undead's
+notes are on its monster squares, numbered round the mirrors, not on a grid
+the walk strides; Crossing's steps fill a whole run and write the notes the
+next placement rests on (`aimedNotes`), which no rung of the walk does.
+
+- **Undead** reads its ladder's `total` and `sightline` firings off the
+  player's notes (`undeadFirings`), a note-less square reading as every
+  monster, in place of the recorder (`recordUndeadDeductions`) and the
+  reason callbacks. `total` says `d` and `n`, `sightline` its slot `s`. The
+  count placement (`onlyCells`) is `total`'s placing half, so the walk's own
+  copy of that count went. The recorder's two tests went with it: every
+  rung is pinned (`describeHintPins`), and `hint-resume.test.ts` asks
+  `findMistakes` at every position a walk reaches.
+- **Crossing** already walked the compiled firings on the notes; its five
+  reason callbacks became `says`, read by one `whyOf`.
+
+Compared by `research/hint-walk-dump/` here and in a worktree of HEAD:
+Crossing's dump is byte-identical. Undead's ends every walk as at HEAD (64
+solved, 32 refused on Unreasonable), and differs on one board, where a
+`total` now strikes three vampires at once where HEAD struck one by a
+sightline first (21928 lines against 21968). The walk fingerprint is
+unchanged for both. Undead's dump ran in 5.3 s against 8.9 s at HEAD.

@@ -445,13 +445,12 @@ A solver that is not `engine/latin.ts` records through a parallel recorder:
 separate code from the grading path that reuses its building blocks. The
 generate, solve and `findMistakes` paths never call it, so they are
 unchanged by construction. Each ladder pass returns after its first firing
-and bumps the group; the recorder loops to a fixpoint. A described ladder is
-recorded so: `recordUndeadDeductions` in
-[`undead/solver.ts`](../src/games/undead/solver.ts) runs the compiled ladder
-again with the marks' `recorder` set. A bespoke solver whose ladder is
-described needs no recorder at all where the mistake check vouches for the
-notes: Solo's hint runs its techniques on them (§ "Deduce from the notes
-when the mistake check vouches for them").
+and bumps the group; the recorder loops to a fixpoint. A bespoke solver whose
+ladder is described needs no recorder at all where the mistake check vouches
+for the notes: Solo's hint runs its techniques on them (§ "Deduce from the
+notes when the mistake check vouches for them"), and Undead's, outside the
+shared walk, reads its ladder's firings off them (`undeadFirings` in
+[`undead/solver.ts`](../src/games/undead/solver.ts)).
 
 When recording:
 

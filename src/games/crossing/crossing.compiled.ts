@@ -19,6 +19,19 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "onlyNumber" | "onlyRun" | "sharedDigit" | "crossRuns" | "narrow" | "misread" | "twice";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  onlyNumber: OnlyNumberSays;
+  onlyRun: OnlyRunSays;
+  sharedDigit: SharedDigitSays;
+  crossRuns: CrossRunsSays;
+  narrow: NarrowSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["onlyNumber","onlyRun","sharedDigit","crossRuns","narrow"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -183,10 +196,16 @@ export interface OnlyNumberBinding {
   K: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OnlyNumberSays {
+  terms: { L: number; c: number; K: readonly number[]; };
+  marks: {  };
+}
+
 const onlyNumberFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function onlyNumber(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyNumberBinding> | null): number {
+export function onlyNumber(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyNumberBinding, OnlyNumberSays> | null): number {
   const _g32: number[] = [];
   const facts = onlyNumberFacts;
   let fired = 0;
@@ -299,7 +318,10 @@ export function onlyNumber(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyNu
           if (!(_c69)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, c: v_c, R: v_R.slice(), K: v_K.slice() }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { L: v_L, c: v_c, K: v_K.slice() }, marks: {  } };
+              if (!fire({ L: v_L, c: v_c, R: v_R.slice(), K: v_K.slice() }, facts, _says)) return 1;
+            }
           }
         }
       }
@@ -315,10 +337,16 @@ export interface OnlyRunBinding {
   R: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OnlyRunSays {
+  terms: { k: number; L: number; c: number; };
+  marks: {  };
+}
+
 const onlyRunFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function onlyRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRunBinding> | null): number {
+export function onlyRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRunBinding, OnlyRunSays> | null): number {
   const facts = onlyRunFacts;
   let fired = 0;
   let changed = false;
@@ -513,7 +541,10 @@ export function onlyRun(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRunBi
         if (!(_q88)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ k: v_k, L: v_L, c: v_c, R: v_R.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { k: v_k, L: v_L, c: v_c }, marks: {  } };
+            if (!fire({ k: v_k, L: v_L, c: v_c, R: v_R.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -530,10 +561,16 @@ export interface SharedDigitBinding {
   D: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SharedDigitSays {
+  terms: { L: number; c: number; K: readonly number[]; };
+  marks: {  };
+}
+
 const sharedDigitFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function sharedDigit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedDigitBinding> | null): number {
+export function sharedDigit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedDigitBinding, SharedDigitSays> | null): number {
   const _g42: number[] = [];
   const _g73: number[] = [];
   const facts = sharedDigitFacts;
@@ -697,7 +734,10 @@ export function sharedDigit(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Share
               if (!(true)) return -1;
               if (changed || facts.length > 0) {
                 fired = 1;
-                if (fire !== null && !fire({ L: v_L, c: v_c, R: v_R.slice(), K: v_K.slice(), x: v_x, D: v_D }, facts)) return 1;
+                if (fire !== null) {
+                  const _says = { terms: { L: v_L, c: v_c, K: v_K.slice() }, marks: {  } };
+                  if (!fire({ L: v_L, c: v_c, R: v_R.slice(), K: v_K.slice(), x: v_x, D: v_D }, facts, _says)) return 1;
+                }
               }
             }
           }
@@ -717,10 +757,16 @@ export interface CrossRunsBinding {
   D: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CrossRunsSays {
+  terms: { x: number; KA: readonly number[]; KB: readonly number[]; };
+  marks: {  };
+}
+
 const crossRunsFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function crossRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrossRunsBinding> | null): number {
+export function crossRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrossRunsBinding, CrossRunsSays> | null): number {
   const _g61: number[] = [];
   const _g73: number[] = [];
   const facts = crossRunsFacts;
@@ -899,7 +945,10 @@ export function crossRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CrossRu
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ x: v_x, A: v_A.slice(), B: v_B.slice(), KA: v_KA.slice(), KB: v_KB.slice(), D: v_D }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { x: v_x, KA: v_KA.slice(), KB: v_KB.slice() }, marks: {  } };
+            if (!fire({ x: v_x, A: v_A.slice(), B: v_B.slice(), KA: v_KA.slice(), KB: v_KB.slice(), D: v_D }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -915,11 +964,17 @@ export interface NarrowBinding {
   x: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface NarrowSays {
+  terms: { L: number; c: number; K: readonly number[]; };
+  marks: {  };
+}
+
 const narrowFacts: number[] = [];
 let narrowCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function narrow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NarrowBinding> | null): number {
+export function narrow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NarrowBinding, NarrowSays> | null): number {
   const _g34: number[] = [];
   const _g54: number[] = [];
   const facts = narrowFacts;
@@ -1084,7 +1139,10 @@ export function narrow(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NarrowBind
           if (!(_q82)) return -1;
           if (changed || facts.length > 0) {
             fired = 1;
-            if (fire !== null && !fire({ L: v_L, c: v_c, R: v_R.slice(), K: v_K.slice(), x: v_x }, facts)) return 1;
+            if (fire !== null) {
+              const _says = { terms: { L: v_L, c: v_c, K: v_K.slice() }, marks: {  } };
+              if (!fire({ L: v_L, c: v_c, R: v_R.slice(), K: v_K.slice(), x: v_x }, facts, _says)) return 1;
+            }
             cands.fill(-1);
           }
         }

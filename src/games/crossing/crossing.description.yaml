@@ -121,6 +121,9 @@ techniques:
       where (exists x in R: not known(x)),
       K = {k in clues(numbers) where free(k, R)} where |K| < 2
     conclude: "|K| = 1 and (forall x in R where not known(x): place(x, digit(first(K), x, R)))"
+    says:
+      terms: { L: L, c: c, K: K }
+      marks: {}
   # A number that still fits only one run goes there, whatever else the run
   # could take.
   - id: onlyRun
@@ -130,6 +133,9 @@ techniques:
       and count(M in lines, b in cells(M) where head(M, b) and fits(k, run(M, b))) = 1,
       L in lines, c in cells(L) where head(L, c) and fits(k, run(L, c)), R = run(L, c)
     conclude: "forall x in R where not known(x): place(x, digit(k, x, R))"
+    says:
+      terms: { k: k, L: L, c: c }
+      marks: {}
   # Every number that still fits a run puts the same digit in one of its
   # squares.
   - id: sharedDigit
@@ -140,6 +146,9 @@ techniques:
       K = {k in clues(numbers) where free(k, R)} where |K| > 0,
       x in R where not known(x), D = set(digit(k, x, R) over k in K) where |D| = 1
     conclude: "place(x, first(D))"
+    says:
+      terms: { L: L, c: c, K: K }
+      marks: {}
   # The numbers still fitting a square's across run and those fitting its down
   # run share one digit there.
   - id: crossRuns
@@ -152,6 +161,9 @@ techniques:
       D = {d in set(digit(k, x, A) over k in KA) where exists k in KB: digit(k, x, B) = d}
       where |D| = 1
     conclude: "place(x, first(D))"
+    says:
+      terms: { x: x, KA: KA, KB: KB }
+      marks: {}
   # A square of a run holds only a digit some number still fitting the run
   # puts there.
   - id: narrow
@@ -162,6 +174,9 @@ techniques:
       K = {k in clues(numbers) where free(k, R)},
       x in R where not known(x)
     conclude: "forall d in cand(x) where not (exists k in K: digit(k, x, R) = d): strike(x, d)"
+    says:
+      terms: { L: L, c: c, K: K }
+      marks: {}
   # A square down to one digit needs no technique of its own: every number
   # still fitting its run puts that digit there, and a square with none left
   # leaves its run no number.
