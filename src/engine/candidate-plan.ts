@@ -161,10 +161,10 @@ export type CandidateRung<M, H, R, Reason> = (
 /** A game's ladder, as a plan that deduces from the notes runs its
  * techniques: on fresh marks over the working grid, each blank cell's
  * candidates the notes the walk shows, read through `enc`. */
-export interface NotesLadder {
-  ladder: Ladder;
+export interface NotesLadder<S extends CellMarks = CellMarks> {
+  ladder: Ladder<S>;
   /** Marks over the walk's working grid; their candidates are set here. */
-  marks: () => CellMarks;
+  marks: () => S;
   enc: NoteEncoding & { values: number };
 }
 
@@ -181,8 +181,8 @@ export interface NotesLadder {
  * the solver reaches it only once those before it are spent: by tier alone,
  * Abcd's `runs`, as easy as its single, would crowd the singles out.
  */
-export function techniqueRung<M, H, R, Reason>(
-  on: NotesLadder,
+export function techniqueRung<M, H, R, Reason, S extends CellMarks = CellMarks>(
+  on: NotesLadder<S>,
   id: string,
   legs: (f: LadderFiring, shown: ArrayLike<number>) => Firing<M, H, Reason> | null,
 ): CandidateRung<M, H, R, Reason> {

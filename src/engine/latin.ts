@@ -332,23 +332,23 @@ export const LATIN_RUNGS = {
   "latin.single": uncluedRung(compiled.single, (): LatinReason => ({ kind: "single" })),
   "latin.set": uncluedRung(
     compiled.set,
-    ({ S }, _c, _n, m): LatinReason => ({
+    (_b, _c, _n, m, { terms }): LatinReason => ({
       kind: "set",
-      cells: S.map(cellAt(m.sp.w)),
+      cells: terms.S.map(cellAt(m.sp.w)),
     }),
   ),
   "latin.fish": uncluedRung(
     compiled.fish,
-    (binding, _c, _n, m): LatinReason => fishReason(binding, m),
+    (_b, _c, _n, m, says): LatinReason => fishReason(says, m.sp.w),
   ),
   "latin.wing": uncluedRung(
     compiled.wing,
-    ({ m: mid, x, E }, _c, _n, m): LatinReason => ({
+    (_b, _c, _n, m, { terms: { m: mid, x, E, self } }): LatinReason => ({
       kind: "wing",
       n: x,
       middle: cellAt(m.sp.w)(mid),
       ends: E.map(cellAt(m.sp.w)),
-      self: m.has(mid, x),
+      self,
     }),
   ),
 } satisfies Record<string, Rung>;
@@ -369,32 +369,19 @@ export function latinLadder<Id extends string, P extends string, S extends CellM
   return describedLadder(module, own, LATIN_LIBRARY);
 }
 
-/**
- * A fish confines its value two ways at once, and either gives its strikes:
- * the columns `X` hold it only in the rows `Y0 − T`, and the rows `T` hold it
- * only in the other columns. The one over fewer lines is recorded, the smaller
- * pattern for a player to check, with the places the value can take in it.
- */
-function fishReason(
-  { d, X0, Y0, T, X }: compiled.FishBinding,
-  m: CellMarks,
-): LatinReason {
-  const o = m.sp.w;
-  const chosen = valuesOf(T);
-  const byColumn = X.length <= chosen.length;
-  const cols = byColumn ? X : X0.filter((L) => !X.includes(L));
-  const rows = byColumn ? valuesOf(Y0 & ~T) : chosen;
-  const cells: { x: number; y: number }[] = [];
-  for (const L of cols)
-    for (const y of rows) if (m.has(y * o + (L - o), d)) cells.push({ x: L - o, y });
-  const lines = byColumn
-    ? confinedLines(
-        "col",
-        X.map((L) => L - o),
-        o,
-      )
-    : confinedLines("row", chosen, o);
-  return { kind: "set", cells, lines };
+/** A fish as a set confined across lines, in the view its `says` names: the
+ * columns, whose elements follow the `o` rows in a Latin space, or the rows,
+ * a set of indices. */
+function fishReason({ arm, terms }: compiled.FishSays, o: number): LatinReason {
+  const lines =
+    arm === "cols"
+      ? confinedLines(
+          "col",
+          terms.lines.map((L) => L - o),
+          o,
+        )
+      : confinedLines("row", valuesOf(terms.lines), o);
+  return { kind: "set", cells: terms.places.map(cellAt(o)), lines };
 }
 
 /** How `latinSolver` runs: its rungs, the game's answer check, and the

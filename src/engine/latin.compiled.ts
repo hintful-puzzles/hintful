@@ -241,11 +241,17 @@ export interface SetBinding {
   S: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SetSays {
+  terms: { S: readonly number[]; };
+  marks: {  };
+}
+
 const setFacts: number[] = [];
 let setCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n^0.5. */
-export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): number {
+export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding, SetSays> | null): number {
   const _g40: number[] = [];
   const _g58: number[] = [];
   const _g74: number[] = [];
@@ -420,7 +426,10 @@ export function set(b: Marks, sp: GridSpace, fire: Fire<SetBinding> | null): num
         if (!(_c114)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ u: v_u, V: v_V, open: v_open.slice(), R: v_R, extra: v_extra, T: v_T, S: v_S.slice() }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { S: v_S.slice() }, marks: {  } };
+            if (!fire({ u: v_u, V: v_V, open: v_open.slice(), R: v_R, extra: v_extra, T: v_T, S: v_S.slice() }, facts, _says)) return 1;
+          }
           cands.fill(-1);
         }
       }
@@ -438,13 +447,23 @@ export interface FishBinding {
   X: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type FishSays =
+  | { arm: "cols"; terms: { d: number; lines: readonly number[]; places: readonly number[]; }; marks: {  } }
+  | { arm: "rows"; terms: { d: number; lines: number; places: readonly number[]; }; marks: {  } }
+;
+
 const fishFacts: number[] = [];
+const fish_st343 = stamps();
+const fish_st355 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): number {
+export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding, FishSays> | null): number {
   const _g83: number[] = [];
   const _g142: number[] = [];
   const _g178: number[] = [];
+  const _g337: number[] = [];
+  const _g349: number[] = [];
   const facts = fishFacts;
   let fired = 0;
   let changed = false;
@@ -456,7 +475,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
     const v_k = (v_d === b.repeat ? b.times : 1);
     const _h104 = (v_k > 1);
     const _h127 = (v_k === 1);
-    const _m337_0 = b.made[0];
+    const _m361_0 = b.made[0];
     _g83.length = 0;
     G84: {
       const _a97 = sp.cols;
@@ -499,7 +518,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
     const v_X0 = _g83;
     const _h140 = v_X0.length;
     const _h141 = (_h140 - 2);
-    const _m338_1 = b.made[1];
+    const _m362_1 = b.made[1];
     let _g114 = 0;
     G115: {
       const _a124 = cellsValued(b, sp.cells, v_d);
@@ -605,7 +624,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
           _c177 = _c176;
         }
         if (!(_c177)) break L157;
-        if (b.made[0] !== _m337_0 || b.made[1] !== _m338_1) {
+        if (b.made[0] !== _m361_0 || b.made[1] !== _m362_1) {
           _g178.length = 0;
           G179: {
             const _a192 = sp.cols;
@@ -901,7 +920,49 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding> | null): n
         if (!(_c336)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ d: v_d, k: v_k, X0: v_X0.slice(), Y0: v_Y0, T: v_T, X: v_X.slice() }, facts)) return 1;
+          if (fire !== null) {
+            let _arm = -1;
+            if ((_h158 <= _h139)) _arm = 0; else if ((_h158 > _h139)) _arm = 1;
+            let _says: FishSays | null = null;
+            if (_arm === 0) {
+              _g337.length = 0;
+              fish_st343.pass++;
+              G338: {
+                const _a344 = v_X;
+                for (let _i345 = 0; _i345 < _a344.length; _i345++) {
+                  const v_L = _a344[_i345];
+                  const _a346 = sp.lineCells[v_L];
+                  for (let _i347 = 0; _i347 < _a346.length; _i347++) {
+                    const v_c = _a346[_i347];
+                    if (!(((((_h334 >> ((v_c / sp.w) | 0)) & 1) !== 0) && (((b.cands[v_c] >> v_d) & 1) !== 0)))) continue;
+                    const _t348 = v_c;
+                    if (_g337.length < 16) { if (!_g337.includes(_t348)) _g337.push(_t348); } else addOnce(_g337, fish_st343, _t348);
+                  }
+                }
+              }
+              _says = { arm: "cols", terms: { d: v_d, lines: v_X.slice(), places: _g337.slice() }, marks: {  } };
+            }
+            if (_arm === 1) {
+              _g349.length = 0;
+              fish_st355.pass++;
+              G350: {
+                const _a356 = minus(v_X0, v_X);
+                for (let _i357 = 0; _i357 < _a356.length; _i357++) {
+                  const v_L = _a356[_i357];
+                  const _a358 = sp.lineCells[v_L];
+                  for (let _i359 = 0; _i359 < _a358.length; _i359++) {
+                    const v_c = _a358[_i359];
+                    if (!(((((v_T >> ((v_c / sp.w) | 0)) & 1) !== 0) && (((b.cands[v_c] >> v_d) & 1) !== 0)))) continue;
+                    const _t360 = v_c;
+                    if (_g349.length < 16) { if (!_g349.includes(_t360)) _g349.push(_t360); } else addOnce(_g349, fish_st355, _t360);
+                  }
+                }
+              }
+              _says = { arm: "rows", terms: { d: v_d, lines: v_T, places: _g349.slice() }, marks: {  } };
+            }
+            if (_says === null) throw new Error("fish: no arm of says holds");
+            if (!fire({ d: v_d, k: v_k, X0: v_X0.slice(), Y0: v_Y0, T: v_T, X: v_X.slice() }, facts, _says)) return 1;
+          }
         }
       }
     }
@@ -918,12 +979,18 @@ export interface WingBinding {
   E: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface WingSays {
+  terms: { m: number; x: number; E: readonly number[]; self: boolean; };
+  marks: {  };
+}
+
 const wingFacts: number[] = [];
 let wingCands = new Int32Array(0);
 const wing_st93 = stamps();
 
 /** Its dearest read grows with the board as n. */
-export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): number {
+export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding, WingSays> | null): number {
   const _g84: number[] = [];
   const _g95: number[] = [];
   const facts = wingFacts;
@@ -1187,7 +1254,10 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding> | null): n
             if (!(true)) return -1;
             if (changed || facts.length > 0) {
               fired = 1;
-              if (fire !== null && !fire({ m: v_m, x: v_x, R: v_R, k0: v_k0, t: v_t, E: v_E.slice() }, facts)) return 1;
+              if (fire !== null) {
+                const _says = { terms: { m: v_m, x: v_x, E: v_E.slice(), self: (((b.cands[v_m] >> v_x) & 1) !== 0) }, marks: {  } };
+                if (!fire({ m: v_m, x: v_x, R: v_R, k0: v_k0, t: v_t, E: v_E.slice() }, facts, _says)) return 1;
+              }
               cands.fill(-1);
             }
           }

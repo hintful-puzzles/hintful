@@ -65,6 +65,9 @@ techniques:
       (|T| > 0 or (forall c in cells(u): |cand(c)| > 0))
       and |S| = |V| - |T| + extra * |R - T|
       and (forall c in open where c not in S, d in V - T where d in cand(c): strike(c, d))
+    says:
+      terms: { S: S }
+      marks: {}
 
   # One value d: the columns lacking it that have no place for it in a set T of
   # the rows lacking it are as many as those rows' others, Y0 - T, so they hold
@@ -91,6 +94,25 @@ techniques:
         or (k > 1 and sum(L in X of k - count(c in cells(L) where value(c) = d))
           = sum(r in Y0 - T of k - count(c in cells(row(cell(0, r))) where value(c) = d))))
       and (forall L in X0 - X, c in cells(L) where y(c) in Y0 - T and d in cand(c) and (k = 1 or not known(c)): strike(c, d))
+    # Either view gives the strikes: the columns X hold d only in the rows
+    # Y0 - T, and the rows T only in the other columns. A step names the one
+    # over fewer lines, and the places d can still take in it.
+    says:
+      terms: { d: d }
+      marks: {}
+      arms:
+        cols:
+          when: "|X| <= |T|"
+          terms:
+            lines: X
+            places: "set(c over L in X, c in cells(L) where y(c) in Y0 - T and d in cand(c))"
+          marks: {}
+        rows:
+          when: "|X| > |T|"
+          terms:
+            lines: T
+            places: "set(c over L in X0 - X, c in cells(L) where y(c) in T and d in cand(c))"
+          marks: {}
 
   # engine/wing.ts: for each value a of an open middle cell m but x, an end that
   # sees m and is down to a and x; a cell t seeing every end, and m too where m
@@ -107,3 +129,7 @@ techniques:
       t in peers(k0) where t != m and not known(t) and x in cand(t) and (x not in cand(m) or t in peers(m)) and (forall a in R: exists k in peers(m): not known(k) and cand(k) = {a, x} and k != t and k in peers(t)),
       E = set(first({k in peers(m) where not known(k) and cand(k) = {a, x} and k != t and k in peers(t)}) over a in R)
     conclude: "strike(t, x)"
+    # Where m can be x itself, it is one of the cells x must be in.
+    says:
+      terms: { m: m, x: x, E: E, self: "x in cand(m)" }
+      marks: {}

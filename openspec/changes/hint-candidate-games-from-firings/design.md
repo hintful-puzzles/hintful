@@ -69,3 +69,23 @@ every board still finishes, and the rungs are the same in near the same
 numbers (loop 5448 to 5363, reach 485 to 472, opposite 303 to 343; onlyHome's
 131 strikes gone, hidden singles 12 to 83). The dump ran in 2.1 s against
 10.8 s at HEAD.
+
+## The Latin library says (2026-11-14)
+
+`set`, `fish` and `wing` say their terms, and the library's rungs build the
+`LatinReason` that `latinPremise` narrates from them, so a reason is the same
+recorded or read off the notes, and the rungs no longer read the marks
+themselves. A fish says its two views as arms, `cols` where its columns are
+no more than its rows, and the places the value can take in that view,
+written column by column (`set(c over L in X, c in cells(L) ...)`), the
+order the recorded reason had: written row by row, the outline's order
+changed, and with it which cell the implicit reading notes first.
+
+`latinNotesLadder` (`engine/latin-hint.ts`) is a game's `NotesLadder` over
+a fresh `LatinSolver` holding the walk's grid, so a game's own techniques read
+the solver they read when solving; `NotesLadder` and `techniqueRung` take
+the marks' type.
+
+Compared by `research/hint-walk-dump/` here and in a worktree of HEAD for the
+six Latin games whose walk fingerprint a set or fish step reaches (Adjacent,
+Group, Keen, Mathrax, Salad, Unequal): every dump is byte-identical.

@@ -12,7 +12,7 @@ Each game is enrolled in `hint-walk-fingerprint.test.ts` at the commit before it
 
 - [x] 2.0 Every game below enrolled in `hint-walk-fingerprint.test.ts`, pinned at HEAD before any moves
 - [x] 2.1 Rome (design § "Rome, moved")
-- [ ] 2.1a The Latin library's `set`, `fish` and `wing` (`engine/latin.description.yaml`) say their terms, and a Latin `NotesLadder` builds `LatinSolver` marks from the notes. Salad and every game of 2.2 run `latinLadder`, whose library rungs carry their reasons through callbacks (as of 2026-11-14 none of the library says anything), so this comes first and is the engine's, shared by all of them; `narrateLatinReason` is what reads those reasons today
+- [x] 2.1a The Latin library's `set`, `fish` and `wing` (`engine/latin.description.yaml`) say their terms, and a Latin `NotesLadder` builds `LatinSolver` marks from the notes (design § "The Latin library says"). The first game to move writes the legs of the library's three rungs; every Latin game's are the same, so they belong in the engine beside `latinNotesLadder`, not in the game
 - [ ] 2.1b Salad (its own `border` says as well; a cross or ball is a seeded marker, and the X note is the hole symbol's candidate)
 - [ ] 2.2 The Latin games (Unequal, Adjacent, Keen, Towers, Group, Solo, Mathrax)
 - [ ] 2.3 Undead, Crossing
