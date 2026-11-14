@@ -14,6 +14,12 @@
 
 import { MADE } from "../engine/marks-made.ts";
 import {
+  type Slot as ClauseSlot,
+  STATED_INNER_WORDS,
+  STATED_WORDS,
+  slotsOf,
+} from "../engine/stated-clauses.ts";
+import {
   cellMarkOf,
   type Definition,
   type ClueKind as DescribedClueKind,
@@ -26,6 +32,7 @@ import {
   parseTechnique,
   relationMarkOf,
   type Says,
+  type StatedClauses,
   type Technique,
   UNPLACED,
   withEveryVariation,
@@ -468,6 +475,8 @@ interface Env {
     says: NonNullable<Says["fact"]>;
     buffer: string;
     fields: { terms: string[]; marks: string[] };
+    /** Each term's sort, for checking the clauses that say it. */
+    sorts: Map<string, Sort>;
   };
   /** Where the code is the answer check, which reads a whole grid's values
    * (`g`) rather than the marks: whether the description has a repeated
@@ -4468,6 +4477,108 @@ function clueCall(args: readonly Expr[], scope: Scope, env: Env, out: Out): Val 
 }
 
 /**
+ * Every slot of a technique's stated clauses names what the technique states:
+ * a number term or a lexicon word said plainly, a role it marks or a term of
+ * elements as a reference. A fact's clauses read the firing's terms and the
+ * fact's own.
+ */
+function checkStated(
+  id: string,
+  says: Says,
+  variants: readonly { sorts: ReadonlyMap<string, Sort> }[],
+  factSorts: ReadonlyMap<string, Sort> | null,
+): void {
+  const isNum = (s?: Sort): boolean => s?.k === "num" || s?.k === "int";
+  const isElems = (s?: Sort): boolean =>
+    s !== undefined && (s.k === "elem" || (s.k === "set" && s.of.k === "elem"));
+  const check = (
+    where: string,
+    clauses: StatedClauses,
+    sorts: ReadonlyMap<string, Sort>,
+    roles: ReadonlySet<string>,
+  ): void => {
+    for (const [part, src] of Object.entries(clauses) as [string, string][]) {
+      let slots: ClauseSlot[];
+      try {
+        slots = slotsOf(src);
+      } catch (e) {
+        throw new CompileError(`${id}: says ${where}${part}: ${(e as Error).message}`);
+      }
+      const plain = (name: string, inner: boolean): void => {
+        if (STATED_WORDS.has(name) || isNum(sorts.get(name))) return;
+        if (inner && STATED_INNER_WORDS.has(name)) return;
+        throw new CompileError(
+          `${id}: says ${where}${part} says {${name}}, which is no number term and no word of the lexicon`,
+        );
+      };
+      for (const s of slots) {
+        if (s.role === null) plain(s.name as string, false);
+        else if (s.name === null) {
+          if (s.role !== "ring" && !roles.has(s.role))
+            throw new CompileError(
+              `${id}: says ${where}${part} names {${s.role}}, which it marks nothing in`,
+            );
+        } else if (!isElems(sorts.get(s.name)))
+          throw new CompileError(
+            `${id}: says ${where}${part} names {${s.role} ${s.name}}, and ${s.name} is no term of elements`,
+          );
+        for (const n of s.inner) plain(n, true);
+      }
+    }
+  };
+  for (const [i, v] of says.variants.entries()) {
+    if (v.clauses === null) continue;
+    check(
+      v.name === null ? "" : `${v.name} `,
+      v.clauses,
+      variants[i].sorts,
+      new Set(v.marks.map((m) => m.role)),
+    );
+  }
+  if (says.fact !== null && factSorts !== null) {
+    const sorts = new Map([...variants.flatMap((v) => [...v.sorts]), ...factSorts]);
+    const roles = new Set([
+      ...says.variants.flatMap((v) => v.marks.map((m) => m.role)),
+      ...says.fact.marks.map((m) => m.role),
+    ]);
+    for (const a of says.fact.arms)
+      check(`fact ${a.name === null ? "" : `${a.name} `}`, a.clauses, sorts, roles);
+  }
+}
+
+/** The module's `STATED`: each kind of step's clauses as the description
+ * states them, and each fact's by its arm (`""` where it has none), for
+ * `engine/stated.ts` to render. Empty where nothing states a clause. */
+function statedTable(own: readonly Technique[]): string[] {
+  const rows: string[] = [];
+  for (const t of own) {
+    if (t.says === null) continue;
+    const fact =
+      t.says.fact === null || t.says.fact.arms.length === 0
+        ? null
+        : Object.fromEntries(t.says.fact.arms.map((a) => [a.name ?? "", a.clauses]));
+    for (const v of t.says.variants) {
+      if (v.clauses === null && fact === null) continue;
+      const kind = v.name === null ? t.id : `${t.id}.${v.name}`;
+      const entry = {
+        ...(v.clauses === null ? {} : { step: v.clauses }),
+        ...(fact === null ? {} : { fact }),
+      };
+      rows.push(`  ${JSON.stringify(kind)}: ${JSON.stringify(entry)},`);
+    }
+  }
+  if (rows.length === 0) return [];
+  return [
+    "/** Each kind of step's words as the description states them, and each",
+    " * fact's by its arm (`engine/stated.ts`). */",
+    "export const STATED = {",
+    ...rows,
+    "} as const;",
+    "",
+  ];
+}
+
+/**
  * A `place` or `strike` whose technique `says` something of each fact: on a
  * hint's path it reads what the fact has of its own where the fact is made,
  * in the conclusion's scope (the `forall` binders, and any `with` it writes),
@@ -4498,15 +4609,32 @@ function factWithSays(
     if (group === "marks" && !isArray(r.sort))
       throw new CompileError(`says fact marks ${name} is not a set of elements`);
     fields[group].push(`${name}: ${tsType(r.sort)};`);
+    if (group === "terms") site.sorts.set(name, r.sort);
     return `${name}: ${isArray(r.sort) ? `${r.code}.slice()` : r.code}`;
   };
   const terms = site.says.terms.map((x) => read(x.expr, "terms", x.name));
   const marks = site.says.marks.map((x) => read(x.expr, "marks", x.role));
   site.fields.terms = fields.terms;
   site.fields.marks = fields.marks;
+  // The arm that holds for this square, the first true one, read where the
+  // fact is made.
+  const named = site.says.arms.filter((a) => a.name !== null);
+  let arm = "";
+  if (named.length > 0) {
+    const holds = named.map((a) => {
+      const w = compileExpr(a.when as Expr, scope, inner, out);
+      expect(w, "bool", `says fact ${a.name} when`);
+      return w.code;
+    });
+    out.emit(
+      `const _fa = ${holds.map((h, i) => `${h} ? ${JSON.stringify(named[i].name)} : `).join("")}null;`,
+    );
+    out.emit(`if (_fa === null) throw new Error("no arm of says fact holds");`);
+    arm = "arm: _fa, ";
+  }
   out.emit(`facts.push(${fn === "strike" ? "STRIKE" : "PLACE"}, ${c}, ${d});`);
   out.emit(
-    `${site.buffer}.push({ terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} } });`,
+    `${site.buffer}.push({ ${arm}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} } });`,
   );
   out.close();
   out.close();
@@ -6230,6 +6358,7 @@ function techniqueFunction(
             says: t.says.fact,
             buffer: `${fnName}FactSays`,
             fields: { terms: [], marks: [] },
+            sorts: new Map(),
           },
   };
   if (t.binders.some((b) => b.kind === "fill"))
@@ -6273,7 +6402,12 @@ function techniqueFunction(
   });
   // The fields of what a firing says, by group, as the module's type for it.
   const saysFields = {
-    variants: [] as { name: string | null; terms: string[]; marks: string[] }[],
+    variants: [] as {
+      name: string | null;
+      terms: string[];
+      marks: string[];
+      sorts: Map<string, Sort>;
+    }[],
   };
   const fire = (sc: Scope): void => {
     const shared: Shared = { made: new Map() };
@@ -6407,6 +6541,7 @@ function techniqueFunction(
       if (arms) body.emit(`let _says: ${saysType} | null = null;`);
       for (const [i, v] of variants.entries()) {
         const fields = { terms: [] as string[], marks: [] as string[] };
+        const sorts = new Map<string, Sort>();
         // A term read inside an arm is not in scope in another.
         const inArm: Shared = { made: new Map(shared.made) };
         if (arms) body.open(`if (_arm === ${i}) {`);
@@ -6417,6 +6552,7 @@ function techniqueFunction(
               `${t.id}: says marks ${name} is not a set of elements`,
             );
           fields[group].push(`${name}: ${tsType(r.sort)};`);
+          if (group === "terms") sorts.set(name, r.sort);
           // A set is a buffer the next binding refills.
           return `${name}: ${isArray(r.sort) ? `${r.code}.slice()` : r.code}`;
         };
@@ -6428,7 +6564,7 @@ function techniqueFunction(
           `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} }${own}${t.says.witness ? ", witness: _w" : ""}${t.says.reads ? ", reads: _r" : ""} };`,
         );
         if (arms) body.close();
-        saysFields.variants.push({ name: v.name, ...fields });
+        saysFields.variants.push({ name: v.name, ...fields, sorts });
       }
       if (arms)
         body.emit(
@@ -6556,6 +6692,8 @@ function techniqueFunction(
     throw new CompileError(
       `${t.id}: its dearest read grows with the board as ${power(growth)}, past ${power(MAX_GROWTH)}: bind a set once outside the loops that read it, or keep what it reads (docs/descriptions.md § "What a technique compiles to")`,
     );
+  if (t.says !== null)
+    checkStated(t.id, t.says, saysFields.variants, tenv.factSays?.sorts ?? null);
   const lines = [
     `export interface ${bindingType} {`,
     ...fields,
@@ -6569,6 +6707,11 @@ function techniqueFunction(
             : [
                 `/** What a square the firing decides has of its own, read where it is made. */`,
                 `export interface ${saysType}Fact {`,
+                ...(tenv.factSays.says.arms.some((a) => a.name !== null)
+                  ? [
+                      `  arm: ${tenv.factSays.says.arms.map((a) => JSON.stringify(a.name)).join(" | ")};`,
+                    ]
+                  : []),
                 `  terms: { ${tenv.factSays.fields.terms.join(" ")} };`,
                 `  marks: { ${tenv.factSays.fields.marks.join(" ")} };`,
                 "}",
@@ -7006,6 +7149,7 @@ export function compileGame(
             ),
           )} as const;`,
           "",
+          ...statedTable(own),
           ...(own.some((t) => t.says?.each)
             ? [
                 "/** The techniques whose step is made for each square the firing decides. */",

@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/unequal/unequal.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, freshBinding, rangeMask, staleChecking } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, freshBinding, rangeMask, setOf, staleChecking } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -26,6 +26,12 @@ export interface SaysById {
 /** The kinds of step a firing can be: a technique's id, and for one whose
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["sign"] as const;
+
+/** Each kind of step's words as the description states them, and each
+ * fact's by its arm (`engine/stated.ts`). */
+export const STATED = {
+  "sign": {"fact":{"least":{"look":"The larger side of {outline sign: this greater-than sign} can't hold the smallest number"},"greater":{"look":"{outline small: the outlined smaller side} of {outline sign: this greater-than sign} is at least {lo}"},"most":{"look":"The smaller side of {outline sign: this greater-than sign} can't hold the largest number"},"lesser":{"look":"{outline big: the outlined larger side} of {outline sign: this greater-than sign} is at most {hi}"}}},
+} as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
@@ -98,13 +104,22 @@ export interface SignBinding {
   small: number;
 }
 
-/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
-export interface SignSays {
-  terms: { big: number; small: number; lo: number; hi: number; };
+/** What a square the firing decides has of its own, read where it is made. */
+export interface SignSaysFact {
+  arm: "least" | "greater" | "most" | "lesser";
+  terms: { sign: readonly number[]; };
   marks: {  };
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; and `facts`, what each of its facts has of its own. */
+export interface SignSays {
+  terms: { big: number; small: number; lo: number; hi: number; };
+  marks: {  };
+  facts: SignSaysFact[];
+}
+
 const signFacts: number[] = [];
+const signFactSays: SignSaysFact[] = [];
 let signCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
@@ -126,48 +141,143 @@ export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding,
       freshBinding("sign", [(v_big === cl.greater.v[v_k]), (v_small === (sp.edgeEnds[2 * _t5] === _t6 ? sp.edgeEnds[2 * _t5 + 1] : sp.edgeEnds[2 * _t5]))], ["big =", "small ="]);
     }
     facts.length = 0;
+    signFactSays.length = 0;
     changed = false;
     let _q7 = true;
     Q8: {
-      for (let _m9 = b.domain; _m9 !== 0; _m9 &= _m9 - 1) {
-        const v_d = 31 - Math.clz32(_m9 & -_m9);
-        let _q10 = true;
-        Q11: {
-          for (let _m12 = (cands[v_small] >= 0 ? cands[v_small] : (cands[v_small] = b.cands[v_small])); _m12 !== 0; _m12 &= _m12 - 1) {
-            const v_d2 = 31 - Math.clz32(_m12 & -_m12);
-            if (!((v_d <= v_d2))) {
-              _q10 = false;
-              break Q11;
-            }
-          }
-        }
-        let _c13: boolean = !(_q10);
-        if (!_c13) {
-          if ((((b.cands[v_big] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_big, v_d); changed = true; } else facts.push(STRIKE, v_big, v_d); }
-          _c13 = true;
-        }
-        let _c18: boolean = _c13;
-        if (_c18) {
-          let _q14 = true;
-          Q15: {
-            for (let _m16 = (cands[v_big] >= 0 ? cands[v_big] : (cands[v_big] = b.cands[v_big])); _m16 !== 0; _m16 &= _m16 - 1) {
-              const v_d2 = 31 - Math.clz32(_m16 & -_m16);
-              if (!((v_d >= v_d2))) {
-                _q14 = false;
-                break Q15;
+      for (let _i9 = 0; _i9 < 2; _i9++) {
+        const v_c = _i9 === 0 ? v_big : v_small;
+        if (_i9 === 1 && (v_c === v_big)) continue;
+        const _h11 = (v_c === v_big);
+        const _h27 = (v_c === v_small);
+        for (let _m10 = b.domain; _m10 !== 0; _m10 &= _m10 - 1) {
+          const v_d = 31 - Math.clz32(_m10 & -_m10);
+          let _c15: boolean = _h11;
+          if (_c15) {
+            let _q12 = true;
+            Q13: {
+              for (let _m14 = (cands[v_small] >= 0 ? cands[v_small] : (cands[v_small] = b.cands[v_small])); _m14 !== 0; _m14 &= _m14 - 1) {
+                const v_d2 = 31 - Math.clz32(_m14 & -_m14);
+                if (!((v_d <= v_d2))) {
+                  _q12 = false;
+                  break Q13;
+                }
               }
             }
+            _c15 = _q12;
           }
-          let _c17: boolean = !(_q14);
-          if (!_c17) {
-            if ((((b.cands[v_small] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_small, v_d); changed = true; } else facts.push(STRIKE, v_small, v_d); }
-            _c17 = true;
+          let _c28: boolean = !(_c15);
+          if (!_c28) {
+            if ((((b.cands[v_c] >> v_d) & 1) !== 0)) {
+              if (fire === null) { b.strikeAt(v_c, v_d); changed = true; }
+              if (fire !== null) {
+                let _g16 = -1;
+                let _n18 = 0;
+                G17: {
+                  for (let _i19 = 0; _i19 < 2; _i19++) {
+                    const v_p = _i19 === 0 ? v_big : v_small;
+                    if (_i19 === 1 && (v_p === v_big)) continue;
+                    if (!((v_p !== v_c))) continue;
+                    if (++_n18 === 2) {
+                      _g16 = -1;
+                      break G17;
+                    }
+                    _g16 = v_p;
+                  }
+                }
+                let _c23: boolean = _h11;
+                if (_c23) {
+                  let _g20 = -1;
+                  G21: {
+                    for (let _m22 = (cands[v_small] >= 0 ? cands[v_small] : (cands[v_small] = b.cands[v_small])); _m22 !== 0; _m22 &= _m22 - 1) {
+                      const v_d2 = 31 - Math.clz32(_m22 & -_m22);
+                      if (_g20 === -1 || v_d2 < _g20) _g20 = v_d2;
+                    }
+                  }
+                  _c23 = (_g20 <= 1);
+                }
+                let _g24 = -1;
+                G25: {
+                  for (let _m26 = (cands[v_big] >= 0 ? cands[v_big] : (cands[v_big] = b.cands[v_big])); _m26 !== 0; _m26 &= _m26 - 1) {
+                    const v_d2 = 31 - Math.clz32(_m26 & -_m26);
+                    if (_g24 === -1 || v_d2 > _g24) _g24 = v_d2;
+                  }
+                }
+                const _fa = _c23 ? "least" : _h11 ? "greater" : (_g24 >= sp.w) ? "most" : _h27 ? "lesser" : null;
+                if (_fa === null) throw new Error("no arm of says fact holds");
+                facts.push(STRIKE, v_c, v_d);
+                signFactSays.push({ arm: _fa, terms: { sign: setOf(v_c, _g16).slice() }, marks: {  } });
+              }
+            }
+            _c28 = true;
           }
-          _c18 = _c17;
-        }
-        if (!(_c18)) {
-          _q7 = false;
-          break Q8;
+          let _c45: boolean = _c28;
+          if (_c45) {
+            let _c32: boolean = _h27;
+            if (_c32) {
+              let _q29 = true;
+              Q30: {
+                for (let _m31 = (cands[v_big] >= 0 ? cands[v_big] : (cands[v_big] = b.cands[v_big])); _m31 !== 0; _m31 &= _m31 - 1) {
+                  const v_d2 = 31 - Math.clz32(_m31 & -_m31);
+                  if (!((v_d >= v_d2))) {
+                    _q29 = false;
+                    break Q30;
+                  }
+                }
+              }
+              _c32 = _q29;
+            }
+            let _c44: boolean = !(_c32);
+            if (!_c44) {
+              if ((((b.cands[v_c] >> v_d) & 1) !== 0)) {
+                if (fire === null) { b.strikeAt(v_c, v_d); changed = true; }
+                if (fire !== null) {
+                  let _g33 = -1;
+                  let _n35 = 0;
+                  G34: {
+                    for (let _i36 = 0; _i36 < 2; _i36++) {
+                      const v_p = _i36 === 0 ? v_big : v_small;
+                      if (_i36 === 1 && (v_p === v_big)) continue;
+                      if (!((v_p !== v_c))) continue;
+                      if (++_n35 === 2) {
+                        _g33 = -1;
+                        break G34;
+                      }
+                      _g33 = v_p;
+                    }
+                  }
+                  let _c40: boolean = _h11;
+                  if (_c40) {
+                    let _g37 = -1;
+                    G38: {
+                      for (let _m39 = (cands[v_small] >= 0 ? cands[v_small] : (cands[v_small] = b.cands[v_small])); _m39 !== 0; _m39 &= _m39 - 1) {
+                        const v_d2 = 31 - Math.clz32(_m39 & -_m39);
+                        if (_g37 === -1 || v_d2 < _g37) _g37 = v_d2;
+                      }
+                    }
+                    _c40 = (_g37 <= 1);
+                  }
+                  let _g41 = -1;
+                  G42: {
+                    for (let _m43 = (cands[v_big] >= 0 ? cands[v_big] : (cands[v_big] = b.cands[v_big])); _m43 !== 0; _m43 &= _m43 - 1) {
+                      const v_d2 = 31 - Math.clz32(_m43 & -_m43);
+                      if (_g41 === -1 || v_d2 > _g41) _g41 = v_d2;
+                    }
+                  }
+                  const _fa = _c40 ? "least" : _h11 ? "greater" : (_g41 >= sp.w) ? "most" : _h27 ? "lesser" : null;
+                  if (_fa === null) throw new Error("no arm of says fact holds");
+                  facts.push(STRIKE, v_c, v_d);
+                  signFactSays.push({ arm: _fa, terms: { sign: setOf(v_c, _g33).slice() }, marks: {  } });
+                }
+              }
+              _c44 = true;
+            }
+            _c45 = _c44;
+          }
+          if (!(_c45)) {
+            _q7 = false;
+            break Q8;
+          }
         }
       }
     }
@@ -175,21 +285,22 @@ export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding,
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null) {
-        let _g19 = -1;
-        G20: {
-          for (let _m21 = (cands[v_small] >= 0 ? cands[v_small] : (cands[v_small] = b.cands[v_small])); _m21 !== 0; _m21 &= _m21 - 1) {
-            const v_d = 31 - Math.clz32(_m21 & -_m21);
-            if (_g19 === -1 || v_d < _g19) _g19 = v_d;
+        if (signFactSays.length * 3 !== facts.length) throw new Error("sign: a fact of its conclusion is made where says.fact is not read");
+        let _g46 = -1;
+        G47: {
+          for (let _m48 = (cands[v_small] >= 0 ? cands[v_small] : (cands[v_small] = b.cands[v_small])); _m48 !== 0; _m48 &= _m48 - 1) {
+            const v_d = 31 - Math.clz32(_m48 & -_m48);
+            if (_g46 === -1 || v_d < _g46) _g46 = v_d;
           }
         }
-        let _g22 = -1;
-        G23: {
-          for (let _m24 = (cands[v_big] >= 0 ? cands[v_big] : (cands[v_big] = b.cands[v_big])); _m24 !== 0; _m24 &= _m24 - 1) {
-            const v_d = 31 - Math.clz32(_m24 & -_m24);
-            if (_g22 === -1 || v_d > _g22) _g22 = v_d;
+        let _g49 = -1;
+        G50: {
+          for (let _m51 = (cands[v_big] >= 0 ? cands[v_big] : (cands[v_big] = b.cands[v_big])); _m51 !== 0; _m51 &= _m51 - 1) {
+            const v_d = 31 - Math.clz32(_m51 & -_m51);
+            if (_g49 === -1 || v_d > _g49) _g49 = v_d;
           }
         }
-        const _says = { terms: { big: v_big, small: v_small, lo: _g19, hi: _g22 }, marks: {  } };
+        const _says = { terms: { big: v_big, small: v_small, lo: _g46, hi: _g49 }, marks: {  }, facts: signFactSays.slice() };
         if (!fire({ k: v_k, big: v_big, small: v_small }, facts, _says)) return 1;
       }
       cands.fill(-1);

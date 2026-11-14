@@ -616,6 +616,10 @@ decides only how it reads. Sentences several games speak word for word are
 the engine's [`hint-text.ts`](../src/engine/hint-text.ts). Exemplar:
 `src/games/tracks/hint-text.ts`.
 
+- **A described technique may state its words in its description**
+  (`docs/descriptions.md` § "A firing's reason is built from its binding";
+  Unequal's `sign`), and its game then has no entry for it here. Moving a
+  game's sentences there is held to the same census as a move between files.
 - **Values arrive as the board means them, never as words.** An axis, a
   count, a direction constant: the plural, "both" at two, "a" or "an" and a
   direction's name are the text file's choices. A conclusion the deduction

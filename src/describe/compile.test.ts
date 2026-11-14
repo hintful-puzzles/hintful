@@ -240,6 +240,89 @@ describe("a technique states how its dearest read grows with the board", () => {
   });
 });
 
+describe("a stated clause names only what its technique states", () => {
+  const stated = (says: Record<string, unknown>): string =>
+    compileLibrary(
+      {
+        library: "t",
+        techniques: {
+          x: {
+            for: "c in cells where known(c), n = |{d in adj4(c) where known(d)}|",
+            conclude: "forall d in adj4(c): strike(d, 1) and strike(c, 2)",
+            says: {
+              terms: { n: "n", near: "adj4(c)" },
+              marks: { outline: "{c}" },
+              ...says,
+            },
+          },
+        },
+      },
+      "t",
+      "./runtime.ts",
+    );
+
+  it("so a number term, a lexicon word and a role it marks are said", () => {
+    expect(() =>
+      stated({
+        look: "{outline: the outlined {noun}} has {n} {shaded} {outline near: neighbor | neighbors}",
+        move: "{ring} must be {unshaded}",
+      }),
+    ).not.toThrow();
+  });
+
+  it.each([
+    ["a term it does not state", { look: "{m} is it" }, /says look says \{m\}/],
+    ["a set said as a number", { look: "{near} is it" }, /says look says \{near\}/],
+    ["a role it marks nothing in", { look: "{stripes} is it" }, /marks nothing in/],
+    [
+      "a number as a reference",
+      { look: "{outline n} is it" },
+      /n is no term of elements/,
+    ],
+    ["a word only a reference says", { look: "{each} is it" }, /says \{each\}/],
+    [
+      "a malformed slot",
+      { look: "{outline n: a | b | c} is it" },
+      /more than two forms/,
+    ],
+  ])("and refuses %s", (_, says, error) => {
+    expect(() => stated(says)).toThrow(error);
+  });
+
+  it("a fact's arm is read where the fact is made, and typed", () => {
+    const code = compileLibrary(
+      {
+        library: "t",
+        techniques: {
+          x: {
+            for: "c in cells where known(c)",
+            conclude: "forall d in adj4(c): strike(d, 1)",
+            says: {
+              terms: {},
+              marks: {},
+              fact: {
+                terms: { at: "d" },
+                arms: {
+                  across: {
+                    when: "x(d) = x(c)",
+                    look: "{outline at} is above or below",
+                  },
+                  beside: { when: "true", look: "{outline at} is beside" },
+                },
+              },
+            },
+          },
+        },
+      },
+      "t",
+      "./runtime.ts",
+    );
+    expect(code).toContain('arm: "across" | "beside";');
+    expect(code).toMatch(/const _fa = .* \? "across" : true \? "beside" : null;/);
+    expect(code).toContain("xFactSays.push({ arm: _fa, terms: { at: v_d }");
+  });
+});
+
 describe("a witness is written for a hint only", () => {
   const technique = (witness: boolean, reads = false) =>
     compileLibrary(

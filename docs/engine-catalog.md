@@ -92,6 +92,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `latin-notes.ts` — a Latin ladder run on the player's notes |
 | – `hint-words.ts` — a hint's words bound to its marks |
 | – `hint-text.ts` — the sentences several games share |
+| – `stated.ts` — a step's words as its description states them |
 | – `slide-planner.ts` — sliding-permutation search |
 | – `permutation-planner.ts` — a staged plan over any permutation moves |
 | – `position-store.ts` — the positions a breadth-first search reached |
@@ -993,6 +994,15 @@ Write every step's words through it. Exemplar:
   `testing/hint-binding.ts` holds the rendered frame to the words.
   `legendMarkdown` is the help's list of marks. See
   [`hints.md`](./hints.md) § "Bind the words to the marks".
+
+### `stated.ts` — a step's words as its description states them
+
+Read it when a technique states `look`, `follows` or `move` in its
+description. `stated-clauses.ts` is the clause grammar, which the compiler
+checks a description's clauses with, and `stated.ts` renders a clause over
+what a firing says into `hint-words.ts` references. See
+[`descriptions.md`](./descriptions.md) § "A firing's reason is built from its
+binding".
 
 ### `hint-text.ts` — the sentences several games share
 

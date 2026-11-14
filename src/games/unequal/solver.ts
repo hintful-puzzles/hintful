@@ -6,21 +6,16 @@
 
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { ADJTHAN, type ClueKind } from "../../engine/edge-clue-latin/state.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { compiledRung } from "../../engine/ladder-runtime.ts";
 import { type LatinReason, latinLadder } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import * as unequal from "./unequal.compiled.ts";
 
-/** Why a sign ruled a candidate out — the premise the hint narrates and
- * highlights, built from what `sign` says.
- *
- * Each carries the cell across the `>` sign (`ox`,`oy`) plus that cell's
- * binding value (`bound`, 1-based): for `greater` the smaller cell can be no
- * *less* than `bound`, so this cell must exceed it; for `lesser` the larger cell
- * can be no *more* than `bound`, so this cell must fall short of it. */
+/** Why a sign ruled a candidate out: the larger end (`greater`) or the
+ * smaller (`lesser`), with the premise `sign` states for that end. */
 export type UnequalReason =
-  | { kind: "greater"; ox: number; oy: number; bound: number }
-  | { kind: "lesser"; ox: number; oy: number; bound: number }
+  | { kind: "greater" | "lesser"; premise: Narration }
   /** The singles the hint plan reads off the working board. */
   | SingleReason;
 

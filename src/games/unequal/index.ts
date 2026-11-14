@@ -55,6 +55,7 @@ import {
   DIFF_EXTREME,
   diffFromLevel,
   diffToLevel,
+  displayChar,
   type EdgeClueMove,
   type EdgeClueParams,
   type EdgeClueState,
@@ -76,7 +77,7 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import {
   byCell,
@@ -92,7 +93,8 @@ import {
 } from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
-import { say } from "./hint-text.ts";
+import { statedParts } from "../../engine/stated.ts";
+import type { Point } from "../../engine/types.ts";
 import type { HintReason } from "./solver.ts";
 import { decodeParams, defaultParams, menu, SIGNS, validateParams } from "./state.ts";
 import * as unequal from "./unequal.compiled.ts";
@@ -104,17 +106,10 @@ import * as unequal from "./unequal.compiled.ts";
  * `o` is the grid order. The words, and how they read at the value extremes,
  * are [`hint-text.ts`](./hint-text.ts)'s. */
 function premise(reason: HintReason, marks: readonly Mark[], o: number): Premise {
-  // A sign deduction outlines the struck cell *and* the cell across the sign,
-  // so the player sees the pair.
-  const pair = (r: { ox: number; oy: number }) => ({
-    at: { x: marks[0].x, y: marks[0].y },
-    other: { x: r.ox, y: r.oy },
-  });
   switch (reason.kind) {
     case "greater":
-      return { premise: say.greater(pair(reason), reason.bound, o) };
     case "lesser":
-      return { premise: say.lesser(pair(reason), reason.bound, o) };
+      return { premise: reason.premise };
     // The generic Latin arms (dup / set) read identically to Keen's
     // — narrated once, shared.
     default:
@@ -133,24 +128,35 @@ function narrate(reason: HintReason, m: Mark, o: number): Sentence {
   }
 }
 
-/** A sign firing as legs, a cell each: the larger end's strikes held to the
- * least the smaller end can be, the smaller end's to the greatest the larger
- * can be. */
+/** A sign firing as legs, a cell each, each with the premise the description
+ * states for that end of the sign. */
 function signLegs(
   f: LadderFiring,
   o: number,
 ): Firing<EdgeClueMove, EdgeClueHint, HintReason> {
-  const { big, small, lo, hi } = (
-    f.reasons[0] as Said<unequal.SignBinding, unequal.SignSays>
-  ).says.terms;
-  const across = (c: number) => ({ ox: c % o, oy: (c / o) | 0 });
-  return byCell(strikesOf(f, o)).map((strike) => ({
-    strike,
-    reason:
-      strike[0].y * o + strike[0].x === big
-        ? { kind: "greater", ...across(small), bound: lo }
-        : { kind: "lesser", ...across(big), bound: hi },
-  }));
+  const { terms, facts } = (f.reasons[0] as Said<unequal.SignBinding, unequal.SignSays>)
+    .says;
+  const strikes = strikesOf(f, o);
+  const at = (c: number): Point => ({ x: c % o, y: (c / o) | 0 });
+  return byCell(strikes).map((strike) => {
+    const fact = facts[strikes.indexOf(strike[0])];
+    const { look } = statedParts(unequal.STATED.sign.fact[fact.arm], {
+      kind: CELL,
+      at,
+      ring: [],
+      marks: {},
+      terms: { ...terms, ...fact.terms },
+      value: (n) => displayChar(n, o),
+    });
+    if (look === undefined) throw new Error(`sign's ${fact.arm} states no look`);
+    return {
+      strike,
+      reason: {
+        kind: strike[0].y * o + strike[0].x === terms.big ? "greater" : "lesser",
+        premise: look,
+      },
+    };
+  });
 }
 
 /** Every rung an Unequal step can be: the Latin family's, and the kinds of

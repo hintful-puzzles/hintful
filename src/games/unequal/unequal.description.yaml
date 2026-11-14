@@ -101,14 +101,36 @@ techniques:
     rung: [greater, lesser]
     for: "k in clues(greater), big = v(k), small = lesser(k)"
     conclude: >-
-      forall d in domain:
-      ((forall d2 in cand(small): d <= d2) implies strike(big, d))
-      and ((forall d2 in cand(big): d >= d2) implies strike(small, d))
+      forall c in {big, small}, d in domain:
+      ((c = big and (forall d2 in cand(small): d <= d2)) implies strike(c, d))
+      and ((c = small and (forall d2 in cand(big): d >= d2)) implies strike(c, d))
     # The hint names the sign's two ends, and the bound each struck end is
-    # held to: the least the smaller end can be, the greatest the larger.
+    # held to: the least the smaller end can be, the greatest the larger. At
+    # the value's extreme the bound says nothing, so the sentence names the
+    # extreme instead.
     says:
-      terms: { big: big, small: small, lo: "min(d in cand(small))", hi: "max(d in cand(big))" }
+      terms:
+        big: big
+        small: small
+        lo: "min(d in cand(small))"
+        hi: "max(d in cand(big))"
       marks: {}
+      fact:
+        # The sign's two ends, the struck one first.
+        terms: { sign: "{c, the(p in {big, small} where p != c)}" }
+        arms:
+          least:
+            when: "c = big and min(d2 in cand(small)) <= 1"
+            look: "The larger side of {outline sign: this greater-than sign} can't hold the smallest number"
+          greater:
+            when: "c = big"
+            look: "{outline small: the outlined smaller side} of {outline sign: this greater-than sign} is at least {lo}"
+          most:
+            when: "max(d2 in cand(big)) >= order"
+            look: "The smaller side of {outline sign: this greater-than sign} can't hold the largest number"
+          lesser:
+            when: "c = small"
+            look: "{outline big: the outlined larger side} of {outline sign: this greater-than sign} is at most {hi}"
   - { use: latin.set, tier: Tricky, rung: set }
   - { use: latin.fish, tier: Hard, rung: set }
   - { use: latin.wing, tier: Hard, rung: wing }

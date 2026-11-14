@@ -206,7 +206,7 @@ export interface StatedTechnique {
 /** What a technique's hint step speaks of. `arms` splits the step by which
  * condition holds, first true winning, each arm adding its own terms and marks
  * to the shared ones (an arm's names win). */
-export interface StatedSays {
+export interface StatedSays extends StatedClauses {
   /** `each`: a step for every square the firing decides, each its own argument
    * (Light Up's discounts); `legs`, the same with the later squares continuing
    * the first (Sticks: a number's one reason over several squares); absent, one
@@ -221,19 +221,29 @@ export interface StatedSays {
   terms?: Record<string, string>;
   marks?: Partial<Record<SaidRole, string>>;
   /** What each square the firing decides has of its own, read where the
-   * conclusion's `place` or `strike` makes it. */
-  fact?: {
+   * conclusion's `place` or `strike` makes it. Its arms are tried there, in
+   * order, the first true one giving the square's step its clauses. */
+  fact?: StatedClauses & {
     terms?: Record<string, string>;
     marks?: Partial<Record<SaidRole, string>>;
+    arms?: Record<string, StatedClauses & { when: string }>;
   };
   arms?: Record<
     string,
-    {
+    StatedClauses & {
       when: string;
       terms?: Record<string, string>;
       marks?: Partial<Record<SaidRole, string>>;
     }
   >;
+}
+
+/** A step's words as a description states them: clauses with slots, which
+ * `engine/stated.ts` renders (docs/hints.md § "Writing the narration"). */
+export interface StatedClauses {
+  look?: string;
+  follows?: string;
+  move?: string;
 }
 
 /** The roles a technique's `says` marks elements in; the firing's facts are
@@ -547,12 +557,17 @@ export interface Says {
   fact: {
     terms: { name: string; expr: Expr }[];
     marks: { role: SaidRole; expr: Expr }[];
+    /** The clauses a square's step says, by arm: one unnamed arm where the
+     * fact has none; empty where the fact states no clauses. */
+    arms: { name: string | null; when: Expr | null; clauses: StatedClauses }[];
   } | null;
   variants: {
     name: string | null;
     when: Expr | null;
     terms: { name: string; expr: Expr }[];
     marks: { role: SaidRole; expr: Expr }[];
+    /** The step's stated words; `null` where it states none. */
+    clauses: StatedClauses | null;
   }[];
 }
 
@@ -678,13 +693,42 @@ export function parseTechnique(
   };
 }
 
+/** The clauses a part of a `says` states; `null` where it states none. */
+function clausesOf(part: StatedClauses): StatedClauses | null {
+  const { look, follows, move } = part;
+  if (look === undefined && follows === undefined && move === undefined) return null;
+  return {
+    ...(look === undefined ? {} : { look }),
+    ...(follows === undefined ? {} : { follows }),
+    ...(move === undefined ? {} : { move }),
+  };
+}
+
+function factArms(
+  fact: NonNullable<StatedSays["fact"]>,
+  at: (part: string, src: string) => Expr,
+): NonNullable<Says["fact"]>["arms"] {
+  if (fact.arms === undefined) {
+    const own = clausesOf(fact);
+    return own === null ? [] : [{ name: null, when: null, clauses: own }];
+  }
+  if (clausesOf(fact) !== null)
+    throw new SyntaxError("says fact: clauses go on its arms where it has arms");
+  return Object.entries(fact.arms).map(([name, arm]) => ({
+    name,
+    when: at(`says fact ${name} when`, arm.when),
+    clauses: clausesOf(arm) ?? {},
+  }));
+}
+
 function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr): Says {
   const variant = (
     name: string | null,
     when: Expr | null,
-    own: Pick<StatedSays, "terms" | "marks">,
+    own: Pick<StatedSays, "terms" | "marks"> & StatedClauses,
   ): Says["variants"][number] => {
     const { terms, marks } = own;
+    const words = clausesOf(own) ?? clausesOf(stated);
     const label = `says${name === null ? "" : ` ${name}`}`;
     return {
       name,
@@ -696,6 +740,7 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
       marks: (
         Object.entries({ ...stated.marks, ...marks }) as [SaidRole, string][]
       ).map(([role, src]) => ({ role, expr: at(`${label} ${role}`, src) })),
+      clauses: words,
     };
   };
   const witness = stated.witness === true;
@@ -713,6 +758,7 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
           marks: (Object.entries(stated.fact.marks ?? {}) as [SaidRole, string][]).map(
             ([role, src]) => ({ role, expr: at(`says fact ${role}`, src) }),
           ),
+          arms: factArms(stated.fact, at),
         };
   if (stated.arms === undefined)
     return { each, legs, witness, reads, fact, variants: [variant(null, null, {})] };

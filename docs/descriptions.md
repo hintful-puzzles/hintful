@@ -1051,7 +1051,19 @@ may be written (`outline: "with place(c, 1): run(c)"`). The module types it as
 sentence reads `spoken.facts` (each square of its step, with its own terms) and
 `spoken.outline`, which holds the firing's marks and those of the step's
 squares. The walk reads the facts' marks too. Only a cell game's `place` and
-`strike` read one; a fact made elsewhere throws. **A game whose placing techniques
+`strike` read one; a fact made elsewhere throws.
+
+**A technique may state its step's words**: `look`, `follows` and `move` on
+its `says`, on an arm, or on its `fact`, whose own `arms` (each a `when` read
+where the fact is made, in the conclusion's scope) pick a square's clauses by
+what holds there. A clause is whole, with slots, and its grammar is
+[`engine/stated-clauses.ts`](../src/engine/stated-clauses.ts)'s header; the
+compiler refuses a slot that names no number term, lexicon word, role the
+technique marks, or term of elements, and writes the clauses into the module
+as `STATED`, which [`engine/stated.ts`](../src/engine/stated.ts) renders over
+what a firing says. Where a sentence branches on which end of a relation a
+square is, restate the conclusion with that square as a `forall` binder, so a
+fact arm can name it (Unequal's `sign`: `forall c in {big, small}`). **A game whose placing techniques
 decide what the board already shows** (a bulb lights its lines, and a player
 crosses none) passes `consequences: false`, so a step asks only for its
 firing's squares. `describedFiringHint` also owns `refreshHintStep` (a step the

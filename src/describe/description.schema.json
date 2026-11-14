@@ -9,6 +9,11 @@
   "$defs": {
     "formula": { "type": "string", "minLength": 1, "description": "A formula." },
     "prose": { "type": "string", "minLength": 1, "description": "Markdown." },
+    "clause": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A part of a hint step's sentence, whole, with slots: `{term}`, `{word}`, `{role}`, `{role: one | several}`, `{role term: words}` (`engine/stated.ts`)."
+    },
     "rung": {
       "description": "The game's hint rungs a firing of this is recorded under, among its hintRungs: one, or several where one firing records under more than one (an Unequal sign's two ends).",
       "oneOf": [
@@ -62,6 +67,9 @@
               "type": "boolean",
               "description": "Report, with the firing, the elements whose marks its `for ... where` and `premise` read (`reads.cells`, `reads.edges`), for the engine to find what the firing rests on. Read on a hint's path only."
             },
+            "look": { "$ref": "#/$defs/clause" },
+            "follows": { "$ref": "#/$defs/clause" },
+            "move": { "$ref": "#/$defs/clause" },
             "terms": {
               "type": "object",
               "description": "Named values the step's sentence reads, by name.",
@@ -98,6 +106,24 @@
                     "strand": { "$ref": "#/$defs/formula" },
                     "reads": { "$ref": "#/$defs/formula" }
                   }
+                },
+                "look": { "$ref": "#/$defs/clause" },
+                "follows": { "$ref": "#/$defs/clause" },
+                "move": { "$ref": "#/$defs/clause" },
+                "arms": {
+                  "type": "object",
+                  "description": "Where a square's step reads differently by what holds where its fact is made: each arm a name, a condition read in the conclusion's scope, and the clauses it says; tried in order, the first true one winning.",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["when"],
+                    "properties": {
+                      "when": { "$ref": "#/$defs/formula" },
+                      "look": { "$ref": "#/$defs/clause" },
+                      "follows": { "$ref": "#/$defs/clause" },
+                      "move": { "$ref": "#/$defs/clause" }
+                    }
+                  }
                 }
               }
             },
@@ -110,6 +136,9 @@
                 "required": ["when"],
                 "properties": {
                   "when": { "$ref": "#/$defs/formula" },
+                  "look": { "$ref": "#/$defs/clause" },
+                  "follows": { "$ref": "#/$defs/clause" },
+                  "move": { "$ref": "#/$defs/clause" },
                   "terms": {
                     "type": "object",
                     "additionalProperties": { "$ref": "#/$defs/formula" }
