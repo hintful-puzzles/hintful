@@ -881,17 +881,7 @@ export const magnetsHint = describedEdgeHint<
   plan: PLAN_CAP,
   done: (m) => !m.grid.includes(0),
   step: stepOf,
-  say: {
-    single: sentence,
-    count: sentence,
-    oddGap: sentence,
-    marked: () => {
-      throw new Error("magnets hint: a hidden premise reached narration");
-    },
-    oneNeutral: sentence,
-    everyTile: sentence,
-    onlyEnd: sentence,
-  },
+  say: sentence,
 });
 
 // --- following the plan ---------------------------------------------------
