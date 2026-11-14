@@ -12,14 +12,18 @@ gate on `RungContext`: `satisfied` on `populated`, `packed` on `populated` and
   encoding) and a technique id, and says how a firing becomes legs, from the
   terms its `says` names. The engine fills the marks' candidates from the
   notes through the encoding, so no game writes that loop.
-- **The gate is read off the ladder.** A rung reading the notes always waits
-  for `populated`. A technique of a harder tier than the ladder's easiest
-  waits for `nothingEarlier`, which is the rule `docs/hints-candidates.md` §
-  "A rung of the game's own" already stated for a hand-written rung. Seismic's
-  `starve` (Normal) takes it; Abcd's `satisfied` (Easy) does not, as before.
-  Abcd's `runs` is Easy too, and its wrapper gated it by hand as "the solver's
-  last resort"; whether the tier rule may drop that is measured on Abcd before
-  it moves (task 1.3).
+- **The gate is read off the ladder's order.** A rung reading the notes
+  always waits for `populated`, and any technique but the ladder's first
+  waits for `nothingEarlier`, since the solver restarts from the top after
+  each firing and so reaches it only once those before it are spent. That
+  reproduces both games' hand-written gates: Abcd's `satisfied` (first) is
+  ungated, its `runs` and Seismic's `starve` gated.
+- **The tier was tried first and is not enough.** Gating only a technique of
+  a harder tier than the ladder's easiest left Abcd's `runs` (Easy, like its
+  single) ungated, and its walks changed: on the fingerprint's boards the
+  packed-stretch steps rose and the singles fell (one 6×9 board: packed 5 to
+  36, singles 49 to 18). The help calls `runs` the one idea that goes
+  further, so it would crowd out the plain rules.
 - **A plan with no recorder reads its hidden singles off the notes.** The
   recorder was the only source of hidden singles (`availablePlacements`), so
   `record` is now optional, and without it the walk's singles rung adds a
@@ -27,6 +31,12 @@ gate on `RungContext`: `satisfied` on `populated`, `packed` on `populated` and
   the notes are set up or under the implicit reading. Every Latin game will
   need this when its recorder goes; Abcd has no such region, so it is
   unchanged.
+
+## Abcd, moved (2026-11-14)
+
+Its wrappers are two `techniqueRung` calls; `legs` is handed the shown notes,
+which `packed`'s words read for the cells the line has left. Its walk
+fingerprint, pinned at the commit before, is unchanged.
 
 ## Seismic, moved (2026-11-14)
 

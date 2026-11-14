@@ -336,7 +336,7 @@ could take now, and the frontier chooses. Its duties:
   rungs certify. A recorded strike cannot do this, since the solver records
   the harder deduction only when the easier are spent; an own rung has to say
   so. `techniqueRung` takes both gates for a compiled technique, from its
-  tier.
+  place in the ladder.
 - **A hidden single of the game's own skips a cell whose notes are down to
   that value.** The shared classifier calls it naked, and the frontier would
   otherwise prefer the hidden one for its larger evidence.
@@ -500,9 +500,11 @@ of `findMistakes` in the same change.
   each to the game to make legs of, from what its `says` names. So what a
   step finds is the solver's technique by construction, and the soundness
   check is what holds it, not a test comparing two copies. The rung waits
-  for the setup, and a technique of a harder tier than the ladder's easiest
-  waits for every earlier rung to come up empty: the gate is read off the
-  ladder, so the game writes none.
+  for the setup, and any technique but the ladder's first waits for every
+  earlier rung to come up empty, as the solver reaches it only then: the
+  gate is read off the ladder's order, so the game writes none. The tier is
+  not enough: Abcd's `runs` is as easy as its single, and ungated it
+  crowds the singles out.
 - **The firing-replay audit has nothing to replay** on such a plan; the
   game's own hint test holds its technique to what it claims (Seismic's
   starved area against upstream's trial placement).

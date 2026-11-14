@@ -176,20 +176,19 @@ export interface NotesLadder {
  * notes when the mistake check vouches for them"), so a step is the solver's
  * technique by construction.
  *
- * It reads the notes, so it waits for the setup (`populated`). A technique of
- * a harder tier than the ladder's easiest waits for every earlier rung to come
- * up empty, as the solver reaches it only once the easier ones are spent; one
- * of the easiest tier competes on where the last step left off.
+ * It reads the notes, so it waits for the setup (`populated`). Any technique
+ * but the ladder's first waits for every earlier rung to come up empty, as
+ * the solver reaches it only once those before it are spent: by tier alone,
+ * Abcd's `runs`, as easy as its single, would crowd the singles out.
  */
 export function techniqueRung<M, H, R, Reason>(
   on: NotesLadder,
   id: string,
-  legs: (f: LadderFiring) => Firing<M, H, Reason> | null,
+  legs: (f: LadderFiring, shown: ArrayLike<number>) => Firing<M, H, Reason> | null,
 ): CandidateRung<M, H, R, Reason> {
-  const { entries } = on.ladder;
-  const entry = entries.find((e) => e.id === id);
-  if (entry === undefined) throw new Error(`no technique ${id} in the ladder`);
-  const last = entry.tier > Math.min(...entries.map((e) => e.tier));
+  const at = on.ladder.entries.findIndex((e) => e.id === id);
+  if (at < 0) throw new Error(`no technique ${id} in the ladder`);
+  const last = at > 0;
   const bit = on.enc.bit ?? ((n: number): number => 1 << n);
   return ({ populated, nothingEarlier, shown }) => {
     if (!populated || (last && !nothingEarlier)) return [];
@@ -203,7 +202,7 @@ export function techniqueRung<M, H, R, Reason>(
     }
     const out: Firing<M, H, Reason>[] = [];
     for (const f of techniqueFirings(on.ladder, id, m)) {
-      const legged = legs(f);
+      const legged = legs(f, shown);
       if (legged) out.push(legged);
     }
     return out;

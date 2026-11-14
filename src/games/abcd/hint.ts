@@ -9,8 +9,8 @@
  * records nothing: its rungs read the candidates the walk shows
  * (`RungContext.shown`), which is also what the player can check on screen.
  *
- * **Each rung is one firing of a compiled line technique** ({@link lineFirings}):
- * `satisfied` and `runs`, run on the letters placed and the notes shown. The
+ * **Each rung is a compiled line technique** (`techniqueRung`): `satisfied`
+ * and `runs`, run on the letters placed and the notes shown. The
  * description's `single` is the walk's naked single and its placement strikes
  * the walk's `reach`, so those two are the walk's own. The frontier chooses
  * which line goes next, so the order the ladder fires in never reaches the
@@ -29,10 +29,11 @@ import {
 } from "../../engine/candidate-hint.ts";
 import {
   CANDIDATE_RUNGS,
-  type CandidateRung,
   type Firing,
+  type NotesLadder,
   type PlanRung,
   runCandidatePlan,
+  techniqueRung,
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { rangeMask } from "../../engine/describe-runtime.ts";
@@ -41,9 +42,8 @@ import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { candidateConclusions } from "../../engine/hint-text.ts";
 import {
   CellMarks,
-  type Ladder,
+  type Firing as LadderFiring,
   type Said,
-  techniqueFirings,
 } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
@@ -154,31 +154,18 @@ function linesOf(p: AbcdParams): Line[] {
   return lines;
 }
 
-/**
- * The firings of the line technique `id` on the board the walk shows: the
- * letters placed, and each empty cell's notes as its candidates. Each is the
- * line, the letter, the line's number for it, and the cells it strikes or
- * places.
- */
-function lineFirings(
-  p: AbcdParams,
-  ladder: Ladder,
-  grid: Int8Array,
-  shown: ArrayLike<number>,
+/** A line technique's firing: the line, the letter, the line's number for it,
+ * and the cells it strikes or places. */
+function lineFiring(
+  { facts, reasons }: LadderFiring,
   id: "satisfied" | "runs",
-): { line: number; n: number; clue: number; cells: number[] }[] {
-  const m = new CellMarks(abcdSpace(p), rangeMask(1, p.n), grid);
-  for (let i = 0; i < grid.length; i++)
-    m.cands[i] = grid[i] ? 1 << grid[i] : shown[i] << 1;
-  return techniqueFirings(ladder, id, m).map(({ facts, reasons }) => {
-    const { L, d, v } = (reasons[0] as Said<unknown, SaysById[typeof id]>).says.terms;
-    const cells: number[] = [];
-    for (let i = 0; i < facts.length; i += 3) cells.push(facts[i + 1]);
-    return { line: L, n: d, clue: v, cells };
-  });
+): { line: number; n: number; clue: number; cells: number[] } {
+  const { L, d, v } = (reasons[0] as Said<unknown, SaysById[typeof id]>).says.terms;
+  const cells: number[] = [];
+  for (let i = 0; i < facts.length; i += 3) cells.push(facts[i + 1]);
+  return { line: L, n: d, clue: v, cells };
 }
 
-type Rung = CandidateRung<AbcdMove, AbcdHint, DeductionRecord, AbcdReason>;
 type AbcdFiring = Firing<AbcdMove, AbcdHint, AbcdReason>;
 
 export function buildSteps(
@@ -201,49 +188,54 @@ export function buildSteps(
     }
     return cells;
   };
-  const enc: NoteEncoding = {
-    bit: (n) => letterBit(n - 1),
+  const enc = {
+    bit: (n: number) => letterBit(n - 1),
     values: p.n,
     all: () => (1 << p.n) - 1,
-  };
+  } satisfies NoteEncoding;
 
-  // Both line rungs strike or place notes, so they wait for the setup; the
-  // runs technique is the solver's last resort, so it waits for the others.
   const lines = linesOf(p);
-  const ladder = abcdLadder(p, dealtOf(p, state.numbers));
-  const satisfied: Rung = ({ populated, shown }) =>
-    populated
-      ? lineFirings(p, ladder, grid, shown, "satisfied").map(
-          ({ line, n, clue, cells }): AbcdFiring => [
-            {
-              strike: cells.map((i) => ({ ...cellOf(i), n })),
-              reason: { kind: "satisfied", line: lines[line], n, clue },
-            },
-          ],
-        )
-      : [];
-  const packed: Rung = ({ populated, nothingEarlier, shown }) =>
-    populated && nothingEarlier
-      ? lineFirings(p, ladder, grid, shown, "runs").map(
-          ({ line: L, n, clue, cells }): AbcdFiring => {
-            const line = lines[L];
-            const placed = line.cells.filter((i) => grid[i] === n).length;
-            const open = line.cells.filter(
-              (i) => grid[i] === 0 && (shown[i] & letterBit(n - 1)) !== 0,
-            );
-            const reason: AbcdReason = {
-              kind: "packed",
-              line,
-              n,
-              need: clue - placed,
-              more: placed > 0,
-              only: cells.length === open.length,
-              open: open.map(cellOf),
-            };
-            return cells.map((i) => ({ place: { ...cellOf(i), n }, reason }));
-          },
-        )
-      : [];
+  const sp = abcdSpace(p);
+  const on: NotesLadder = {
+    ladder: abcdLadder(p, dealtOf(p, state.numbers)),
+    marks: () => new CellMarks(sp, rangeMask(1, p.n), grid),
+    enc,
+  };
+  const satisfied = techniqueRung<AbcdMove, AbcdHint, DeductionRecord, AbcdReason>(
+    on,
+    "satisfied",
+    (f): AbcdFiring => {
+      const { line, n, clue, cells } = lineFiring(f, "satisfied");
+      return [
+        {
+          strike: cells.map((i) => ({ ...cellOf(i), n })),
+          reason: { kind: "satisfied", line: lines[line], n, clue },
+        },
+      ];
+    },
+  );
+  const packed = techniqueRung<AbcdMove, AbcdHint, DeductionRecord, AbcdReason>(
+    on,
+    "runs",
+    (f, shown): AbcdFiring => {
+      const { line: L, n, clue, cells } = lineFiring(f, "runs");
+      const line = lines[L];
+      const placed = line.cells.filter((i) => grid[i] === n).length;
+      const open = line.cells.filter(
+        (i) => grid[i] === 0 && (shown[i] & letterBit(n - 1)) !== 0,
+      );
+      const reason: AbcdReason = {
+        kind: "packed",
+        line,
+        n,
+        need: clue - placed,
+        more: placed > 0,
+        only: cells.length === open.length,
+        open: open.map(cellOf),
+      };
+      return cells.map((i) => ({ place: { ...cellOf(i), n }, reason }));
+    },
+  );
 
   /** The line a step names, as its words mark it: striped, with its clue for
    * `n` the count the words read. */
@@ -264,7 +256,6 @@ export function buildSteps(
     autoClean,
     reading,
     label: "abcd hint plan",
-    record: () => [],
     // No region holds every letter or forbids a repeat: a line's rule is a
     // count, which the rungs read, and the no-touch rule is `reach`.
     regionsOf: () => [],

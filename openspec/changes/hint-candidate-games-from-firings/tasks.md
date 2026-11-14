@@ -4,7 +4,7 @@
 
 - [x] 1.1 Read Abcd's `hint.ts` wrappers (`satisfied`, `packed`) against `RungContext`, and decide what the engine takes from them (design § "The engine takes the gate")
 - [x] 1.2 Seismic's `starve`, moved from its recorder to the compiled firings, compared by a dump of every plan and by `seismic-hint.test.ts` (design § "Seismic, moved")
-- [ ] 1.3 Abcd onto `techniqueRung`: enroll it in `hint-walk-fingerprint.test.ts` first, then measure whether the tier gate may replace `packed`'s hand-written `nothingEarlier`
+- [x] 1.3 Abcd onto `techniqueRung`, enrolled in `hint-walk-fingerprint.test.ts` first; the tier gate could not replace `packed`'s `nothingEarlier`, the ladder's order can (design § "The engine takes the gate")
 
 ## 2. The rest
 

@@ -11,9 +11,11 @@ import { describe, expect, it } from "vitest";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { fingerprint, walkLines } from "./testing/hint-walk-fingerprint.ts";
 
-/** The games moved onto the engine's steps so far, and Slant, Loopy and Net,
+/** The games moved onto the engine's steps so far; Slant, Loopy and Net,
  * whose words are held while they move onto the fact graph
- * (`explain-a-firing-by-its-witness-and-parents` 3.4). */
+ * (`explain-a-firing-by-its-witness-and-parents` 3.4); and the candidate
+ * games, each enrolled before it moves onto its compiled firings
+ * (`hint-candidate-games-from-firings`). */
 const MOVED = [
   "unruly",
   "singles",
@@ -42,6 +44,8 @@ const MOVED = [
   "slant",
   "loopy",
   "net",
+  "abcd",
+  "seismic",
 ];
 
 /** The boards dealt a preset: more than one, so a rare rung is more likely met. */
