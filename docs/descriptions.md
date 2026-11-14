@@ -1077,7 +1077,12 @@ are `reads`, never a hook**, however far they lie from the binding (Pearl's
 square past the next, `set(other(x, j) over x in edges(j) where ...)`, and the
 piece of line a way would close, `through(...)`). Write a predicate only
 `reads` needs inline: a `define` added is part of every technique's
-statement, so each loses its soundness verdict, and `says` is not. The game's own `hintKeepTrack`
+statement, so each loses its soundness verdict, and `says` is not. **A
+change to what a firing reads is compared by
+[`research/hint-walk-dump/`](../research/hint-walk-dump/dump.test.ts)**, run
+here and in a worktree of `HEAD`: the hint-walk fingerprint's few boards miss
+a rare rung, and a wrong `reads` set on Pearl's `earlyThrough` passed every
+test while the dump moved 1,349 lines. The game's own `hintKeepTrack`
 stays: a bridge is drawn a drag at a time, which no fact is.
 
 **A technique whose words need what held says `witness: true`**: the
