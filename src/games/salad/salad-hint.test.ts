@@ -21,7 +21,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { narrate, premise, type SaladHint } from "./hint.ts";
 import { saladGame } from "./index.ts";
-import { recordSaladDeductions, saladSolution } from "./solver.ts";
+import { saladSolution } from "./solver.ts";
 import {
   CIRCLE,
   CROSS,
@@ -33,7 +33,6 @@ import {
   type SaladMove,
   type SaladParams,
   type SaladState,
-  scratchBoard,
   symbolChar,
 } from "./state.ts";
 
@@ -241,11 +240,15 @@ describe("salad hint — journeys and highlights", () => {
     let near = 0;
     let far = 0;
     for (const seed of ["h1", "h2", "h3"]) {
+      const clues = board(LETTERS, seed).borderclues;
       for (const step of walk(LETTERS, seed).steps) {
         if (step.rung !== "borderNear" && step.rung !== "borderFar") continue;
         const hl = step.highlights as SaladHint;
         // The premise is only visible if the clue itself is lit.
         expect(hl.clues.length).toBe(1);
+        // The far arm strikes the lit clue's own letter, the near arm others.
+        for (const m of hl.marks)
+          expect(m.n === clues[hl.clues[0]]).toBe(step.rung === "borderFar");
         expect(hl.area.length).toBeGreaterThan(0);
         const inArea = (t: { x: number; y: number }): boolean =>
           hl.area.some((a) => a.x === t.x && a.y === t.y);
@@ -611,33 +614,6 @@ describe("salad hint — the opener never destroys the player's own notes", () =
     // …where the player's own Mark-all deliberately resets it, as upstream does.
     const reset = saladGame.executeMove(narrowed, { type: "markAll" });
     expect(reset.pencil[i as number]).toBe(full.pencil[i as number]);
-  });
-});
-
-describe("salad hint — the recorder cannot reach the generator", () => {
-  it("recording leaves the board it was given untouched", () => {
-    // The recorder is gated off the generate/solve path, and nothing regenerates
-    // a board against a recording; this pins the narrower property that the
-    // recording run itself is pure on its input.
-    const state = board(LETTERS, "i1");
-    const b = scratchBoard(state);
-    const before = [Array.from(b.grid), Array.from(b.holes)];
-    recordSaladDeductions(b, DIFF_HARD);
-    expect([Array.from(b.grid), Array.from(b.holes)]).toEqual(before);
-  });
-
-  it("records the border deduction with the premise the narration cites", () => {
-    const state = board(LETTERS, "i2");
-    const { ops } = recordSaladDeductions(scratchBoard(state), DIFF_EASY);
-    const kinds = new Set(ops.map((o) => (o.reason as { kind: string }).kind));
-    expect(kinds.has("borderNear") || kinds.has("borderFar")).toBe(true);
-    for (const op of ops) {
-      const r = op.reason as { kind: string; clue?: number; clueVal?: number };
-      if (r.kind === "borderNear" || r.kind === "borderFar") {
-        expect(r.clue).toBeGreaterThanOrEqual(0);
-        expect(state.borderclues[r.clue as number]).toBe(r.clueVal);
-      }
-    }
   });
 });
 

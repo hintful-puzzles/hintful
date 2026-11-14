@@ -387,9 +387,10 @@ export interface CandidatePlan<
   /** The naked singles, where the game's differ from `nakedSingles` (Salad's
    * lone "might be empty" note is a marker, not a value). */
   singles?: () => readonly Mark[];
-  /** Whether a recorded placement is one the plan places (Salad's hole symbols
-   * are settled by markers instead). Default: all of them. */
-  placeable?: (op: R) => boolean;
+  /** Whether a placement, recorded or a hidden single the notes show, is one
+   * the plan places (Salad's hole symbol is settled by a marker instead).
+   * Default: all of them. */
+  placeable?: (m: Mark) => boolean;
   /** Which cells a recorded placement counts as already made in, where that
    * differs from `grid` (`availableFirings`). */
   placed?: () => ArrayLike<number>;
@@ -802,6 +803,7 @@ class CandidateWalk<
       const y = (i / w) | 0;
       for (const n of this.valuesIn(shown[i])) {
         if (shown[i] === this.bit(n)) break;
+        if (this.plan.placeable && !this.plan.placeable({ x, y, n })) continue;
         const region = regionsOf(x, y).find(
           (r): r is WholeRegion<Reg> =>
             r.holdsEvery &&

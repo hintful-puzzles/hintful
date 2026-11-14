@@ -90,6 +90,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `candidate-plan.ts` — the candidate-elimination plan walk |
 | – `hint-frontier.ts` — which available firing a plan takes next |
 | – `latin-hint.ts` — truthful Latin single classification |
+| – `latin-notes.ts` — a Latin ladder run on the player's notes |
 | – `hint-words.ts` — a hint's words bound to its marks |
 | – `hint-text.ts` — the sentences several games share |
 | – `slide-planner.ts` — sliding-permutation search |
@@ -972,6 +973,14 @@ that visibly holds several candidates. It throws on a placement that is
 neither, which is a strike the plan skipped. `availablePlacements` lists
 the recorded placements a plan could take now. The sentences are
 `hint-text.ts`'s.
+
+### `latin-notes.ts` — a Latin ladder run on the player's notes
+
+Reach for it when a Latin game's hint deduces from the notes rather than
+recording a solve. `latinNotesLadder` runs the game's ladder on
+`LatinSolver` marks over the walk's grid, and `latinStrikeRungs` makes the
+library's set, fish and wing rungs of the plan, so the game writes legs
+only for its own techniques. Exemplar: `src/games/salad/hint.ts`.
 
 ### `hint-words.ts` — a hint's words bound to its marks
 

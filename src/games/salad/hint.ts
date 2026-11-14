@@ -11,16 +11,18 @@
  * 1. **A square is settled by a marker, whose why is read off the board.** The
  *    cube places the hole symbol and strikes it, but the player settles a
  *    square with a cross or a ball, so each is a marker step whose *why* is
- *    re-derived from what the player can see: a line's counts first, then the
- *    square's own notes (only the X left, or the X gone). The cube's strike of
- *    the hole symbol from a line that holds all its empties is dropped, since
- *    the count says the same. Its other strikes of it (a set, a chain) are no
- *    count's to say, so they are strikes of the X note like any candidate's.
- * 2. **Only the border deduction needs to be recorded.** The generic rungs
- *    record their placements and strikes through the shared solver; the
- *    recorder is threaded through the ABC End View border scan alone
- *    (`solver.ts`), which is the one Salad deduction that strikes candidates the
- *    player holds notes for.
+ *    read off what the player can see: a line's counts first, then the
+ *    square's own notes (only the X left, or the X gone). A line that holds
+ *    all its empties is the count's to say, so no technique strikes its X
+ *    notes; a set's strike of one is a strike of the X note like any
+ *    candidate's.
+ * 2. **The strikes are the compiled techniques run on the notes.** The
+ *    mistake check vouches for the notes (`findMistakes` passes them to
+ *    `entryMistake`), so the plan records nothing: the border deduction and
+ *    the library's set, fish and wing run on the X note as the hole symbol's
+ *    candidate, with a cross the hole placed and a ball's X no candidate
+ *    (`techniqueRung`, docs/hints-candidates.md § "Deduce from the notes when
+ *    the mistake check vouches for them").
  * 3. **The walk terminates on {@link isComplete}, not "the grid is full".**
  *    A solved board legitimately leaves `order − nums` squares per line blank,
  *    so a fill-the-grid loop would never end.
@@ -46,13 +48,16 @@ import {
   regionReach,
 } from "../../engine/candidate-hint.ts";
 import {
+  type CandidateRung,
   evidenceOf,
   type Firing,
   LATIN_POPULATE_RUNGS,
   type Leg,
+  type NotesLadder,
   type PlanRung,
   populateThenClean,
   runLatinCandidatePlan,
+  techniqueRung,
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import {
@@ -68,17 +73,25 @@ import {
   type Premise,
 } from "../../engine/hint-text.ts";
 import type { Narration, Sentence } from "../../engine/hint-words.ts";
-import type { ConfinedLines } from "../../engine/latin.ts";
+import type { Said } from "../../engine/ladder-runtime.ts";
+import type { LatinSolver } from "../../engine/latin.ts";
 import { hiddenSingleLine, type SingleReasonUnder } from "../../engine/latin-hint.ts";
+import {
+  type LatinStrikeReason,
+  latinNotesLadder,
+  latinStrikeRungs,
+} from "../../engine/latin-notes.ts";
 import { noteEntryGesture } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
 import { CLUE, saladVocab, say } from "./hint-text.ts";
-import { type BorderReason, recordSaladDeductions } from "./solver.ts";
+import type * as salad from "./salad.compiled.ts";
+import { holeSymbol, repeatsFor, saladLadder } from "./solver.ts";
 import {
   borderScanFor,
   CIRCLE,
   CROSS,
   clueSide,
+  dealtOf,
   isComplete,
   KEY_CIRCLE,
   KEY_CROSS,
@@ -94,8 +107,30 @@ import {
 
 // --- reasons ---------------------------------------------------------------
 
+/** Why a border-clue elimination is forced, read off what the compiled
+ * `border` technique says. */
+type BorderReason =
+  /** Near the clue: the first square that could hold a symbol must hold the
+   * clue's, so every *other* symbol is ruled out of it. `skipped` counts the
+   * already-known-empty squares between the clue and this one. */
+  | { kind: "borderNear"; clue: number; clueVal: number; skipped: number }
+  /** Past the clue's reach: the clue's own symbol cannot sit this far in.
+   * `reach` is how many squares from the clue it may still sit (0-based), which
+   * starts at `order − nums` (the line's whole hole budget), is reduced by the
+   * `tightenedBy` empty squares already marked beyond it, and is cut off
+   * outright at `circleAt` if a square in between is known to hold a symbol. */
+  | {
+      kind: "borderFar";
+      clue: number;
+      clueVal: number;
+      reach: number;
+      holes: number;
+      tightenedBy: number;
+      circleAt: number | null;
+    };
+
 /** Why the hint's next step is forced. Salad's own arms, plus the generic Latin
- * ones it inherits from the shared solver (narrated by `narrateLatinReason`). */
+ * ones (narrated by `narrateLatinReason`). */
 export type SaladReason =
   | BorderReason
   /** A line already carries every empty square it may hold, so the rest of it
@@ -115,7 +150,7 @@ export type SaladReason =
   | { kind: "circleXNote"; count: number }
   | SingleReasonUnder<"populate">
   | { kind: "dup"; n: number; px: number; py: number }
-  | { kind: "set"; cells: readonly Cell[]; lines?: ConfinedLines };
+  | LatinStrikeReason;
 
 /** Every rung a Salad step can be: the Latin family's on the populate reading,
  * the only one Salad's plan walks (`buildSteps`'s `setUp`), and the kinds of
@@ -140,17 +175,6 @@ export type SaladRung = (typeof SALAD_RUNGS)[number];
 export interface SaladHint extends CandidateHighlights {
   clues: number[];
   ghost?: "cross" | "circle" | number;
-}
-
-type SaladOp = DeductionRecord & { reason: SaladReason };
-
-/** Whether a recorded strike of the hole symbol says only that its line already
- * holds every empty square it may: the cube's `repeatFull`, or the `dup` of a
- * hole placed where a line has one. `countHolesDone` teaches both, so neither
- * is one of {@link SaladReason}'s. */
-function lineHasItsHoles(reason: unknown): boolean {
-  const kind = (reason as { kind?: string }).kind;
-  return kind === "repeatFull" || kind === "dup";
 }
 
 // --- narration -------------------------------------------------------------
@@ -368,22 +392,6 @@ function startWorking(s: SaladState): Working {
   return w;
 }
 
-/**
- * The grid a recorded placement is judged made against — `availableFirings`'
- * and `nextPlace`'s "is this cell decided yet?". Salad is the first game where
- * that differs from the symbol grid: the cube places its hole symbol in a square
- * the player settles with an empty-square marker, and that square's grid entry
- * stays blank for ever, so judging by `grid` alone would leave the op permanently
- * unmade and hold back every strike whose premise reads that square.
- */
-function placedProbe(w: Working): Uint8Array {
-  const out = Uint8Array.from(w.grid);
-  for (let i = 0; i < out.length; i++) {
-    if (out[i] === 0 && w.holes[i] === CROSS) out[i] = 255;
-  }
-  return out;
-}
-
 /** The squares whose notes have come down to a single *symbol* — the move a
  * person makes next. The X-mark-only case is a *cross*, not a placement (see the
  * file header), and is handled by the marker pass. */
@@ -476,26 +484,92 @@ function cheapMarkers(w: Working, o: number, nums: number): MarkerFiring[] {
   return out;
 }
 
-/** Throw if the cube forces a marker the working board still lacks once every
- * recorded strike and placement is on it. No reason the plan can narrate
- * explains such a marker, so it rests on a strike the plan skipped: the marker
- * twin of `classifyPlacementInRegions`'s throw (docs/hints.md § "The quality bar",
- * rule 6). */
-function assertEveryMarkerExplained(
-  w: Working,
-  fixpointHoles: Uint8Array,
+/** The ladder run on the notes the walk shows, over its working board: the X
+ * note is the hole symbol's candidate, a cross is the hole placed, and a
+ * ball's square holds a symbol, so its X is no candidate. */
+function notesLadder(state: SaladState, w: Working): NotesLadder<LatinSolver> {
+  const { order: o, nums } = state;
+  const hole = holeSymbol(nums);
+  const allMarks = (1 << hole) - 1;
+  const symbolMarks = (1 << nums) - 1;
+  const on = latinNotesLadder(saladLadder(dealtOf({ ...state, ...w })), o, w.grid, {
+    repeats: repeatsFor(state),
+    enc: {
+      ...saladNotes(nums),
+      all: (i) => (w.holes[i] === CIRCLE ? symbolMarks : allMarks),
+    },
+  });
+  return {
+    ...on,
+    marks: () => {
+      const m = on.marks();
+      for (let i = 0; i < o * o; i++) if (w.holes[i] === CROSS) m.grid[i] = hole;
+      return m;
+    },
+  };
+}
+
+/** A border slot as the space numbers it (above each column, below each,
+ * left of each row, right of each), as Salad's clue array numbers it (top,
+ * left, bottom, right). */
+function clueOfSlot(slot: number, o: number): number {
+  const side = (slot / o) | 0;
+  return [0, 2, 1, 3][side] * o + (slot % o);
+}
+
+/** A border firing as legs: the clue's own letter struck past its reach, as
+ * one leg, and every other letter struck near the clue, a leg a square, in
+ * the order the technique strikes them. A square known to hold a letter cut
+ * the reach where it comes no later than the empties' reach does. */
+function borderLegs(
+  { facts, reasons }: { facts: readonly number[]; reasons: readonly object[] },
+  cl: salad.Dealt,
   o: number,
-): void {
-  for (let i = 0; i < o * o; i++) {
-    if (w.holes[i] !== 0 || w.grid[i] !== 0) continue;
-    const m = fixpointHoles[i];
-    if (m !== CROSS && m !== CIRCLE) continue;
-    throw new Error(
-      `hint plan: the ${m === CROSS ? "empty-square" : "letter"} marker at ` +
-        `(${i % o}, ${(i / o) | 0}) has no reason the notes show, so the plan ` +
-        "skipped a strike it rests on",
-    );
+): SaladFiring {
+  const { k, L, H, reach, stop } = (
+    reasons[0] as Said<salad.BorderBinding, salad.BorderSays>
+  ).says.terms;
+  const clue = clueOfSlot(cl.border.at[k], o);
+  const clueVal = cl.border.v[k];
+  const far: BorderReason = {
+    kind: "borderFar",
+    clue,
+    clueVal,
+    reach,
+    holes: H,
+    tightenedBy: H - reach,
+    circleAt: stop >= 0 && stop <= reach ? L[stop] : null,
+  };
+  const legs = new Map<number | "far", { strike: Mark[]; reason: BorderReason }>();
+  for (let j = 0; j < facts.length; j += 3) {
+    const c = facts[j + 1];
+    const n = facts[j + 2];
+    const key = n === clueVal ? "far" : c;
+    let leg = legs.get(key);
+    if (!leg) {
+      leg = {
+        strike: [],
+        reason:
+          key === "far"
+            ? far
+            : { kind: "borderNear", clue, clueVal, skipped: L.indexOf(c) },
+      };
+      legs.set(key, leg);
+    }
+    leg.strike.push({ x: c % o, y: (c / o) | 0, n });
   }
+  return [...legs.values()];
+}
+
+/** A firing's strikes, a leg a square: a set's sentence is one square's
+ * notes ({@link premise}). */
+function bySquare(marks: Mark[]): Mark[][] {
+  const out = new Map<string, Mark[]>();
+  for (const m of marks) {
+    const k = `${m.x},${m.y}`;
+    out.set(k, [...(out.get(k) ?? []), m]);
+  }
+  return [...out.values()];
 }
 
 /** Salad's dialect for the shared plan mechanics. The three canonical shapes map
@@ -663,9 +737,6 @@ function buildSteps(
     populated = true;
   };
 
-  /** The cube's markers, for the check that the plan explained every one. */
-  let holes: Uint8Array = new Uint8Array(0);
-
   // Notes are needed once the note-free rungs are spent, so fill them in — as
   // the player's own Mark-all move, once — then bulk-clear the candidates a
   // placed symbol already rules out, in one step, so the walk teaches real
@@ -694,66 +765,61 @@ function buildSteps(
     return true;
   });
 
-  runLatinCandidatePlan<SaladMove, SaladHint, SaladOp, SaladReason, "populate">({
-    w: o,
-    steps,
-    grid: w.grid,
-    pencil: w.pencil,
-    enc,
-    moves: saladCandidateMoves(nums),
-    autoClean,
-    label: "salad hint plan",
-    cap: o * o * (nums + 4) + 8,
-    finished: () => isComplete(board()),
-    // A strike of the hole symbol because its line holds all its empty squares
-    // is dropped: a count says the same as a marker step (file header, point
-    // 1), and teaching it twice would be noise. Every other strike of it is a
-    // strike of the X note. Hole *placements* are kept, because a strike whose
-    // premise reads a square the board has not settled yet still waits for it.
-    record: () => {
-      const rec = recordSaladDeductions(board(), state.diff);
-      holes = rec.holes;
-      return rec.ops.filter(
-        (op) => op.kind === "place" || op.n <= nums || !lineHasItsHoles(op.reason),
-      ) as SaladOp[];
+  const on = notesLadder(state, w);
+  const cl = dealtOf(board());
+  type Rung = CandidateRung<SaladMove, SaladHint, DeductionRecord, SaladReason>;
+  const border: Rung = techniqueRung(on, "border", (f) => borderLegs(f, cl, o));
+  const library: Rung[] = latinStrikeRungs<
+    SaladMove,
+    SaladHint,
+    DeductionRecord,
+    SaladReason
+  >(on, o, bySquare);
+
+  runLatinCandidatePlan<SaladMove, SaladHint, DeductionRecord, SaladReason, "populate">(
+    {
+      w: o,
+      steps,
+      grid: w.grid,
+      pencil: w.pencil,
+      enc,
+      moves: saladCandidateMoves(nums),
+      autoClean,
+      label: "salad hint plan",
+      cap: o * o * (nums + 4) + 8,
+      finished: () => isComplete(board()),
+      // The walk reads the outline and the stripes off the words; the clues they
+      // light are Salad's, read the same way.
+      placeWords: (m, reason) => {
+        const words = narrate(reason, m, state);
+        return { words, clues: cluesNamed(words), ghost: m.n };
+      },
+      strikeWords: (marks, reason) => {
+        const p = premise(reason, marks, state);
+        return { ...p, clues: cluesNamed(p.premise) };
+      },
+      setUp,
+      // The setup is Salad's own; the vocabulary still words the conclusions.
+      notes: { placedVerb: "placed", ...saladVocab(state.mode, nums) },
+      // The cheapest emptiness deductions: a line's counts, or a collapse onto
+      // the empty-square mark. Both need no notes beyond what is on screen, so a
+      // Number Ball board opens on them rather than on "pencil everything in".
+      // Then the strikes, in the ladder's order.
+      rungs: [
+        () => cheapMarkers(w, o, nums).map((f) => markerFiring(f, w, state)),
+        () => circledEmptyNotes(w, o, nums),
+        border,
+        ...library,
+      ],
+      // A lone "might be empty" note is a marker, not a symbol to place.
+      singles: () => nakedSymbols(w, o, nums),
+      // So is the last X a line's notes have room for.
+      placeable: (m) => m.n <= nums,
+      onPlace: (x, y) => {
+        w.holes[y * o + x] = CIRCLE;
+      },
     },
-    // The walk reads the outline and the stripes off the words; the clues they
-    // light are Salad's, read the same way.
-    placeWords: (m, reason) => {
-      const words = narrate(reason, m, state);
-      return { words, clues: cluesNamed(words), ghost: m.n };
-    },
-    strikeWords: (marks, reason) => {
-      const p = premise(reason, marks, state);
-      return { ...p, clues: cluesNamed(p.premise) };
-    },
-    // The far border arm names the clue's *symbol* and rules it out along a
-    // run, so it is one multi-square leg; everything else names *this square*.
-    strikeAxis: (op) =>
-      op.reason.kind === "borderFar"
-        ? `far:${op.n}`
-        : `${op.reason.kind}:${op.y * o + op.x}`,
-    setUp,
-    // The setup is Salad's own; the vocabulary still words the conclusions.
-    notes: { placedVerb: "placed", ...saladVocab(state.mode, nums) },
-    // The cheapest emptiness deductions: a line's counts, or a collapse onto
-    // the empty-square mark. Both need no notes beyond what is on screen, so a
-    // Number Ball board opens on them rather than on "pencil everything in".
-    rungs: [
-      () => cheapMarkers(w, o, nums).map((f) => markerFiring(f, w, state)),
-      () => circledEmptyNotes(w, o, nums),
-    ],
-    // A lone "might be empty" note is a marker, not a symbol to place.
-    singles: () => nakedSymbols(w, o, nums),
-    // The cube's hole symbols are settled by markers, never placed.
-    placeable: (op) => op.n <= nums,
-    placed: () => placedProbe(w),
-    onPlace: (x, y) => {
-      w.holes[y * o + x] = CIRCLE;
-    },
-    // Nothing further is deducible from here.
-    stuck: () => assertEveryMarkerExplained(w, holes, o),
-  });
+  );
   return steps;
 }
 

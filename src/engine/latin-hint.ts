@@ -19,43 +19,9 @@ import {
   type NoteEncoding,
   nextPlace,
 } from "./candidate-hint.ts";
-import type { NotesLadder } from "./candidate-plan.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
-import type { Ladder } from "./ladder-runtime.ts";
-import {
-  type ConfinedLines,
-  type LatinRepeats,
-  LatinSolver,
-  type LatinWingReason,
-} from "./latin.ts";
+import type { ConfinedLines, LatinWingReason } from "./latin.ts";
 import type { Point } from "./types.ts";
-
-/**
- * A Latin game's ladder as a plan that deduces from the notes runs it
- * (`techniqueRung`): fresh {@link LatinSolver} marks each time, holding the
- * values on the walk's working `grid` as it stands, so a technique of the
- * game's own reads the solver it reads on the solve path. A note is the
- * solver's value of the same number, up to `enc.values`, which defaults to
- * every symbol.
- */
-export function latinNotesLadder(
-  ladder: Ladder<LatinSolver>,
-  o: number,
-  grid: ArrayLike<number>,
-  opts: { repeats?: LatinRepeats | null; enc?: NoteEncoding } = {},
-): NotesLadder<LatinSolver> {
-  const repeats = opts.repeats ?? null;
-  const symbols = repeats ? o - repeats.times + 1 : o;
-  return {
-    ladder,
-    marks: () => {
-      const m = new LatinSolver(o, repeats, ladder.placing);
-      m.grid.set(grid);
-      return m;
-    },
-    enc: { ...opts.enc, values: opts.enc?.values ?? symbols },
-  };
-}
 
 /** A forced single placement, classified against the working board:
  * - `naked` — the cell's own candidates are exactly `{n}`;

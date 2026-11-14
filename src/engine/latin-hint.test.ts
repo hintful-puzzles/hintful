@@ -4,17 +4,12 @@
  * (the generic `latin.ts` solver records all three under one `single` reason).
  */
 import { describe, expect, it } from "vitest";
-import { type RungContext, techniqueRung } from "./candidate-plan.ts";
-import { STRIKE } from "./describe-runtime.ts";
 import { candidateConclusions, latinPremise, narrateLatinReason } from "./hint-text.ts";
 import { markKeys, type Narration } from "./hint-words.ts";
-import type { Firing as LadderFiring } from "./ladder-runtime.ts";
-import { LatinSolver, latinLadder } from "./latin.ts";
 import {
   classifyPlacement,
   classifyPlacementInRegions,
   hiddenSingleLine,
-  latinNotesLadder,
   singlePlacementReason,
 } from "./latin-hint.ts";
 
@@ -276,67 +271,5 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
     );
     expect(say.place(3)).toBe("must be 3");
     expect(say.keep([1, 5])).toBe("can only be 1 or 5");
-  });
-});
-
-describe("latinNotesLadder", () => {
-  const ladder = latinLadder<string, string, LatinSolver>(
-    {
-      ladder: [
-        { id: "latin.single", tier: 0 },
-        { id: "latin.wing", tier: 2 },
-      ],
-      placing: [{ id: "latin.placed" }],
-      striking: [],
-    },
-    {},
-  );
-  const context = (shown: ArrayLike<number>): RungContext<never, never> => ({
-    nothingEarlier: true,
-    placements: () => [],
-    ops: [],
-    populated: true,
-    shown,
-  });
-
-  it("runs a library technique on the notes, its reason built from what it says", () => {
-    // (1,0) is 2 or 3; if 2, (0,0) in its row is 1, and if 3, (1,1) in its
-    // column is 1. Either way (0,1), in line with both, cannot be 1.
-    const grid = new Int8Array(16);
-    const shown = new Int32Array(16).fill(0b11110);
-    shown[0] = 0b110;
-    shown[1] = 0b1100;
-    shown[5] = 0b1010;
-    const fired: LadderFiring[] = [];
-    const rung = techniqueRung<never, never, never, never, LatinSolver>(
-      latinNotesLadder(ladder, 4, grid),
-      "latin.wing",
-      (f) => {
-        fired.push(f);
-        return null;
-      },
-    );
-    rung(context(shown));
-    expect(fired.map((f) => [...f.facts])).toEqual([[STRIKE, 4, 1]]);
-    expect(fired[0].reasons[0]).toEqual({
-      kind: "wing",
-      n: 1,
-      middle: { x: 1, y: 0 },
-      ends: [
-        { x: 0, y: 0 },
-        { x: 1, y: 1 },
-      ],
-      self: false,
-    });
-  });
-
-  it("holds the values on the walk's grid as it stands when asked", () => {
-    const grid = new Int8Array(16);
-    const on = latinNotesLadder(ladder, 4, grid);
-    grid[6] = 3;
-    const m = on.marks();
-    expect(m).toBeInstanceOf(LatinSolver);
-    expect([...m.grid]).toEqual([...grid]);
-    expect(on.enc.values).toBe(4);
   });
 });

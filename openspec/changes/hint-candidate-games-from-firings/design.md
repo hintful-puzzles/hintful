@@ -99,3 +99,38 @@ the marks' type.
 Compared by `research/hint-walk-dump/` here and in a worktree of HEAD for the
 six Latin games whose walk fingerprint a set or fish step reaches (Adjacent,
 Group, Keen, Mathrax, Salad, Unequal): every dump is byte-identical.
+
+## Salad, moved (2026-11-14)
+
+The recorder (`recordSaladDeductions`) and the border's reason callback are
+gone; `border` says `k`, `L`, `H`, `reach` and `stop`, and the hint builds
+its near and far reasons from them. The library's rungs are
+`latinStrikeRungs`, in `engine/latin-notes.ts` with `latinNotesLadder`
+(apart from `latin-hint.ts`, which `candidate-plan.ts` imports, so as not
+to make an import cycle). Each game's own `legs` would have been the same
+three, so no Latin game writes them.
+
+- **The X note is the hole symbol's candidate, a cross the hole placed**
+  on the marks, and a ball's square has no X in its full set
+  (`NoteEncoding.all`), so a stray X the player left on a ball is no
+  candidate. `stop`, the first square that cannot be empty, is now read
+  off the notes too: a square whose notes have lost the X. That is the
+  same fact the cube's struck hole was, and the outlined square shows it.
+- **The walk's hidden singles leave out the X**: the last X a line's notes
+  have room for is a marker, which the counts take. `placeable` now takes
+  a mark and screens the hidden singles too.
+- **The check that every marker the cube forced was explained went** with
+  the cube it compared against (`assertEveryMarkerExplained`). Each board
+  finishing its walk (the dump below, the walk fingerprint) is what shows
+  a skipped strike now.
+
+Compared by `research/hint-walk-dump/` over the gate's three presets, 8
+boards each from four starting shares: every one of the 96 walks finishes,
+as at HEAD. The opening plans are the same up to the first hidden single
+the notes show before the cube placed it; from there the plans run on hidden
+singles where HEAD waited on the cube's naked ones and the line counts that
+followed them (steps over every plan: hidden singles 8564 to 22620, naked
+singles 35792 to 19144, line counts 35636 to 22692), and the plans are
+shorter (120968 lines against 153884). The border and set steps are near
+the same in number (border 11608 to 12972, set 3356 to 3380). The dump ran
+in 7 s against 10 s at HEAD.

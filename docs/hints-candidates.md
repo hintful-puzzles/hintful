@@ -466,9 +466,7 @@ When threading:
   is set, and only then.
 - **Record only the deduction whose premise the working board cannot
   recover.** A deduction the plan can re-derive from the board needs no
-  recorder, which keeps the gated surface small. Exemplar: the border scan
-  in [`salad/solver.ts`](../src/games/salad/solver.ts), the one function
-  Salad records.
+  recorder, which keeps the gated surface small.
 - **Record placements only; the walk recomputes each placement's cull** from
   `reach`, so a solver need not record `dup` strikes.
 - **More kinds of region mean a richer reason union and the game's own
@@ -508,11 +506,16 @@ of `findMistakes` in the same change.
   not enough: Abcd's `runs` is as easy as its single, and ungated it
   crowds the singles out.
 - **A Latin game's marks are a `LatinSolver`**: `latinNotesLadder`
-  (`engine/latin-hint.ts`) builds them over the walk's grid, so its own
+  (`engine/latin-notes.ts`) builds them over the walk's grid, so its own
   techniques read what they read when solving. The library's `set`, `fish`
-  and `wing` say their terms, and their rungs turn them into the
-  `LatinReason` that `latinPremise` narrates, so a firing's reason is the
-  same whether it was recorded or read off the notes.
+  and `wing` say their terms, and `latinStrikeRungs` makes each a rung whose
+  strikes carry the `LatinReason` that `latinPremise` narrates; the game
+  writes no legs for them.
+- **A marker the board shows beside its notes is seeded on the marks**
+  where the game builds them: Salad's cross is the hole symbol placed, and
+  a ball's square has the X outside its full set (`NoteEncoding.all`). A
+  hidden single the game settles another way than by placing (Salad's last
+  X) is kept out by the plan's `placeable`.
 - **A technique the walk already takes gets no rung**: the singles, the cull
   around a placement, and a hidden single in a region that holds every
   value (Rome's `onlyHome`, which the walk places where the recorder struck
@@ -528,7 +531,8 @@ of `findMistakes` in the same change.
 
 Exemplars: [`seismic/hint.ts`](../src/games/seismic/hint.ts),
 [`abcd/hint.ts`](../src/games/abcd/hint.ts),
-[`rome/hint.ts`](../src/games/rome/hint.ts).
+[`rome/hint.ts`](../src/games/rome/hint.ts),
+[`salad/hint.ts`](../src/games/salad/hint.ts) (a Latin game).
 
 ## A premise names everything its deduction reads
 

@@ -20,6 +20,15 @@ export const units: readonly string[] = ["rows","cols"];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "border" | "latin.hiddenSingle" | "latin.single" | "latin.set" | "latin.fish" | "latin.wing";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  border: BorderSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["border"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
 
@@ -131,10 +140,16 @@ export interface BorderBinding {
   stop: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface BorderSays {
+  terms: { k: number; L: readonly number[]; H: number; reach: number; stop: number; };
+  marks: {  };
+}
+
 const borderFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBinding> | null): number {
+export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBinding, BorderSays> | null): number {
   const _g18: number[] = [];
   const _g33: number[] = [];
   const facts = borderFacts;
@@ -254,7 +269,10 @@ export function border(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BorderBind
     if (!(_q55)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ k: v_k, L: v_L.slice(), H: v_H, f: v_f, reach: v_reach, stop: v_stop }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { k: v_k, L: v_L.slice(), H: v_H, reach: v_reach, stop: v_stop }, marks: {  } };
+        if (!fire({ k: v_k, L: v_L.slice(), H: v_H, f: v_f, reach: v_reach, stop: v_stop }, facts, _says)) return 1;
+      }
     }
   }
   return fired;

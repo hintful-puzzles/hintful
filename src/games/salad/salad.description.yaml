@@ -93,6 +93,11 @@ techniques:
       forall c in L, i = index(c, L):
       ((f < 0 or i <= f) implies (forall e in domain where e != v(k) and e <= nums: strike(c, e)))
       and (((stop >= 0 and i > stop) or i > reach) implies strike(c, v(k)))
+    # The hint names the clue, and for its own letter how far in the line's
+    # empties let it sit and where a square holding a letter stops it.
+    says:
+      terms: { k: k, L: L, H: H, reach: reach, stop: stop }
+      marks: {}
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
   - { use: latin.set, tier: Normal, rung: set }

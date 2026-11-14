@@ -29,7 +29,6 @@
  * the cube never recurses or follows a forcing chain at either tier.
  */
 
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { latinSpace } from "../../engine/describe-runtime.ts";
 import { type EntryBoard, entryMistake } from "../../engine/entry-mistakes.ts";
 import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
@@ -60,14 +59,14 @@ import {
 /** The cube's symbol for an empty square: one past the last real symbol. This
  * is also the value a solved working `grid` holds in an empty square, which is
  * why every reader of a solved grid tests `<= nums`. */
-function holeSymbol(nums: number): number {
+export function holeSymbol(nums: number): number {
   return nums + 1;
 }
 
 /** How the cube is told about the empty squares. With exactly one empty square
  * per line (`nums = order − 1`) the hole is an ordinary once-per-line symbol
  * and needs no declaration. */
-function repeatsFor(b: SaladBoard): LatinRepeats | null {
+export function repeatsFor(b: { order: number; nums: number }): LatinRepeats | null {
   const times = b.order - b.nums;
   return times >= 2 ? { times } : null;
 }
@@ -103,73 +102,11 @@ function markersFromCube(b: SaladBoard, grid: Uint8Array, cube: Uint8Array): voi
   }
 }
 
-// --- the ABC End View border deduction -------------------------------------
-
-/**
- * Why a border-clue elimination is forced — the premise Salad's hint narrates,
- * built from the compiled `border` technique's binding.
- */
-export type BorderReason =
-  /** Near the clue: the first square that could hold a symbol must hold the
-   * clue's, so every *other* symbol is ruled out of it. `skipped` counts the
-   * already-known-empty squares between the clue and this one. */
-  | { kind: "borderNear"; clue: number; clueVal: number; skipped: number }
-  /** Past the clue's reach: the clue's own symbol cannot sit this far in.
-   * `reach` is how many squares from the clue it may still sit (0-based), which
-   * starts at `order − nums` (the line's whole hole budget), is reduced by the
-   * `tightenedBy` empty squares already marked beyond it, and is cut off
-   * outright at `circleAt` if a square in between is known to hold a symbol. */
-  | {
-      kind: "borderFar";
-      clue: number;
-      clueVal: number;
-      reach: number;
-      holes: number;
-      tightenedBy: number;
-      circleAt: number | null;
-    };
-
-/** A border slot as the space numbers it (above each column, below each,
- * left of each row, right of each), as Salad's clue array numbers it (top,
- * left, bottom, right). */
-function clueOfSlot(slot: number, o: number): number {
-  const side = (slot / o) | 0;
-  return [0, 2, 1, 3][side] * o + (slot % o);
-}
-
-/** A border strike's reason: the clue's own letter struck past its reach,
- * any other letter near the clue. A square known to hold a letter cut the
- * reach where it comes no later than the empties' reach does. */
-function borderReason(
-  { k, L, H, reach, stop }: salad.BorderBinding,
-  cell: number,
-  n: number,
-  cl: salad.Dealt,
-  o: number,
-): BorderReason {
-  const clue = clueOfSlot(cl.border.at[k], o);
-  const clueVal = cl.border.v[k];
-  if (n !== clueVal)
-    return { kind: "borderNear", clue, clueVal, skipped: L.indexOf(cell) };
-  return {
-    kind: "borderFar",
-    clue,
-    clueVal,
-    reach,
-    holes: H,
-    tightenedBy: H - reach,
-    circleAt: stop >= 0 && stop <= reach ? L[stop] : null,
-  };
-}
-
-/** The ladder over the dealt board. No technique reads the balls, since a
- * ball is seeded as a strike. */
-function describedLadder(cl: salad.Dealt): Ladder<LatinSolver> {
-  return latinLadder(salad, {
-    border: compiledRung(salad.border, cl, (binding, cell, n, m) =>
-      borderReason(binding, cell, n, cl, m.sp.w),
-    ),
-  });
+/** The ladder over the dealt board: the ABC End View border deduction, then
+ * the library's. No technique reads the balls, since a ball is seeded as a
+ * strike. */
+export function saladLadder(cl: salad.Dealt): Ladder<LatinSolver> {
+  return latinLadder(salad, { border: compiledRung(salad.border, cl) });
 }
 
 // --- the driver ------------------------------------------------------------
@@ -189,22 +126,6 @@ function seedGridClues(solver: LatinSolver, b: SaladBoard): void {
   }
 }
 
-/** Seed the cube from a board's *confirmed markers* — the hint path's analog
- * of {@link seedGridClues}. A cross or ball is a real entry (Check & Save flags a
- * wrong one), so it is a fact the working cube may assume; the player's *pencil
- * notes* never are (docs/hints-candidates.md § "The recorder and the soundness
- * boundary"). Symbols need no seeding here because they sit in `b.grid`, which
- * `LatinSolver.alloc` places. */
-function seedMarkers(solver: LatinSolver, b: SaladBoard): void {
-  const o = b.order;
-  for (let i = 0; i < o * o; i++) {
-    const x = i % o;
-    const y = (i / o) | 0;
-    if (b.holes[i] === CROSS) placeCross(solver, b, x, y);
-    else if (b.holes[i] === CIRCLE) placeCircle(solver, b, x, y);
-  }
-}
-
 /** The shared config for a solve at `maxdiff` over `b`, seeded by `seed`. */
 function configFor(
   b: SaladBoard,
@@ -216,7 +137,7 @@ function configFor(
   return {
     repeats: repeatsFor(b),
     maxdiff,
-    ladder: describedLadder(cl),
+    ladder: saladLadder(cl),
     // Never search, by forcing chain or recursion: both tiers are pure
     // deduction (the guess-free policy).
     diffRecursive: DIFF_IMPOSSIBLE,
@@ -231,44 +152,6 @@ function configFor(
 /** The final candidate cube's size for `b` — `order² × symbols`. */
 function cubeSize(b: SaladBoard): number {
   return b.order * b.order * holeSymbol(b.nums);
-}
-
-/** What one recording run of the solver saw, from the player's board forward. */
-export interface SaladDeductions {
-  /** Every candidate cleared / cell placed, in solver order, each carrying the
-   * reason that forced it. Values run over `1..nums + 1`: an op with
-   * `n === nums + 1` concerns the empty-square symbol, whose player-visible
-   * note is the X mark (see `hint.ts` for which of those the plan teaches). */
-  ops: DeductionRecord[];
-  /** The marker array at the deduction fixpoint: which squares are forced empty
-   * ({@link CROSS}) or forced to hold a symbol ({@link CIRCLE}), read back off
-   * the cube. */
-  holes: Uint8Array;
-  /** The grid at the fixpoint, holes as {@link holeSymbol}. */
-  grid: Uint8Array;
-}
-
-/**
- * Run the solver over a copy of `b` at `maxdiff` with recording on, and report
- * everything it deduced (hint path only). Deductive only — both of Salad's tiers
- * pass `diffRecursive = DIFF_IMPOSSIBLE`, so there is nothing to cap.
- */
-export function recordSaladDeductions(b: SaladBoard, maxdiff: number): SaladDeductions {
-  const o = b.order;
-  const grid = b.grid.slice();
-  const holes = b.holes.slice();
-  const work: SaladBoard = { ...b, grid, holes };
-  const ops: DeductionRecord[] = [];
-  const cube = new Uint8Array(cubeSize(b));
-
-  latinSolver(grid, o, {
-    ...configFor(work, maxdiff, (solver) => seedMarkers(solver, work), cube),
-    recorder: (rec) => ops.push(rec),
-    budgetLabel: "salad hint",
-  });
-  markersFromCube(work, grid, cube);
-
-  return { ops, holes, grid };
 }
 
 /**
