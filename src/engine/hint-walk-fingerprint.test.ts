@@ -46,6 +46,17 @@ const MOVED = [
   "net",
   "abcd",
   "seismic",
+  "rome",
+  "salad",
+  "unequal",
+  "adjacent",
+  "keen",
+  "towers",
+  "group",
+  "solo",
+  "mathrax",
+  "undead",
+  "crossing",
 ];
 
 /** The boards dealt a preset: more than one, so a rare rung is more likely met. */
