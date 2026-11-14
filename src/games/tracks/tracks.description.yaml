@@ -148,7 +148,7 @@ techniques:
     conclude: "not on(c) and strike(c, 1)"
     says:
       terms: { c: c }
-      marks: {}
+      marks: { reads: "{c}" }
   # A track square with as many sides left as it still needs rails: the
   # track crosses every one.
   - id: bothSidesLeft
@@ -159,7 +159,7 @@ techniques:
     conclude: "|F| + drawn(c) = 2 and (forall y in F: place(edge(c, y), 1))"
     says:
       terms: { c: c }
-      marks: {}
+      marks: { reads: "{c}" }
   # A row or column with all the track squares its clue allows: the rest
   # hold none. One with more is inconsistent.
   - id: clueFull
@@ -168,7 +168,7 @@ techniques:
     conclude: "laid(L) = clue(count, L) and (forall c in O: strike(c, 1))"
     says:
       terms: { L: L }
-      marks: {}
+      marks: { reads: "cells(L)" }
   # A row or column with all the empty squares its clue allows: the rest
   # hold track. One with more is inconsistent.
   - id: clueExact
@@ -180,7 +180,7 @@ techniques:
       |cells(L)| - emptied(L) = clue(count, L) and (forall c in O: strike(c, 2))
     says:
       terms: { L: L }
-      marks: {}
+      marks: { reads: "cells(L)" }
   # An open side between two track squares the rails already join: crossing
   # it would close a loop.
   - id: closeLoop
@@ -193,7 +193,7 @@ techniques:
     conclude: "place(e, 2)"
     says:
       terms: { e: e, G: G }
-      marks: {}
+      marks: { reads: "{end1(e)} + G" }
   # An open side between two track squares the rails join to the track's
   # two ends: crossing it would finish the track, leaving a track square
   # off it.
@@ -209,7 +209,8 @@ techniques:
     conclude: "place(e, 2)"
     says:
       terms: { e: e, G: G, H: H }
-      marks: {}
+      # The side, and the track it would strand.
+      marks: { reads: "{end1(e)} + {c in cells where on(c) and c not in G and c not in H}" }
   # The same, where crossing it would finish the track short of a row's or
   # column's clue.
   - id: finishEarly
@@ -225,7 +226,15 @@ techniques:
     conclude: "place(e, 2)"
     says:
       terms: { e: e, G: G, H: H }
-      marks: {}
+      # The side, and the line the joined track would leave short: the first
+      # such column, or else the first such row, as the sentence names it.
+      marks:
+        reads: >-
+          {end1(e)} + set(c over
+          C = {L in cols where count(c in cells(L) where c in G or c in H) < clue(count, L)},
+          R = {L in rows where count(c in cells(L) where c in G or c in H) < clue(count, L)},
+          L in lines where (|C| > 0 and L = first(C)) or (|C| = 0 and L = first(R)),
+          c in cells(L))
   # A row or column two track squares short of its clue, besides its
   # finished ones, with one loose end running along it, and no square
   # unfinished in it that the track could cross it through: the loose end
@@ -246,7 +255,7 @@ techniques:
     conclude: "|Q| = 1 and (forall y in Q: place(edge(p, y), 1))"
     says:
       terms: { L: L }
-      marks: {}
+      marks: { reads: "cells(L)" }
   # A row or column one track square short of its clue: a square whose
   # only way on, were it track, is into the next square along the line
   # would take two, so it holds none.
@@ -260,7 +269,7 @@ techniques:
     conclude: "strike(p, 1)"
     says:
       terms: { L: L, p: p, q: q }
-      marks: {}
+      marks: { reads: "cells(L)" }
   # A row or column one empty square short of its clue: the same square
   # left empty would empty the next too, so the next holds track.
   - id: sharedFateEmpties
@@ -273,7 +282,7 @@ techniques:
     conclude: "strike(q, 2)"
     says:
       terms: { L: L, p: p, q: q }
-      marks: {}
+      marks: { reads: "cells(L)" }
   # An open side whose squares no other open side joins: the track crosses
   # into the block on one side of it as often as it leaves, its ends
   # counted, so the side carries track where the block's crossings so far
@@ -292,4 +301,4 @@ techniques:
     conclude: "(k mod 2 = 1 implies place(e, 1)) and (k mod 2 = 0 implies place(e, 2))"
     says:
       terms: { e: e, G: G }
-      marks: {}
+      marks: { reads: "{end1(e)} + G" }

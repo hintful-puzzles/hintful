@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/tracks/tracks.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE_EDGE, clueAt, cutEdges, edgeGroups, freshBinding, keptEdgeGroups, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, step, through, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, STRIKE_EDGE, addOnce, clueAt, cutEdges, edgeGroups, freshBinding, keptEdgeGroups, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, stamps, step, through, type Kept, union } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -224,7 +224,7 @@ export interface OneWayInBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface OneWayInSays {
   terms: { c: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const oneWayInFacts: number[] = [];
@@ -368,7 +368,7 @@ export function oneWayIn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneWayIn
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null) {
-        const _says = { terms: { c: v_c }, marks: {  } };
+        const _says = { terms: { c: v_c }, marks: { reads: setOf(v_c).slice() } };
         if (!fire({ c: v_c }, facts, _says)) return 1;
       }
     }
@@ -384,7 +384,7 @@ export interface BothSidesLeftBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface BothSidesLeftSays {
   terms: { c: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const bothSidesLeftFacts: number[] = [];
@@ -584,7 +584,7 @@ export function bothSidesLeft(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Bot
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { c: v_c }, marks: {  } };
+          const _says = { terms: { c: v_c }, marks: { reads: setOf(v_c).slice() } };
           if (!fire({ c: v_c, F: v_F.slice() }, facts, _says)) return 1;
         }
       }
@@ -601,7 +601,7 @@ export interface ClueFullBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ClueFullSays {
   terms: { L: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const clueFullFacts: number[] = [];
@@ -694,7 +694,7 @@ export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFull
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { L: v_L }, marks: {  } };
+          const _says = { terms: { L: v_L }, marks: { reads: sp.lineCells[v_L].slice() } };
           if (!fire({ L: v_L, O: v_O.slice() }, facts, _says)) return 1;
         }
         cands.fill(-1);
@@ -713,7 +713,7 @@ export interface ClueExactBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ClueExactSays {
   terms: { L: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const clueExactFacts: number[] = [];
@@ -836,7 +836,7 @@ export function clueExact(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueExa
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { L: v_L }, marks: {  } };
+          const _says = { terms: { L: v_L }, marks: { reads: sp.lineCells[v_L].slice() } };
           if (!fire({ L: v_L, O: v_O.slice() }, facts, _says)) return 1;
         }
       }
@@ -854,7 +854,7 @@ export interface CloseLoopBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface CloseLoopSays {
   terms: { e: number; G: readonly number[]; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const closeLoopFacts: number[] = [];
@@ -1048,7 +1048,7 @@ export function closeLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CloseLo
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { e: v_e, G: v_G.slice() }, marks: {  } };
+          const _says = { terms: { e: v_e, G: v_G.slice() }, marks: { reads: union(setOf(sp.edgeEnds[2 * v_e]), v_G).slice() } };
           if (!fire({ R: v_R.slice(), e: v_e, G: v_G.slice() }, facts, _says)) return 1;
         }
       }
@@ -1067,7 +1067,7 @@ export interface StrandBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface StrandSays {
   terms: { e: number; G: readonly number[]; H: readonly number[]; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const strandFacts: number[] = [];
@@ -1075,11 +1075,12 @@ const strandFacts: number[] = [];
 /** Its dearest read grows with the board as n^2. */
 export function strand(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StrandBinding, StrandSays> | null): number {
   const _g54: number[] = [];
+  const _g162: number[] = [];
   const facts = strandFacts;
   let fired = 0;
   let changed = false;
   const _k67 = exitsKept.board(cl);
-  const _m162_0 = b.made[0];
+  const _m178_0 = b.made[0];
   _g54.length = 0;
   G55: {
     const _a58 = sp.edges;
@@ -1090,8 +1091,8 @@ export function strand(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StrandBind
     }
   }
   const v_R = _g54;
-  const _m163_1 = b.made[1];
-  const _m164_2 = b.made[2];
+  const _m179_1 = b.made[1];
+  const _m180_2 = b.made[2];
   const _eg91 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a60 = sp.edges;
   R1:
@@ -1223,7 +1224,7 @@ export function strand(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StrandBind
         _c108 = _q99;
       }
       if (!(_c108)) break L92;
-      if (b.made[0] !== _m162_0 || b.made[1] !== _m163_1 || b.made[2] !== _m164_2) {
+      if (b.made[0] !== _m178_0 || b.made[1] !== _m179_1 || b.made[2] !== _m180_2) {
         const _now109 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
         if (!(_now109 === _eg91.of(sp.edgeEnds[2 * v_e]) || sameSet(_now109, _eg91.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
         const _now110 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e + 1]);
@@ -1370,7 +1371,28 @@ export function strand(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<StrandBind
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { e: v_e, G: v_G.slice(), H: v_H.slice() }, marks: {  } };
+          _g162.length = 0;
+          G163: {
+            const _a171 = sp.cells;
+            for (let _i172 = 0; _i172 < _a171.length; _i172++) {
+              const v_c = _a171[_i172];
+              let _c177: boolean = !(((b.edgeCand(v_c) >> 2) & 1) !== 0);
+              if (!_c177) {
+                let _g173 = 0;
+                G174: {
+                  const _a175 = sp.adj4[v_c];
+                  for (let _i176 = 0; _i176 < _a175.length; _i176++) {
+                    if (!(((b.grid[sp.adj4Edges[v_c][_i176]] || -1) === 1))) continue;
+                    _g173++;
+                  }
+                }
+                _c177 = ((_g173 + (_k67[v_c] ?? exits(sp, cl, v_c))) > 0);
+              }
+              if (!(((_c177 && !(_eg91.of(v_c) === v_G)) && !(_eg91.of(v_c) === v_H)))) continue;
+              _g162.push(v_c);
+            }
+          }
+          const _says = { terms: { e: v_e, G: v_G.slice(), H: v_H.slice() }, marks: { reads: union(setOf(sp.edgeEnds[2 * v_e]), _g162).slice() } };
           if (!fire({ R: v_R.slice(), e: v_e, G: v_G.slice(), H: v_H.slice() }, facts, _says)) return 1;
         }
       }
@@ -1389,19 +1411,23 @@ export interface FinishEarlyBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface FinishEarlySays {
   terms: { e: number; G: readonly number[]; H: readonly number[]; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const finishEarlyFacts: number[] = [];
+const finishEarly_st194 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
 export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FinishEarlyBinding, FinishEarlySays> | null): number {
   const _g53: number[] = [];
+  const _g160: number[] = [];
+  const _g195: number[] = [];
+  const _g210: number[] = [];
   const facts = finishEarlyFacts;
   let fired = 0;
   let changed = false;
   const _k66 = exitsKept.board(cl);
-  const _m160_0 = b.made[0];
+  const _m233_0 = b.made[0];
   _g53.length = 0;
   G54: {
     const _a57 = sp.edges;
@@ -1412,8 +1438,8 @@ export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Finis
     }
   }
   const v_R = _g53;
-  const _m161_1 = b.made[1];
-  const _m162_2 = b.made[2];
+  const _m234_1 = b.made[1];
+  const _m235_2 = b.made[2];
   const _eg90 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a59 = sp.edges;
   R1:
@@ -1543,7 +1569,7 @@ export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Finis
         _c107 = _q98;
       }
       if (!(_c107)) break L91;
-      if (b.made[0] !== _m160_0 || b.made[1] !== _m161_1 || b.made[2] !== _m162_2) {
+      if (b.made[0] !== _m233_0 || b.made[1] !== _m234_1 || b.made[2] !== _m235_2) {
         const _now108 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
         if (!(_now108 === _eg90.of(sp.edgeEnds[2 * v_e]) || sameSet(_now108, _eg90.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
         const _now109 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e + 1]);
@@ -1687,7 +1713,65 @@ export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Finis
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { e: v_e, G: v_G.slice(), H: v_H.slice() }, marks: {  } };
+          _g160.length = 0;
+          finishEarly_st194.pass++;
+          G161: {
+            _g195.length = 0;
+            G196: {
+              const _a203 = sp.cols;
+              for (let _i204 = 0; _i204 < _a203.length; _i204++) {
+                const v_L = _a203[_i204];
+                const _h209 = clueAt(cl.count, v_L);
+                let _g205 = 0;
+                G206: {
+                  const _a207 = sp.lineCells[v_L];
+                  for (let _i208 = 0; _i208 < _a207.length; _i208++) {
+                    const v_c = _a207[_i208];
+                    if (!(((_eg90.of(v_c) === v_G) || (_eg90.of(v_c) === v_H)))) continue;
+                    _g205++;
+                  }
+                }
+                if (!((_g205 < _h209))) continue;
+                _g195.push(v_L);
+              }
+            }
+            const v_C = _g195;
+            const _h227 = v_C.length;
+            const _h228 = (_h227 > 0);
+            const _h229 = (_h227 === 0);
+            _g210.length = 0;
+            G211: {
+              const _a218 = sp.rows;
+              for (let _i219 = 0; _i219 < _a218.length; _i219++) {
+                const v_L = _a218[_i219];
+                const _h224 = clueAt(cl.count, v_L);
+                let _g220 = 0;
+                G221: {
+                  const _a222 = sp.lineCells[v_L];
+                  for (let _i223 = 0; _i223 < _a222.length; _i223++) {
+                    const v_c = _a222[_i223];
+                    if (!(((_eg90.of(v_c) === v_G) || (_eg90.of(v_c) === v_H)))) continue;
+                    _g220++;
+                  }
+                }
+                if (!((_g220 < _h224))) continue;
+                _g210.push(v_L);
+              }
+            }
+            const v_R = _g210;
+            const _a225 = sp.lines;
+            for (let _i226 = 0; _i226 < _a225.length; _i226++) {
+              const v_L = _a225[_i226];
+              if (!(((_h228 && (v_L === (v_C.length > 0 ? v_C[0] : -1))) || (_h229 && (v_L === (v_R.length > 0 ? v_R[0] : -1)))))) continue;
+              const _a230 = sp.lineCells[v_L];
+              for (let _i231 = 0; _i231 < _a230.length; _i231++) {
+                const v_c = _a230[_i231];
+                const _t232 = v_c;
+                if (_g160.length < 16) { if (!_g160.includes(_t232)) _g160.push(_t232); } else addOnce(_g160, finishEarly_st194, _t232);
+              }
+            }
+          }
+          const _says = { terms: { e: v_e, G: v_G.slice(), H: v_H.slice() }, marks: { reads: union(setOf(sp.edgeEnds[2 * v_e]), _g160).slice() } };
           if (!fire({ R: v_R.slice(), e: v_e, G: v_G.slice(), H: v_H.slice() }, facts, _says)) return 1;
         }
       }
@@ -1707,7 +1791,7 @@ export interface LooseEndBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LooseEndSays {
   terms: { L: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const looseEndFacts: number[] = [];
@@ -1943,7 +2027,7 @@ export function looseEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LooseEnd
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { L: v_L }, marks: {  } };
+            const _says = { terms: { L: v_L }, marks: { reads: sp.lineCells[v_L].slice() } };
             if (!fire({ L: v_L, F: v_F.slice(), P: v_P.slice(), p: v_p, Q: v_Q.slice() }, facts, _says)) return 1;
           }
           cands.fill(-1);
@@ -1964,7 +2048,7 @@ export interface SharedFateBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SharedFateSays {
   terms: { L: number; p: number; q: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const sharedFateFacts: number[] = [];
@@ -2205,7 +2289,7 @@ export function sharedFate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shared
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { L: v_L, p: v_p, q: v_q }, marks: {  } };
+            const _says = { terms: { L: v_L, p: v_p, q: v_q }, marks: { reads: sp.lineCells[v_L].slice() } };
             if (!fire({ L: v_L, p: v_p, q: v_q }, facts, _says)) return 1;
           }
           cands.fill(-1);
@@ -2226,7 +2310,7 @@ export interface SharedFateEmptiesBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SharedFateEmptiesSays {
   terms: { L: number; p: number; q: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const sharedFateEmptiesFacts: number[] = [];
@@ -2488,7 +2572,7 @@ export function sharedFateEmpties(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { L: v_L, p: v_p, q: v_q }, marks: {  } };
+            const _says = { terms: { L: v_L, p: v_p, q: v_q }, marks: { reads: sp.lineCells[v_L].slice() } };
             if (!fire({ L: v_L, p: v_p, q: v_q }, facts, _says)) return 1;
           }
         }
@@ -2508,7 +2592,7 @@ export interface ParityBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ParitySays {
   terms: { e: number; G: readonly number[]; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const parityFacts: number[] = [];
@@ -2718,7 +2802,7 @@ export function parity(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ParityBind
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null) {
-        const _says = { terms: { e: v_e, G: v_G.slice() }, marks: {  } };
+        const _says = { terms: { e: v_e, G: v_G.slice() }, marks: { reads: union(setOf(sp.edgeEnds[2 * v_e]), v_G).slice() } };
         if (!fire({ O: v_O.slice(), e: v_e, G: v_G.slice(), k: v_k }, facts, _says)) return 1;
       }
     }

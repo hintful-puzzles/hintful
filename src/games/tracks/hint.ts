@@ -15,12 +15,10 @@
 import { PLACE, STRIKE_EDGE } from "../../engine/describe-runtime.ts";
 import {
   describedEdgeHint,
-  type EdgeSpoken,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { trackTargets } from "../../engine/hint-track.ts";
+import { keepTrackBy } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder, Taken } from "../../engine/ladder-runtime.ts";
 import {
@@ -64,18 +62,6 @@ import {
   type TracksState,
 } from "./state.ts";
 import * as tracks from "./tracks.compiled.ts";
-
-/**
- * A hard cap on how far ahead the plan is computed.
- *
- * A UX bound rather than a correctness one, and Tracks needs it more than most:
- * a 15x15 board is ~600 forced decisions from empty, and a player rarely
- * follows more than a handful before going their own way, at which point the
- * plan is recomputed anyway (Spokes and Bricks bound theirs the same way:
- * `engine/hint-plan.ts`). It also keeps `hint()` cheap enough to be called
- * after every move, which the cross-game resume walk does.
- */
-const PLAN_CAP = 40;
 
 // --- why a firing holds ---------------------------------------------------
 
@@ -346,19 +332,6 @@ function applyOps(b: Board, ops: readonly TracksOp[]): void {
   }
 }
 
-/** The squares a firing's premise reads, which a plan continues from: the
- * square it turns on, the squares and sides it cites, and the lines whose
- * clues it counts. A player follows the track through them. */
-function premise(b: Board, reason: TracksReason): number[] {
-  const { ev } = reason;
-  return [
-    ...("x" in reason ? [reason.y * b.w + reason.x] : []),
-    ...ev.cells,
-    ...ev.edges.map((e) => e >> 4),
-    ...ev.clues.flatMap((line) => lineSquares(b, line)),
-  ];
-}
-
 // --- the picture ----------------------------------------------------------
 
 /** One side of one square. */
@@ -560,29 +533,6 @@ interface TracksMarked {
   picture: TracksPicture;
 }
 
-/** Every technique's sentence is the one `narrate` says for its premise. */
-const sentence = (_spoken: unknown, { board, reason, picture }: TracksMarked) =>
-  narrate(board, reason, picture);
-
-const sentences: {
-  [K in keyof TracksSays]: (
-    spoken: EdgeSpoken<TracksSays[K]>,
-    marked: TracksMarked,
-  ) => Sentence;
-} = {
-  oneWayIn: sentence,
-  bothSidesLeft: sentence,
-  clueFull: sentence,
-  clueExact: sentence,
-  closeLoop: sentence,
-  strand: sentence,
-  finishEarly: sentence,
-  looseEnd: sentence,
-  sharedFate: sentence,
-  sharedFateEmpties: sentence,
-  parity: sentence,
-};
-
 /** A firing's step: the changes it makes, made on the hint's copy of the board
  * too, so the next firing's premise reads the board it leaves. Every firing is
  * shown: the description reads a square with a rail as track and a side its
@@ -645,11 +595,9 @@ export const tracksHint = describedEdgeHint<
   tiers: { lowest: (state) => state.diff, count: (state) => state.diff + 1 },
   roles: ROLES,
   done: (_marks, ctx) => ctx.finished(),
-  plan: PLAN_CAP,
-  // The squares the premise reads, on the board as it stands before the firing.
-  reads: (taken, ctx) => premise(ctx.board, premiseOf(ctx.board, taken)),
   step: stepOf,
-  say: sentences,
+  // Every technique's sentence is the one `narrate` says for its premise.
+  say: (_spoken, { board, reason, picture }) => narrate(board, reason, picture),
 });
 
 // --- following the plan ---------------------------------------------------
@@ -707,33 +655,24 @@ function flagChanges(before: Board, after: Board): Map<string, boolean> {
  * places them one click or one drag at a time, so the step is shrunk in place
  * to what is left and a later `executeHint` does not re-apply what is done.
  */
-export function tracksKeepTrack(
-  m: TracksMove,
-  step: HintStep<TracksMove>,
-  state: TracksState,
-): HintTrackVerdict {
-  if (m.solve) return "off";
-  const before = stateToBoard(state);
-  const after = stateToBoard(executeMove(state, m));
-  const { verdict, left } = trackTargets({
-    targets: step.move.ops,
-    changes: flagChanges(before, after),
-    key: (op) => opKey(before, op),
-    want: (op) => op.set,
-    holds: (op) => appliedIn(after, op) === op.set,
-  });
-  if (verdict !== "onTrack") return verdict;
-
-  step.move = { ops: left };
-  if (step.words) {
-    const kept = new Set(left.map((o) => PIECE.key(pieceOfOp(o))));
-    step.words = step.words.narrow(
-      (role, _kind, key) => role !== "ring" || kept.has(key),
-    );
-    step.explanation = step.words.text;
-  }
-  return "onTrack";
-}
+export const tracksKeepTrack = keepTrackBy<
+  TracksState,
+  TracksMove,
+  unknown,
+  TracksOp,
+  string,
+  boolean
+>({
+  foreign: (m) => m.solve === true,
+  execute: executeMove,
+  targets: (step) => step.move.ops,
+  changesOf: (before, after) => flagChanges(stateToBoard(before), stateToBoard(after)),
+  key: (op, state) => opKey(state, op),
+  want: (op) => op.set,
+  valueOf: (state, op) => appliedIn(stateToBoard(state), op),
+  narrowed: (_step, left) => ({ move: { ops: [...left] } }),
+  ring: (op) => PIECE.key(pieceOfOp(op)),
+});
 
 /** Is the flag this op names set on `b`? */
 function appliedIn(b: Board, op: TracksOp): boolean {

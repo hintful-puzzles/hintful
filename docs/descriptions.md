@@ -1075,7 +1075,9 @@ island read, `reads`), and what is an edge or a line (a group's bridges) is a
 term, which the game reads off its geometry. **The squares a premise reads
 are `reads`, never a hook**, however far they lie from the binding (Pearl's
 square past the next, `set(other(x, j) over x in edges(j) where ...)`, and the
-piece of line a way would close, `through(...)`). The game's own `hintKeepTrack`
+piece of line a way would close, `through(...)`). Write a predicate only
+`reads` needs inline: a `define` added is part of every technique's
+statement, so each loses its soundness verdict, and `says` is not. The game's own `hintKeepTrack`
 stays: a bridge is drawn a drag at a time, which no fact is.
 
 **A technique whose words need what held says `witness: true`**: the
