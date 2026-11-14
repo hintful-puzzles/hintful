@@ -13,26 +13,27 @@
  *   `CellRegion.holdsEvery` turned out to be `size === 4` — which is the
  *   description's `onlyHome` guard. A region of four squares must hold all
  *   four arrows; a smaller one only forbids repeats. That is exactly the
- *   distinction the engine's flag draws, so the dsf needed translating, not
- *   reasoning about.
+ *   distinction the engine's flag draws, so the walk's hidden single in such
+ *   an area is `onlyHome`, and the game writes no rung for it.
  * - **`NoteEncoding` fit a game whose values are bits**, near-identically:
  *   `bit` is a lookup and `values` is 4. What it was *missing* was a way to say
  *   what a blank square's full note set is, because Rome's is bounded by the
  *   grid edge and so differs square to square; that is now `NoteEncoding.all`.
- * - **The reachability techniques needed no rung slot of their own.** `loop`,
- *   `reach` and `onlyHome` all strike candidates, so all three are ordinary
- *   candidate eliminations whose *reason* happens to be a fact about a
- *   graph. Reachability is a premise, not a plan shape, and `plan.rungs` is
- *   unused here.
+ * - **The reachability techniques needed no rung shape of their own.** `loop`,
+ *   `reach`, `pair` and `opposite` all strike candidates, so each is an
+ *   ordinary strike whose *reason* happens to be a fact about a graph.
  *
- * ## Solving from the player's board, and why that is sound
+ * ## Deduced from the player's notes
  *
  * `candidateHint` refuses on any mistake, and Rome's `findMistakes` flags both
  * a placed arrow the solution disagrees with **and** a square whose marks have
  * crossed out its answer. So wherever this runs, every placed arrow is right
- * and every square's marks still hold its answer — which is what makes reading
- * a naked single off the player's own notes sound (docs/hints-candidates.md
- * § "Deduce from the notes when the mistake check vouches for them").
+ * and every square's marks still hold its answer, and the plan records
+ * nothing: the walk reads the singles off the notes it shows, and each of
+ * Rome's own strikes is the compiled technique run on them (`techniqueRung`,
+ * docs/hints-candidates.md § "Deduce from the notes when the mistake check
+ * vouches for them"). What a sentence names beyond the technique's terms (a
+ * loop's chain, a goal's group) is read off the arrows placed.
  */
 
 import {
@@ -45,27 +46,34 @@ import {
 } from "../../engine/candidate-hint.ts";
 import {
   CANDIDATE_RUNGS,
+  type CandidateRung,
   type DupReason,
+  type Firing,
+  type NotesLadder,
   type PlanRung,
   runCandidatePlan,
+  techniqueRung,
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
+import { describedSpace, rangeMask, step } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Premise } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import {
+  CellMarks,
+  type Firing as LadderFiring,
+  type Said,
+} from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
-import { type RomeReason, recordRomeDeductions } from "./solver.ts";
+import * as rome from "./rome.compiled.ts";
+import { dealtOf, romeLadder } from "./solver.ts";
 import {
-  DIFFCOUNT,
   DIR_COUNT,
   dirBit,
   dirValue,
-  FM_FIXED,
-  FM_GOAL,
   placedValues,
-  type RomeBoard,
   type RomeDir,
   type RomeMove,
   type RomeState,
@@ -104,20 +112,33 @@ export const romeCandidateMoves: CandidateMoveAdapter<RomeMove> = {
  * shade, the squares acted on, and the marks struck. */
 export type RomeHint = CandidateHighlights;
 
-/**
- * Why the plan's next step is forced: everything the solver records, plus the
- * one arm the plan synthesizes.
- *
- * The solver only ever *places* a naked single, so `hiddenSingle` is never
- * recorded — but the plan may reach a square before it has taken every strike
- * the solver took, and then the same placement is forced by its area instead.
- * Re-deriving which it is from the working board is the shared classifier's
- * whole job (docs/hints-candidates.md § "Re-derive a placement's why").
- */
+/** Why the plan's next step is forced. */
 type RomeHintReason =
-  | RomeReason
+  /** The square's notes have collapsed to one arrow. */
+  | { kind: "single" }
   | { kind: "regionsFull" }
-  | { kind: "hiddenSingle"; n: number; region: readonly number[] };
+  /** The only square of a four-square area left to take arrow `n`. */
+  | { kind: "hiddenSingle"; n: number; region: readonly number[] }
+  /** Pointing that way joins a chain of arrows that leads back here. `path` is
+   * that chain, from the square pointed at through to the square itself. */
+  | { kind: "loop"; path: readonly number[] }
+  /** The only arrow left anywhere that can point into `group`, the squares
+   * already leading to one goal. `reads` is every square bordering the group,
+   * whose marks show that none of the others can. */
+  | { kind: "reach"; group: readonly number[]; reads: readonly Point[] }
+  /** `(px, py)` can only point along this axis, and both its neighbors on it
+   * share its area, so a neighbor pointing back would close a two-square
+   * loop. */
+  | { kind: "opposite"; px: number; py: number }
+  /** Two squares of this area hold the same two arrows between them, so those
+   * two arrows are spent. `values` is carried because a sentence built from
+   * the struck marks would name only those the other squares still had. */
+  | {
+      kind: "pair";
+      pair: readonly number[];
+      values: readonly number[];
+      region: readonly number[];
+    };
 
 /** Every rung a Rome step can be: the walk's own, and the kinds of
  * {@link RomeHintReason}. */
@@ -127,7 +148,6 @@ export const ROME_RUNGS = [
   "regionsFull",
   "hiddenSingle",
   "loop",
-  "onlyHome",
   "reach",
   "opposite",
   "pair",
@@ -172,15 +192,8 @@ function premise(
     }
     // The walk back to this square *is* the premise; the arrows on its squares
     // give its order.
-    case "loop": {
-      const path = reason.path.map((i) => ({ x: i % w, y: (i / w) | 0 }));
-      return { premise: say.loop(path, n, at) };
-    }
-    case "onlyHome":
-      return {
-        premise: say.onlyHome(cellsOf(w, reason.region), at, [...reason.only]),
-        struck: say.onlyHomeStruck,
-      };
+    case "loop":
+      return { premise: say.loop(cellsOf(w, reason.path), n, at) };
     case "reach":
       return {
         premise: say.reach(cellsOf(w, reason.group), at),
@@ -209,28 +222,17 @@ function premise(
 
 /** The two arrows a square restricted to one axis may take — the premise an
  * `opposite` firing rests on, derived from the struck direction rather than
- * carried, because the rung only ever fires on an exact axis pair. */
+ * carried, because the technique only fires on an exact axis pair. */
 function axisOf(n: number): number[] {
   return n <= 2 ? [1, 2] : [3, 4];
 }
 
-/** The board the recording solver runs on: the puzzle's clues and goals, plus
- * every arrow the plan has placed on its working grid so far. */
-function boardOf(state: RomeState, grid: Uint8Array): RomeBoard {
-  const { w, h, regions } = state;
-  const out: RomeBoard = {
-    w,
-    h,
-    regions,
-    grid: new Int32Array(grid.length),
-    pencil: new Int32Array(grid.length),
-  };
-  for (let i = 0; i < grid.length; i++) {
-    out.grid[i] =
-      (state.grid[i] & (FM_FIXED | FM_GOAL)) |
-      (grid[i] > 0 && grid[i] <= DIR_COUNT ? dirBit(grid[i]) : 0);
-  }
-  return out;
+/** The terms a firing of technique `id` says (`says` in the description). */
+function termsOf<K extends keyof rome.SaysById>(
+  f: LadderFiring,
+  _id: K,
+): rome.SaysById[K]["terms"] {
+  return (f.reasons[0] as Said<unknown, rome.SaysById[K]>).says.terms;
 }
 
 export function buildSteps(
@@ -244,7 +246,99 @@ export function buildSteps(
   const regionsOf = romeRegions(state);
   const areaOf = (x: number, y: number): readonly number[] =>
     Array.from(regionsOf(x, y)[0].cells);
-  const enc = romeNotes(w, h);
+  const enc = { ...romeNotes(w, h), values: DIR_COUNT };
+  const dl = dealtOf(state);
+  const sp = describedSpace(rome.units, w, h);
+  const on: NotesLadder = {
+    ladder: romeLadder(dl),
+    marks: () => new CellMarks(sp, rangeMask(1, DIR_COUNT + 1), grid),
+    enc,
+  };
+  const cellOf = (i: number): Point => ({ x: i % w, y: (i / w) | 0 });
+  const isArrow = (i: number): boolean => grid[i] >= 1 && grid[i] <= DIR_COUNT;
+  /** Where following the arrows placed from `from` stops: a goal, or a square
+   * with no arrow yet. */
+  const chainEnd = (from: number): number => {
+    let at = from;
+    for (let n = 0; isArrow(at) && n < grid.length; n++) {
+      const next = step(sp, at, grid[at]);
+      if (next < 0) break;
+      at = next;
+    }
+    return at;
+  };
+  /** The squares from `from` along the arrows placed to `to`, both included:
+   * the chain a loop sentence names. */
+  const arrowPath = (from: number, to: number): number[] => {
+    const path: number[] = [];
+    for (
+      let at = from;
+      at >= 0 && path.length <= grid.length;
+      at = step(sp, at, grid[at])
+    ) {
+      path.push(at);
+      if (at === to) return path;
+      if (!isArrow(at)) break;
+    }
+    throw new Error("rome: a loop with no chain back to its square");
+  };
+  /** A firing's facts, as the marks it strikes. */
+  const struck = (f: LadderFiring): Mark[] => {
+    const out: Mark[] = [];
+    for (let k = 0; k < f.facts.length; k += 3)
+      out.push({ ...cellOf(f.facts[k + 1]), n: f.facts[k + 2] });
+    return out;
+  };
+
+  type Rung = CandidateRung<RomeMove, RomeHint, DeductionRecord, RomeHintReason>;
+  type RomeFiring = Firing<RomeMove, RomeHint, RomeHintReason>;
+  const rung = (
+    id: keyof rome.SaysById,
+    legs: (f: LadderFiring, shown: ArrayLike<number>) => RomeFiring | null,
+  ): Rung =>
+    techniqueRung<RomeMove, RomeHint, DeductionRecord, RomeHintReason>(on, id, legs);
+
+  const loop = rung("loop", (f) => {
+    const { c, q } = termsOf(f, "loop");
+    return [{ strike: struck(f), reason: { kind: "loop", path: arrowPath(q, c) } }];
+  });
+  const pair = rung("pair", (f, shown) => {
+    const { r, a, b } = termsOf(f, "pair");
+    const values: number[] = [];
+    for (let d = 1; d <= DIR_COUNT; d++) if (shown[a] & dirBit(d)) values.push(d);
+    return [
+      {
+        strike: struck(f),
+        reason: { kind: "pair", pair: [b, a], values, region: dl.area.cells[r] },
+      },
+    ];
+  });
+  const reach = rung("reach", (f) => {
+    const { p, d } = termsOf(f, "reach");
+    const goal = chainEnd(step(sp, p, d));
+    const group: number[] = [];
+    for (let c = 0; c < grid.length; c++) if (chainEnd(c) === goal) group.push(c);
+    const border = new Set<number>();
+    for (const i of group)
+      for (const j of sp.adj4[i]) if (!group.includes(j)) border.add(j);
+    return [
+      {
+        strike: struck(f),
+        reason: { kind: "reach", group, reads: [...border].map(cellOf) },
+      },
+    ];
+  });
+  // Each neighbor pointed back into the two-way square is its own step.
+  const opposite = rung("opposite", (f) => {
+    const { c } = termsOf(f, "opposite");
+    const reason: RomeHintReason = { kind: "opposite", ...pointOf(c, w) };
+    const bySquare = new Map<number, Mark[]>();
+    for (const m of struck(f)) {
+      const i = m.y * w + m.x;
+      bySquare.set(i, [...(bySquare.get(i) ?? []), m]);
+    }
+    return [...bySquare.values()].map((strike) => ({ strike, reason }));
+  });
 
   runCandidatePlan<RomeMove, RomeHint, DeductionRecord, RomeHintReason, CellRegion>({
     w,
@@ -256,13 +350,9 @@ export function buildSteps(
     autoClean,
     reading,
     label: "rome hint plan",
-    // Every rung, not the puzzle's own tier — which a `RomeState` does not
-    // carry anyway. Upstream's gating is by ladder position, so a rung above a
-    // board's tier can only run once everything easier is exhausted, which on a
-    // board solvable at its tier never happens before it is finished.
-    // `solutionGrid` reads the ladder the same way.
-    record: () => recordRomeDeductions(boardOf(state, grid), DIFFCOUNT),
     regionsOf,
+    // The ladder's order: a technique waits for every one before it.
+    rungs: [loop, pair, reach, opposite],
     singleReason: (n, why) => {
       switch (why.kind) {
         case "naked":
@@ -276,11 +366,6 @@ export function buildSteps(
     placeWords: (m, reason) => ({ words: narrate(reason, m, w) }),
     strikeWords: (struck, reason) => premise(reason, struck, w, areaOf),
     conclude: say.conclude,
-    // Every deduction here is about one square, so a firing's strikes stay
-    // together; only the `pair` rung reaches several, and its sentence speaks
-    // for the whole area at once.
-    strikeAxis: (op) =>
-      (op.reason as RomeHintReason).kind === "pair" ? null : op.y * w + op.x,
     notes: {
       populate: say.populate,
       cleanObvious: say.cleanObvious,
@@ -289,6 +374,11 @@ export function buildSteps(
   });
   return steps;
 }
+
+const pointOf = (i: number, w: number): { px: number; py: number } => ({
+  px: i % w,
+  py: (i / w) | 0,
+});
 
 /** Classify a player move against the displayed step (shared bookkeeping, in
  * Rome's move dialect). */

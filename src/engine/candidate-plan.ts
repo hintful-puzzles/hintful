@@ -195,9 +195,11 @@ export function techniqueRung<M, H, R, Reason>(
     const m = on.marks();
     for (let i = 0; i < m.cands.length; i++) {
       let cands = 0;
+      // A note the cell's full set lacks (Rome's arrow off the board) is no
+      // candidate: the player may write it, and no technique may read it.
+      const notes = shown[i] & (on.enc.all?.(i) ?? ~0);
       if (m.grid[i]) cands = 1 << m.grid[i];
-      else
-        for (let n = 1; n <= on.enc.values; n++) if (shown[i] & bit(n)) cands |= 1 << n;
+      else for (let n = 1; n <= on.enc.values; n++) if (notes & bit(n)) cands |= 1 << n;
       m.cands[i] = cands;
     }
     const out: Firing<M, H, Reason>[] = [];

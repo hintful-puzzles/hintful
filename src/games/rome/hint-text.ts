@@ -154,12 +154,6 @@ export const say = {
       : phrase`${mark.as("outline", CELL, arrows, `The arrows from the square ${neighbor(n)}`)} lead back to ${here(at)}`;
   },
 
-  /** A four-square area, `region`, with only one home left for an arrow, seen
-   * as the elimination of that square's other marks. */
-  onlyHome: (region: readonly Point[], at: Point, only: number[]): Narration =>
-    phrase`${itsArea(region)} must hold all four arrows, and only ${here(at)} can still point ${joinOr(only.map(arrow))}`,
-  onlyHomeStruck: "its other marks",
-
   /** The one candidate anywhere that can still grow a goal's `group`, and what
    * its strike calls the square's other marks. The mark kept is in square
    * `at`, which its struck marks show. */

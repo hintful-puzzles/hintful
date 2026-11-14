@@ -51,3 +51,21 @@ finishes, and from the start the plans hold 2611 steps against 2588 at HEAD,
 the same rungs in near the same numbers (a few more hidden singles and
 starved areas, a few fewer naked singles). The dump ran in 4.5 s against
 12 s at HEAD.
+
+## Rome, moved (2026-11-14)
+
+The recorder (`recordRomeDeductions`) and the ladder's reason callbacks are
+gone. `loop`, `pair`, `reach` and `opposite` say their binding's cells, and
+each is a `techniqueRung` in the ladder's order; a loop's chain and a goal's
+group are read off the arrows placed. `onlyHome` has no rung: it is the
+walk's hidden single in an area of four, so its strikes became placements.
+`techniqueRung` now drops a note outside `NoteEncoding.all`, since a player
+may pencil an arrow off the board. Rome's `reach @ reach` entry in
+`firing-replay.test.ts`'s gated ledger went with the recording it audited.
+
+Compared by a scratch dump of every plan over 20 Rome boards (4x4 to 8x8, all
+three tiers) and both readings, every fifth move of a played-through game:
+every board still finishes, and the rungs are the same in near the same
+numbers (loop 5448 to 5363, reach 485 to 472, opposite 303 to 343; onlyHome's
+131 strikes gone, hidden singles 12 to 83). The dump ran in 2.1 s against
+10.8 s at HEAD.

@@ -202,14 +202,12 @@ const keyOf = (f: { reason: unknown; technique: string }): string =>
  * to fire, so returning those cells stops it. A replay cannot tell such a gate
  * from a read. Keyed `<id>: <reason kind> @ <technique>`, each pinned to a board
  * that shows it below, and each fix of a `reads` it could hide held by a test
- * of its own (`rome-hint.test.ts`).
+ * of its own.
  */
 const GATED: Record<string, string> = {
   "mathrax: clue @ clueEasy":
     "Easy strikes a cell's candidates only once every clue at its corners leaves it one digit; the strike rests on the one clue and its partner the step names",
   "mathrax: clue @ clue": "Normal keeps Easy's gate",
-  "rome: reach @ reach":
-    "the technique fires only while exactly one mark on the whole board points into any goal's group; the strike rests on this group and its border",
 };
 
 /**
@@ -247,12 +245,6 @@ const PINNED: { key: string; id: string; board: string }[] = [
     id: "mathrax",
     board: "5dt:n3j,cA7bS1S0aA6aS1d",
   },
-  {
-    key: "rome: reach @ reach",
-    id: "rome",
-    board:
-      "8x8dn:2aaaa8b1ab3aa10aaaa2d1a1a2aa1b11dbba5a2a2,aRaLDbLRaDRbXdDUbLaLUaDUaDURcRbRDXRaLDcRDLaLUeRb",
-  },
 ];
 
 /**
@@ -273,6 +265,7 @@ const EXTRA_BOARDS: Record<string, readonly string[]> = {
 const RECORDS_NOTHING: Record<string, string> = {
   abcd: "its rungs are its own and read the board",
   seismic: "its starved area is the compiled technique run on the notes",
+  rome: "its strikes are the compiled techniques run on the notes",
 };
 
 /**

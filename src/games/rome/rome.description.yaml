@@ -99,6 +99,9 @@ techniques:
       c in cells where not known(c), d in cand(c), q = step(c, d)
       where q != none and c in chain(q)
     conclude: "strike(c, d)"
+    says:
+      terms: { c: c, q: q }
+      marks: {}
   # An area of four squares holds all four arrows, so an arrow only one of
   # its squares can still take is that square's. One no square can take
   # makes the marks inconsistent.
@@ -119,6 +122,9 @@ techniques:
       r in area, a in cells(r) where not known(a) and |cand(a)| = 2,
       b in before(a, cells(r)) where not known(b) and cand(b) = cand(a)
     conclude: "forall p in cells(r) where p != a and p != b, d in cand(a): strike(p, d)"
+    says:
+      terms: { r: r, a: a, b: b }
+      marks: {}
   # Some square not yet leading to a goal points straight into the squares
   # that do, since every square leads to one. Where only one arrow anywhere
   # still can, it is that one.
@@ -129,6 +135,9 @@ techniques:
       where step(p, d) in H and not (exists q in cells where not known(q),
       e in cand(q) where q != p or e != d: step(q, e) in H)
     conclude: "forall e in cand(p) where e != d: strike(p, e)"
+    says:
+      terms: { p: p, d: d }
+      marks: {}
   # A square left only the two arrows along one line cannot be pointed at
   # along that line from its own area: the neighbor's arrow would leave it
   # only the other, which points straight back.
@@ -139,3 +148,6 @@ techniques:
       forall a in adj4(c) where area(a) = area(c), d in cand(a)
       where step(a, d) = c and d in cand(c)
       and (exists e in cand(c): e != d and step(c, e) = a): strike(a, d)
+    says:
+      terms: { c: c }
+      marks: {}

@@ -1,17 +1,15 @@
 /**
  * Rome's solver: the ladder `rome.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/ladder-runtime.ts`), with the reason each
- * technique records for the hint; the answer check its rules compile to; and
- * the validity check the board paints as it is played.
+ * engine's marks and runner (`engine/ladder-runtime.ts`); the answer check its
+ * rules compile to; and the validity check the board paints as it is played.
  *
  * One ladder serves the generator, which lays its arrows on it and keeps a
  * blanked clue only while the board still solves, so its verdict on every
  * intermediate board decides which puzzles exist; `solve()`; `findMistakes`;
- * and the hint, which records it. No technique supposes anything, so a board
+ * and the hint, which runs its strikes on the player's notes. No technique supposes anything, so a board
  * the ladder drives to its end is uniquely solved, at every tier.
  */
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import {
   DESC_CONTRADICTORY,
   type DescError,
@@ -24,27 +22,21 @@ import {
   describedSpace,
   partition,
   rangeMask,
-  step,
-  valuesOf,
 } from "../../engine/describe-runtime.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import { auditingPremises, offerReplay } from "../../engine/firing-replay.ts";
 import {
   CellMarks,
   compiledRung,
   describedLadder,
   type Ladder,
-  ladderReplay,
   ladderTechniques,
   placingRung,
   runLadder,
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import * as rome from "./rome.compiled.ts";
 import {
-  DIFFCOUNT,
   dirBit,
   EMPTY,
   FD_TOGOAL,
@@ -232,52 +224,12 @@ export function parseDesc(p: RomeParams, desc: string): DescParse<RomeState> {
 
 // --- the board as the description reads it ---------------------------------
 
-/**
- * Why one recorded Rome deduction fired — the premise its sentence states and
- * its evidence shades, built from the firing's binding on the marks it read.
- * A culled arrow is the engine's `dup`, the cull the candidate plan does for
- * itself around every placement.
- */
-export type RomeReason =
-  /** The square's notes have collapsed to one arrow. */
-  | { kind: "single" }
-  /** Pointing that way joins a chain of arrows that leads back here. `path` is
-   * that chain, from the square pointed at through to the square itself. */
-  | { kind: "loop"; path: readonly number[] }
-  /** In a four-square region, this is the only square left that can take the
-   * arrows in `only`, so it can be nothing else. `region` is the four squares. */
-  | { kind: "onlyHome"; only: readonly number[]; region: readonly number[] }
-  /** The only arrow left anywhere that can point into `group`, the squares
-   * already leading to the goal at `goal`. `reads` is every square bordering
-   * the group, whose marks show that none of the others can
-   * (`DeductionRecord`). */
-  | {
-      kind: "reach";
-      goal: number;
-      group: readonly number[];
-      reads: readonly { x: number; y: number }[];
-    }
-  /** `(px, py)` can only point along this axis, and both its neighbors on it
-   * share its region, so a neighbor pointing back would close a two-square
-   * loop. */
-  | { kind: "opposite"; px: number; py: number }
-  /** Two squares of this region hold the same two candidates between them, so
-   * those two arrows are spent. `pair` is the two squares and `values` the two
-   * arrows they share, carried because a sentence built from the struck marks
-   * would name only those the other squares still had. */
-  | {
-      kind: "pair";
-      pair: readonly number[];
-      values: readonly number[];
-      region: readonly number[];
-    };
-
 const areasByDsf = new WeakMap<Dsf, ReturnType<typeof partition>>();
 
 /** The board as the description deals it: its areas, in the order of their
  * first square, each in reading order, and its goals. The partition is kept
  * for the life of the board's areas, which every solve of it shares. */
-function dealtOf(board: RomeBoard): rome.Dealt {
+export function dealtOf(board: RomeBoard): rome.Dealt {
   let area = areasByDsf.get(board.regions);
   if (area === undefined) {
     const byRoot = new Map<number, number[]>();
@@ -303,102 +255,17 @@ function dealtOf(board: RomeBoard): rome.Dealt {
   };
 }
 
-/** The squares from `from` along the placed arrows to `to`, both included:
- * the chain a loop sentence names. The `loop` technique fired because `to`
- * is on `from`'s chain. */
-function arrowPath(m: CellMarks, from: number, to: number): number[] {
-  const path: number[] = [];
-  for (
-    let at = from;
-    at >= 0 && path.length <= m.grid.length;
-    at = step(m.sp, at, m.value(at))
-  ) {
-    path.push(at);
-    if (at === to) return path;
-  }
-  throw new Error("rome: a loop with no chain back to its square");
-}
-
-/** The squares whose arrows lead to `goal`, it among them: the group a
- * `reach` sentence names. */
-function groupOf(m: CellMarks, goal: number): number[] {
-  const out: number[] = [];
-  for (let c = 0; c < m.grid.length; c++) {
-    let at = c;
-    for (let n = 0; at >= 0 && at !== goal && n < m.grid.length; n++)
-      at = step(m.sp, at, m.value(at));
-    if (at === goal) out.push(c);
-  }
-  return out;
-}
-
-/** Why `reach` leaves `cell` one arrow: the group it is the only way into. */
-function reachReason(m: CellMarks, home: readonly number[], cell: number): RomeReason {
-  const { w } = m.sp;
-  const into = valuesOf(m.cand(cell)).find((d) => home.includes(step(m.sp, cell, d)));
-  if (into === undefined) throw new Error("rome: reach with no way into the goals");
-  let goal = step(m.sp, cell, into);
-  for (let n = 0; m.known(goal) && n < m.grid.length; n++) {
-    const next = step(m.sp, goal, m.value(goal));
-    if (next < 0) break;
-    goal = next;
-  }
-  const group = groupOf(m, goal);
-  const border = new Set<number>();
-  for (const i of group)
-    for (const p of m.sp.adj4[i]) if (!group.includes(p)) border.add(p);
-  return {
-    kind: "reach",
-    goal,
-    group,
-    reads: [...border].map((i) => ({ x: i % w, y: (i / w) | 0 })),
-  };
-}
-
-/** The ladder over the dealt areas and goals, each technique with its
- * reason. */
-function romeLadder(dl: rome.Dealt): Ladder {
+/** The ladder over the dealt areas and goals. A strike's firing says what its
+ * sentence names (`says` in the description). */
+export function romeLadder(dl: rome.Dealt): Ladder {
   return describedLadder(rome, {
     cull: placingRung(rome.cull, dl),
-    lone: uncluedRung(rome.lone, (): RomeReason => ({ kind: "single" })),
-    loop: uncluedRung(
-      rome.loop,
-      ({ c, q }, _cell, _n, m): RomeReason => ({
-        kind: "loop",
-        path: arrowPath(m, q, c),
-      }),
-    ),
-    onlyHome: compiledRung(
-      rome.onlyHome,
-      dl,
-      ({ r, d }): RomeReason => ({
-        kind: "onlyHome",
-        only: [d],
-        region: dl.area.cells[r],
-      }),
-    ),
-    pair: compiledRung(
-      rome.pair,
-      dl,
-      ({ r, a, b }, _cell, _n, m): RomeReason => ({
-        kind: "pair",
-        pair: [b, a],
-        values: valuesOf(m.cand(a)),
-        region: dl.area.cells[r],
-      }),
-    ),
-    reach: compiledRung(rome.reach, dl, ({ H }, cell, _n, m) =>
-      reachReason(m, H, cell),
-    ),
-    opposite: compiledRung(
-      rome.opposite,
-      dl,
-      ({ c }, _cell, _n, m): RomeReason => ({
-        kind: "opposite",
-        px: c % m.sp.w,
-        py: (c / m.sp.w) | 0,
-      }),
-    ),
+    lone: uncluedRung(rome.lone),
+    loop: uncluedRung(rome.loop),
+    onlyHome: compiledRung(rome.onlyHome, dl),
+    pair: compiledRung(rome.pair, dl),
+    reach: compiledRung(rome.reach, dl),
+    opposite: compiledRung(rome.opposite, dl),
   });
 }
 
@@ -475,38 +342,4 @@ export function romeSolve(
   if (impossible) return STATUS_INVALID;
   if (!full) return STATUS_INCOMPLETE;
   return rome.isAnswer(values, m.sp, dl) ? STATUS_COMPLETE : STATUS_INVALID;
-}
-
-/**
- * The recording solver on the arrows `board` holds (never the player's
- * notes), up to `maxdiff`: every arrow it places and rules out, in order,
- * each with the reason the hint narrates. `board` is not modified.
- */
-export function recordRomeDeductions(
-  board: RomeBoard,
-  maxdiff: number = DIFFCOUNT - 1,
-): DeductionRecord[] {
-  const ops: DeductionRecord[] = [];
-  const dl = dealtOf(board);
-  const ladder = romeLadder(dl);
-  const m = marksOf(board, placedValues(board), dl, ladder);
-  if (m === null) return ops;
-  m.recorder = (rec) => ops.push(rec);
-  m.budget = stepBudget("rome hint");
-  const techniquesOn = (on: CellMarks) =>
-    ladderTechniques(on, ladder.entries, { [TIERS]: maxdiff }, {});
-  const replay = auditingPremises()
-    ? ladderReplay(
-        m,
-        (values) => {
-          const fresh = marksOf(board, Uint8Array.from(values), dl, ladder);
-          if (fresh === null) throw new Error("rome replay: the edited board clashes");
-          return fresh;
-        },
-        techniquesOn,
-      )
-    : null;
-  runLadder(m, techniquesOn(m));
-  if (replay) offerReplay(replay);
-  return ops;
 }

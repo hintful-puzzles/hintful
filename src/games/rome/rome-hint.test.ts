@@ -1,8 +1,8 @@
 /**
  * Rome explained-hint tests.
  *
- * Tier 1 — the recording places every arrow the solve does; each technique's
- * firing is recorded as one group with the premise a sentence can state; the
+ * Tier 1 — the plan, deducing from the notes, finishes every board; what a
+ * loop or reach step claims is read back on the board it is shown on; the
  * plan places, strikes and refuses at the quality bar; the marks the hint
  * teaches are marks a player can make. Tier 2.5 — render scenarios for the two
  * shapes Rome was picked to press on: an ordinary area elimination, and a
@@ -10,9 +10,8 @@
  *
  * What these catch that no cheaper test would: the cross-game guards walk a
  * plan and check its *form*, and `rome-ladder.test.ts` checks that every rung
- * of the solver fires — but nothing else checks that the recording teaches
- * the solve the generator graded, and nothing else reads a premise back to see
- * that it is true of the board rather than merely present.
+ * of the solver fires — but nothing else reads a premise back to see that it
+ * is true of the board rather than merely present.
  */
 import { describe, expect, it } from "vitest";
 import type { CandidatePlanPrefs } from "../../engine/candidate-hint.ts";
@@ -31,12 +30,7 @@ import { buildSteps } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { romeGame } from "./index.ts";
 import { COL_ARROW_PENCIL, COL_HINT_CELL } from "./render.ts";
-import {
-  parseDesc,
-  type RomeReason,
-  recordRomeDeductions,
-  romeSolve,
-} from "./solver.ts";
+import { parseDesc, romeSolve } from "./solver.ts";
 import {
   boardFromClues,
   DIFF_NORMAL,
@@ -66,135 +60,119 @@ function gen(p: RomeParams, seed: string): { desc: string; st: RomeState } {
   return { desc, st: descValue(parseDesc(p, desc)) };
 }
 
-const kindOf = (reason: unknown): string => (reason as RomeReason).kind;
+/** Each step of the plan from `st`, with the board it is shown on, and the
+ * board the plan leaves. */
+function walk(
+  st: RomeState,
+  prefs: CandidatePlanPrefs,
+): { shown: { step: RomeStep; on: RomeState }[]; end: RomeState } {
+  const shown: { step: RomeStep; on: RomeState }[] = [];
+  let on = st;
+  for (const step of buildSteps(st, prefs)) {
+    shown.push({ step, on });
+    on = romeGame.executeMove(on, step.move as RomeMove);
+  }
+  return { shown, end: on };
+}
 
-// --- tier 1: the recording projection ---------------------------------------
+type RomeStep = ReturnType<typeof buildSteps>[number];
+type Cells = readonly { x: number; y: number }[];
+const keys = (cs: Cells): Set<string> => new Set(cs.map((c) => `${c.x},${c.y}`));
 
-describe("rome recording projection", () => {
-  /**
-   * The hint takes one firing a pass where a solve takes every firing of a
-   * pass, so the two must still come to one board: what the hint teaches is
-   * the solve the generator graded.
-   */
-  it("records every arrow the solve places", () => {
-    for (const p of [NORMAL, TRICKY]) {
-      for (let s = 0; s < 6; s++) {
-        const { st } = gen(p, `pure-${p.w}-${s}`);
-        const plain = boardFromClues(st);
-        romeSolve(plain, DIFFCOUNT);
-        const recorded = boardFromClues(st);
-        const ops = recordRomeDeductions(recorded, DIFFCOUNT);
-        for (const op of ops)
-          if (op.kind === "place") recorded.grid[op.y * p.w + op.x] = dirBit(op.n);
-        expect(Array.from(recorded.grid, (c) => c & FM_ARROWMASK)).toEqual(
-          Array.from(plain.grid, (c) => c & FM_ARROWMASK),
-        );
-        expect(ops.length).toBeGreaterThan(0);
-      }
+/** The boards the plan checks below are walked on: Normal and Tricky, under
+ * both readings. */
+function* plans(
+  tag: string,
+): Generator<{ shown: { step: RomeStep; on: RomeState }[]; end: RomeState }> {
+  for (const p of [NORMAL, TRICKY])
+    for (let s = 0; s < 6; s++) {
+      const { st } = gen(p, `${tag}-${p.w}-${s}`);
+      for (const reading of ["populate", "implicit"] as const)
+        yield walk(st, { autoClean: false, reading });
     }
+}
+
+// --- tier 1: the plan's deductions -------------------------------------------
+
+describe("rome plan deductions", () => {
+  /** The plan deduces from the notes, so finishing is what shows that the
+   * strikes it reads off them are the ones the solve needs. */
+  it("finishes every board, under both readings", () => {
+    let boards = 0;
+    for (const { end } of plans("pure")) {
+      boards++;
+      expect(romeGame.status(end)).toBe("solved");
+    }
+    expect(boards).toBe(24);
   });
 
-  it("gives every recorded op a premise, and every firing one group", () => {
-    const { st } = gen(TRICKY, "premise-0");
-    const ops = recordRomeDeductions(boardFromClues(st), DIFFCOUNT);
-    expect(ops.length).toBeGreaterThan(20);
-    for (const op of ops) {
-      expect(op.n, `${op.kind} at ${op.x},${op.y} records no arrow`).toBeGreaterThan(0);
-      expect(op.n).toBeLessThanOrEqual(4);
-      expect(op.group).toBeGreaterThan(0);
-      // A placement is always a naked single here: `lone` is the only
-      // technique that places, and it fires on one arrow left.
-      if (op.kind === "place") expect(kindOf(op.reason)).toBe("single");
-    }
-    // Every op of one group shares its reason, so a firing narrates once. A
-    // placement's cull is recorded in its group, as the cull the plan makes
-    // around every placement.
-    const byGroup = new Map<number, unknown[]>();
-    for (const op of ops) {
-      if (kindOf(op.reason) === "dup") continue;
-      const list = byGroup.get(op.group) ?? [];
-      list.push(op.reason);
-      byGroup.set(op.group, list);
-    }
-    for (const [group, reasons] of byGroup)
-      expect(new Set(reasons.map(kindOf)).size, `group ${group} mixes reasons`).toBe(1);
-  });
-
-  /**
-   * A `loop` reason claims a walk exists, so the walk is read back and taken.
-   * `arrowPath` throws rather than returning a wrong path, so this is checking
-   * the *claim the sentence makes* — that following the arrows from the named
-   * neighbor arrives at the struck square — against the board it was recorded
-   * from (docs/hints.md § "The quality bar", rule 5).
-   */
   /**
    * "Only this mark still leads into the striped group" is a claim about every
-   * square around the group, so the firing reads them all; without them the
-   * plan could offer it while one of them still showed a mark pointing in
-   * (`guard-recorded-firing-premises`). The premise audit cannot hold this
-   * one: the rung reads the whole board to decide whether to fire at all.
+   * square around the group, so the step reads them all; without them the
+   * plan could offer it while one of them still showed a mark pointing in.
    */
   it("reads every square bordering the group a reach strike names", () => {
     let seen = 0;
-    for (const p of [NORMAL, TRICKY]) {
-      for (let s = 0; s < 6; s++) {
-        const { st } = gen(p, `reach-${p.w}-${s}`);
-        for (const op of recordRomeDeductions(st, DIFFCOUNT)) {
-          const r = op.reason as RomeReason;
-          if (r.kind !== "reach") continue;
-          seen++;
-          const inside = new Set(r.group);
-          const border = new Set<string>();
-          for (const i of r.group) {
-            const x = i % p.w;
-            const y = (i / p.w) | 0;
-            for (const [nx, ny] of [
-              [x + 1, y],
-              [x - 1, y],
-              [x, y + 1],
-              [x, y - 1],
-            ])
-              if (
-                nx >= 0 &&
-                ny >= 0 &&
-                nx < p.w &&
-                ny < p.h &&
-                !inside.has(ny * p.w + nx)
-              )
-                border.add(`${nx},${ny}`);
-          }
-          expect(new Set(r.reads.map((q) => `${q.x},${q.y}`))).toEqual(border);
-        }
+    for (const { shown } of plans("reach"))
+      for (const { step, on } of shown) {
+        if (step.rung !== "reach") continue;
+        seen++;
+        const h = step.highlights as { hatch: Cells; reads: Cells };
+        expect(h.hatch.length).toBeGreaterThan(0);
+        const group = keys(h.hatch);
+        const reads = keys(h.reads);
+        for (const { x, y } of h.hatch)
+          for (const [nx, ny] of [
+            [x + 1, y],
+            [x - 1, y],
+            [x, y + 1],
+            [x, y - 1],
+          ])
+            if (
+              nx >= 0 &&
+              ny >= 0 &&
+              nx < on.w &&
+              ny < on.h &&
+              !group.has(`${nx},${ny}`)
+            )
+              expect(reads).toContain(`${nx},${ny}`);
       }
-    }
     expect(seen, "reach strikes looked at").toBeGreaterThan(3);
   });
 
-  it("records a loop path that really leads back to the square it strikes", () => {
+  /**
+   * A loop sentence claims a walk exists, so the walk is taken on the board
+   * the step is shown on: from the square the struck arrow points at, along
+   * the arrows placed, to the struck square (docs/hints.md § "The quality
+   * bar", rule 5).
+   */
+  it("outlines a loop's chain that really leads back to the square it strikes", () => {
     let checked = 0;
-    for (let s = 0; s < 8; s++) {
-      const { st } = gen(TRICKY, `loop-${s}`);
-      const board = boardFromClues(st);
-      const ops = recordRomeDeductions(board, DIFFCOUNT);
-      // Re-solve to the same board the ops were recorded against is not
-      // possible op by op, so the structural claims are what is checked here:
-      // the path starts at the neighbor the struck arrow points at and ends on
-      // the struck square itself.
-      for (const op of ops) {
-        const reason = op.reason as RomeReason;
-        if (reason.kind !== "loop") continue;
+    for (const { shown } of plans("loop"))
+      for (const { step, on } of shown) {
+        if (step.rung !== "loop") continue;
         checked++;
-        const cell = op.y * st.w + op.x;
-        const step = op.n === 1 ? -st.w : op.n === 2 ? st.w : op.n === 3 ? -1 : 1;
-        expect(reason.path[0]).toBe(cell + step);
-        expect(reason.path[reason.path.length - 1]).toBe(cell);
-        expect(reason.path.length).toBeGreaterThanOrEqual(2);
+        const { w } = on;
+        const h = step.highlights as { area: Cells; targets: Cells };
+        expect(h.targets).toHaveLength(1);
+        const cell = h.targets[0].y * w + h.targets[0].x;
+        const chain = h.area.map((c) => c.y * w + c.x).filter((i) => i !== cell);
+        expect(chain.length).toBeGreaterThan(0);
+        // Every outlined arrow leads, along the arrows, to the struck square.
+        for (const from of chain) {
+          let at = from;
+          for (let k = 0; at !== cell; k++) {
+            expect(k, "the chain runs on without coming back").toBeLessThan(w * on.h);
+            const arrow = on.grid[at] & FM_ARROWMASK;
+            expect(arrow, "the chain stops at a square with no arrow").not.toBe(0);
+            const n = [0, dirBit(1), dirBit(2), dirBit(3), dirBit(4)].indexOf(arrow);
+            at += n === 1 ? -w : n === 2 ? w : n === 3 ? -1 : 1;
+          }
+        }
       }
-    }
-    expect(
-      checked,
-      "no loop firing was recorded, so nothing was checked",
-    ).toBeGreaterThan(50);
+    expect(checked, "no loop step was shown, so nothing was checked").toBeGreaterThan(
+      50,
+    );
   });
 });
 
@@ -253,17 +231,17 @@ describe("rome hint plan", () => {
   it("names both arrows of a naked pair, not only the ones still live", () => {
     const params: RomeParams = { w: 6, h: 6, diff: DIFF_TRICKY };
     const board = descValue(parseDesc(params, PAIR_DESC));
-    const ops = recordRomeDeductions(boardFromClues(board), DIFFCOUNT);
-    const pair = ops.find((o) => kindOf(o.reason) === "pair");
-    expect(pair, "the pinned board no longer fires pair").toBeDefined();
-    const reason = pair?.reason as Extract<RomeReason, { kind: "pair" }>;
+    const pair = walk(board, POPULATE).shown.find(({ step }) => step.rung === "pair");
+    expect(pair, "the pinned board's plan no longer takes a pair").toBeDefined();
     // A pair is two squares holding two arrows between them. Both counts are
     // what the sentence claims, so both are asserted.
-    expect(reason.pair).toHaveLength(2);
-    expect(reason.values).toHaveLength(2);
-    expect(new Set(reason.values).size).toBe(2);
-    expect(reason.region.length).toBeGreaterThanOrEqual(3);
-    for (const cell of reason.pair) expect(reason.region).toContain(cell);
+    const words = pair?.step.explanation.match(/must take (\w+) or (\w+) between them/);
+    expect(words, pair?.step.explanation).not.toBeNull();
+    expect(words?.[1]).not.toBe(words?.[2]);
+    const h = pair?.step.highlights as { area: Cells; hatch: Cells };
+    expect(h.area).toHaveLength(2);
+    expect(h.hatch.length).toBeGreaterThanOrEqual(3);
+    for (const c of keys(h.area)) expect(keys(h.hatch)).toContain(c);
   });
 
   /**
@@ -398,12 +376,6 @@ const pinned = describeHintPins({
     hiddenSingle: "5x5dt:a1a2aaa3b2a2aa1aaaab,bXdRaUmRa",
     /** Held on 2347 of 2499 positions walked. */
     loop: "5x5dt:a1a2aaa3b2a2aa1aaaab,bXdRaUmRa",
-    /** Held on 653 of 2499 positions walked. */
-    onlyHome: {
-      id: "5x5dt:1b3aaaaabaa6a3a2a,dXRcLbDaUaLbDe",
-      moves:
-        '[{"kind":"place","x":0,"y":0,"dir":8},{"kind":"pencilAdd","marks":[{"x":1,"y":1,"n":1},{"x":1,"y":1,"n":2},{"x":1,"y":1,"n":4}]},{"kind":"pencilAdd","marks":[{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":2}]},{"kind":"pencilAdd","marks":[{"x":0,"y":3,"n":1},{"x":0,"y":3,"n":2}]},{"kind":"pencilAdd","marks":[{"x":2,"y":3,"n":2},{"x":2,"y":3,"n":4}]},{"kind":"place","x":4,"y":4,"dir":16},{"kind":"pencilAdd","marks":[{"x":3,"y":4,"n":1},{"x":3,"y":4,"n":3}]}]',
-    },
     /** Held on 1595 of 2499 positions walked. */
     reach: {
       id: "5x5dt:ba4aa2a9a1ba2a1a,DdRaLLeLbUaDRUXb",

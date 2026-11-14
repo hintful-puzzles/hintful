@@ -319,7 +319,9 @@ Put a deduction in the plan's `rungs` only when it makes a move the recorded
 shapes have no room for, or reads the board with no recording. Ask first what
 the rung writes: a deduction that only strikes notes is a recorded
 elimination with an unusual reason, however it was reached ("A deduction over
-a graph is a reason, not a plan shape"; Rome's `rungs` is empty). A rung is a
+a graph is a reason, not a plan shape"). A plan that deduces from the notes
+records nothing, so its techniques are rungs, each a `techniqueRung` (§ "Deduce
+from the notes when the mistake check vouches for them"). A rung is a
 `CandidateRung`: called with a `RungContext`, it returns every firing it
 could take now, and the frontier chooses. Its duties:
 
@@ -505,12 +507,22 @@ of `findMistakes` in the same change.
   gate is read off the ladder's order, so the game writes none. The tier is
   not enough: Abcd's `runs` is as easy as its single, and ungated it
   crowds the singles out.
+- **A technique the walk already takes gets no rung**: the singles, the cull
+  around a placement, and a hidden single in a region that holds every
+  value (Rome's `onlyHome`, which the walk places where the recorder struck
+  the square's other marks). The rungs go in the ladder's order.
+- **A note outside the cell's full set (`NoteEncoding.all`) is no
+  candidate**: a player may pencil Rome's arrow off the board, and no
+  technique reads it.
+- **What a sentence names beyond the technique's terms is read off the
+  values placed** in the game's `legs`: Rome's loop chain and goal group.
 - **The firing-replay audit has nothing to replay** on such a plan; the
   game's own hint test holds its technique to what it claims (Seismic's
   starved area against upstream's trial placement).
 
 Exemplars: [`seismic/hint.ts`](../src/games/seismic/hint.ts),
-[`abcd/hint.ts`](../src/games/abcd/hint.ts).
+[`abcd/hint.ts`](../src/games/abcd/hint.ts),
+[`rome/hint.ts`](../src/games/rome/hint.ts).
 
 ## A premise names everything its deduction reads
 
@@ -557,7 +569,7 @@ the firing's technique again ("The engine audits a premise by replaying its
 firing"). What a game owes it:
 
 - **A solver on `latinSolver` takes part with no code.** A compiled ladder
-  offers its replay through `ladderReplay` (Seismic's, Solo's, Rome's), and
+  offers its replay through `ladderReplay` (Solo's), and
   a recording solver of a game's own writes a `ReplayAdapter`.
 - **The replay runs one technique, not the ladder**, so a rung reads nothing
   a rung before it left behind in the same pass: work such state out from
@@ -945,7 +957,7 @@ the arrows from the square above leads back here"), compute the walk and
 throw if it does not arrive, with the termination argument written beside
 it. Outline the walk's cells on the board, with no number on them ("A
 premise that asserts a walk is computed and outlined"). Exemplar:
-`arrowPath` in [`rome/solver.ts`](../src/games/rome/solver.ts).
+`arrowPath` in [`rome/hint.ts`](../src/games/rome/hint.ts).
 
 **A test of a named walk holds each step to the one before it**, not only to
 its own cell: a check that each named value is among its cell's candidates

@@ -19,6 +19,18 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "lone" | "loop" | "onlyHome" | "pair" | "reach" | "opposite";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  loop: LoopSays;
+  pair: PairSays;
+  reach: ReachSays;
+  opposite: OppositeSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["loop","pair","reach","opposite"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "cull";
 
@@ -217,11 +229,17 @@ export interface LoopBinding {
   q: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface LoopSays {
+  terms: { c: number; q: number; };
+  marks: {  };
+}
+
 const loopFacts: number[] = [];
 let loopCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function loop(b: Marks, sp: GridSpace, fire: Fire<LoopBinding> | null): number {
+export function loop(b: Marks, sp: GridSpace, fire: Fire<LoopBinding, LoopSays> | null): number {
   const facts = loopFacts;
   let fired = 0;
   let changed = false;
@@ -255,7 +273,10 @@ export function loop(b: Marks, sp: GridSpace, fire: Fire<LoopBinding> | null): n
         if (!(true)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, d: v_d, q: v_q }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { c: v_c, q: v_q }, marks: {  } };
+            if (!fire({ c: v_c, d: v_d, q: v_q }, facts, _says)) return 1;
+          }
           cands.fill(-1);
         }
       }
@@ -375,11 +396,17 @@ export interface PairBinding {
   b: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface PairSays {
+  terms: { r: number; a: number; b: number; };
+  marks: {  };
+}
+
 const pairFacts: number[] = [];
 let pairCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as 1. */
-export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding> | null): number {
+export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding, PairSays> | null): number {
   const facts = pairFacts;
   let fired = 0;
   let changed = false;
@@ -430,7 +457,10 @@ export function pair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBinding>
         if (!(_q17)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ r: v_r, a: v_a, b: v_b }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { r: v_r, a: v_a, b: v_b }, marks: {  } };
+            if (!fire({ r: v_r, a: v_a, b: v_b }, facts, _says)) return 1;
+          }
           cands.fill(-1);
         }
       }
@@ -445,11 +475,17 @@ export interface ReachBinding {
   d: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ReachSays {
+  terms: { p: number; d: number; };
+  marks: {  };
+}
+
 const reachFacts: number[] = [];
 let reachCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n^2. */
-export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBinding> | null): number {
+export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBinding, ReachSays> | null): number {
   const _g28: number[] = [];
   const _g60: number[] = [];
   const facts = reachFacts;
@@ -600,7 +636,10 @@ export function reach(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ReachBindin
       if (!(_q102)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ H: v_H.slice(), p: v_p, d: v_d }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { p: v_p, d: v_d }, marks: {  } };
+          if (!fire({ H: v_H.slice(), p: v_p, d: v_d }, facts, _says)) return 1;
+        }
         cands.fill(-1);
       }
     }
@@ -612,11 +651,17 @@ export interface OppositeBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface OppositeSays {
+  terms: { c: number; };
+  marks: {  };
+}
+
 const oppositeFacts: number[] = [];
 let oppositeCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function opposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OppositeBinding> | null): number {
+export function opposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OppositeBinding, OppositeSays> | null): number {
   const facts = oppositeFacts;
   let fired = 0;
   let changed = false;
@@ -668,7 +713,10 @@ export function opposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Opposite
     if (!(_q6)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ c: v_c }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { c: v_c }, marks: {  } };
+        if (!fire({ c: v_c }, facts, _says)) return 1;
+      }
       cands.fill(-1);
     }
   }
