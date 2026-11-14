@@ -152,6 +152,14 @@ game SHALL shrink the step's move, marks and words to those left.
   only square still outstanding with a click
 - **THEN** the verdict is `"completed"`
 
+#### Scenario: The board shows the shrunk step at once
+
+- **WHEN** a step's sentence is shown whole and the player makes one of its
+  ringed squares, so that the sentence's words stay as they were
+- **THEN** the next frame rings only the squares left, with the marks the app
+  lays over the board in each reference's color measured again from the
+  shrunk step
+
 ### Requirement: A stored plan is cleared when play leaves it
 
 The stored plan SHALL be cleared on undo, redo, restart, new game and solve,

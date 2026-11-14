@@ -108,6 +108,9 @@ export const DEAL_PENDING_MS = SLOW_DEAL_MS;
 /** The chrome's wording for a pending deal (`Puzzle.dealMessage`). */
 const DEAL_PENDING_MESSAGE = "Looking for a board…";
 
+/** A status bar message with no hint's words, as `Puzzle.hintSaid` compares it. */
+const NOTHING_SAID = JSON.stringify([null, null]);
+
 /** `ms` as minutes and seconds, `2:05`. */
 function clock(ms: number): string {
   const s = Math.round(ms / 1000);
@@ -285,15 +288,19 @@ export class Puzzle {
         update(this._params, message.params);
         this.prepareNextDeal();
         break;
-      case "status-bar-change":
+      case "status-bar-change": {
         update(this._statusbarText, message.statusBarText);
         update(this._activeHintExplanation, message.activeHintExplanation ?? "");
         // Compared by value: the engine sends fresh runs each time. Other
-        // words are another step, whose marks a flash begun on these is not.
-        if (
-          JSON.stringify(this._activeHintSpans.get()) !==
-          JSON.stringify(message.activeHintSpans ?? null)
-        ) {
+        // words, or the same words marking other squares (a step a move
+        // narrowed), are marks a flash begun on these is not, and that the
+        // measure taken of these does not draw.
+        const said = JSON.stringify([
+          message.activeHintSpans ?? null,
+          message.activeHintMarks ?? null,
+        ]);
+        if (said !== this.hintSaid) {
+          this.hintSaid = said;
           this._activeHintSpans.set(message.activeHintSpans ?? null);
           this.stopHintFlash();
           this.measureHintMarks();
@@ -307,6 +314,7 @@ export class Puzzle {
             : "",
         );
         break;
+      }
       case "timer-change":
         // Compared by value: the engine sends a fresh object each second.
         if (!sameTimer(this._timer.get(), message.timer))
@@ -395,6 +403,8 @@ export class Puzzle {
   private hintFlashTimer: ReturnType<typeof setTimeout> | null = null;
   private _hintMarks = signal<HintReferenceMarks | null>(null);
   private hintMarksToken = 0;
+  /** The hint's words and marks the status bar last said, as compared. */
+  private hintSaid = NOTHING_SAID;
   /** "Step 2 of 3" while one deduction plays out over several legs; empty for a
    * single-leg hint and when no hint is displayed. Formatted here rather than
    * in the chrome, so that whatever shows it cannot word it differently. */
@@ -592,6 +602,7 @@ export class Puzzle {
   private clearHintExplanation(): void {
     this._activeHintExplanation.set("");
     this._activeHintSpans.set(null);
+    this.hintSaid = NOTHING_SAID;
     this.stopHintFlash();
     // With the words gone, the engine's wordless message that follows reads as
     // no change, so the marks are dropped here or they outlive the board.

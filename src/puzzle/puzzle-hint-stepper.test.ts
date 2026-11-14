@@ -459,4 +459,30 @@ describe("a hint's measured marks", () => {
     notify();
     expect(puzzle.hintMarks).toBeNull();
   });
+
+  // A move that makes part of a step keeps its sentence and drops a ring
+  // (Tents' grass); marks measured before it would paint that ring on.
+  it("are measured again when the same words mark other squares", async () => {
+    const measure = vi.fn(async () => ({ width: 1, height: 1, refs: [], roles: [] }));
+    const { puzzle } = makePuzzle({
+      currentAnimationMs: vi.fn(async () => 0),
+      hintReferenceMarks: measure,
+    });
+    const words = [{ text: "every ringed square", ref: 0 }];
+    const notify = (marks: string[]) =>
+      Reflect.get(
+        puzzle,
+        "notifyChange",
+      )({
+        type: "status-bar-change",
+        statusBarText: "",
+        activeHintSpans: { light: words, dark: words },
+        activeHintMarks: marks,
+      });
+    notify(["ring|cell|1,0 ring|cell|2,0"]);
+    await vi.waitFor(() => expect(measure).toHaveBeenCalledTimes(1));
+    notify(["ring|cell|1,0 ring|cell|2,0"]);
+    notify(["ring|cell|2,0"]);
+    await vi.waitFor(() => expect(measure).toHaveBeenCalledTimes(2));
+  });
 });

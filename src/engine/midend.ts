@@ -49,7 +49,7 @@ import {
   SEARCH_OUT_OF_REACH,
   type WayForward,
 } from "./hint-refusal.ts";
-import type { MarkRole } from "./hint-words.ts";
+import { type MarkRole, markKeys } from "./hint-words.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
 import { configNarrowing, onlyError } from "./only.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
@@ -2875,6 +2875,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         light: words.spansIn("light"),
         dark: words.spansIn("dark"),
       },
+      activeHintMarks: words?.refs.map((r) => [...markKeys([r])].sort().join(" ")),
       hintJourney: this.hintJourney(),
     });
   }

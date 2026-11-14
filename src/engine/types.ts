@@ -160,6 +160,13 @@ export interface NotifyStatusBarChange {
    */
   activeHintSpans?: { light: HintSpan[]; dark: HintSpan[] };
   /**
+   * What each reference of the sentence marks on the board, in the order of
+   * the spans' `ref`, so the frontend knows its measure of the marks is stale
+   * when the marks change under unchanged words: a step a move narrows keeps
+   * its sentence and loses a ring. Absent with the spans.
+   */
+  activeHintMarks?: string[];
+  /**
    * Where the displayed hint sits in its **journey**, 1-based, and how many
    * legs the journey has — so the chrome can say "Step 2 of 3" while a single
    * deduction plays out over several moves.

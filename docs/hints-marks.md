@@ -656,7 +656,10 @@ engine colors every hint mark".
 
 Until a step's marks are measured, through a move's animation, the board
 shows the inks. Each is its role's first reference color, so a step with one
-reference of each role looks the same before and after.
+reference of each role looks the same before and after. The app measures
+again whenever the words or the marks each reference names change
+(`activeHintMarks`): a step a move narrows keeps its words, so the words alone
+would leave the old measure painting a ring the frame no longer draws.
 
 ## A hint that suppresses a game's aid dismisses on a UI update
 

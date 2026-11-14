@@ -1566,6 +1566,43 @@ describe("Midend hint plan lifecycle", () => {
     expect(marks.of("outline", CELL)).toEqual([{ x: 0, y: 0 }]);
   });
 
+  it("sends the marks a move on track narrowed, under the same words", () => {
+    // Tents: grass on one ringed square keeps "every ringed square must be
+    // grass" and loses that ring; the screen measures the marks it overlays by
+    // what is sent here.
+    const g = twoMarkGame(
+      phrase`From ${mark.as("outline", CELL, [{ x: 0, y: 0 }], "the left cell")}, fill ${mark.as(
+        "ring",
+        CELL,
+        [
+          { x: 1, y: 0 },
+          { x: 2, y: 0 },
+        ],
+        "the right ones",
+      )}.`,
+    );
+    h = harness({
+      ...g.game,
+      hintKeepTrack: (_m, step) => {
+        step.words = step.words?.narrow(
+          (role, _kind, key) => role !== "ring" || key !== "1,0",
+        );
+        return "onTrack";
+      },
+    });
+    h.m.newGame();
+    h.m.hint();
+    const before = h.sent("status-bar-change");
+    expect(before.activeHintMarks).toEqual([
+      "outline|cell|0,0",
+      "ring|cell|1,0 ring|cell|2,0",
+    ]);
+    h.m.processInput(0, 0, LEFT_BUTTON);
+    const after = h.sent("status-bar-change");
+    expect(after.activeHintSpans).toEqual(before.activeHintSpans);
+    expect(after.activeHintMarks).toEqual(["outline|cell|0,0", "ring|cell|2,0"]);
+  });
+
   it("ends a hidden reference with the step it was set on", () => {
     const g = twoMarkGame();
     h = harness(g.game);
