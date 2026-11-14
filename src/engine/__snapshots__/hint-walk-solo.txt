@@ -5,7 +5,7 @@ Standard: 3x3 Hard #0: 85 steps, solved, 910bb6646a7496e4 [dup:9 hiddenSingle:10
 Standard: 3x3 Extreme #0: 98 steps, solved, 0aeac3171ee98105 [dup:16 hiddenSingle:25 intersect:4 note:17 regionsFull:7 set:7 single:21 wing:1]
 Standard: 3x3 Unreasonable #0: 47 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 9a94ff0f5857a859 [dup:1 hiddenSingle:19 intersect:4 note:11 regionsFull:7 set:3 single:1 wing:1]
 Standard: 3x3 X Normal #0: 59 steps, solved, 0087781c7a207988 [hiddenSingle:14 regionsFull:45]
-Standard: 3x3 Killer Easy #0: 297 steps, solved, 11b34a823a2121c8 [cageMinMax:81 cageSingle:15 cageSums:8 dup:64 hiddenSingle:22 note:64 single:43]
+Standard: 3x3 Killer Easy #0: 297 steps, solved, 1cfa504625842bb8 [cageMinMax:81 cageSingle:15 cageSums:8 dup:64 hiddenSingle:22 note:64 single:43]
 Jigsaw: 9x9 Easy #0: 52 steps, solved, 92d00fe6ef86a7c4 [hiddenSingle:9 regionsFull:43]
 Standard: 2x3 Easy, Symmetry: 4-way rotation #0: 20 steps, solved, 0ff9e4a29a71f338 [regionsFull:20]
 Standard: 2x3 Easy, Symmetry: 2-way mirror #0: 22 steps, solved, 9fd06e2a970189c6 [regionsFull:22]

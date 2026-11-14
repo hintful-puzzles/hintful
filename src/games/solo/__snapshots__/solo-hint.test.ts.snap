@@ -6455,7 +6455,7 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
 
 exports[`solo: pinned hint positions > says, at each pin 1`] = `
 {
-  "cageMinMax": "This row's whole cages and digits leave the outlined cells 9, which the others share, so this cell can only be 1, 2, 3, 4, 5 or 7.",
+  "cageMinMax": "This row's whole cages and digits leave the outlined cells 9 between them, so this cell can only be 1, 2, 3, 4, 5 or 7.",
   "cageSingle": "This column must total 45; the cages and digits inside it account for all but 5, so its one open cell must be 5.",
   "cageSums": "This column's whole cages and digits leave the outlined cells 20; no such sum has 2, so the 2 must go.",
   "clean": "Now clear the easy ones: cross out any number already placed in its cell's row, column or block.",

@@ -196,7 +196,7 @@ export const say = {
   ): Narration =>
     origin.kind === "cage" && origin.placed === 0
       ? phrase`${thisCage(open).capitalized()} must total ${clue}; its other cells leave no room for ${any(ns)}`
-      : phrase`${cageSum(open, origin, clue, cells)}, which the others share`,
+      : phrase`${cageSum(open, origin, clue, cells)} between them`,
 
   /** No way to make a {@link CageSum}'s clue over `open` uses `ns` in the struck
    * cell `at`. */
@@ -217,8 +217,6 @@ export const say = {
 // cells they leave a sum to are outlined, and a cage's clue and placed digits
 // are on the board, so the sentence gives only the sum those leave. "Whole"
 // cages are the ones the region rule takes out, not the one it leaves cells of.
-// A strike on a region's sum is still two premises, the sum and the rung, and
-// is listed long for it (`hint-quality.test.ts`'s `LONG_NARRATIONS`).
 
 /** The region rule, as far as the cage its leftover cells, `inside`, all lie
  * in; they are outlined. */
