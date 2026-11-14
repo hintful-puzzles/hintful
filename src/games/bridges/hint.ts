@@ -43,17 +43,6 @@ import {
   G_NOLINEV,
 } from "./state.ts";
 
-/**
- * A hard cap on how far ahead the plan is computed.
- *
- * A UX bound rather than a correctness one: a 15x15 board runs to some hundreds
- * of forced bridges from empty, and a player rarely follows more than a handful
- * before going their own way, at which point the plan is recomputed anyway
- * (`engine/hint-plan.ts`). It also keeps `hint()` cheap enough to be asked for
- * after every move, which the cross-game resume walk does.
- */
-const PLAN_CAP = 12;
-
 // --- highlights -----------------------------------------------------------
 
 /** A span the step decides, and what it decides about it. */
@@ -216,7 +205,7 @@ export const bridgesHint = describedEdgeHint<
   name: "bridges hint",
   walk: (state, _cap) => bridgesWalk(state),
   tiers: { lowest: walkTier, count: TIER_COUNT },
-  plan: PLAN_CAP,
+  plan: 12,
   // A player follows the islands: a firing reads the island it is about and
   // those it counts, and writes the islands its lines join.
   writes: (taken, ctx) => linesJoined(ctx.geo, taken),

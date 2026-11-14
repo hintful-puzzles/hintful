@@ -47,12 +47,6 @@ export interface DominosaHint {
   kind: "place" | "barrier";
 }
 
-/**
- * The most steps a plan holds: a player rarely follows more than a handful
- * before going their own way, at which point the plan is recomputed.
- */
-const PLAN_CAP = 40;
-
 /** What a step's sentence is told besides the firing's own: the spot it
  * decides (its squares, lower first), the numbers they show, and which of the
  * firing's steps it is (a later one does not repeat the reason). */
@@ -162,7 +156,6 @@ const dominosaPlan = describedEdgeHint<
   },
   // No tier is held back: the walk takes whatever the ladder offers.
   tiers: { lowest: () => DIFF_EXTREME, count: DIFFCOUNT },
-  plan: PLAN_CAP,
   // A firing continues from the squares its own spots join as well as the
   // ones its reason names.
   reads: ({ facts }, { sp }) => {

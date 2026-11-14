@@ -17,7 +17,6 @@
 
 import {
   describedEdgeHint,
-  type EdgeSpoken,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
 import { type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
@@ -49,11 +48,6 @@ import {
   type PathPuzzle,
   type PathState,
 } from "./state.ts";
-
-/** How far ahead the plan is computed. A player rarely follows more than a
- * few steps before going their own way, and the plan is asked for again
- * then. */
-const PLAN_CAP = 40;
 
 /** The edges a step tries lines on, as the board draws them. */
 export interface PathHighlights {
@@ -314,23 +308,6 @@ interface Fired {
   before: Uint8Array;
 }
 
-/** Every technique's sentence is the one `wordsOf` says for its reason. */
-const sentence = (_spoken: unknown, { firing, before }: Fired, state: PathState) =>
-  wordsOf(state, before, firing);
-
-const sentences: {
-  [K in keyof PathSays]: (
-    spoken: EdgeSpoken<PathSays[K]>,
-    marked: Fired,
-    state: PathState,
-  ) => Sentence;
-} = {
-  forced: sentence,
-  lineBreaks: sentence,
-  pairBreaks: sentence,
-  weighed: sentence,
-};
-
 /** A firing's step: the lines or crosses it makes, and the lines it tries. */
 function stepOf(
   fired: FiredOf<PathSays[keyof PathSays], PathWalkContext>,
@@ -368,11 +345,11 @@ export const pathHint = describedEdgeHint<
   // The whole ladder, from the Easy rung up.
   tiers: { lowest: () => DIFF_TRICKY, count: DIFF_TRICKY + 1 },
   done: (_marks, ctx) => ctx.complete(),
-  plan: PLAN_CAP,
   reads: (taken, ctx) => ctx.reads(taken),
   writes: (taken, ctx) => ctx.writes(taken),
   step: (fired) => stepOf(fired),
-  say: sentences,
+  // Every technique's sentence is the one `wordsOf` says for its reason.
+  say: (_spoken, { firing, before }, state) => wordsOf(state, before, firing),
 });
 
 /** Judge a move against the step on show by what it did to the edges, which

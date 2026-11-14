@@ -35,11 +35,6 @@ import {
   type SkeletonState,
 } from "./state.ts";
 
-/** How far ahead the plan is computed. A player rarely follows more than a
- * few steps before going their own way, and the plan is asked for again
- * then. */
-const PLAN_CAP = 24;
-
 /** The edges a step tries lines on, as the board draws them. */
 export interface SkeletonHighlights {
   tried: readonly ShapedEdge[];
@@ -136,7 +131,6 @@ export const skeletonHint = describedEdgeHint<
   // The whole ladder, from the Easy rung up.
   tiers: { lowest: () => DIFF_NORMAL, count: DIFF_NORMAL + 1 },
   done: (_marks, ctx) => ctx.complete(),
-  plan: PLAN_CAP,
   step: ({ taken, says, ctx }) => {
     const edges = ctx.decided(taken);
     // Every edge a firing sets was open before it.

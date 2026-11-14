@@ -16,7 +16,6 @@
 
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import type { HintStep } from "../../engine/index.ts";
 import type { CellMarks } from "../../engine/ladder-runtime.ts";
 import type { Point } from "../../engine/types.ts";
@@ -208,9 +207,6 @@ function stepOf(
   return [{ move: moveOf(p.firing), highlights, marked: { highlights } }];
 }
 
-const sentence = (_spoken: unknown, { highlights }: GalaxiesMarked): Sentence =>
-  say(highlights);
-
 /**
  * The plan from the player's own board: the deduction as far as the plan cap
  * allows, a step for each firing the board would take. Nothing beyond the
@@ -254,15 +250,7 @@ export const galaxiesHint = describedEdgeHint<
       ),
     ),
   step: stepOf,
-  say: {
-    dotTile: sentence,
-    separate: sentence,
-    enclosed: sentence,
-    soleOwner: sentence,
-    onlyReach: sentence,
-    exclave: sentence,
-    mirrorWall: sentence,
-  },
+  say: (_spoken, { highlights }) => say(highlights),
 });
 
 // --- narration --------------------------------------------------------

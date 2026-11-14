@@ -456,8 +456,6 @@ function workOf(state: MapState): Work {
   };
 }
 
-const sentence = (_spoken: unknown, { words }: Marked): Sentence => words;
-
 /**
  * The deduction, walked by the engine one firing a step. A region's colors are
  * its dots and what its neighbors show (see the file comment), which the marks
@@ -487,7 +485,6 @@ const deduction = describedEdgeHint<
   },
   // Map's tiers are its rungs: the walk offers the lowest that fires.
   tiers: { lowest: () => map.tiers.length - 1, count: map.tiers.length },
-  plan: 40,
   done: (_m, { w }) => !w.coloring.includes(-1),
   settle: (m, walk) => {
     const left = marksOf(walk.w);
@@ -502,7 +499,8 @@ const deduction = describedEdgeHint<
   reads: readsOf,
   writes: writesOf,
   step: (fired) => legsOf(fired),
-  say: { lone: sentence, pair: sentence, weigh: sentence },
+  // Every technique's words are its legs', made in `legsOf`.
+  say: (_spoken, { words }) => words,
 });
 
 /** The whole plan from `state`'s board, opening with the Mark-all press where

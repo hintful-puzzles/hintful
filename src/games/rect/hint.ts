@@ -10,14 +10,9 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import {
-  describedEdgeHint,
-  type EdgeSpoken,
-  type Fired,
-} from "../../engine/described-edge-hint.ts";
+import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder, Taken } from "../../engine/ladder-runtime.ts";
 import type { Rect } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
@@ -113,29 +108,6 @@ interface RectMarked {
   reason: RectReason;
 }
 
-/** Every technique's sentence is `say.firing` of its reason. */
-const sentence = (
-  _spoken: unknown,
-  { reason }: RectMarked,
-  state: RectState,
-): Sentence => say.firing(state, reason);
-
-const sentences: {
-  [K in keyof RectSays]: (
-    spoken: EdgeSpoken<RectSays[K]>,
-    marked: RectMarked,
-    state: RectState,
-  ) => Sentence;
-} = {
-  fit: sentence,
-  uncovered: sentence,
-  boxed: sentence,
-  reach: sentence,
-  overlap: sentence,
-  starve: sentence,
-  line: sentence,
-};
-
 /** Why a taken firing drew what it did, from the edges as they stood before
  * it: `grid`. */
 function reasonBefore(
@@ -196,12 +168,12 @@ export const rectHint = describedEdgeHint<
   name: "rect hint",
   walk: rectWalk,
   tiers: { lowest: () => HINT_TIER, count: HINT_TIER + 1 },
-  plan: 40,
   done: (_marks, ctx) => isSolved(ctx.board),
   reads: (taken, ctx) =>
     readsOf(ctx.marks.sp, reasonBefore(taken, ctx, ctx.marks.grid)),
   step: stepOf,
-  say: sentences,
+  // Every technique's sentence is `say.firing` of its reason.
+  say: (_spoken, { reason }, state) => say.firing(state, reason),
 });
 
 /**

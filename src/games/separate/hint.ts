@@ -38,12 +38,6 @@ import type { SeparateMove, SeparateState } from "./state.ts";
 export const SEPARATE_RUNGS = SAYS_KINDS;
 export type SeparateRung = (typeof SEPARATE_RUNGS)[number];
 
-/**
- * The most steps a plan holds: a player rarely follows more than a handful
- * before going their own way, at which point the plan is recomputed.
- */
-const PLAN_CAP = 40;
-
 /** What a leg's sentence is told besides the firing's own: the leg it is and
  * the edges it rings (its own and the ones still to come). */
 interface Leg {
@@ -150,7 +144,6 @@ export const separateHint = describedEdgeHint<
   walk: (state) => separateWalk(state),
   tiers: { lowest: () => 0, count: 1 },
   done: wallsAreAnswer,
-  plan: PLAN_CAP,
   step: stepOf,
   say: sentences,
 });

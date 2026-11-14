@@ -13,11 +13,9 @@
 
 import {
   describedEdgeHint,
-  type EdgeSpoken,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
@@ -40,9 +38,6 @@ import {
 } from "./state.ts";
 
 export type { Rival, SignpostFiring, SignpostRung } from "./solver.ts";
-
-/** How far ahead the plan is computed. */
-const PLAN_CAP = 40;
 
 /** The rungs a step can be: the description's techniques, in its order. */
 export const SIGNPOST_RUNGS: readonly SignpostRung[] = signpost.ladder.map((e) => e.id);
@@ -86,16 +81,6 @@ function firingBefore(
 /** The squares a link's premise reads, which a walk continues from: the two
  * it joins, and the squares it ruled out. */
 const readsOf = (f: SignpostFiring): number[] => [f.from, f.to, ...f.line, ...f.others];
-
-const sentence = (_spoken: unknown, { firing, highlights }: SignpostMarked): Sentence =>
-  say.firing(firing, highlights);
-
-const sentences: {
-  [K in keyof SignpostSays]: (
-    spoken: EdgeSpoken<SignpostSays[K]>,
-    marked: SignpostMarked,
-  ) => Sentence;
-} = { onlyNext: sentence, onlyBefore: sentence };
 
 /** A firing's step: its link, drawn on the walk's board as `executeMove` does,
  * with the numbers it settles and the links between consecutive numbers the
@@ -174,7 +159,6 @@ export const signpostHint = describedEdgeHint<
   name: "signpost hint",
   walk: signpostWalk,
   tiers: { lowest: () => 0, count: 1 },
-  plan: PLAN_CAP,
   reads: (taken, ctx) =>
     readsOf(
       firingBefore(
@@ -194,7 +178,7 @@ export const signpostHint = describedEdgeHint<
     return [f.from, f.to];
   },
   step: stepOf,
-  say: sentences,
+  say: (_spoken, { firing, highlights }) => say.firing(firing, highlights),
 });
 
 /** The step's link, made by the player, completes it; any other move goes

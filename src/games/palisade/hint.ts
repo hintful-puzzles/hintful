@@ -38,12 +38,6 @@ import type { PalisadeMove, PalisadeState } from "./state.ts";
 export const PALISADE_RUNGS = SAYS_KINDS;
 export type PalisadeRung = (typeof PALISADE_RUNGS)[number];
 
-/**
- * The most steps a plan holds: a player rarely follows more than a handful
- * before going their own way, at which point the plan is recomputed.
- */
-const PLAN_CAP = 40;
-
 /** What a leg's sentence is told besides the firing's own: the leg it is, the
  * edges it rings (its own and the ones still to come), whether the firing sets
  * several, and the board's width. */
@@ -139,7 +133,6 @@ export const palisadeHint = describedEdgeHint<
   walk: (state) => palisadeWalk(state),
   tiers: { lowest: () => 0, count: 1 },
   done: wallsAreAnswer,
-  plan: PLAN_CAP,
   step: stepOf,
   say: sentences,
 });
