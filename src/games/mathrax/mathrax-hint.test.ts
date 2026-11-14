@@ -1,9 +1,7 @@
 /**
  * Mathrax explained-hint tests.
  *
- * Tier 1 — the recording solver attributes each elimination to **one** clue
- * acting on **one** cell and its replayed placements complete a generated board;
- * `hint` populates, strikes and places with quality-bar narration; the clue
+ * Tier 1 — `hint` populates, strikes and places with quality-bar narration; the clue
  * sentence it speaks follows the board rather than the record; refusal on solved
  * / on mistakes; `hintKeepTrack` verdicts; resume to solved. Tier 2.5 — render
  * scenarios for both clue shapes: the arithmetic clue's diagonal pair (two
@@ -26,11 +24,8 @@ import { itDeep } from "../../engine/testing/slow.ts";
 import { newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
 import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
-import { type HintReason, mathraxSolve, recordMathraxDeductions } from "./solver.ts";
 import {
   clueIsParity,
-  DIFF_TRICKY,
-  diffToLevel,
   encodeParams,
   F_IMMUTABLE,
   type MathraxMove,
@@ -147,90 +142,6 @@ const pinned = describeHintKindPins({
         '[{"type":"pencilAll"},{"type":"pencilStrike","marks":[{"x":3,"y":0,"n":3},{"x":3,"y":1,"n":3},{"x":0,"y":2,"n":3},{"x":1,"y":2,"n":3},{"x":2,"y":2,"n":3},{"x":4,"y":2,"n":3},{"x":3,"y":3,"n":3},{"x":3,"y":4,"n":3}]},{"type":"pencilStrike","marks":[{"x":1,"y":2,"n":1}]}]',
     },
   },
-});
-
-const givens = (s: MathraxState): Uint8Array =>
-  s.grid.map((d, i) => (s.flags[i] & F_IMMUTABLE ? d : 0));
-
-// --- tier 1: recording solver ----------------------------------------------
-
-describe("mathrax recording solver", () => {
-  it("records a clue reason and its placements complete the board", () => {
-    const { st } = gen(NORMAL, "rec-normal");
-    const ops = recordMathraxDeductions(
-      st.params.o,
-      st.clues,
-      givens(st),
-      Math.min(diffToLevel(NORMAL.diff), DIFF_TRICKY),
-    );
-    expect(ops.length).toBeGreaterThan(0);
-    expect(ops.some((o) => (o.reason as HintReason).kind === "clue")).toBe(true);
-
-    const filled = givens(st);
-    for (const op of ops)
-      if (op.kind === "place") filled[op.y * st.params.o + op.x] = op.n;
-    for (let i = 0; i < st.params.o * st.params.o; i++)
-      expect(filled[i]).toBeGreaterThan(0);
-  });
-
-  it("gives one firing one clue acting on one cell", () => {
-    // The whole reason the recording path differs from the generator's: the
-    // deduction intersects up to four clues per cell at once, and a hint step
-    // that narrated one of them while striking marks another ruled out would be
-    // a lie. `group` is what a hint step is built from, so the property has to
-    // hold per group (docs/hints.md § "A rung is not a premise, so return per premise").
-    let groups = 0;
-    for (const p of [NORMAL, TRICKY]) {
-      for (let s = 0; s < 6; s++) {
-        const { st } = gen(p, `firing-${p.o}-${s}`);
-        const ops = recordMathraxDeductions(
-          st.params.o,
-          st.clues,
-          givens(st),
-          Math.min(diffToLevel(p.diff), DIFF_TRICKY),
-        );
-        const byGroup = new Map<number, typeof ops>();
-        for (const op of ops) {
-          if ((op.reason as HintReason).kind !== "clue") continue;
-          const g = byGroup.get(op.group) ?? [];
-          g.push(op);
-          byGroup.set(op.group, g);
-        }
-        for (const g of byGroup.values()) {
-          groups++;
-          expect(new Set(g.map((o) => `${o.x},${o.y}`)).size).toBe(1);
-          const clue = g.map((o) => JSON.stringify(o.reason));
-          expect(new Set(clue).size).toBe(1);
-        }
-      }
-    }
-    expect(groups).toBeGreaterThan(50);
-  });
-
-  it("solves identically with and without a recorder", () => {
-    // The recording path commits one clue's eliminations per firing where the
-    // generator path sweeps the whole board, so it is a *finer attribution* of
-    // the same eliminations and must reach the same verdict on the same grid.
-    // The generator is solver-gated, so a divergence here would change which
-    // boards exist (docs/solver-and-generator.md § "Solver-gated
-    // generation"); the frozen fixture corpus checks the other side of it.
-    // No recorder runs at the searching cap, so the caps stop below it.
-    let checked = 0;
-    for (const p of [NORMAL, TRICKY]) {
-      for (let s = 0; s < 6; s++) {
-        const { st } = gen(p, `gate-${p.o}-${s}`);
-        for (const cap of [0, 1, 2]) {
-          const plain = givens(st);
-          const taped = givens(st);
-          const verdict = mathraxSolve(p.o, plain, st.clues, cap);
-          expect(mathraxSolve(p.o, taped, st.clues, cap, () => {})).toBe(verdict);
-          expect([...taped]).toEqual([...plain]);
-          checked++;
-        }
-      }
-    }
-    expect(checked).toBe(36);
-  });
 });
 
 // --- tier 1: hint plan ------------------------------------------------------

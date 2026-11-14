@@ -28,8 +28,11 @@ import {
   LATIN_RUNGS,
   type PlanRung,
   runLatinCandidatePlan,
+  strikesOf,
+  techniqueRung,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
+import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import {
   clearEntries,
@@ -57,7 +60,10 @@ import {
 } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
+import type { Said } from "../../engine/ladder-runtime.ts";
+import type { LatinSolver } from "../../engine/latin.ts";
 import { rowColRegions } from "../../engine/latin-hint.ts";
+import { latinNotesLadder, latinStrikeRungs } from "../../engine/latin-notes.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
@@ -83,6 +89,7 @@ import { SQUARE_GRID } from "../../engine/sections.ts";
 import type { Point } from "../../engine/types.ts";
 import { newMathraxDesc } from "./generator.ts";
 import { MATHRAX_VOCAB, say } from "./hint-text.ts";
+import type * as mathrax from "./mathrax.compiled.ts";
 import {
   colors,
   computeSize,
@@ -95,10 +102,10 @@ import {
   redraw,
 } from "./render.ts";
 import {
-  type HintOp,
+  clueReason,
   type HintReason,
+  mathraxLadder,
   mathraxSolve,
-  recordMathraxDeductions,
   SOLVE_AMBIGUOUS,
   SOLVE_IMPOSSIBLE,
   SOLVE_UNIQUE,
@@ -113,6 +120,7 @@ import {
   DIFF_NAMES,
   DIFF_RECURSIVE,
   DIFF_TRICKY,
+  dealtOf,
   decodeParams,
   defaultParams,
   diffFromLevel,
@@ -404,10 +412,25 @@ function buildSteps(
   const o = state.params.o;
   const steps: HintStep<MathraxMove, MathraxHint, PlanRung<HintReason>>[] = [];
   const wGrid = Uint8Array.from(state.grid);
-  // Deductive only: a guess is not a teachable note strike, so the recording
-  // solve is capped below the recursive tier whatever the board's own tier is.
-  const maxdiff = Math.min(diffToLevel(state.params.diff), DIFF_TRICKY);
-  runLatinCandidatePlan<MathraxMove, MathraxHint, HintOp, HintReason>({
+  // Deductive only: a guess is not a teachable note strike, so the techniques
+  // are capped below the recursive tier whatever the board's own tier is.
+  const on = latinNotesLadder(
+    mathraxLadder(dealtOf(state.clues)),
+    o,
+    wGrid,
+    Math.min(diffToLevel(state.params.diff), DIFF_TRICKY),
+  );
+  // A firing is one clue's strikes in one cell, so it is one leg.
+  const clueRung = (id: "clueEasy" | "clue" | "clueTricky") =>
+    techniqueRung<MathraxMove, MathraxHint, DeductionRecord, HintReason, LatinSolver>(
+      on,
+      id,
+      (f) => {
+        const { k } = (f.reasons[0] as Said<unknown, mathrax.ClueSays>).says.terms;
+        return [{ strike: strikesOf(f, o), reason: clueReason(state.clues, k, o) }];
+      },
+    );
+  runLatinCandidatePlan<MathraxMove, MathraxHint, DeductionRecord, HintReason>({
     w: o,
     steps,
     grid: wGrid,
@@ -415,9 +438,14 @@ function buildSteps(
     autoClean,
     reading,
     label: "mathrax hint plan",
-    record: () => recordMathraxDeductions(o, state.clues, wGrid, maxdiff),
     placeWords: (m, reason) => ({ words: narrate(reason, m, o) }),
     strikeWords: (marks, reason) => premise(reason, marks, wGrid, o),
+    rungs: [
+      clueRung("clueEasy"),
+      clueRung("clue"),
+      clueRung("clueTricky"),
+      ...latinStrikeRungs<MathraxMove, MathraxHint, DeductionRecord, HintReason>(on, o),
+    ],
     notes: { noun: "number", placedVerb: "standing", cell: "cell" },
   });
   return steps;

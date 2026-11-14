@@ -252,3 +252,20 @@ tower it pins is mostly a hidden single of its line by then. The other
 rungs are near the same (arrangement 5268 to 6244, lowerBound 3020 to
 3300, lineFull 1876 to 1552). The avoidable-jump share rose (implicit
 reading 3.4% to 5.2%, populated 0% to 0.6%), inside the 10% bound.
+
+## Mathrax, moved (2026-11-14)
+
+The recorder and the clue readings' reason callback are gone; each says its
+clue, and a firing, one clue's strikes in one cell, is one leg. The
+replay audit's two gated entries, which said a recorded clue strike was
+decided by more corners than the step names, went with the recording they
+audited.
+
+Compared by `research/hint-walk-dump/` as for Unequal: every walk ends as
+at HEAD (288 solved, 32 refused), every sentence has a shape HEAD spoke,
+and the rungs are near the same (clue 29144 to 29016, a line's last cell
+73872 to 69984, hidden singles 8300 to 9716, sets 1352 to 1824, and 156
+wing steps on Tricky boards where there were none). The avoidable-jump
+share is unchanged (implicit reading 2.1% to 2.2%, populated 0.8% to
+0.4%). Two Tricky fingerprint walks lengthen (73 to 88 and 54 to 68
+steps), taking singles where a line's last cell was filled whole.

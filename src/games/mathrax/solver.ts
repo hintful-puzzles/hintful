@@ -1,8 +1,7 @@
 /**
- * Mathrax solver: the ladder `mathrax.description.yaml` states, compiled, with
- * the reason its clue readings record for the hint, on the shared
- * `LatinSolver` (`engine/latin.ts`), whose forcing chains and recursion are
- * the search above the ladder. The tiers:
+ * Mathrax solver: the ladder `mathrax.description.yaml` states, compiled, on
+ * the shared `LatinSolver` (`engine/latin.ts`), whose forcing chains and
+ * recursion are the search above the ladder. The tiers:
  *
  *   Easy (`DIFF_EASY`)         → a cell that the clues at its corners leave
  *                                one value, an arithmetic clue read only with
@@ -19,10 +18,6 @@
  * parity of 0 and 1.
  */
 
-import type {
-  DeductionRecord,
-  DeductionRecorder,
-} from "../../engine/deduction-record.ts";
 import { latinSpace } from "../../engine/describe-runtime.ts";
 import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
 import {
@@ -45,51 +40,39 @@ export const SOLVE_UNIQUE = 1;
 export const SOLVE_AMBIGUOUS = 2;
 
 /**
- * Why a Mathrax-specific deduction ruled a candidate out — the premise the hint
- * narrates and highlights. Combined with {@link LatinReason} (the generic
- * positional/set deductions) it covers every technique the recording
- * solver fires. The `kind` fields never collide with the Latin reasons.
+ * Why a Mathrax-specific step struck a candidate, as the hint narrates and
+ * highlights it. Combined with {@link LatinReason} (the generic positional and
+ * set steps) it covers every technique; the `kind` fields never collide.
  *
  * There is **one** clue arm, not one per clue shape, because everything else a
  * sentence needs is derivable: the packed `clue` carries its operation and
  * number, the intersection `(cx, cy)` plus the acted-on cell give the cell
  * diagonally across it, and whether that cell shows a digit is a fact about the
- * *working board* the hint re-derives at narration time rather than a fact the
- * solver could record (docs/hints-candidates.md § "Re-derive a placement's why"
- * applies the same rule to a single).
+ * *working board* the hint re-derives at narration time
+ * (docs/hints-candidates.md § "Re-derive a placement's why" applies the same
+ * rule to a single).
  */
 export type MathraxReason =
   /** The clue packed in `clue`, sitting at interior intersection `(cx, cy)`. */
   | { kind: "clue"; clue: number; cx: number; cy: number }
-  /** The singles the hint plan re-derives from the working board at placement
-   * time (the recording solver records them all as `single`). */
+  /** The singles the hint plan re-derives from the working board. */
   | SingleReason;
 
-/** A reason attached to a recorded Mathrax deduction. */
+/** A reason a Mathrax hint step gives. */
 export type HintReason = MathraxReason | LatinReason;
 
-/** One recorded Mathrax deduction op (a {@link DeductionRecord} with a narrowed
- * reason). */
-export interface HintOp extends DeductionRecord {
-  reason: HintReason;
+/** Clue `k` of an order-`o` board as a {@link MathraxReason}. */
+export function clueReason(clues: Int32Array, k: number, o: number): MathraxReason {
+  const co = o - 1;
+  return { kind: "clue", clue: clues[k], cx: k % co, cy: (k / co) | 0 };
 }
 
-function describedLadder(
-  o: number,
-  clues: Int32Array,
-  dl: mathrax.Dealt,
-): Ladder<LatinSolver> {
-  const co = o - 1;
-  const reason = ({ k }: { k: number }): MathraxReason => ({
-    kind: "clue",
-    clue: clues[k],
-    cx: k % co,
-    cy: (k / co) | 0,
-  });
+/** The ladder `mathrax.description.yaml` states, over the dealt clues. */
+export function mathraxLadder(dl: mathrax.Dealt): Ladder<LatinSolver> {
   return latinLadder(mathrax, {
-    clueEasy: compiledRung(mathrax.clueEasy, dl, reason),
-    clue: compiledRung(mathrax.clue, dl, reason),
-    clueTricky: compiledRung(mathrax.clueTricky, dl, reason),
+    clueEasy: compiledRung(mathrax.clueEasy, dl),
+    clue: compiledRung(mathrax.clue, dl),
+    clueTricky: compiledRung(mathrax.clueTricky, dl),
   });
 }
 
@@ -101,46 +84,22 @@ function describedLadder(
  *
  * The write-back is load-bearing: the generator's two clue-stripping loops keep
  * their own backup of the puzzle and restore it after each trial solve.
- *
- * `recorder` is the hint path's only extra: see {@link recordMathraxDeductions}.
  */
 export function mathraxSolve(
   o: number,
   grid: Uint8Array,
   clues: Int32Array,
   maxdiff: number,
-  recorder?: DeductionRecorder,
 ): number {
   const dl = dealtOf(clues);
   const diff = latinSolver(grid, o, {
     maxdiff,
     diffRecursive: DIFF_RECURSIVE,
     isAnswer: (g) => mathrax.isAnswer(g, latinSpace(o), dl),
-    recorder,
-    budgetLabel: "mathrax hint",
-    ladder: describedLadder(o, clues, dl),
+    ladder: mathraxLadder(dl),
   });
   if (diff === DIFF_IMPOSSIBLE) return SOLVE_IMPOSSIBLE;
   if (diff === DIFF_UNFINISHED) return SOLVE_STUCK;
   if (diff === DIFF_AMBIGUOUS) return SOLVE_AMBIGUOUS;
   return SOLVE_UNIQUE;
-}
-
-/**
- * Run the recording solver on a sound candidate cube seeded from `grid` (the
- * placed givens/entries only — never the player's notes), up to `maxdiff`, and
- * return every candidate elimination and cell placement it makes, in solver
- * order, each tagged with the rule + premise that forced it. This is the raw
- * deduction script a hint narrates. `grid` is treated read-only (a working copy
- * is solved internally).
- */
-export function recordMathraxDeductions(
-  o: number,
-  clues: Int32Array,
-  grid: Uint8Array,
-  maxdiff: number,
-): HintOp[] {
-  const ops: HintOp[] = [];
-  mathraxSolve(o, grid.slice(), clues, maxdiff, (r) => ops.push(r as HintOp));
-  return ops;
 }

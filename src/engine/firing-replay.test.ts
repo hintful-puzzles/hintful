@@ -204,11 +204,7 @@ const keyOf = (f: { reason: unknown; technique: string }): string =>
  * that shows it below, and each fix of a `reads` it could hide held by a test
  * of its own.
  */
-const GATED: Record<string, string> = {
-  "mathrax: clue @ clueEasy":
-    "Easy strikes a cell's candidates only once every clue at its corners leaves it one digit; the strike rests on the one clue and its partner the step names",
-  "mathrax: clue @ clue": "Normal keeps Easy's gate",
-};
+const GATED: Record<string, string> = {};
 
 /**
  * Firings whose premise really is short: a defect in the game's hint, held
@@ -234,18 +230,7 @@ const UNREPLAYED: Record<string, string> = {};
 
 /** The boards that show each entry of the two ledgers, as the input its
  * technique reads. */
-const PINNED: { key: string; id: string; board: string }[] = [
-  {
-    key: "mathrax: clue @ clueEasy",
-    id: "mathrax",
-    board: "5dn:g3q,dS1S2A7aS0dOb",
-  },
-  {
-    key: "mathrax: clue @ clue",
-    id: "mathrax",
-    board: "5dt:n3j,cA7bS1S0aA6aS1d",
-  },
-];
+const PINNED: { key: string; id: string; board: string }[] = [];
 
 /**
  * Boards a game's sweep adds to its presets' own, each the input for a rung
@@ -268,6 +253,7 @@ const RECORDS_NOTHING: Record<string, string> = {
   adjacent: "its strikes are the compiled techniques run on the notes",
   keen: "its strikes are the compiled techniques run on the notes",
   towers: "its steps are the compiled techniques run on the notes",
+  mathrax: "its strikes are the compiled techniques run on the notes",
 };
 
 /**

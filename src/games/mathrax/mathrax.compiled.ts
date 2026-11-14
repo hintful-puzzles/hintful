@@ -22,6 +22,17 @@ export const units: readonly string[] = ["rows","cols"];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "clueEasy" | "latin.hiddenSingle" | "latin.single" | "clue" | "latin.set" | "clueTricky" | "latin.fish" | "latin.wing";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  clueEasy: ClueEasySays;
+  clue: ClueSays;
+  clueTricky: ClueTrickySays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["clueEasy","clue","clueTricky"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
 
@@ -175,11 +186,17 @@ export interface ClueEasyBinding {
   k: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClueEasySays {
+  terms: { k: number; };
+  marks: {  };
+}
+
 const clueEasyFacts: number[] = [];
 let clueEasyCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasyBinding> | null): number {
+export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasyBinding, ClueEasySays> | null): number {
   const facts = clueEasyFacts;
   let fired = 0;
   let changed = false;
@@ -418,7 +435,10 @@ export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasy
         if (!(_c180)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, M: v_M, k: v_k }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { k: v_k }, marks: {  } };
+            if (!fire({ c: v_c, M: v_M, k: v_k }, facts, _says)) return 1;
+          }
           cands.fill(-1);
         }
       }
@@ -433,11 +453,17 @@ export interface ClueBinding {
   k: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClueSays {
+  terms: { k: number; };
+  marks: {  };
+}
+
 const clueFacts: number[] = [];
 let clueCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding> | null): number {
+export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding, ClueSays> | null): number {
   const facts = clueFacts;
   let fired = 0;
   let changed = false;
@@ -639,7 +665,10 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding>
         if (!(_c142)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ c: v_c, M: v_M, k: v_k }, facts)) return 1;
+          if (fire !== null) {
+            const _says = { terms: { k: v_k }, marks: {  } };
+            if (!fire({ c: v_c, M: v_M, k: v_k }, facts, _says)) return 1;
+          }
           cands.fill(-1);
         }
       }
@@ -654,11 +683,17 @@ export interface ClueTrickyBinding {
   k: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface ClueTrickySays {
+  terms: { k: number; };
+  marks: {  };
+}
+
 const clueTrickyFacts: number[] = [];
 let clueTrickyCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTrickyBinding> | null): number {
+export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTrickyBinding, ClueTrickySays> | null): number {
   const facts = clueTrickyFacts;
   let fired = 0;
   let changed = false;
@@ -858,7 +893,10 @@ export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTr
       if (!(_c140)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ c: v_c, M: v_M, k: v_k }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { k: v_k }, marks: {  } };
+          if (!fire({ c: v_c, M: v_M, k: v_k }, facts, _says)) return 1;
+        }
         cands.fill(-1);
       }
     }
