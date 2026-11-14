@@ -269,6 +269,7 @@ const RECORDS_NOTHING: Record<string, string> = {
   salad: "its strikes are the compiled techniques run on the notes",
   unequal: "its strikes are the compiled techniques run on the notes",
   adjacent: "its strikes are the compiled techniques run on the notes",
+  keen: "its strikes are the compiled techniques run on the notes",
 };
 
 /**

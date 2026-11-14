@@ -21,12 +21,17 @@ import {
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import {
+  type CandidateRung,
+  type Firing,
   LATIN_RUNGS,
   type PlanRung,
   runLatinCandidatePlan,
+  strikesOf,
+  techniqueRung,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
 import { digitValue } from "../../engine/decimal.ts";
+import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import {
   clearEntries,
@@ -50,8 +55,14 @@ import {
 } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
+import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { rowColRegions } from "../../engine/latin-hint.ts";
+import {
+  byCell,
+  latinNotesLadder,
+  latinStrikeRungs,
+} from "../../engine/latin-notes.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -91,14 +102,16 @@ import {
   redraw,
 } from "./render.ts";
 import {
+  cageReason,
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
-  type HintOp,
   type HintReason,
-  recordKeenDeductions,
+  keenLadder,
   solveKeen,
 } from "./solver.ts";
 import {
+  type Cages,
+  cagesOf,
   cloneState,
   DIFF_EXTREME,
   DIFF_NAMES,
@@ -345,6 +358,24 @@ function reasonReads(reason: HintReason): { reads?: Point[] } {
     : {};
 }
 
+/** A cage firing as legs, a cell each: a cage's narration is about "this
+ * cell", with the whole cage hatched on every leg. A line firing says its
+ * line, and the rows are numbered before the columns. */
+function cageLegs(
+  f: LadderFiring,
+  w: number,
+  cages: Cages,
+): Firing<KeenMove, KeenHint, HintReason> {
+  const { r, L } = (f.reasons[0] as Said<unknown, { terms: { r: number; L?: number } }>)
+    .says.terms;
+  const cage = cageReason(cages, r, w);
+  const reason: HintReason =
+    L === undefined
+      ? { kind: "cage", ...cage }
+      : { kind: "cageLine", ...cage, horizontal: L < w };
+  return byCell(strikesOf(f, w)).map((strike) => ({ strike, reason }));
+}
+
 /** Every rung a Keen step can be: the Latin family's, and the two cage kinds
  * of `KeenReason`. */
 export const KEEN_RUNGS = [...LATIN_RUNGS, "cage", "cageLine"] as const;
@@ -360,8 +391,17 @@ function buildSteps(
   const w = state.params.w;
   const steps: HintStep<KeenMove, KeenHint, PlanRung<HintReason>>[] = [];
   const wGrid = Int8Array.from(state.grid);
-  const maxdiff = Math.min(diffToLevel(state.params.diff), DIFF_EXTREME);
-  runLatinCandidatePlan<KeenMove, KeenHint, HintOp, HintReason>({
+  const cages = cagesOf(w, state.clues);
+  const on = latinNotesLadder(
+    keenLadder(cages),
+    w,
+    wGrid,
+    Math.min(diffToLevel(state.params.diff), DIFF_EXTREME),
+  );
+  type Rung = CandidateRung<KeenMove, KeenHint, DeductionRecord, HintReason>;
+  const cageRung = (id: "cageEasy" | "cage" | "cageLine"): Rung =>
+    techniqueRung(on, id, (f) => cageLegs(f, w, cages));
+  runLatinCandidatePlan<KeenMove, KeenHint, DeductionRecord, HintReason>({
     w,
     steps,
     grid: wGrid,
@@ -369,15 +409,21 @@ function buildSteps(
     autoClean,
     reading,
     label: "keen hint plan",
-    record: () => recordKeenDeductions(w, state.clues, Uint8Array.from(wGrid), maxdiff),
     placeWords: (m, reason) => ({ words: narrate(reason, m, w) }),
     strikeWords: (marks, reason) => ({
       ...premise(reason, marks),
       ...reasonReads(reason),
     }),
-    // A cage's narration is about "this cell", with the whole cage hatched on
-    // every leg, so a firing is one leg per cell.
-    strikeAxis: (op) => op.y * w + op.x,
+    rungs: [
+      cageRung("cageEasy"),
+      cageRung("cage"),
+      cageRung("cageLine"),
+      ...latinStrikeRungs<KeenMove, KeenHint, DeductionRecord, HintReason>(
+        on,
+        w,
+        byCell,
+      ),
+    ],
     notes: { noun: "number", placedVerb: "standing", cell: "cell" },
   });
   return steps;

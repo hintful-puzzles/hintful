@@ -22,6 +22,17 @@ export const units: readonly string[] = ["rows","cols"];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "cageEasy" | "latin.hiddenSingle" | "latin.single" | "cage" | "cageLine" | "latin.set" | "latin.fish" | "latin.wing";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  cageEasy: CageEasySays;
+  cage: CageSays;
+  cageLine: CageLineSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["cageEasy","cage","cageLine"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
 
@@ -164,13 +175,19 @@ export interface CageEasyBinding {
   D: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CageEasySays {
+  terms: { r: number; };
+  marks: {  };
+}
+
 const cageEasyFacts: number[] = [];
 let cageEasyCands = new Int32Array(0);
 let cageEasy_f188 = new Int32Array(0);
 let cageEasy_l189: readonly number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasyBinding> | null): number {
+export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasyBinding, CageEasySays> | null): number {
   if (cageEasy_f188.length < sp.cells.length) cageEasy_f188 = new Int32Array(sp.cells.length).fill(-1);
   else cageEasy_f188.fill(-1);
   cageEasy_l189 = [];
@@ -509,7 +526,10 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
     if (!(_q374)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ r: v_r, K: v_K.slice(), D: v_D }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { r: v_r }, marks: {  } };
+        if (!fire({ r: v_r, K: v_K.slice(), D: v_D }, facts, _says)) return 1;
+      }
       cands.fill(-1);
     }
   }
@@ -521,6 +541,12 @@ export interface CageBinding {
   K: readonly number[];
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CageSays {
+  terms: { r: number; };
+  marks: {  };
+}
+
 const cageFacts: number[] = [];
 let cageCands = new Int32Array(0);
 let cage_p10 = new Int32Array(0);
@@ -529,7 +555,7 @@ let cage_f16 = new Int32Array(0);
 let cage_l17: readonly number[] = [];
 
 /** Its dearest read grows with the board as 1. */
-export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding> | null): number {
+export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding, CageSays> | null): number {
   if (cage_p10.length < sp.cells.length) cage_p10 = new Int32Array(sp.cells.length);
   else cage_p10.fill(0);
   cage_l11 = [];
@@ -723,7 +749,10 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding>
     if (!(_q5)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ r: v_r, K: v_K.slice() }, facts)) return 1;
+      if (fire !== null) {
+        const _says = { terms: { r: v_r }, marks: {  } };
+        if (!fire({ r: v_r, K: v_K.slice() }, facts, _says)) return 1;
+      }
       cands.fill(-1);
       _epoch++;
     }
@@ -737,13 +766,19 @@ export interface CageLineBinding {
   L: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface CageLineSays {
+  terms: { r: number; L: number; };
+  marks: {  };
+}
+
 const cageLineFacts: number[] = [];
 let cageLineCands = new Int32Array(0);
 let cageLine_f16 = new Int32Array(0);
 let cageLine_l17: readonly number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLineBinding> | null): number {
+export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLineBinding, CageLineSays> | null): number {
   if (cageLine_f16.length < sp.cells.length) cageLine_f16 = new Int32Array(sp.cells.length).fill(-1);
   else cageLine_f16.fill(-1);
   cageLine_l17 = [];
@@ -945,7 +980,10 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
       if (!(_q10)) return -1;
       if (changed || facts.length > 0) {
         fired = 1;
-        if (fire !== null && !fire({ r: v_r, K: v_K.slice(), L: v_L }, facts)) return 1;
+        if (fire !== null) {
+          const _says = { terms: { r: v_r, L: v_L }, marks: {  } };
+          if (!fire({ r: v_r, K: v_K.slice(), L: v_L }, facts, _says)) return 1;
+        }
         cands.fill(-1);
       }
     }

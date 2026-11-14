@@ -124,6 +124,10 @@ techniques:
       r in cage, K = cells(r),
       D = set(f(x) over fill f of K from cand where apart(f, K) and makes(f, r), x in K)
     conclude: "forall c in K, d in cand(c) where d not in D: strike(c, d)"
+    # The hint names the cage.
+    says:
+      terms: { r: r }
+      marks: {}
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
   # Cage by cage: a value no filling of the cage that makes its clue puts in
@@ -135,6 +139,10 @@ techniques:
     conclude: >-
       forall c in K, d in cand(c) where not (exists fill f of K from cand
       where apart(f, K) and makes(f, r) and f(c) = d: true): strike(c, d)
+    # The hint names the cage.
+    says:
+      terms: { r: r }
+      marks: {}
   # Cage by cage, and line by line, the columns before the rows: a value
   # every filling of the cage that makes its clue puts in its part of the
   # line is struck from the rest of the line. One line a firing.
@@ -146,6 +154,10 @@ techniques:
       forall d in domain where (forall fill f of K from cand
       where apart(f, K) and makes(f, r): exists x in cells(L): x in K and f(x) = d),
       c in cells(L) where c not in K: strike(c, d)
+    # The hint names the cage and the line.
+    says:
+      terms: { r: r, L: L }
+      marks: {}
   - { use: latin.set, tier: Tricky, rung: set }
   - { use: latin.fish, tier: Hard, rung: set }
   - { use: latin.wing, tier: Hard, rung: wing }

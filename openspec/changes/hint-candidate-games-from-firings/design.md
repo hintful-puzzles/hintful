@@ -217,3 +217,19 @@ number (adjacent 20112 to 18056, adjacentSet 20152 to 21532, set 4180 to
 fingerprint moves more than Unequal's: walks of a board's tier shift by up
 to a dozen steps either way (5x5 Tricky #3 49 to 60, more of them neighbor
 steps; #1 73 to 63), every one still solved.
+
+## Keen, moved (2026-11-14)
+
+The recorder and the three cage techniques' reason callbacks are gone; each
+says its cage, and `cageLine` its line too (the rows numbered first, so a
+line below the board's width is a row). The cap keeps `cageEasy` to Easy
+boards, as its `until` did for the solver.
+
+Compared by `research/hint-walk-dump/` as for Unequal: every walk ends as
+at HEAD (160 solved, 32 refused), and every sentence has a shape HEAD
+spoke, but for a line step striking three numbers at once. No line step
+appears below Tricky. On Tricky boards and up the line steps rise (28920 to
+51908) and the cell-by-cell cage steps fall (188376 to 168532): a line step
+that continues the last one is now offered beside the singles. The
+avoidable-jump share fell (implicit reading 2.8% to 2.6%, populated 1.0% to
+0%). Every fingerprint walk still solves, in a few steps fewer.

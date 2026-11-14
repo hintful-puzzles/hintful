@@ -30,10 +30,7 @@ import {
 import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
 import { COL_HINT_CELL, COL_PENCIL, computeSize, coord, gridExtra } from "./render.ts";
-import { type HintReason, recordKeenDeductions } from "./solver.ts";
 import {
-  DIFF_EXTREME,
-  diffToLevel,
   type KeenMove,
   type KeenParams,
   type KeenState,
@@ -206,39 +203,6 @@ const pinnedMarked = describeHintKindPins({
       moves: [{ type: "pencilAll" }],
     },
   },
-});
-
-// --- tier 1: recording solver ----------------------------------------------
-
-describe("keen recording solver", () => {
-  it("records a cage reason and its placements complete the board", () => {
-    const { st } = gen(NORMAL, "rec-normal");
-    const ops = recordKeenDeductions(
-      st.params.w,
-      st.clues,
-      Uint8Array.from(st.grid),
-      Math.min(diffToLevel(NORMAL.diff), DIFF_EXTREME),
-    );
-    expect(ops.length).toBeGreaterThan(0);
-    const kinds = new Set(ops.map((o) => (o.reason as HintReason).kind));
-    // The signature cage deduction is exercised.
-    expect(kinds.has("cage")).toBe(true);
-
-    // Replaying the placements reconstructs the full (unique) solution.
-    const w = st.params.w;
-    const filled = new Uint8Array(w * w);
-    for (const op of ops) if (op.kind === "place") filled[op.y * w + op.x] = op.n;
-    for (let i = 0; i < w * w; i++) expect(filled[i]).toBeGreaterThan(0);
-  });
-
-  it("with recording off, leaves the generate/solve path producing a unique solution", () => {
-    // A smoke check that recording is opt-in: solving without a recorder still
-    // yields the same kind of result (the byte-identical guarantee is the C
-    // differential in keen-differential.test.ts; this just guards the wiring).
-    const { st } = gen(NORMAL, "rec-off");
-    const r = keenGame.solve?.(st, st);
-    expect(r?.ok).toBe(true);
-  });
 });
 
 // --- tier 1: hint plan ------------------------------------------------------
