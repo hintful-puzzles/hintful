@@ -11,13 +11,11 @@
 
 import {
   describedEdgeHint,
-  type EdgeSpoken,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
-import type { HintStep } from "../../engine/game.ts";
-import { trackTargets } from "../../engine/hint-track.ts";
+import { keepTrackBy } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder, Taken } from "../../engine/ladder-runtime.ts";
 import {
@@ -57,14 +55,6 @@ import {
   type PearlState,
   STRAIGHT,
 } from "./state.ts";
-
-/**
- * How far ahead the plan is computed: a UX bound, not a correctness one. A
- * player rarely follows more than a handful of steps before going their own
- * way, and the plan is recomputed then anyway; it also keeps `hint()` cheap
- * enough for the cross-game resume walk, which asks after every move.
- */
-const PLAN_CAP = 40;
 
 /** An edge a step decides: the side of square `sq` toward `dir` (`R` or `D`,
  * so each edge has one name), and whether it carries the line. */
@@ -257,34 +247,6 @@ function reasonOf(
         }
       throw new Error(`pearl hint: earlyThrough at ${c} joins no piece`);
     }
-  }
-}
-
-/**
- * The squares a firing's premise reads, which a hint plan continues from:
- * the square it reads, the pearl and the squares beside it its rule looks
- * along, or the piece of line it would close.
- */
-function premise(v: View, r: PearlReason): number[] {
-  const at = (cell: number, d: number, k: number): number[] => {
-    const x = (cell % v.w) + k * dirX(d);
-    const y = ((cell / v.w) | 0) + k * dirY(d);
-    return x >= 0 && y >= 0 && x < v.w && y < v.h ? [y * v.w + x] : [];
-  };
-  switch (r.kind) {
-    case "square":
-      return [r.sq];
-    case "blackRunsOn":
-    case "blackCannotRunOn":
-      return [r.pearl, ...at(r.pearl, r.dir, 1), ...at(r.pearl, r.dir, 2)];
-    case "whiteCannotTurn":
-      return [r.pearl, ...at(r.pearl, r.axis, 1), ...at(r.pearl, r.axis, -1)];
-    case "whiteTurnsOpposite":
-      return [r.pearl, ...at(r.pearl, r.dir, 1), ...at(r.pearl, r.dir, -1)];
-    case "closesEarly":
-      return [r.sq, ...at(r.sq, r.dir, 1), ...r.piece];
-    case "closesEarlyThrough":
-      return [r.sq, ...r.piece];
   }
 }
 
@@ -527,29 +489,6 @@ interface PearlMarked {
   reason: PearlReason;
 }
 
-/** Every technique's sentence is the one `narrate` says for its premise. */
-const sentence = (_spoken: unknown, { view, firing, reason }: PearlMarked): Sentence =>
-  narrate(view, firing, reason);
-
-const sentences: {
-  [K in keyof PearlSays]: (
-    spoken: EdgeSpoken<PearlSays[K]>,
-    marked: PearlMarked,
-  ) => Sentence;
-} = {
-  closed: () => {
-    throw new Error("pearl hint: the closed loop makes no step");
-  },
-  square: sentence,
-  blackPearl: sentence,
-  blackRunsOn: sentence,
-  blackCannotRunOn: sentence,
-  whiteCannotTurn: sentence,
-  whiteTurnsOpposite: sentence,
-  earlyLoop: sentence,
-  earlyThrough: sentence,
-};
-
 /** A firing's step: the edges it decided and the lines the pearls carry on
  * from them, drawn on the working board in the same step. */
 function stepOf(fired: FiredOf<PearlSays[keyof PearlSays], PearlWalkContext>): {
@@ -624,14 +563,9 @@ export const pearlHint = describedEdgeHint<
   walk: pearlWalk,
   tiers: { lowest: () => pearl.tiers.length - 1, count: pearl.tiers.length },
   done: (m, ctx) => ctx.closed || !m.grid.includes(0),
-  plan: PLAN_CAP,
-  // The squares the premise reads, as the board stands before the firing.
-  reads: (taken, ctx) => {
-    const reason = premiseOf(ctx.view, taken, ctx.view.grid);
-    return reason === null ? [] : premise(ctx.view, reason);
-  },
   step: stepOf,
-  say: sentences,
+  // Every technique's sentence is the one `narrate` says for its premise.
+  say: (_spoken, { view, firing, reason }) => narrate(view, firing, reason),
 });
 
 /** The move that makes these edges: each a line or a cross, set on the squares
@@ -657,54 +591,49 @@ function edgeOn(state: PearlState, t: PearlEdgeOp): "line" | "cross" | null {
   return null;
 }
 
+const keyOf = (e: { sq: number; dir: number }) => e.sq * 16 + e.dir;
+
 /**
  * Classify a player move against the displayed step.
  *
  * A step that decides several edges is one step, and the player makes them one
  * click or one drag at a time, a drag and a click spelling the same edge
- * differently. So the move is judged by the edges it changes
- * (`engine/hint-track.ts`), and the step shrinks in place to what is left.
+ * differently. So the move is judged by the edges it changes, and the step
+ * shrinks in place to what is left.
  */
-export function pearlKeepTrack(
-  m: PearlMove,
-  hintStep: HintStep<PearlMove, PearlHint>,
-  state: PearlState,
-): "completed" | "onTrack" | "off" {
-  if (m.ops.some((op) => op.kind === "solve" || op.kind === "hint")) return "off";
-  const targets = hintStep.highlights?.targets ?? [];
-  let after: PearlState;
-  try {
-    after = executeMove(state, m);
-  } catch {
-    return "off";
-  }
-  const changes = new Map<number, "line" | "cross" | null>();
-  const keyOf = (e: { sq: number; dir: number }) => e.sq * 16 + e.dir;
-  for (let sq = 0; sq < state.w * state.h; sq++)
-    for (const dir of [R, D]) {
-      const e = { sq, dir, line: false };
-      const now = edgeOn(after, e);
-      if (edgeOn(state, e) !== now) changes.set(keyOf(e), now);
+export const pearlKeepTrack = keepTrackBy<
+  PearlState,
+  PearlMove,
+  PearlHint,
+  PearlEdgeOp,
+  number,
+  "line" | "cross" | null
+>({
+  foreign: (m) => m.ops.some((op) => op.kind === "solve" || op.kind === "hint"),
+  execute: (state, m) => {
+    try {
+      return executeMove(state, m);
+    } catch {
+      return null;
     }
-  const want = (t: PearlEdgeOp) => (t.line ? "line" : "cross");
-  const { verdict, left } = trackTargets<PearlEdgeOp, number, "line" | "cross" | null>({
-    targets,
-    changes,
-    key: keyOf,
-    want,
-    holds: (t) => edgeOn(after, t) === want(t),
-  });
-  if (verdict === "onTrack") {
-    hintStep.move = moveOf(state, left);
-    if (hintStep.highlights)
-      hintStep.highlights = { ...hintStep.highlights, targets: left };
-    if (hintStep.words) {
-      const kept = new Set(left.map((t) => EDGE.key(edgeOf(state, t))));
-      hintStep.words = hintStep.words.narrow(
-        (role, _kind, key) => role !== "ring" || kept.has(key),
-      );
-      hintStep.explanation = hintStep.words.text;
-    }
-  }
-  return verdict;
-}
+  },
+  targets: (step) => step.highlights?.targets ?? [],
+  changesOf: (before, after) => {
+    const changes = new Map<number, "line" | "cross" | null>();
+    for (let sq = 0; sq < before.w * before.h; sq++)
+      for (const dir of [R, D]) {
+        const e = { sq, dir, line: false };
+        const now = edgeOn(after, e);
+        if (edgeOn(before, e) !== now) changes.set(keyOf(e), now);
+      }
+    return changes;
+  },
+  key: keyOf,
+  want: (t) => (t.line ? "line" : "cross"),
+  valueOf: edgeOn,
+  narrowed: (step, left, state) => ({
+    move: moveOf(state, left),
+    highlights: step.highlights && { ...step.highlights, targets: [...left] },
+  }),
+  ring: (t, state) => EDGE.key(edgeOf(state, t)),
+});

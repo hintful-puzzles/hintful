@@ -785,16 +785,21 @@ makes some, and a sentence a technique, which an `arms` technique reads by
 `describedEdgeHint` is the shape for a game whose facts are on edges, a step a
 firing: it walks from the board's own tier, caps the plan, names the kind from
 the technique and arm, and calls the game's `step` with the marks before and
-after the firing, to make the move and highlights from. Keep-track is the
-game's. Exemplar: `bridges/hint.ts`.
+after the firing, to make the move and highlights from. A game whose words
+read the firing's premise itself gives one `say` for every technique, and the
+squares a premise reads are the description's `marks.reads`, not a hook.
+Keep-track is the game's, `keepTrackBy` where its step names its targets.
+Exemplar: `pearl/hint.ts`.
 
 ### `hint-track.ts` — following a step that asks for several things
 
 `trackTargets` is the `hintKeepTrack` verdict for a step that decides
 several squares or edges, judged by what the player's move changed and not
 by its ops. `changedCells` is the diff for a board with one value per cell;
-a game whose elements are edges, links or flags writes its own. Exemplar:
-`tents/hint.ts`. See [`hints-marks.md`](./hints-marks.md) § "Group one
+a game whose elements are edges, links or flags writes its own. `keepTrackBy`
+is the whole `hintKeepTrack` from a codec: how the game executes a move,
+diffs two boards, keys and values a target, rebuilds the shrunk move and keys
+a target's ring. Exemplars: `tents/hint.ts`, `pearl/hint.ts`. See [`hints-marks.md`](./hints-marks.md) § "Group one
 firing into one step".
 
 ### `hint-gesture.ts` — how the pointer makes a hint step

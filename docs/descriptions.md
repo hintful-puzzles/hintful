@@ -1072,7 +1072,10 @@ with) gives `describedEdgeHint` (`engine/described-edge-hint.ts`) the walk,
 `step` that makes the move and the highlights from the marks as the firing found
 them and left them. Its `says` marks are cells (the islands outlined and the
 island read, `reads`), and what is an edge or a line (a group's bridges) is a
-term, which the game reads off its geometry. The game's own `hintKeepTrack`
+term, which the game reads off its geometry. **The squares a premise reads
+are `reads`, never a hook**, however far they lie from the binding (Pearl's
+square past the next, `set(other(x, j) over x in edges(j) where ...)`, and the
+piece of line a way would close, `through(...)`). The game's own `hintKeepTrack`
 stays: a bridge is drawn a drag at a time, which no fact is.
 
 **A technique whose words need what held says `witness: true`**: the

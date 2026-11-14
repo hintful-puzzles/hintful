@@ -16,7 +16,7 @@
  * because each spells its move differently.
  */
 
-import type { HintTrackVerdict } from "./game.ts";
+import type { HintStep, HintTrackVerdict } from "./game.ts";
 
 export interface TargetTrack<Target, Key, Value> {
   /** What the step still asks for. */
@@ -72,6 +72,64 @@ export function trackLeg<Target, Value>(spec: {
   }
   if (done === spec.targets.length) return "completed";
   return done > 0 ? "onTrack" : "off";
+}
+
+/** How a game spells a step's targets, for following the step by what a move
+ * did to the board ({@link keepTrackBy}). */
+export interface TargetCodec<State, Move, H, Target, Key, Value> {
+  /** Whether a move can be no part of a step (a solve, a hint request). */
+  foreign(m: Move): boolean;
+  /** The board after the move, or `null` where it cannot be made. */
+  execute(state: State, m: Move): State | null;
+  /** What the step still asks for. */
+  targets(step: HintStep<Move, H>): readonly Target[];
+  /** Every element that differs between two boards, with what it holds in the
+   * second. */
+  changesOf(before: State, after: State): ReadonlyMap<Key, Value>;
+  /** The element a target names, as {@link changesOf} keys it. */
+  key(t: Target, state: State): Key;
+  /** The value the target asks its element to take. */
+  want(t: Target): Value;
+  /** The value the target's element holds on a board. */
+  valueOf(state: State, t: Target): Value;
+  /** The step's move and highlights where only `left` is still to make. */
+  narrowed(
+    step: HintStep<Move, H>,
+    left: readonly Target[],
+    state: State,
+  ): Pick<HintStep<Move, H>, "move" | "highlights">;
+  /** The key of the target's ring in the step's words. */
+  ring(t: Target, state: State): string;
+}
+
+/** A game's `hintKeepTrack` from how it spells its targets: the move is judged
+ * by {@link trackTargets}, and a step on track shrinks in place to what is
+ * left, its words keeping only the rings of the targets left. */
+export function keepTrackBy<State, Move, H, Target, Key, Value>(
+  codec: TargetCodec<State, Move, H, Target, Key, Value>,
+): (m: Move, step: HintStep<Move, H>, state: State) => HintTrackVerdict {
+  return (m, step, state) => {
+    if (codec.foreign(m)) return "off";
+    const after = codec.execute(state, m);
+    if (after === null) return "off";
+    const { verdict, left } = trackTargets({
+      targets: codec.targets(step),
+      changes: codec.changesOf(state, after),
+      key: (t) => codec.key(t, state),
+      want: codec.want,
+      holds: (t) => codec.valueOf(after, t) === codec.want(t),
+    });
+    if (verdict !== "onTrack") return verdict;
+    Object.assign(step, codec.narrowed(step, left, state));
+    if (step.words) {
+      const kept = new Set(left.map((t) => codec.ring(t, state)));
+      step.words = step.words.narrow(
+        (role, _kind, key) => role !== "ring" || kept.has(key),
+      );
+      step.explanation = step.words.text;
+    }
+    return verdict;
+  };
 }
 
 /**

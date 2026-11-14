@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/pearl/pearl.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, cluesValued, edgeGroups, freshBinding, keptEdgeGroups, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, through, type Footprint, type Kept } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, addOnce, clueAt, cluesValued, edgeGroups, freshBinding, keptEdgeGroups, keptStore, minus, rangeMask, sameSet, setOf, staleChecking, stamps, through, type Footprint, type Kept, union } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -302,7 +302,7 @@ export interface SquareBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SquareSays {
   terms: { c: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const squareFacts: number[] = [];
@@ -711,7 +711,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { c: v_c }, marks: {  } };
+            const _says = { terms: { c: v_c }, marks: { reads: setOf(v_c).slice() } };
             if (!fire({ c: v_c, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts, _says)) return 1;
           }
           cands.fill(-1);
@@ -733,7 +733,7 @@ export interface BlackPearlBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface BlackPearlSays {
   terms: { c: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const blackPearlFacts: number[] = [];
@@ -1051,7 +1051,7 @@ export function blackPearl(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlackP
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { c: v_c }, marks: {  } };
+            const _says = { terms: { c: v_c }, marks: { reads: setOf(v_c).slice() } };
             if (!fire({ c: v_c, e: v_e, A: v_A, B: v_B }, facts, _says)) return 1;
           }
           cands.fill(-1);
@@ -1072,16 +1072,18 @@ export interface BlackRunsOnBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface BlackRunsOnSays {
   terms: { c: number; e: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const blackRunsOnFacts: number[] = [];
+const blackRunsOn_st40 = stamps();
 
 /** What a binding at one element of its first binder reads. */
 const blackRunsOnFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"},{"steps":["cellEdges","edgeEnds","cellEdges"],"kind":"answer"}],"relation":false};
 
 /** Its dearest read grows with the board as 1. */
 export function blackRunsOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BlackRunsOnBinding, BlackRunsOnSays> | null): number {
+  const _g36: number[] = [];
   const facts = blackRunsOnFacts;
   let fired = 0;
   let changed = false;
@@ -1171,7 +1173,19 @@ export function blackRunsOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Black
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { c: v_c, e: v_e }, marks: {  } };
+            _g36.length = 0;
+            blackRunsOn_st40.pass++;
+            G37: {
+              const _a41 = sp.cellEdges[v_j];
+              for (let _i42 = 0; _i42 < _a41.length; _i42++) {
+                const v_x = _a41[_i42];
+                if (!(((v_x !== v_e) && !(bent(sp, v_x, v_e))))) continue;
+                const _t43 = (sp.edgeEnds[2 * v_x] === v_j ? sp.edgeEnds[2 * v_x + 1] : sp.edgeEnds[2 * v_x]);
+                const _t44 = _t43;
+                if (_g36.length < 16) { if (!_g36.includes(_t44)) _g36.push(_t44); } else addOnce(_g36, blackRunsOn_st40, _t44);
+              }
+            }
+            const _says = { terms: { c: v_c, e: v_e }, marks: { reads: union(setOf(v_c, v_j), _g36).slice() } };
             if (!fire({ c: v_c, e: v_e, j: v_j }, facts, _says)) return 1;
           }
         }
@@ -1190,13 +1204,14 @@ export interface BlackCannotRunOnBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface BlackCannotRunOnSays {
   terms: { c: number; e: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const blackCannotRunOnFacts: number[] = [];
 let blackCannotRunOnCands = new Int32Array(0);
 let blackCannotRunOn_f38 = new Int32Array(0);
 let blackCannotRunOn_l39: readonly number[] = [];
+const blackCannotRunOn_st87 = stamps();
 
 /** What a binding at one element of its first binder reads. */
 const blackCannotRunOnFootprint: Footprint = {"sort":"cell","reads":[{"steps":["cellEdges"],"kind":"answer"},{"steps":["cellEdges","edgeEnds","cellEdges"],"kind":"answer"}],"relation":false};
@@ -1207,6 +1222,7 @@ export function blackCannotRunOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<
   else blackCannotRunOn_f38.fill(-1);
   blackCannotRunOn_l39 = [];
   const _s40: number[] = [];
+  const _g83: number[] = [];
   const facts = blackCannotRunOnFacts;
   let fired = 0;
   let changed = false;
@@ -1384,7 +1400,19 @@ export function blackCannotRunOn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { c: v_c, e: v_e }, marks: {  } };
+            _g83.length = 0;
+            blackCannotRunOn_st87.pass++;
+            G84: {
+              const _a88 = sp.cellEdges[v_j];
+              for (let _i89 = 0; _i89 < _a88.length; _i89++) {
+                const v_x = _a88[_i89];
+                if (!(((v_x !== v_e) && !(bent(sp, v_x, v_e))))) continue;
+                const _t90 = (sp.edgeEnds[2 * v_x] === v_j ? sp.edgeEnds[2 * v_x + 1] : sp.edgeEnds[2 * v_x]);
+                const _t91 = _t90;
+                if (_g83.length < 16) { if (!_g83.includes(_t91)) _g83.push(_t91); } else addOnce(_g83, blackCannotRunOn_st87, _t91);
+              }
+            }
+            const _says = { terms: { c: v_c, e: v_e }, marks: { reads: union(setOf(v_c, v_j), _g83).slice() } };
             if (!fire({ c: v_c, e: v_e, j: v_j }, facts, _says)) return 1;
           }
           cands.fill(-1);
@@ -1405,7 +1433,7 @@ export interface WhiteCannotTurnBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface WhiteCannotTurnSays {
   terms: { c: number; e: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const whiteCannotTurnFacts: number[] = [];
@@ -1877,7 +1905,7 @@ export function whiteCannotTurn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<W
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { c: v_c, e: v_e }, marks: {  } };
+            const _says = { terms: { c: v_c, e: v_e }, marks: { reads: setOf(v_c, _h81, (sp.edgeEnds[2 * v_f] === v_c ? sp.edgeEnds[2 * v_f + 1] : sp.edgeEnds[2 * v_f])).slice() } };
             if (!fire({ c: v_c, e: v_e, f: v_f, P: v_P.slice() }, facts, _says)) return 1;
           }
           cands.fill(-1);
@@ -1902,7 +1930,7 @@ export interface WhiteTurnsOppositeBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface WhiteTurnsOppositeSays {
   terms: { c: number; e: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const whiteTurnsOppositeFacts: number[] = [];
@@ -2699,7 +2727,7 @@ export function whiteTurnsOpposite(b: Marks, sp: GridSpace, cl: Dealt, fire: Fir
               if (changed || facts.length > 0) {
                 fired = 1;
                 if (fire !== null) {
-                  const _says = { terms: { c: v_c, e: v_e }, marks: {  } };
+                  const _says = { terms: { c: v_c, e: v_e }, marks: { reads: setOf(v_c, _h179, v_k).slice() } };
                   if (!fire({ c: v_c, e: v_e, f: v_f, k: v_k, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts, _says)) return 1;
                 }
                 cands.fill(-1);
@@ -2907,7 +2935,7 @@ export interface EarlyLoopBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface EarlyLoopSays {
   terms: { e: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const earlyLoopFacts: number[] = [];
@@ -3028,7 +3056,7 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { e: v_e }, marks: {  } };
+          const _says = { terms: { e: v_e }, marks: { reads: union(setOf(sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]), v_G).slice() } };
           if (!fire({ L: v_L.slice(), e: v_e, G: v_G.slice() }, facts, _says)) return 1;
         }
       }
@@ -3049,7 +3077,7 @@ export interface EarlyThroughBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface EarlyThroughSays {
   terms: { c: number; };
-  marks: {  };
+  marks: { reads: readonly number[]; };
 }
 
 const earlyThroughFacts: number[] = [];
@@ -3062,6 +3090,7 @@ let earlyThrough_p254 = new Int32Array(0);
 let earlyThrough_l255: readonly number[] = [];
 let earlyThrough_f260 = new Int32Array(0);
 let earlyThrough_l261: readonly number[] = [];
+const earlyThrough_st438 = stamps();
 
 /** Its dearest read grows with the board as n. */
 export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyThroughBinding, EarlyThroughSays> | null): number {
@@ -3088,6 +3117,7 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
   const _s262: number[] = [];
   const _g280: number[] = [];
   const _g286: number[] = [];
+  const _g430: number[] = [];
   const facts = earlyThroughFacts;
   let fired = 0;
   let changed = false;
@@ -3095,7 +3125,7 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
   if (earlyThroughCands.length < sp.edges.length) earlyThroughCands = new Int32Array(sp.edges.length);
   const cands = earlyThroughCands;
   cands.fill(-1);
-  const _m430_0 = b.made[0];
+  const _m447_0 = b.made[0];
   _g145.length = 0;
   G146: {
     const _a149 = sp.edges;
@@ -3106,7 +3136,7 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
     }
   }
   const v_L = _g145;
-  const _m431_1 = b.made[1];
+  const _m448_1 = b.made[1];
   const _eg223 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   _g151.length = 0;
   G152: {
@@ -3309,7 +3339,7 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
           }
         }
         if (!(_q276)) break L275;
-        if (b.made[0] !== _m430_0 || b.made[1] !== _m431_1) {
+        if (b.made[0] !== _m447_0 || b.made[1] !== _m448_1) {
           _g280.length = 0;
           G281: {
             const _a284 = sp.edges;
@@ -3578,7 +3608,27 @@ export function earlyThrough(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Earl
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { c: v_c }, marks: {  } };
+            _g430.length = 0;
+            earlyThrough_st438.pass++;
+            G431: {
+              const _a439 = v_F;
+              for (let _i440 = 0; _i440 < _a439.length; _i440++) {
+                const v_x = _a439[_i440];
+                const _h443 = (sp.edgeEnds[2 * v_x] === v_c ? sp.edgeEnds[2 * v_x + 1] : sp.edgeEnds[2 * v_x]);
+                const _a441 = v_F;
+                for (let _i442 = 0; _i442 < _a441.length; _i442++) {
+                  const v_y = _a441[_i442];
+                  if (!(((v_y !== v_x) && (_eg223.of((sp.edgeEnds[2 * v_y] === v_c ? sp.edgeEnds[2 * v_y + 1] : sp.edgeEnds[2 * v_y])) === _eg223.of(_h443))))) continue;
+                  const _a444 = _eg223.of(_h443);
+                  for (let _i445 = 0; _i445 < _a444.length; _i445++) {
+                    const v_q = _a444[_i445];
+                    const _t446 = v_q;
+                    if (_g430.length < 16) { if (!_g430.includes(_t446)) _g430.push(_t446); } else addOnce(_g430, earlyThrough_st438, _t446);
+                  }
+                }
+              }
+            }
+            const _says = { terms: { c: v_c }, marks: { reads: union(setOf(v_c), _g430).slice() } };
             if (!fire({ L: v_L.slice(), Q: v_Q.slice(), c: v_c, F: v_F.slice(), W: v_W.slice(), N: v_N.slice() }, facts, _says)) return 1;
           }
           cands.fill(-1);

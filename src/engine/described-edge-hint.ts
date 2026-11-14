@@ -102,9 +102,9 @@ export interface EdgeHintSpec<
    * also note the board as it stands in `ctx`, for the step that follows the
    * firing to tell what the firing changed (Magnets). */
   settle?(marks: CellMarks, ctx: Ctx): boolean;
-  /** The most steps a plan holds, a firing's last leg included: a player rarely
-   * follows more, and a recompute yields the next batch. */
-  plan: number;
+  /** The most steps a plan holds, a firing's last leg included; {@link
+   * EDGE_PLAN} where left out. */
+  plan?: number;
   /** The elements a firing writes, which the walk continues from. Left out, a
    * firing writes the two cells each of its edges lies between. */
   writes?(taken: Taken, ctx: Ctx): readonly number[];
@@ -119,15 +119,31 @@ export interface EdgeHintSpec<
     fired: Fired<Says[keyof Says & string], Ctx>,
     state: State,
   ): { move: Move; highlights: H; marked: Marked }[];
-  /** Each technique's sentence. */
-  say: {
-    [K in keyof Says & string]: (
-      spoken: EdgeSpoken<Says[K]>,
-      marked: Marked,
-      state: State,
-    ) => Sentence;
-  };
+  /** The sentence of a step: one for every technique, where the game reads
+   * the firing's premise itself into `marked`, or one a technique. */
+  say:
+    | ((
+        spoken: EdgeSpoken<Says[keyof Says & string]>,
+        marked: Marked,
+        state: State,
+      ) => Sentence)
+    | {
+        [K in keyof Says & string]: (
+          spoken: EdgeSpoken<Says[K]>,
+          marked: Marked,
+          state: State,
+        ) => Sentence;
+      };
 }
+
+/**
+ * The most steps a plan holds unless a game says otherwise: a UX bound, not a
+ * correctness one. A player rarely follows more than a handful of steps before
+ * going their own way, and the plan is recomputed then anyway; it also keeps a
+ * hint cheap enough for the cross-game resume walk, which asks after every
+ * move.
+ */
+const EDGE_PLAN = 40;
 
 /** The hint of a game whose ladder works on the edges, a step a firing. */
 export function describedEdgeHint<
@@ -142,10 +158,13 @@ export function describedEdgeHint<
   spec: EdgeHintSpec<State, Move, H, Marked, Ctx, Says>,
 ): (state: State) => HintResult<Move, H, Kind> {
   type Step = HintStep<Move, H, Kind>;
-  const say = spec.say as unknown as Record<
-    string,
-    (spoken: unknown, marked: Marked, state: State) => Sentence
-  >;
+  type Say = (spoken: unknown, marked: Marked, state: State) => Sentence;
+  const { say } = spec;
+  const sayOf = (technique: string): Say =>
+    typeof say === "function"
+      ? (say as Say)
+      : (say as unknown as Record<string, Say>)[technique];
+  const plan = spec.plan ?? EDGE_PLAN;
 
   /** The steps the ladder makes from `state` at tier `cap`, or the refusal
    * where its marks contradict themselves. */
@@ -174,7 +193,7 @@ export function describedEdgeHint<
       },
     );
     const steps: Step[] = [];
-    while (steps.length < spec.plan && !spec.done?.(m, ctx)) {
+    while (steps.length < plan && !spec.done?.(m, ctx)) {
       if (spec.settle?.(m, ctx) === false) return "contradiction";
       const before = m.cands.slice();
       const taken = walk.next();
@@ -187,7 +206,7 @@ export function describedEdgeHint<
         state,
       );
       legs.forEach(({ move, highlights, marked }, leg) => {
-        const words = say[technique](
+        const words = sayOf(technique)(
           {
             terms: says.terms,
             arm: says.arm,
