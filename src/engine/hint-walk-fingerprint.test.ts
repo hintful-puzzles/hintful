@@ -8,8 +8,10 @@
  * text, which is what a run prints in full.
  */
 import { describe, expect, it } from "vitest";
-import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
+import { HINT_GAMES } from "./testing/hint-games.ts";
 import { fingerprint, walkLines } from "./testing/hint-walk-fingerprint.ts";
+import { dealtBoards } from "./testing/presets.ts";
+import { itSlow } from "./testing/slow.ts";
 
 /** The games moved onto the engine's steps so far; Slant, Loopy and Net,
  * whose words are held while they move onto the fact graph
@@ -59,8 +61,11 @@ const MOVED = [
   "crossing",
 ];
 
-/** The boards dealt a preset: more than one, so a rare rung is more likely met. */
-const DEALS = [0, 1, 2, 3];
+/** The boards dealt a preset: one on every commit, and in the slow tier three
+ * more, so a rare rung is more likely met (docs/testing.md § "Right-sizing the
+ * gate"). */
+const DEALS = [0];
+const MORE_DEALS = [1, 2, 3];
 
 const show = (import.meta.env as unknown as Record<string, string | undefined>)[
   "VITE_HINT_WALK"
@@ -69,25 +74,32 @@ const show = (import.meta.env as unknown as Record<string, string | undefined>)[
 describe("hint walks", () => {
   for (const [id, game] of HINT_GAMES) {
     if (!MOVED.includes(id)) continue;
-    it(`${id}: every step's words and marks`, async () => {
-      const boards = gatePresets(game).flatMap(({ title, params }) =>
-        DEALS.map((n) => ({ title, params, n })),
+    // The gate's slice in either tier, since `gatePresets` deals every preset
+    // in the slow one and the snapshots hold the slice's.
+    const presets = dealtBoards(game, { scalarEnds: false });
+    const walks = async (deals: readonly number[], file: string): Promise<void> => {
+      const boards = presets.flatMap(({ title, params }) =>
+        deals.map((n) => ({ title, params, n })),
       );
       if (show !== undefined) {
-        const walks = boards
+        const shown = boards
           .filter((b) => `${id} ${b.title}`.includes(show))
           .map(
             (b) =>
               `${id} ${b.title} #${b.n}\n${walkLines(game, b.params, b.n).lines.join("\n")}`,
           );
-        throw new Error(walks.join("\n\n"));
+        throw new Error(shown.join("\n\n"));
       }
       const lines = boards.map(({ title, params, n }) =>
         fingerprint(game, title, params, n),
       );
       await expect(`${lines.join("\n")}\n`).toMatchFileSnapshot(
-        `./__snapshots__/hint-walk-${id}.txt`,
+        `./__snapshots__/${file}.txt`,
       );
-    });
+    };
+    it(`${id}: every step's words and marks`, () => walks(DEALS, `hint-walk-${id}`));
+    itSlow(`${id}: every step's words and marks, on more boards`, () =>
+      walks(MORE_DEALS, `hint-walk-${id}-more`),
+    );
   }
 });

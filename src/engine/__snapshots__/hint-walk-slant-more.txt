@@ -1,0 +1,6 @@
+5x5 Easy #1: 25 steps, solved, 5d8ab8c149d57f25 [clue-empty:7 clue-fill:16 loop:2]
+5x5 Easy #2: 25 steps, solved, d5b23837f1803c2d [clue-empty:15 clue-fill:10]
+5x5 Easy #3: 25 steps, solved, 2ae81f2f98fc7b91 [clue-empty:10 clue-fill:12 loop:3]
+5x5 Normal #1: 32 steps, solved, 64c1ce1a8c1b8d2e [clue-empty:16 clue-fill:7 equiv:2 mark-clue:4 mark-v:3]
+5x5 Normal #2: 28 steps, solved, 674db7a1c45e4d21 [clue-empty:17 clue-fill:8 mark-clue:1 mark-v:2]
+5x5 Normal #3: 27 steps, solved, d4628cbb35043a23 [clue-empty:16 clue-fill:8 loop:1 mark-clue:2]

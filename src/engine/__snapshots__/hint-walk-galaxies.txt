@@ -1,8 +1,2 @@
 7x7 Easy #0: 61 steps, solved, 8008faf8cfdd69dc [dotTile:8 onlyReach:7 separate:39 soleOwner:7]
-7x7 Easy #1: 62 steps, solved, 85007571f76ba941 [dotTile:7 enclosed:1 onlyReach:8 separate:41 soleOwner:5]
-7x7 Easy #2: 67 steps, solved, da68794c067ee8ce [dotTile:8 onlyReach:9 separate:48 soleOwner:2]
-7x7 Easy #3: 61 steps, solved, affba1c4c259c5e6 [dotTile:5 enclosed:1 onlyReach:8 separate:43 soleOwner:4]
 7x7 Unreasonable #0: 30 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 19b009b1ec060587 [dotTile:6 mirrorWall:9 onlyReach:2 separate:11 soleOwner:2]
-7x7 Unreasonable #1: 53 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 9996dedefcfbe764 [dotTile:8 mirrorWall:10 onlyReach:3 separate:28 soleOwner:4]
-7x7 Unreasonable #2: 47 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 2ee436749483c290 [dotTile:5 enclosed:1 mirrorWall:5 onlyReach:7 separate:25 soleOwner:4]
-7x7 Unreasonable #3: 59 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., fcd0d4d3778370c9 [dotTile:9 mirrorWall:6 onlyReach:3 separate:35 soleOwner:6]

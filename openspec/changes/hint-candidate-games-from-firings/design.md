@@ -70,6 +70,16 @@ numbers (loop 5448 to 5363, reach 485 to 472, opposite 303 to 343; onlyHome's
 131 strikes gone, hidden singles 12 to 83). The dump ran in 2.1 s against
 10.8 s at HEAD.
 
+## The fingerprint's boards (2026-11-14)
+
+Enrolling every game left (task 2.0) took `hint-walk-fingerprint.test.ts`
+to 178 s on CI against its 120 s budget, Group's 8x8 walks the most of it.
+As `docs/testing.md` § "Right-sizing the gate" has it, every commit walks
+one board a preset and the slow tier the other three, each into a snapshot of
+its own (`hint-walk-<id>-more.txt`); the split files hold HEAD's lines
+exactly. Both read the gate's slice of presets, which `gatePresets` widens to
+every preset in the slow tier, where the snapshots would not have matched.
+
 ## The Latin library says (2026-11-14)
 
 `set`, `fish` and `wing` say their terms, and the library's rungs build the

@@ -1,0 +1,6 @@
+4x4 Easy, 4 letters #1: 21 steps, solved, 71fcdf0e8ecc5552 [onlyWay:9 sharedLetter:10 walledApart:2]
+4x4 Easy, 4 letters #2: 22 steps, solved, 73b92ef7389708e1 [onlyWay:10 sharedLetter:8 walledApart:4]
+4x4 Easy, 4 letters #3: 21 steps, solved, ff0fb2a1f1d3c7e3 [onlyWay:9 sharedLetter:9 walledApart:3]
+4x4 Unreasonable, 4 letters #1: 11 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., e8dd761296df2daa [onlyWay:5 sharedLetter:6]
+4x4 Unreasonable, 4 letters #2: 9 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., e091111bd0f045c5 [onlyWay:4 sharedLetter:5]
+4x4 Unreasonable, 4 letters #3: 0 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 811c9dc501000193 []
