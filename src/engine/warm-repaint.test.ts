@@ -89,8 +89,6 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
     // A ringed line.
     "10x10e0.5:a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c",
   ],
-  // A striped row or column.
-  rome: ["4x4dn:1a3aa5aba2,gUaLRUcX"],
   sokoban: [
     // Arrows on the ways a barrel can still finish.
     "10x12:w11fs2f2w5fs2ws3fw2s7w4s2usbs2w2tbsfs2bsw2tbswst2bw4s2ws2tw3tbsws2fw6f2s2w8s2w11",
