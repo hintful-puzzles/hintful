@@ -158,6 +158,41 @@ The walk fingerprint's per-commit boards keep their step counts and rungs;
 on the slow tier a few walks move by a few steps, and an Unreasonable
 board's goes further before it refuses (62 to 77 steps).
 
+## A waiting technique continues; the board's tier bounds it (2026-11-14)
+
+The commit after Adjacent's failed `hint-frontier.test.ts`: Adjacent's plans
+passed over a firing that continued the last step on 14% of their jumps
+(implicit reading), against a bound of 10%. Measured on the same corpus at
+the session's start and after each move (avoidable jumps over jumps, implicit
+reading): the recording games sit at 0 to 4%; Unequal went from 1.9% to
+5.1%, Adjacent from 2.7% to 14.2%, and Rome, moved before, sat at 8.8%. The
+cause was the gate: a recorded strike was offered beside the singles, so the
+frontier could take the one that continued, while a `techniqueRung` past the
+ladder's first waited for every earlier rung to be empty, so a bar step
+continuing the last placement waited behind any single on the board.
+
+- **Offered whenever it continues**, every waiting technique took Adjacent
+  to 1.5% and Rome to 2.7%, but taught past the board: a Normal Adjacent
+  board took neighbor-set steps (Tricky) by the dozen, an Easy one bar steps,
+  Seismic's Easy boards starved areas, which its test forbids, and Abcd's
+  `packed` crowded its singles out again (one 6x9 board: packed 5 to 36,
+  singles 49 to 18), the outcome § "The engine takes the gate" rejected.
+- **What holds**: a technique of the ladder's easiest tier waits outright,
+  being another reading of the singles' difficulty, and a harder one offers
+  only a firing that continues the latest steps. A `NotesLadder` carries the
+  board's `caps`, and a technique the solver would not run at them offers
+  nothing, as the Latin recorders, which solved up to the board's tier, did
+  not record it. `latinNotesLadder` takes the cap; Abcd and Seismic pass
+  their board's tier, Rome its top one, since its state keeps no tier and
+  its recorder solved at every one.
+
+With both, at the session's start against now (implicit reading): Adjacent
+2.7% to 1.4%, Unequal 1.9% to 3.0%, Rome 8.8% to 6.4%, Salad 3.7% to 2.9%,
+Seismic 3.3% to 0.8%, and Abcd's dump is byte-identical. Every walk of the
+six games' dumps ends as before. Rome's pinned `pair` board no longer takes
+a pair; a search found two such boards in 1200 dealt Tricky ones, and the
+pin moved to one.
+
 ## Adjacent, moved (2026-11-14)
 
 The recorder and both bar techniques' reason callbacks are gone; `adjacent`

@@ -13,7 +13,7 @@ import {
   strikesOf,
   techniqueRung,
 } from "./candidate-plan.ts";
-import type { Ladder } from "./ladder-runtime.ts";
+import { type Ladder, TIERS } from "./ladder-runtime.ts";
 import { type LatinReason, type LatinRepeats, LatinSolver } from "./latin.ts";
 
 /**
@@ -22,18 +22,21 @@ import { type LatinReason, type LatinRepeats, LatinSolver } from "./latin.ts";
  * values on the walk's working `grid` as it stands, so a technique of the
  * game's own reads the solver it reads on the solve path. A note is the
  * solver's value of the same number, up to `enc.values`, which defaults to
- * every symbol.
+ * every symbol. `cap` is the board's tier, which the hint teaches nothing
+ * past, as the solver that graded the board ran nothing past it.
  */
 export function latinNotesLadder(
   ladder: Ladder<LatinSolver>,
   o: number,
   grid: ArrayLike<number>,
+  cap: number,
   opts: { repeats?: LatinRepeats | null; enc?: NoteEncoding } = {},
 ): NotesLadder<LatinSolver> {
   const repeats = opts.repeats ?? null;
   const symbols = repeats ? o - repeats.times + 1 : o;
   return {
     ladder,
+    caps: { [TIERS]: cap },
     marks: () => {
       const m = new LatinSolver(o, repeats, ladder.placing);
       m.grid.set(grid);

@@ -1,3 +1,3 @@
-4x4 Easy #0: 18 steps, solved, e052c90562a979df [dup:1 loop:11 regionsFull:2 single:4]
-4x4 Normal #0: 18 steps, solved, 352eb76c4791a33a [dup:1 loop:11 reach:1 regionsFull:1 single:4]
-4x4 Tricky #0: 22 steps, solved, c5decef54255dba1 [dup:3 loop:9 opposite:2 reach:2 regionsFull:1 single:5]
+4x4 Easy #0: 19 steps, solved, 8ffdee6f7fcbbc93 [dup:2 loop:9 note:1 reach:1 regionsFull:2 single:4]
+4x4 Normal #0: 16 steps, solved, d3ed21e290ac2128 [loop:6 note:1 reach:4 regionsFull:2 single:3]
+4x4 Tricky #0: 24 steps, solved, 4ad71a9708780dcd [dup:4 loop:9 opposite:2 reach:2 regionsFull:1 single:6]

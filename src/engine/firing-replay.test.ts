@@ -266,6 +266,9 @@ const RECORDS_NOTHING: Record<string, string> = {
   abcd: "its rungs are its own and read the board",
   seismic: "its starved area is the compiled technique run on the notes",
   rome: "its strikes are the compiled techniques run on the notes",
+  salad: "its strikes are the compiled techniques run on the notes",
+  unequal: "its strikes are the compiled techniques run on the notes",
+  adjacent: "its strikes are the compiled techniques run on the notes",
 };
 
 /**

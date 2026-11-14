@@ -50,7 +50,7 @@ const NORMAL: RomeParams = { w: 6, h: 6, diff: DIFF_NORMAL };
 const TRICKY: RomeParams = { w: 8, h: 8, diff: DIFF_TRICKY };
 
 /** A 6x6 Tricky board on which the `pair` technique fires. */
-const PAIR_DESC = "1a1aa2a4b1a1ab2a1a4c3aaa1a2aa,aLDRDgRaXUDcLcRUaURg";
+const PAIR_DESC = "2aa1bb4aa2a3ab7a3a1b1aaa1a,cDcLcLaUaUaXbLRUbRdRRUc";
 
 /** The plan these cases read: every mark penciled in first. */
 const POPULATE: CandidatePlanPrefs = { autoClean: false, reading: "populate" };
@@ -221,8 +221,9 @@ describe("rome hint plan", () => {
   });
 
   /**
-   * The `pair` technique fires on about one board in sixty, so this is the
-   * pinned desc from `rome-ladder.test.ts` rather than a seed — and it is here
+   * A plan takes a `pair` on about one board in six hundred (2 of 1200 dealt
+   * 5x5 to 7x7 Tricky boards, 2026-11-14), so this is a pinned desc rather
+   * than a seed — and it is here
    * because that sentence names **two** arrows, which the struck marks alone
    * cannot always supply: where the region's other squares had already lost one
    * of the pair, a narration built from the live strikes would call a pair one
@@ -388,8 +389,8 @@ const pinned = describeHintPins({
       moves:
         '[{"kind":"place","x":0,"y":4,"dir":32},{"kind":"pencilAdd","marks":[{"x":4,"y":1,"n":2},{"x":4,"y":1,"n":3}]},{"kind":"pencilStrike","marks":[{"x":4,"y":1,"n":2}]},{"kind":"place","x":4,"y":1,"dir":16},{"kind":"pencilAdd","marks":[{"x":3,"y":1,"n":1},{"x":3,"y":1,"n":2}]},{"kind":"pencilAdd","marks":[{"x":1,"y":2,"n":2},{"x":1,"y":2,"n":3}]},{"kind":"pencilAdd","marks":[{"x":3,"y":3,"n":1},{"x":3,"y":3,"n":2},{"x":3,"y":3,"n":4}]},{"kind":"place","x":1,"y":4,"dir":4},{"kind":"place","x":2,"y":1,"dir":4},{"kind":"pencilAdd","marks":[{"x":0,"y":1,"n":1},{"x":0,"y":1,"n":4}]},{"kind":"pencilStrike","marks":[{"x":1,"y":2,"n":2}]},{"kind":"place","x":1,"y":2,"dir":16},{"kind":"pencilAdd","marks":[{"x":2,"y":0,"n":3},{"x":2,"y":0,"n":4}]}]',
     },
-    /** Held on 0 of 2499 positions walked: the rung fires on about one board
-     * in sixty. Pinned by hand on the board above that records a pair. */
+    /** Held on 0 of 2499 positions walked: a plan takes a pair on about one
+     * board in six hundred. Pinned by hand on the board above whose plan does. */
     pair: { id: `6x6dt:${PAIR_DESC}`, moves: MARK_ALL },
   },
 });

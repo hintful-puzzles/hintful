@@ -158,6 +158,17 @@ export class HintFrontier<P = Point> {
     return chosen;
   }
 
+  /** Whether a candidate reading `reads` continues one of the latest steps,
+   * the test {@link take} prefers by. */
+  continues(reads: readonly P[]): boolean {
+    return this.recent.some((wrote) =>
+      reads.some((p) => {
+        const i = this.key(p);
+        return i !== null && wrote.has(i);
+      }),
+    );
+  }
+
   private choose(
     rungs: readonly (readonly FrontierCandidate<P>[])[],
   ): FrontierCandidate<P> | null {

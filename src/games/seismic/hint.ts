@@ -39,7 +39,7 @@ import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { candidateConclusions } from "../../engine/hint-text.ts";
 import { digitKeyCode } from "../../engine/key-labels.ts";
-import { CellMarks, type Said } from "../../engine/ladder-runtime.ts";
+import { CellMarks, type Said, TIERS } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
@@ -187,6 +187,7 @@ export function buildSteps(
     ladder: seismicLadder(dl),
     marks: () => new CellMarks(sp, rangeMask(1, 9), grid),
     enc,
+    caps: { [TIERS]: state.params.diff },
   };
 
   const cellsOf = (area: readonly number[]): Point[] =>

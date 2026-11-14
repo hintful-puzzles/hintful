@@ -44,6 +44,7 @@ import {
   CellMarks,
   type Firing as LadderFiring,
   type Said,
+  TIERS,
 } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
@@ -200,6 +201,7 @@ export function buildSteps(
     ladder: abcdLadder(p, dealtOf(p, state.numbers)),
     marks: () => new CellMarks(sp, rangeMask(1, p.n), grid),
     enc,
+    caps: { [TIERS]: p.diff },
   };
   const satisfied = techniqueRung<AbcdMove, AbcdHint, DeductionRecord, AbcdReason>(
     on,

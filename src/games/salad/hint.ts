@@ -493,7 +493,8 @@ function notesLadder(state: SaladState, w: Working): NotesLadder<LatinSolver> {
   const hole = holeSymbol(nums);
   const allMarks = (1 << hole) - 1;
   const symbolMarks = (1 << nums) - 1;
-  const on = latinNotesLadder(saladLadder(dealtOf({ ...state, ...w })), o, w.grid, {
+  const ladder = saladLadder(dealtOf({ ...state, ...w }));
+  const on = latinNotesLadder(ladder, o, w.grid, state.diff, {
     repeats: repeatsFor(state),
     enc: {
       ...saladNotes(nums),

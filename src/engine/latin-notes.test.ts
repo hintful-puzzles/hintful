@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { RungContext } from "./candidate-plan.ts";
+import type { Firing, RungContext } from "./candidate-plan.ts";
 import { LatinSolver, latinLadder } from "./latin.ts";
-import { latinNotesLadder, latinStrikeRungs } from "./latin-notes.ts";
+import {
+  type LatinStrikeReason,
+  latinNotesLadder,
+  latinStrikeRungs,
+} from "./latin-notes.ts";
 
 describe("a Latin ladder run on the notes", () => {
   const ladder = latinLadder<string, string, LatinSolver>(
@@ -15,12 +19,15 @@ describe("a Latin ladder run on the notes", () => {
     },
     {},
   );
-  const context = (shown: ArrayLike<number>): RungContext<never, never> => ({
+  const context = (
+    shown: ArrayLike<number>,
+  ): RungContext<never, Firing<never, never, LatinStrikeReason>> => ({
     nothingEarlier: true,
     placements: () => [],
     ops: [],
     populated: true,
     shown,
+    continues: () => false,
   });
 
   it("strikes what a library technique finds in the notes, for the reason it says", () => {
@@ -32,7 +39,7 @@ describe("a Latin ladder run on the notes", () => {
     shown[1] = 0b1100;
     shown[5] = 0b1010;
     const rungs = latinStrikeRungs<never, never, never>(
-      latinNotesLadder(ladder, 4, grid),
+      latinNotesLadder(ladder, 4, grid, 2),
       4,
     );
     // The single is the walk's, so the wing is the only rung.
@@ -58,7 +65,7 @@ describe("a Latin ladder run on the notes", () => {
 
   it("holds the values on the walk's grid as it stands when asked", () => {
     const grid = new Int8Array(16);
-    const on = latinNotesLadder(ladder, 4, grid);
+    const on = latinNotesLadder(ladder, 4, grid, 2);
     grid[6] = 3;
     const m = on.marks();
     expect(m).toBeInstanceOf(LatinSolver);

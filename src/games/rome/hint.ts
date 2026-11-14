@@ -64,6 +64,7 @@ import {
   CellMarks,
   type Firing as LadderFiring,
   type Said,
+  TIERS,
 } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
@@ -71,6 +72,7 @@ import { say } from "./hint-text.ts";
 import * as rome from "./rome.compiled.ts";
 import { dealtOf, romeLadder } from "./solver.ts";
 import {
+  DIFFCOUNT,
   DIR_COUNT,
   dirBit,
   dirValue,
@@ -254,6 +256,9 @@ export function buildSteps(
     ladder: romeLadder(dl),
     marks: () => new CellMarks(sp, rangeMask(1, DIR_COUNT + 1), grid),
     enc,
+    // A board does not keep the tier it was dealt at, so its hint may teach
+    // any of them, as the solve it recorded did.
+    caps: { [TIERS]: DIFFCOUNT },
   };
   const cellOf = (i: number): Point => ({ x: i % w, y: (i / w) | 0 });
   const isArrow = (i: number): boolean => grid[i] >= 1 && grid[i] <= DIR_COUNT;

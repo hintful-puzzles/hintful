@@ -61,6 +61,8 @@ import {
   so,
 } from "./hint-words.ts";
 import {
+  admits,
+  type Caps,
   type CellMarks,
   type Ladder,
   type Firing as LadderFiring,
@@ -152,6 +154,9 @@ export interface RungContext<R, F = unknown> {
    * under the implicit reading (or before a populate) what its regions leave a
    * cell with none (`impliedNotes`). */
   shown: ArrayLike<number>;
+  /** Whether a firing continues the plan's latest steps, as the frontier
+   * judges it: what a rung that waits its turn may still offer early. */
+  continues: (f: F) => boolean;
 }
 
 /** One rung of a plan's ladder: the firings of one kind it could take now. */
@@ -167,6 +172,11 @@ export interface NotesLadder<S extends CellMarks = CellMarks> {
   /** Marks over the walk's working grid; their candidates are set here. */
   marks: () => S;
   enc: NoteEncoding & { values: number };
+  /** The board's caps: a technique the solver would not run at them offers
+   * nothing, so a board's hint teaches no technique past its tier (Keen's
+   * `cageEasy` runs only at Easy), however well it would continue the work in
+   * hand ({@link techniqueRung}). */
+  caps: Caps;
 }
 
 /**
@@ -181,18 +191,31 @@ export interface NotesLadder<S extends CellMarks = CellMarks> {
  * but the ladder's first waits for every earlier rung to come up empty, as
  * the solver reaches it only once those before it are spent: by tier alone,
  * Abcd's `runs`, as easy as its single, would crowd the singles out.
+ *
+ * A technique of a harder tier than the ladder's easiest is work the board
+ * needs rather than another reading of the singles' difficulty, so while it
+ * waits it still offers a firing that continues the plan's latest steps
+ * (`continues`), as a recorded strike was offered beside the singles. Waiting
+ * outright, a plan leaves the work in hand for a single elsewhere and comes
+ * back: a seventh of Adjacent's jumps passed over a bar step that continued.
+ * A technique past the board's `caps` offers nothing.
  */
 export function techniqueRung<M, H, R, Reason, S extends CellMarks = CellMarks>(
   on: NotesLadder<S>,
   id: string,
   legs: (f: LadderFiring, shown: ArrayLike<number>) => Firing<M, H, Reason> | null,
 ): CandidateRung<M, H, R, Reason> {
-  const at = on.ladder.entries.findIndex((e) => e.id === id);
+  const entries = on.ladder.entries;
+  const at = entries.findIndex((e) => e.id === id);
   if (at < 0) throw new Error(`no technique ${id} in the ladder`);
+  if (!admits(entries[at], on.caps)) return () => [];
   const last = at > 0;
+  const harder = entries[at].tier > Math.min(...entries.map((e) => e.tier));
   const bit = on.enc.bit ?? ((n: number): number => 1 << n);
-  return ({ populated, nothingEarlier, shown }) => {
-    if (!populated || (last && !nothingEarlier)) return [];
+  return ({ populated, nothingEarlier, shown, continues }) => {
+    if (!populated) return [];
+    const waits = last && !nothingEarlier;
+    if (waits && !harder) return [];
     const m = on.marks();
     for (let i = 0; i < m.cands.length; i++) {
       let cands = 0;
@@ -206,7 +229,7 @@ export function techniqueRung<M, H, R, Reason, S extends CellMarks = CellMarks>(
     const out: Firing<M, H, Reason>[] = [];
     for (const f of techniqueFirings(on.ladder, id, m)) {
       const legged = legs(f, shown);
-      if (legged) out.push(legged);
+      if (legged && (!waits || continues(legged))) out.push(legged);
     }
     return out;
   };
@@ -760,6 +783,7 @@ class CandidateWalk<
           ops: this.ops,
           populated: this.setUp.done(),
           shown: this.shown,
+          continues: (f) => frontier.continues(this.premise(f)),
         });
         if (firings.length > 0) nothingEarlier = false;
         lists.push(firings.map((f) => this.candidate(f)));

@@ -53,6 +53,7 @@ import {
   redraw,
 } from "../../engine/edge-clue-latin/render.ts";
 import {
+  DIFF_EXTREME,
   diffFromLevel,
   diffToLevel,
   type EdgeClueMove,
@@ -168,7 +169,12 @@ function buildSteps(
   const o = state.order;
   const steps: HintStep<EdgeClueMove, EdgeClueHint, PlanRung<HintReason>>[] = [];
   const wGrid = Int8Array.from(state.grid);
-  const on = latinNotesLadder(SIGNS.ladder(o, state.clueFlags), o, wGrid);
+  const on = latinNotesLadder(
+    SIGNS.ladder(o, state.clueFlags),
+    o,
+    wGrid,
+    Math.min(diffToLevel(state.diff), DIFF_EXTREME),
+  );
   type Rung = CandidateRung<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>;
   const sign: Rung = techniqueRung(on, "sign", (f) => signLegs(f, o));
   runLatinCandidatePlan<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>({

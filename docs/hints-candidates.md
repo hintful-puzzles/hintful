@@ -505,6 +505,19 @@ of `findMistakes` in the same change.
   gate is read off the ladder's order, so the game writes none. The tier is
   not enough: Abcd's `runs` is as easy as its single, and ungated it
   crowds the singles out.
+- **A harder technique continues the work in hand while it waits**: one of
+  a harder tier than the ladder's easiest still offers a firing that reads
+  a cell the latest steps wrote (`RungContext.continues`, the frontier's own
+  test), as a recorded strike was offered beside the singles. Waiting
+  outright, a plan leaves the work for a single elsewhere and comes back;
+  `hint-frontier.test.ts` measures it. One of the singles' own tier waits
+  outright, so Abcd's `runs` cannot crowd them out this way either.
+- **The board's tier bounds what the hint teaches**: a `NotesLadder` carries
+  the board's `caps`, and a technique the solver would not run at them
+  offers nothing, so a harder technique cannot step in on an easier board,
+  and a technique with a tier window (Keen's `cageEasy`, until Normal) runs
+  only inside it. A game whose board keeps no tier (Rome) passes its top
+  one, as its recording did.
 - **A Latin game's marks are a `LatinSolver`**: `latinNotesLadder`
   (`engine/latin-notes.ts`) builds them over the walk's grid, so its own
   techniques read what they read when solving. The library's `set`, `fish`

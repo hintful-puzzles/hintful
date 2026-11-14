@@ -54,6 +54,7 @@ import {
   redraw,
 } from "../../engine/edge-clue-latin/render.ts";
 import {
+  DIFF_EXTREME,
   diffFromLevel,
   diffToLevel,
   type EdgeClueMove,
@@ -151,7 +152,12 @@ function buildSteps(
   const o = state.order;
   const steps: HintStep<EdgeClueMove, EdgeClueHint, PlanRung<HintReason>>[] = [];
   const wGrid = Int8Array.from(state.grid);
-  const on = latinNotesLadder(BARS.ladder(o, state.clueFlags), o, wGrid);
+  const on = latinNotesLadder(
+    BARS.ladder(o, state.clueFlags),
+    o,
+    wGrid,
+    Math.min(diffToLevel(state.diff), DIFF_EXTREME),
+  );
   /** A bar firing strikes in one cell, toward one neighbor: one leg, its
    * reason built from what the technique says. */
   const barRung = <K extends keyof adjacent.SaysById>(

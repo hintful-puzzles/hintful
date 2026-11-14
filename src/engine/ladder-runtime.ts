@@ -969,7 +969,7 @@ export type Caps = Readonly<Record<string, number>>;
 
 /** Whether an entry runs at `caps`: its scale's cap reaches its tier and its
  * `from`, and has not reached its `until`. */
-function admits(entry: CompiledEntry, caps: Caps): boolean {
+export function admits(entry: CompiledEntry, caps: Caps): boolean {
   const cap = caps[entry.scale ?? TIERS];
   if (cap === undefined || entry.tier > cap) return false;
   if (entry.from !== undefined && cap < entry.from) return false;
