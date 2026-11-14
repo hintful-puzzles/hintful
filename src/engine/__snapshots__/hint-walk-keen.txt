@@ -1,6 +1,6 @@
 4x4 Easy #0: 36 steps, solved, b127191040b5c766 [cage:7 dup:12 hiddenSingle:4 populate:1 single:12]
 6x6 Normal #0: 107 steps, solved, fa31dc741dd28e78 [cage:42 dup:28 hiddenSingle:11 populate:1 single:25]
 6x6 Tricky #0: 111 steps, solved, b7a825eed741ba90 [cage:41 cageLine:3 dup:30 hiddenSingle:13 populate:1 single:23]
-6x6 Hard #0: 117 steps, solved, d89ef72727c498df [cage:27 cageLine:22 dup:26 hiddenSingle:5 populate:1 set:5 single:31]
+6x6 Hard #0: 117 steps, solved, 04e88dbf1240631b [cage:27 cageLine:22 dup:26 hiddenSingle:5 populate:1 set:5 single:31]
 6x6 Unreasonable #0: 27 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., d139ddb34e40cc05 [cage:26 populate:1]
 6x6 Normal, multiplication only #0: 100 steps, solved, d1c3a82e4d3c7bd4 [cage:33 dup:30 hiddenSingle:8 populate:1 single:28]

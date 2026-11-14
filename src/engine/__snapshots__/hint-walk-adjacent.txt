@@ -1,5 +1,5 @@
 5x5 Easy #0: 17 steps, solved, fb6f27941a3d44a8 [hiddenSingle:1 regionsFull:16]
 5x5 Normal #0: 37 steps, solved, ece9638261e55b44 [adjacent:14 dup:6 hiddenSingle:2 regionsFull:9 single:6]
 5x5 Tricky #0: 66 steps, solved, cdbb1d400b5a32cc [adjacent:7 adjacentSet:21 dup:12 hiddenSingle:8 note:1 regionsFull:2 set:2 single:13]
-5x5 Hard #0: 71 steps, solved, 037b61b6d60b376a [adjacent:8 adjacentSet:17 dup:13 hiddenSingle:4 note:3 regionsFull:6 set:6 single:14]
+5x5 Hard #0: 71 steps, solved, a6fb672c9e3bb48e [adjacent:8 adjacentSet:17 dup:13 hiddenSingle:4 note:3 regionsFull:6 set:6 single:14]
 7x7 Unreasonable #0: 5 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 233ae3d01f9bc052 [adjacent:3 adjacentSet:2]

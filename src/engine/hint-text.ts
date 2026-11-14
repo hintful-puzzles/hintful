@@ -382,7 +382,7 @@ function confinedPremise(
     lines.cells,
     `These ${lines.count} ${along}`,
   );
-  return phrase`${striped} fit ${value} only in ${mark.the("outline", CELL, set, cell)}, taking the ${value} of ${lines.count} ${across}`;
+  return phrase`${striped} fit ${value} only in ${mark.the("outline", CELL, set, cell)}, taking ${lines.count === 2 ? "both" : `all ${lines.count}`} ${across}' ${value}`;
 }
 
 /**

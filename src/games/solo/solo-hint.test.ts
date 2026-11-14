@@ -78,7 +78,11 @@ const KILLER: SoloParams = {
 
 const EXTRA_CAGE = /^This (row|column|block) must total (\d+);/;
 const CONFINED =
-  /^These (\d+) (rows|columns) fit (\S+) only in the outlined cells, taking the \S+ of (\d+) (rows|columns),/;
+  /^These (\d+) (rows|columns) fit (\S+) only in the outlined cells, taking (both|all \d+) (rows|columns)' \S+,/;
+
+/** The count a confined-lines sentence gives the lines the other way. */
+const acrossCount = (said: string): number =>
+  said === "both" ? 2 : Number(said.slice(4));
 
 const strikes = (step: AnyStep): number =>
   step.move.type === "pencilStrike" ? step.move.marks.length : 0;
@@ -671,7 +675,7 @@ describe("solo hint", () => {
     expect(said[2]).toBe(word);
     expect(Number(said[1]), "'these N lines' over another number").toBe(lines.length);
     const crossing = new Set(area.map((c) => c[across]));
-    expect(Number(said[4]), "the outlined cells' lines the other way").toBe(
+    expect(acrossCount(said[4]), "the outlined cells' lines the other way").toBe(
       crossing.size,
     );
     expect(crossing.size, "as many lines each way").toBe(lines.length);

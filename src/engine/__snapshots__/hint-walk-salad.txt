@@ -1,3 +1,3 @@
 Letters: 4x4 A~C Easy #0: 41 steps, solved, fa83353da9e91d27 [borderFar:6 borderNear:5 circleXNote:2 countHolesDone:4 countLettersDone:2 dup:9 hiddenSingle:9 populate:1 single:3]
-Letters: 5x5 A~C Normal #0: 67 steps, solved, a75800c28b6dc84c [borderFar:10 borderNear:10 circleXNote:2 countHolesDone:3 countLettersDone:8 crossNaked:2 dup:11 hiddenSingle:12 populate:1 set:5 single:3]
+Letters: 5x5 A~C Normal #0: 67 steps, solved, 72dcd942b3c44c08 [borderFar:10 borderNear:10 circleXNote:2 countHolesDone:3 countLettersDone:8 crossNaked:2 dup:11 hiddenSingle:12 populate:1 set:5 single:3]
 Numbers: 5x5 1~3 Easy #0: 28 steps, solved, 21f4bac30568f009 [circleXNote:1 clean:1 countHolesDone:2 countLettersDone:4 dup:8 hiddenSingle:8 populate:1 single:3]

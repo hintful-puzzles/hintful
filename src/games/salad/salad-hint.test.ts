@@ -502,7 +502,7 @@ describe("salad hint — a square a set rules out as empty", () => {
       { mode: GAMEMODE_NUMBERS, order: 5, nums: 3 },
     );
     expect(t.premise.text).toBe(
-      "These 2 rows fit X only in the outlined squares, taking the X of 2 columns",
+      "These 2 rows fit X only in the outlined squares, taking both columns' X",
     );
     expect(evidenceOf(t.premise).hatch).toHaveLength(10);
   });

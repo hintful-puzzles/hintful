@@ -20,7 +20,7 @@ Each game is enrolled in `hint-walk-fingerprint.test.ts` at the commit before it
   - [x] 2.2c Keen
   - [x] 2.2d Towers
   - [x] 2.2e Mathrax
-  - [ ] 2.2f Group, Solo
+  - [ ] 2.2f Group, Solo. Group's `associativity` and `identity` place, and its `leads` rung offers the recorded placements ahead of the strikes (`placements().recorded`), which has no meaning once nothing records: decide what leads in its place, as Towers' `facing` (a placing technique, legs built from the firing's `PLACE` facts) did not need to. Solo's recorder is threaded through its bespoke solver (`usage.pendingRecorder`)
 - [ ] 2.3 Undead, Crossing
 - [x] 2.5 Spec deltas for every game moved so far, and the engine's rung over the notes (`specs/`); each later move updates its game's requirements that name a recording solver, and 2.4 the engine's that name `CandidatePlan.record`
 - [ ] 2.4 With the last recorder gone, retire what only recording needs: `docs/hints-candidates.md` § "The recorder and the soundness boundary" and § "Record off a bespoke solver" (or what of them a game still uses), `CandidatePlan.record`, `strikeAxis` and the replay audit (`firing-replay.ts`), each checked for a remaining caller first
