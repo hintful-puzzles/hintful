@@ -21,10 +21,14 @@ import type { LineBreaksBinding, LineBreaksSays } from "./path.compiled.ts";
 import { pathWalk } from "./solver.ts";
 import { DIFF_NORMAL, MODE_PAIRS, MODE_PATH, newState } from "./state.ts";
 
-describe("a lineBreaks firing's witness", () => {
-  it("names the edge supposed, and the squares read under it", () => {
-    let seen = 0;
-    for (const mode of [MODE_PATH, MODE_PAIRS])
+/** The `lineBreaks` firings left once every other technique has run, on each
+ * board of a mode: dealt once for both tests, since dealing is their cost. */
+const firingsOf = (() => {
+  const dealt = new Map<number, ReturnType<typeof techniqueFirings>[]>();
+  return (mode: number): ReturnType<typeof techniqueFirings>[] => {
+    let got = dealt.get(mode);
+    if (got === undefined) {
+      got = [];
       for (const n of [6, 7])
         for (let seed = 0; seed < 25; seed++) {
           const p = { w: n, h: n, diff: DIFF_NORMAL, mode };
@@ -33,31 +37,44 @@ describe("a lineBreaks firing's witness", () => {
           // Every other technique first: `lineBreaks` then fires on what they leave.
           const others = entries.filter((e) => e.id !== "lineBreaks");
           runLadder(marks, ladderTechniques(marks, others, { [TIERS]: 99 }, {}));
-          const firings = techniqueFirings(
-            { entries, placing: [], striking: [] },
-            "lineBreaks",
-            marks,
+          got.push(
+            techniqueFirings(
+              { entries, placing: [], striking: [] },
+              "lineBreaks",
+              marks,
+            ),
           );
-          for (const f of firings) {
-            const said = f.reasons[0] as Said<LineBreaksBinding, LineBreaksSays>;
-            const { witness } = said.says;
-            // The `where` is `live(a, b) and (b in piece(a) or with ...)`: the
-            // `and`'s parts are `live`'s definition, which has an `or` of its
-            // own, and the technique's `or`.
-            if (witness === null || witness.held !== "all")
-              throw new Error("no witness");
-            const arm = witness.of.find((x) => x.held === "arm");
-            if (arm === undefined || arm.held !== "arm") throw new Error("no arm");
-            expect(arm.arm).toBe(1);
-            seen++;
-            // The edge the firing crosses out is the one supposed to hold a line.
-            const [s] = witnessNodes(arm).filter((x) => x.held === "supposing");
-            if (s === undefined || s.held !== "supposing") throw new Error("no with");
-            expect(s.cell).toBe(said.binding.e);
-            expect(s.value).toBe(1);
-            expect(witnessOfDef(s, "shortNear")).not.toBeNull();
-          }
         }
+      dealt.set(mode, got);
+    }
+    return got;
+  };
+})();
+
+describe("a lineBreaks firing's witness", () => {
+  it("names the edge supposed, and the squares read under it", () => {
+    let seen = 0;
+    for (const mode of [MODE_PATH, MODE_PAIRS])
+      for (const firings of firingsOf(mode)) {
+        for (const f of firings) {
+          const said = f.reasons[0] as Said<LineBreaksBinding, LineBreaksSays>;
+          const { witness } = said.says;
+          // The `where` is `live(a, b) and (b in piece(a) or with ...)`: the
+          // `and`'s parts are `live`'s definition, which has an `or` of its
+          // own, and the technique's `or`.
+          if (witness === null || witness.held !== "all") throw new Error("no witness");
+          const arm = witness.of.find((x) => x.held === "arm");
+          if (arm === undefined || arm.held !== "arm") throw new Error("no arm");
+          expect(arm.arm).toBe(1);
+          seen++;
+          // The edge the firing crosses out is the one supposed to hold a line.
+          const [s] = witnessNodes(arm).filter((x) => x.held === "supposing");
+          if (s === undefined || s.held !== "supposing") throw new Error("no with");
+          expect(s.cell).toBe(said.binding.e);
+          expect(s.value).toBe(1);
+          expect(witnessOfDef(s, "shortNear")).not.toBeNull();
+        }
+      }
     // What the check looked at.
     expect(seen).toBeGreaterThan(20);
   });
@@ -65,28 +82,17 @@ describe("a lineBreaks firing's witness", () => {
   it("carries the elements read, each once, the firing's own edge among them", () => {
     let seen = 0;
     let reads = 0;
-    for (const n of [6, 7])
-      for (let seed = 0; seed < 25; seed++) {
-        const p = { w: n, h: n, diff: DIFF_NORMAL, mode: MODE_PATH };
-        const state = newState(p, pathGame.newDesc(p, randomNew(`r${seed}`)).desc);
-        const { marks, entries } = pathWalk(state);
-        const others = entries.filter((e) => e.id !== "lineBreaks");
-        runLadder(marks, ladderTechniques(marks, others, { [TIERS]: 99 }, {}));
-        const firings = techniqueFirings(
-          { entries, placing: [], striking: [] },
-          "lineBreaks",
-          marks,
-        );
-        for (const f of firings) {
-          const said = f.reasons[0] as Said<LineBreaksBinding, LineBreaksSays>;
-          const { cells } = said.says.reads;
-          expect(new Set(cells).size).toBe(cells.length);
-          // `live` reads the edge's own mark before the `with` supposes it.
-          expect(cells).toContain(said.binding.e);
-          reads += cells.length;
-          seen++;
-        }
+    for (const firings of firingsOf(MODE_PATH)) {
+      for (const f of firings) {
+        const said = f.reasons[0] as Said<LineBreaksBinding, LineBreaksSays>;
+        const { cells } = said.says.reads;
+        expect(new Set(cells).size).toBe(cells.length);
+        // `live` reads the edge's own mark before the `with` supposes it.
+        expect(cells).toContain(said.binding.e);
+        reads += cells.length;
+        seen++;
       }
+    }
     expect(seen).toBeGreaterThan(20);
     expect(reads).toBeGreaterThan(seen);
   });
