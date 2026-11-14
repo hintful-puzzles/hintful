@@ -1,8 +1,7 @@
 /**
  * Unequal explained-hint tests.
  *
- * Tier 1 — the recording solver records a reason per technique and its
- * replayed placements complete a generated board; `hint` populates, strikes
+ * Tier 1 — `hint` populates, strikes
  * (basic-Latin culls + the sign eliminations) and places with quality-bar
  * narration; refusal on solved / on mistakes; `hintKeepTrack` verdicts; resume
  * to solved. Tier 2.5 — a render-scenario snapshot of a sign-elimination
@@ -12,10 +11,7 @@
 import { describe, expect, it } from "vitest";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { COL_HINT_CELL, COL_PENCIL } from "../../engine/edge-clue-latin/render.ts";
-import { recordEdgeClueDeductions } from "../../engine/edge-clue-latin/solver.ts";
 import {
-  DIFF_EXTREME,
-  diffToLevel,
   type EdgeClueMove,
   type EdgeClueParams,
   type EdgeClueState,
@@ -34,7 +30,6 @@ import {
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { unequalGame } from "./index.ts";
-import type { HintReason } from "./solver.ts";
 import { SIGNS } from "./state.ts";
 
 function gen(p: EdgeClueParams, seed: string) {
@@ -46,31 +41,6 @@ function gen(p: EdgeClueParams, seed: string) {
 type AnyStep = any;
 
 const UNEQ: EdgeClueParams = { order: 5, diff: "tricky" };
-
-// --- tier 1: recording solver ----------------------------------------------
-
-describe("unequal recording solver", () => {
-  it("records sign reasons and its placements complete the board", () => {
-    const { st } = gen(UNEQ, "rec-unequal");
-    const ops = recordEdgeClueDeductions(
-      st.order,
-      SIGNS,
-      st.clueFlags,
-      Uint8Array.from(st.grid),
-      Math.min(diffToLevel(UNEQ.diff), DIFF_EXTREME),
-    );
-    expect(ops.length).toBeGreaterThan(0);
-    const kinds = new Set(ops.map((o) => (o.reason as HintReason).kind));
-    // The sign's deduction is exercised.
-    expect(kinds.has("greater") || kinds.has("lesser")).toBe(true);
-
-    // Replaying the placements reconstructs the full (unique) solution.
-    const filled = Uint8Array.from(st.immutable);
-    for (const op of ops)
-      if (op.kind === "place") filled[op.y * st.order + op.x] = op.n;
-    for (let i = 0; i < st.order * st.order; i++) expect(filled[i]).toBeGreaterThan(0);
-  });
-});
 
 // --- tier 1: hint plan ------------------------------------------------------
 

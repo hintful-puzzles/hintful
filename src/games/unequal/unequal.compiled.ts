@@ -18,6 +18,15 @@ export const units: readonly string[] = ["rows","cols"];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "latin.hiddenSingle" | "latin.single" | "sign" | "latin.set" | "latin.fish" | "latin.wing";
 
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  sign: SignSays;
+}
+
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["sign"] as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
 
@@ -89,11 +98,17 @@ export interface SignBinding {
   small: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface SignSays {
+  terms: { big: number; small: number; lo: number; hi: number; };
+  marks: {  };
+}
+
 const signFacts: number[] = [];
 let signCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
-export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding> | null): number {
+export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding, SignSays> | null): number {
   const facts = signFacts;
   let fired = 0;
   let changed = false;
@@ -159,7 +174,24 @@ export function sign(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SignBinding>
     if (!(_q7)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null && !fire({ k: v_k, big: v_big, small: v_small }, facts)) return 1;
+      if (fire !== null) {
+        let _g19 = -1;
+        G20: {
+          for (let _m21 = (cands[v_small] >= 0 ? cands[v_small] : (cands[v_small] = b.cands[v_small])); _m21 !== 0; _m21 &= _m21 - 1) {
+            const v_d = 31 - Math.clz32(_m21 & -_m21);
+            if (_g19 === -1 || v_d < _g19) _g19 = v_d;
+          }
+        }
+        let _g22 = -1;
+        G23: {
+          for (let _m24 = (cands[v_big] >= 0 ? cands[v_big] : (cands[v_big] = b.cands[v_big])); _m24 !== 0; _m24 &= _m24 - 1) {
+            const v_d = 31 - Math.clz32(_m24 & -_m24);
+            if (_g22 === -1 || v_d > _g22) _g22 = v_d;
+          }
+        }
+        const _says = { terms: { big: v_big, small: v_small, lo: _g19, hi: _g22 }, marks: {  } };
+        if (!fire({ k: v_k, big: v_big, small: v_small }, facts, _says)) return 1;
+      }
       cands.fill(-1);
     }
   }

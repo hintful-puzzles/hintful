@@ -16,10 +16,14 @@ import {
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import {
+  type CandidateRung,
+  type Firing,
   LATIN_RUNGS,
   type PlanRung,
   runLatinCandidatePlan,
+  techniqueRung,
 } from "../../engine/candidate-plan.ts";
+import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { edgeClueVocab } from "../../engine/edge-clue-latin/hint-text.ts";
@@ -47,9 +51,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "../../engine/edge-clue-latin/render.ts";
-import { recordEdgeClueDeductions } from "../../engine/edge-clue-latin/solver.ts";
 import {
-  DIFF_EXTREME,
   diffFromLevel,
   diffToLevel,
   type EdgeClueMove,
@@ -74,6 +76,12 @@ import {
   type Premise,
 } from "../../engine/hint-text.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
+import {
+  byCell,
+  latinNotesLadder,
+  latinStrikeRungs,
+} from "../../engine/latin-notes.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   autoPencilPref,
@@ -84,7 +92,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { say } from "./hint-text.ts";
-import type { HintOp, HintReason } from "./solver.ts";
+import type { HintReason } from "./solver.ts";
 import { decodeParams, defaultParams, menu, SIGNS, validateParams } from "./state.ts";
 import * as unequal from "./unequal.compiled.ts";
 
@@ -124,6 +132,36 @@ function narrate(reason: HintReason, m: Mark, o: number): Sentence {
   }
 }
 
+/** A sign firing as legs, a cell each: the larger end's strikes held to the
+ * least the smaller end can be, the smaller end's to the greatest the larger
+ * can be. */
+function signLegs(
+  f: LadderFiring,
+  o: number,
+): Firing<EdgeClueMove, EdgeClueHint, HintReason> {
+  const { big, small, lo, hi } = (
+    f.reasons[0] as Said<unequal.SignBinding, unequal.SignSays>
+  ).says.terms;
+  const across = (c: number) => ({ ox: c % o, oy: (c / o) | 0 });
+  const legs = new Map<number, { strike: Mark[]; reason: HintReason }>();
+  for (let k = 0; k < f.facts.length; k += 3) {
+    const c = f.facts[k + 1];
+    let leg = legs.get(c);
+    if (!leg) {
+      leg = {
+        strike: [],
+        reason:
+          c === big
+            ? { kind: "greater", ...across(small), bound: lo }
+            : { kind: "lesser", ...across(big), bound: hi },
+      };
+      legs.set(c, leg);
+    }
+    leg.strike.push({ x: c % o, y: (c / o) | 0, n: f.facts[k + 2] });
+  }
+  return [...legs.values()];
+}
+
 /** Every rung an Unequal step can be: the Latin family's, and the kinds of
  * `UnequalReason`. */
 export const UNEQUAL_RUNGS = [...LATIN_RUNGS, "greater", "lesser"] as const;
@@ -139,8 +177,10 @@ function buildSteps(
   const o = state.order;
   const steps: HintStep<EdgeClueMove, EdgeClueHint, PlanRung<HintReason>>[] = [];
   const wGrid = Int8Array.from(state.grid);
-  const maxdiff = Math.min(diffToLevel(state.diff), DIFF_EXTREME);
-  runLatinCandidatePlan<EdgeClueMove, EdgeClueHint, HintOp, HintReason>({
+  const on = latinNotesLadder(SIGNS.ladder(o, state.clueFlags), o, wGrid);
+  type Rung = CandidateRung<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>;
+  const sign: Rung = techniqueRung(on, "sign", (f) => signLegs(f, o));
+  runLatinCandidatePlan<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>({
     w: o,
     steps,
     grid: wGrid,
@@ -148,19 +188,18 @@ function buildSteps(
     autoClean,
     reading,
     label: "unequal hint plan",
-    record: () =>
-      recordEdgeClueDeductions(
-        o,
-        SIGNS,
-        state.clueFlags,
-        Uint8Array.from(wGrid),
-        maxdiff,
-      ) as HintOp[],
     placeWords: (m, reason) => ({ words: narrate(reason, m, o) }),
     strikeWords: (marks, reason) => premise(reason, marks, o),
-    // The narration names a cell's relationship to its neighbor, so a firing is
-    // one leg per cell: a link's two ends, greater and lesser, are two legs.
-    strikeAxis: (op) => op.y * o + op.x,
+    // The narration names one cell's notes, and a sign's its relationship to
+    // its neighbor, so a firing is a leg a cell: a sign's two ends are two.
+    rungs: [
+      sign,
+      ...latinStrikeRungs<EdgeClueMove, EdgeClueHint, DeductionRecord, HintReason>(
+        on,
+        o,
+        byCell,
+      ),
+    ],
     notes: {
       noun: "number",
       placedVerb: "standing",

@@ -980,7 +980,9 @@ Reach for it when a Latin game's hint deduces from the notes rather than
 recording a solve. `latinNotesLadder` runs the game's ladder on
 `LatinSolver` marks over the walk's grid, and `latinStrikeRungs` makes the
 library's set, fish and wing rungs of the plan, so the game writes legs
-only for its own techniques. Exemplar: `src/games/salad/hint.ts`.
+only for its own techniques; `byCell` cuts a firing a leg a cell, for a
+game whose sentence names one cell's notes. Exemplars:
+`src/games/salad/hint.ts`, `src/games/unequal/index.ts`.
 
 ### `hint-words.ts` — a hint's words bound to its marks
 

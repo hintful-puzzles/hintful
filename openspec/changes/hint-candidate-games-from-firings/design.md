@@ -134,3 +134,26 @@ singles 35792 to 19144, line counts 35636 to 22692), and the plans are
 shorter (120968 lines against 153884). The border and set steps are near
 the same in number (border 11608 to 12972, set 3356 to 3380). The dump ran
 in 7 s against 10 s at HEAD.
+
+## Unequal, moved (2026-11-14)
+
+The recorder and `sign`'s reason callback are gone; `sign` says its ends
+and the bound each struck end is held to (`lo`, the least the smaller end
+can be, `hi` the greatest the larger can be), as terms the description
+computes off the marks, so the game reads no candidates to build a reason.
+The hint cuts a firing a leg a cell, with `byCell` (`engine/latin-notes.ts`,
+moved there from Salad) for the library's rungs.
+
+The recorder solved only up to the board's tier; the rungs do not, and
+need not: a technique past the board's tier is reached only when every
+easier rung is empty, which on a board solvable at its tier never happens.
+
+Compared by `research/hint-walk-dump/` over the gate's presets, 8 boards
+each from four starting shares: every walk ends as at HEAD (128 solved, 32
+refused on Unreasonable boards), and the rungs are near the same in number
+(greater 36564 to 36792, lesser 34504 to 35456, set 11376 to 11992, hidden
+singles 21092 to 21908, naked singles 55908 to 49316). The plans differ in
+order where the notes show a hidden single before the recording placed it.
+The walk fingerprint's per-commit boards keep their step counts and rungs;
+on the slow tier a few walks move by a few steps, and an Unreasonable
+board's goes further before it refuses (62 to 77 steps).

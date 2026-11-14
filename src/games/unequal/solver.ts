@@ -1,28 +1,18 @@
 /**
  * Unequal's ladder: the techniques `unequal.description.yaml` states,
- * compiled, with the reason each records for the hint. The shared edge-clue
- * solver (`engine/edge-clue-latin/solver.ts`) runs it on the `LatinSolver`.
+ * compiled. The shared edge-clue solver (`engine/edge-clue-latin/solver.ts`)
+ * runs it on the `LatinSolver`, and the hint runs it on the player's notes.
  */
 
-import {
-  clueList,
-  greatest,
-  latinSpace,
-  least,
-} from "../../engine/describe-runtime.ts";
+import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { ADJTHAN, type ClueKind } from "../../engine/edge-clue-latin/state.ts";
-import { type CellMarks, compiledRung } from "../../engine/ladder-runtime.ts";
-import {
-  type DeductionRecord,
-  type LatinReason,
-  latinLadder,
-} from "../../engine/latin.ts";
+import { compiledRung } from "../../engine/ladder-runtime.ts";
+import { type LatinReason, latinLadder } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import * as unequal from "./unequal.compiled.ts";
 
 /** Why a sign ruled a candidate out — the premise the hint narrates and
- * highlights. Combined with {@link LatinReason} (the generic positional/set
- * deductions) it covers every technique the recording solver fires.
+ * highlights, built from what `sign` says.
  *
  * Each carries the cell across the `>` sign (`ox`,`oy`) plus that cell's
  * binding value (`bound`, 1-based): for `greater` the smaller cell can be no
@@ -31,38 +21,11 @@ import * as unequal from "./unequal.compiled.ts";
 export type UnequalReason =
   | { kind: "greater"; ox: number; oy: number; bound: number }
   | { kind: "lesser"; ox: number; oy: number; bound: number }
-  /** The singles the hint plan re-derives from the working board at placement
-   * time (the recording solver records them all as `single`). */
+  /** The singles the hint plan reads off the working board. */
   | SingleReason;
 
-/** A reason attached to a recorded Unequal deduction. */
+/** A reason an Unequal hint step narrates. */
 export type HintReason = UnequalReason | LatinReason;
-
-/** One recorded Unequal deduction op (a {@link DeductionRecord} with a narrowed
- * reason). */
-export interface HintOp extends DeductionRecord {
-  reason: HintReason;
-}
-
-/** The cell across a sign, as a reason names it. */
-const across = (c: number, o: number) => ({ ox: c % o, oy: (c / o) | 0 });
-
-/** A struck end's other end can be no less (or, for the smaller end, no more)
- * than this, as the board stood: its least or greatest candidate, past the
- * values altogether when it has none. */
-function signReason(
-  { big, small }: unequal.SignBinding,
-  cell: number,
-  marks: CellMarks,
-): UnequalReason {
-  const o = marks.sp.w;
-  if (cell === big) {
-    const m = marks.cand(small);
-    return { kind: "greater", ...across(small, o), bound: m === 0 ? o + 1 : least(m) };
-  }
-  const m = marks.cand(big);
-  return { kind: "lesser", ...across(big, o), bound: m === 0 ? 1 : greatest(m) };
-}
 
 /**
  * The board's signs as the description deals them: flagged at the greater end,
@@ -87,11 +50,5 @@ function dealtOf(o: number, flags: Int32Array): unequal.Dealt {
 export const signAnswer: ClueKind["isAnswer"] = (grid, o, flags) =>
   unequal.isAnswer(grid, latinSpace(o), dealtOf(o, flags));
 
-export const signLadder: ClueKind["ladder"] = (o, flags) => {
-  const cl = dealtOf(o, flags);
-  return latinLadder(unequal, {
-    sign: compiledRung(unequal.sign, cl, (binding, cell, _n, m) =>
-      signReason(binding, cell, m),
-    ),
-  });
-};
+export const signLadder: ClueKind["ladder"] = (o, flags) =>
+  latinLadder(unequal, { sign: compiledRung(unequal.sign, dealtOf(o, flags)) });

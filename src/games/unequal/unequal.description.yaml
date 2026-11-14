@@ -104,6 +104,11 @@ techniques:
       forall d in domain:
       ((forall d2 in cand(small): d <= d2) implies strike(big, d))
       and ((forall d2 in cand(big): d >= d2) implies strike(small, d))
+    # The hint names the sign's two ends, and the bound each struck end is
+    # held to: the least the smaller end can be, the greatest the larger.
+    says:
+      terms: { big: big, small: small, lo: "min(d in cand(small))", hi: "max(d in cand(big))" }
+      marks: {}
   - { use: latin.set, tier: Tricky, rung: set }
   - { use: latin.fish, tier: Hard, rung: set }
   - { use: latin.wing, tier: Hard, rung: wing }

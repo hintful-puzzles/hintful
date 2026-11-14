@@ -77,6 +77,7 @@ import type { Said } from "../../engine/ladder-runtime.ts";
 import type { LatinSolver } from "../../engine/latin.ts";
 import { hiddenSingleLine, type SingleReasonUnder } from "../../engine/latin-hint.ts";
 import {
+  byCell,
   type LatinStrikeReason,
   latinNotesLadder,
   latinStrikeRungs,
@@ -561,17 +562,6 @@ function borderLegs(
   return [...legs.values()];
 }
 
-/** A firing's strikes, a leg a square: a set's sentence is one square's
- * notes ({@link premise}). */
-function bySquare(marks: Mark[]): Mark[][] {
-  const out = new Map<string, Mark[]>();
-  for (const m of marks) {
-    const k = `${m.x},${m.y}`;
-    out.set(k, [...(out.get(k) ?? []), m]);
-  }
-  return [...out.values()];
-}
-
 /** Salad's dialect for the shared plan mechanics. The three canonical shapes map
  * onto `set`/`pencil`/`markAll`/`pencilStrike`; the **marker** entries are a
  * fourth shape the canonical set has no room for, so they are read as `null`
@@ -769,12 +759,13 @@ function buildSteps(
   const cl = dealtOf(board());
   type Rung = CandidateRung<SaladMove, SaladHint, DeductionRecord, SaladReason>;
   const border: Rung = techniqueRung(on, "border", (f) => borderLegs(f, cl, o));
+  // A set's sentence is one square's notes (`premise`).
   const library: Rung[] = latinStrikeRungs<
     SaladMove,
     SaladHint,
     DeductionRecord,
     SaladReason
-  >(on, o, bySquare);
+  >(on, o, byCell);
 
   runLatinCandidatePlan<SaladMove, SaladHint, DeductionRecord, SaladReason, "populate">(
     {

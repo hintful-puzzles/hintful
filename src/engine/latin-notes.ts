@@ -43,6 +43,17 @@ export function latinNotesLadder(
   };
 }
 
+/** A firing's strikes, a leg a cell, in the order the cells first appear: for
+ * a game whose sentence names one cell's notes. */
+export function byCell(marks: readonly Mark[]): Mark[][] {
+  const out = new Map<string, Mark[]>();
+  for (const m of marks) {
+    const k = `${m.x},${m.y}`;
+    out.set(k, [...(out.get(k) ?? []), m]);
+  }
+  return [...out.values()];
+}
+
 /** The reasons the library's strikes give: a set (a fish is one confined
  * across lines) and a wing. */
 export type LatinStrikeReason = Exclude<LatinReason, { kind: "single" | "dup" }>;

@@ -1338,11 +1338,6 @@ export function least(m: number): number {
   return m === 0 ? -1 : 31 - Math.clz32(m & -m);
 }
 
-/** The greatest value of a set of values, or `-1`. */
-export function greatest(m: number): number {
-  return m === 0 ? -1 : 31 - Math.clz32(m);
-}
-
 /** A set of values' members, ascending. */
 export function valuesOf(m: number): number[] {
   const out: number[] = [];
