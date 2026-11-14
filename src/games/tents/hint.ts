@@ -14,8 +14,8 @@
 
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { trackTargets } from "../../engine/hint-track.ts";
+import type { HintStep } from "../../engine/game.ts";
+import { keepTrackBy } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { lineSquares, pointOf } from "./hint-marks.ts";
 import { type Counted, type Dir, type LineKind, say } from "./hint-text.ts";
@@ -74,24 +74,6 @@ interface TentsMarked {
   words: Sentence;
 }
 
-/** Every technique's sentence is read from the firing's reason, on the board
- * the firing found, in {@link stepsOf}. */
-const sentence = (_spoken: unknown, { words }: TentsMarked): Sentence => words;
-
-const sentences: {
-  [K in keyof tents.SaysById]: (spoken: unknown, marked: TentsMarked) => Sentence;
-} = {
-  tentLink: sentence,
-  noTree: sentence,
-  treesDone: sentence,
-  nextToTent: sentence,
-  treeSingle: sentence,
-  treeLink: sentence,
-  treeDiagonal: sentence,
-  lineCount: sentence,
-  lineNeighbors: sentence,
-};
-
 /** A firing's legs, from the board the walk made it on. */
 function stepOf(
   fired: Fired<tents.SaysById[keyof tents.SaysById], TentsWalkContext>,
@@ -118,9 +100,7 @@ function stepOf(
  *
  * No tier cap: a shared game ID carries no difficulty, and the ladder tries
  * the Easy techniques before the Normal ones, which is the order a hint wants
- * anyway. A plan holds forty steps: a UX bound, not a correctness one. A
- * player rarely follows more than a handful of steps before going their own
- * way, and the plan is recomputed then anyway.
+ * anyway.
  */
 export const tentsHint = describedEdgeHint<
   TentsState,
@@ -136,12 +116,13 @@ export const tentsHint = describedEdgeHint<
   settle: settleLinks,
   tiers: { lowest: () => tents.tiers.length - 1, count: tents.tiers.length },
   roles: { fallback: ["linkForNear", "linkForAny"] },
-  plan: 40,
   done: (m, ctx) => marksSolved(ctx.b, m),
   writes: (taken, ctx) => writesOf(ctx.b, taken),
   reads: (taken, ctx) => readsOf(ctx.b, taken),
   step: stepOf,
-  say: sentences,
+  // Every technique's sentence is read from the firing's reason, on the board
+  // the firing found, in `stepsOf`.
+  say: (_spoken, { words }) => words,
 });
 
 // --- reading a firing --------------------------------------------------------
@@ -407,43 +388,44 @@ function changesBetween(before: TentsState, after: TentsState): Map<number, numb
  * same (`engine/hint-track.ts`). A step that decides several squares shrinks
  * in place to what is left.
  */
-export function tentsKeepTrack(
-  m: TentsMove,
-  hintStep: HintStep<TentsMove>,
-  state: TentsState,
-): HintTrackVerdict {
-  if (m.type === "solve") return "off";
-  let after: TentsState;
-  try {
-    after = executeMove(state, m);
-  } catch {
-    return "off";
-  }
-  const { w } = state;
-  const { verdict, left } = trackTargets({
-    targets: targetsOf(hintStep, state),
-    changes: changesBetween(state, after),
-    key: (t) => t.key,
-    want: (t) => t.want,
-    holds: (t) =>
-      t.key >= 0
-        ? after.grid[t.key] === t.want
-        : partnerOf(w, after.links, -1 - t.key) === t.want,
-  });
-  if (verdict === "onTrack" && hintStep.move.type === "cells") {
-    hintStep.move = {
-      type: "cells",
-      cells: left.map((t) => ({ x: t.key % w, y: Math.floor(t.key / w), v: t.want })),
-    };
-    // The words shrink with the rings, which are read from them: a sentence
-    // that counted the squares left counts the ones left now.
-    const kept = new Set(left.map((t) => `${t.key % w},${Math.floor(t.key / w)}`));
-    if (hintStep.words) {
-      hintStep.words = hintStep.words.narrow(
-        (role, kind, key) => role !== "ring" || kind !== "cell" || kept.has(key),
-      );
-      hintStep.explanation = hintStep.words.text;
+export const tentsKeepTrack = keepTrackBy<
+  TentsState,
+  TentsMove,
+  unknown,
+  Target,
+  number,
+  number
+>({
+  foreign: (m) => m.type === "solve",
+  execute: (state, m) => {
+    try {
+      return executeMove(state, m);
+    } catch {
+      return null;
     }
-  }
-  return verdict;
-}
+  },
+  targets: targetsOf,
+  changesOf: changesBetween,
+  key: (t) => t.key,
+  want: (t) => t.want,
+  valueOf: (state, t) =>
+    t.key >= 0 ? state.grid[t.key] : partnerOf(state.w, state.links, -1 - t.key),
+  // A cells step shrinks to the squares left, and its words with the rings
+  // they are read from: a sentence that counted the squares left counts the
+  // ones left now. Only a cells step rings squares.
+  narrowed: (step, left, state) =>
+    step.move.type === "cells"
+      ? {
+          move: {
+            type: "cells",
+            cells: left.map((t) => ({
+              x: t.key % state.w,
+              y: Math.floor(t.key / state.w),
+              v: t.want,
+            })),
+          },
+          highlights: step.highlights,
+        }
+      : null,
+  ring: (t, state) => `${t.key % state.w},${Math.floor(t.key / state.w)}`,
+});

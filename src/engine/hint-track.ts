@@ -81,8 +81,8 @@ export interface TargetCodec<State, Move, H, Target, Key, Value> {
   foreign(m: Move): boolean;
   /** The board after the move, or `null` where it cannot be made. */
   execute(state: State, m: Move): State | null;
-  /** What the step still asks for. */
-  targets(step: HintStep<Move, H>): readonly Target[];
+  /** What the step still asks for, on the board before the move. */
+  targets(step: HintStep<Move, H>, state: State): readonly Target[];
   /** Every element that differs between two boards, with what it holds in the
    * second. */
   changesOf(before: State, after: State): ReadonlyMap<Key, Value>;
@@ -92,12 +92,15 @@ export interface TargetCodec<State, Move, H, Target, Key, Value> {
   want(t: Target): Value;
   /** The value the target's element holds on a board. */
   valueOf(state: State, t: Target): Value;
-  /** The step's move and highlights where only `left` is still to make. */
+  /** The step's move and highlights where only `left` is still to make, or
+   * `null` where the step stays as it is, its words too: a move that is asked
+   * for whole however much of it is made (Tents' link, once its tent is
+   * placed). */
   narrowed(
     step: HintStep<Move, H>,
     left: readonly Target[],
     state: State,
-  ): Pick<HintStep<Move, H>, "move" | "highlights">;
+  ): Pick<HintStep<Move, H>, "move" | "highlights"> | null;
   /** The key of the target's ring in the step's words. */
   ring(t: Target, state: State): string;
 }
@@ -113,14 +116,16 @@ export function keepTrackBy<State, Move, H, Target, Key, Value>(
     const after = codec.execute(state, m);
     if (after === null) return "off";
     const { verdict, left } = trackTargets({
-      targets: codec.targets(step),
+      targets: codec.targets(step, state),
       changes: codec.changesOf(state, after),
       key: (t) => codec.key(t, state),
       want: codec.want,
       holds: (t) => codec.valueOf(after, t) === codec.want(t),
     });
     if (verdict !== "onTrack") return verdict;
-    Object.assign(step, codec.narrowed(step, left, state));
+    const narrowed = codec.narrowed(step, left, state);
+    if (narrowed === null) return verdict;
+    Object.assign(step, narrowed);
     if (step.words) {
       const kept = new Set(left.map((t) => codec.ring(t, state)));
       step.words = step.words.narrow(
