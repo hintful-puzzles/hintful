@@ -8,6 +8,8 @@
  * right-click cycles the other way; number keys place directly.
  */
 
+import type { ColorWord } from "../../engine/color/color-word.ts";
+import { TWO_NAMES } from "../../engine/color/colors.ts";
 import { type CellHint, describedHint } from "../../engine/described-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
@@ -23,9 +25,8 @@ import {
   verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
-import { type Cell, EMPTY, ONE, ZERO } from "./constants.ts";
+import { type Cell, EMPTY, ONE, pairIndex, ZERO } from "./constants.ts";
 import { newDesc, solvableAt } from "./generator.ts";
-import { colorName, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -54,7 +55,10 @@ import {
   type UnrulyUi,
   validateParams,
 } from "./state.ts";
-import type { SaysById } from "./unruly.compiled.ts";
+import { type SaysById, STATED } from "./unruly.compiled.ts";
+
+/** The word for a piece: the palette's, so it is the color the piece is. */
+const colorName = (c: number): ColorWord => TWO_NAMES[pairIndex(c)];
 
 function newUi(_state: UnrulyState): UnrulyUi {
   return { cursor: newCursor() };
@@ -129,7 +133,9 @@ const described = describedHint<UnrulyState, UnrulyMove, SaysById>({
   entries: ({ unique }) => (unique ? LADDERS.unique : LADDERS.plain).entries,
   width: ({ w2 }) => w2,
   move: ({ x, y }, value) => ({ type: "place", x, y, value: value as Cell }),
-  say,
+  stated: STATED,
+  color: colorName,
+  say: {},
 });
 
 export type UnrulyRung = keyof SaysById;

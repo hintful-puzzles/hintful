@@ -10,10 +10,11 @@
  *
  * Cell games only: a fact is a placement of a value on a cell.
  */
+import type { ColorWord } from "./color/color-word.ts";
 import { PLACE } from "./describe-runtime.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
-import type { Sentence } from "./hint-words.ts";
+import { CELL, type Sentence } from "./hint-words.ts";
 import {
   type CellMarks,
   type LadderEntry,
@@ -22,6 +23,7 @@ import {
   type Taken,
   TIERS,
 } from "./ladder-runtime.ts";
+import { type Clauses, statedSentence } from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
 import type { Point } from "./types.ts";
 
@@ -67,8 +69,14 @@ export interface DescribedHintSpec<
   width(state: State): number;
   /** The move that places `n` on the cell at `at`. */
   move(at: Point, n: number): Move;
-  /** Each technique's sentence. */
-  say: { [K in keyof Says & string]: (spoken: Spoken<Says[K]["terms"]>) => Sentence };
+  /** Each technique's words as the description states them: the compiled
+   * module's `STATED`. A technique it does not state is said by `say`. */
+  stated?: Readonly<Record<string, { readonly step?: readonly Clauses[] }>>;
+  /** The color word a number term names, for a stated clause's `{color term}`. */
+  color?(n: number): ColorWord;
+  /** The sentences the description cannot state, one per technique that
+   * `stated` has none of. */
+  say: { [K in keyof Says & string]?: (spoken: Spoken<Says[K]["terms"]>) => Sentence };
 }
 
 /** The hooks a game takes from its description. */
@@ -107,7 +115,15 @@ export function describedHint<
   Says extends { [K in keyof Says]: SaysOf },
   Kind extends keyof Says & string = keyof Says & string,
 >(spec: DescribedHintSpec<State, Move, Says>): DescribedHint<State, Move, Kind> {
-  const kinds = Object.keys(spec.say) as Kind[];
+  const say = spec.say as Record<
+    string,
+    ((spoken: Spoken<object>) => Sentence) | undefined
+  >;
+  const stated = spec.stated ?? {};
+  for (const id of Object.keys(say))
+    if (id in stated)
+      throw new Error(`${spec.name}: ${id} is both stated and overridden`);
+  const kinds = [...new Set([...Object.keys(say), ...Object.keys(stated)])] as Kind[];
   const spoken = spokenOf<SaysOf>;
   const filled = filledBy;
 
@@ -137,12 +153,29 @@ export function describedHint<
         if (f.facts[i] !== PLACE) continue;
         const target = pointOf(f.facts[i + 1]);
         const value = f.facts[i + 2];
-        const words = spec.say[kind]({
-          terms: terms as Says[Kind]["terms"],
-          target,
-          outline: outline.map(pointOf),
-          stripes: (marks.stripes ?? []).map(pointOf),
-        });
+        const stripes = (marks.stripes ?? []).map(pointOf);
+        const clauses = stated[kind]?.step?.[0];
+        const override = say[kind];
+        if (clauses === undefined && override === undefined)
+          throw new Error(`${spec.name}: ${kind} is neither stated nor overridden`);
+        const words =
+          clauses !== undefined
+            ? statedSentence(clauses, {
+                kind: CELL,
+                at: pointOf,
+                ring: [target],
+                marks: { outline: outline.map(pointOf), stripes },
+                terms: terms as Record<string, unknown>,
+                value: String,
+                ...(spec.color === undefined ? {} : { color: spec.color }),
+                unit: (els) => (els[0]?.y === els[1]?.y ? "row" : "column"),
+              })
+            : (override as NonNullable<typeof override>)({
+                terms,
+                target,
+                outline: outline.map(pointOf),
+                stripes,
+              });
         steps.push({
           move: spec.move(target, value),
           rung: kind,

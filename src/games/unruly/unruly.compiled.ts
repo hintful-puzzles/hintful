@@ -24,6 +24,16 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["threes","lastGap","quota","lastOne","unique"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "threes": {"step":[{"look":"{outline: the outlined cell | the outlined cells} are already {color color}","follows":"{ring: this cell} would make three in a row","move":"it must be {color fill}"}]},
+  "lastGap": {"step":[{"look":"{stripes} has {outline: all its {color full} cells (outlined)}","move":"{ring: this cell} and the {if horizontal: row | column}'s other empty cells must be {color fill}"}]},
+  "quota": {"step":[{"look":"{stripes} has {outline: all its {color full} cells (outlined)}","move":"{ring: this cell} and the {if horizontal: row | column}'s other empty cells must be {color fill}"}]},
+  "lastOne": {"step":[{"look":"The last {color kept} in {stripes} fits only in {outline: an outlined cell} without making three {color fill}s","move":"{ring: this cell} must be {color fill}"}]},
+  "unique": {"step":[{"look":"{stripes}'s {color kept}s all sit where {outline: the outlined {if horizontal: row | column}}'s do","follows":"a {color kept} in {ring: this cell} would copy it","move":"it must be {color fill}"}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -156,7 +166,7 @@ export interface ThreesBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ThreesSays {
-  terms: { color: number; };
+  terms: { color: number; fill: number; };
   marks: { outline: readonly number[]; };
 }
 
@@ -234,7 +244,7 @@ export function threes(b: Marks, sp: GridSpace, fire: Fire<ThreesBinding, Threes
                   _g32.push(v_c);
                 }
               }
-              const _says = { terms: { color: v_d }, marks: { outline: _g32.slice() } };
+              const _says = { terms: { color: v_d, fill: (3 - v_d) }, marks: { outline: _g32.slice() } };
               if (!fire({ L: v_L, i: v_i, W: v_W.slice(), x: v_x, d: v_d }, facts, _says)) return 1;
             }
           }
@@ -484,7 +494,7 @@ export interface LastOneBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LastOneSays {
-  terms: { horizontal: boolean; fill: number; };
+  terms: { horizontal: boolean; fill: number; kept: number; };
   marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; };
 }
 
@@ -657,7 +667,7 @@ export function lastOne(b: Marks, sp: GridSpace, fire: Fire<LastOneBinding, Last
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: { horizontal: _h88, fill: _h39 }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice(), outline: v_W.slice() } };
+              const _says = { terms: { horizontal: _h88, fill: _h39, kept: v_d }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice(), outline: v_W.slice() } };
               if (!fire({ L: v_L, n: v_n, d: v_d, i: v_i, W: v_W.slice() }, facts, _says)) return 1;
             }
           }
@@ -678,7 +688,7 @@ export interface UniqueBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface UniqueSays {
-  terms: { horizontal: boolean; fill: number; };
+  terms: { horizontal: boolean; fill: number; kept: number; };
   marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; };
 }
 
@@ -836,7 +846,7 @@ export function unique(b: Marks, sp: GridSpace, fire: Fire<UniqueBinding, Unique
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: { horizontal: _h29, fill: _h68 }, marks: { stripes: sp.lineCells[v_B].slice(), reads: sp.lineCells[v_B].slice(), outline: sp.lineCells[v_A].slice() } };
+              const _says = { terms: { horizontal: _h29, fill: _h68, kept: v_d }, marks: { stripes: sp.lineCells[v_B].slice(), reads: sp.lineCells[v_B].slice(), outline: sp.lineCells[v_A].slice() } };
               if (!fire({ A: v_A, n: v_n, d: v_d, B: v_B, j: v_j }, facts, _says)) return 1;
             }
           }

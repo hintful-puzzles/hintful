@@ -100,8 +100,11 @@ variations:
             j in range(0, |cells(A)| - 1) where value(sq(A, j)) = d and not known(sq(B, j))
           conclude: "place(sq(B, j), flip(d))"
           says:
-            terms: { horizontal: "A in rows", fill: flip(d) }
+            terms: { horizontal: "A in rows", fill: flip(d), kept: d }
             marks: { stripes: "cells(B)", reads: "cells(B)", outline: "cells(A)" }
+            look: "{stripes}'s {color kept}s all sit where {outline: the outlined {if horizontal: row | column}}'s do"
+            follows: "a {color kept} in {ring: this cell} would copy it"
+            move: "it must be {color fill}"
 tiers: [Easy, Normal, Tricky]
 techniques:
   # Two of three squares in a row of a line hold one piece, so the third holds
@@ -114,8 +117,11 @@ techniques:
       d in domain where (forall c in W where c != x: value(c) = d)
     conclude: "place(x, flip(d))"
     says:
-      terms: { color: d }
+      terms: { color: d, fill: flip(d) }
       marks: { outline: "{c in W where c != x}" }
+      look: "{outline: the outlined cell | the outlined cells} are already {color color}"
+      follows: "{ring: this cell} would make three in a row"
+      move: "it must be {color fill}"
   # A line holding all its d and all but one of the other piece: its one empty
   # square holds the other piece.
   - id: lastGap
@@ -131,6 +137,8 @@ techniques:
         stripes: "cells(L)"
         reads: "cells(L)"
         outline: "{c in cells(L) where value(c) = d}"
+      look: "{stripes} has {outline: all its {color full} cells (outlined)}"
+      move: "{ring: this cell} and the {if horizontal: row | column}'s other empty cells must be {color fill}"
   # A line holding all its d: every empty square holds the other piece.
   - id: quota
     tier: Normal
@@ -145,6 +153,8 @@ techniques:
         stripes: "cells(L)"
         reads: "cells(L)"
         outline: "{c in cells(L) where value(c) = d}"
+      look: "{stripes} has {outline: all its {color full} cells (outlined)}"
+      move: "{ring: this cell} and the {if horizontal: row | column}'s other empty cells must be {color fill}"
   # A line with one d left to place and at least two of the other piece: three
   # squares in a row holding no d, two of them empty, would be three of the
   # other piece unless the last d goes among them, so it does, and every
@@ -159,5 +169,7 @@ techniques:
       where (forall c in W: value(c) != d) and count(c in W where not known(c)) >= 2
     conclude: "forall c in cells(L) where not known(c) and c not in W: place(c, flip(d))"
     says:
-      terms: { horizontal: "L in rows", fill: flip(d) }
+      terms: { horizontal: "L in rows", fill: flip(d), kept: d }
       marks: { stripes: "cells(L)", reads: "cells(L)", outline: "W" }
+      look: "The last {color kept} in {stripes} fits only in {outline: an outlined cell} without making three {color fill}s"
+      move: "{ring: this cell} must be {color fill}"
