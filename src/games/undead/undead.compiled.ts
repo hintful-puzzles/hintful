@@ -22,6 +22,61 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "single" | "total" | "sightline";
 
+/** The game's nouns, which the engine's hint words read. */
+export const WORDS = {"cell":"square"} as const;
+
+/** What the planner supplies for each kind of step it emits, over the
+ * elements `E` it marks: its terms, and the elements marked by role and sort. */
+export interface StepsById<E> {
+  populate: { ring: "cell"; terms: Record<string, never>; marks: {  } };
+  sightline: { ring: "cell"; terms: { a: number; b: number }; marks: { outline: { sight: readonly E[] }; stripes: { at: readonly E[] } } };
+  total: { ring: "cell"; terms: { d: number }; marks: {  } };
+  onlyCells: { ring: "cell"; terms: { d: number }; marks: {  } };
+  single: { ring: "cell"; terms: { d: number }; marks: {  } };
+}
+
+/** Each kind of step the planner emits: its clauses by wording, and the
+ * condition under which each wording is the one said (`null`: always). */
+export const STEPS: {
+  readonly [K in keyof StepsById<unknown>]: {
+    readonly ring: StepsById<unknown>[K]["ring"];
+    readonly clauses: readonly { look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string }[];
+    readonly when: readonly (
+      | null
+      | ((
+          t: StepsById<unknown>[K]["terms"],
+          m: StepsById<unknown>[K]["marks"],
+        ) => boolean)
+    )[];
+  };
+} = {
+  populate: {
+    ring: "cell",
+    clauses: [{"look":"Start by penciling every monster into each empty {noun}."}],
+    when: [null],
+  },
+  sightline: {
+    ring: "cell",
+    clauses: [{"look":"{outline sight: This sightline}'s {numeral a} and {numeral b} leave no room for a {struckOr} in {stripes at: this {noun}}","again":"{outline sight: the same sightline}"}],
+    when: [null],
+  },
+  total: {
+    ring: "cell",
+    clauses: [{"look":"No {d}s are left to place","follows":"no undecided {noun} can be one"}],
+    when: [null],
+  },
+  onlyCells: {
+    ring: "cell",
+    clauses: [{"look":"Exactly as many {nouns} can still hold a {d} as there are {d}s left to place","move":"{ring} can only be a {d}"}],
+    when: [null],
+  },
+  single: {
+    ring: "cell",
+    clauses: [{"look":"Every other monster has been ruled out in {ring}","move":"it can only be a {d}"}],
+    when: [null],
+  },
+};
+
 /** What a firing of each technique that says anything says, by id. */
 export interface SaysById {
   total: TotalSays;

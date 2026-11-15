@@ -472,15 +472,20 @@ export function plannedSentence<
   step: PlannedKind<T, M>,
   said: { readonly terms: T; readonly marks: M },
   cx: Omit<StatedContext<E>, "terms" | "marks" | "at">,
+  closing: Narration | null = null,
 ): Sentence {
   const i = step.when.findIndex((w) => w === null || w(said.terms, said.marks));
   if (i < 0) throw new Error("stated clause: no wording of the step holds");
-  return statedSentence(step.clauses[i], {
-    ...cx,
-    at: () => {
-      throw new Error("stated clause: a planned step has no element terms");
+  return statedSentence(
+    step.clauses[i],
+    {
+      ...cx,
+      at: () => {
+        throw new Error("stated clause: a planned step has no element terms");
+      },
+      terms: said.terms,
+      marks: said.marks as StatedContext<E>["marks"],
     },
-    terms: said.terms,
-    marks: said.marks as StatedContext<E>["marks"],
-  });
+    closing,
+  );
 }

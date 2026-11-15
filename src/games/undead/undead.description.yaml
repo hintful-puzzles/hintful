@@ -60,6 +60,8 @@ help:
     says so rather than guessing for you: save your position, try it, and
     undo if it breaks.
 name: Undead
+words:
+  cell: square
 family: numbers
 sizes:
   # At most 54 squares in all.
@@ -186,3 +188,38 @@ techniques:
     says:
       terms: { s: s }
       marks: {}
+# The steps the planner emits that no firing is: the opener, and the sentences
+# a firing or a note spoken as one is told in. A monster is named by its number
+# (1 a ghost, 2 a vampire, 3 a zombie), said by the game's value words. The
+# struck pencil marks a move names are drawn by the planner, which supplies the
+# move as the step's closing: a strike's reference is the thing the player
+# presses, and follows the step as it shrinks.
+steps:
+  populate:
+    ring: cell
+    look: "Start by penciling every monster into each empty {noun}."
+  # Which monster shows where is the game's rule, and the help teaches it; the
+  # step says only what this sightline's two clues decide. A later leg of the
+  # firing says the sightline again.
+  sightline:
+    ring: cell
+    terms: { a: number, b: number }
+    marks: { outline: [sight], stripes: [at] }
+    wordings:
+      - again: "{outline sight: the same sightline}"
+        look: "{outline sight: This sightline}'s {numeral a} and {numeral b} leave no room for a {struckOr} in {stripes at: this {noun}}"
+  total:
+    ring: cell
+    terms: { d: number }
+    look: "No {d}s are left to place"
+    follows: "no undecided {noun} can be one"
+  onlyCells:
+    ring: cell
+    terms: { d: number }
+    look: "Exactly as many {nouns} can still hold a {d} as there are {d}s left to place"
+    move: "{ring} can only be a {d}"
+  single:
+    ring: cell
+    terms: { d: number }
+    look: "Every other monster has been ruled out in {ring}"
+    move: "it can only be a {d}"

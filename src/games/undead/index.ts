@@ -60,7 +60,6 @@ import { stepBudget } from "../../engine/step-budget.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
 import type { Color, GameStatus, KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newUndeadDesc } from "./generator.ts";
-import { type Marked, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -82,6 +81,7 @@ import {
   type UndeadFiring,
   undeadFirings,
 } from "./solver.ts";
+import { type Marked, say } from "./speak.ts";
 import {
   cloneState,
   DIFF_EASY,
@@ -493,7 +493,7 @@ type UndeadRung = (typeof UNDEAD_RUNGS)[number];
 
 /** Narrate *why* a firing is forced. `bits` is the struck candidate mask (an
  * elimination) or the single placed monster (a placement); `continues` gets a
- * terser continuation-leg line. The words are [`hint-text.ts`](./hint-text.ts)'s. */
+ * terser continuation-leg line. The words are the description's, spoken by [`speak.ts`](./speak.ts). */
 function narrate(
   common: UndeadCommon,
   reason: UndeadReason,
@@ -504,9 +504,8 @@ function narrate(
   const m = markedOf(hl);
   switch (reason.kind) {
     case "sightline": {
-      if (continues) return say.sightlineNext(m);
       const path = common.paths[reason.path];
-      return say.sightline(path.sightingsStart, path.sightingsEnd, bits, m);
+      return say.sightline(path.sightingsStart, path.sightingsEnd, bits, m, continues);
     }
     case "total":
       return say.total(reason.monster, m);
