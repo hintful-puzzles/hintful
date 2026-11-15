@@ -19,14 +19,17 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { EDGE } from "../../engine/edge-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { dirX, dirY, opposite } from "../../engine/square-edges.ts";
+import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { type PearlHint, type PearlRung, pearlKeepTrack } from "./hint.ts";
-import { say } from "./hint-text.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";
+import { SQUARE } from "./kinds.ts";
 import { executeMove } from "./moves.ts";
+import { STATED } from "./pearl.compiled.ts";
 import { pearlSolve } from "./solver.ts";
 import {
   CORNER,
@@ -198,20 +201,47 @@ describe("every narratable premise the corpus reaches is reached", () => {
     );
   });
 
-  it("the arms no corpus board reaches still read as English, in the necessity voice", () => {
-    const one = { own: [0], black: [], white: [], area: [1] };
-    const two = { ...one, own: [...one.own, 1] };
-    for (const { text } of [
-      say.closesEarly("lines", one),
-      say.closesEarlyThrough("lines", two),
-      say.closesEarlyWhite("across", "upDown", "lines", two),
-      say.closesEarlyWhite("upDown", "across", "lines", two),
-      say.squareFull(one),
-      say.squareFull(two),
-    ]) {
-      expect(text.length, text).toBeLessThanOrEqual(120);
-      expect(text).toMatch(/must|can't/);
-    }
+  it("the wordings no walk of the word dump reaches still read as English, in the necessity voice", () => {
+    // Rendered from the compiled module's clauses, as the engine renders them.
+    const said = (
+      kind: keyof typeof STATED,
+      wording: number,
+      terms: Record<string, number | boolean | number[]>,
+      ring: number[],
+    ): string =>
+      statedSentence(STATED[kind].step[wording], {
+        kind: SQUARE,
+        ringKind: EDGE,
+        at: (i) => i,
+        termKinds: { through: EDGE, all: EDGE },
+        ring,
+        marks: { outline: [1], stripes: [] },
+        terms: { runs: false, several: false, through: [], ...terms },
+        value: String,
+      }).text;
+    const texts = [
+      said("square", 0, {}, [3]),
+      said("square", 2, { multi: false }, [3]),
+      said("square", 2, { multi: true }, [3, 4]),
+      said("blackRunsOn", 0, {}, [3]),
+      said("whiteTurnsOpposite", 0, { multi: true, line: true }, [3, 4]),
+      said("whiteTurnsOpposite", 0, { multi: true, line: false }, [3, 4]),
+      said("earlyThrough", 0, { blocked: true, pearlOff: false }, [3, 4]),
+      said("earlyThrough", 0, { blocked: false, pearlOff: true }, [3, 4]),
+      said("earlyThrough", 1, { pearlOff: false }, [3, 4]),
+    ];
+    expect(texts).toEqual([
+      "This white pearl's line runs straight through it, so it must leave by the opposite edge.",
+      "This square already has its two lines, so this edge can't be a line.",
+      "This square already has its two lines, so its other edges can't be lines.",
+      "The outlined black pearl's line runs straight through the next square, so this line must carry on out of its far side.",
+      "The white pearl runs straight through the outlined square, so it turns on its other side: these edges must be lines.",
+      "The white pearl runs straight through the outlined square, so it turns on its other side: these edges can't be lines.",
+      "Across, this white pearl would close the outlined line into a loop missing other lines, so it must run up and down.",
+      "Up and down, this white pearl would close the outlined line into a loop missing a pearl, so it must run across.",
+      "Any line through this square would close the outlined line into a loop that misses other lines, so it must stay empty.",
+    ]);
+    for (const text of texts) expect(text.length, text).toBeLessThanOrEqual(125);
   });
 });
 

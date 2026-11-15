@@ -56,7 +56,7 @@ import {
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, loopSteps, WIN_LEAD, walkLoop } from "../../engine/win-wave.ts";
 import { edgeOf, type PearlHint } from "./hint.ts";
-import { SQUARE } from "./hint-text.ts";
+import { SQUARE } from "./kinds.ts";
 import { pearlLines } from "./moves.ts";
 import {
   ERROR_CLUE,

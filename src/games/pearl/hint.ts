@@ -15,7 +15,6 @@ import {
 } from "../../engine/described-edge-hint.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
 import { keepTrackBy } from "../../engine/hint-track.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
 import {
   bitDirection,
@@ -29,15 +28,10 @@ import {
   squareEdges,
   U,
 } from "../../engine/square-edges.ts";
-import {
-  type Axis,
-  type LeftOut,
-  type Marked,
-  type NoStraight,
-  say,
-} from "./hint-text.ts";
+import { SQUARE } from "./kinds.ts";
 import { executeMove } from "./moves.ts";
 import * as pearl from "./pearl.compiled.ts";
+import { STATED } from "./pearl.compiled.ts";
 import {
   LINE,
   ladderOf,
@@ -150,6 +144,9 @@ function linesAt(v: View, grid: ArrayLike<number>, sq: number): number {
   return n;
 }
 
+/** Which way a line runs through a square. */
+type Axis = "across" | "upDown";
+
 const axisOf = (d: number): Axis => (d === R || d === L ? "across" : "upDown");
 const otherAxis = (a: Axis): Axis => (a === "across" ? "upDown" : "across");
 
@@ -165,23 +162,15 @@ function dirOf(v: View, sq: number, e: number): number {
   return d;
 }
 
-/** The op's edge as seen from square `sq`: the direction it leaves `sq` by, or
- * 0 when it is not one of `sq`'s edges. */
-function dirFrom(v: { w: number }, op: PearlEdgeOp, sq: number): number {
-  if (op.sq === sq) return op.dir;
-  if (step(v, op.sq, op.dir) === sq) return opposite(op.dir);
-  return 0;
-}
-
-/** Does anything a closed loop through `piece` (and `also`) would leave out
- * hold a pearl? Otherwise what it leaves out is lines: the technique fires
+/** Does a pearl lie outside `piece` and `also`, the squares a closed loop
+ * would take in? Otherwise what it leaves out is lines: the technique fires
  * only when it leaves out a pearl or a line. */
-function leftOut(v: View, piece: readonly number[], also: number | null): LeftOut {
+function pearlOutside(v: View, piece: readonly number[], also: number): boolean {
   const on = new Set(piece);
-  if (also !== null) on.add(also);
+  on.add(also);
   for (let c = 0; c < v.w * v.h; c++)
-    if (!on.has(c) && v.clues[c] !== NOCLUE) return "pearl";
-  return "lines";
+    if (!on.has(c) && v.clues[c] !== NOCLUE) return true;
+  return false;
 }
 
 /** A firing as its technique said it. */
@@ -271,47 +260,14 @@ function carryOn(
   return carried;
 }
 
-// --- narration ------------------------------------------------------------
+// --- the terms ------------------------------------------------------------
 
-/** Why the square past a black pearl cannot run straight on toward `d`. */
-function noStraight(
-  v: View,
-  grid: ArrayLike<number>,
-  next: number,
-  d: number,
-): NoStraight {
-  if (v.clues[next] === CORNER) return "blackPearl";
-  for (const s of DIRECTIONS)
-    if (s !== d && s !== opposite(d) && edgeState(v, grid, next, s) === 1)
-      return "sideLine";
-  return onBoard(v, next, d) ? "farEdge" : "boardEdge";
-}
-
-/** A firing that reads one square's own edges. */
-function narrateSquare(v: View, f: ShownFiring, sq: number, m: Marked): Sentence {
-  const grid = f.before;
-  const clue = v.clues[sq];
-  if (clue === CORNER) {
-    // One axis: the op's edge, and the edge opposite it.
-    const d = dirFrom(v, f.ops[0], sq);
-    const facing = edgeState(v, grid, sq, opposite(d));
-    if (facing === 1) return say.blackOpposite("line", m);
-    return say.blackOpposite(
-      onBoard(v, sq, opposite(d)) ? "ruledOut" : "boardEdge",
-      m,
-      m.black.length > 0,
-    );
-  }
-  if (clue === STRAIGHT) {
-    if (linesAt(v, grid, sq) > 0) return say.whiteCarriesOn(m);
-    for (const d of DIRECTIONS)
-      if (edgeState(v, grid, sq, d) === 2)
-        return say.whiteBlocked(otherAxis(axisOf(d)), !onBoard(v, sq, d), m);
-    throw new Error("pearl hint: a white pearl settled with nothing beside it");
-  }
-  const lines = linesAt(v, grid, sq);
-  if (lines === 2) return say.squareFull(m);
-  return lines === 1 ? say.lineGoesOn(m) : say.deadEnd(m);
+/** What a step marks, split the way its words name it: the edges its own
+ * deduction decides, and the lines each pearl rule carries on from them. */
+interface Marked {
+  own: readonly number[];
+  black: readonly number[];
+  white: readonly number[];
 }
 
 /** The op's edge, by its `square-edges.ts` number. */
@@ -321,7 +277,7 @@ export function edgeOf(board: { w: number; h: number }, op: PearlEdgeOp): number
 
 /** What a firing's step marks, split the way its words name it: the edges its
  * own deduction decides, and the lines each pearl rule carries on from them. */
-function markedOf(v: View, f: ShownFiring, reason: PearlReason): Marked {
+function markedOf(v: View, f: ShownFiring): Marked {
   const carried = new Map(f.carried.map((c) => [edgeOf(v, c.op), c.rule]));
   const rule = (op: PearlEdgeOp) => carried.get(edgeOf(v, op)) ?? null;
   const edges = (r: Carried["rule"] | null) =>
@@ -330,12 +286,14 @@ function markedOf(v: View, f: ShownFiring, reason: PearlReason): Marked {
     own: edges(null),
     black: edges("black"),
     white: edges("white"),
-    area: areaOf(v, reason),
   };
 }
 
-/** Which sentence a firing speaks, and with what values. */
-function narrate(v: View, f: ShownFiring, reason: PearlReason): Sentence {
+/** The terms a firing's description cannot know: what its step carries on
+ * through white pearls, and what the board's edges show of the step's reason
+ * (the sides a white pearl is shut in by, the squares a closed loop would
+ * leave out). */
+function termsOf({ view: v, firing: f, reason }: PearlMarked): Record<string, unknown> {
   // Only a black pearl's own square firing draws a line whose run-on is still
   // open, and its sentence names it; the other techniques that draw a line
   // beside one draw its run-on too.
@@ -344,25 +302,30 @@ function narrate(v: View, f: ShownFiring, reason: PearlReason): Sentence {
     !(reason.kind === "square" && v.clues[reason.sq] === CORNER)
   )
     throw new Error(`pearl hint: a ${reason.kind} step drew a black pearl's run-on`);
-  return sentenceOf(v, f, reason, markedOf(v, f, reason));
-}
-
-/** The sentence for the firing's own deduction. */
-function sentenceOf(v: View, f: ShownFiring, reason: PearlReason, m: Marked): Sentence {
-  const grid = f.before;
+  const m = markedOf(v, f);
+  const common = {
+    multi: m.own.length > 1,
+    runs: m.white.length > 0,
+    several: m.white.length > 1,
+    through: m.white,
+    runsOn: m.black.length > 0,
+    all: [...m.own, ...m.black, ...m.white],
+  };
   switch (reason.kind) {
-    case "square":
-      return narrateSquare(v, f, reason.sq, m);
-    case "blackRunsOn":
-      return say.blackRunsOn(m);
-    case "blackCannotRunOn": {
-      const next = step(v, reason.pearl, reason.dir);
-      return say.blackCannotRunOn(noStraight(v, grid, next, reason.dir), m);
+    case "square": {
+      const { sq } = reason;
+      if (v.clues[sq] !== STRAIGHT || linesAt(v, f.before, sq) > 0) return common;
+      for (const d of DIRECTIONS)
+        if (edgeState(v, f.before, sq, d) === 2)
+          return {
+            ...common,
+            board: !onBoard(v, sq, d),
+            across: otherAxis(axisOf(d)) === "across",
+          };
+      throw new Error("pearl hint: a white pearl settled with nothing beside it");
     }
-    case "whiteCannotTurn": {
-      const blocked = axisOf(reason.axis);
-      return say.whiteCannotTurn(otherAxis(blocked), m);
-    }
+    case "whiteCannotTurn":
+      return { ...common, across: otherAxis(axisOf(reason.axis)) === "across" };
     case "whiteTurnsOpposite": {
       // The square that turns may settle its straight-on cross and a line to
       // one side at once. It then has its two lines, so the cross is not
@@ -373,41 +336,16 @@ function sentenceOf(v: View, f: ShownFiring, reason: PearlReason, m: Marked): Se
         .map((op) => op.line);
       if (lines.includes(true) && lines.includes(false))
         throw new Error("pearl hint: a white pearl's turn showed a line and a cross");
-      return say.whiteTurnsOpposite(lines[0], m);
+      return { ...common, line: lines[0] };
     }
-    case "closesEarly":
-      return say.closesEarly(leftOut(v, reason.piece, null), m);
-    case "closesEarlyThrough": {
-      const out = leftOut(v, reason.piece, reason.sq);
-      if (v.clues[reason.sq] === STRAIGHT) {
-        const blocked = axisOf(reason.shape & -reason.shape);
-        return say.closesEarlyWhite(blocked, otherAxis(blocked), out, m);
-      }
-      return say.closesEarlyThrough(out, m);
-    }
-  }
-}
-
-// --- highlights -----------------------------------------------------------
-
-/** The squares a firing reasons from. */
-function areaOf(v: View, reason: PearlReason): number[] {
-  switch (reason.kind) {
-    case "square":
-      return [reason.sq];
-    case "blackRunsOn":
-      return [reason.pearl];
-    case "blackCannotRunOn":
-      return [step(v, reason.pearl, reason.dir)];
-    case "whiteCannotTurn": {
-      const d = reason.axis;
-      return [step(v, reason.pearl, d), step(v, reason.pearl, opposite(d))];
-    }
-    case "whiteTurnsOpposite":
-      return [step(v, reason.pearl, reason.dir)];
-    case "closesEarly":
     case "closesEarlyThrough":
-      return reason.piece;
+      return {
+        ...common,
+        pearlOff: pearlOutside(v, reason.piece, reason.sq),
+        blocked: axisOf(reason.shape & -reason.shape) === "across",
+      };
+    default:
+      return common;
   }
 }
 
@@ -530,15 +468,22 @@ export const pearlHint = describedEdgeHint<
   PearlMarked,
   PearlWalkContext,
   PearlSays,
-  PearlRung
+  PearlRung,
+  number,
+  number
 >({
   name: "pearl hint",
   walk: pearlWalk,
   tiers: { lowest: () => pearl.tiers.length - 1, count: pearl.tiers.length },
   done: (m, ctx) => ctx.closed || !m.grid.includes(0),
   step: stepOf,
-  // Every technique's sentence is the one `narrate` says for its premise.
-  say: (_spoken, { view, firing, reason }) => narrate(view, firing, reason),
+  stated: STATED,
+  // A sentence's marks are squares, indexed, and the edges a step decides.
+  elements: { kind: SQUARE, at: (index) => index },
+  ringKind: EDGE,
+  ring: ({ view, firing }) => markedOf(view, firing).own,
+  termKinds: { through: EDGE, all: EDGE },
+  terms: termsOf,
 });
 
 /** The move that makes these edges: each a line or a cross, set on the squares

@@ -200,8 +200,53 @@ techniques:
       forall e in F: (e in W or e in N)
       and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
     says:
-      terms: { c: c }
-      marks: { reads: "{c}" }
+      terms:
+        c: c
+        # The lines the square already has, and whether it holds a white pearl.
+        lines: "drawn(c)"
+        isWhite: "clue(pearl, c) = 2"
+        # A white pearl with a side ruled out: whether that side is the
+        # board's edge, and whether its line must run across (else up and
+        # down). The game reads the sides.
+        board: "false" # supplied
+        across: "false" # supplied
+        # Whether the step sets several edges, and the edges a white pearl's
+        # line carries on through (the game draws them with the step).
+        multi: "false" # supplied
+        runs: "false" # supplied
+        through: "edges(c)" # supplied
+      marks: { outline: "{c}" }
+      wordings:
+        - when: "isWhite and lines > 0"
+          look: "{outline: this white pearl}'s line runs straight through it"
+          move: >-
+            it must leave by {ring: the opposite edge}{if runs: , and on through
+            {ring through: the next pearl (ringed) | the next pearls (ringed)}|}
+        - when: "isWhite"
+          look: >-
+            {outline: this white pearl} {if board: sits on the board's edge |
+            has one edge ruled out}
+          move: >-
+            {ring: its line} must run {if board: along it | {if across: across |
+            up and down}}{if runs: , and on through {ring through: the next pearl
+            (ringed) | the next pearls (ringed)}|}
+        - when: "lines = 2"
+          look: "{outline: this square} already has its two lines"
+          move: >-
+            {ring: this edge | its other edges} can't be {if multi: lines | a
+            line}{if runs: , and on through {ring through: the next pearl (ringed)
+            | the next pearls (ringed)}|}
+        - when: "lines = 1"
+          look: "the line in {outline: this square} has no other way to go on"
+          move: >-
+            {ring: this edge | these edges} must be a line{if runs: , and on
+            through {ring through: the next pearl (ringed) | the next pearls
+            (ringed)}|}
+        - look: "{outline: this square} has no line and no other open edge"
+          move: >-
+            it can't be a line{if runs: , and on through {ring through: the next
+            pearl (ringed) | the next pearls (ringed)}|}
+          follows: "a line on {ring: this edge | these edges} would dead-end"
   # A black pearl's edge its ways agree on. It turns, so of each two edges
   # across from each other it takes exactly one: an edge is settled where
   # the other across from it is, or is off the board.
@@ -212,8 +257,43 @@ techniques:
       A = turnsAt(c, e, 1), B = turnsAt(c, e, 2) where not A or not B
     conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"
     says:
-      terms: { c: c }
-      marks: { reads: "{c}" }
+      terms:
+        c: c
+        # The edge across the pearl from the one decided: a line, else ruled
+        # out, or none because the pearl is at the board's edge.
+        line: "exists x in edges(c) where x != e and not bent(x, e) and value(x) = 1: true"
+        board: "not (exists x in edges(c) where x != e and not bent(x, e): true)"
+        # Whether the step also draws the line on through the next square
+        # (`runsOn`), the edges it takes in all (`all`), and the white pearls
+        # it runs on through (`runs`, `several`, `through`); the game reads
+        # them.
+        runsOn: "false" # supplied
+        all: "edges(c)" # supplied
+        runs: "false" # supplied
+        several: "false" # supplied
+        through: "edges(c)" # supplied
+      marks: { outline: "{c}" }
+      wordings:
+        - when: line
+          look: "{outline: this black pearl} must turn, and the opposite edge is a line"
+          move: >-
+            {ring: this edge | these edges} can't be one{if runs: , and on through
+            {ring through: the next pearl (ringed) | the next pearls (ringed)}|}
+        - when: board
+          look: "{outline: this black pearl} backs onto the board's edge"
+          move: >-
+            {if runsOn: its line must take {ring all: the ringed edge | the ringed
+            edges}{if runs: , and on through the next {if several: pearls |
+            pearl}|} | {ring: this edge | these edges} must be a line{if runs: ,
+            and on through {ring through: the next pearl (ringed) | the next
+            pearls (ringed)}|}}
+        - look: "{outline: this black pearl} has its opposite edge ruled out"
+          move: >-
+            {if runsOn: its line must take {ring all: the ringed edge | the ringed
+            edges}{if runs: , and on through the next {if several: pearls |
+            pearl}|} | {ring: this edge | these edges} must be a line{if runs: ,
+            and on through {ring through: the next pearl (ringed) | the next
+            pearls (ringed)}|}}
   # A black pearl's line runs straight on through the next square: on out
   # of its far side, and off neither of its others.
   - id: blackRunsOn
@@ -227,10 +307,19 @@ techniques:
       and (forall x in edges(j) where x != e:
       (bent(x, e) implies place(x, 2)) and (not bent(x, e) implies place(x, 1)))
     says:
-      terms: { c: c, e: e }
+      terms:
+        c: c
+        e: e
+        runs: "false" # supplied
+        through: "edges(c)" # supplied
       # The pearl, the square past it and the square past that, straight on.
       marks:
         reads: "{c, j} + set(other(x, j) over x in edges(j) where x != e and not bent(x, e))"
+        outline: "{c}"
+      look: "{outline: the outlined black pearl}'s line runs straight through the next square"
+      move: >-
+        {ring: this line} must carry on out of its far side{if runs: , and on
+        through {ring through: the next pearl (ringed) | the next pearls (ringed)}|}
   # A black pearl's edge into a square that cannot carry a line straight
   # through from it is empty.
   - id: blackCannotRunOn
@@ -240,9 +329,30 @@ techniques:
       j = other(e, c) where not runs(j, e)
     conclude: "place(e, 2)"
     says:
-      terms: { c: c, e: e }
+      terms:
+        c: c
+        e: e
+        # Why the square past the pearl cannot carry the line straight on: it
+        # holds a black pearl, has a line off to the side, or has a far edge
+        # (ruled out, else the board's edge).
+        blackPast: "clue(pearl, j) = 1"
+        sideLine: "exists x in edges(j) where x != e and bent(x, e) and value(x) = 1: true"
+        farEdge: "exists x in edges(j) where x != e and not bent(x, e): true"
       marks:
         reads: "{c, j} + set(other(x, j) over x in edges(j) where x != e and not bent(x, e))"
+        outline: "{j}"
+      wordings:
+        - when: blackPast
+          look: "{outline: the outlined square} holds a black pearl, which must turn"
+          move: "{ring: this black pearl's line} can't run straight through it"
+        - when: sideLine
+          look: "{outline: the outlined square} has a line off to the side"
+          move: "{ring: this black pearl's line} can't run straight through it"
+        - when: farEdge
+          look: "{outline: the outlined square} has its far edge ruled out"
+          move: "{ring: this black pearl's line} can't run straight through it"
+        - look: "{outline: the outlined square} is at the board's edge"
+          move: "{ring: this black pearl's line} can't run straight through it"
   # A white pearl whose squares along one line can neither turn into it
   # runs along the other line.
   - id: whiteCannotTurn
@@ -258,8 +368,21 @@ techniques:
     conclude: >-
       place(e, 2) and place(f, 2) and |P| = 2 and (forall x in P: place(x, 1))
     says:
-      terms: { c: c, e: e }
-      marks: { reads: "{c, other(e, c), other(f, c)}" }
+      terms:
+        c: c
+        e: e
+        # Whether the pearl runs across (else up and down), and the white
+        # pearls its line carries on through.
+        across: "false" # supplied
+        runs: "false" # supplied
+        through: "edges(c)" # supplied
+      marks:
+        reads: "{c, other(e, c), other(f, c)}"
+        outline: "{other(e, c), other(f, c)}"
+      look: "neither {outline: outlined square} can turn into {ring: this white pearl}"
+      move: >-
+        it runs {if across: across | up and down}{if runs: , and on through {ring
+        through: the next pearl (ringed) | the next pearls (ringed)}|}
   # A white pearl whose line runs straight on through the square on one
   # side turns in the square on the other, where that square could still
   # run straight: every edge there its ways of turning agree on. A black
@@ -279,8 +402,26 @@ techniques:
       forall x in F: (x in W or x in N)
       and (x not in W implies place(x, 2)) and (x not in N implies place(x, 1))
     says:
-      terms: { c: c, e: e }
-      marks: { reads: "{c, other(e, c), k}" }
+      terms:
+        c: c
+        e: e
+        # Whether the square that turns takes lines (else crosses), whether
+        # the step sets several edges, and the white pearls its lines carry
+        # on through.
+        line: "false" # supplied
+        multi: "false" # supplied
+        runs: "false" # supplied
+        through: "edges(c)" # supplied
+      marks:
+        reads: "{c, other(e, c), k}"
+        outline: "{other(e, c)}"
+      look: "the white pearl runs straight through {outline: the outlined square}"
+      move: >-
+        {ring: this edge | these edges} {if multi: {if line: must be lines |
+        can't be lines} | {if line: must be a line | can't be a line}}{if runs: ,
+        and on through {ring through: the next pearl (ringed) | the next pearls
+        (ringed)}|}
+      follows: "it turns on its other side"
   # The lines are closed, each square with one line or none: they are the
   # loop, and every other edge is empty. One that leaves a line or a pearl
   # off it is inconsistent.
@@ -309,8 +450,16 @@ techniques:
       and (exists c in cells: c not in G and (clue(pearl, c) != none or drawn(c) > 0))
     conclude: "place(e, 2)"
     says:
-      terms: { e: e }
+      terms:
+        e: e
+        # Whether a pearl lies off the lines the edge would close.
+        pearlOff: "exists q in cells where q not in G and clue(pearl, q) != none: true"
       marks: { reads: "{end1(e), end2(e)}", outline: "G" }
+      look: >-
+        joining the ends of {outline: the outlined line} with {ring: this edge |
+        these edges} would close a loop that misses {if pearlOff: a pearl | other
+        lines}
+      move: "it can't be a line"
   # A square with no line whose ways through would join two squares the
   # lines already join, while a pearl or a line lies off them: those ways
   # would close a loop that leaves it out, and the rest agree.
@@ -327,8 +476,19 @@ techniques:
       forall e in F: (e in W or e in N)
       and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
     says:
-      # Its open sides, which the hint reads its way through from.
-      terms: { c: c, F: F }
+      terms:
+        c: c
+        # Its open sides, which the hint reads its way through from.
+        F: F
+        isWhite: "clue(pearl, c) = 2"
+        # Whether a pearl lies off the squares the closed loop would take in
+        # (the game reads the piece), and for a white pearl, whether the
+        # blocked way runs across; and the white pearls its lines carry on
+        # through.
+        pearlOff: "false" # supplied
+        blocked: "false" # supplied
+        runs: "false" # supplied
+        through: "edges(c)" # supplied
       # The square and the pieces of line its ways through would close; the
       # piece shown is the one the first way that has one leads into.
       marks:
@@ -338,3 +498,20 @@ techniques:
         outline: >-
           through(other(first({x in F where exists y in F where y != x:
           other(y, c) in through(other(x, c), L)}), c), L)
+      wordings:
+        - when: isWhite
+          look: >-
+            {if blocked: across | up and down}, {ring: this white pearl} would
+            close {outline: the outlined line} into a loop missing {if pearlOff: a
+            pearl | other lines}
+          move: >-
+            it must run {if blocked: up and down | across}{if runs: , and on
+            through {ring through: the next pearl (ringed) | the next pearls
+            (ringed)}|}
+        - look: >-
+            any line through {ring: this square} would close {outline: the
+            outlined line} into a loop that misses {if pearlOff: a pearl | other
+            lines}
+          move: >-
+            it must stay empty{if runs: , and on through {ring through: the next
+            pearl (ringed) | the next pearls (ringed)}|}

@@ -22,8 +22,8 @@ import {
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import type { Flash } from "../../engine/win-wave.ts";
 import type { PearlHint } from "./hint.ts";
-import { SQUARE } from "./hint-text.ts";
 import { pearlGame } from "./index.ts";
+import { SQUARE } from "./kinds.ts";
 import {
   COL_BLACK,
   COL_FLASH,
