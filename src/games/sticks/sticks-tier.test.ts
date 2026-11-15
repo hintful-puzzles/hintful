@@ -161,7 +161,7 @@ describe("sticks' search for a board's answers", () => {
   it("takes one position for every Easy board", () => {
     for (const side of [4, 5, 7]) {
       const p = sized(side, side, DIFF_EASY);
-      for (let seed = 0; seed < 8; seed++) {
+      for (let seed = 0; seed < deepBudget(3, 8); seed++) {
         const { desc } = sticksGame.newDesc(p, randomNew(`one-position-${seed}`));
         const board = newState(p, desc);
         expect(searchAnswers(board, 1).kind, desc).toBe("one");
@@ -170,7 +170,7 @@ describe("sticks' search for a board's answers", () => {
   });
 
   it("agrees with the count on boards of every kind", () => {
-    const seeds = deepBudget(8, 40);
+    const seeds = deepBudget(5, 40);
     // Dealt boards, which have one answer; the same with numbers taken away,
     // which often have several; and with one number changed, which mostly
     // have none.

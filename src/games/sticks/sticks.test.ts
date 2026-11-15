@@ -280,7 +280,9 @@ describe("sticks solver", () => {
       { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT2, diff: DIFF_EASY },
       { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2, diff: DIFF_EASY },
     ]) {
-      const boards = seedBudget(2, 8);
+      // The 10x10 board is most of the case's cost, and the 7x7 ones hold the
+      // same rule, so CI deals one of it.
+      const boards = p.w === 7 ? seedBudget(2, 8) : seedBudget(1, 8);
       for (let s = 0; s < boards; s++) {
         const { desc } = newSticksDesc(p, randomNew(`unique-${p.w}-${s}`));
         const state = newState(p, desc);
