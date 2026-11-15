@@ -7098,8 +7098,10 @@ export function compileLibrary(
     supposed: [],
     kept: null,
   };
+  const techniques: Technique[] = [];
   const parts = Object.entries(lib.techniques).map(([id, stated]) => {
     const t: Technique = { ...parseTechnique(lib.library, id, stated), ...UNPLACED };
+    techniques.push(t);
     const out = compileTechnique(t, env);
     if (out.clues)
       throw new CompileError(
@@ -7107,7 +7109,8 @@ export function compileLibrary(
       );
     return out.code;
   });
-  const body = parts.join("\n\n");
+  const stated = statedTable(techniques).join("\n").trimEnd();
+  const body = (stated === "" ? parts : [...parts, stated]).join("\n\n");
   return `${[HEADER(source), "", runtimeImport(used, [], false, runtime, body), "", body].join("\n")}\n`;
 }
 

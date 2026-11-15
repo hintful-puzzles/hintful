@@ -17,6 +17,8 @@
 import { EDGE, type ForcedBorderEdge } from "./border-grid-hint.ts";
 import {
   CELL,
+  joinNums,
+  joinWith,
   mark,
   type Narration,
   NOTE,
@@ -28,25 +30,15 @@ import {
   unshaped,
   whole,
 } from "./hint-words.ts";
+import { STATED as LATIN_STATED } from "./latin.compiled.ts";
+import type { LatinWingReason } from "./latin.ts";
 import { type GenericLatinReason, hiddenSingleLine } from "./latin-hint.ts";
+import { statedParts } from "./stated.ts";
 import type { Point } from "./types.ts";
 
 // --- lists and articles ------------------------------------------------------
 
-/** Join a value list for narration: `[3]`→"3", `[1,2]`→"1 and 2",
- * `[1,2,3]`→"1, 2 and 3". */
-export function joinNums(ns: number[]): string {
-  if (ns.length <= 1) return `${ns[0] ?? ""}`;
-  if (ns.length === 2) return `${ns[0]} and ${ns[1]}`;
-  return `${ns.slice(0, -1).join(", ")} and ${ns[ns.length - 1]}`;
-}
-
-/** {@link joinNums} over already-rendered values: `["A","B"]` → "A and B". */
-export function joinWith(parts: string[]): string {
-  if (parts.length <= 1) return parts[0] ?? "";
-  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
-  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
-}
+export { joinNums, joinWith };
 
 /** "a" or "an" for `s` — chosen by how the *word* is pronounced, so a letter
  * value ("an A", "a B") and a digit ("a 6", "an 8") both read correctly. The
@@ -386,27 +378,32 @@ function confinedPremise(
 }
 
 /**
- * A wing: whichever value the outlined middle cell takes, one of the other
- * outlined cells that shares a line with the outlined struck cell, or where
- * `self` the middle itself, must have `value`. Every way is read off the notes the walk
- * has written on the middle and the ends, so the words name the cells and the
- * value and leave the ways to the notes, as Map's weighing does. The ends take
- * no noun of their own (owner, 2026-10-28): they are named by their mark.
- * `beside` says how an end and the struck cell are related, in the game's
- * regions.
+ * A wing, as the library's `says` states it (`latin.description.yaml`): the
+ * words name the cells and the value and leave the ways to the notes, as
+ * Map's weighing does. `cell` and `beside` are the game's: what it calls a
+ * board position, and how an end and the struck cell share a unit in its
+ * units.
  */
 function wingPremise(
-  wing: { middle: Point; ends: readonly Point[]; self: boolean },
-  at: Point,
-  value: string,
+  { said, w }: Pick<LatinWingReason, "said" | "w">,
+  struck: Note,
+  value: (n: number) => string,
   cell = "square",
-  beside = "in line with",
+  beside?: string,
 ): Narration {
-  // "Another": the struck cell is outlined too, and an end is any outlined
-  // cell but it (`point-a-cell-reference-at-its-cell`, D4).
-  const end = mark.as("outline", CELL, wing.ends, `another outlined ${cell}`);
-  const which = wing.self ? phrase`it or ${end}` : end;
-  return phrase`Whatever goes in ${mark.as("outline", CELL, [wing.middle], `the middle ${cell}`)}, ${which} ${beside} ${thisCell(at, cell)} must have ${value}`;
+  const { look } = statedParts(LATIN_STATED.wing.step[0], {
+    kind: CELL,
+    // The struck cell is the note the walk strikes, which its highlight names.
+    at: (i): Point => (i === said.t ? struck : { x: i % w, y: (i / w) | 0 }),
+    ring: [],
+    marks: {},
+    terms: said,
+    value,
+    noun: cell,
+    beside,
+  });
+  if (look === undefined) throw new Error("the library's wing states no look");
+  return look;
 }
 
 /** The premise of a generic Latin strike (the placement cull, a set), shared
@@ -424,19 +421,27 @@ export function latinPremise(
         premise: placedRulesOut(reason, v(reason.n)),
         where: `from the other ${cell}s`,
       };
-    case "set":
-      if (reason.lines)
+    case "set": {
+      if ("lines" in reason)
         return {
           premise: confinedPremise(reason.lines, reason.cells, v(marks[0].n), cell),
         };
-      // One strike per cell can repeat a value, and the order is the solver's:
-      // name each value once, smallest first.
-      return {
-        premise: phrase`${mark.the("outline", CELL, reason.cells, cell).capitalized()} already account for ${joinWith(distinct(marks.map((m) => m.n)).map(v))} between them`,
-      };
+      const { look } = statedParts(LATIN_STATED.set.step[0], {
+        kind: CELL,
+        at: (i): Point => ({ x: i % reason.w, y: (i / reason.w) | 0 }),
+        ring: [],
+        marks: {},
+        terms: reason.said,
+        value: v,
+        noun: cell,
+        struck: marks.map((m) => m.n),
+      });
+      if (look === undefined) throw new Error("the library's set states no look");
+      return { premise: look };
+    }
     case "wing":
       return {
-        premise: wingPremise(reason, marks[0], v(reason.n), cell, vocab.beside),
+        premise: wingPremise(reason, marks[0], v, cell, vocab.beside),
       };
     default:
       throw new Error(`a ${reason.kind} places, and is narrated by narrateLatinReason`);

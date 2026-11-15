@@ -63,16 +63,34 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
     const set = latinPremise(
       {
         kind: "set",
-        cells: [
-          { x: 0, y: 0 },
-          { x: 1, y: 0 },
-        ],
+        said: { u: 0, S: [0, 1] },
+        w: 3,
       },
       struck(3, 2, 3),
     );
     expect(set.premise.text).toBe(
       "The outlined squares already account for 2 and 3 between them",
     );
+    // A wing in a 3-wide grid: middle 1, ends 0 and 5, struck cell 8 (the
+    // marks' own), `self` where the middle may be the value itself.
+    const wing = (self: boolean, beside?: string) =>
+      latinPremise(
+        { kind: "wing", n: 2, said: { t: 8, m: 1, x: 2, E: [0, 5], self }, w: 3 },
+        [{ x: 2, y: 2, n: 2 }],
+        { noun: "number", value: String, cell: "cell", beside },
+      );
+    expect(wing(false).premise.text).toBe(
+      "Whatever goes in the middle cell, another outlined cell in line with this cell must have 2",
+    );
+    expect(wing(true, "in a block with").premise.text).toBe(
+      "Whatever goes in the middle cell, it or another outlined cell in a block with this cell must have 2",
+    );
+    expect(keys(wing(false).premise)).toEqual([
+      "outline|cell|0,0",
+      "outline|cell|1,0",
+      "outline|cell|2,1",
+      "ring|cell|2,2",
+    ]);
     expect(() => latinPremise({ kind: "single" }, struck(3))).toThrow(
       /narrateLatinReason/,
     );

@@ -7,7 +7,7 @@
  */
 
 import type { CandidateReading } from "./candidate-hint.ts";
-import type { ConfinedLines, LatinWingReason } from "./latin.ts";
+import type { LatinSetReason, LatinWingReason } from "./latin.ts";
 import type { Point } from "./types.ts";
 
 /** A region a value may not repeat in: its member cell indices (`y * w + x`),
@@ -133,5 +133,5 @@ export type GenericLatinReason =
    * diagonal as well as a line. */
   | { kind: "hiddenSingle"; n: number; unit: { name: string; cells: readonly Point[] } }
   | { kind: "dup"; n: number; px: number; py: number }
-  | { kind: "set"; cells: readonly Point[]; lines?: ConfinedLines }
+  | LatinSetReason
   | LatinWingReason;

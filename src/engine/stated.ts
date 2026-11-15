@@ -10,8 +10,9 @@
  * terms when the description is compiled, so a clause cannot name what its
  * technique does not state.
  */
-import { joinNums } from "./hint-text.ts";
 import {
+  joinNums,
+  joinWith,
   type MarkKind,
   type MarkRole,
   mark,
@@ -73,6 +74,12 @@ export interface StatedContext<E> {
   /** The noun for one element of `kind`: the lexicon's "square" unless the
    * game declares its own. */
   readonly noun?: Noun;
+  /** How cells share a unit, in the game's units ("in a line or block
+   * with"); "in line with" where the game declares none. */
+  readonly beside?: string;
+  /** The values a strike step removes, for `{struck}`: the order is the
+   * solver's, and each is named once, smallest first. */
+  readonly struck?: readonly number[];
   /** The noun a set of elements in stripes is, taken whole ("row"). */
   unit?(els: readonly E[]): string;
 }
@@ -133,6 +140,12 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
       return nounOf(noun, false);
     case "nouns":
       return nounOf(noun, true);
+    case "beside":
+      return cx.beside ?? "in line with";
+    case "struck":
+      if (!cx.struck)
+        throw new Error("stated clause: {struck} needs the step's strikes");
+      return joinWith([...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value));
     case "shaded":
       return SHADED_NAME;
     case "unshaded":

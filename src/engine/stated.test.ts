@@ -31,6 +31,18 @@ describe("a stated clause", () => {
     );
   });
 
+  it("says how cells share a unit in the game's words, and in line otherwise", () => {
+    const say = (beside?: string): string =>
+      statedSentence(
+        { look: "{outline} is {beside} {ring}", move: "go" },
+        cx({ beside }),
+      ).text;
+    expect(say()).toBe("The outlined square is in line with these squares, so go.");
+    expect(say("in a block with")).toBe(
+      "The outlined square is in a block with these squares, so go.",
+    );
+  });
+
   it("takes the form a flag term holds, in a clause and inside a reference's words", () => {
     const say = (one: boolean, two: boolean): string =>
       statedSentence(

@@ -466,11 +466,8 @@ describe("salad hint — a square a set rules out as empty", () => {
     const t = premise(
       {
         kind: "set",
-        cells: [
-          { x: 2, y: 1 },
-          { x: 2, y: 2 },
-          { x: 2, y: 3 },
-        ],
+        said: { u: 0, S: [7, 12, 17] },
+        w: 5,
       },
       [
         { x: 2, y: 4, n: 2 },

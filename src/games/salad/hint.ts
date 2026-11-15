@@ -73,7 +73,7 @@ import {
 } from "../../engine/hint-text.ts";
 import type { Narration, Sentence } from "../../engine/hint-words.ts";
 import type { Said } from "../../engine/ladder-runtime.ts";
-import type { LatinSolver } from "../../engine/latin.ts";
+import { type LatinSolver, setCells } from "../../engine/latin.ts";
 import { hiddenSingleLine, type SingleReasonUnder } from "../../engine/latin-hint.ts";
 import {
   byCell,
@@ -266,10 +266,10 @@ export function premise(
       // One mark confined across several lines is the shared sentence whichever
       // mark it is: an X fits a line as often as the line has empty squares, and
       // "no other X" is as true of those.
-      if (reason.lines || !marks.some((m) => m.n > nums))
+      if ("lines" in reason || !marks.some((m) => m.n > nums))
         return latinPremise(reason, marks, saladVocab(mode, nums));
       const also = marks.filter((m) => m.n <= nums).map((m) => m.n);
-      const { cells } = reason;
+      const cells = setCells(reason);
       const line = cells.every((c) => c.x === cells[0].x) ? "col" : "row";
       return {
         premise: text.setHoles(cells, also, line, o - nums),

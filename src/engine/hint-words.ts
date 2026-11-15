@@ -842,3 +842,18 @@ export function markKeys(refs: readonly MarkRef[]): Set<string> {
     }
   return out;
 }
+
+/** Join a value list for narration: `[3]`→"3", `[1,2]`→"1 and 2",
+ * `[1,2,3]`→"1, 2 and 3". */
+export function joinNums(ns: number[]): string {
+  if (ns.length <= 1) return `${ns[0] ?? ""}`;
+  if (ns.length === 2) return `${ns[0]} and ${ns[1]}`;
+  return `${ns.slice(0, -1).join(", ")} and ${ns[ns.length - 1]}`;
+}
+
+/** {@link joinNums} over already-rendered values: `["A","B"]` → "A and B". */
+export function joinWith(parts: string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}

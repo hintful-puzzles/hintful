@@ -904,11 +904,9 @@ export const MODULES = [
   },
 
   {
-    // The sentences several games speak word for word, moved out of
-    // `candidate-hint.ts` and `latin-hint.ts` by `extract-hint-strings`. Its own
-    // tests are the engine hint suites that pin those sentences, so both cases
-    // keep asking the files they asked before the move.
-    module: "src/engine/hint-text.ts",
+    // The list joiner every strike's words and the stated clauses' `{struck}`
+    // go through; the hint suites pin its sentences.
+    module: "src/engine/hint-words.ts",
     cases: [
       {
         within: "joinNums",
@@ -916,6 +914,16 @@ export const MODULES = [
         find: "  if (ns.length === 2) return `${ns[0]} and ${ns[1]}`;",
         replace: "  if (ns.length === 2) return `${ns[0]}, ${ns[1]}`;",
       },
+    ],
+  },
+
+  {
+    // The sentences several games speak word for word, moved out of
+    // `candidate-hint.ts` and `latin-hint.ts` by `extract-hint-strings`. Its own
+    // tests are the engine hint suites that pin those sentences, so both cases
+    // keep asking the files they asked before the move.
+    module: "src/engine/hint-text.ts",
+    cases: [
       {
         within: "populateText",
         why: "the populate opener says “cell” for a game whose board positions are squares",

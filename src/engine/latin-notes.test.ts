@@ -49,12 +49,8 @@ describe("a Latin ladder run on the notes", () => {
           reason: {
             kind: "wing",
             n: 1,
-            middle: { x: 1, y: 0 },
-            ends: [
-              { x: 0, y: 0 },
-              { x: 1, y: 1 },
-            ],
-            self: false,
+            said: { t: 4, m: 1, x: 1, E: [0, 5], self: false },
+            w: 4,
           },
         },
       ],

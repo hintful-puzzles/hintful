@@ -94,26 +94,36 @@ export type LatinReason =
   | LatinSetReason
   | LatinWingReason;
 
-/** A wing (`wing.ts`): whichever value the `middle` cell takes, one
- * of the `ends`, or where `self` the middle itself, is `n`, and the struck
- * cell shares a line with each. The words outline the middle and the ends,
- * which are every cell it reads. */
+/** A wing (`wing.ts`): whichever value the middle cell `m` takes, one of the
+ * ends `E`, or where `self` the middle itself, is `n`, and the struck cell `t`
+ * shares a line with each. `said` is what the library's `says` states of the
+ * firing, its cells numbered on a board `w` wide; the words outline the
+ * middle and the ends, which are every cell it reads. */
 export interface LatinWingReason {
   kind: "wing";
   n: number;
-  middle: { x: number; y: number };
-  ends: readonly { x: number; y: number }[];
-  self: boolean;
+  said: compiled.WingSays["terms"];
+  w: number;
 }
 
-/** A set elimination. `cells` are the subset: the cells whose candidates
- * account for the struck values between them. One value confined across
- * lines has `lines` too. */
-type LatinSetReason = {
-  kind: "set";
-  cells: readonly { x: number; y: number }[];
-  lines?: ConfinedLines;
-};
+/** A set elimination. A naked or hidden set within one unit: `said` is what
+ * the library's `says` states of the firing, its cells `S` numbered on a board
+ * `w` wide, the ones whose candidates account for the struck values between
+ * them. One value confined across lines is `cells`, the ones of the lines
+ * it can still take, and the `lines`. */
+export type LatinSetReason =
+  | { kind: "set"; said: compiled.SetSays["terms"]; w: number }
+  | {
+      kind: "set";
+      cells: readonly { x: number; y: number }[];
+      lines: ConfinedLines;
+    };
+
+/** The cells a set elimination outlines: the subset, or where one value is
+ * confined across lines, the ones of those lines it can still take. */
+export function setCells(reason: LatinSetReason): readonly { x: number; y: number }[] {
+  return "lines" in reason ? reason.cells : reason.said.S.map(cellAt(reason.w));
+}
 
 /** The parallel lines one value is confined in, where a set is that and not a
  * set within one line: `count` whole rows or columns, whose `cells` are every
@@ -322,7 +332,8 @@ export const LATIN_RUNGS = {
     compiled.set,
     (_b, _c, _n, m, { terms }): LatinReason => ({
       kind: "set",
-      cells: terms.S.map(cellAt(m.sp.w)),
+      said: terms,
+      w: m.sp.w,
     }),
   ),
   "latin.fish": uncluedRung(
@@ -331,12 +342,11 @@ export const LATIN_RUNGS = {
   ),
   "latin.wing": uncluedRung(
     compiled.wing,
-    (_b, _c, _n, m, { terms: { m: mid, x, E, self } }): LatinReason => ({
+    (_b, _c, _n, m, { terms }): LatinReason => ({
       kind: "wing",
-      n: x,
-      middle: cellAt(m.sp.w)(mid),
-      ends: E.map(cellAt(m.sp.w)),
-      self,
+      n: terms.x,
+      said: terms,
+      w: m.sp.w,
     }),
   ),
 } satisfies Record<string, Rung>;

@@ -19,10 +19,14 @@
  */
 
 /** The lexicon's words a clause may say anywhere: the noun for one square
- * and for several, and the two shading states' names. */
+ * and for several, the two shading states' names, and how a deduction's cells
+ * share a unit with the one it decides (`beside`, the game's units in words),
+ * and the values a strike step removes (`struck`, each named once). */
 export const STATED_WORDS: ReadonlySet<string> = new Set([
   "noun",
   "nouns",
+  "beside",
+  "struck",
   "shaded",
   "unshaded",
 ]);

@@ -54,7 +54,7 @@ import {
 import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
-import { latinVerdict } from "../../engine/latin.ts";
+import { latinVerdict, setCells } from "../../engine/latin.ts";
 import { hiddenSingleLine, rowColRegions } from "../../engine/latin-hint.ts";
 import { latinNotesLadder, latinStrikeRungs } from "../../engine/latin-notes.ts";
 import {
@@ -468,9 +468,9 @@ function premise(reason: HintReason, marks: readonly Mark[], w: number): Premise
         where: say.dupWhere,
       };
     case "set":
-      return reason.lines
+      return "lines" in reason
         ? latinPremise(reason, marks, TOWERS_VOCAB)
-        : { premise: say.set(reason.cells, n) };
+        : { premise: say.set(setCells(reason), n) };
     case "wing":
       return latinPremise(reason, marks, TOWERS_VOCAB);
     default:

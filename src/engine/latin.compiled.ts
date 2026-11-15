@@ -981,7 +981,7 @@ export interface WingBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface WingSays {
-  terms: { m: number; x: number; E: readonly number[]; self: boolean; };
+  terms: { t: number; m: number; x: number; E: readonly number[]; self: boolean; };
   marks: {  };
 }
 
@@ -1255,7 +1255,7 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding, WingSays> 
             if (changed || facts.length > 0) {
               fired = 1;
               if (fire !== null) {
-                const _says = { terms: { m: v_m, x: v_x, E: v_E.slice(), self: (((b.cands[v_m] >> v_x) & 1) !== 0) }, marks: {  } };
+                const _says = { terms: { t: v_t, m: v_m, x: v_x, E: v_E.slice(), self: (((b.cands[v_m] >> v_x) & 1) !== 0) }, marks: {  } };
                 if (!fire({ m: v_m, x: v_x, R: v_R, k0: v_k0, t: v_t, E: v_E.slice() }, facts, _says)) return 1;
               }
               cands.fill(-1);
@@ -1267,3 +1267,10 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding, WingSays> 
   }
   return fired;
 }
+
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "set": {"step":[{"look":"{outline S} already account for {struck} between them"}]},
+  "wing": {"step":[{"look":"Whatever goes in {outline m: the middle {noun}}, {outline E: {if self: it or another | another} outlined {noun}} {beside} {ring t: this {noun}} must have {x}"}]},
+} as const;
