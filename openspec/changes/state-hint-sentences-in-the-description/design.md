@@ -271,6 +271,25 @@ technique is restated, or it stays an override.
   and into `LONG_NARRATIONS` with a pinned board. Both moved the walk
   fingerprint's snapshots, which were taken again.
 
+### Slide's steps (2026-11-15)
+
+- **Five declared kinds, no new mechanism for a move puzzle's step** beyond
+  what a search game's slide says: an `effect` clause (the relation the old
+  `sentence({ relation: { kind: "effect" } })` carried), a count form
+  `{left: 1 move | {left} moves}` over a plain number term, and `steps:` in a
+  planning description, which `compilePlanning` writes as the logic compiler
+  does (`stepsOf`, `stepsBlock`).
+- **A block is a sort the planner marks whole**: its ring, outline and stripes
+  are the block's squares, drawn on `whole(CELL)`, so one reference is "the
+  ringed block" over all of them. "Key block" is written in the kinds the key
+  block alone takes (`keyBlock`, `keyOut`); no flag is needed, because the
+  planner's kind already says which.
+- **No `words:` block for Slide.** The nouns are literal words inside the
+  references, and a declaration would only restate them; the Latin games are
+  what `words` is for.
+- The `1 move` form is met by no board of the word dump (a key block's
+  `left` is at least 4 there); the unit test is what holds it.
+
 ### Unequal (2026-11-14, `59c6af093`)
 
 - **Stated whole, no override.** Its two sentences became four fact arms,

@@ -48,7 +48,8 @@
           "when": { "$ref": "#/$defs/formula" },
           "look": { "$ref": "#/$defs/clause" },
           "follows": { "$ref": "#/$defs/clause" },
-          "move": { "$ref": "#/$defs/clause" }
+          "move": { "$ref": "#/$defs/clause" },
+          "effect": { "$ref": "#/$defs/clause" }
         }
       }
     },
@@ -680,6 +681,10 @@
               "look": { "$ref": "#/$defs/clause" },
               "follows": { "$ref": "#/$defs/clause" },
               "move": { "$ref": "#/$defs/clause" },
+              "effect": {
+                "$ref": "#/$defs/clause",
+                "description": "What the move does, where no rule forces it: said after the move as an `effect` relation (Slide's \"that makes room for the outlined block\")."
+              },
               "wordings": { "$ref": "#/$defs/wordings" }
             }
           }

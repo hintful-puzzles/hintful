@@ -98,6 +98,42 @@ moves:
         block: "block(a)"
 finish:
   - "exists g in cells where goal(g) = 1: block(g) = 1 and lead(g)"
+steps:
+  # No slide is forced: every one is a move and what it is for, which the
+  # planner's line shows (`hint.ts` picks the kind). A block is a piece of
+  # several squares, so a reference to one is taken whole.
+  # The slide leaves a square that the outlined block's later slide needs.
+  makesRoom:
+    ring: block
+    marks: { outline: [block], stripes: [block] }
+    move: &slide "slide {ring: the ringed block} into {stripes block: the striped space}"
+    effect: "that makes room for {outline block: the outlined block}"
+  # The slide leaves a square the key block's next slide needs.
+  makesRoomForKey:
+    ring: block
+    marks: { stripes: [block] }
+    move: *slide
+    effect: "that makes room for the key block"
+  # No later slide needs what this one leaves until the same block moves on
+  # from where it lands: it stops part way.
+  movesOn:
+    ring: block
+    marks: { stripes: [block] }
+    move: *slide
+    effect: "it moves on again later"
+  # A slide of the key block, with `left` moves still to make at the fewest.
+  keyBlock:
+    ring: block
+    terms: { left: number }
+    marks: { stripes: [block] }
+    move: "slide {ring: the ringed key block} into {stripes block: the striped space}"
+    effect: "after that it can be out in {left: 1 move | {left} moves}"
+  # The key block's last slide.
+  keyOut:
+    ring: block
+    marks: { stripes: [block] }
+    move: "slide {ring: the ringed key block} into {stripes block: the striped space}"
+    effect: "that brings it onto the exit"
 deal:
   start: >-
     a wall round a board of single squares, the main block at the top left

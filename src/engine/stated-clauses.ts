@@ -10,6 +10,8 @@
  * - `{role}`, `{role: words}`, `{role term}`, `{role term: words}`: a reference
  *   in a role ({@link SLOT_ROLES}) to the step's marks in that role, or to the
  *   elements a term holds.
+ * - `{count: one | several}`: the first form where the number term `count` is 1,
+ *   the second otherwise; its forms hold what an `if`'s do.
  * - `{if flag: yes | no}`: the form the step's flag term holds, whole; its forms
  *   hold literal words, number terms and further `if`s, and no reference.
  * - A reference's words are one form, or `one | several`; a slot inside them is
@@ -98,6 +100,8 @@ function slot(body: string, src: string): Piece {
     return { name: head[1], role: head[0], words };
   if (head.length === 1 && head[0] !== "" && words === null)
     return { name: head[0], role: null, words };
+  if (head.length === 1 && head[0] !== "" && words !== null && words.length === 2)
+    return { name: head[0], role: "count", words };
   throw new Error(`"{${body}}" is no slot, in "${src}"`);
 }
 
@@ -144,6 +148,9 @@ export function slotsOf(src: string): Slot[] {
       if (p.role === "if") {
         into.flags.push(p.name);
         within(p.words, into);
+      } else if (p.role === "count") {
+        into.inner.push(p.name);
+        within(p.words, into);
       } else if (p.role === null) into.inner.push(p.name);
       else throw new Error(`a reference inside the words of "${src}"`);
     }
@@ -164,6 +171,11 @@ export function slotsOf(src: string): Slot[] {
       }
       const into = { inner: [] as string[], flags: [] as string[] };
       within(p.words, into);
+      if (p.role === "count")
+        // The term it counts and its forms' words are said plainly.
+        return [p.name, ...into.inner].map(
+          (n): Slot => ({ name: n, role: null, inner: [], flags: into.flags }),
+        );
       return [
         {
           name: p.role !== null && p.name === "" ? null : p.name,

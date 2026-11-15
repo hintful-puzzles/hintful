@@ -50,7 +50,7 @@ export interface StepsById<E> {
 export const STEPS: {
   readonly [K in keyof StepsById<unknown>]: {
     readonly ring: StepsById<unknown>[K]["ring"];
-    readonly clauses: readonly { look?: string; follows?: string; move?: string }[];
+    readonly clauses: readonly { look?: string; follows?: string; move?: string; effect?: string }[];
     readonly when: readonly (
       | null
       | ((

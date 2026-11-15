@@ -1354,7 +1354,7 @@ describe("Loopy hint: two blocked dots settle a clue", () => {
         noun: "edge",
       }).text;
     expect(spoken(3)).toBe(
-      "Both outlined dots have a line, so joining them leaves this 3 short: that edge can't be one and the rest must be lines.",
+      "Both outlined dots have a line, so joining them leaves this 3 short: that edge can't be one and the other edges must be lines.",
     );
     expect(spoken(2)).toBe(spoken(3).replaceAll("3", "2"));
   });

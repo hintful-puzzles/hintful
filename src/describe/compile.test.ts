@@ -438,6 +438,8 @@ describe("a stated clause names only what its technique states", () => {
         { look: "{outline} is it" },
         /marks several sorts/,
       ],
+      ["a count over a flag", { effect: "{line: a | b} left" }, /says \{line\}/],
+      ["an effect naming a term it lacks", { effect: "{m} left" }, /effect says \{m\}/],
       [
         "a sort it does not mark",
         { look: "{outline cell: the dot} is it" },

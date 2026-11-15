@@ -1104,6 +1104,11 @@ states no words. **`{if flag: yes | no}`** says the form a flag term holds, in a
 clause or inside a reference's words; it holds words and number terms only. Use
 it for a choice inside one deduction's sentence (a verdict's "must be a line" or
 "can't be a line"), and a `wording` where the whole sentence differs.
+**`{n: one | several}`** takes the first form where the number term `n` is 1
+("1 move" | "{n} moves"). **A move no rule forces** (a search game's slide)
+states its `move` and an `effect`, said after it ("that makes room for the
+outlined block"); a planning game's description (Slide's) declares `steps` the
+same way, and its blocks are a sort `block` the planner marks whole.
 
 **A step that is a journey** (Boats: one firing, a fill a leg, each judged by
 the squares it makes) gives `describedFiringHint` a `journey`; the squares its

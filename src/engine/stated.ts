@@ -31,6 +31,7 @@ export interface Clauses {
   readonly look?: string;
   readonly follows?: string;
   readonly move?: string;
+  readonly effect?: string;
 }
 
 /** The role each slot role is drawn in: `strand` is outlined apart. */
@@ -91,6 +92,12 @@ const DEFAULT_FORMS: Readonly<Record<string, readonly string[]>> = {
 function expand<E>(pieces: readonly Piece[], cx: StatedContext<E>): Piece[] {
   return pieces.flatMap((p): Piece[] => {
     if (!("name" in p)) return [p];
+    if (p.role === "count") {
+      const n = cx.terms[p.name];
+      if (typeof n !== "number")
+        throw new Error(`stated clause: {${p.name}: …} is no count term`);
+      return expand((p.words as readonly (readonly Piece[])[])[n === 1 ? 0 : 1], cx);
+    }
     if (p.role === "if") {
       const flag = cx.terms[p.name];
       if (typeof flag !== "boolean")
@@ -183,11 +190,17 @@ function reference<E>(
 export function statedParts<E>(
   c: Clauses,
   cx: StatedContext<E>,
-): { look?: Narration; follows?: Narration; move?: Narration } {
+): {
+  look?: Narration;
+  follows?: Narration;
+  move?: Narration;
+  effect?: Narration;
+} {
   return {
     ...(c.look === undefined ? {} : { look: render(c.look, cx).capitalized() }),
     ...(c.follows === undefined ? {} : { follows: render(c.follows, cx) }),
     ...(c.move === undefined ? {} : { move: render(c.move, cx) }),
+    ...(c.effect === undefined ? {} : { effect: render(c.effect, cx) }),
   };
 }
 
@@ -199,11 +212,15 @@ export function statedSentence<E>(
   closing: Narration | null = null,
   relation: Relation = { kind: "forced" },
 ): Sentence {
-  const parts = statedParts(c, cx);
+  const { effect, ...parts } = statedParts(c, cx);
   const move = parts.move ?? closing;
   if (move === null)
     throw new Error("stated clause: no move, and no closing from the fact");
-  return sentence({ ...parts, move, relation });
+  return sentence({
+    ...parts,
+    move,
+    relation: effect === undefined ? relation : { kind: "effect", effect },
+  });
 }
 
 /** What a game's planner supplies for a step of a kind its description

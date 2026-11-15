@@ -50,6 +50,23 @@ describe("a stated clause", () => {
     );
   });
 
+  it("takes the one form of a count term where it is 1, and says an effect as the move's relation", () => {
+    const say = (left: number): string =>
+      statedSentence(
+        {
+          move: "go",
+          effect: "it can be out in {left: 1 move | {left} moves}",
+        },
+        cx({ terms: { left }, value: String }),
+      ).text;
+    expect(say(1)).toBe("Go: it can be out in 1 move.");
+    expect(say(3)).toBe("Go: it can be out in 3 moves.");
+    expect(say(0)).toBe("Go: it can be out in 0 moves.");
+    expect(() =>
+      statedSentence({ move: "x", effect: "{n: a | b}" }, cx({ terms: { n: true } })),
+    ).toThrow(/no count term/);
+  });
+
   it("takes the one form or the several from the reference's live elements", () => {
     const s = statedSentence(
       {

@@ -4680,7 +4680,10 @@ function stepWhen(step: Step, e: Expr, where: string): string {
 
 /** The module's planner steps: each kind's clauses in `STATED`'s form, what
  * the planner supplies, and each wording's `when` as code. */
-function stepsBlock(steps: readonly Step[], own: readonly Technique[]): string[] {
+export function stepsBlock(
+  steps: readonly Step[],
+  own: readonly Technique[],
+): string[] {
   if (steps.length === 0) return [];
   for (const s of steps) {
     // A step is a kind of its own, but one name must not have the technique's
@@ -4724,7 +4727,7 @@ function stepsBlock(steps: readonly Step[], own: readonly Technique[]): string[]
     "export const STEPS: {",
     "  readonly [K in keyof StepsById<unknown>]: {",
     '    readonly ring: StepsById<unknown>[K]["ring"];',
-    "    readonly clauses: readonly { look?: string; follows?: string; move?: string }[];",
+    "    readonly clauses: readonly { look?: string; follows?: string; move?: string; effect?: string }[];",
     "    readonly when: readonly (",
     "      | null",
     "      | ((",

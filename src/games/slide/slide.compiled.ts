@@ -29,6 +29,58 @@ export interface ShiftMove {
 /** A move: its name and its binding. */
 export type Move = ShiftMove;
 
+/** What the planner supplies for each kind of step it emits, over the
+ * elements `E` it marks: its terms, and the elements marked by role and sort. */
+export interface StepsById<E> {
+  makesRoom: { ring: "block"; terms: Record<string, never>; marks: { outline: { block: readonly E[] }; stripes: { block: readonly E[] } } };
+  makesRoomForKey: { ring: "block"; terms: Record<string, never>; marks: { stripes: { block: readonly E[] } } };
+  movesOn: { ring: "block"; terms: Record<string, never>; marks: { stripes: { block: readonly E[] } } };
+  keyBlock: { ring: "block"; terms: { left: number }; marks: { stripes: { block: readonly E[] } } };
+  keyOut: { ring: "block"; terms: Record<string, never>; marks: { stripes: { block: readonly E[] } } };
+}
+
+/** Each kind of step the planner emits: its clauses by wording, and the
+ * condition under which each wording is the one said (`null`: always). */
+export const STEPS: {
+  readonly [K in keyof StepsById<unknown>]: {
+    readonly ring: StepsById<unknown>[K]["ring"];
+    readonly clauses: readonly { look?: string; follows?: string; move?: string; effect?: string }[];
+    readonly when: readonly (
+      | null
+      | ((
+          t: StepsById<unknown>[K]["terms"],
+          m: StepsById<unknown>[K]["marks"],
+        ) => boolean)
+    )[];
+  };
+} = {
+  makesRoom: {
+    ring: "block",
+    clauses: [{"move":"slide {ring: the ringed block} into {stripes block: the striped space}","effect":"that makes room for {outline block: the outlined block}"}],
+    when: [null],
+  },
+  makesRoomForKey: {
+    ring: "block",
+    clauses: [{"move":"slide {ring: the ringed block} into {stripes block: the striped space}","effect":"that makes room for the key block"}],
+    when: [null],
+  },
+  movesOn: {
+    ring: "block",
+    clauses: [{"move":"slide {ring: the ringed block} into {stripes block: the striped space}","effect":"it moves on again later"}],
+    when: [null],
+  },
+  keyBlock: {
+    ring: "block",
+    clauses: [{"move":"slide {ring: the ringed key block} into {stripes block: the striped space}","effect":"after that it can be out in {left: 1 move | {left} moves}"}],
+    when: [null],
+  },
+  keyOut: {
+    ring: "block",
+    clauses: [{"move":"slide {ring: the ringed key block} into {stripes block: the striped space}","effect":"that brings it onto the exit"}],
+    when: [null],
+  },
+};
+
 /** The description's dead-end claims, by id. */
 export type DeadEndId = never;
 

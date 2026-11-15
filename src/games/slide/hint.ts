@@ -21,11 +21,16 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import { CELL, type Sentence, whole } from "../../engine/hint-words.ts";
 import { searchRefusal, type Unfinished } from "../../engine/search-outcome.ts";
+import {
+  type PlannedKind,
+  type PlannedSaid,
+  plannedSentence,
+} from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
-import { type Slid, say } from "./hint-text.ts";
 import { computeReachable, executeMove } from "./moves.ts";
+import { STEPS } from "./slide.compiled.ts";
 import { findExit } from "./solver.ts";
 import {
   EMPTY,
@@ -48,6 +53,27 @@ export const SLIDE_RUNGS = [
 export type SlideRung = (typeof SLIDE_RUNGS)[number];
 
 type Step = HintStep<SlideMove, unknown, SlideRung>;
+
+/** The squares of one block, or of the space a block moves into, named as one
+ * thing: "the ringed block" over all its squares. */
+const BLOCK = whole(CELL);
+
+/**
+ * The words of a slide, as `slide.description.yaml`'s `steps` state them: no
+ * rule forces a slide, so each is the move and what it does, and which kind a
+ * slide is stays this file's to decide, from what the line shows it is for.
+ * `ring` is the squares the block covers now.
+ */
+function speak<
+  T extends PlannedSaid<Point>["terms"],
+  M extends PlannedSaid<Point>["marks"],
+>(step: PlannedKind<T, M>, terms: T, marks: M, ring: readonly Point[]): Sentence {
+  return plannedSentence(
+    step,
+    { terms, marks },
+    { kind: BLOCK, kinds: { block: BLOCK }, ring, value: String, noun: "block" },
+  );
+}
 
 /** The squares of the block anchored at `anchor`, anchor first. */
 export function blockCells(s: SlideState, anchor: number): number[] {
@@ -152,29 +178,41 @@ export function hint(state: SlideState): HintResult<SlideMove, unknown, SlideRun
     const s = boards[i];
     const { from, to } = line[i];
     const key = s.board[from] === MAINANCHOR;
-    const slid: Slid = {
-      cells: blockCells(s, from).map((c) => pointOf(s, c)),
-      into: blockCells(boards[i + 1], to).map((c) => pointOf(s, c)),
-      key,
-    };
+    const cells = blockCells(s, from).map((c) => pointOf(s, c));
+    const stripes = { block: blockCells(boards[i + 1], to).map((c) => pointOf(s, c)) };
     let said: { rung: SlideRung; words: Sentence };
     if (key) {
       const left = line.length - i - 1;
       said =
         left === 0
-          ? { rung: "keyOut", words: say.keyOut(slid) }
-          : { rung: "keyBlock", words: say.keyBlock(slid, left) };
+          ? { rung: "keyOut", words: speak(STEPS.keyOut, {}, { stripes }, cells) }
+          : {
+              rung: "keyBlock",
+              words: speak(STEPS.keyBlock, { left }, { stripes }, cells),
+            };
     } else {
       const room = roomFor(boards, line, i);
       said = room.self
-        ? { rung: "movesOn", words: say.movesOn(slid) }
+        ? { rung: "movesOn", words: speak(STEPS.movesOn, {}, { stripes }, cells) }
         : boards[room.at].board[line[room.at].from] === MAINANCHOR
-          ? { rung: "makesRoomForKey", words: say.makesRoomForKey(slid) }
+          ? {
+              rung: "makesRoomForKey",
+              words: speak(STEPS.makesRoomForKey, {}, { stripes }, cells),
+            }
           : {
               rung: "makesRoom",
-              words: say.makesRoom(
-                slid,
-                blockCells(s, anchorBefore(line, room.at, i)).map((c) => pointOf(s, c)),
+              words: speak(
+                STEPS.makesRoom,
+                {},
+                {
+                  stripes,
+                  outline: {
+                    block: blockCells(s, anchorBefore(line, room.at, i)).map((c) =>
+                      pointOf(s, c),
+                    ),
+                  },
+                },
+                cells,
               ),
             };
     }

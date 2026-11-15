@@ -20,17 +20,19 @@ const WITH_TEXT = new Set(
   Object.keys(import.meta.glob("../games/*/hint-text.ts")).map((p) => p.split("/")[2]),
 );
 
-/** Game ids whose description states its sentences: a compiled `STATED` with
- * an entry. The hint already loads these modules, so reading them here costs
+/** Game ids whose description states its sentences: a compiled module with a
+ * non-empty `STATED` (a technique's words) or `STEPS` (a planner's kinds of
+ * step). The hint already loads these modules, so reading them here costs
  * nothing. */
 const STATED_GAMES = new Set(
   Object.entries(
-    import.meta.glob<object>("../games/*/*.compiled.ts", {
-      import: "STATED",
+    import.meta.glob<Record<string, object>>("../games/*/*.compiled.ts", {
       eager: true,
     }),
   )
-    .filter(([, stated]) => stated !== undefined && Object.keys(stated).length > 0)
+    .filter(([, m]) =>
+      ["STATED", "STEPS"].some((name) => name in m && Object.keys(m[name]).length > 0),
+    )
     .map(([p]) => p.split("/")[2]),
 );
 

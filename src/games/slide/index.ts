@@ -51,7 +51,6 @@ import { solveBySearch } from "../../engine/search-outcome.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSlideDesc } from "./generator.ts";
 import { hint, hintKeepTrack, SLIDE_RUNGS } from "./hint.ts";
-import { HINT_MARKS } from "./hint-text.ts";
 import { computeReachable, executeMove, nearestReachable, status } from "./moves.ts";
 import {
   BORDER,
@@ -325,7 +324,14 @@ export const slideGame: Game<
   solve,
 
   hint,
-  hintMarks: HINT_MARKS,
+  hintMarks: {
+    roles: {
+      ring: "the block to slide (*the ringed block*).",
+      outline:
+        "the block the slide makes room for: its own slide, which comes later, needs a square the ringed block is leaving (*the outlined block*).",
+      stripes: "the squares the ringed block slides onto (*the striped space*).",
+    },
+  },
   hintRungs: SLIDE_RUNGS,
   hintKeepTrack,
   // The drag a player makes: press the block's anchor square and let go

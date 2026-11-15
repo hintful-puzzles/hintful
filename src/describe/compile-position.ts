@@ -23,6 +23,7 @@ import {
   Out,
   type Sort,
   show,
+  stepsBlock,
   type Val,
 } from "./compile.ts";
 import {
@@ -34,6 +35,7 @@ import {
   parseBinders,
   parseDefinitions,
   planningWith,
+  stepsOf,
 } from "./description.ts";
 import { type Binder, type Expr, parse } from "./expr.ts";
 
@@ -646,6 +648,10 @@ export function compilePlanning(
     "/** A move: its name and its binding. */",
     `export type Move = ${moves.map((m) => `${capitalized(m.name)}Move`).join(" | ")};`,
     "",
+    ...stepsBlock(
+      stepsOf(d.steps ?? {}, (part, src) => parsed(json.game, part, src)),
+      [],
+    ),
     "/** The description's dead-end claims, by id. */",
     `export type DeadEndId = ${ids.length === 0 ? "never" : ids.join(" | ")};`,
     "",

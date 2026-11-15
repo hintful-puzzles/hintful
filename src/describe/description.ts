@@ -257,6 +257,8 @@ export interface StatedClauses {
   look?: string;
   follows?: string;
   move?: string;
+  /** What a move that no rule forces does: its `effect` relation. */
+  effect?: string;
 }
 
 /** Clauses, and the wordings tried before them in order, the first whose
@@ -388,6 +390,8 @@ export interface PlanningJson {
    * of moves finishes. */
   deadEnds?: Record<string, string>;
   deal?: Record<string, string>;
+  /** Kinds of step the game's planner emits (`StatedStep`), by id. */
+  steps?: Record<string, StatedStep>;
   variations?: Record<string, PlanningVariationJson>;
 }
 
@@ -748,12 +752,19 @@ export function parseTechnique(
 
 /** The clauses a part of a `says` states; `null` where it states none. */
 function clausesOf(part: StatedClauses): StatedClauses | null {
-  const { look, follows, move } = part;
-  if (look === undefined && follows === undefined && move === undefined) return null;
+  const { look, follows, move, effect } = part;
+  if (
+    look === undefined &&
+    follows === undefined &&
+    move === undefined &&
+    effect === undefined
+  )
+    return null;
   return {
     ...(look === undefined ? {} : { look }),
     ...(follows === undefined ? {} : { follows }),
     ...(move === undefined ? {} : { move }),
+    ...(effect === undefined ? {} : { effect }),
   };
 }
 
@@ -976,21 +987,26 @@ export function loadDescription(
             times: at("answer repeat times", json.answer.value.repeat.times),
           },
     techniques,
-    steps: Object.entries(json.steps ?? {}).map(([id, s]): Step => {
-      const label = `step ${id}`;
-      return {
-        id,
-        ring: s.ring,
-        terms: Object.entries(s.terms ?? {}).map(([name, kind]) => ({ name, kind })),
-        marks: (
-          Object.entries(s.marks ?? {}) as [
-            "outline" | "stripes" | "strand",
-            string[],
-          ][]
-        ).flatMap(([role, sorts]) => sorts.map((sort) => ({ role, sort }))),
-        words: wordingsOf(s, label, at),
-      };
-    }),
+    steps: stepsOf(json.steps ?? {}, at),
     tiers,
   };
+}
+
+/** A game's kinds of planner step, parsed. */
+export function stepsOf(
+  steps: Record<string, StatedStep>,
+  at: (part: string, src: string) => Expr,
+): Step[] {
+  return Object.entries(steps).map(([id, s]): Step => {
+    const label = `step ${id}`;
+    return {
+      id,
+      ring: s.ring,
+      terms: Object.entries(s.terms ?? {}).map(([name, kind]) => ({ name, kind })),
+      marks: (
+        Object.entries(s.marks ?? {}) as ["outline" | "stripes" | "strand", string[]][]
+      ).flatMap(([role, sorts]) => sorts.map((sort) => ({ role, sort }))),
+      words: wordingsOf(s, label, at),
+    };
+  });
 }
