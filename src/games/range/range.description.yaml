@@ -120,6 +120,8 @@ techniques:
     says:
       shown: each
       marks: { outline: "{c}" }
+      look: "{ring} touches {outline: the outlined {shaded} square | the outlined {shaded} squares}"
+      move: "it must be {unshaded}"
   # A number's view along one arm runs at least as far as it is known to and
   # at most as far as the other arms, as short as they can be, leave it
   # room for. Where the two meet, the square past the view is shaded. A
@@ -136,11 +138,23 @@ techniques:
       shown: each
       terms: { clue: k, value: n }
       marks: { outline: "{k} + set(p over b in adj4(k), B = ray(k, b), p in B where index(p, B) < seen(B))" }
+      # A number is "this 5" rather than "clue 5": it lies inside its own line
+      # of sight, and that can hold a second number of the same value. At the
+      # small counts "all 2 of" reads wrong, so 1 and 2 are said apart.
       arms:
         satisfied:
           when: "W = n"
+          move: "{ring: the ringed square just past {value: it | them}} must be {shaded}"
+          wordings:
+            - when: "n = 1"
+              look: "{outline clue: this {value}} already sees {outline: its one {unshaded} square (outlined)}"
+            - when: "n = 2"
+              look: "{outline clue: this {value}} already sees {outline: both of its {unshaded} squares (outlined)}"
+            - look: "{outline clue: this {value}} already sees {outline: all {value} of its {unshaded} squares (outlined)}"
         overrun:
           when: "W != n"
+          look: "if {ring}, just past {outline: the outlined square | the outlined squares}, were {unshaded}, {outline clue: this {value}} would see more than {value}"
+          move: "it must be {shaded}"
   # With every other arm of a number's view as long as it can be, the view
   # along this one must still run far enough to make up the count, so the
   # squares that far are clear. A number that cannot see its count however
@@ -161,7 +175,21 @@ techniques:
       terms: { clue: k, value: n }
       marks:
         outline: "set(p over b in adj4(k), B = ray(k, b), p in B where b != a and index(p, B) < seen(B))"
+      # The solver forces the run because the number's other directions, even
+      # at their longest, leave it short without the squares up to the target;
+      # the bare wording, whose other directions see nothing yet, says so.
       fact:
+        wordings:
+          # Something is outlined: a square the other arms see, or the clear
+          # one just past the target.
+          - when: >-
+              count(b in adj4(k) where b != a and seen(ray(k, b)) > 0) > 0
+              or (index(p, R) + 1 < |R| and value(nth(R, index(p, R) + 1)) = 2)
+            look: "{outline clue: this {value}} needs more than {outline: the outlined square | the outlined squares}"
+            follows: "it must see along {stripes: the striped run}"
+            move: "{ring: the ringed square} must be {unshaded}"
+          - look: "{outline clue: this {value}} can't see {value} without seeing along {stripes: the striped run} to {ring: the ringed square}"
+            move: "that square must be {unshaded}"
         marks:
           outline: >-
             {q in R where index(q, R) > index(p, R)
@@ -180,3 +208,5 @@ techniques:
     says:
       shown: each
       marks: { outline: "{p in adj4(c) where value(p) != 1}" }
+      look: "making {ring} {shaded} would cut some of {outline: the outlined square | the outlined squares} around it off from the rest"
+      move: "it must stay {unshaded}"

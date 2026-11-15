@@ -27,7 +27,7 @@ import { filledBy, spokenOf } from "./described-hint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { changedCells, trackLeg, trackTargets } from "./hint-track.ts";
-import { CELL, type Sentence } from "./hint-words.ts";
+import { CELL, type MarkKind, type Sentence } from "./hint-words.ts";
 import {
   type CellMarks,
   type LadderEntry,
@@ -183,6 +183,9 @@ interface FiringShape<
       { readonly step?: readonly Clauses[]; readonly fact?: readonly Clauses[] }
     >
   >;
+  /** The terms whose squares a stated clause draws on a mark kind of their
+   * own, apart from the step's squares. */
+  termKinds?: Readonly<Record<string, MarkKind<Point>>>;
   /** The number a square shows, for a stated clause's `{each}`. */
   shows?(state: State, at: Point): number;
   /** The color word a number term names, for a stated clause's `{color term}`. */
@@ -360,6 +363,7 @@ export function describedFiringHint<
           clauses !== undefined
             ? statedSentence(clauses, {
                 kind: CELL,
+                ...(spec.termKinds === undefined ? {} : { termKinds: spec.termKinds }),
                 at: pointOf,
                 ring: group.map(bare),
                 marks: {

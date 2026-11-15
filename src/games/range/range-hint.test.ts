@@ -4,8 +4,8 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import type { RangeHint } from "./hint.ts";
-import { CLUE } from "./hint-text.ts";
 import { rangeGame } from "./index.ts";
+import { CLUE } from "./kinds.ts";
 import { answerOf } from "./solver.ts";
 import {
   BLACK,
@@ -82,6 +82,20 @@ describe("the hint's steps", () => {
     if (!adj) return;
     expect(decided(adj).value).toBe("white");
     expect(stepMarks(adj).of("outline", CELL)).toEqual([{ x: 1, y: 1 }]);
+  });
+
+  it("says a 1 sees its one square, a wording no walk of a generated board reaches", () => {
+    // A 1 at the end of a 3x1 sees only itself, so the square past it is shaded.
+    const plan = stepsOf({
+      w: 3,
+      h: 1,
+      grid: Int8Array.from([1, EMPTY, EMPTY]),
+      clues: Int8Array.from([1, 0, 0]),
+    });
+    const step = plan.find((s) => s.rung === "capped.satisfied");
+    expect(step?.explanation).toBe(
+      "This 1 already sees its one clear square (outlined), so the ringed square just past it must be purple.",
+    );
   });
 
   it("takes the ladder's first rung first, one step a square", () => {

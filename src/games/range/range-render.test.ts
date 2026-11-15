@@ -5,7 +5,7 @@
 // reviewable text diff.
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { CELL, mark, phrase, so, stepMarks } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -13,8 +13,8 @@ import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import type { RangeHint } from "./hint.ts";
-import { CLUE, say } from "./hint-text.ts";
 import { rangeGame } from "./index.ts";
+import { CLUE } from "./kinds.ts";
 import {
   COL_CELL,
   COL_ERROR,
@@ -68,12 +68,9 @@ describe("hint color legend", () => {
     // forces a neighbor white (the target), each in its own role's ink.
     const grid = [EMPTY, EMPTY, EMPTY, EMPTY, BLACK, EMPTY, EMPTY, EMPTY, EMPTY];
     const state = makeState(3, 3, grid);
-    const words = say.adjacency({
-      target: { x: 1, y: 0 },
-      area: [],
-      blacks: [{ x: 1, y: 1 }],
-      run: [],
-      clue: null,
+    const words = so({
+      look: phrase`${mark.this("ring", CELL, [{ x: 1, y: 0 }], "square")} touches ${mark.the("outline", CELL, [{ x: 1, y: 1 }], "shaded square")}`,
+      move: phrase`it must be unshaded`,
     });
     const step: HintStep<RangeMove, RangeHint> = {
       move: { sets: [{ r: 0, c: 1, value: "white" }] },

@@ -53,6 +53,9 @@ export interface StatedContext<E> {
   /** Where a role marks elements of several sorts (its marks a set by sort),
    * what a reference to one sort is drawn on. */
   readonly kinds?: Readonly<Record<string, MarkKind<E>>>;
+  /** Where a term's elements are drawn on a kind of their own, not the
+   * step's: a number that lies inside the squares it outlines (Range's). */
+  readonly termKinds?: Readonly<Record<string, MarkKind<E>>>;
   /** The element a term's index names. */
   at(index: number): E;
   /** What the step decides. */
@@ -241,6 +244,7 @@ function reference<E>(
     kind = k;
   } else if (p.name !== "") {
     const t = cx.terms[p.name];
+    kind = cx.termKinds?.[p.name] ?? kind;
     if (typeof t === "number") els = [cx.at(t)];
     else if (Array.isArray(t)) els = (t as number[]).map((i) => cx.at(i));
     else throw new Error(`stated clause: {${role} ${p.name}} names no element term`);

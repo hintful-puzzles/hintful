@@ -12,8 +12,8 @@ import {
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
-import { sentences } from "./hint-text.ts";
-import type { SaysById } from "./range.compiled.ts";
+import { CLUE } from "./kinds.ts";
+import { type SaysById, STATED } from "./range.compiled.ts";
 import { hintWalk, type RangeRung } from "./solver.ts";
 import { BLACK, executeMove, type RangeMove, type RangeState, WHITE } from "./state.ts";
 
@@ -61,7 +61,10 @@ const described = describedFiringHint<
       value: t.value === SHADED ? "black" : "white",
     })),
   }),
-  say: sentences,
+  stated: STATED,
+  // A number lies inside the squares it sees, so it is drawn apart from them.
+  termKinds: { clue: CLUE },
+  say: {},
 });
 
 export const { hint: rangeHint, hintKeepTrack: rangeKeepTrack } = described;

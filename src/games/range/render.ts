@@ -38,7 +38,7 @@ import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts"
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { RangeHint } from "./hint.ts";
-import { CLUE } from "./hint-text.ts";
+import { CLUE } from "./kinds.ts";
 import { findErrors } from "./solver.ts";
 import {
   BLACK,
