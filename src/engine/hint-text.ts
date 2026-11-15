@@ -18,6 +18,7 @@ import { EDGE, type ForcedBorderEdge } from "./border-grid-hint.ts";
 import {
   CELL,
   joinNums,
+  joinOr,
   joinWith,
   mark,
   type Narration,
@@ -49,13 +50,7 @@ export function indefinite(s: string, capital = false): string {
   return capital ? `${a.charAt(0).toUpperCase()}${a.slice(1)}` : a;
 }
 
-/** {@link joinWith} for **alternatives**: "1 or 2", "1, 2 or 3". A list of
- * candidates, or a list under a negation ("no room for …"), means "any one of
- * these", which "and" would turn into "all of them at once". */
-export function joinOr(parts: readonly (string | number)[]): string {
-  if (parts.length <= 1) return `${parts[0] ?? ""}`;
-  return `${parts.slice(0, -1).join(", ")} or ${parts[parts.length - 1]}`;
-}
+export { joinOr };
 
 /** Each value once, in order. */
 const distinct = (ns: number[]): number[] => [...new Set(ns)].sort((a, b) => a - b);

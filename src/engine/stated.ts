@@ -12,6 +12,7 @@
  */
 import {
   joinNums,
+  joinOr,
   joinWith,
   type MarkKind,
   type MarkRole,
@@ -80,7 +81,7 @@ export interface StatedContext<E> {
   /** What a value is called, for `{valueNoun}`: "number" unless the game's
    * values are letters, elements or heights. */
   readonly valueNoun?: string;
-  /** The values a strike step removes, for `{struck}`: the order is the
+  /** The values a strike step removes, for `{struck}` and `{struckOr}`: the order is the
    * solver's, and each is named once, smallest first. */
   readonly struck?: readonly number[];
   /** The kinds of region a value may not repeat in, for `{regions}`. */
@@ -155,6 +156,10 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
       if (!cx.struck)
         throw new Error("stated clause: {struck} needs the step's strikes");
       return joinWith([...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value));
+    case "struckOr":
+      if (!cx.struck)
+        throw new Error("stated clause: {struckOr} needs the step's strikes");
+      return joinOr([...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value));
     case "regions":
       return cx.regions ?? "row and column";
     case "tally":

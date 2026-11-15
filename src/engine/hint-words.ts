@@ -857,3 +857,11 @@ export function joinWith(parts: string[]): string {
   if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
   return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
 }
+
+/** {@link joinWith} for **alternatives**: "1 or 2", "1, 2 or 3". A list of
+ * candidates, or a list under a negation ("no room for …"), means "any one of
+ * these", which "and" would turn into "all of them at once". */
+export function joinOr(parts: readonly (string | number)[]): string {
+  if (parts.length <= 1) return `${parts[0] ?? ""}`;
+  return `${parts.slice(0, -1).join(", ")} or ${parts[parts.length - 1]}`;
+}

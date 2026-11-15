@@ -56,6 +56,7 @@ import {
   DIFF_EXTREME,
   diffFromLevel,
   diffToLevel,
+  displayChar,
   type EdgeClueMove,
   type EdgeClueParams,
   type EdgeClueState,
@@ -77,7 +78,7 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import type { Said } from "../../engine/ladder-runtime.ts";
 import type { LatinSolver } from "../../engine/latin.ts";
 import {
@@ -94,30 +95,22 @@ import {
 } from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
+import { statedParts } from "../../engine/stated.ts";
+import type { Point } from "../../engine/types.ts";
 import * as adjacent from "./adjacent.compiled.ts";
-import { say } from "./hint-text.ts";
-import type { BarReason, HintReason } from "./solver.ts";
+import type { HintReason } from "./solver.ts";
 import { BARS, decodeParams, defaultParams, menu, validateParams } from "./state.ts";
 
 // --- hint ------------------------------------------------------------------
 
 /** Why a strike is forced (docs/hints.md § "Writing the narration"):
  * indication, then reasoning, which the walk concludes with the move it makes.
- * `ns` is the struck value list; `o` is the grid order. The words, and how they
- * read at the value extremes, are [`hint-text.ts`](./hint-text.ts)'s. */
+ * A bar's premise is the wording `adjacent.description.yaml` states. */
 function premise(reason: HintReason, marks: readonly Mark[], o: number): Premise {
-  const ns = valuesOf(marks);
-  // A bar deduction outlines the struck cell *and* the cell across the bar, or
-  // across where none is, so the player sees the pair.
-  const pair = (r: { ox: number; oy: number }) => ({
-    at: { x: marks[0].x, y: marks[0].y },
-    other: { x: r.ox, y: r.oy },
-  });
   switch (reason.kind) {
     case "adjacent":
-      return { premise: say.adjacent(pair(reason), reason.bar, reason.v, o) };
     case "adjacentSet":
-      return { premise: say.adjacentSet(pair(reason), reason.bar, ns, o) };
+      return { premise: reason.premise };
     // The generic Latin arms (dup / set) read identically to Keen's
     // — narrated once, shared.
     default:
@@ -158,31 +151,29 @@ function buildSteps(
     Math.min(diffToLevel(state.diff), DIFF_EXTREME),
   );
   /** A bar firing strikes in one cell, toward one neighbor: one leg, its
-   * reason built from what the technique says. */
+   * premise the wording the description states for the firing. */
   const barRung = <K extends keyof adjacent.SaysById>(
     id: K,
-    reason: (terms: adjacent.SaysById[K]["terms"]) => BarReason,
   ): CandidateRung<EdgeClueMove, EdgeClueHint, HintReason> =>
-    techniqueRung<EdgeClueMove, EdgeClueHint, HintReason, LatinSolver>(on, id, (f) => [
-      {
-        strike: strikesOf(f, o),
-        reason: reason(
-          (f.reasons[0] as Said<unknown, adjacent.SaysById[K]>).says.terms,
-        ),
-      },
-    ]);
-  const across = (c: number) => ({ ox: c % o, oy: (c / o) | 0 });
-  const adjacentRung = barRung("adjacent", ({ a, v, bar }) => ({
-    kind: "adjacent",
-    ...across(a),
-    v,
-    bar: bar === 1,
-  }));
-  const adjacentSet = barRung("adjacentSet", ({ a, bar }) => ({
-    kind: "adjacentSet",
-    ...across(a),
-    bar: bar === 1,
-  }));
+    techniqueRung<EdgeClueMove, EdgeClueHint, HintReason, LatinSolver>(on, id, (f) => {
+      const strike = strikesOf(f, o);
+      const { terms, wording } = (f.reasons[0] as Said<unknown, adjacent.SaysById[K]>)
+        .says;
+      const { look } = statedParts(adjacent.STATED[id].step[wording], {
+        kind: CELL,
+        at: (c: number): Point => ({ x: c % o, y: (c / o) | 0 }),
+        ring: [{ x: strike[0].x, y: strike[0].y }],
+        marks: {},
+        terms,
+        value: (n) => displayChar(n, o),
+        noun: adjacent.WORDS.cell,
+        struck: valuesOf(strike),
+      });
+      if (look === undefined) throw new Error(`${id} states no look`);
+      return [{ strike, reason: { kind: id, premise: look } }];
+    });
+  const adjacentRung = barRung("adjacent");
+  const adjacentSet = barRung("adjacentSet");
   runLatinCandidatePlan<EdgeClueMove, EdgeClueHint, HintReason>({
     w: o,
     steps,

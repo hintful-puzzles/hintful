@@ -43,6 +43,13 @@ describe("a stated clause", () => {
     );
   });
 
+  it("names the struck values each once, as all of them or as alternatives", () => {
+    const say = (clause: string): string =>
+      statedSentence({ look: clause, move: "go" }, cx({ struck: [3, 1, 3, 2] })).text;
+    expect(say("with {struck}")).toBe("With v1, v2 and v3, so go.");
+    expect(say("with {struckOr}")).toBe("With v1, v2 or v3, so go.");
+  });
+
   it("names a value in the game's word, and a number otherwise", () => {
     const say = (valueNoun?: string): string =>
       statedSentence(

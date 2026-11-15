@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/adjacent/adjacent.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt, freshBinding, rangeMask, staleChecking } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt, freshBinding, rangeMask, setOf, staleChecking } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -30,6 +30,13 @@ export interface SaysById {
 /** The kinds of step a firing can be: a technique's id, and for one whose
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["adjacent","adjacentSet"] as const;
+
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "adjacent": {"step":[{"look":"{outline pair: a bar} joins {ring} to {outline a: the {v} beside it}: they differ by 1"},{"look":"{outline pair: no bar} joins {ring} to {outline a: the {v} beside it}: they can't differ by 1"}]},
+  "adjacentSet": {"step":[{"look":"{outline pair: a bar} joins {ring} to {outline a: its neighbor} with nothing open one away from {struckOr}"},{"look":"{outline pair: no bar} joins {ring} to {outline a: its neighbor}, whose numbers all clash with {struck}"}]},
+} as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
@@ -106,8 +113,10 @@ export interface AdjacentBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface AdjacentSays {
-  terms: { a: number; v: number; bar: number; };
+  terms: { a: number; v: number; bar: number; pair: readonly number[]; };
   marks: {  };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const adjacentFacts: number[] = [];
@@ -162,7 +171,11 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { a: v_a, v: _h17, bar: _h18 }, marks: {  } };
+            const _sw_a = v_a;
+            const _sw_v = _h17;
+            const _sw_bar = _h18;
+            const _sw_pair = setOf(v_b, v_a).slice();
+            const _says = { terms: { a: _sw_a, v: _sw_v, bar: _sw_bar, pair: _sw_pair }, marks: {  }, wording: ((_sw_bar === 1) ? 0 : 1) };
             if (!fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts, _says)) return 1;
           }
           cands.fill(-1);
@@ -182,8 +195,10 @@ export interface AdjacentSetBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface AdjacentSetSays {
-  terms: { a: number; bar: number; };
+  terms: { a: number; bar: number; pair: readonly number[]; };
   marks: {  };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const adjacentSetFacts: number[] = [];
@@ -240,7 +255,10 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjac
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { a: v_a, bar: _h19 }, marks: {  } };
+            const _sw_a = v_a;
+            const _sw_bar = _h19;
+            const _sw_pair = setOf(v_b, v_a).slice();
+            const _says = { terms: { a: _sw_a, bar: _sw_bar, pair: _sw_pair }, marks: {  }, wording: ((_sw_bar === 1) ? 0 : 1) };
             if (!fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts, _says)) return 1;
           }
           cands.fill(-1);

@@ -6,18 +6,16 @@
 
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { ADJTHAN, type ClueKind } from "../../engine/edge-clue-latin/state.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { compiledRung } from "../../engine/ladder-runtime.ts";
 import { type LatinReason, latinLadder } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import * as adjacent from "./adjacent.compiled.ts";
 
-/** Why a bar, or its absence, ruled a candidate out — the premise the hint
- * narrates and highlights, built from what the technique says. Each carries
- * the constraining neighbor (`ox`,`oy`) and whether a bar joins them (`bar`);
- * `adjacent` also the number the neighbor holds. */
+/** Why a bar, or its absence, ruled a candidate out: the premise the
+ * description states for the wording that held. */
 export type BarReason =
-  | { kind: "adjacent"; ox: number; oy: number; v: number; bar: boolean }
-  | { kind: "adjacentSet"; ox: number; oy: number; bar: boolean }
+  | { kind: "adjacent" | "adjacentSet"; premise: Narration }
   /** The singles the hint plan reads off the working board. */
   | SingleReason;
 

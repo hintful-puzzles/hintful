@@ -109,8 +109,12 @@ techniques:
     # The hint names the placed neighbor, its number, and whether a bar joins
     # them.
     says:
-      terms: { a: a, v: "value(a)", bar: "clue(bar, e)" }
+      terms: { a: a, v: "value(a)", bar: "clue(bar, e)", pair: "{b, a}" }
       marks: {}
+      wordings:
+        - when: "bar = 1"
+          look: "{outline pair: a bar} joins {ring} to {outline a: the {v} beside it}: they differ by 1"
+        - look: "{outline pair: no bar} joins {ring} to {outline a: the {v} beside it}: they can't differ by 1"
   # A number is struck across an edge when none of the other end's candidates
   # fits it, in the same order over every cell.
   - id: adjacentSet
@@ -122,8 +126,12 @@ techniques:
       strike(b, d)
     # The hint names the neighbor and whether a bar joins them.
     says:
-      terms: { a: a, bar: "clue(bar, e)" }
+      terms: { a: a, bar: "clue(bar, e)", pair: "{b, a}" }
       marks: {}
+      wordings:
+        - when: "bar = 1"
+          look: "{outline pair: a bar} joins {ring} to {outline a: its neighbor} with nothing open one away from {struckOr}"
+        - look: "{outline pair: no bar} joins {ring} to {outline a: its neighbor}, whose numbers all clash with {struck}"
   - { use: latin.set, tier: Tricky, rung: set }
   - { use: latin.fish, tier: Hard, rung: set }
   - { use: latin.wing, tier: Hard, rung: wing }
