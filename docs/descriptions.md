@@ -1148,7 +1148,14 @@ change to what a firing reads is compared by
 here and in a worktree of `HEAD`, each step's marks listed with its words: the hint-walk fingerprint's few boards miss
 a rare rung, and a wrong `reads` set on Pearl's `earlyThrough` passed every
 test while the dump moved 1,349 lines. The game's own `hintKeepTrack`
-stays: a bridge is drawn a drag at a time, which no fact is.
+stays: a bridge is drawn a drag at a time, which no fact is. **An edge game
+states its words as a cell game does** (Separate): its `STATED` goes to
+`describedEdgeHint` with `ringKind` (what a `{ring}` reference is drawn on, the
+edges), `ring` (what a leg decides), `width` and `value`; a kind that states
+`again` has a later leg say it as the basis of the game's own `later` sentence
+(`edgeContinuation`), so a kind states its first leg's `move` only. `{a term}`
+says a value with its article ("an A") and `{numeral term}` a plain count where
+`{term}` is a value the board draws another way (a letter).
 
 **A technique whose words need what held says `witness: true`**: the
 compiler then reads, on the same marks as the terms and only on a hint's

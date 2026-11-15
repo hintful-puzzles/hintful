@@ -15,7 +15,7 @@
 import { spokenOf, techniqueOf } from "./described-hint.ts";
 import type { HintResult, HintStep } from "./game.ts";
 import { CONTRADICTION_UNLOCALIZED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
-import type { Sentence } from "./hint-words.ts";
+import { CELL, type MarkKind, type Narration, type Sentence } from "./hint-words.ts";
 import {
   type CellMarks,
   type LadderEntry,
@@ -23,12 +23,21 @@ import {
   type Taken,
   TIERS,
 } from "./ladder-runtime.ts";
+import {
+  type Clauses,
+  type StatedContext,
+  statedParts,
+  statedSentence,
+} from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
+import type { Point } from "./types.ts";
 
 /** What a firing says, as the compiled module types it: its terms and the
  * elements it marks by role, and the arm that held where it has arms. */
 interface SaysOf {
   arm?: string;
+  /** The wording that held, where the technique states several. */
+  wording?: number;
   terms: object;
   marks: {
     outline?: readonly number[];
@@ -70,6 +79,7 @@ export interface EdgeHintSpec<
   Marked,
   Ctx,
   Says extends { [K in keyof Says]: SaysOf },
+  Ring = never,
 > {
   /** A name for the walk's step budget. */
   name: string;
@@ -119,16 +129,35 @@ export interface EdgeHintSpec<
     fired: Fired<Says[keyof Says & string], Ctx>,
     state: State,
   ): { move: Move; highlights: H; marked: Marked }[];
-  /** The sentence of a step: one for every technique, where the game reads
-   * the firing's premise itself into `marked`, or one a technique. */
-  say:
+  /** Each kind of step's words as the description states them: the compiled
+   * module's `STATED`. A technique none of whose kinds it states is said by
+   * `say`. Stating a kind needs the rest of this block. */
+  stated?: Readonly<Record<string, { readonly step?: readonly Clauses[] }>>;
+  /** What a stated clause's `ring` is drawn on: the edges (or whatever) a leg
+   * decides, which are not the cells its terms and marks name. */
+  ringKind?: MarkKind<Ring>;
+  /** What a leg decides, for a stated clause's `ring`. */
+  ring?(marked: Marked): readonly Ring[];
+  /** A later leg's sentence (a leg after the firing's first): its move is the
+   * game's, from the ring it still has to make, and `basis` is what the kind's
+   * `again` clause says of the reasoning. Needed where a kind states `again`. */
+  later?(ring: readonly Ring[], basis: Narration): Sentence;
+  /** The width of the board, to name a cell's point in a stated clause. */
+  width?(state: State): number;
+  /** A number term as the board draws it; its numeral where absent. */
+  value?(n: number, state: State): string;
+  /** The sentences the description cannot state, each technique's an override
+   * of the stated form, with a comment saying why: one for every technique,
+   * where the game reads the firing's premise itself into `marked`, or one a
+   * technique. */
+  say?:
     | ((
         spoken: EdgeSpoken<Says[keyof Says & string]>,
         marked: Marked,
         state: State,
       ) => Sentence)
     | {
-        [K in keyof Says & string]: (
+        [K in keyof Says & string]?: (
           spoken: EdgeSpoken<Says[K]>,
           marked: Marked,
           state: State,
@@ -154,16 +183,23 @@ export function describedEdgeHint<
   Ctx,
   Says extends { [K in keyof Says]: SaysOf },
   Kind extends string = string,
+  Ring = never,
 >(
-  spec: EdgeHintSpec<State, Move, H, Marked, Ctx, Says>,
+  spec: EdgeHintSpec<State, Move, H, Marked, Ctx, Says, Ring>,
 ): (state: State) => HintResult<Move, H, Kind> {
   type Step = HintStep<Move, H, Kind>;
   type Say = (spoken: unknown, marked: Marked, state: State) => Sentence;
   const { say } = spec;
-  const sayOf = (technique: string): Say =>
+  const stated = spec.stated ?? {};
+  // A technique is stated or overridden, never both.
+  if (typeof say === "object")
+    for (const id of Object.keys(say))
+      if (Object.keys(stated).some((k) => k === id || k.startsWith(`${id}.`)))
+        throw new Error(`${spec.name}: ${id} is both stated and overridden`);
+  const sayOf = (technique: string): Say | null =>
     typeof say === "function"
       ? (say as Say)
-      : (say as unknown as Record<string, Say>)[technique];
+      : ((say as unknown as Record<string, Say> | undefined)?.[technique] ?? null);
   const plan = spec.plan ?? EDGE_PLAN;
 
   /** The steps the ladder makes from `state` at tier `cap`, or the refusal
@@ -205,22 +241,52 @@ export function describedEdgeHint<
         { taken, says: says as Says[keyof Says & string], ctx, before, marks: m },
         state,
       );
+      const rung = (
+        says.arm === undefined ? technique : `${technique}.${says.arm}`
+      ) as Kind;
+      const clauses = stated[rung]?.step?.[says.wording ?? 0];
       legs.forEach(({ move, highlights, marked }, leg) => {
-        const words = sayOf(technique)(
-          {
-            terms: says.terms,
-            arm: says.arm,
-            outline: says.marks.outline ?? [],
-            stripes: says.marks.stripes ?? [],
-          },
-          marked,
-          state,
-        );
+        let words: Sentence;
+        if (clauses !== undefined) {
+          const w = (spec.width as NonNullable<typeof spec.width>)(state);
+          const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
+          const ring = (spec.ring as NonNullable<typeof spec.ring>)(marked);
+          const cx: StatedContext<Point, Ring> = {
+            kind: CELL,
+            ...(spec.ringKind === undefined ? {} : { ringKind: spec.ringKind }),
+            at: pointOf,
+            ring,
+            marks: {
+              outline: (says.marks.outline ?? []).map(pointOf),
+              stripes: (says.marks.stripes ?? []).map(pointOf),
+            },
+            terms: says.terms as Record<string, unknown>,
+            value: (n) => spec.value?.(n, state) ?? String(n),
+          };
+          const basis = leg > 0 ? statedParts(clauses, cx).again : undefined;
+          words =
+            basis !== undefined && spec.later !== undefined
+              ? spec.later(ring, basis)
+              : statedSentence(clauses, cx);
+        } else
+          words = (
+            sayOf(technique) ??
+            (() => {
+              throw new Error(`${spec.name}: ${rung} is neither stated nor overridden`);
+            })
+          )(
+            {
+              terms: says.terms,
+              arm: says.arm,
+              outline: says.marks.outline ?? [],
+              stripes: says.marks.stripes ?? [],
+            },
+            marked,
+            state,
+          );
         steps.push({
           move,
-          rung: (says.arm === undefined
-            ? technique
-            : `${technique}.${says.arm}`) as Kind,
+          rung,
           explanation: words.text,
           words,
           highlights,

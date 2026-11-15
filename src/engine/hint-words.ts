@@ -858,6 +858,15 @@ export function joinWith(parts: string[]): string {
   return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
 }
 
+/** "a" or "an" for `s` — chosen by how the *word* is pronounced, so a letter
+ * value ("an A", "a B") and a digit ("a 6", "an 8") both read correctly. The
+ * `dup` arm says "There's already a …", which without this reads "a A" /
+ * "a 8". `capital` gives the form that opens a sentence. */
+export function indefinite(s: string, capital = false): string {
+  const a = /^(?:[aefhilmnorsx]|8|11|18)/i.test(s) ? "an" : "a";
+  return capital ? `${a.charAt(0).toUpperCase()}${a.slice(1)}` : a;
+}
+
 /** {@link joinWith} for **alternatives**: "1 or 2", "1, 2 or 3". A list of
  * candidates, or a list under a negation ("no room for …"), means "any one of
  * these", which "and" would turn into "all of them at once". */

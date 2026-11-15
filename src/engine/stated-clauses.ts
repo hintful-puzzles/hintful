@@ -19,6 +19,10 @@
  *   player reads it in (inside a reference's words, the one word it has).
  * - `{spelled term}`: the number term in words, "zero" to "ten" (a count that
  *   would read as a coordinate in digits), the numeral past ten.
+ * - `{numeral term}`: the number term as a plain count, in digits, where `{term}`
+ *   would print it as the board draws a value (a letter, say).
+ * - `{a term}`: the number term as the board draws it, with its indefinite
+ *   article ("an A", "a D").
  * - `{count: one | several}`: the first form where the number term `count` is 1,
  *   the second otherwise; its forms hold what an `if`'s do.
  * - `{if flag: yes | no}`: the form the step's flag term holds, whole; its forms
@@ -73,6 +77,8 @@ const SLOT_ROLES: ReadonlySet<string> = new Set([
   "if",
   "color",
   "spelled",
+  "numeral",
+  "a",
   "has",
   "fit",
 ]);
@@ -137,7 +143,10 @@ function slot(body: string, src: string): Piece {
           (f) => parseClause(f.trim()),
         );
   if (
-    (head[0] === "color" || head[0] === "spelled") &&
+    (head[0] === "color" ||
+      head[0] === "spelled" ||
+      head[0] === "numeral" ||
+      head[0] === "a") &&
     (head.length !== 2 || words !== null)
   )
     throw new Error(`"{${body}}" is no color of a term, in "${src}"`);
@@ -218,7 +227,13 @@ export function slotsOf(src: string): Slot[] {
       } else if (p.role === "count") {
         into.inner.push(p.name);
         within(p.words, into);
-      } else if (p.role === null || p.role === "color" || p.role === "spelled")
+      } else if (
+        p.role === null ||
+        p.role === "color" ||
+        p.role === "spelled" ||
+        p.role === "numeral" ||
+        p.role === "a"
+      )
         into.inner.push(p.name);
       else throw new Error(`a reference inside the words of "${src}"`);
     }
@@ -252,7 +267,12 @@ export function slotsOf(src: string): Slot[] {
       const into = { inner: [] as string[], flags: [] as string[] };
       within(p.words, into);
       // A color is said where its term is, which must be a number.
-      if (p.role === "color" || p.role === "spelled")
+      if (
+        p.role === "color" ||
+        p.role === "spelled" ||
+        p.role === "numeral" ||
+        p.role === "a"
+      )
         return [{ name: p.name, role: null, inner: [], flags: [] }];
       if (p.role === "count")
         // The term it counts and its forms' words are said plainly.

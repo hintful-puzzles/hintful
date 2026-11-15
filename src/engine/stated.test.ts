@@ -122,6 +122,38 @@ describe("a stated clause", () => {
     ).toThrow(/game's colors/);
   });
 
+  it("says a value with its article, and a count as a numeral where the board draws a value another way", () => {
+    const say = (n: number, letter: number): string =>
+      statedSentence(
+        {
+          look: "it holds {a letter} and {numeral n} of {outline: {a letter}}",
+          move: "go",
+        },
+        cx({
+          terms: { n, letter },
+          value: (v) => String.fromCharCode(65 + v),
+        }),
+      ).text;
+    expect(say(3, 0)).toBe("It holds an A and 3 of an A, so go.");
+    expect(say(12, 3)).toBe("It holds a D and 12 of a D, so go.");
+  });
+
+  it("draws the ring on a kind of its own", () => {
+    const edge: MarkKind<string> = { name: "edge", key: (e) => e };
+    const s = statedSentence(
+      { look: "it sits by {ring: this edge | these edges}", move: "go" },
+      {
+        ...cx(),
+        placing: undefined,
+        consequences: [],
+        ringKind: edge,
+        ring: ["a", "b"],
+      },
+    );
+    expect(s.text).toBe("It sits by these edges, so go.");
+    expect(stepMarks({ words: s }).of("ring", edge)).toEqual(["a", "b"]);
+  });
+
   it("counts a reference's live elements, so a narrowed reference re-counts", () => {
     const s = statedSentence(
       { look: "it needs {ring: 1 more bulb | {live} more bulbs}", move: "go" },

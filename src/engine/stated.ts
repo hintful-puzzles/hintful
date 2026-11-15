@@ -12,6 +12,7 @@
  */
 import type { ColorWord } from "./color/color-word.ts";
 import {
+  indefinite,
   joinNums,
   joinOr,
   joinWith,
@@ -52,9 +53,13 @@ const DRAWN: Readonly<Record<string, MarkRole>> = {
 
 /** What a clause is rendered against: a firing's terms and marks, and the
  * game's words. */
-export interface StatedContext<E> {
+export interface StatedContext<E, R = E> {
   /** What the references are drawn on. */
   readonly kind: MarkKind<E>;
+  /** What `ring` references are drawn on, where the step decides elements of
+   * another kind than the ones it marks (a wall on an edge, the squares it
+   * reasons from). */
+  readonly ringKind?: MarkKind<R>;
   /** Where a role marks elements of several sorts (its marks a set by sort),
    * what a reference to one sort is drawn on. */
   readonly kinds?: Readonly<Record<string, MarkKind<E>>>;
@@ -64,12 +69,12 @@ export interface StatedContext<E> {
   /** The element a term's index names. */
   at(index: number): E;
   /** What the step decides. */
-  readonly ring: readonly E[];
+  readonly ring: readonly R[];
   /** What the step decides to be `n`, for `{ring n}`. */
-  placing?(n: number): readonly E[];
+  placing?(n: number): readonly R[];
   /** What the step's placing techniques follow with, which it shows and makes
    * but does not decide, for `{ring then}`. */
-  readonly consequences?: readonly E[];
+  readonly consequences?: readonly R[];
   /** The elements the step marks in each other role. */
   readonly marks: Readonly<
     Partial<
@@ -162,6 +167,8 @@ function render<E>(src: string, cx: StatedContext<E>): Narration {
   for (const p of expand(parseClause(src), cx)) {
     if ("text" in p) lits[lits.length - 1] += p.text;
     else if (p.role === null) lits[lits.length - 1] += word(p.name, cx, null);
+    else if (p.role === "numeral") lits[lits.length - 1] += numeral(p.name, cx);
+    else if (p.role === "a") lits[lits.length - 1] += article(p.name, cx);
     else if (p.role === "color") {
       vals.push(colorOf(p.name, cx));
       lits.push("");
@@ -187,6 +194,20 @@ const SPELLED = [
   "nine",
   "ten",
 ] as const;
+
+/** A number term as the board draws it, with its indefinite article. */
+function article<E>(term: string, cx: StatedContext<E>): string {
+  const v = word(term, cx, null);
+  return `${indefinite(v)} ${v}`;
+}
+
+/** A number term as a plain count, in digits. */
+function numeral<E>(term: string, cx: StatedContext<E>): string {
+  const n = cx.terms[term];
+  if (typeof n !== "number")
+    throw new Error(`stated clause: {numeral ${term}} is no number term`);
+  return String(n);
+}
 
 function spelled<E>(term: string, cx: StatedContext<E>): string {
   const n = cx.terms[term];
@@ -269,7 +290,7 @@ function reference<E>(
 ): Narration {
   const role = p.role as string;
   let els: readonly E[];
-  let kind = cx.kind;
+  let kind = role === "ring" ? (cx.ringKind ?? cx.kind) : cx.kind;
   const ofRole = role === "ring" ? undefined : cx.marks[role as "outline"];
   if (ofRole !== undefined && !Array.isArray(ofRole)) {
     // A role of several sorts: the reference names the one it is over.
@@ -302,7 +323,11 @@ function reference<E>(
             ? colorOf(q.name, cx).only
             : q.role === "spelled"
               ? spelled(q.name, cx)
-              : word(q.name, cx, live),
+              : q.role === "numeral"
+                ? numeral(q.name, cx)
+                : q.role === "a"
+                  ? article(q.name, cx)
+                  : word(q.name, cx, live),
       )
       .join("");
   };
@@ -310,9 +335,9 @@ function reference<E>(
 }
 
 /** A step's parts, rendered; `move` only where the clauses state one. */
-export function statedParts<E>(
+export function statedParts<E, R = E>(
   c: Clauses,
-  cx: StatedContext<E>,
+  context: StatedContext<E, R>,
 ): {
   look?: Narration;
   follows?: Narration;
@@ -320,6 +345,9 @@ export function statedParts<E>(
   effect?: Narration;
   again?: Narration;
 } {
+  // The ring's elements are of the kind `ringKind` names, which only a ring
+  // reference reads.
+  const cx = context as unknown as StatedContext<E>;
   return {
     ...(c.again === undefined ? {} : { again: render(c.again, cx) }),
     ...(c.look === undefined ? {} : { look: render(c.look, cx).capitalized() }),
@@ -331,12 +359,13 @@ export function statedParts<E>(
 
 /** A step's words, from its stated parts; `closing` is the move's words where
  * the clauses state none, the engine's from the fact. */
-export function statedSentence<E>(
+export function statedSentence<E, R = E>(
   c: Clauses,
-  cx: StatedContext<E>,
+  context: StatedContext<E, R>,
   closing: Narration | null = null,
   relation: Relation = { kind: "forced" },
 ): Sentence {
+  const cx = context as unknown as StatedContext<E>;
   const turns = Math.max(
     1,
     ...Object.values(c).map((src) =>

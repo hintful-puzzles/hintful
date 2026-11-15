@@ -30,6 +30,14 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["sharedLetter","walledApart","onlyWay"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "sharedLetter": {"step":[{"move":"{ring: the edge between them | every edge between them} must be a wall","look":"{outline: These two {letter}s} can't share a region","again":"{outline: the same two {letter}s}"},{"move":"{ring: the edge between them | every edge between them} must be a wall","look":"{stripes: the striped region} already holds {a letter}","follows":"{outline: the outlined {letter}} can't join it","again":"the same {stripes: striped region} and the {outline: outlined square}"},{"move":"{ring: the edge between them | every edge between them} must be a wall","look":"The {stripes: striped} and {outline: outlined regions} both hold {a letter}","follows":"they can't join","again":"the same {stripes: striped} and {outline: outlined regions}"}]},
+  "walledApart": {"step":[{"look":"A wall already separates {if alike: the {stripes: striped} and {outline: outlined {nb: squares | regions}} | the {stripes: striped {na: square | region}} and the {outline: outlined {nb: square | region}}}","move":"{ring: this edge between them | every other edge between them} must be a wall too","again":"{if alike: the same {stripes: striped} and {outline: outlined {nb: squares | regions}} | the same {stripes: striped {na: square | region}} and the {outline: outlined {nb: square | region}}}"}]},
+  "onlyWay": {"step":[{"move":"{ring: this edge | these edges} can't be a wall","again":"{stripes: the same striped region}","look":"{stripes: This {letter}} is walled in on every side but one"},{"move":"{ring: this edge | these edges} can't be a wall","again":"{stripes: the same striped region}","look":"{stripes: the striped region} has {numeral have} of its {numeral size} squares and one square left to grow into"}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -168,8 +176,10 @@ export interface SharedLetterBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SharedLetterSays {
-  terms: { letter: number; };
+  terms: { letter: number; side: readonly number[]; };
   marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const sharedLetterFacts: number[] = [];
@@ -178,10 +188,14 @@ const sharedLetterFacts: number[] = [];
 export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedLetterBinding, SharedLetterSays> | null): number {
   const _g36: number[] = [];
   const _g113: number[] = [];
+  const _g121: number[] = [];
+  const _g129: number[] = [];
+  const _g139: number[] = [];
+  const _g145: number[] = [];
   const facts = sharedLetterFacts;
   let fired = 0;
   let changed = false;
-  const _m122_0 = b.made[0];
+  const _m154_0 = b.made[0];
   _g36.length = 0;
   G37: {
     const _a40 = sp.edges;
@@ -192,7 +206,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
     }
   }
   const v_O = _g36;
-  const _m123_1 = b.made[1];
+  const _m155_1 = b.made[1];
   const _eg44 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a42 = sp.edges;
   R1:
@@ -200,11 +214,19 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
     const v_e = _a42[_i43];
     if (!(!((b.grid[v_e] !== 0)))) continue;
     const v_A = _eg44.of(sp.edgeEnds[2 * v_e]);
+    const _h127 = v_A.length;
+    const _h128 = (_h127 > 1);
+    const _h135 = (_h127 === 1);
     L45: {
       const v_b = sp.edgeEnds[2 * v_e + 1];
       if (!(!(_eg44.of(v_b) === v_A))) break L45;
       const v_B = _eg44.of(v_b);
-      const _h121 = union(v_A, v_B);
+      const _h136 = v_B.length;
+      const _h137 = (_h136 > 1);
+      const _h138 = (_h135 && _h137);
+      const _h151 = (_h136 === 1);
+      const _h152 = (_h128 || _h151);
+      const _h153 = union(v_A, v_B);
       let _g46 = 0;
       G47: {
         const _a50 = v_B;
@@ -258,7 +280,7 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
             const v_y = _a71[_i72];
             const _h73 = clueAt(cl.letter, v_y);
             if (!((_h73 === v_d))) continue;
-            if (b.made[0] !== _m122_0 || b.made[1] !== _m123_1) {
+            if (b.made[0] !== _m154_0 || b.made[1] !== _m155_1) {
               const _now74 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
               if (!(_now74 === _eg44.of(sp.edgeEnds[2 * v_e]) || sameSet(_now74, _eg44.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
               const _now75 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_b);
@@ -364,7 +386,48 @@ export function sharedLetter(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shar
             if (changed || facts.length > 0) {
               fired = 1;
               if (fire !== null) {
-                const _says = { terms: { letter: v_d }, marks: { stripes: v_A.slice(), outline: v_B.slice(), reads: _h121.slice() } };
+                const _sw_letter = v_d;
+                const _sw_side = v_A.slice();
+                _g121.length = 0;
+                G122: {
+                  const _a125 = v_A;
+                  for (let _i126 = 0; _i126 < _a125.length; _i126++) {
+                    const v_x = _a125[_i126];
+                    if (!(_h128)) continue;
+                    _g121.push(v_x);
+                  }
+                }
+                _g129.length = 0;
+                G130: {
+                  const _a133 = v_B;
+                  for (let _i134 = 0; _i134 < _a133.length; _i134++) {
+                    const v_x = _a133[_i134];
+                    if (!(_h138)) continue;
+                    _g129.push(v_x);
+                  }
+                }
+                const _sw_stripes = union(_g121, _g129).slice();
+                _g139.length = 0;
+                G140: {
+                  const _a143 = v_A;
+                  for (let _i144 = 0; _i144 < _a143.length; _i144++) {
+                    const v_x = _a143[_i144];
+                    if (!(_h135)) continue;
+                    _g139.push(v_x);
+                  }
+                }
+                _g145.length = 0;
+                G146: {
+                  const _a149 = v_B;
+                  for (let _i150 = 0; _i150 < _a149.length; _i150++) {
+                    const v_x = _a149[_i150];
+                    if (!(_h152)) continue;
+                    _g145.push(v_x);
+                  }
+                }
+                const _sw_outline = union(_g139, _g145).slice();
+                const _sw_reads = _h153.slice();
+                const _says = { terms: { letter: _sw_letter, side: _sw_side }, marks: { stripes: _sw_stripes, outline: _sw_outline, reads: _sw_reads }, wording: ((_sw_stripes.length === 0) ? 0 : (_sw_outline.length === 1) ? 1 : 2) };
                 if (!fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice(), L: v_L, d: v_d, x: v_x, y: v_y }, facts, _says)) return 1;
               }
             }
@@ -386,7 +449,7 @@ export interface WalledApartBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface WalledApartSays {
-  terms: {  };
+  terms: { na: number; nb: number; alike: boolean; };
   marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
 }
 
@@ -399,7 +462,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
   const facts = walledApartFacts;
   let fired = 0;
   let changed = false;
-  const _m59_0 = b.made[0];
+  const _m61_0 = b.made[0];
   _g17.length = 0;
   G18: {
     const _a21 = sp.edges;
@@ -410,7 +473,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
     }
   }
   const v_O = _g17;
-  const _m60_1 = b.made[1];
+  const _m62_1 = b.made[1];
   const _eg25 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a23 = sp.edges;
   R1:
@@ -418,6 +481,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
     const v_e = _a23[_i24];
     if (!(!((b.grid[v_e] !== 0)))) continue;
     const v_A = _eg25.of(sp.edgeEnds[2 * v_e]);
+    const _h59 = v_A.length;
     L26: {
       const v_b = sp.edgeEnds[2 * v_e + 1];
       if (!(!(_eg25.of(v_b) === v_A))) break L26;
@@ -440,7 +504,8 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
           }
         }
         if (!(_q28)) break L27;
-        if (b.made[0] !== _m59_0 || b.made[1] !== _m60_1) {
+        const _h60 = v_B.length;
+        if (b.made[0] !== _m61_0 || b.made[1] !== _m62_1) {
           const _now34 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
           if (!(_now34 === _eg25.of(sp.edgeEnds[2 * v_e]) || sameSet(_now34, _eg25.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
           const _now35 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(v_b);
@@ -502,7 +567,7 @@ export function walledApart(b: Marks, sp: GridSpace, fire: Fire<WalledApartBindi
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: {  }, marks: { stripes: v_A.slice(), outline: v_B.slice(), reads: union(v_A, v_B).slice() } };
+            const _says = { terms: { na: _h59, nb: _h60, alike: (((_h59 === 1) && (_h60 === 1)) || ((_h59 > 1) && (_h60 > 1))) }, marks: { stripes: v_A.slice(), outline: v_B.slice(), reads: union(v_A, v_B).slice() } };
             if (!fire({ O: v_O.slice(), e: v_e, A: v_A.slice(), b: v_b, B: v_B.slice() }, facts, _says)) return 1;
           }
         }
@@ -521,8 +586,10 @@ export interface OnlyWayBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface OnlyWaySays {
-  terms: { letter: number; size: number; };
+  terms: { letter: number; size: number; have: number; };
   marks: { stripes: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const onlyWayFacts: number[] = [];
@@ -636,7 +703,12 @@ export function onlyWay(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyWayBi
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { letter: _h71, size: cl.k }, marks: { stripes: v_A.slice(), reads: union(v_A, v_S).slice() } };
+          const _sw_letter = _h71;
+          const _sw_size = cl.k;
+          const _sw_have = _h30;
+          const _sw_stripes = v_A.slice();
+          const _sw_reads = union(v_A, v_S).slice();
+          const _says = { terms: { letter: _sw_letter, size: _sw_size, have: _sw_have }, marks: { stripes: _sw_stripes, reads: _sw_reads }, wording: ((_sw_stripes.length === 1) ? 0 : 1) };
           if (!fire({ O: v_O.slice(), c: v_c, A: v_A.slice(), S: v_S.slice() }, facts, _says)) return 1;
         }
       }
