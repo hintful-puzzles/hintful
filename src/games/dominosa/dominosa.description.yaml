@@ -131,7 +131,15 @@ techniques:
       e = nth(P, 0) where not known(e)
     conclude: "place(e, 1)"
     says:
+      # The domino a leg decides, lower number first: no firing's binding
+      # holds it for every leg of a firing that rules out spots of several
+      # dominoes (`set`), so the leg supplies it (every kind below reads it).
+      terms:
+        lo: "0" # supplied
+        hi: "0" # supplied
       marks: {}
+      look: "The {lo}–{hi} domino has only one spot left where it fits"
+      move: "it must go on {ring: the ringed spot}"
   # A square with one spot left round it is covered there; with none, the
   # marks are inconsistent.
   - id: squareOnly
@@ -141,7 +149,12 @@ techniques:
       where |S| <= 1 and not (exists f in S: known(f))
     conclude: "|S| = 1 and place(nth(S, 0), 1)"
     says:
+      terms:
+        lo: "0" # supplied
+        hi: "0" # supplied
       marks: { outline: "{c}" }
+      look: "{outline} has only one neighbor left to pair with"
+      move: "the {lo}–{hi} domino must go on {ring: the ringed spot}"
   # A square whose spots left are all one domino's takes that domino: its
   # other spots are out.
   - id: squareSingleDomino
@@ -153,7 +166,14 @@ techniques:
       forall f in edges where f not in S and value(f) != 2 and same(f, s):
       place(f, 2)
     says:
+      terms:
+        lo: "0" # supplied
+        hi: "0" # supplied
       marks: { outline: "{c}" }
+      look: "{outline} can only be part of the {lo}–{hi} domino"
+      move: "{lo}–{hi} can't sit on {ring: the ringed spot} instead"
+      again: "the same reason about {outline}"
+      later: "{ring: this spot} can't hold a domino either"
   # A spot that shares a square with every spot left for a domino would leave
   # it nowhere to go: it is out. Such a spot touches each of them, so it is
   # found beside the first.
@@ -168,7 +188,16 @@ techniques:
       and (forall f in P: touch(f, edge(x, y))):
       place(edge(x, y), 2)
     says:
+      terms:
+        lo: "0" # supplied
+        hi: "0" # supplied
       marks: { outline: "set(z over f in P, z in {end1(f), end2(f)})" }
+      look: >-
+        {outline: Every remaining spot for the outlined domino} overlaps
+        {ring: this pair}
+      move: "no other domino can go on it"
+      again: "the same reason about {outline}"
+      later: "{ring: this spot} can't hold a domino either"
   # A domino on spot p rules out the spot q beside it, and where every other
   # spot left round q's far square y is p's domino, y could then be covered
   # only by a second copy of it: p is out.
@@ -180,7 +209,16 @@ techniques:
       and (forall r in spots(y) where r != q: same(r, p))
     conclude: "place(p, 2)"
     says:
+      terms:
+        lo: "0" # supplied
+        hi: "0" # supplied
       marks: { outline: "{y}" }
+      look: >-
+        {a lo}–{hi} domino on {ring: the ringed spot} would force another at
+        {outline}, but each domino is used once
+      move: "it can't"
+      again: "the same reason about {outline}"
+      later: "{ring: this spot} can't hold a domino either"
   # A domino on spot p rules out two spots beside it, whose far squares y and
   # z could then each be covered only by one domino, the same for both, on
   # two different spots: p is out.
@@ -197,7 +235,16 @@ techniques:
       where |S| >= 1 and (forall r in S: same(r, d) and not touch(r, q))
     conclude: "place(p, 2)"
     says:
+      terms:
+        lo: "0" # supplied
+        hi: "0" # supplied
       marks: { outline: "{y, z}" }
+      look: >-
+        A domino on {ring: the ringed spot} would leave
+        {outline: both outlined squares} needing the same domino, a duplicate
+      move: "it can't"
+      again: "the same reason about {outline}"
+      later: "{ring: this spot} can't hold a domino either"
   # A spot whose domino would cut its squares' group, the squares the spots
   # left join, into two parts each of an even count would leave each part an
   # odd count of squares to cover: it is out. A spot on a ring of four spots
@@ -212,7 +259,16 @@ techniques:
       and |through(end2(p), Q)| mod 2 = 0
     conclude: "place(p, 2)"
     says:
+      terms:
+        lo: "0" # supplied
+        hi: "0" # supplied
       marks: {}
+      look: >-
+        A domino on {ring: the ringed spot} would split the empty squares into
+        odd-sized regions dominoes can't fill
+      move: "it can't"
+      again: "the same reason"
+      later: "{ring: this spot} can't hold a domino either"
   # Squares T showing a, no two of them joined by a spot left, whose spots
   # left show as many other numbers between them as there are squares, take
   # those dominoes between them: their spots away from T are out. Read only
@@ -229,8 +285,16 @@ techniques:
     conclude: >-
       forall x in S, y in adj4(x), f = edge(x, y)
       where value(f) != 2 and away(f, T) and num(y) in O: place(f, 2)
-    says:
+    says: &setSays
+      terms:
+        lo: "0" # supplied
+        hi: "0" # supplied
       marks: { outline: T }
+      look: >-
+        {outline} can only hold one set of dominoes, which uses the {lo}–{hi}
+      move: "{lo}–{hi} can't sit on {ring: the ringed spot} as well"
+      again: "the same reason about {outline}"
+      later: "{ring: this spot} can't hold a domino either"
   # The same where a spot left joins two squares of T, so the double a-a may
   # cover two of them. With one other number fewer than squares, T takes
   # every domino of a and those numbers, the double over two of its squares;
@@ -250,5 +314,4 @@ techniques:
       or (|O| < |T| and num(end1(f)) = num(end2(f))
       and not (end1(f) in T and end2(f) in T))):
       place(f, 2)
-    says:
-      marks: { outline: T }
+    says: *setSays

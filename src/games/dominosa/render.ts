@@ -35,7 +35,7 @@ import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts"
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD } from "../../engine/win-wave.ts";
 import type { DominosaHint } from "./hint.ts";
-import { SPOT } from "./hint-text.ts";
+import { SPOT } from "./kinds.ts";
 import {
   boardSize,
   DCOUNT,

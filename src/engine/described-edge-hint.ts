@@ -142,6 +142,10 @@ export interface EdgeHintSpec<
    * game's, from the ring it still has to make, and `basis` is what the kind's
    * `again` clause says of the reasoning. Needed where a kind states `again`. */
   later?(ring: readonly Ring[], basis: Narration): Sentence;
+  /** The terms a leg supplies itself, which a technique declares with a
+   * placeholder formula and a `# supplied` comment: the domino of the spot a
+   * leg decides, which differs by leg and which no firing's binding holds. */
+  terms?(marked: Marked, state: State): Readonly<Record<string, unknown>>;
   /** The width of the board, to name a cell's point in a stated clause. */
   width?(state: State): number;
   /** A number term as the board draws it; its numeral where absent. */
@@ -265,8 +269,10 @@ export function describedEdgeHint<
               // A technique that declares `multi` is told whether its firing
               // sets several edges, which a leg's words differ by.
               ...("multi" in says.terms ? { multi: legs.length > 1 } : {}),
+              ...spec.terms?.(marked, state),
             },
             value: (n) => spec.value?.(n, state) ?? String(n),
+            later: leg > 0,
           };
           const basis = leg > 0 ? statedParts(clauses, cx).again : undefined;
           words =

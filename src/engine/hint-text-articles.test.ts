@@ -10,9 +10,12 @@ import {
   type Marked as CrossingMarked,
   say as crossing,
 } from "../games/crossing/hint-text.ts";
-import { say as dominosa } from "../games/dominosa/hint-text.ts";
+import { STATED as DOMINOSA } from "../games/dominosa/dominosa.compiled.ts";
+import { SPOT } from "../games/dominosa/kinds.ts";
 import { say as keen } from "../games/keen/hint-text.ts";
 import { indefinite } from "./hint-text.ts";
+import { CELL } from "./hint-words.ts";
+import { statedSentence } from "./stated.ts";
 
 type SharedDigit = Parameters<typeof crossing.sharedDigit>[0];
 type NoteStrike = Parameters<typeof crossing.noteStrike>[0];
@@ -76,12 +79,17 @@ describe("a number after an article gets the article it is pronounced with", () 
   });
 
   it("Dominosa's duplicate dominoes", () => {
-    const spot = [0, 1] as const;
-    expect(dominosa.barrier("localDuplicate", 8, 8, spot, []).text).toMatch(
-      /^An 8–8 domino on the ringed spot/,
-    );
-    expect(dominosa.barrier("localDuplicate", 1, 8, spot, []).text).toMatch(
-      /^A 1–8 domino on the ringed spot/,
-    );
+    const said = (lo: number, hi: number): string =>
+      statedSentence(DOMINOSA.localDuplicate.step[0], {
+        kind: CELL,
+        ringKind: SPOT,
+        at: (c) => ({ x: c, y: 0 }),
+        ring: [[0, 1]],
+        marks: { outline: [], stripes: [] },
+        terms: { lo, hi },
+        value: String,
+      }).text;
+    expect(said(8, 8)).toMatch(/^An 8–8 domino on the ringed spot/);
+    expect(said(1, 8)).toMatch(/^A 1–8 domino on the ringed spot/);
   });
 });

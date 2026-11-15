@@ -50,7 +50,8 @@
           "follows": { "$ref": "#/$defs/clause" },
           "move": { "$ref": "#/$defs/clause" },
           "effect": { "$ref": "#/$defs/clause" },
-          "again": { "$ref": "#/$defs/clause" }
+          "again": { "$ref": "#/$defs/clause" },
+          "later": { "$ref": "#/$defs/clause" }
         }
       }
     },
@@ -114,6 +115,10 @@
               "$ref": "#/$defs/clause",
               "description": "A later leg of a journey (`shown: legs`): said after its move in place of `look` and `follows`, the reasoning the first leg gave as this square adds to it."
             },
+            "later": {
+              "$ref": "#/$defs/clause",
+              "description": "What a later leg says as its move, in place of `move`, where it differs; said with the `again` relation."
+            },
             "terms": {
               "type": "object",
               "description": "Named values the step's sentence reads, by name.",
@@ -144,6 +149,7 @@
                 "follows": { "$ref": "#/$defs/clause" },
                 "move": { "$ref": "#/$defs/clause" },
                 "again": { "$ref": "#/$defs/clause" },
+                "later": { "$ref": "#/$defs/clause" },
                 "wordings": {
                   "$ref": "#/$defs/wordings",
                   "description": "Where a square's step reads differently by what holds where its fact is made, each `when` read in the conclusion's scope."

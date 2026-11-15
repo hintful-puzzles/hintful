@@ -3,21 +3,14 @@
  * [`dominosa.description.yaml`](./dominosa.description.yaml) states, one at a
  * time, which `engine/described-edge-hint.ts` walks. This file turns a firing
  * into its steps (a domino placed, or a barrier on each spot it rules out that
- * the player has not already drawn) and says which sentence a step speaks; the
- * words are [`hint-text.ts`](./hint-text.ts)'s.
+ * the player has not already drawn); the words are the description's.
  */
 
-import {
-  describedEdgeHint,
-  type EdgeSpoken,
-  type Fired,
-} from "../../engine/described-edge-hint.ts";
+import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
-import { SAYS_KINDS } from "./dominosa.compiled.ts";
-import { say } from "./hint-text.ts";
+import { SAYS_KINDS, STATED } from "./dominosa.compiled.ts";
+import { SPOT, type Spot } from "./kinds.ts";
 import {
   answerOf,
   type DominosaSays,
@@ -47,58 +40,12 @@ export interface DominosaHint {
   kind: "place" | "barrier";
 }
 
-/** What a step's sentence is told besides the firing's own: the spot it
- * decides (its squares, lower first), the numbers they show, and which of the
- * firing's steps it is (a later one does not repeat the reason). */
-interface Spot {
-  leg: number;
-  spot: readonly [number, number];
+/** What a leg's words are told of the spot it decides: its squares (lower
+ * first) and the numbers they show, which make the domino the words name. */
+interface Leg {
+  spot: Spot;
   numbers: readonly [number, number];
 }
-
-type Spoken<K extends keyof DominosaSays> = EdgeSpoken<DominosaSays[K]>;
-
-const pointsOf = (squares: readonly number[], w: number): Point[] =>
-  squares.map((i) => ({ x: i % w, y: Math.floor(i / w) }));
-
-/** A placing technique's sentence. */
-const placing =
-  (kind: "onlySpot" | "squareOnly") =>
-  (s: { outline: readonly number[] }, { spot, numbers }: Spot, { w }: DominosaState) =>
-    say.place(kind, numbers[0], numbers[1], spot, pointsOf(s.outline, w));
-
-/** A technique that rules spots out: the first spot's sentence gives the
- * reason, and each later one points back at the evidence. */
-const ruling =
-  (kind: Exclude<DominosaRung, "onlySpot" | "squareOnly">) =>
-  (
-    s: { outline: readonly number[] },
-    { leg, spot, numbers }: Spot,
-    { w }: DominosaState,
-  ) => {
-    const evidence = pointsOf(s.outline, w);
-    return leg > 0
-      ? say.barrierNext(spot, evidence)
-      : say.barrier(kind, numbers[0], numbers[1], spot, evidence);
-  };
-
-const sentences: {
-  [K in keyof DominosaSays]: (
-    spoken: Spoken<K>,
-    spot: Spot,
-    state: DominosaState,
-  ) => Sentence;
-} = {
-  onlySpot: placing("onlySpot"),
-  squareOnly: placing("squareOnly"),
-  squareSingleDomino: ruling("squareSingleDomino"),
-  mustOverlap: ruling("mustOverlap"),
-  localDuplicate: ruling("localDuplicate"),
-  localDuplicate2: ruling("localDuplicate2"),
-  parity: ruling("parity"),
-  set: ruling("set"),
-  setDoubles: ruling("setDoubles"),
-};
 
 const edgeKey = (a: number, b: number): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
 
@@ -107,10 +54,10 @@ const edgeKey = (a: number, b: number): string => (a < b ? `${a}-${b}` : `${b}-$
 function stepOf(
   fired: Fired<DominosaSays[keyof DominosaSays], DominosaWalkContext>,
   state: DominosaState,
-): { move: DominosaMove; highlights: DominosaHint; marked: Spot }[] {
+): { move: DominosaMove; highlights: DominosaHint; marked: Leg }[] {
   const { sp, seen } = fired.ctx;
   const { facts } = fired.taken;
-  const steps: { move: DominosaMove; highlights: DominosaHint; marked: Spot }[] = [];
+  const steps: { move: DominosaMove; highlights: DominosaHint; marked: Leg }[] = [];
   for (let i = 0; i < facts.length; i += 3) {
     const [a, b] = endsOf(sp, facts[i + 1]);
     const numbers = [state.numbers[a], state.numbers[b]] as const;
@@ -118,7 +65,7 @@ function stepOf(
       steps.push({
         move: { type: "domino", d1: a, d2: b },
         highlights: { kind: "place" },
-        marked: { leg: 0, spot: [a, b], numbers },
+        marked: { spot: [a, b], numbers },
       });
       continue;
     }
@@ -128,7 +75,7 @@ function stepOf(
     steps.push({
       move: { type: "edge", d1: a, d2: b },
       highlights: { kind: "barrier" },
-      marked: { leg: steps.length, spot: [a, b], numbers },
+      marked: { spot: [a, b], numbers },
     });
   }
   return steps;
@@ -138,10 +85,11 @@ const dominosaPlan = describedEdgeHint<
   DominosaState,
   DominosaMove,
   DominosaHint,
-  Spot,
+  Leg,
   DominosaWalkContext,
   DominosaSays,
-  DominosaRung
+  DominosaRung,
+  Spot
 >({
   name: "dominosa hint",
   walk: (state) => {
@@ -164,7 +112,12 @@ const dominosaPlan = describedEdgeHint<
     return squares;
   },
   step: stepOf,
-  say: sentences,
+  stated: STATED,
+  ringKind: SPOT,
+  ring: ({ spot }) => [spot],
+  // The domino a leg decides, lower number first.
+  terms: ({ numbers: [a, b] }) => ({ lo: Math.min(a, b), hi: Math.max(a, b) }),
+  width: (state) => state.w,
 });
 
 /** The deduction from the player's dominoes to the end. A board with several

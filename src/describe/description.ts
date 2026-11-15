@@ -273,6 +273,8 @@ export interface StatedClauses {
   /** A later leg's reasoning, said after its move in place of `look` and
    * `follows`: its `again` relation. */
   again?: string;
+  /** What a later leg says as its move, where it differs from `move`. */
+  later?: string;
 }
 
 /** Clauses, and the wordings tried before them in order, the first whose
@@ -768,13 +770,14 @@ export function parseTechnique(
 
 /** The clauses a part of a `says` states; `null` where it states none. */
 function clausesOf(part: StatedClauses): StatedClauses | null {
-  const { look, follows, move, effect, again } = part;
+  const { look, follows, move, effect, again, later } = part;
   if (
     look === undefined &&
     follows === undefined &&
     move === undefined &&
     effect === undefined &&
-    again === undefined
+    again === undefined &&
+    later === undefined
   )
     return null;
   return {
@@ -783,6 +786,7 @@ function clausesOf(part: StatedClauses): StatedClauses | null {
     ...(move === undefined ? {} : { move }),
     ...(effect === undefined ? {} : { effect }),
     ...(again === undefined ? {} : { again }),
+    ...(later === undefined ? {} : { later }),
   };
 }
 

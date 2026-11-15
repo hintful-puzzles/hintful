@@ -1160,7 +1160,13 @@ declares a flag term `multi` (`multi: "false" # supplied`) has it set to whether
 the firing sets several edges, which `{if multi: …}` says (Palisade); a
 wording's `when` cannot read it, for the compiled module picks the wording
 before the engine knows. `{derived outline: words}` is a reference whose words
-claim what the board does not show, which `Narration.depth` counts.
+claim what the board does not show, which `Narration.depth` counts. A kind
+that states `again` and no game `later` hook says a later leg's move as its
+`later` clause where it has one, else its `move` (Dominosa: "this spot can't
+hold a domino either"). **A term a leg supplies** is declared as a placeholder
+with `# supplied` and given by the game's `terms(marked, state)`: Dominosa's
+domino (`lo`, `hi`) differs by the spot a leg decides, which no firing's
+binding holds.
 
 **A technique whose words need what held says `witness: true`**: the
 compiler then reads, on the same marks as the terms and only on a hint's

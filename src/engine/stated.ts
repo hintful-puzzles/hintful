@@ -42,6 +42,9 @@ export interface Clauses {
    * `follows`: the reasoning its first leg gave, as this square adds to it (an
    * `again` relation). A first leg ignores it. */
   readonly again?: string;
+  /** What a later leg says as its move in place of `move`, where it differs
+   * ("can't hold a domino either"); said with the `again` relation. */
+  readonly later?: string;
 }
 
 /** The role each slot role is drawn in: `strand` is outlined apart. */
@@ -346,12 +349,14 @@ export function statedParts<E, R = E>(
   move?: Narration;
   effect?: Narration;
   again?: Narration;
+  later?: Narration;
 } {
   // The ring's elements are of the kind `ringKind` names, which only a ring
   // reference reads.
   const cx = context as unknown as StatedContext<E>;
   return {
     ...(c.again === undefined ? {} : { again: render(c.again, cx) }),
+    ...(c.later === undefined ? {} : { later: render(c.later, cx) }),
     ...(c.look === undefined ? {} : { look: render(c.look, cx).capitalized() }),
     ...(c.follows === undefined ? {} : { follows: render(c.follows, cx) }),
     ...(c.move === undefined ? {} : { move: render(c.move, cx) }),
@@ -399,12 +404,15 @@ function statedOnce<E>(
   closing: Narration | null,
   relation: Relation,
 ): Sentence {
-  const { effect, again, ...parts } = statedParts(c, cx);
+  const { effect, again, later, ...parts } = statedParts(c, cx);
   const move = parts.move ?? closing;
   if (move === null)
     throw new Error("stated clause: no move, and no closing from the fact");
   if (cx.later === true && again !== undefined)
-    return sentence({ move, relation: { kind: "again", basis: again } });
+    return sentence({
+      move: later ?? move,
+      relation: { kind: "again", basis: again },
+    });
   return sentence({
     ...parts,
     move,

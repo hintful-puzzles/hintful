@@ -231,6 +231,20 @@ describe("a stated clause", () => {
     );
   });
 
+  it("says a later leg's `later` as its move in place of `move`, and a first leg ignores it", () => {
+    const clauses = {
+      look: "{outline} is shaded",
+      move: "{ring} must be {n}",
+      again: "{outline} is shaded again",
+      later: "{ring} must be {n} too",
+    };
+    const first = statedSentence(clauses, cx({ later: false })).text;
+    expect(first).toContain("must be v3.");
+    expect(first).not.toContain("too");
+    const later = statedSentence(clauses, cx({ later: true })).text;
+    expect(later).toContain("must be v3 too");
+  });
+
   it("names the squares a step places by value, and those its placing techniques follow with, and drops a `has` with none", () => {
     const placing = (n: number): Point[] => (n === 1 ? [at(5)] : [at(6), at(7)]);
     const say = (consequences: Point[]): string =>

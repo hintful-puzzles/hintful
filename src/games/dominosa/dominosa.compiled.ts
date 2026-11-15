@@ -36,6 +36,20 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["onlySpot","squareOnly","squareSingleDomino","mustOverlap","localDuplicate","localDuplicate2","parity","set","setDoubles"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "onlySpot": {"step":[{"look":"The {lo}–{hi} domino has only one spot left where it fits","move":"it must go on {ring: the ringed spot}"}]},
+  "squareOnly": {"step":[{"look":"{outline} has only one neighbor left to pair with","move":"the {lo}–{hi} domino must go on {ring: the ringed spot}"}]},
+  "squareSingleDomino": {"step":[{"look":"{outline} can only be part of the {lo}–{hi} domino","move":"{lo}–{hi} can't sit on {ring: the ringed spot} instead","again":"the same reason about {outline}","later":"{ring: this spot} can't hold a domino either"}]},
+  "mustOverlap": {"step":[{"look":"{outline: Every remaining spot for the outlined domino} overlaps {ring: this pair}","move":"no other domino can go on it","again":"the same reason about {outline}","later":"{ring: this spot} can't hold a domino either"}]},
+  "localDuplicate": {"step":[{"look":"{a lo}–{hi} domino on {ring: the ringed spot} would force another at {outline}, but each domino is used once","move":"it can't","again":"the same reason about {outline}","later":"{ring: this spot} can't hold a domino either"}]},
+  "localDuplicate2": {"step":[{"look":"A domino on {ring: the ringed spot} would leave {outline: both outlined squares} needing the same domino, a duplicate","move":"it can't","again":"the same reason about {outline}","later":"{ring: this spot} can't hold a domino either"}]},
+  "parity": {"step":[{"look":"A domino on {ring: the ringed spot} would split the empty squares into odd-sized regions dominoes can't fill","move":"it can't","again":"the same reason","later":"{ring: this spot} can't hold a domino either"}]},
+  "set": {"step":[{"look":"{outline} can only hold one set of dominoes, which uses the {lo}–{hi}","move":"{lo}–{hi} can't sit on {ring: the ringed spot} as well","again":"the same reason about {outline}","later":"{ring: this spot} can't hold a domino either"}]},
+  "setDoubles": {"step":[{"look":"{outline} can only hold one set of dominoes, which uses the {lo}–{hi}","move":"{lo}–{hi} can't sit on {ring: the ringed spot} as well","again":"the same reason about {outline}","later":"{ring: this spot} can't hold a domino either"}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "placed";
 
@@ -309,7 +323,7 @@ export interface OnlySpotBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface OnlySpotSays {
-  terms: {  };
+  terms: { lo: number; hi: number; };
   marks: {  };
 }
 
@@ -375,7 +389,7 @@ export function onlySpot(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlySpot
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: {  }, marks: {  } };
+              const _says = { terms: { lo: 0, hi: 0 }, marks: {  } };
               if (!fire({ a: v_a, b: v_b, P: v_P.slice(), e: v_e }, facts, _says)) return 1;
             }
           }
@@ -393,7 +407,7 @@ export interface SquareOnlyBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SquareOnlySays {
-  terms: {  };
+  terms: { lo: number; hi: number; };
   marks: { outline: readonly number[]; };
 }
 
@@ -478,7 +492,7 @@ export function squareOnly(b: Marks, sp: GridSpace, fire: Fire<SquareOnlyBinding
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: {  }, marks: { outline: setOf(v_c).slice() } };
+          const _says = { terms: { lo: 0, hi: 0 }, marks: { outline: setOf(v_c).slice() } };
           if (!fire({ c: v_c, S: v_S.slice() }, facts, _says)) return 1;
         }
       }
@@ -495,7 +509,7 @@ export interface SquareSingleDominoBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SquareSingleDominoSays {
-  terms: {  };
+  terms: { lo: number; hi: number; };
   marks: { outline: readonly number[]; };
 }
 
@@ -652,7 +666,7 @@ export function squareSingleDomino(b: Marks, sp: GridSpace, cl: Dealt, fire: Fir
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: {  }, marks: { outline: setOf(v_c).slice() } };
+            const _says = { terms: { lo: 0, hi: 0 }, marks: { outline: setOf(v_c).slice() } };
             if (!fire({ c: v_c, S: v_S.slice(), s: v_s }, facts, _says)) return 1;
           }
         }
@@ -671,7 +685,7 @@ export interface MustOverlapBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface MustOverlapSays {
-  terms: {  };
+  terms: { lo: number; hi: number; };
   marks: { outline: readonly number[]; };
 }
 
@@ -789,7 +803,7 @@ export function mustOverlap(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<MustO
                 }
               }
             }
-            const _says = { terms: {  }, marks: { outline: _g61.slice() } };
+            const _says = { terms: { lo: 0, hi: 0 }, marks: { outline: _g61.slice() } };
             if (!fire({ a: v_a, b: v_b, P: v_P.slice(), e: v_e }, facts, _says)) return 1;
           }
         }
@@ -808,7 +822,7 @@ export interface LocalDuplicateBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LocalDuplicateSays {
-  terms: {  };
+  terms: { lo: number; hi: number; };
   marks: { outline: readonly number[]; };
 }
 
@@ -949,7 +963,7 @@ export function localDuplicate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Lo
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: {  }, marks: { outline: setOf(v_y).slice() } };
+              const _says = { terms: { lo: 0, hi: 0 }, marks: { outline: setOf(v_y).slice() } };
               if (!fire({ p: v_p, x: v_x, y: v_y, q: v_q }, facts, _says)) return 1;
             }
           }
@@ -975,7 +989,7 @@ export interface LocalDuplicate2Binding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LocalDuplicate2Says {
-  terms: {  };
+  terms: { lo: number; hi: number; };
   marks: { outline: readonly number[]; };
 }
 
@@ -1286,7 +1300,7 @@ export function localDuplicate2(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<L
                       if (changed || facts.length > 0) {
                         fired = 1;
                         if (fire !== null) {
-                          const _says = { terms: {  }, marks: { outline: setOf(v_y, v_z).slice() } };
+                          const _says = { terms: { lo: 0, hi: 0 }, marks: { outline: setOf(v_y, v_z).slice() } };
                           if (!fire({ p: v_p, x: v_x, y: v_y, q: v_q, R: v_R.slice(), d: v_d, x2: v_x2, z: v_z, q2: v_q2, S: v_S.slice() }, facts, _says)) return 1;
                         }
                       }
@@ -1312,7 +1326,7 @@ export interface ParityBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ParitySays {
-  terms: {  };
+  terms: { lo: number; hi: number; };
   marks: {  };
 }
 
@@ -1422,7 +1436,7 @@ export function parity(b: Marks, sp: GridSpace, fire: Fire<ParityBinding, Parity
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: {  }, marks: {  } };
+          const _says = { terms: { lo: 0, hi: 0 }, marks: {  } };
           if (!fire({ P: v_P.slice(), p: v_p, Q: v_Q.slice(), A: v_A.slice() }, facts, _says)) return 1;
         }
       }
@@ -1441,7 +1455,7 @@ export interface SetBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SetSays {
-  terms: {  };
+  terms: { lo: number; hi: number; };
   marks: { outline: readonly number[]; };
 }
 
@@ -1643,7 +1657,7 @@ export function set(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetBinding, S
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: {  }, marks: { outline: v_T.slice() } };
+              const _says = { terms: { lo: 0, hi: 0 }, marks: { outline: v_T.slice() } };
               if (!fire({ a: v_a, S: v_S.slice(), U: v_U.slice(), T: v_T.slice(), O: v_O }, facts, _says)) return 1;
             }
           }
@@ -1664,7 +1678,7 @@ export interface SetDoublesBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SetDoublesSays {
-  terms: {  };
+  terms: { lo: number; hi: number; };
   marks: { outline: readonly number[]; };
 }
 
@@ -1895,7 +1909,7 @@ export function setDoubles(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SetDou
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: {  }, marks: { outline: v_T.slice() } };
+              const _says = { terms: { lo: 0, hi: 0 }, marks: { outline: v_T.slice() } };
               if (!fire({ a: v_a, S: v_S.slice(), U: v_U.slice(), T: v_T.slice(), O: v_O }, facts, _says)) return 1;
             }
           }
