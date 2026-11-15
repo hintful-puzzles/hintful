@@ -21,6 +21,76 @@ export type LadderId = "facing" | "bounds" | "latin.hiddenSingle" | "latin.singl
 /** The game's nouns, which the engine's hint words read. */
 export const WORDS = {"cell":"cell"} as const;
 
+/** What the planner supplies for each kind of step it emits, over the
+ * elements `E` it marks: its terms, and the elements marked by role and sort. */
+export interface StepsById<E> {
+  fullLine: { ring: "cell"; terms: { v: number; n: number }; marks: { outline: { clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  tallestNearest: { ring: "cell"; terms: { v: number; n: number }; marks: { outline: { clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  facing: { ring: "cell"; terms: { n: number }; marks: { outline: { clues: readonly E[] }; stripes: { line: readonly E[] } } };
+  lineFull: { ring: "cell"; terms: { v: number; seen: number; n: number }; marks: { outline: { clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  lowerBound: { ring: "cell"; terms: { v: number; n: number }; marks: { outline: { clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  arrangement: { ring: "cell"; terms: { v: number; n: number }; marks: { outline: { clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  hiddenSingle: { ring: "cell"; terms: { col: boolean; n: number }; marks: { stripes: { line: readonly E[] } } };
+  set: { ring: "cell"; terms: { n: number }; marks: { outline: { set: readonly E[] } } };
+}
+
+/** Each kind of step the planner emits: its clauses by wording, and the
+ * condition under which each wording is the one said (`null`: always). */
+export const STEPS: {
+  readonly [K in keyof StepsById<unknown>]: {
+    readonly ring: StepsById<unknown>[K]["ring"];
+    readonly clauses: readonly { look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string }[];
+    readonly when: readonly (
+      | null
+      | ((
+          t: StepsById<unknown>[K]["terms"],
+          m: StepsById<unknown>[K]["marks"],
+        ) => boolean)
+    )[];
+  };
+} = {
+  fullLine: {
+    ring: "cell",
+    clauses: [{"move":"{ring} must be {n}","look":"{outline clue: Clue {v}} sees every tower in {stripes line: this line}","follows":"heights must climb 1, 2, … from the clue","again":"{stripes line: the same line} from {outline clue: clue {v}}"}],
+    when: [null],
+  },
+  tallestNearest: {
+    ring: "cell",
+    clauses: [{"look":"{outline clue: Clue {v}} sees one tower in {stripes line: its line}","follows":"the tallest must stand next to it","move":"{ring} must be {n}"}],
+    when: [null],
+  },
+  facing: {
+    ring: "cell",
+    clauses: [{"look":"{outline clues: These facing clues} sum to one more than the grid size","follows":"{derived stripes line: their line}'s tallest is pinned","move":"{ring} must be {n}"}],
+    when: [null],
+  },
+  lineFull: {
+    ring: "cell",
+    clauses: [{"look":"{outline clue: Clue {v}} already sees {seen} {seen: tower | towers} in {derived stripes line: the line}, so the cell nearest it must top all between; height {n} can't"}],
+    when: [null],
+  },
+  lowerBound: {
+    ring: "cell",
+    clauses: [{"look":"{outline clue: Clue {v}} sees exactly {v} towers along {derived stripes line: its line}; height {n} so near it would hide too many"}],
+    when: [null],
+  },
+  arrangement: {
+    ring: "cell",
+    clauses: [{"look":"No way for {outline clue: clue {v}} to show exactly {v} towers along {derived stripes line: its line} puts height {n} in {ring}"}],
+    when: [null],
+  },
+  hiddenSingle: {
+    ring: "cell",
+    clauses: [{"look":"No other cell in {stripes line: this {if col: column | row}} can be height {n}","move":"{ring} must be {n}"}],
+    when: [null],
+  },
+  set: {
+    ring: "cell",
+    clauses: [{"look":"{outline set} already account for a fixed set of heights that includes {n}"}],
+    when: [null],
+  },
+};
+
 /** What a firing of each technique that says anything says, by id. */
 export interface SaysById {
   facing: FacingSays;

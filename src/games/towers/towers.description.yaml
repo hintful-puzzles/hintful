@@ -183,3 +183,76 @@ techniques:
   - { use: latin.set, tier: Normal, rung: set }
   - { use: latin.fish, tier: Tricky, rung: set }
   - { use: latin.wing, tier: Tricky, rung: wing }
+# The steps the planner emits that no firing is: the clue sentences the walk
+# tells in its own words, the hidden single and the naked set. A clue is
+# outlined in its slot beside the grid and the line it sees along is striped
+# through both clue slots; `v` is the clue's number and `n` the height the
+# step decides or strikes. A line the clue's value alone does not decide is
+# `derived`: the sentence claims something of every arrangement of it.
+steps:
+  # The clue sees every tower, so heights climb from it. A later leg of the
+  # journey does not restate that, only the line it is still working along.
+  fullLine:
+    ring: cell
+    terms: { v: number, n: number }
+    marks: { outline: [clue], stripes: [line] }
+    move: "{ring} must be {n}"
+    wordings:
+      - again: "{stripes line: the same line} from {outline clue: clue {v}}"
+        look: "{outline clue: Clue {v}} sees every tower in {stripes line: this line}"
+        follows: "heights must climb 1, 2, … from the clue"
+  tallestNearest:
+    ring: cell
+    terms: { v: number, n: number }
+    marks: { outline: [clue], stripes: [line] }
+    look: "{outline clue: Clue {v}} sees one tower in {stripes line: its line}"
+    follows: "the tallest must stand next to it"
+    move: "{ring} must be {n}"
+  # Two clues at the two ends of one line.
+  facing:
+    ring: cell
+    terms: { n: number }
+    marks: { outline: [clues], stripes: [line] }
+    look: "{outline clues: These facing clues} sum to one more than the grid size"
+    follows: "{derived stripes line: their line}'s tallest is pinned"
+    move: "{ring} must be {n}"
+  # The strike steps below are premises, which the walk concludes with the move
+  # it makes. The clue's other towers are already in sight deeper in, so the
+  # one it still needs is the nearest cell, which must stand taller than every
+  # tower between them: `seen` of them are.
+  lineFull:
+    ring: cell
+    terms: { v: number, seen: number, n: number }
+    marks: { outline: [clue], stripes: [line] }
+    look: >-
+      {outline clue: Clue {v}} already sees {seen} {seen: tower | towers} in
+      {derived stripes line: the line}, so the cell nearest it must top all
+      between; height {n} can't
+  lowerBound:
+    ring: cell
+    terms: { v: number, n: number }
+    marks: { outline: [clue], stripes: [line] }
+    look: >-
+      {outline clue: Clue {v}} sees exactly {v} towers along {derived stripes
+      line: its line}; height {n} so near it would hide too many
+  arrangement:
+    ring: cell
+    terms: { v: number, n: number }
+    marks: { outline: [clue], stripes: [line] }
+    look: >-
+      No way for {outline clue: clue {v}} to show exactly {v} towers along
+      {derived stripes line: its line} puts height {n} in {ring}
+  # The height is qualified in the single's sentence and bare where the engine's
+  # sentences say it (`TOWERS_VOCAB`), since the qualified form runs past the
+  # narration limit there.
+  hiddenSingle:
+    ring: cell
+    terms: { col: flag, n: number }
+    marks: { stripes: [line] }
+    look: "No other cell in {stripes line: this {if col: column | row}} can be height {n}"
+    move: "{ring} must be {n}"
+  set:
+    ring: cell
+    terms: { n: number }
+    marks: { outline: [set] }
+    look: "{outline set} already account for a fixed set of heights that includes {n}"

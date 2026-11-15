@@ -91,7 +91,6 @@ import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTowersDesc } from "./generator.ts";
-import { type ClueSight, say, TOWERS_VOCAB } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -113,6 +112,7 @@ import {
   solveTowers,
   towersLadder,
 } from "./solver.ts";
+import { type ClueSight, say, TOWERS_VOCAB } from "./speak.ts";
 import {
   cloneState,
   clueIndex,
@@ -411,7 +411,7 @@ function findMistakes(state: TowersState): readonly TowersMistake[] {
  * conclusion (docs/hints.md § "Writing the narration"). `n` is the placed height for a placement;
  * `continues` (a journey continuation leg) gets a terser line that doesn't
  * restate the premise the journey's first leg already gave. The words are
- * [`hint-text.ts`](./hint-text.ts)'s. */
+ * the description's, spoken by [`speak.ts`](./speak.ts). */
 function narrate(reason: HintReason, m: Mark, w: number, continues = false): Sentence {
   const n = m.n;
   switch (reason.kind) {
@@ -463,15 +463,11 @@ function premise(reason: HintReason, marks: readonly Mark[], w: number): Premise
       return { premise: say.lowerBound(sight(reason, w), n) };
     case "arrangement":
       return { premise: say.arrangement(sight(reason, w), n, marks[0]) };
-    case "dup":
-      return {
-        premise: say.dup({ x: reason.px, y: reason.py }, reason.n),
-        where: say.dupWhere,
-      };
     case "set":
       return "lines" in reason
         ? latinPremise(reason, marks, TOWERS_VOCAB)
         : { premise: say.set(setCells(reason), n) };
+    case "dup":
     case "wing":
       return latinPremise(reason, marks, TOWERS_VOCAB);
     default:
