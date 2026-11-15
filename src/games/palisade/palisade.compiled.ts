@@ -34,6 +34,18 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["cluesVersusRegionSize","numberExhausted","notTooBig","notTooSmall","noDanglingEdges","equivalentEdges","inside"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "cluesVersusRegionSize": {"step":[{"again":"{outline: the same outlined clue | the same outlined clues}","look":"Open as each 3's only gap, {ring: the edge} between {derived outline: these 3s} would seal 2 squares where regions hold {size}","move":"it must be a wall"},{"again":"{outline: the same outlined clue | the same outlined clues}","look":"{derived outline: this clue | these clues} would need a shared region of at least {bound} squares","move":"{ring: the edge between them} must be a wall"}]},
+  "numberExhausted": {"step":[{"again":"{outline: clue {clue}}","look":"{outline: Clue {clue}} allows no walls","move":"{if multi: none of {ring: its remaining edges} can be walls | {ring: this edge} can't be one}"},{"again":"{outline: clue {clue}}","look":"{outline: Clue {clue}} {if multi: reaches its count only if {ring: every ringed edge} is a wall | needs all its remaining edges to be walls}","move":"{if multi: draw them all | {ring: the ringed edge} must be a wall}"},{"again":"{outline: clue {clue}}","look":"{outline: Clue {clue}} already has all its walls","move":"{if multi: {ring: its remaining edges} can't be walls | {ring: this edge} can't be one}"}]},
+  "notTooBig": {"step":[{"look":"Joining {outline: these two regions} would make {joined} squares","move":"{ring: this edge} must be a wall","again":"{outline: the same outlined region | the same outlined regions}"}]},
+  "notTooSmall": {"step":[{"look":"{stripes: this region} has {have} of its {size} squares and {if multi: only one region left to grow into | just one way left to grow}","move":"{if multi: {ring: these edges} can't be walls | {ring: this edge} can't be a wall}","again":"{stripes: the same striped region}"}]},
+  "noDanglingEdges": {"step":[{"look":"A wall must continue at {outline: this corner}","move":"{ring: this edge} must be a wall","again":"{outline: the same outlined corner}"}]},
+  "equivalentEdges": {"step":[{"look":"{if multi: {ring: Both ringed edges} border {derived stripes: the same region} and share a fate; {if wall: leaving both open leaves clue {clue} short | walling both would exceed clue {clue}} | {ring: this edge} borders {derived stripes: a region} clue {clue} {if wall: can't fully open | can't wall off}}","move":"{if multi: {if wall: both must be walls | neither can be a wall} | {if wall: it must be a wall | it can't be a wall}}","again":"{stripes: the same striped region}"}]},
+  "inside": {"step":[{"look":"{stripes: this region} already holds the squares either side of {ring: this edge}","move":"it can't be a wall","again":"{stripes: the same striped region}"}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -156,8 +168,10 @@ export interface CluesVersusRegionSizeBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface CluesVersusRegionSizeSays {
-  terms: { anchor: readonly number[]; c: number; d: number; size: number; };
+  terms: { anchor: readonly number[]; c: number; d: number; size: number; bound: number; };
   marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const cluesVersusRegionSizeFacts: number[] = [];
@@ -192,7 +206,13 @@ export function cluesVersusRegionSize(b: Marks, sp: GridSpace, cl: Dealt, fire: 
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { anchor: setOf(v_a).slice(), c: _h8, d: v_d, size: cl.k }, marks: { outline: setOf(v_a, v_b).slice() } };
+            const _sw_anchor = setOf(v_a).slice();
+            const _sw_c = _h8;
+            const _sw_d = v_d;
+            const _sw_size = cl.k;
+            const _sw_bound = (_h9 - v_d);
+            const _sw_outline = setOf(v_a, v_b).slice();
+            const _says = { terms: { anchor: _sw_anchor, c: _sw_c, d: _sw_d, size: _sw_size, bound: _sw_bound }, marks: { outline: _sw_outline }, wording: (((_sw_c === 3) && (_sw_d === 3)) ? 0 : 1) };
             if (!fire({ q: v_q, a: v_a, b: v_b, d: v_d }, facts, _says)) return 1;
           }
         }
@@ -211,8 +231,10 @@ export interface NumberExhaustedBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface NumberExhaustedSays {
-  terms: { anchor: readonly number[]; clue: number; };
+  terms: { anchor: readonly number[]; clue: number; wall: boolean; multi: boolean; };
   marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const numberExhaustedFacts: number[] = [];
@@ -315,7 +337,12 @@ export function numberExhausted(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<N
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { anchor: setOf(v_c).slice(), clue: cl.number.v[v_q] }, marks: { outline: setOf(v_c).slice() } };
+          const _sw_anchor = setOf(v_c).slice();
+          const _sw_clue = cl.number.v[v_q];
+          const _sw_wall = (v_n < cl.number.v[v_q]);
+          const _sw_multi = false;
+          const _sw_outline = setOf(v_c).slice();
+          const _says = { terms: { anchor: _sw_anchor, clue: _sw_clue, wall: _sw_wall, multi: _sw_multi }, marks: { outline: _sw_outline }, wording: ((_sw_clue === 0) ? 0 : _sw_wall ? 1 : 2) };
           if (!fire({ q: v_q, c: v_c, U: v_U.slice(), n: v_n }, facts, _says)) return 1;
         }
       }
@@ -418,7 +445,7 @@ export interface NotTooSmallBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface NotTooSmallSays {
-  terms: { anchor: readonly number[]; have: number; size: number; };
+  terms: { anchor: readonly number[]; have: number; size: number; multi: boolean; };
   marks: { stripes: readonly number[]; reads: readonly number[]; };
 }
 
@@ -570,7 +597,7 @@ export function notTooSmall(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<NotTo
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { anchor: v_A.slice(), have: _h42, size: cl.k }, marks: { stripes: v_A.slice(), reads: v_A.slice() } };
+          const _says = { terms: { anchor: v_A.slice(), have: _h42, size: cl.k, multi: false }, marks: { stripes: v_A.slice(), reads: v_A.slice() } };
           if (!fire({ O: v_O.slice(), c: v_c, A: v_A.slice(), S: v_S.slice() }, facts, _says)) return 1;
         }
       }
@@ -722,7 +749,7 @@ export interface EquivalentEdgesBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface EquivalentEdgesSays {
-  terms: { anchor: readonly number[]; clue: number; };
+  terms: { anchor: readonly number[]; clue: number; wall: boolean; multi: boolean; };
   marks: { stripes: readonly number[]; reads: readonly number[]; };
 }
 
@@ -848,7 +875,7 @@ export function equivalentEdges(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<E
             if (changed || facts.length > 0) {
               fired = 1;
               if (fire !== null) {
-                const _says = { terms: { anchor: setOf(v_c).slice(), clue: _h60 }, marks: { stripes: v_R.slice(), reads: _h70.slice() } };
+                const _says = { terms: { anchor: setOf(v_c).slice(), clue: _h60, wall: ((walls(b, sp, v_c) + 2) <= _h60), multi: false }, marks: { stripes: v_R.slice(), reads: _h70.slice() } };
                 if (!fire({ O: v_O.slice(), q: v_q, c: v_c, y: v_y, R: v_R.slice(), z: v_z }, facts, _says)) return 1;
               }
             }

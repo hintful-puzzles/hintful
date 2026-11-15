@@ -260,7 +260,12 @@ export function describedEdgeHint<
               outline: (says.marks.outline ?? []).map(pointOf),
               stripes: (says.marks.stripes ?? []).map(pointOf),
             },
-            terms: says.terms as Record<string, unknown>,
+            terms: {
+              ...(says.terms as Record<string, unknown>),
+              // A technique that declares `multi` is told whether its firing
+              // sets several edges, which a leg's words differ by.
+              ...("multi" in says.terms ? { multi: legs.length > 1 } : {}),
+            },
             value: (n) => spec.value?.(n, state) ?? String(n),
           };
           const basis = leg > 0 ? statedParts(clauses, cx).again : undefined;

@@ -1155,7 +1155,12 @@ edges), `ring` (what a leg decides), `width` and `value`; a kind that states
 `again` has a later leg say it as the basis of the game's own `later` sentence
 (`edgeContinuation`), so a kind states its first leg's `move` only. `{a term}`
 says a value with its article ("an A") and `{numeral term}` a plain count where
-`{term}` is a value the board draws another way (a letter).
+`{term}` is a value the board draws another way (a letter). A technique that
+declares a flag term `multi` (`multi: "false" # supplied`) has it set to whether
+the firing sets several edges, which `{if multi: …}` says (Palisade); a
+wording's `when` cannot read it, for the compiled module picks the wording
+before the engine knows. `{derived outline: words}` is a reference whose words
+claim what the board does not show, which `Narration.depth` counts.
 
 **A technique whose words need what held says `witness: true`**: the
 compiler then reads, on the same marks as the terms and only on a hint's

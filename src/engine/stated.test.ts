@@ -335,6 +335,21 @@ describe("a stated clause", () => {
     );
   });
 
+  it("counts a derived reference as a fact the board does not show", () => {
+    const parts = statedParts(
+      { look: "{derived stripes: the same region} and {outline} agree" },
+      cx(),
+    );
+    expect(parts.look?.text).toBe("The same region and the outlined square agree");
+    expect(parts.look?.depth).toBe(1);
+    expect(
+      statedParts({ look: "{stripes: it} and {outline} agree" }, cx()).look?.depth,
+    ).toBe(0);
+    expect(() => statedParts({ look: "{derived n} is it" }, cx())).toThrow(
+      /no derived reference/,
+    );
+  });
+
   it("refuses literal words that only a reference may say", () => {
     expect(() => statedParts({ look: "this square is full" }, cx())).toThrow();
   });

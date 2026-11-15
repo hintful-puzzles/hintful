@@ -121,8 +121,25 @@ techniques:
       and (8 - v(q) - d > k or (v(q) = 3 and d = 3 and k != 2))
     conclude: "place(edge(a, b), 1)"
     says:
-      terms: { anchor: "{a}", c: "v(q)", d: d, size: k }
+      terms: { anchor: "{a}", c: "v(q)", d: d, size: k, bound: "8 - v(q) - d" }
       marks: { outline: "{a, b}" }
+      # Two 3s are the case where the bound is exact rather than a minimum:
+      # each keeps one side open and it has to be the shared one, so the
+      # region would be those two squares and nothing else, and the sentence
+      # shows that count. Elsewhere the bound is left to the outlined clues,
+      # which keeps the sentence short.
+      wordings:
+        - when: "c = 3 and d = 3"
+          look: >-
+            Open as each 3's only gap, {ring: the edge} between
+            {derived outline: these 3s} would seal 2 squares where regions
+            hold {size}
+          move: "it must be a wall"
+        - look: >-
+            {derived outline: this clue | these clues} would need a shared
+            region of at least {bound} squares
+          move: "{ring: the edge between them} must be a wall"
+      again: "{outline: the same outlined clue | the same outlined clues}"
   # A number with all its walls has no more: its other edges are open. One
   # that reaches its count only with every edge left a wall has them all.
   # One with more walls, or too few edges left, makes the marks inconsistent.
@@ -136,8 +153,31 @@ techniques:
       and (n = v(q) implies forall y in U: place(edge(c, y), 2))
       and (n < v(q) implies forall y in U: place(edge(c, y), 1))
     says:
-      terms: { anchor: "{c}", clue: "v(q)" }
+      terms:
+        anchor: "{c}"
+        clue: "v(q)"
+        # Whether the edges left are all walls, which is how the number is met.
+        wall: "n < v(q)"
+        # Whether the firing sets several edges, which the engine says.
+        multi: "false" # supplied
       marks: { outline: "{c}" }
+      wordings:
+        - when: "clue = 0"
+          look: "{outline: Clue {clue}} allows no walls"
+          move: >-
+            {if multi: none of {ring: its remaining edges} can be walls |
+            {ring: this edge} can't be one}
+        - when: "wall"
+          look: >-
+            {outline: Clue {clue}} {if multi: reaches its count only if
+            {ring: every ringed edge} is a wall | needs all its remaining edges
+            to be walls}
+          move: "{if multi: draw them all | {ring: the ringed edge} must be a wall}"
+        - look: "{outline: Clue {clue}} already has all its walls"
+          move: >-
+            {if multi: {ring: its remaining edges} can't be walls |
+            {ring: this edge} can't be one}
+      again: "{outline: clue {clue}}"
   # Two groups whose squares together outnumber a region are different
   # regions: wall the edge between them.
   - id: notTooBig
@@ -150,6 +190,9 @@ techniques:
     says:
       terms: { anchor: A, joined: "|A| + |B|", size: k }
       marks: { outline: A + B }
+      look: "Joining {outline: these two regions} would make {joined} squares"
+      move: "{ring: this edge} must be a wall"
+      again: "{outline: the same outlined region | the same outlined regions}"
   # A group short of k squares grows across an edge still to decide. Where
   # every such edge leads into one other group, it joins that group: every
   # edge between them is open. With no edge to grow across, or past k
@@ -165,8 +208,20 @@ techniques:
       (forall s in S: s in B) implies
       forall x in A, y in adj4(x) where y in B: place(edge(x, y), 2))
     says:
-      terms: { anchor: A, have: "|A|", size: k }
+      terms:
+        anchor: A
+        have: "|A|"
+        size: k
+        # Whether the firing sets several edges, which the engine says.
+        multi: "false" # supplied
       marks: { stripes: A, reads: A }
+      look: >-
+        {stripes: this region} has {have} of its {size} squares and
+        {if multi: only one region left to grow into | just one way left to grow}
+      move: >-
+        {if multi: {ring: these edges} can't be walls |
+        {ring: this edge} can't be a wall}
+      again: "{stripes: the same striped region}"
   # A wall cannot stop at a corner where four squares meet: of the four
   # edges there, never exactly one is a wall. With one wall and one edge
   # left, that edge is a wall.
@@ -182,6 +237,9 @@ techniques:
     says:
       terms: { anchor: C }
       marks: { outline: C }
+      look: "A wall must continue at {outline: this corner}"
+      move: "{ring: this edge} must be a wall"
+      again: "{outline: the same outlined corner}"
   # Two edges still to decide between a number's square and one group: the
   # square joins the group, both open, or is walled from it, both walls. So
   # where both walls would pass the number, both are open, and where both
@@ -198,8 +256,29 @@ techniques:
       and (walls(c) + 2 <= v(q) and opens(c) + 2 > 4 - v(q) implies
       place(edge(c, y), 1) and place(edge(c, z), 1))
     says:
-      terms: { anchor: "{c}", clue: "v(q)" }
+      terms:
+        anchor: "{c}"
+        clue: "v(q)"
+        # Whether the edges are walls (both open would leave the number short)
+        # or are open (both walls would pass it).
+        wall: "walls(c) + 2 <= v(q)"
+        # Whether the firing sets both edges, which the engine says.
+        multi: "false" # supplied
       marks: { stripes: R, reads: "{c} + R" }
+      # Both edges border one region, so the number's square is inside all of
+      # it or walled from all of it, and that is what makes the count force
+      # them. Sharing a fate holds of every way the board can be completed.
+      look: >-
+        {if multi: {ring: Both ringed edges} border
+        {derived stripes: the same region} and share a fate;
+        {if wall: leaving both open leaves clue {clue} short |
+        walling both would exceed clue {clue}} |
+        {ring: this edge} borders {derived stripes: a region} clue {clue}
+        {if wall: can't fully open | can't wall off}}
+      move: >-
+        {if multi: {if wall: both must be walls | neither can be a wall} |
+        {if wall: it must be a wall | it can't be a wall}}
+      again: "{stripes: the same striped region}"
   # Two squares side by side that the open edges already join are one
   # region: the edge between them is open. With a wall on it, the marks are
   # inconsistent.
@@ -212,3 +291,8 @@ techniques:
     says:
       terms: { anchor: "through(end1(e), O)" }
       marks: { stripes: "through(end1(e), O)", reads: "through(end1(e), O)" }
+      look: >-
+        {stripes: this region} already holds the squares either side of
+        {ring: this edge}
+      move: "it can't be a wall"
+      again: "{stripes: the same striped region}"

@@ -12,6 +12,7 @@
  */
 import type { ColorWord } from "./color/color-word.ts";
 import {
+  derived,
   indefinite,
   joinNums,
   joinOr,
@@ -331,7 +332,8 @@ function reference<E>(
       )
       .join("");
   };
-  return mark.as(DRAWN[role], role === "stripes" ? whole(kind) : kind, els, say);
+  const ref = mark.as(DRAWN[role], role === "stripes" ? whole(kind) : kind, els, say);
+  return p.derived === true ? derived(ref) : ref;
 }
 
 /** A step's parts, rendered; `move` only where the clauses state one. */
