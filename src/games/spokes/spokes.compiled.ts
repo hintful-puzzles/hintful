@@ -36,6 +36,16 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["saturation","twoOnes","exhaustion","lineBreaks","spareBreaks"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "saturation": {"step":[{"again":"{outline: the outlined hub}","later":"{ring: this spoke | these spokes} must be {rest: a line | lines} too","look":"{outline: the outlined hub} has only one free spoke left for its count","move":"{ring: this spoke | these spokes} must be a line"},{"again":"{outline: the outlined hub}","later":"{ring: this spoke | these spokes} must be {rest: a line | lines} too","look":"{outline: the outlined hub} has just enough free spokes left for its count","move":"{ring: this spoke | these spokes} must all be lines"}]},
+  "twoOnes": {"step":[{"look":"Connecting {outline: the outlined 1-hubs} would strand them from the rest","move":"{ring: this spoke | these spokes} must be unused"}]},
+  "exhaustion": {"step":[{"look":"{outline: the outlined hub} already has all its lines","follows":"none of its other spokes can be one","move":"{ring: this spoke | these spokes} must be unused","again":"{outline: the outlined hub}","later":"rule {ring: this spoke | these spokes} out too"}]},
+  "lineBreaks": {"step":[{"look":"Drawing {ring: this line} would {if starved: leave {outline broken: {if many: the outlined hubs | the outlined {bn}}} too few spokes | strand {outline broken: the outlined hubs}}","move":"rule it out"}]},
+  "spareBreaks": {"step":[{"look":"Ruling {ring: this spoke | these spokes} out would {if hasFilled: leave {outline filled: {if same: one outlined {fn} | the outlined {fn}}} no spare spoke and {if starved: {outline broken: {if same: the other | {if many: the outlined hubs | the outlined {bn}}}} too few spokes | strand {outline broken: the outlined hubs}} | {if starved: leave {outline broken: {if many: the outlined hubs | the outlined {bn}}} too few spokes | strand {outline broken: the outlined hubs}}}","move":"it must be a line"}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -193,8 +203,10 @@ export interface SaturationBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SaturationSays {
-  terms: { c: number; };
-  marks: { reads: readonly number[]; };
+  terms: { c: number; n: number; rest: number; };
+  marks: { outline: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const saturationFacts: number[] = [];
@@ -255,7 +267,12 @@ export function saturation(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Satura
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { c: v_c }, marks: { reads: union(setOf(v_c), v_U).slice() } };
+          const _sw_c = v_c;
+          const _sw_n = v_n;
+          const _sw_rest = v_n;
+          const _sw_outline = setOf(v_c).slice();
+          const _sw_reads = union(setOf(v_c), v_U).slice();
+          const _says = { terms: { c: _sw_c, n: _sw_n, rest: _sw_rest }, marks: { outline: _sw_outline, reads: _sw_reads }, wording: ((_sw_n === 1) ? 0 : 1) };
           if (!fire({ c: v_c, n: v_n, U: v_U.slice() }, facts, _says)) return 1;
         }
       }
@@ -274,7 +291,7 @@ export interface TwoOnesBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface TwoOnesSays {
   terms: { a: number; b: number; };
-  marks: { reads: readonly number[]; };
+  marks: { outline: readonly number[]; reads: readonly number[]; };
 }
 
 const twoOnesFacts: number[] = [];
@@ -390,7 +407,7 @@ export function twoOnes(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TwoOnesBi
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { a: v_a, b: v_b }, marks: { reads: setOf(v_a, v_b).slice() } };
+            const _says = { terms: { a: v_a, b: v_b }, marks: { outline: setOf(v_a, v_b).slice(), reads: setOf(v_a, v_b).slice() } };
             if (!fire({ N: v_N, e: v_e, a: v_a, b: v_b }, facts, _says)) return 1;
           }
         }
@@ -408,7 +425,7 @@ export interface ExhaustionBinding {
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ExhaustionSays {
   terms: { c: number; };
-  marks: { reads: readonly number[]; };
+  marks: { outline: readonly number[]; reads: readonly number[]; };
 }
 
 const exhaustionFacts: number[] = [];
@@ -527,7 +544,7 @@ export function exhaustion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Exhaus
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { c: v_c }, marks: { reads: union(setOf(v_c), v_U).slice() } };
+          const _says = { terms: { c: v_c }, marks: { outline: setOf(v_c).slice(), reads: union(setOf(v_c), v_U).slice() } };
           if (!fire({ c: v_c, U: v_U.slice() }, facts, _says)) return 1;
         }
       }
@@ -545,8 +562,8 @@ export interface LineBreaksBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LineBreaksSays {
-  terms: { e: number; a: number; b: number; };
-  marks: { reads: readonly number[]; };
+  terms: { e: number; a: number; b: number; broken: readonly number[]; many: boolean; bn: number; starved: boolean; };
+  marks: { outline: readonly number[]; reads: readonly number[]; };
 }
 
 const lineBreaksFacts: number[] = [];
@@ -1357,7 +1374,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { e: v_e, a: v_a, b: v_b }, marks: { reads: setOf(v_a, v_b).slice() } };
+          const _says = { terms: { e: v_e, a: v_a, b: v_b, broken: setOf(v_a).slice(), many: false, bn: (_k177[v_a] ?? takes(sp, cl, v_a)), starved: false }, marks: { outline: setOf(v_a, v_b).slice(), reads: setOf(v_a, v_b).slice() } };
           if (!fire({ e: v_e, a: v_a, b: v_b, H: v_H.slice() }, facts, _says)) return 1;
         }
       }
@@ -1375,8 +1392,8 @@ export interface SpareBreaksBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SpareBreaksSays {
-  terms: { c: number; y: number; H: readonly number[]; };
-  marks: { reads: readonly number[]; };
+  terms: { c: number; y: number; H: readonly number[]; broken: readonly number[]; many: boolean; bn: number; starved: boolean; hasFilled: boolean; filled: number; fn: number; same: boolean; };
+  marks: { outline: readonly number[]; reads: readonly number[]; };
 }
 
 const spareBreaksFacts: number[] = [];
@@ -2214,7 +2231,7 @@ export function spareBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Spare
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: { c: v_c, y: v_y, H: v_H.slice() }, marks: { reads: setOf(v_c, v_y).slice() } };
+              const _says = { terms: { c: v_c, y: v_y, H: v_H.slice(), broken: setOf(v_c).slice(), many: false, bn: (_k190[v_c] ?? takes(sp, cl, v_c)), starved: false, hasFilled: false, filled: v_c, fn: (_k190[v_c] ?? takes(sp, cl, v_c)), same: false }, marks: { outline: setOf(v_c, v_y).slice(), reads: setOf(v_c, v_y).slice() } };
               if (!fire({ c: v_c, U: v_U.slice(), y: v_y, H: v_H.slice() }, facts, _says)) return 1;
             }
           }

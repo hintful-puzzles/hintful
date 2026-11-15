@@ -2,16 +2,14 @@
  * Spokes' explained hint: the firings of the ladder
  * [`spokes.description.yaml`](./spokes.description.yaml) states, one at a time,
  * which `engine/described-edge-hint.ts` walks. This file turns a firing into its
- * journey (a leg for each spoke it decides) and says which sentence a leg
- * speaks; the words are [`hint-text.ts`](./hint-text.ts)'s, every claim of
- * which the compiled ladder has checked.
+ * journey (a leg for each spoke it decides) and supplies what the description's
+ * sentences cannot know: the hubs a Check's trial breaks.
  */
 
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import type { HintResult } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
-import { type Hub, type Marked, type Spoke, say } from "./hint-text.ts";
+import { HUB, SPOKE, type Spoke } from "./kinds.ts";
 import {
   type SpokesFiring,
   type SpokesRung,
@@ -20,6 +18,7 @@ import {
   spokesAnswer,
   spokesWalk,
 } from "./solver.ts";
+import { STATED } from "./spokes.compiled.ts";
 import {
   canonicalEdge,
   DIFF_TRICKY,
@@ -49,11 +48,6 @@ export interface SpokesHint {
 const spokeOf = (sp: SpokesSpokeRef, w: number): Spoke =>
   canonicalEdge(sp.index, sp.dir, w);
 
-const markedOf = (hl: SpokesHint): Marked => ({
-  spokes: hl.spokes.map((sp) => spokeOf(sp, hl.w)),
-  hubs: hl.evidence,
-});
-
 /** What a leg's sentence is told: the firing, the leg it is, and what it shows. */
 interface Leg {
   firing: SpokesFiring;
@@ -61,37 +55,31 @@ interface Leg {
   highlights: SpokesHint;
 }
 
-/**
- * One crisp line for a player who knows the rules, premise then conclusion,
- * in the necessity voice (the hint quality bar); the later legs of a firing
- * continue it.
- */
-function narrate(
-  { firing: f, leg, highlights: hl }: Leg,
+/** The terms a leg supplies, which the description declares with a placeholder:
+ * the spokes a later leg still decides, and what a Check's trial breaks. A hub
+ * the rule-out leaves no spare spoke is told apart from a broken one of the
+ * same number by order. */
+function termsOf(
+  { firing: f, highlights }: Leg,
   state: SpokesState,
-): Sentence {
-  const m = markedOf(hl);
-  if (leg > 0) return say.continuation(f.kind === "saturation", m);
-  const hubOf = (index: number): Hub => ({ index, number: state.numbers[index] });
-  switch (f.kind) {
-    case "twoOnes":
-      return say.twoOnes(m);
-    case "saturation":
-      return say.saturation(f.forced.length, m);
-    case "exhaustion":
-      return say.exhaustion(m);
-    case "lineBreaks":
-    case "spareBreaks": {
-      const filled = f.filled ?? null;
-      return say.breaks(
-        f.kind === "lineBreaks",
-        f.breakKind ?? "sealed",
-        m,
-        filled === null ? null : hubOf(filled),
-        f.evidenceHubs.filter((h) => h !== filled).map(hubOf),
-      );
-    }
-  }
+): Readonly<Record<string, unknown>> {
+  const rest = { rest: highlights.spokes.length };
+  if (f.breakKind === undefined) return rest;
+  const filled = f.filled ?? null;
+  const broken = f.evidenceHubs.filter((h) => h !== filled);
+  const number = (h: number): number => state.numbers[h];
+  return {
+    ...rest,
+    broken,
+    many: broken.length > 1,
+    bn: number(broken[0]),
+    starved: f.breakKind === "starved",
+    hasFilled: filled !== null,
+    filled: filled ?? broken[0],
+    fn: number(filled ?? broken[0]),
+    same:
+      filled !== null && broken.length === 1 && number(broken[0]) === number(filled),
+  };
 }
 
 /** A firing's journey: a leg for each spoke it decides, each showing the
@@ -123,7 +111,9 @@ const spokesPlan = describedEdgeHint<
   Leg,
   SpokesWalkContext,
   SpokesSays,
-  SpokesRung
+  SpokesRung,
+  Spoke,
+  number
 >({
   name: "spokes hint",
   walk: (state) => spokesWalk(state),
@@ -132,8 +122,15 @@ const spokesPlan = describedEdgeHint<
   done: (_marks, ctx) => ctx.complete(),
   reads: (taken, ctx) => ctx.reads(taken),
   step: stepOf,
-  // Every technique's sentence is `narrate`'s for its firing.
-  say: (_spoken, leg, state) => narrate(leg, state),
+  stated: STATED,
+  // A step's references are drawn on the hubs it outlines and the spokes it
+  // decides, which a leg still has to settle.
+  elements: { kind: HUB, at: (index) => index },
+  ringKind: SPOKE,
+  ring: ({ highlights: hl }) => hl.spokes.map((sp) => spokeOf(sp, hl.w)),
+  // The hubs the step outlines, a Check's trial finding the ones it breaks.
+  outline: ({ highlights }) => highlights.evidence,
+  terms: termsOf,
 });
 
 /** The deduction from the player's lines to the end. A board with several

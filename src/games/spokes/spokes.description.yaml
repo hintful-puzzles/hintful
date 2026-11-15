@@ -158,8 +158,21 @@ techniques:
       where n < 0 or (n > 0 and |U| <= n)
     conclude: "n >= 0 and |U| = n and (forall y in U: place(edge(c, y), 1))"
     says:
-      terms: { c: c }
-      marks: { reads: "{c} + U" }
+      terms:
+        c: c
+        # The spokes it takes, which is how many it decides.
+        n: n
+        # The spokes a later leg still has to decide, which the engine says.
+        rest: "n" # supplied
+      marks: { outline: "{c}", reads: "{c} + U" }
+      wordings:
+        - when: "n = 1"
+          look: "{outline: the outlined hub} has only one free spoke left for its count"
+          move: "{ring: this spoke | these spokes} must be a line"
+        - look: "{outline: the outlined hub} has just enough free spokes left for its count"
+          move: "{ring: this spoke | these spokes} must all be lines"
+      again: "{outline: the outlined hub}"
+      later: "{ring: this spoke | these spokes} must be {rest: a line | lines} too"
   # A line between two 1-hubs would close the pair off from the other hubs.
   - id: twoOnes
     tier: Easy
@@ -169,7 +182,9 @@ techniques:
     conclude: "place(e, 2)"
     says:
       terms: { a: a, b: b }
-      marks: { reads: "{a, b}" }
+      marks: { outline: "{a, b}", reads: "{a, b}" }
+      look: "Connecting {outline: the outlined 1-hubs} would strand them from the rest"
+      move: "{ring: this spoke | these spokes} must be unused"
   # A hub with all its lines takes none on its other edges: those to a hub
   # still short of lines are crossed out.
   - id: exhaustion
@@ -182,7 +197,12 @@ techniques:
     conclude: "forall y in U: place(edge(c, y), 2)"
     says:
       terms: { c: c }
-      marks: { reads: "{c} + U" }
+      marks: { outline: "{c}", reads: "{c} + U" }
+      look: "{outline: the outlined hub} already has all its lines"
+      follows: "none of its other spokes can be one"
+      move: "{ring: this spoke | these spokes} must be unused"
+      again: "{outline: the outlined hub}"
+      later: "rule {ring: this spoke | these spokes} out too"
   # A line on an edge would break the board at once, the hubs it fills
   # taking no more lines: the edge is crossed out.
   - id: lineBreaks
@@ -192,9 +212,25 @@ techniques:
       where live(a, b) and (brokenH(a, H) or brokenH(b, H))
     conclude: "place(e, 2)"
     says:
-      terms: { e: e, a: a, b: b }
+      terms:
+        e: e
+        a: a
+        b: b
+        # What the trial breaks is the game's to find: the hubs it breaks, how
+        # many, the number on the first, and whether a hub is left too few
+        # spokes (else the hubs are sealed off from the rest).
+        broken: "{a}" # supplied
+        many: "false" # supplied
+        bn: "takes(a)" # supplied
+        starved: "false" # supplied
       # The edge's hubs; the hubs its trial breaks are the game's to find.
-      marks: { reads: "{a, b}" }
+      marks: { outline: "{a, b}", reads: "{a, b}" } # outline supplied
+      look: >-
+        Drawing {ring: this line} would
+        {if starved: leave {outline broken: {if many: the outlined hubs |
+        the outlined {bn}}} too few spokes |
+        strand {outline broken: the outlined hubs}}
+      move: "rule it out"
   # A hub with one edge to spare: crossing one out would leave it lines on
   # all the others. Where those would break the board at once, it takes a
   # line.
@@ -207,5 +243,31 @@ techniques:
       and (brokenH(c, H) or (exists x in U where x != y: brokenH(x, H)))
     conclude: "place(edge(c, y), 1)"
     says:
-      terms: { c: c, y: y, H: H }
-      marks: { reads: "{c, y}" }
+      terms:
+        c: c
+        y: y
+        H: H
+        # What the trial breaks is the game's to find, as in `lineBreaks`; and
+        # the hub the rule-out leaves no spare spoke, with its number, whether
+        # the hub broken has the same number (so the two are told apart by
+        # order), and whether there is one.
+        broken: "{c}" # supplied
+        many: "false" # supplied
+        bn: "takes(c)" # supplied
+        starved: "false" # supplied
+        hasFilled: "false" # supplied
+        filled: c # supplied
+        fn: "takes(c)" # supplied
+        same: "false" # supplied
+      marks: { outline: "{c, y}", reads: "{c, y}" } # outline supplied
+      look: >-
+        Ruling {ring: this spoke | these spokes} out would
+        {if hasFilled: leave {outline filled: {if same: one outlined {fn} |
+        the outlined {fn}}} no spare spoke and
+        {if starved: {outline broken: {if same: the other |
+        {if many: the outlined hubs | the outlined {bn}}}} too few spokes |
+        strand {outline broken: the outlined hubs}} |
+        {if starved: leave {outline broken: {if many: the outlined hubs |
+        the outlined {bn}}} too few spokes |
+        strand {outline broken: the outlined hubs}}}
+      move: "it must be a line"

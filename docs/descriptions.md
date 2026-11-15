@@ -1166,7 +1166,11 @@ that states `again` and no game `later` hook says a later leg's move as its
 hold a domino either"). **A term a leg supplies** is declared as a placeholder
 with `# supplied` and given by the game's `terms(marked, state)`: Dominosa's
 domino (`lo`, `hi`) differs by the spot a leg decides, which no firing's
-binding holds.
+binding holds. Spokes' Checks supply the hubs their trial breaks the same way
+(`broken`, `starved`), and the outline they are drawn on through the game's
+`outline(marked)`, with `elements` for a game whose marks are not squares (its
+hubs); a `later` clause may read a supplied count (`rest`, the spokes a later
+leg still decides).
 
 **A technique whose words need what held says `witness: true`**: the
 compiler then reads, on the same marks as the terms and only on a hint's

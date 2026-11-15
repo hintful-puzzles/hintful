@@ -80,6 +80,7 @@ export interface EdgeHintSpec<
   Ctx,
   Says extends { [K in keyof Says]: SaysOf },
   Ring = never,
+  Elem = Point,
 > {
   /** A name for the walk's step budget. */
   name: string;
@@ -148,6 +149,13 @@ export interface EdgeHintSpec<
   terms?(marked: Marked, state: State): Readonly<Record<string, unknown>>;
   /** The width of the board, to name a cell's point in a stated clause. */
   width?(state: State): number;
+  /** What a stated clause's outlines and terms are drawn on, where it is not
+   * the board's squares (Spokes' hubs), and the element each index names. */
+  elements?: { kind: MarkKind<Elem>; at(index: number): Elem };
+  /** The squares a leg outlines, where they are the game's to find and not the
+   * technique's (the hubs a trial breaks): the technique declares its
+   * `outline` with a placeholder and a `# supplied` comment. */
+  outline?(marked: Marked): readonly number[];
   /** A number term as the board draws it; its numeral where absent. */
   value?(n: number, state: State): string;
   /** The sentences the description cannot state, each technique's an override
@@ -188,8 +196,9 @@ export function describedEdgeHint<
   Says extends { [K in keyof Says]: SaysOf },
   Kind extends string = string,
   Ring = never,
+  Elem = Point,
 >(
-  spec: EdgeHintSpec<State, Move, H, Marked, Ctx, Says, Ring>,
+  spec: EdgeHintSpec<State, Move, H, Marked, Ctx, Says, Ring, Elem>,
 ): (state: State) => HintResult<Move, H, Kind> {
   type Step = HintStep<Move, H, Kind>;
   type Say = (spoken: unknown, marked: Marked, state: State) => Sentence;
@@ -252,16 +261,25 @@ export function describedEdgeHint<
       legs.forEach(({ move, highlights, marked }, leg) => {
         let words: Sentence;
         if (clauses !== undefined) {
-          const w = (spec.width as NonNullable<typeof spec.width>)(state);
-          const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
           const ring = (spec.ring as NonNullable<typeof spec.ring>)(marked);
-          const cx: StatedContext<Point, Ring> = {
-            kind: CELL,
+          const { kind, at: pointOf } =
+            spec.elements ??
+            (() => {
+              const w = (spec.width as NonNullable<typeof spec.width>)(state);
+              return {
+                kind: CELL as unknown as MarkKind<Elem>,
+                at: (c: number) => ({ x: c % w, y: Math.floor(c / w) }) as Elem,
+              };
+            })();
+          const cx: StatedContext<Elem, Ring> = {
+            kind,
             ...(spec.ringKind === undefined ? {} : { ringKind: spec.ringKind }),
             at: pointOf,
             ring,
             marks: {
-              outline: (says.marks.outline ?? []).map(pointOf),
+              outline: (spec.outline?.(marked) ?? says.marks.outline ?? []).map(
+                pointOf,
+              ),
               stripes: (says.marks.stripes ?? []).map(pointOf),
             },
             terms: {
