@@ -27,8 +27,8 @@ import {
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import type { MagnetsHighlights } from "./hint.ts";
-import { CLUE, LINE, SQUARE } from "./hint-text.ts";
 import { magnetsGame } from "./index.ts";
+import { CLUE, LINE, SQUARE } from "./kinds.ts";
 import {
   COL_CURSOR,
   COL_DONE,

@@ -23,14 +23,7 @@ import {
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
-import {
-  type Axis,
-  type Cause,
-  type LineMarks,
-  type RuleOut,
-  SQUARE,
-  say,
-} from "./hint-text.ts";
+import { SQUARE } from "./kinds.ts";
 import * as magnets from "./magnets.compiled.ts";
 import {
   lineCells,
@@ -52,6 +45,7 @@ import {
   reasonOf,
   whichOf,
 } from "./solver.ts";
+import { type Axis, type Cause, type LineMarks, type RuleOut, say } from "./speak.ts";
 import {
   clueIndex,
   DIFF_TRICKY,

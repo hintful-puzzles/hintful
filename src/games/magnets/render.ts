@@ -47,7 +47,7 @@ import {
   winSlot,
 } from "../../engine/win-wave.ts";
 import type { MagnetsHighlights } from "./hint.ts";
-import { CLUE, LINE, SQUARE } from "./hint-text.ts";
+import { CLUE, LINE, SQUARE } from "./kinds.ts";
 import {
   COLUMN,
   clueIndex,

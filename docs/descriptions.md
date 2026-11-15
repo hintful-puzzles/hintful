@@ -1090,7 +1090,11 @@ player has partly made, shown for what is left).
 
 **A step no technique's firing is states itself as `steps`**: a note the plan
 places, a move the planner chooses, or a line whose reasons the plan reads
-where no formula states them (Loopy's pairs and the corners a count leans on).
+where no formula states them (Loopy's pairs and the corners a count leans on),
+or a firing's sentence that cites why a square is ruled out as the board shows
+it, which no formula of the firing holds (Magnets': the game reads the reason
+and supplies it as flags and the squares and digits it names, so the wording a
+reason takes is a `when` or an `if` over them).
 Each kind declares its `ring` (the sort of what it decides), its `terms` (a
 `number`, said by the game's value words, or a `flag`), the sorts it `marks` in
 each role, and its clauses and `wordings` as a technique's. **The planner

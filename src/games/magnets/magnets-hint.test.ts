@@ -19,19 +19,17 @@ import {
   magnetsKeepTrack,
   walkFirings,
 } from "./hint.ts";
+import { magnetsGame } from "./index.ts";
+import { CLUE, LINE, SQUARE } from "./kinds.ts";
+import { isSolved, type MagnetsReason } from "./solver.ts";
 import {
   type Axis,
   type Cause,
-  CLUE,
-  LINE,
   type LineMarks,
   type OnlyEnd,
   type RuleOut,
-  SQUARE,
   say,
-} from "./hint-text.ts";
-import { magnetsGame } from "./index.ts";
-import { isSolved, type MagnetsReason } from "./solver.ts";
+} from "./speak.ts";
 import {
   COLUMN,
   DIFF_TRICKY,
@@ -603,6 +601,48 @@ describe("magnets hint sentences", () => {
       expect(res.steps[0].explanation).not.toMatch(/marked/);
     }
     expect(checked).toBe(CORPUS.length);
+  });
+
+  it("says the branches no walk of the word dump reaches in their own words", () => {
+    // Each wording was compared with the hand-written sentence it replaced over
+    // every value of every kind (34690 sentences, words and marks alike), and
+    // these are the ones a board seldom deals.
+    const full = (axis: Axis, clue: number): Cause & { kind: "full" } => ({
+      kind: "full",
+      axis,
+      line: 0,
+      marked: false,
+      clue,
+      hatched: null,
+    });
+    const touch: Cause = { kind: "touch", at: 1 };
+    expect(say.bothInFull(T, POSITIVE, full("column", 0), full("column", 1)).text).toBe(
+      "Both ends of this tile are in columns with all their +s, so it must be neutral.",
+    );
+    expect(say.neitherEnd(T, NEGATIVE, full("column", 0), full("row", 1)).text).toBe(
+      "No − fits in this tile: it would exceed its row's clue at one end and its column's at the other, so it must be neutral.",
+    );
+    expect(say.neitherEnd(T, NEGATIVE, full("row", 0), full("row", 1)).text).toBe(
+      "No − fits in this tile: it would exceed its row's clue at both ends, so it must be neutral.",
+    );
+    expect(say.oneEndNeither(T, touch, { kind: "touch", at: 2 }).text).toBe(
+      "One end of this tile can't be + or −: it touches both a + and a −, so it must be neutral.",
+    );
+    expect(say.oneEndNeither(T, touch, full("column", 0)).text).toBe(
+      "One end of this tile can't be + or −: it touches a +, and a − would exceed its column's clue, so it must be neutral.",
+    );
+    expect(say.neutralExact(M, "column", 2, [2]).text).toBe(
+      "This column needs 2 more neutral squares; only these 2 aren't in marked magnets (outlined), so they must be neutral.",
+    );
+    // A far end ruled out by a met line of several clues is "a clue", of one "its".
+    const along = (clues: number[]) =>
+      say.onlyEndLeft(M, "row", POSITIVE, 1, rest([], 0), {
+        kind: "along",
+        why: { kind: "full", axis: "column", clues },
+        far: 8,
+      }).text;
+    expect(along([4])).toContain("would exceed its clue, so it must go in");
+    expect(along([4, 8])).toContain("would exceed a clue, so it must go in");
   });
 
   it("speaks the singular at one", () => {

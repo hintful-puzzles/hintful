@@ -19,6 +19,124 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "single" | "count" | "oddGap" | "marked" | "oneNeutral" | "everyTile" | "onlyEnd";
 
+/** What the planner supplies for each kind of step it emits, over the
+ * elements `E` it marks: its terms, and the elements marked by role and sort. */
+export interface StepsById<E> {
+  magnetHere: { ring: "square"; terms: { plus: boolean; touch: boolean; hatched: boolean; col: boolean; marked: boolean }; marks: { outline: { magnet: readonly E[]; touched: readonly E[]; clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  magnetThere: { ring: "square"; terms: { plus: boolean; touch: boolean; hatched: boolean; col: boolean; marked: boolean }; marks: { outline: { magnet: readonly E[]; touched: readonly E[]; clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  bothEndsTouch: { ring: "square"; terms: { plus: boolean }; marks: { outline: { touched: readonly E[] } } };
+  alongFull: { ring: "square"; terms: { plus: boolean; hatched: boolean; col: boolean }; marks: { outline: { clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  bothInFull: { ring: "square"; terms: { plus: boolean; col: boolean }; marks: { outline: { clue: readonly E[] } } };
+  neitherEnd: { ring: "square"; terms: { plus: boolean; fullBoth: boolean; sameAxis: boolean; bTouch: boolean; hatched: boolean; col: boolean }; marks: { outline: { touched: readonly E[]; otherTouched: readonly E[]; clue: readonly E[]; otherClue: readonly E[] }; stripes: { line: readonly E[] } } };
+  oneEndNeither: { ring: "square"; terms: { plus: boolean; kindTouch: boolean; kindFull: boolean; sameAxis: boolean; hatched: boolean; col: boolean }; marks: { outline: { plusAt: readonly E[]; minusAt: readonly E[]; touched: readonly E[]; clue: readonly E[]; otherClue: readonly E[] }; stripes: { line: readonly E[] } } };
+  polesEverywhere: { ring: "square"; terms: { col: boolean; k: number }; marks: { outline: { clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  oneNeutralLeft: { ring: "square"; terms: { col: boolean; k: number; one: boolean }; marks: { outline: { clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  tilesNeeded: { ring: "square"; terms: { plus: boolean; col: boolean; n: number }; marks: { outline: { clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  lineExact: { ring: "square"; terms: { plus: boolean; col: boolean; n: number; one: boolean; several: boolean; rest: boolean; tiles0: boolean; tiles1: boolean; touchAny: boolean; touchOwn: boolean; touchPartner: boolean; fullAny: boolean; fullOwn: boolean; fullPartner: boolean; fullMany: boolean }; marks: { outline: { clue: readonly E[]; ruled: readonly E[]; touchAt: readonly E[]; fullClues: readonly E[] }; stripes: { line: readonly E[] } } };
+  noPolesLeft: { ring: "square"; terms: { col: boolean; k: number }; marks: { outline: { clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  neutralExact: { ring: "square"; terms: { col: boolean; n: number }; marks: { outline: { clue: readonly E[]; marked: readonly E[] }; stripes: { line: readonly E[] } } };
+  oddGap: { ring: "square"; terms: { plus: boolean; col: boolean }; marks: { outline: { clue: readonly E[] }; stripes: { line: readonly E[] } } };
+  onlyEndCrosses: { ring: "square"; terms: { plus: boolean; col: boolean; n: number; one: boolean; several: boolean; rest: boolean; tiles0: boolean; tiles1: boolean; touchAny: boolean; touchOwn: boolean; touchPartner: boolean; fullAny: boolean; fullOwn: boolean; fullPartner: boolean; fullMany: boolean }; marks: { outline: { clue: readonly E[]; ruled: readonly E[]; touchAt: readonly E[]; fullClues: readonly E[] }; stripes: { line: readonly E[] } } };
+  onlyEndAlong: { ring: "square"; terms: { plus: boolean; col: boolean; n: number; one: boolean; rest: boolean; tiles0: boolean; tiles1: boolean; touchAny: boolean; touchOwn: boolean; touchPartner: boolean; fullAny: boolean; fullOwn: boolean; fullPartner: boolean; fullMany: boolean; endTouch: boolean; endPartnerTouch: boolean; endOne: boolean }; marks: { outline: { clue: readonly E[]; ruled: readonly E[]; touchAt: readonly E[]; fullClues: readonly E[]; far: readonly E[]; endAt: readonly E[]; endClue: readonly E[] }; stripes: { line: readonly E[] } } };
+}
+
+/** Each kind of step the planner emits: its clauses by wording, and the
+ * condition under which each wording is the one said (`null`: always). */
+export const STEPS: {
+  readonly [K in keyof StepsById<unknown>]: {
+    readonly ring: StepsById<unknown>[K]["ring"];
+    readonly clauses: readonly { look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string }[];
+    readonly when: readonly (
+      | null
+      | ((
+          t: StepsById<unknown>[K]["terms"],
+          m: StepsById<unknown>[K]["marks"],
+        ) => boolean)
+    )[];
+  };
+} = {
+  magnetHere: {
+    ring: "square",
+    clauses: [{"look":"{outline magnet: This magnet}'s {ring: ringed end} can't be {if plus: + | −}, {if touch: beside {outline touched: another {if plus: + | −}} | as its {if hatched: {stripes line: {if col: column | row}} | {if col: column | row}} {if marked: has | already has} {outline clue: all its {if plus: + | −}s}}","move":"it must be {if plus: − | +}"}],
+    when: [null],
+  },
+  magnetThere: {
+    ring: "square",
+    clauses: [{"look":"{outline magnet: This magnet's other end} can't be {if plus: + | −}, {if touch: beside {outline touched: another {if plus: + | −}} | as its {if hatched: {stripes line: {if col: column | row}} | {if col: column | row}} {if marked: has | already has} {outline clue: all its {if plus: + | −}s}}","move":"{ring: the ringed end} must be {if plus: + | −}"}],
+    when: [null],
+  },
+  bothEndsTouch: {
+    ring: "square",
+    clauses: [{"look":"Both ends of {ring: this tile} touch {outline touched: a {if plus: + | −}}","move":"it must be neutral"}],
+    when: [null],
+  },
+  alongFull: {
+    ring: "square",
+    clauses: [{"look":"{ring: This tile} lies along a {if hatched: {stripes line: {if col: column | row}} | {if col: column | row}} with {outline clue: all its {if plus: + | −}s}","move":"it must be neutral"}],
+    when: [null],
+  },
+  bothInFull: {
+    ring: "square",
+    clauses: [{"look":"Both ends of {ring: this tile} are in {if col: columns | rows} with {outline clue: all their {if plus: + | −}s}","move":"it must be neutral"}],
+    when: [null],
+  },
+  neitherEnd: {
+    ring: "square",
+    clauses: [{"move":"it must be neutral","look":"No {if plus: + | −} fits in {ring: this tile}: it would exceed {outline clue: its {if col: column | row}'s clue} at both ends"},{"move":"it must be neutral","look":"No {if plus: + | −} fits in {ring: this tile}: it would exceed {outline clue: its {if col: column | row}'s clue} at one end and {outline otherClue: its {if col: row | column}'s} at the other"},{"move":"it must be neutral","look":"No {if plus: + | −} fits in {ring: this tile}: it would touch {outline touched: a {if plus: + | −}} at one end and {if bTouch: touch {outline otherTouched: a {if plus: + | −}} | exceed its {if hatched: {stripes line: {if col: column | row}} | {if col: column | row}}'s {outline clue: clue}} at the other"}],
+    when: [(t, _m) => (t.fullBoth && t.sameAxis), (t, _m) => t.fullBoth, null],
+  },
+  oneEndNeither: {
+    ring: "square",
+    clauses: [{"move":"it must be neutral","look":"One end of {ring: this tile} can't be + or −: it touches both {outline plusAt: a +} and {outline minusAt: a −}"},{"move":"it must be neutral","look":"One end of {ring: this tile} can't be + or −: a + or − would exceed its {if hatched: {stripes line: {if col: column | row}} | {if col: column | row}}'s {outline clue: clues}"},{"move":"it must be neutral","look":"One end of {ring: this tile} can't be + or −: a + would exceed its {if hatched: {stripes line: {if col: column | row}} | {if col: column | row}}'s {outline clue: clue}, and a − {outline otherClue: its {if col: row | column}'s}"},{"move":"it must be neutral","look":"One end of {ring: this tile} can't be + or −: it touches {outline touched: a {if plus: − | +}}, and a {if plus: + | −} would exceed its {if hatched: {stripes line: {if col: column | row}} | {if col: column | row}}'s {outline clue: clue}"}],
+    when: [(t, _m) => t.kindTouch, (t, _m) => (t.kindFull && t.sameAxis), (t, _m) => t.kindFull, null],
+  },
+  polesEverywhere: {
+    ring: "square",
+    clauses: [{"look":"{stripes line: this {if col: column | row}}'s {outline clue: clue | clues} {k: needs | need} a + or − in every one of its empty squares","move":"{ring: each ringed tile} must be a magnet"}],
+    when: [null],
+  },
+  oneNeutralLeft: {
+    ring: "square",
+    clauses: [{"look":"{stripes line: this {if col: column | row}}'s {outline clue: clue | clues} {k: leaves | leave} room for just one more neutral square","move":"{ring: {if one: the ringed tile | each ringed tile}} lying along it must be a magnet"}],
+    when: [null],
+  },
+  tilesNeeded: {
+    ring: "square",
+    clauses: [{"look":"{stripes line: this {if col: column | row}} needs {outline clue: one more {if plus: + | −}} and has only {ring: this undecided tile}","move":"it must be a magnet"},{"look":"{stripes line: this {if col: column | row}} needs {outline clue: {n} more {if plus: + | −}s} and has only {n} undecided tiles","move":"{ring: each ringed tile} must be a magnet"}],
+    when: [(t, _m) => (t.n === 1), null],
+  },
+  lineExact: {
+    ring: "square",
+    clauses: [{"look":"{stripes line: this {if col: column | row}} needs {outline clue: {if one: one more {if plus: + | −} | {n} more {if plus: + | −}s}}; a {if plus: + | −} {outline ruled: {if tiles0: in an outlined square | {if tiles1: in the outlined tile | in an outlined tile}}} would {if touchAny: {if fullAny: {if touchOwn: {if touchPartner: make {outline touchAt: like poles} touch | touch {outline touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside {outline touchAt: a {if plus: − | +}}} or {if fullOwn: {if fullPartner: exceed {outline fullClues: a clue} | exceed {outline fullClues: {if fullMany: a clue | its clue}}} | exceed {outline fullClues: a clue}} | {if touchOwn: {if touchPartner: make {outline touchAt: like poles} touch | touch {outline touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside {outline touchAt: a {if plus: − | +}}}} | {if fullOwn: {if fullPartner: exceed {outline fullClues: a clue} | exceed {outline fullClues: {if fullMany: a clue | its clue}}} | exceed {outline fullClues: a clue}}}","move":"{ring: this square | these {live} squares} must be {if plus: + | −}{if several: s | }"},{"look":"{stripes line: this {if col: column | row}} needs {outline clue: one more {if plus: + | −}} and only {ring: this square} can take one","move":"it must be {if plus: + | −}"},{"look":"{stripes line: this {if col: column | row}} needs {outline clue: {n} more {if plus: + | −}s} and only {ring: these {n} squares} can take one","move":"they must be {if plus: + | −}s"}],
+    when: [(t, _m) => t.rest, (t, _m) => t.one, null],
+  },
+  noPolesLeft: {
+    ring: "square",
+    clauses: [{"look":"{stripes line: this {if col: column | row}}'s {outline clue: clue | clues} {k: leaves | leave} no room for another + or −","move":"{ring: all its empty squares} must be neutral"}],
+    when: [null],
+  },
+  neutralExact: {
+    ring: "square",
+    clauses: [{"look":"{stripes line: this {if col: column | row}} needs {outline clue: 1 more neutral square}; only {ring: the ringed one} isn't in {outline marked: a marked magnet (outlined)}","move":"it must be neutral"},{"look":"{stripes line: this {if col: column | row}} needs {outline clue: {n} more neutral squares}; only {ring: these {n}} aren't in {outline marked: marked magnets (outlined)}","move":"they must be neutral"}],
+    when: [(t, _m) => (t.n === 1), null],
+  },
+  oddGap: {
+    ring: "square",
+    clauses: [{"look":"{stripes line: this {if col: column | row}}'s empty squares take alternating poles, {outline clue: one more {if plus: + | −} than {if plus: − | +}}","move":"{ring: this odd-length gap} must start with {if plus: + | −}"}],
+    when: [null],
+  },
+  onlyEndCrosses: {
+    ring: "square",
+    clauses: [{"look":"{stripes line: this {if col: column | row}} needs {outline clue: {if one: one more {if plus: + | −} | {n} more {if plus: + | −}s}} from {if one: only {ring: this tile} | just {n} tiles}{if rest: ; a {if plus: + | −} {outline ruled: {if tiles0: in an outlined square | {if tiles1: in the outlined tile | in an outlined tile}}} would {if touchAny: {if fullAny: {if touchOwn: {if touchPartner: make {outline touchAt: like poles} touch | touch {outline touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside {outline touchAt: a {if plus: − | +}}} or {if fullOwn: {if fullPartner: exceed {outline fullClues: a clue} | exceed {outline fullClues: {if fullMany: a clue | its clue}}} | exceed {outline fullClues: a clue}} | {if touchOwn: {if touchPartner: make {outline touchAt: like poles} touch | touch {outline touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside {outline touchAt: a {if plus: − | +}}}} | {if fullOwn: {if fullPartner: exceed {outline fullClues: a clue} | exceed {outline fullClues: {if fullMany: a clue | its clue}}} | exceed {outline fullClues: a clue}}} | }","move":"{ring: this square | these {live} squares} must be {if plus: + | −}{if several: s | }"}],
+    when: [null],
+  },
+  onlyEndAlong: {
+    ring: "square",
+    clauses: [{"look":"{stripes line: this {if col: column | row}} needs {outline clue: {if one: one more {if plus: + | −} | {n} more {if plus: + | −}s}} from {if one: only {ring: this tile} | just {n} tiles}{if rest: ; a {if plus: + | −} {outline ruled: {if tiles0: in an outlined square | {if tiles1: in the outlined tile | in an outlined tile}}} would {if touchAny: {if fullAny: {if touchOwn: {if touchPartner: make {outline touchAt: like poles} touch | touch {outline touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside {outline touchAt: a {if plus: − | +}}} or {if fullOwn: {if fullPartner: exceed {outline fullClues: a clue} | exceed {outline fullClues: {if fullMany: a clue | its clue}}} | exceed {outline fullClues: a clue}} | {if touchOwn: {if touchPartner: make {outline touchAt: like poles} touch | touch {outline touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside {outline touchAt: a {if plus: − | +}}}} | {if fullOwn: {if fullPartner: exceed {outline fullClues: a clue} | exceed {outline fullClues: {if fullMany: a clue | its clue}}} | exceed {outline fullClues: a clue}}} | }. A {if plus: + | −} at {outline far: its far end} would {if endTouch: touch {outline endAt: a {if plus: + | −}} | {if endPartnerTouch: put a {if plus: − | +} beside {outline endAt: a {if plus: − | +}} | exceed {outline endClue: {if endOne: its clue | a clue}}}}","move":"it must go in {ring: the ringed square}"}],
+    when: [null],
+  },
+};
+
 /** What a firing of each technique that says anything says, by id. */
 export interface SaysById {
   single: SingleSays;
