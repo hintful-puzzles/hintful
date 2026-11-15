@@ -18,6 +18,160 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "deadEnd" | "lineContinues" | "dotFull" | "clueFull" | "clueStarved" | "clueBlockedPair" | "clueOneShort" | "earlyLoop" | "closed" | "related" | "cornerAtDot" | "cornerOther" | "cornerBoth" | "clueBound" | "cornerFromClue" | "cornerAcross" | "cornerExit" | "cornerOppositeExit" | "matchingPair" | "pairAtClue" | "parityClue" | "linkClue" | "pairFromCorner" | "cornerFromPair" | "pairAtDot" | "parityDot" | "linkDot";
 
+/** What the planner supplies for each kind of step it emits, over the
+ * elements `E` it marks: its terms, and the elements marked by role and sort. */
+export interface StepsById<E> {
+  boundLine: { ring: "edge"; terms: { n: number; fewer: number }; marks: { outline: { face: readonly E[]; angle: readonly E[] } } };
+  boundEmpty: { ring: "edge"; terms: { n: number; single: boolean }; marks: { outline: { face: readonly E[]; angle: readonly E[] } } };
+  cornerOtherLine: { ring: "edge"; terms: Record<string, never>; marks: { outline: { angle: readonly E[] } } };
+  cornerBothLines: { ring: "edge"; terms: Record<string, never>; marks: { outline: { angle: readonly E[]; cell: readonly E[] } } };
+  cornerOtherEmpty: { ring: "edge"; terms: Record<string, never>; marks: { outline: { angle: readonly E[] } } };
+  cornerNeither: { ring: "edge"; terms: Record<string, never>; marks: { outline: { angle: readonly E[]; cell: readonly E[] } } };
+  cornerExit: { ring: "edge"; terms: Record<string, never>; marks: { outline: { angle: readonly E[]; cell: readonly E[] } } };
+  matchingPair: { ring: "edge"; terms: { n: number; line: boolean }; marks: { outline: { face: readonly E[]; pair: readonly E[] } } };
+  parityFace: { ring: "edge"; terms: { n: number; needed: number; opposite: boolean; line: boolean }; marks: { outline: { face: readonly E[]; pair: readonly E[] } } };
+  parityDot: { ring: "edge"; terms: { hasLine: boolean; opposite: boolean; line: boolean }; marks: { outline: { cell: readonly E[]; pair: readonly E[] } } };
+  related: { ring: "edge"; terms: { opposite: boolean; fromLine: boolean; line: boolean }; marks: { outline: { pair: readonly E[]; edge: readonly E[] } } };
+  cornerAtDot: { ring: "angle"; terms: { atMost: boolean; exactly: boolean }; marks: { outline: { cell: readonly E[] } } };
+  cornerFromClue: { ring: "angle"; terms: { n: number; total: number; atLeast: boolean }; marks: { outline: { face: readonly E[]; angle: readonly E[] } } };
+  cornerAcross: { ring: "angle"; terms: Record<string, never>; marks: { outline: { angle: readonly E[]; cell: readonly E[] } } };
+  cornerOppositeExit: { ring: "angle"; terms: Record<string, never>; marks: { outline: { angle: readonly E[]; cell: readonly E[] } } };
+  cornerFromPair: { ring: "angle"; terms: { exactly: boolean; atMost: boolean }; marks: { outline: { pair: readonly E[] } } };
+  pairAtClue: { ring: "pair"; terms: { n: number; needed: number; opposite: boolean }; marks: { outline: { face: readonly E[] } } };
+  pairAtDot: { ring: "pair"; terms: { hasLine: boolean; opposite: boolean }; marks: { outline: { cell: readonly E[] } } };
+  pairAtCorner: { ring: "pair"; terms: Record<string, never>; marks: { outline: { angle: readonly E[] } } };
+  pairAcrossClue: { ring: "pair"; terms: { n: number; needed: number; pairOpposite: boolean; opposite: boolean }; marks: { outline: { face: readonly E[]; pair: readonly E[] } } };
+  pairAcrossDot: { ring: "pair"; terms: { hasLine: boolean; pairOpposite: boolean; opposite: boolean }; marks: { outline: { cell: readonly E[]; pair: readonly E[] } } };
+  pairChain: { ring: "pair"; terms: { mixed: boolean; opposite: boolean }; marks: { outline: { edge: readonly E[]; pair: readonly E[] } } };
+}
+
+/** Each kind of step the planner emits: its clauses by wording, and the
+ * condition under which each wording is the one said (`null`: always). */
+export const STEPS: {
+  readonly [K in keyof StepsById<unknown>]: {
+    readonly ring: StepsById<unknown>[K]["ring"];
+    readonly clauses: readonly { look?: string; follows?: string; move?: string }[];
+    readonly when: readonly (
+      | null
+      | ((
+          t: StepsById<unknown>[K]["terms"],
+          m: StepsById<unknown>[K]["marks"],
+        ) => boolean)
+    )[];
+  };
+} = {
+  boundLine: {
+    ring: "edge",
+    clauses: [{"move":"{ring} must be a line","look":"{outline face: this {n}'s} other edges can give it only {fewer}"},{"move":"{ring} must be a line","look":"{outline face: this {n}'s} other edges can give it only {fewer}, counting {outline angle: the marked corner | each marked corner} as one"}],
+    when: [(_t, m) => (m.outline.angle.length === 0), null],
+  },
+  boundEmpty: {
+    ring: "edge",
+    clauses: [{"move":"{ring} can't be a line","look":"{outline face: this {n}} already has {if single: its line | all {n}}"},{"move":"{ring} can't be a line","look":"{outline face: this {n}} already has {if single: its line | all {n}}, counting {outline angle: the marked corner | each marked corner} as one"}],
+    when: [(_t, m) => (m.outline.angle.length === 0), null],
+  },
+  cornerOtherLine: {
+    ring: "edge",
+    clauses: [{"look":"{outline angle: The marked corner} needs a line; one edge there is ruled out","move":"{ring: the ringed edge} must be a line"}],
+    when: [null],
+  },
+  cornerBothLines: {
+    ring: "edge",
+    clauses: [{"look":"{outline angle: The marked corner} needs a line; {outline cell: the outlined dot} takes both or neither","move":"{ring: both ringed edges} must be lines"}],
+    when: [null],
+  },
+  cornerOtherEmpty: {
+    ring: "edge",
+    clauses: [{"look":"{outline angle: The marked corner} can take one line at most; one edge there is already a line","move":"{ring} can't be one"}],
+    when: [null],
+  },
+  cornerNeither: {
+    ring: "edge",
+    clauses: [{"look":"{outline angle: The marked corner} can take one line at most; {outline cell: the outlined dot} takes both or neither","move":"{ring: neither ringed edge} can be one"}],
+    when: [null],
+  },
+  cornerExit: {
+    ring: "edge",
+    clauses: [{"look":"{outline angle: The marked corner} takes exactly one line; {outline cell: the outlined dot} has no line yet","move":"{ring} must be its second"}],
+    when: [null],
+  },
+  matchingPair: {
+    ring: "edge",
+    clauses: [{"look":"{outline pair: The marked pair} makes {ring: these two edges} match, and {outline face: this {n}} {if line: can spare one more edge | has room for one more line}","move":"{if line: both must be lines | neither can be one}"}],
+    when: [null],
+  },
+  parityFace: {
+    ring: "edge",
+    clauses: [{"look":"{outline face: this {n}} needs {needed} more; {outline pair: the marked pair} makes two of its open edges give {if opposite: exactly 1 | 0 or 2}","move":"{ring} {if line: must be a line | can't be a line}"}],
+    when: [null],
+  },
+  parityDot: {
+    ring: "edge",
+    clauses: [{"look":"{outline cell: The outlined dot} has {if hasLine: one line | no line}; {outline pair: the marked pair} makes two of its open edges give {if opposite: exactly 1 | 0 or 2}","move":"{ring} {if line: must be a line | can't be a line}"}],
+    when: [null],
+  },
+  related: {
+    ring: "edge",
+    clauses: [{"look":"{outline pair: The marked pair} makes {ring} {if opposite: the opposite of | match} {outline edge: the marked {if fromLine: line | ruled-out edge}}","move":"it {if line: must be a line | can't be a line}"}],
+    when: [null],
+  },
+  cornerAtDot: {
+    ring: "angle",
+    clauses: [{"look":"{outline cell: The outlined dot} already has a line","move":"{ring} can take one line at most"},{"look":"The line at {outline cell: the outlined dot} can only go on through {ring}","move":"it {if exactly: must take exactly one line | needs a line}"}],
+    when: [(t, _m) => t.atMost, null],
+  },
+  cornerFromClue: {
+    ring: "angle",
+    clauses: [{"look":"{outline face: this {n}'s} other edges are ruled out","move":"{ring} needs a line"},{"look":"{outline face: this {n}'s} other edges can give it {total} at most","move":"{ring} needs a line"},{"look":"{outline face: this {n}'s} other edges can give it {total} at most, counting {outline angle: the marked corner | each marked corner} as one","move":"{ring} needs a line"},{"look":"{outline face: this {n}} takes one line","move":"{ring} can take one at most"},{"look":"{outline face: this {n}'s} other edges already give it {total}","move":"{ring} can take one line at most"},{"look":"{outline face: this {n}'s} other edges already give it {total}, counting {outline angle: the marked corner | each marked corner} as one","move":"{ring} can take one line at most"}],
+    when: [(t, m) => ((t.atLeast && (t.total === 0)) && (m.outline.angle.length === 0)), (t, m) => (t.atLeast && (m.outline.angle.length === 0)), (t, _m) => t.atLeast, (t, m) => ((t.n === 1) && (m.outline.angle.length === 0)), (_t, m) => (m.outline.angle.length === 0), null],
+  },
+  cornerAcross: {
+    ring: "angle",
+    clauses: [{"look":"{outline angle: The marked corner} across {outline cell: the outlined dot} needs a line","move":"{ring} can take one line at most"}],
+    when: [null],
+  },
+  cornerOppositeExit: {
+    ring: "angle",
+    clauses: [{"look":"{outline angle: The marked corner} takes exactly one of {outline cell: the outlined dot's} two lines","move":"{ring} needs the other"}],
+    when: [null],
+  },
+  cornerFromPair: {
+    ring: "angle",
+    clauses: [{"look":"{outline pair: The marked pair} makes {ring: this corner's} edges opposites","move":"it {if exactly: must take exactly one line | {if atMost: can take one line at most | needs a line}}"}],
+    when: [null],
+  },
+  pairAtClue: {
+    ring: "pair",
+    clauses: [{"look":"Only {ring: these two edges} of {outline face: this {n}} are still open, and it needs {needed} more","move":"they {if opposite: must be opposites | must match}"}],
+    when: [null],
+  },
+  pairAtDot: {
+    ring: "pair",
+    clauses: [{"look":"Only {ring: these two edges} at {outline cell: the outlined dot} are still open, and it has {if hasLine: one line | no line}","move":"they {if opposite: must be opposites | must match}"}],
+    when: [null],
+  },
+  pairAtCorner: {
+    ring: "pair",
+    clauses: [{"look":"{outline angle: The marked corner} takes exactly one line","move":"{ring: these two edges} must be opposites"}],
+    when: [null],
+  },
+  pairAcrossClue: {
+    ring: "pair",
+    clauses: [{"look":"{outline face: this {n}} needs {needed} more from four open edges, and {outline pair: the marked pair} gives {if pairOpposite: exactly 1 | 0 or 2}","move":"{ring: these two edges} {if opposite: must be opposites | must match}"}],
+    when: [null],
+  },
+  pairAcrossDot: {
+    ring: "pair",
+    clauses: [{"look":"{outline cell: The outlined dot} has {if hasLine: one line | no line} and four open edges; {outline pair: the marked pair} gives {if pairOpposite: exactly 1 | 0 or 2}","move":"{ring: these two edges} {if opposite: must be opposites | must match}"}],
+    when: [null],
+  },
+  pairChain: {
+    ring: "pair",
+    clauses: [{"look":"One of {ring: these edges} matches {outline edge: the marked edge} {outline pair: the marked pairs} share and the other its opposite","move":"they must be opposites"},{"look":"{ring: These two edges} are each the opposite of {outline edge: the marked edge} {outline pair: the marked pairs} share","move":"they must match"},{"look":"{ring: These two edges} each match {outline edge: the marked edge} {outline pair: the marked pairs} share","move":"they must match"}],
+    when: [(t, _m) => t.mixed, (t, _m) => t.opposite, null],
+  },
+};
+
 /** What a firing of each technique that says anything says, by id. */
 export interface SaysById {
   deadEnd: DeadEndSays;

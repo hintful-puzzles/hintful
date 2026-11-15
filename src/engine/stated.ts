@@ -87,10 +87,26 @@ const DEFAULT_FORMS: Readonly<Record<string, readonly string[]>> = {
   strand: ["the outlined {noun}", "the outlined {nouns}"],
 };
 
+/** A clause's pieces with each `if` replaced by the form its flag term holds. */
+function expand<E>(pieces: readonly Piece[], cx: StatedContext<E>): Piece[] {
+  return pieces.flatMap((p): Piece[] => {
+    if (!("name" in p)) return [p];
+    if (p.role === "if") {
+      const flag = cx.terms[p.name];
+      if (typeof flag !== "boolean")
+        throw new Error(`stated clause: {if ${p.name}} is no flag term`);
+      return expand((p.words as readonly (readonly Piece[])[])[flag ? 0 : 1], cx);
+    }
+    return [
+      p.words === null ? p : { ...p, words: p.words.map((form) => expand(form, cx)) },
+    ];
+  });
+}
+
 function render<E>(src: string, cx: StatedContext<E>): Narration {
   const lits: string[] = [""];
   const vals: Narration[] = [];
-  for (const p of parseClause(src)) {
+  for (const p of expand(parseClause(src), cx)) {
     if ("text" in p) lits[lits.length - 1] += p.text;
     else if (p.role === null) lits[lits.length - 1] += word(p.name, cx, null);
     else {
@@ -188,4 +204,47 @@ export function statedSentence<E>(
   if (move === null)
     throw new Error("stated clause: no move, and no closing from the fact");
   return sentence({ ...parts, move, relation });
+}
+
+/** What a game's planner supplies for a step of a kind its description
+ * declares (`steps`): number and flag terms, and the elements it marks by role
+ * and sort. */
+export interface PlannedSaid<E> {
+  readonly terms: Readonly<Record<string, number | boolean>>;
+  readonly marks: Readonly<
+    Partial<Record<string, Readonly<Record<string, readonly E[]>>>>
+  >;
+}
+
+/** A planner's kind of step as the module's `STEPS` holds it: its clauses by
+ * wording, and the condition each is said under. */
+export interface PlannedKind<T, M> {
+  readonly clauses: readonly Clauses[];
+  readonly when: readonly (null | ((t: T, m: M) => boolean))[];
+}
+
+/**
+ * The words of a step a planner emits: the first wording whose condition holds,
+ * rendered against the terms and marks the planner supplies. `ring` is what
+ * the step decides, and the context's `kind` the sort it is of.
+ */
+export function plannedSentence<
+  E,
+  T extends PlannedSaid<E>["terms"],
+  M extends PlannedSaid<E>["marks"],
+>(
+  step: PlannedKind<T, M>,
+  said: { readonly terms: T; readonly marks: M },
+  cx: Omit<StatedContext<E>, "terms" | "marks" | "at">,
+): Sentence {
+  const i = step.when.findIndex((w) => w === null || w(said.terms, said.marks));
+  if (i < 0) throw new Error("stated clause: no wording of the step holds");
+  return statedSentence(step.clauses[i], {
+    ...cx,
+    at: () => {
+      throw new Error("stated clause: a planned step has no element terms");
+    },
+    terms: said.terms,
+    marks: said.marks as StatedContext<E>["marks"],
+  });
 }

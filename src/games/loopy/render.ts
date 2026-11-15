@@ -57,8 +57,8 @@ import {
   winSlot,
 } from "../../engine/win-wave.ts";
 import type { LoopyCursor } from "./cursor.ts";
-import { CORNER, DOT, EDGE, FACE, PAIR } from "./hint-text.ts";
 import type { LoopyMove, LoopyNoteDrag } from "./index.ts";
+import { CORNER, DOT, EDGE, FACE, PAIR } from "./kinds.ts";
 import { cornerArc, cursorCorner } from "./notes.ts";
 import { gridTypeOf, LOOPY_GRIDS, type LoopyParams } from "./params.ts";
 import {

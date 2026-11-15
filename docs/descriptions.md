@@ -1088,6 +1088,23 @@ crosses none) passes `consequences: false`, so a step asks only for its
 firing's squares. `describedFiringHint` also owns `refreshHintStep` (a step the
 player has partly made, shown for what is left).
 
+**A step no technique's firing is states itself as `steps`**: a note the plan
+places, a move the planner chooses, or a line whose reasons the plan reads
+where no formula states them (Loopy's pairs and the corners a count leans on).
+Each kind declares its `ring` (the sort of what it decides), its `terms` (a
+`number`, said by the game's value words, or a `flag`), the sorts it `marks` in
+each role, and its clauses and `wordings` as a technique's. **The planner
+supplies the terms and the marks by sort** and names the kind, so which step is
+taken stays its code; the compiler checks every slot against the declaration
+and writes `STEPS` (the clauses, and each wording's `when` as code over the
+terms and `|outlineAngle|`-style sizes) and `StepsById<E>` (what the planner
+supplies). The game's `speak` hands them to `engine/stated.ts`'s
+`plannedSentence`. A kind may share a technique's name where the technique
+states no words. **`{if flag: yes | no}`** says the form a flag term holds, in a
+clause or inside a reference's words; it holds words and number terms only. Use
+it for a choice inside one deduction's sentence (a verdict's "must be a line" or
+"can't be a line"), and a `wording` where the whole sentence differs.
+
 **A step that is a journey** (Boats: one firing, a fill a leg, each judged by
 the squares it makes) gives `describedFiringHint` a `journey`; the squares its
 placing techniques decide on their own are read off the marks across the firing

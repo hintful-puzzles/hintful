@@ -591,3 +591,178 @@ techniques:
     says:
       terms: { c: c, e: e, g: g }
       marks: { outline: { cell: "{c}" } }
+# What Loopy's planner says that no one firing does, or that rests on what the
+# planner reads and no formula states: the corners a clue's count leans on and
+# the pairs it reads through (`hint.ts`), and each note a plan places before the
+# line that cites it. Every term and mark is supplied by the plan, by sort.
+steps:
+  # --- steps that set lines, which a technique's firing makes
+  # A clue's other edges can give it one line fewer than it needs.
+  boundLine:
+    ring: edge
+    terms: { n: number, fewer: number }
+    marks: { outline: [face, angle] }
+    move: "{ring} must be a line"
+    wordings:
+      - when: "|outlineAngle| = 0"
+        look: "{outline face: this {n}'s} other edges can give it only {fewer}"
+      - look: "{outline face: this {n}'s} other edges can give it only {fewer}, counting {outline angle: the marked corner | each marked corner} as one"
+  # A clue's other edges already give it every line it needs.
+  boundEmpty:
+    ring: edge
+    terms: { n: number, single: flag }
+    marks: { outline: [face, angle] }
+    move: "{ring} can't be a line"
+    wordings:
+      - when: "|outlineAngle| = 0"
+        look: "{outline face: this {n}} already has {if single: its line | all {n}}"
+      - look: "{outline face: this {n}} already has {if single: its line | all {n}}, counting {outline angle: the marked corner | each marked corner} as one"
+  # A corner with a bound, and what its dot's other edges then settle.
+  cornerOtherLine:
+    ring: edge
+    marks: { outline: [angle] }
+    look: "{outline angle: The marked corner} needs a line; one edge there is ruled out"
+    move: "{ring: the ringed edge} must be a line"
+  cornerBothLines:
+    ring: edge
+    marks: { outline: [angle, cell] }
+    look: "{outline angle: The marked corner} needs a line; {outline cell: the outlined dot} takes both or neither"
+    move: "{ring: both ringed edges} must be lines"
+  cornerOtherEmpty:
+    ring: edge
+    marks: { outline: [angle] }
+    look: "{outline angle: The marked corner} can take one line at most; one edge there is already a line"
+    move: "{ring} can't be one"
+  cornerNeither:
+    ring: edge
+    marks: { outline: [angle, cell] }
+    look: "{outline angle: The marked corner} can take one line at most; {outline cell: the outlined dot} takes both or neither"
+    move: "{ring: neither ringed edge} can be one"
+  cornerExit:
+    ring: edge
+    marks: { outline: [angle, cell] }
+    look: "{outline angle: The marked corner} takes exactly one line; {outline cell: the outlined dot} has no line yet"
+    move: "{ring} must be its second"
+  # Two edges of a clue that match, with room for one more line (neither can be
+  # one) or one more empty edge (both must be lines).
+  matchingPair:
+    ring: edge
+    terms: { n: number, line: flag }
+    marks: { outline: [face, pair] }
+    look: "{outline pair: The marked pair} makes {ring: these two edges} match, and {outline face: this {n}} {if line: can spare one more edge | has room for one more line}"
+    move: "{if line: both must be lines | neither can be one}"
+  # A clue or a dot with three open edges, two of which a pair relates.
+  parityFace:
+    ring: edge
+    terms: { n: number, needed: number, opposite: flag, line: flag }
+    marks: { outline: [face, pair] }
+    look: "{outline face: this {n}} needs {needed} more; {outline pair: the marked pair} makes two of its open edges give {if opposite: exactly 1 | 0 or 2}"
+    move: "{ring} {if line: must be a line | can't be a line}"
+  parityDot:
+    ring: edge
+    terms: { hasLine: flag, opposite: flag, line: flag }
+    marks: { outline: [cell, pair] }
+    look: "{outline cell: The outlined dot} has {if hasLine: one line | no line}; {outline pair: the marked pair} makes two of its open edges give {if opposite: exactly 1 | 0 or 2}"
+    move: "{ring} {if line: must be a line | can't be a line}"
+  # An edge related to a settled one.
+  related:
+    ring: edge
+    terms: { opposite: flag, fromLine: flag, line: flag }
+    marks: { outline: [pair, edge] }
+    look: "{outline pair: The marked pair} makes {ring} {if opposite: the opposite of | match} {outline edge: the marked {if fromLine: line | ruled-out edge}}"
+    move: "it {if line: must be a line | can't be a line}"
+  # --- steps that place a corner note (the ring is the corner)
+  cornerAtDot:
+    ring: angle
+    terms: { atMost: flag, exactly: flag }
+    marks: { outline: [cell] }
+    wordings:
+      - when: atMost
+        look: "{outline cell: The outlined dot} already has a line"
+        move: "{ring} can take one line at most"
+      - look: "The line at {outline cell: the outlined dot} can only go on through {ring}"
+        move: "it {if exactly: must take exactly one line | needs a line}"
+  # A corner read off a clue's count of its other edges, a 1's alone.
+  cornerFromClue:
+    ring: angle
+    terms: { n: number, total: number, atLeast: flag }
+    marks: { outline: [face, angle] }
+    wordings:
+      - when: "atLeast and total = 0 and |outlineAngle| = 0"
+        look: "{outline face: this {n}'s} other edges are ruled out"
+        move: "{ring} needs a line"
+      - when: "atLeast and |outlineAngle| = 0"
+        look: "{outline face: this {n}'s} other edges can give it {total} at most"
+        move: "{ring} needs a line"
+      - when: atLeast
+        look: "{outline face: this {n}'s} other edges can give it {total} at most, counting {outline angle: the marked corner | each marked corner} as one"
+        move: "{ring} needs a line"
+      # Any corner of a 1 takes one line at most, whatever its other edges hold.
+      - when: "n = 1 and |outlineAngle| = 0"
+        look: "{outline face: this {n}} takes one line"
+        move: "{ring} can take one at most"
+      - when: "|outlineAngle| = 0"
+        look: "{outline face: this {n}'s} other edges already give it {total}"
+        move: "{ring} can take one line at most"
+      - look: "{outline face: this {n}'s} other edges already give it {total}, counting {outline angle: the marked corner | each marked corner} as one"
+        move: "{ring} can take one line at most"
+  cornerAcross:
+    ring: angle
+    marks: { outline: [angle, cell] }
+    look: "{outline angle: The marked corner} across {outline cell: the outlined dot} needs a line"
+    move: "{ring} can take one line at most"
+  cornerOppositeExit:
+    ring: angle
+    marks: { outline: [angle, cell] }
+    look: "{outline angle: The marked corner} takes exactly one of {outline cell: the outlined dot's} two lines"
+    move: "{ring} needs the other"
+  cornerFromPair:
+    ring: angle
+    terms: { exactly: flag, atMost: flag }
+    marks: { outline: [pair] }
+    look: "{outline pair: The marked pair} makes {ring: this corner's} edges opposites"
+    move: "it {if exactly: must take exactly one line | {if atMost: can take one line at most | needs a line}}"
+  # --- steps that place a pair note (the ring is the pair)
+  pairAtClue:
+    ring: pair
+    terms: { n: number, needed: number, opposite: flag }
+    marks: { outline: [face] }
+    look: "Only {ring: these two edges} of {outline face: this {n}} are still open, and it needs {needed} more"
+    move: "they {if opposite: must be opposites | must match}"
+  pairAtDot:
+    ring: pair
+    terms: { hasLine: flag, opposite: flag }
+    marks: { outline: [cell] }
+    look: "Only {ring: these two edges} at {outline cell: the outlined dot} are still open, and it has {if hasLine: one line | no line}"
+    move: "they {if opposite: must be opposites | must match}"
+  pairAtCorner:
+    ring: pair
+    marks: { outline: [angle] }
+    look: "{outline angle: The marked corner} takes exactly one line"
+    move: "{ring: these two edges} must be opposites"
+  pairAcrossClue:
+    ring: pair
+    terms: { n: number, needed: number, pairOpposite: flag, opposite: flag }
+    marks: { outline: [face, pair] }
+    look: "{outline face: this {n}} needs {needed} more from four open edges, and {outline pair: the marked pair} gives {if pairOpposite: exactly 1 | 0 or 2}"
+    move: "{ring: these two edges} {if opposite: must be opposites | must match}"
+  pairAcrossDot:
+    ring: pair
+    terms: { hasLine: flag, pairOpposite: flag, opposite: flag }
+    marks: { outline: [cell, pair] }
+    look: "{outline cell: The outlined dot} has {if hasLine: one line | no line} and four open edges; {outline pair: the marked pair} gives {if pairOpposite: exactly 1 | 0 or 2}"
+    move: "{ring: these two edges} {if opposite: must be opposites | must match}"
+  # Two pairs sharing an edge relate their other two edges.
+  pairChain:
+    ring: pair
+    terms: { mixed: flag, opposite: flag }
+    marks: { outline: [edge, pair] }
+    wordings:
+      - when: mixed
+        look: "One of {ring: these edges} matches {outline edge: the marked edge} {outline pair: the marked pairs} share and the other its opposite"
+        move: "they must be opposites"
+      - when: opposite
+        look: "{ring: These two edges} are each the opposite of {outline edge: the marked edge} {outline pair: the marked pairs} share"
+        move: "they must match"
+      - look: "{ring: These two edges} each match {outline edge: the marked edge} {outline pair: the marked pairs} share"
+        move: "they must match"

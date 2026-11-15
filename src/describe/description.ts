@@ -90,7 +90,19 @@ export interface DescriptionJson {
   /** Grading scales besides `tiers`, by name, each its tiers easiest first. */
   scales?: Record<string, string[]>;
   techniques?: TechniqueJson[];
+  /** Kinds of step the game's planner emits (`StatedStep`), by id. */
+  steps?: Record<string, StatedStep>;
   variations?: Record<string, VariationJson>;
+}
+
+/** A kind of hint step a planner emits: what its sentence reads, which the
+ * planner supplies, and its clauses. */
+export interface StatedStep extends Worded {
+  /** The sort of the elements the step decides. */
+  ring: string;
+  terms?: Record<string, "number" | "flag">;
+  /** The sorts marked in each role. */
+  marks?: Partial<Record<"outline" | "stripes" | "strand", string[]>>;
 }
 
 /** The description with the named variations applied, in order. */
@@ -648,7 +660,19 @@ export interface Description {
    * how many times; `null` where each appears once. */
   repeat: { value: Expr; times: Expr } | null;
   techniques: Technique[];
+  /** The kinds of step the game's planner emits. */
+  steps: Step[];
   tiers: string[];
+}
+
+/** A kind of step a planner emits, parsed. */
+export interface Step {
+  id: string;
+  ring: string;
+  terms: { name: string; kind: "number" | "flag" }[];
+  marks: { role: "outline" | "stripes" | "strand"; sort: string }[];
+  /** The step's stated words, by wording. */
+  words: Wording[];
 }
 
 export function parseBinders(src: string): Binder[] {
@@ -952,6 +976,21 @@ export function loadDescription(
             times: at("answer repeat times", json.answer.value.repeat.times),
           },
     techniques,
+    steps: Object.entries(json.steps ?? {}).map(([id, s]): Step => {
+      const label = `step ${id}`;
+      return {
+        id,
+        ring: s.ring,
+        terms: Object.entries(s.terms ?? {}).map(([name, kind]) => ({ name, kind })),
+        marks: (
+          Object.entries(s.marks ?? {}) as [
+            "outline" | "stripes" | "strand",
+            string[],
+          ][]
+        ).flatMap(([role, sorts]) => sorts.map((sort) => ({ role, sort }))),
+        words: wordingsOf(s, label, at),
+      };
+    }),
     tiers,
   };
 }

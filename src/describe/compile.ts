@@ -33,6 +33,7 @@ import {
   relationMarkOf,
   type Says,
   type StatedClauses,
+  type Step,
   type Technique,
   UNPLACED,
   type Wording,
@@ -4513,6 +4514,12 @@ function checkStated(
         );
       };
       for (const s of slots) {
+        for (const flag of s.flags)
+          if (sorts.get(flag)?.k !== "bool")
+            throw new CompileError(
+              `${id}: says ${where}${part} chooses by {if ${flag}}, which is no flag term`,
+            );
+        if (s.role === "if") continue;
         if (s.role === null) plain(s.name as string, false);
         else if (s.name === null) {
           if (s.role !== "ring" && !roles.has(s.role))
@@ -4596,6 +4603,145 @@ function statedTable(own: readonly Technique[]): string[] {
     "export const STATED = {",
     ...rows,
     "} as const;",
+    "",
+  ];
+}
+
+/** A planner's kind of step checks as a technique's `says` does, over the
+ * terms and marks it declares: a number term is a number, a flag a truth. */
+function checkStep(step: Step): void {
+  const sorts = new Map<string, Sort>(
+    step.terms.map((t) => [t.name, t.kind === "flag" ? BOOL : NUM]),
+  );
+  const says: Says = {
+    each: false,
+    legs: false,
+    witness: false,
+    reads: false,
+    fact: null,
+    variants: [
+      {
+        name: null,
+        when: null,
+        terms: [],
+        marks: step.marks.map((m) => ({ ...m, expr: { k: "num", v: 0 } })),
+        words: step.words,
+      },
+    ],
+  };
+  checkStated(step.id, says, [{ sorts }], null);
+  for (const [i, w] of step.words.entries())
+    if (w.when !== null) stepWhen(step, w.when, `wording ${i} when`);
+}
+
+/** A wording's `when` of a planner's step as code over its terms (`t`) and
+ * marks (`m`): a term, a size `|outlineAngle|` of the marks of one role and
+ * sort, a number, and the connectives. */
+function stepWhen(step: Step, e: Expr, where: string): string {
+  const fail = (what: string): never => {
+    throw new CompileError(`${step.id}: ${where} reads ${what}`);
+  };
+  const term = (name: string): Step["terms"][number] =>
+    step.terms.find((t) => t.name === name) ?? fail(`${name}, which is no term`);
+  const num = (x: Expr): string => {
+    if (x.k === "num") return String(x.v);
+    if (x.k === "name") {
+      if (term(x.name).kind !== "number") fail(`${x.name} as a number, a flag`);
+      return `t.${x.name}`;
+    }
+    if (x.k === "size" && x.of.k === "name") {
+      const { name } = x.of;
+      const mark = step.marks.find(
+        (m) => m.role + m.sort[0].toUpperCase() + m.sort.slice(1) === name,
+      );
+      if (mark === undefined) return fail(`|${name}|, which is no mark of the step`);
+      return `m.${mark.role}.${mark.sort}.length`;
+    }
+    return fail("a number it cannot compile");
+  };
+  const bool = (x: Expr): string => {
+    if (x.k === "name") {
+      if (term(x.name).kind !== "flag") fail(`${x.name} as a flag, a number`);
+      return `t.${x.name}`;
+    }
+    if (x.k === "not") return `!${bool(x.of)}`;
+    if (x.k === "bin") {
+      if (x.op === "and" || x.op === "or")
+        return `(${bool(x.a)} ${x.op === "and" ? "&&" : "||"} ${bool(x.b)})`;
+      if (["=", "!=", "<", "<=", ">", ">="].includes(x.op))
+        return `(${num(x.a)} ${x.op === "=" ? "===" : x.op === "!=" ? "!==" : x.op} ${num(x.b)})`;
+    }
+    return fail("a condition it cannot compile");
+  };
+  const body = bool(e);
+  // A parameter the condition does not read is named `_`, as `noUnusedParameters` asks.
+  return `(${body.includes("t.") ? "t" : "_t"}, ${body.includes("m.") ? "m" : "_m"}) => ${body}`;
+}
+
+/** The module's planner steps: each kind's clauses in `STATED`'s form, what
+ * the planner supplies, and each wording's `when` as code. */
+function stepsBlock(steps: readonly Step[], own: readonly Technique[]): string[] {
+  if (steps.length === 0) return [];
+  for (const s of steps) {
+    // A step is a kind of its own, but one name must not have the technique's
+    // stated words and the planner's both.
+    if (
+      own.some((t) => t.id === s.id && t.says?.variants.some((v) => v.words.length > 0))
+    )
+      throw new CompileError(
+        `${s.id}: a technique states its words and a step has the name`,
+      );
+    checkStep(s);
+  }
+  const sortsOf = (s: Step, role: string): string[] =>
+    s.marks.filter((m) => m.role === role).map((m) => m.sort);
+  return [
+    "/** What the planner supplies for each kind of step it emits, over the",
+    " * elements `E` it marks: its terms, and the elements marked by role and sort. */",
+    "export interface StepsById<E> {",
+    ...steps.map((s) => {
+      const roles = [...new Set(s.marks.map((m) => m.role))];
+      const marks = roles
+        .map(
+          (r) =>
+            `${r}: { ${sortsOf(s, r)
+              .map((x) => `${x}: readonly E[]`)
+              .join("; ")} }`,
+        )
+        .join("; ");
+      const terms =
+        s.terms.length === 0
+          ? "Record<string, never>"
+          : `{ ${s.terms
+              .map((t) => `${t.name}: ${t.kind === "flag" ? "boolean" : "number"}`)
+              .join("; ")} }`;
+      return `  ${s.id}: { ring: ${JSON.stringify(s.ring)}; terms: ${terms}; marks: { ${marks} } };`;
+    }),
+    "}",
+    "",
+    "/** Each kind of step the planner emits: its clauses by wording, and the",
+    " * condition under which each wording is the one said (`null`: always). */",
+    "export const STEPS: {",
+    "  readonly [K in keyof StepsById<unknown>]: {",
+    '    readonly ring: StepsById<unknown>[K]["ring"];',
+    "    readonly clauses: readonly { look?: string; follows?: string; move?: string }[];",
+    "    readonly when: readonly (",
+    "      | null",
+    "      | ((",
+    '          t: StepsById<unknown>[K]["terms"],',
+    '          m: StepsById<unknown>[K]["marks"],',
+    "        ) => boolean)",
+    "    )[];",
+    "  };",
+    "} = {",
+    ...steps.flatMap((s) => [
+      `  ${s.id}: {`,
+      `    ring: ${JSON.stringify(s.ring)},`,
+      `    clauses: ${JSON.stringify(s.words.map((w) => w.clauses))},`,
+      `    when: [${s.words.map((w) => (w.when === null ? "null" : stepWhen(s, w.when, "when"))).join(", ")}],`,
+      "  },",
+    ]),
+    "};",
     "",
   ];
 }
@@ -7203,6 +7349,7 @@ export function compileGame(
     "/** Every technique a rung runs, by id: the description's, in its order. */",
     `export type LadderId = ${quoted(ids)};`,
     "",
+    ...stepsBlock(d.steps, own),
     ...(own.some((t) => t.says !== null)
       ? [
           "/** What a firing of each technique that says anything says, by id. */",

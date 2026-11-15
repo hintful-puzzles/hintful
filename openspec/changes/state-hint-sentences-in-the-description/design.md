@@ -226,6 +226,42 @@ technique is restated, or it stays an override.
   and every note-placing step (1.6), whose terms the plan reads when it places
   the note, not when the firing is made.
 
+### The rest of Loopy, as declared step kinds (2026-11-15)
+
+- **`steps:` is the declaration** (§ "Step kinds"): `ring` (a sort), `terms`
+  (`number` or `flag`), `marks` (the sorts held in each role), clauses and
+  `wordings`. The planner supplies terms and marks and names the kind; the
+  compiler checks every slot and a wording's `when`, and writes `STEPS` (kind
+  → clauses, and the `when` of each as code) with `StepsById<E>`. `E` is
+  generic because a pair note's elements are not indices: Loopy's is
+  `number | LoopyPair`, and a `MarkKind<number>` serves a `MarkKind<Elem>` since
+  `key` is a method.
+- **Every sentence of the old `hint-text.ts` is a kind**, with no override left
+  (`grep -c "^  [a-zA-Z]*:$"` over the `steps:` block counts them): the count steps (`boundLine`, `boundEmpty`), `corner` as four
+  kinds by what its dot leaves (`cornerOtherLine`, `cornerBothLines`,
+  `cornerOtherEmpty`, `cornerNeither`) and `cornerExit`, `matchingPair`,
+  `parityFace`, `parityDot`, `related`, five corner notes and six pair notes.
+  Which kind a firing is stays the plan's, as the technique's rung is.
+- **The form grew by one slot, `{if flag: yes | no}`**, because a verdict
+  ("must be a line" / "can't be a line"), a count ("exactly 1" / "0 or 2") and a
+  one-or-none ("one line" / "no line") choose independently inside one sentence,
+  and a wording for each product would have been four of every parity step. A
+  `wording` stays for a sentence that differs as a whole (`cornerFromClue`'s six).
+  Its forms hold words and number terms, no reference, so a clause is still
+  checkable and translatable whole.
+- **A wording's `when` over the plan's terms is data too**: `|outlineAngle| = 0`,
+  a flag, a comparison, and `and`/`or`/`not`, compiled to a small function in the
+  module. Nothing else is evaluated at runtime.
+- **What stays the plan's, and says so**: the pairs a count reads through
+  (`chainPair`), the corners a count leans on (`boundOf`), and what a deferred
+  note quotes of the board (`needed`, `dotLines`), each passed in as a term or
+  a mark by sort; none is a sentence.
+- The walk fingerprint is unchanged on both tiers. The fingerprint line of a
+  board lists its rungs with counts, and the two tiers' snapshots between them
+  meet every rung (read off the files); a kind inside a rung (the four
+  corner kinds, a wording) is met only if its hash covers it, which a planted
+  `0 or 3` in `parityDot` showed for that kind alone.
+
 ### Unequal (2026-11-14, `59c6af093`)
 
 - **Stated whole, no override.** Its two sentences became four fact arms,

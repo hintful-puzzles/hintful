@@ -650,6 +650,40 @@
           "additionalProperties": { "type": "array", "items": { "type": "string" } }
         },
         "techniques": { "$ref": "#/$defs/techniques" },
+        "steps": {
+          "type": "object",
+          "description": "Kinds of hint step the game's own planner emits, which no technique's firing is: a note placed, a move chosen. Each declares what its sentence reads, the terms and marks the planner supplies, and its clauses, which the compiler checks as a technique's are. The planner names the kind and the wording is the first whose `when` holds.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ring"],
+            "properties": {
+              "ring": {
+                "type": "string",
+                "description": "The sort of the elements the step decides, which `{ring}` marks."
+              },
+              "terms": {
+                "type": "object",
+                "description": "Named values the planner supplies: `number`, said by the game's value words, or `flag`, which an `{if flag: yes | no}` and a wording's `when` read.",
+                "additionalProperties": { "enum": ["number", "flag"] }
+              },
+              "marks": {
+                "type": "object",
+                "description": "The sorts of the elements the planner marks in each role, which a reference names (`{outline cell: ...}`); a mark's size is read in a `when` as `|outlineCell|`.",
+                "additionalProperties": false,
+                "properties": {
+                  "outline": { "type": "array", "items": { "type": "string" } },
+                  "stripes": { "type": "array", "items": { "type": "string" } },
+                  "strand": { "type": "array", "items": { "type": "string" } }
+                }
+              },
+              "look": { "$ref": "#/$defs/clause" },
+              "follows": { "$ref": "#/$defs/clause" },
+              "move": { "$ref": "#/$defs/clause" },
+              "wordings": { "$ref": "#/$defs/wordings" }
+            }
+          }
+        },
         "variations": {
           "type": "object",
           "description": "Blocks added to the description, or replacing its blocks of the same name, under the name the game offers it by: a modifier's words, or a ruleset's name. A variation that only adds is a modifier, and one that replaces is a ruleset. The compiler reads the description with every variation applied, so a technique may read what one deals, and finds it empty on a board without it.",

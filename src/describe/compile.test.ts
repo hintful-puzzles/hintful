@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CompileError, compileLibrary } from "./compile.ts";
+import { CompileError, compileGame, compileLibrary } from "./compile.ts";
 import {
   isFormal,
   isLibrary,
@@ -393,6 +393,65 @@ describe("a stated clause names only what its technique states", () => {
       ["a sort it does not mark", { look: "{outline face} is it" }, /face is no term/],
     ])("and refuses %s", (_, says, error) => {
       expect(() => sorts(says)).toThrow(error);
+    });
+  });
+
+  describe("a step the planner emits", () => {
+    const loopy = sources.get("src/games/loopy/loopy.description.yaml");
+    const compileStep = (step: Record<string, unknown>): string => {
+      if (loopy === undefined || !isFormal(loopy)) throw new Error("no Loopy");
+      const libraries = [...sources.values()].filter(isLibrary);
+      return compileGame(
+        { ...loopy, steps: { probe: step } } as never,
+        libraries,
+        "src/games/loopy/loopy.description.yaml",
+        "../../engine/describe-runtime.ts",
+      );
+    };
+    const step = (over: Record<string, unknown>): Record<string, unknown> => ({
+      ring: "edge",
+      terms: { n: "number", line: "flag" },
+      marks: { outline: ["face", "angle"] },
+      ...over,
+    });
+
+    it("is checked as a technique's words are, and its wordings' conditions compile", () => {
+      const code = compileStep(
+        step({
+          wordings: [
+            { when: "|outlineAngle| = 0 and line", look: "{outline face: this {n}}" },
+            { look: "{outline face: this {n}} {if line: is | is not}" },
+          ],
+          move: "{ring} must be a line",
+        }),
+      );
+      expect(code).toContain("probe: {");
+      expect(code).toContain("(t, m) => ((m.outline.angle.length === 0) && t.line)");
+    });
+
+    it.each([
+      ["a term it does not declare", { look: "{m} is it" }, /says \{m\}/],
+      ["an if over a number", { look: "{if n: a | b}" }, /\{if n\}, which is no flag/],
+      ["a flag said as a number", { look: "{line} is it" }, /says \{line\}/],
+      [
+        "a role of several sorts named bare",
+        { look: "{outline} is it" },
+        /marks several sorts/,
+      ],
+      [
+        "a sort it does not mark",
+        { look: "{outline cell: the dot} is it" },
+        /cell is no term/,
+      ],
+      [
+        "a condition on a term it does not declare",
+        { wordings: [{ when: "m", look: "a" }, { look: "b" }] },
+        /reads m, which is no term/,
+      ],
+    ])("and refuses %s", (_, over, error) => {
+      expect(() =>
+        compileStep(step({ move: "{ring} must be a line", ...over })),
+      ).toThrow(error);
     });
   });
 

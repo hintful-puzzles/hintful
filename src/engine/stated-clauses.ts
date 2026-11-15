@@ -10,8 +10,10 @@
  * - `{role}`, `{role: words}`, `{role term}`, `{role term: words}`: a reference
  *   in a role ({@link SLOT_ROLES}) to the step's marks in that role, or to the
  *   elements a term holds.
+ * - `{if flag: yes | no}`: the form the step's flag term holds, whole; its forms
+ *   hold literal words, number terms and further `if`s, and no reference.
  * - A reference's words are one form, or `one | several`; a slot inside them is
- *   a word, a number term, or one of {@link STATED_INNER_WORDS}.
+ *   a word, a number term, an `if`, or one of {@link STATED_INNER_WORDS}.
  */
 
 /** The lexicon's words a clause may say anywhere: the noun for one square
@@ -34,6 +36,7 @@ const SLOT_ROLES: ReadonlySet<string> = new Set([
   "outline",
   "stripes",
   "strand",
+  "if",
 ]);
 
 /** One piece of a clause: literal words, or a slot. */
@@ -86,6 +89,11 @@ function slot(body: string, src: string): Piece {
       : splitForms(body.slice(colon + 1).trim()).map((f) => parseClause(f.trim()));
   if (head.length === 1 && SLOT_ROLES.has(head[0]))
     return { name: "", role: head[0], words };
+  if (head[0] === "if") {
+    if (head.length !== 2 || words === null || words.length !== 2)
+      throw new Error(`"{${body}}" is no if of a flag and two forms, in "${src}"`);
+    return { name: head[1], role: "if", words };
+  }
   if (head.length === 2 && SLOT_ROLES.has(head[0]))
     return { name: head[1], role: head[0], words };
   if (head.length === 1 && head[0] !== "" && words === null)
@@ -119,22 +127,51 @@ export interface Slot {
   readonly role: string | null;
   /** The words and terms named inside a reference's words. */
   readonly inner: readonly string[];
+  /** The flags of every `if` inside the slot's forms, nested ones too. */
+  readonly flags: readonly string[];
 }
 
-/** Every slot of a clause, for the compiler to check. Throws on a malformed
- * one. */
+/** Every slot of a clause, for the compiler to check: a slot of an `if`'s
+ * forms is a slot of the clause, as a word said plainly. Throws on a malformed
+ * one, and on a reference inside an `if`. */
 export function slotsOf(src: string): Slot[] {
-  const inner = (forms: readonly (readonly Piece[])[] | null): string[] =>
-    (forms ?? []).flat().flatMap((p) => ("name" in p ? [p.name] : []));
-  return parseClause(src).flatMap((p) =>
-    "name" in p
-      ? [
-          {
-            name: p.role !== null && p.name === "" ? null : p.name,
-            role: p.role,
-            inner: inner(p.words),
-          },
-        ]
-      : [],
-  );
+  const within = (
+    forms: readonly (readonly Piece[])[] | null,
+    into: { inner: string[]; flags: string[] },
+  ): void => {
+    for (const p of (forms ?? []).flat()) {
+      if (!("name" in p)) continue;
+      if (p.role === "if") {
+        into.flags.push(p.name);
+        within(p.words, into);
+      } else if (p.role === null) into.inner.push(p.name);
+      else throw new Error(`a reference inside the words of "${src}"`);
+    }
+  };
+  const walk = (pieces: readonly Piece[]): Slot[] =>
+    pieces.flatMap((p): Slot[] => {
+      if (!("name" in p)) return [];
+      if (p.role === "if") {
+        // Its forms' words are said plainly, wherever the `if` is.
+        const into = { inner: [] as string[], flags: [] as string[] };
+        within(p.words, into);
+        return [
+          { name: p.name, role: "if", inner: [], flags: [p.name, ...into.flags] },
+          ...into.inner.map(
+            (n): Slot => ({ name: n, role: null, inner: [], flags: [] }),
+          ),
+        ];
+      }
+      const into = { inner: [] as string[], flags: [] as string[] };
+      within(p.words, into);
+      return [
+        {
+          name: p.role !== null && p.name === "" ? null : p.name,
+          role: p.role,
+          inner: into.inner,
+          flags: into.flags,
+        },
+      ];
+    });
+  return walk(parseClause(src));
 }

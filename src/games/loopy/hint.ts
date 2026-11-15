@@ -28,20 +28,17 @@ import {
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import { type Clauses, statedSentence } from "../../engine/stated.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import {
-  CORNER,
-  type CornerBound,
-  type CornerThen,
-  DOT,
-  EDGE,
-  FACE,
-  type Marked,
-  say,
-} from "./hint-text.ts";
+  type Clauses,
+  type PlannedKind,
+  type PlannedSaid,
+  plannedSentence,
+  statedSentence,
+} from "../../engine/stated.ts";
+import { stepBudget } from "../../engine/step-budget.ts";
 import type { LoopyMove, LoopyOp } from "./index.ts";
-import { STATED } from "./loopy.compiled.ts";
+import { CORNER, DOT, EDGE, FACE, PAIR } from "./kinds.ts";
+import { STATED, STEPS } from "./loopy.compiled.ts";
 import {
   type CornerNote,
   type HintBoard,
@@ -65,10 +62,44 @@ import {
   type LoopyState,
 } from "./state.ts";
 
-type Marks = Omit<Marked, "targets">;
+/** An element a step's words point at: everything is an index but a pair note. */
+type Elem = number | LoopyPair;
+
+/** What a corner is known to carry. */
+type CornerBound = "atLeastOne" | "atMostOne" | "exactlyOne";
 
 /** What a reference to each sort a description names is drawn on. */
-const SORT_KINDS = { face: FACE, cell: DOT, edge: EDGE, angle: CORNER };
+const SORT_KINDS = { face: FACE, cell: DOT, edge: EDGE, angle: CORNER, pair: PAIR };
+
+/** The noun for one element of each sort a step decides. */
+const RING_NOUNS = { edge: "edge", angle: "corner", pair: "pair" };
+
+/**
+ * The words of a step the plan emits, as `loopy.description.yaml`'s `steps`
+ * state them: `ring` is what the step decides, the terms and marks are what the
+ * plan reads and supplies by sort.
+ */
+export function speak<
+  T extends PlannedSaid<Elem>["terms"],
+  M extends PlannedSaid<Elem>["marks"],
+>(
+  step: PlannedKind<T, M> & { readonly ring: keyof typeof RING_NOUNS },
+  terms: T,
+  marks: M,
+  ring: readonly Elem[],
+): Sentence {
+  return plannedSentence(
+    step,
+    { terms, marks },
+    {
+      kind: SORT_KINDS[step.ring],
+      kinds: SORT_KINDS,
+      ring,
+      value: String,
+      noun: RING_NOUNS[step.ring],
+    },
+  );
+}
 
 /**
  * The hint's rungs: a line step is the solver's firing, by its reason's kind,
@@ -174,28 +205,7 @@ interface Planner {
   readonly steps: Step[];
 }
 
-const NO_MARKS: Marks = {
-  placedCorner: null,
-  placedPair: null,
-  faces: [],
-  dots: [],
-  edges: [],
-  corners: [],
-  pairs: [],
-};
-
-/** The words a step speaks, given the marks it draws. */
-type Words = (m: Marked) => Sentence;
-
-function push(
-  pl: Planner,
-  rung: LoopyRung,
-  move: LoopyMove,
-  words: Words,
-  marks: Partial<Marks>,
-  targets: readonly number[] = [],
-): void {
-  const said = words({ ...NO_MARKS, ...marks, targets });
+function push(pl: Planner, rung: LoopyRung, move: LoopyMove, said: Sentence): void {
   pl.steps.push({ move, rung, explanation: said.text, words: said });
 }
 
@@ -225,12 +235,17 @@ function chainPair(pl: Planner, links: readonly Link[]): LoopyPair {
         pl,
         "pairChain",
         { kind: "pair", a: joined.a, b: joined.b, relation: relationWord(joined) },
-        (m) => say.pairChain(first, link.opposite, m),
-        {
-          placedPair: joined,
-          edges: [end],
-          pairs: [pairOf(start, end, opposite), pairOf(end, next, link.opposite)],
-        },
+        speak(
+          STEPS.pairChain,
+          { mixed: first !== link.opposite, opposite: first },
+          {
+            outline: {
+              edge: [end],
+              pair: [pairOf(start, end, opposite), pairOf(end, next, link.opposite)],
+            },
+          },
+          [joined],
+        ),
       );
       pl.notes.addPair(joined);
     }
@@ -262,39 +277,60 @@ function placeCorner(pl: Planner, group: readonly CornerNote[]): void {
   const bound: CornerBound = bits === 3 ? "exactlyOne" : f.bound;
 
   let rung: LoopyRung;
-  let words: Words;
-  let marks: Partial<Marks> = f.outline;
+  let words: Sentence;
+  const { outline } = f;
+  const ring = [f.dline];
   const why = f.why;
   switch (why.kind) {
     case "lineElsewhere":
     case "onlyWayOn":
       rung = "cornerAtDot";
-      words = (m) => say.cornerAtDot(bound, m);
+      words = speak(
+        STEPS.cornerAtDot,
+        { atMost: bound === "atMostOne", exactly: bound === "exactlyOne" },
+        { outline: { cell: outline.dots } },
+        ring,
+      );
       break;
     case "clue":
       rung = "cornerFromClue";
-      words = (m) => say.cornerFromClue(why.clue, why.witness.total, f.bound, m);
-      marks = { ...marks, corners: [...why.witness.corners] };
+      words = speak(
+        STEPS.cornerFromClue,
+        { n: why.clue, total: why.witness.total, atLeast: f.bound === "atLeastOne" },
+        { outline: { face: outline.faces, angle: why.witness.corners } },
+        ring,
+      );
       break;
     case "acrossTheDot":
       rung = "cornerAcross";
-      words = say.cornerAcross;
+      words = speak(
+        STEPS.cornerAcross,
+        {},
+        { outline: { angle: outline.corners, cell: outline.dots } },
+        ring,
+      );
       break;
     case "exactlyOneAcross":
       rung = "cornerOppositeExit";
-      words = say.cornerOppositeExit;
+      words = speak(
+        STEPS.cornerOppositeExit,
+        {},
+        { outline: { angle: outline.corners, cell: outline.dots } },
+        ring,
+      );
       break;
     case "opposites":
       rung = "cornerFromPair";
-      marks = { ...marks, pairs: [chainPair(pl, why.path)] };
-      words = (m) => say.cornerFromPair(bound, m);
+      words = speak(
+        STEPS.cornerFromPair,
+        { exactly: bound === "exactlyOne", atMost: bound === "atMostOne" },
+        { outline: { pair: [chainPair(pl, why.path)] } },
+        ring,
+      );
       break;
   }
   const next = had | bits;
-  push(pl, rung, { kind: "corner", dline: f.dline, bits: next }, words, {
-    ...marks,
-    placedCorner: f.dline,
-  });
+  push(pl, rung, { kind: "corner", dline: f.dline, bits: next }, words);
   pl.notes.corners[f.dline] = next;
 }
 
@@ -308,80 +344,107 @@ function placePair(pl: Planner, f: RelationNote, before: Uint8Array): void {
   const dotLines = (dot: number): number => yesAround(g.dots[dot].edges, before);
 
   let rung: LoopyRung;
-  let words: Words;
-  let marks: Partial<Marks> = f.outline;
+  const placed = pairOf(a, b, f.opposite);
+  const { outline } = f;
+  const ring = [placed];
   const why = f.why;
   // What the board shows of a clue or a dot is read where the note is placed,
   // which may be later than where it was found: the sentence quotes the board.
+  let words: Sentence;
   switch (why.kind) {
-    case "faceParity": {
+    case "faceParity":
       rung = "pairAtClue";
-      const more = needed(why.face);
-      words = (m) => say.pairAtClue(why.clue, more, f.opposite, m);
+      words = speak(
+        STEPS.pairAtClue,
+        { n: why.clue, needed: needed(why.face), opposite: f.opposite },
+        { outline: { face: outline.faces } },
+        ring,
+      );
       break;
-    }
-    case "dotParity": {
+    case "dotParity":
       rung = "pairAtDot";
-      const lines = dotLines(why.dot);
-      words = (m) => say.pairAtDot(lines, f.opposite, m);
+      words = speak(
+        STEPS.pairAtDot,
+        { hasLine: dotLines(why.dot) === 1, opposite: f.opposite },
+        { outline: { cell: outline.dots } },
+        ring,
+      );
       break;
-    }
     case "exactlyOneAtCorner":
       rung = "pairAtCorner";
-      words = say.pairAtCorner;
+      words = speak(
+        STEPS.pairAtCorner,
+        {},
+        { outline: { angle: outline.corners } },
+        ring,
+      );
       break;
     case "faceLink": {
       rung = "pairAcrossClue";
       const pair = chainPair(pl, why.path);
-      const more = needed(why.face);
-      words = (m) => say.pairAcrossClue(why.clue, more, pair.opposite, f.opposite, m);
-      marks = { ...marks, pairs: [pair] };
+      words = speak(
+        STEPS.pairAcrossClue,
+        {
+          n: why.clue,
+          needed: needed(why.face),
+          pairOpposite: pair.opposite,
+          opposite: f.opposite,
+        },
+        { outline: { face: outline.faces, pair: [pair] } },
+        ring,
+      );
       break;
     }
     case "dotLink": {
       rung = "pairAcrossDot";
       const pair = chainPair(pl, why.path);
-      const lines = dotLines(why.dot);
-      words = (m) => say.pairAcrossDot(lines, pair.opposite, f.opposite, m);
-      marks = { ...marks, pairs: [pair] };
+      words = speak(
+        STEPS.pairAcrossDot,
+        {
+          hasLine: dotLines(why.dot) === 1,
+          pairOpposite: pair.opposite,
+          opposite: f.opposite,
+        },
+        { outline: { cell: outline.dots, pair: [pair] } },
+        ring,
+      );
       break;
     }
   }
-  const placed = pairOf(a, b, f.opposite);
   push(
     pl,
     rung,
     { kind: "pair", a: placed.a, b: placed.b, relation: relationWord(placed) },
     words,
-    { ...marks, placedPair: placed },
   );
   pl.notes.addPair(placed);
 }
 
 /** The sentence and the marks for one line firing, placing first any pair its
  * chain of pairs comes to. */
-function narrate(pl: Planner, p: Planned): { words: Words; marks: Partial<Marks> } {
+function narrate(pl: Planner, p: Planned): Sentence {
   const state = pl.state;
   const r = p.reason;
   const line = p.ops[0].state === LINE_YES;
-  const marks = r.outline;
+  const outline = r.outline;
+  // The ring is the edges the step sets.
+  const ring = p.ops.map((o) => o.edge);
 
   const stated = (STATED as Readonly<Record<string, { step?: readonly Clauses[] }>>)[
     r.kind
   ]?.step;
   if (stated !== undefined) {
     // The description states this kind's words; the ring is the edges it sets.
-    const spoken = statedSentence(stated[r.said.wording ?? 0], {
+    return statedSentence<Elem>(stated[r.said.wording ?? 0], {
       kind: EDGE,
       kinds: SORT_KINDS,
       at: (i) => i,
-      ring: p.ops.map((o) => o.edge),
+      ring,
       marks: r.said.marks,
       terms: r.said.terms,
       value: String,
       noun: "edge",
     });
-    return { words: () => spoken, marks };
   }
 
   switch (r.kind) {
@@ -394,55 +457,83 @@ function narrate(pl: Planner, p: Planned): { words: Words; marks: Partial<Marks>
     case "dotFull":
     case "earlyLoop":
       throw new Error(`loopy hint: ${r.kind} is stated, and its clauses are missing`);
-    case "clueBound":
-      return {
-        words: (m) => (line ? say.boundLine(r.clue, m) : say.boundEmpty(r.clue, m)),
-        marks: { ...marks, corners: [...r.witness.corners] },
-      };
-
-    case "corner":
-    case "cornerExit": {
-      const bound: CornerBound = r.kind === "cornerExit" ? "exactlyOne" : r.bound;
-      const [a, b] = pl.angleEdges(r.dline);
-      const bothOpen = p.before[a] === LINE_UNKNOWN && p.before[b] === LINE_UNKNOWN;
-      let then: CornerThen;
-      if (r.kind === "cornerExit") then = "exit";
-      else if (bound === "atLeastOne") then = bothOpen ? "bothLines" : "otherLine";
-      else then = bothOpen ? "neither" : "otherEmpty";
-      return { words: (m) => say.corner(bound, then, m), marks };
+    case "clueBound": {
+      // The corners the count leans on are the solver's (`boundOf`), which no
+      // formula states.
+      const marks = { outline: { face: outline.faces, angle: r.witness.corners } };
+      return line
+        ? speak(STEPS.boundLine, { n: r.clue, fewer: r.clue - 1 }, marks, ring)
+        : speak(STEPS.boundEmpty, { n: r.clue, single: r.clue === 1 }, marks, ring);
     }
 
+    case "corner": {
+      const [a, b] = pl.angleEdges(r.dline);
+      const bothOpen = p.before[a] === LINE_UNKNOWN && p.before[b] === LINE_UNKNOWN;
+      // The corner's bound and the dot's other edges decide which it is.
+      const angle = { outline: { angle: outline.corners } };
+      const both = { outline: { angle: outline.corners, cell: outline.dots } };
+      if (r.bound === "atLeastOne")
+        return bothOpen
+          ? speak(STEPS.cornerBothLines, {}, both, ring)
+          : speak(STEPS.cornerOtherLine, {}, angle, ring);
+      return bothOpen
+        ? speak(STEPS.cornerNeither, {}, both, ring)
+        : speak(STEPS.cornerOtherEmpty, {}, angle, ring);
+    }
+
+    case "cornerExit":
+      return speak(
+        STEPS.cornerExit,
+        {},
+        { outline: { angle: outline.corners, cell: outline.dots } },
+        ring,
+      );
+
     case "matchingPair":
-      return {
-        marks: { ...marks, pairs: [chainPair(pl, r.path)] },
-        words: (m) => say.matchingPair(r.clue, line, m),
-      };
+      return speak(
+        STEPS.matchingPair,
+        { n: r.clue, line },
+        { outline: { face: outline.faces, pair: [chainPair(pl, r.path)] } },
+        ring,
+      );
 
     case "parity": {
       const pair = chainPair(pl, r.path);
       if (r.face !== null && r.clue !== null) {
         const c = r.clue;
-        const needed = c - yesAround(state.grid.faces[r.face].edges, p.before);
-        return {
-          words: (m) => say.parityFace(c, needed, pair.opposite, line, m),
-          marks: { ...marks, pairs: [pair] },
-        };
+        return speak(
+          STEPS.parityFace,
+          {
+            n: c,
+            needed: c - yesAround(state.grid.faces[r.face].edges, p.before),
+            opposite: pair.opposite,
+            line,
+          },
+          { outline: { face: outline.faces, pair: [pair] } },
+          ring,
+        );
       }
-      const dot = r.dot ?? 0;
-      const dotLines = yesAround(state.grid.dots[dot].edges, p.before);
-      return {
-        words: (m) => say.parityDot(dotLines, pair.opposite, line, m),
-        marks: { ...marks, pairs: [pair] },
-      };
+      const dotLines = yesAround(state.grid.dots[r.dot ?? 0].edges, p.before);
+      return speak(
+        STEPS.parityDot,
+        { hasLine: dotLines === 1, opposite: pair.opposite, line },
+        { outline: { cell: outline.dots, pair: [pair] } },
+        ring,
+      );
     }
 
     case "related": {
       const pair = chainPair(pl, r.path);
-      const fromLine = p.before[r.from] === LINE_YES;
-      return {
-        words: (m) => say.related(pair.opposite, fromLine, line, m),
-        marks: { ...marks, pairs: [pair] },
-      };
+      return speak(
+        STEPS.related,
+        {
+          opposite: pair.opposite,
+          fromLine: p.before[r.from] === LINE_YES,
+          line,
+        },
+        { outline: { pair: [pair], edge: outline.edges } },
+        ring,
+      );
     }
   }
 }
@@ -683,16 +774,9 @@ function planSteps(
       }
     }
     const lineStart = usedGroups === 1 ? lastStart : pl.steps.length;
-    const { words, marks } = narrate(pl, p);
+    const words = narrate(pl, p);
     const ops: LoopyOp[] = p.ops.map(({ edge, state: to }) => ({ edge, state: to }));
-    push(
-      pl,
-      p.reason.kind,
-      { kind: "set", ops },
-      words,
-      marks,
-      ops.map((o) => o.edge),
-    );
+    push(pl, p.reason.kind, { kind: "set", ops }, words);
     journey(lineStart);
   });
   return pl.steps;

@@ -31,6 +31,25 @@ describe("a stated clause", () => {
     );
   });
 
+  it("takes the form a flag term holds, in a clause and inside a reference's words", () => {
+    const say = (one: boolean, two: boolean): string =>
+      statedSentence(
+        {
+          look: "{outline: the {if one: lone | plain} square} is {if two: full | {if one: part | empty}}",
+          move: "{ring} must go",
+        },
+        cx({ terms: { one, two } }),
+      ).text;
+    expect(say(true, true)).toBe("The lone square is full, so these squares must go.");
+    expect(say(false, false)).toBe(
+      "The plain square is empty, so these squares must go.",
+    );
+    expect(say(true, false)).toBe("The lone square is part, so these squares must go.");
+    expect(() => statedSentence({ look: "{if n: a | b}", move: "x" }, cx())).toThrow(
+      /no flag term/,
+    );
+  });
+
   it("takes the one form or the several from the reference's live elements", () => {
     const s = statedSentence(
       {

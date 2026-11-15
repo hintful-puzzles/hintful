@@ -33,10 +33,11 @@ import {
   type LoopyRung,
   refreshHintStep,
   sentenceExpires,
+  speak,
 } from "./hint.ts";
-import { CORNER, DOT, EDGE, FACE, type Marked, PAIR, say } from "./hint-text.ts";
 import { type LoopyMove, loopyGame } from "./index.ts";
-import { STATED } from "./loopy.compiled.ts";
+import { CORNER, DOT, EDGE, FACE, PAIR } from "./kinds.ts";
+import { STATED, STEPS } from "./loopy.compiled.ts";
 import {
   DIFF_EASY,
   DIFF_HARD,
@@ -63,6 +64,7 @@ import {
   LINE_UNKNOWN,
   LINE_YES,
   type LineState,
+  type LoopyPair,
   type LoopyState,
   newState,
 } from "./state.ts";
@@ -83,17 +85,18 @@ function closureOf(found: ReturnType<typeof deduceLoopyPlan>, k: number): Set<nu
   );
 }
 
-/** A step that marks nothing, for reading a sentence apart from any board. */
-const NO_MARKS: Marked = {
-  targets: [],
-  placedCorner: null,
-  placedPair: null,
-  faces: [],
-  dots: [],
-  edges: [],
-  corners: [],
-  pairs: [],
-};
+/** What a step's words mark: what it decides (the edges it sets, or the note it
+ * places) and what it reasons from. */
+interface Marked {
+  readonly targets: readonly number[];
+  readonly placedCorner: number | null;
+  readonly placedPair: LoopyPair | null;
+  readonly faces: readonly number[];
+  readonly dots: readonly number[];
+  readonly edges: readonly number[];
+  readonly corners: readonly number[];
+  readonly pairs: readonly LoopyPair[];
+}
 
 function board(name: string, p: LoopyParams, seed: string): Board {
   const { desc } = loopyGame.newDesc(p, randomNew(`loopy-hint-${name}-${seed}`));
@@ -902,16 +905,17 @@ describe("Loopy hint: the premises the corpus reaches", () => {
   });
 
   it("says each way a pair can settle an edge in the necessity voice", () => {
-    const m = {
-      ...NO_MARKS,
-      targets: [0],
-      edges: [1],
-      pairs: [{ a: 0, b: 2, opposite: false }],
-    };
-    expect(say.related(false, true, true, m).text).toBe(
+    const related = (opposite: boolean, fromLine: boolean): string =>
+      speak(
+        STEPS.related,
+        { opposite, fromLine, line: true },
+        { outline: { pair: [{ a: 0, b: 2, opposite }], edge: [1] } },
+        [0],
+      ).text;
+    expect(related(false, true)).toBe(
       "The marked pair makes this edge match the marked line, so it must be a line.",
     );
-    expect(say.related(true, false, true, m).text).toBe(
+    expect(related(true, false)).toBe(
       "The marked pair makes this edge the opposite of the marked ruled-out edge, so it must be a line.",
     );
   });
