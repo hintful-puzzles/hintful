@@ -12,10 +12,10 @@ import {
 } from "../games/crossing/hint-text.ts";
 import { STATED as DOMINOSA } from "../games/dominosa/dominosa.compiled.ts";
 import { SPOT } from "../games/dominosa/kinds.ts";
-import { say as keen } from "../games/keen/hint-text.ts";
+import { STATED as KEEN } from "../games/keen/keen.compiled.ts";
 import { indefinite } from "./hint-text.ts";
 import { CELL } from "./hint-words.ts";
-import { statedSentence } from "./stated.ts";
+import { statedParts, statedSentence } from "./stated.ts";
 
 type SharedDigit = Parameters<typeof crossing.sharedDigit>[0];
 type NoteStrike = Parameters<typeof crossing.noteStrike>[0];
@@ -37,15 +37,19 @@ describe("a number after an article gets the article it is pronounced with", () 
 
   it("Keen's cage line", () => {
     const cage = [{ x: 0, y: 0 }];
-    expect(keen.cageLine(cage, 0, 15, [8], true).text).toContain(
-      "places an 8 in its row",
-    );
-    expect(keen.cageLine(cage, 0, 15, [3], false).text).toContain(
-      "places a 3 in its column",
-    );
-    expect(keen.cageLine(cage, 0, 15, [1, 8], false).text).toContain(
-      "places a 1 and an 8 in its column",
-    );
+    const said = (struck: number[], horizontal: boolean): string =>
+      statedParts(KEEN.cageLine.step[0], {
+        kind: CELL,
+        at: () => cage[0],
+        ring: [],
+        marks: { stripes: cage },
+        terms: { r: 0, L: 0, horizontal, sum: 15 },
+        value: String,
+        struck,
+      }).look?.text ?? "";
+    expect(said([8], true)).toContain("places an 8 in its row");
+    expect(said([3], false)).toContain("places a 3 in its column");
+    expect(said([1, 8], false)).toContain("places a 1 and an 8 in its column");
   });
 
   it("Crossing's shared digit and single note strike", () => {

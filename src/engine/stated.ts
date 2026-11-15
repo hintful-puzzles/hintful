@@ -258,6 +258,15 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
       if (!cx.struck)
         throw new Error("stated clause: {struck} needs the step's strikes");
       return joinWith([...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value));
+    case "struckA":
+      if (!cx.struck)
+        throw new Error("stated clause: {struckA} needs the step's strikes");
+      return joinWith(
+        [...new Set(cx.struck)]
+          .sort((a, b) => a - b)
+          .map(cx.value)
+          .map((v) => `${indefinite(v)} ${v}`),
+      );
     case "struckOr":
       if (!cx.struck)
         throw new Error("stated clause: {struckOr} needs the step's strikes");

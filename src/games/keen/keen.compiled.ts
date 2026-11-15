@@ -36,6 +36,14 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["cageEasy","cage","cageLine"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "cageEasy": {"fact":[{"look":"No way to make {stripes: this cage} sum to {sum} puts {struckOr} in {ring at: this {noun}}"},{"look":"No way to make {stripes: this cage} multiply to {product} puts {struckOr} in {ring at: this {noun}}"},{"look":"No way to make {stripes: this cage} differ by {difference} puts {struckOr} in {ring at: this {noun}}"},{"look":"No way to make {stripes: this cage} have a ratio of {quotient} puts {struckOr} in {ring at: this {noun}}"},{}]},
+  "cage": {"fact":[{"look":"No way to make {stripes: this cage} sum to {sum} puts {struckOr} in {ring at: this {noun}}"},{"look":"No way to make {stripes: this cage} multiply to {product} puts {struckOr} in {ring at: this {noun}}"},{"look":"No way to make {stripes: this cage} differ by {difference} puts {struckOr} in {ring at: this {noun}}"},{"look":"No way to make {stripes: this cage} have a ratio of {quotient} puts {struckOr} in {ring at: this {noun}}"},{}]},
+  "cageLine": {"step":[{"look":"{stripes: This cage} must sum to {sum}, and every way to fill it places {struckA} in its {if horizontal: row | column}"},{"look":"{stripes: This cage} must multiply to {product}, and every way to fill it places {struckA} in its {if horizontal: row | column}"},{"look":"{stripes: This cage} must differ by {difference}, and every way to fill it places {struckA} in its {if horizontal: row | column}"},{"look":"{stripes: This cage} must have a ratio of {quotient}, and every way to fill it places {struckA} in its {if horizontal: row | column}"},{}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
 
@@ -178,13 +186,23 @@ export interface CageEasyBinding {
   D: number;
 }
 
-/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
-export interface CageEasySays {
-  terms: { r: number; };
+/** What a square the firing decides has of its own, read where it is made. */
+export interface CageEasySaysFact {
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
+  terms: { at: number; sum: number; product: number; difference: number; quotient: number; };
   marks: {  };
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; and `facts`, what each of its facts has of its own. */
+export interface CageEasySays {
+  terms: { r: number; };
+  marks: { stripes: readonly number[]; };
+  facts: CageEasySaysFact[];
+}
+
 const cageEasyFacts: number[] = [];
+const cageEasyFactSays: CageEasySaysFact[] = [];
 let cageEasyCands = new Int32Array(0);
 let cageEasy_f188 = new Int32Array(0);
 let cageEasy_l189: readonly number[] = [];
@@ -212,6 +230,10 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
     const _h223 = (_h222 === -1);
     const _h236 = clueAt(cl.quotient, v_r);
     const _h237 = (_h236 === -1);
+    const _h379 = (_h196 !== -1);
+    const _h380 = (_h200 !== -1);
+    const _h381 = (_h222 !== -1);
+    const _h382 = (_h236 !== -1);
     const v_K = cl.cage.cells[v_r];
     let _g126 = 0;
     G127: {
@@ -509,6 +531,7 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
       freshBinding("cageEasy", [(cl.cage.parts.includes(v_r)), sameSet(v_K, cl.cage.cells[v_r]), (v_D === _g253)], ["r in", "K =", "D ="]);
     }
     facts.length = 0;
+    cageEasyFactSays.length = 0;
     changed = false;
     let _q374 = true;
     Q375: {
@@ -518,7 +541,13 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
         for (let _m378 = (cands[v_c] >= 0 ? cands[v_c] : (cands[v_c] = b.cands[v_c])); _m378 !== 0; _m378 &= _m378 - 1) {
           const v_d = 31 - Math.clz32(_m378 & -_m378);
           if (!(!(((v_D >> v_d) & 1) !== 0))) continue;
-          if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+          if ((((b.cands[v_c] >> v_d) & 1) !== 0)) {
+            if (fire === null) { b.strikeAt(v_c, v_d); changed = true; }
+            if (fire !== null) {
+              facts.push(STRIKE, v_c, v_d);
+              cageEasyFactSays.push({ wording: (_h379 ? 0 : _h380 ? 1 : _h381 ? 2 : _h382 ? 3 : 4), terms: { at: v_c, sum: _h196, product: _h200, difference: _h222, quotient: _h236 }, marks: {  } });
+            }
+          }
           if (!(true)) {
             _q374 = false;
             break Q375;
@@ -530,7 +559,8 @@ export function cageEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageEasy
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null) {
-        const _says = { terms: { r: v_r }, marks: {  } };
+        if (cageEasyFactSays.length * 3 !== facts.length) throw new Error("cageEasy: a fact of its conclusion is made where says.fact is not read");
+        const _says = { terms: { r: v_r }, marks: { stripes: cl.cage.cells[v_r].slice() }, facts: cageEasyFactSays.slice() };
         if (!fire({ r: v_r, K: v_K.slice(), D: v_D }, facts, _says)) return 1;
       }
       cands.fill(-1);
@@ -544,13 +574,23 @@ export interface CageBinding {
   K: readonly number[];
 }
 
-/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
-export interface CageSays {
-  terms: { r: number; };
+/** What a square the firing decides has of its own, read where it is made. */
+export interface CageSaysFact {
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
+  terms: { at: number; sum: number; product: number; difference: number; quotient: number; };
   marks: {  };
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; and `facts`, what each of its facts has of its own. */
+export interface CageSays {
+  terms: { r: number; };
+  marks: { stripes: readonly number[]; };
+  facts: CageSaysFact[];
+}
+
 const cageFacts: number[] = [];
+const cageFactSays: CageSaysFact[] = [];
 let cageCands = new Int32Array(0);
 let cage_p10 = new Int32Array(0);
 let cage_l11: readonly number[] = [];
@@ -585,12 +625,17 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding,
     const _h49 = (_h48 === -1);
     const _h62 = clueAt(cl.quotient, v_r);
     const _h63 = (_h62 === -1);
+    const _h76 = (_h24 !== -1);
+    const _h77 = (_h28 !== -1);
+    const _h78 = (_h48 !== -1);
+    const _h79 = (_h62 !== -1);
     const v_K = cl.cage.cells[v_r];
     let _g13 = -1;
     if (DEV && staleChecking) {
       freshBinding("cage", [(cl.cage.parts.includes(v_r)), sameSet(v_K, cl.cage.cells[v_r])], ["r in", "K ="]);
     }
     facts.length = 0;
+    cageFactSays.length = 0;
     changed = false;
     let _q5 = true;
     Q6: {
@@ -741,7 +786,13 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding,
             }
           }
           if (!(!(((((cage_p10[v_c] >> v_d) & 1) !== 0) || ((v_d as number) === -1 && _y12 && !v_K.includes(v_c)))))) continue;
-          if ((((b.cands[v_c] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_c, v_d); changed = true; } else facts.push(STRIKE, v_c, v_d); }
+          if ((((b.cands[v_c] >> v_d) & 1) !== 0)) {
+            if (fire === null) { b.strikeAt(v_c, v_d); changed = true; }
+            if (fire !== null) {
+              facts.push(STRIKE, v_c, v_d);
+              cageFactSays.push({ wording: (_h76 ? 0 : _h77 ? 1 : _h78 ? 2 : _h79 ? 3 : 4), terms: { at: v_c, sum: _h24, product: _h28, difference: _h48, quotient: _h62 }, marks: {  } });
+            }
+          }
           if (!(true)) {
             _q5 = false;
             break Q6;
@@ -753,7 +804,8 @@ export function cage(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageBinding,
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null) {
-        const _says = { terms: { r: v_r }, marks: {  } };
+        if (cageFactSays.length * 3 !== facts.length) throw new Error("cage: a fact of its conclusion is made where says.fact is not read");
+        const _says = { terms: { r: v_r }, marks: { stripes: cl.cage.cells[v_r].slice() }, facts: cageFactSays.slice() };
         if (!fire({ r: v_r, K: v_K.slice() }, facts, _says)) return 1;
       }
       cands.fill(-1);
@@ -771,8 +823,10 @@ export interface CageLineBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface CageLineSays {
-  terms: { r: number; L: number; };
-  marks: {  };
+  terms: { r: number; L: number; horizontal: boolean; sum: number; product: number; difference: number; quotient: number; };
+  marks: { stripes: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const cageLineFacts: number[] = [];
@@ -984,7 +1038,15 @@ export function cageLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CageLine
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { r: v_r, L: v_L }, marks: {  } };
+          const _sw_r = v_r;
+          const _sw_L = v_L;
+          const _sw_horizontal = (sp.rows.includes(v_L));
+          const _sw_sum = _h24;
+          const _sw_product = _h28;
+          const _sw_difference = _h48;
+          const _sw_quotient = _h62;
+          const _sw_stripes = cl.cage.cells[v_r].slice();
+          const _says = { terms: { r: _sw_r, L: _sw_L, horizontal: _sw_horizontal, sum: _sw_sum, product: _sw_product, difference: _sw_difference, quotient: _sw_quotient }, marks: { stripes: _sw_stripes }, wording: ((clueAt(cl.sum, _sw_r) !== -1) ? 0 : (clueAt(cl.product, _sw_r) !== -1) ? 1 : (clueAt(cl.difference, _sw_r) !== -1) ? 2 : (clueAt(cl.quotient, _sw_r) !== -1) ? 3 : 4) };
           if (!fire({ r: v_r, K: v_K.slice(), L: v_L }, facts, _says)) return 1;
         }
         cands.fill(-1);

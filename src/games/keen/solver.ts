@@ -27,13 +27,12 @@ import {
   latinSolver,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
+import type { Clauses } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
 import * as keen from "./keen.compiled.ts";
 import {
   type Cages,
   cagesOf,
-  clueOp,
-  clueVal,
   DIFF_UNREASONABLE,
   dealtOf,
   type KeenClues,
@@ -45,28 +44,23 @@ export { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE };
  * the Easy and Normal per-cell pruning: no filling of the cage consistent with
  * its clue leaves this value in this cell. `cageLine` is the Tricky line
  * pruning: every such filling puts a value in the cage's part of a line, so it
- * goes from the rest of the line (`horizontal`: the line is a row). Both carry
- * the cage's sign, value and cells, for the words and the shading. */
+ * goes from the rest of the line. Both carry the cage's cells, for the
+ * shading, and the clause the description states for what holds, with the
+ * terms it reads (`engine/stated.ts`). */
 export type KeenReason =
-  | { kind: "cage"; op: number; value: number; cells: Point[] }
-  | { kind: "cageLine"; op: number; value: number; cells: Point[]; horizontal: boolean }
+  | { kind: "cage"; cells: Point[]; clause: Clauses; terms: StatedTerms }
+  | { kind: "cageLine"; cells: Point[]; clause: Clauses; terms: StatedTerms }
   | SingleReason;
 
 /** A reason a Keen hint step gives. */
 export type HintReason = KeenReason | LatinReason;
 
-/** Cage `r`'s sign, value and cells, as a {@link KeenReason} carries them. */
-export function cageReason(
-  cages: Cages,
-  r: number,
-  w: number,
-): { op: number; value: number; cells: Point[] } {
-  const clue = cages.clues[r];
-  return {
-    op: clueOp(clue),
-    value: clueVal(clue),
-    cells: cages.cells[r].map((c) => ({ x: c % w, y: (c / w) | 0 })),
-  };
+/** The terms a stated clause reads. */
+export type StatedTerms = Readonly<Record<string, unknown>>;
+
+/** Cage `r`'s cells, as a {@link KeenReason} carries them. */
+export function cageCells(cages: Cages, r: number, w: number): Point[] {
+  return cages.cells[r].map((c) => ({ x: c % w, y: (c / w) | 0 }));
 }
 
 /** The ladder `keen.description.yaml` states, over the board's cages. */

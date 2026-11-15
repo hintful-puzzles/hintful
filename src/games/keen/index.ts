@@ -48,11 +48,12 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import {
+  type LatinVocab,
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import { latinVerdict } from "../../engine/latin.ts";
@@ -86,10 +87,10 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
+import { statedParts } from "../../engine/stated.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newKeenDesc } from "./generator.ts";
-import { KEEN_VOCAB, say } from "./hint-text.ts";
-import { WORDS } from "./keen.compiled.ts";
+import * as keen from "./keen.compiled.ts";
 import {
   colors,
   computeSize,
@@ -102,7 +103,7 @@ import {
   redraw,
 } from "./render.ts";
 import {
-  cageReason,
+  cageCells,
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
   type HintReason,
@@ -130,6 +131,11 @@ import {
   status,
   validateParams,
 } from "./state.ts";
+
+const { WORDS } = keen;
+
+/** Keen's numbers print as numbers. */
+const KEEN_VOCAB: LatinVocab = { noun: "number", cell: WORDS.cell, value: String };
 
 /** A player marking that contradicts the unique solution:
  * - `"cell"` — a filled-in digit that is wrong;
@@ -321,22 +327,24 @@ function findMistakes(state: KeenState): readonly KeenMistake[] {
  * identically to Unequal's, narrated once, shared. The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
 function premise(reason: HintReason, marks: readonly Mark[]): Premise {
-  const ns = valuesOf(marks);
   switch (reason.kind) {
     case "cage":
-      return {
-        premise: say.cage(reason.cells, reason.op, reason.value, ns, marks[0]),
-      };
-    case "cageLine":
-      return {
-        premise: say.cageLine(
-          reason.cells,
-          reason.op,
-          reason.value,
-          ns,
-          reason.horizontal,
-        ),
-      };
+    case "cageLine": {
+      const { look } = statedParts(reason.clause, {
+        kind: CELL,
+        // The only element a clause rings is the struck cell, the note the
+        // walk strikes, which its highlight names.
+        at: (): Point => marks[0],
+        ring: [],
+        marks: { stripes: reason.cells },
+        terms: reason.terms,
+        value: KEEN_VOCAB.value,
+        noun: WORDS.cell,
+        struck: valuesOf(marks),
+      });
+      if (look === undefined) throw new Error(`${reason.kind} states no look`);
+      return { premise: look };
+    }
     default:
       return latinPremise(reason, marks, KEEN_VOCAB);
   }
@@ -362,18 +370,36 @@ function reasonReads(reason: HintReason): { reads?: Point[] } {
  * cell", with the whole cage hatched on every leg. A line firing says its
  * line, and the rows are numbered before the columns. */
 function cageLegs(
+  id: "cageEasy" | "cage" | "cageLine",
   f: LadderFiring,
   w: number,
   cages: Cages,
 ): Firing<KeenMove, KeenHint, HintReason> {
-  const { r, L } = (f.reasons[0] as Said<unknown, { terms: { r: number; L?: number } }>)
-    .says.terms;
-  const cage = cageReason(cages, r, w);
-  const reason: HintReason =
-    L === undefined
-      ? { kind: "cage", ...cage }
-      : { kind: "cageLine", ...cage, horizontal: L < w };
-  return byCell(strikesOf(f, w)).map((strike) => ({ strike, reason }));
+  const strikes = strikesOf(f, w);
+  if (id === "cageLine") {
+    const { says } = f.reasons[0] as Said<unknown, keen.CageLineSays>;
+    const reason: HintReason = {
+      kind: "cageLine",
+      cells: cageCells(cages, says.terms.r, w),
+      clause: keen.STATED.cageLine.step[says.wording],
+      terms: says.terms,
+    };
+    return byCell(strikes).map((strike) => ({ strike, reason }));
+  }
+  // The cage's two techniques say the same, each in its own module's words.
+  const { says } = f.reasons[0] as Said<unknown, keen.CageSays | keen.CageEasySays>;
+  const cells = cageCells(cages, says.terms.r, w);
+  const facts = keen.STATED[id].fact;
+  return byCell(strikes).map((strike) => {
+    const fact = says.facts[strikes.indexOf(strike[0])];
+    const reason: HintReason = {
+      kind: "cage",
+      cells,
+      clause: facts[fact.wording],
+      terms: { ...says.terms, ...fact.terms },
+    };
+    return { strike, reason };
+  });
 }
 
 /** Every rung a Keen step can be: the Latin family's, and the two cage kinds
@@ -400,7 +426,7 @@ function buildSteps(
   );
   type Rung = CandidateRung<KeenMove, KeenHint, HintReason>;
   const cageRung = (id: "cageEasy" | "cage" | "cageLine"): Rung =>
-    techniqueRung(on, id, (f) => cageLegs(f, w, cages));
+    techniqueRung(on, id, (f) => cageLegs(id, f, w, cages));
   runLatinCandidatePlan<KeenMove, KeenHint, HintReason>({
     w,
     steps,
