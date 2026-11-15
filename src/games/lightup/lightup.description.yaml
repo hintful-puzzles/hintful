@@ -122,15 +122,47 @@ techniques:
           when: "n < 0"
           terms: { dark: c }
           marks: { outline: L }
-        # A number whose bulbs are all placed.
+          move: "it must hold a bulb"
+          # The one square left is the dark square itself or another. The
+          # outline holds the squares that could light it less that one and
+          # the dark square, so a corridor of just those shows no second mark,
+          # and then the bare deictic is right.
+          wordings:
+            - when: "not known(c) and |L| > 1"
+              look: "{outline: each outlined square} is ruled out or already lit"
+              follows: "nothing else can light {ring: this dark square | these dark squares}"
+            - when: "not known(c)"
+              look: "every other square that could light {ring: this dark square | these dark squares} is ruled out or already lit"
+            - when: "|L| > 2"
+              look: "{outline: the other outlined square | the other outlined squares} can't light {strand: the outlined dark square}"
+              follows: "only {ring} can"
+            - look: "only {ring} can still light {strand: the outlined dark square}"
+        # A number whose bulbs are all placed. At the small counts "all 2 of"
+        # reads wrong, so 0, 1 and 2 are said apart.
         clueSatisfied:
           when: "bulbs(c) = n"
           terms: { n: n }
           marks: { outline: "{p in adj4(c) where value(p) = 1}", reads: "adj4(c)" }
-        # A number with a bulb for each free square beside it.
+          wordings:
+            - when: "n = 0"
+              look: "{strand: the outlined clue} is 0"
+              follows: "no bulb may sit beside it"
+              move: "{ring: its ringed free neighbor | its ringed free neighbors} can't hold a bulb"
+            - when: "n = 1"
+              look: "{strand: the outlined clue} already has {outline: its bulb (outlined)}"
+              move: "{ring: its other ringed free neighbor | its other ringed free neighbors} can't hold a bulb"
+            - when: "n = 2"
+              look: "{strand: the outlined clue} already has {outline: both its bulbs (outlined)}"
+              move: "{ring: its other ringed free neighbor | its other ringed free neighbors} can't hold a bulb"
+            - look: "{strand: the outlined clue} already has {outline: all {n} of its bulbs (outlined)}"
+              move: "{ring: its other ringed free neighbor | its other ringed free neighbors} can't hold a bulb"
+        # A number with a bulb for each free square beside it. Both counts
+        # are of the ringed squares, so a step followed in part re-counts.
         clueSaturated:
           when: "n >= 0"
           marks: { reads: "adj4(c)" }
+          look: "{strand: the outlined clue} still needs {ring: 1 more bulb | {live} more bulbs} and has exactly {ring: 1 free neighbor | {live} free neighbors} left"
+          move: "{ring: the ringed one | each ringed one} must be a bulb"
   # A dark square is lit from one of the free squares that see it, so a
   # square whose bulb would spoil every one of them holds none.
   - id: darkSet
@@ -147,6 +179,11 @@ techniques:
     says:
       shown: each
       marks: { outline: S, strand: "{u}" }
+      # The squares a bulb on the ringed one blocks are the outlined ones;
+      # "rule out" is lit, or beside a full clue, which the outlines let the
+      # player check square by square.
+      look: "a bulb on {ring} blocks {outline: every outlined square} that can light {strand: the outlined dark square}"
+      move: "it can't hold a bulb"
   # A number short of m bulbs among f free squares has one in every f - m + 1
   # of them, so a square whose bulb would spoil all of some such set holds
   # none.
@@ -163,3 +200,5 @@ techniques:
     says:
       shown: each
       marks: { outline: T, strand: "{k}" }
+      look: "a bulb on {ring} blocks {outline: every outlined square} left for {strand: the outlined clue}'s bulb"
+      move: "it can't hold a bulb"

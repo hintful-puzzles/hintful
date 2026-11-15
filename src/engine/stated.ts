@@ -214,6 +214,10 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
       if (els === null || !cx.shows)
         throw new Error("stated clause: {each} needs what an element shows");
       return joinNums(els.map((e) => (cx.shows as (e: E) => number)(e)));
+    case "live":
+      if (els === null)
+        throw new Error("stated clause: {live} counts a reference's elements");
+      return String(els.length);
     case "unit":
       if (els === null || !cx.unit)
         throw new Error("stated clause: {unit} needs the game's units");

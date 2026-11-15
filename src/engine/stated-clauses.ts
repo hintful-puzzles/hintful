@@ -44,8 +44,14 @@ export const STATED_WORDS: ReadonlySet<string> = new Set([
 ]);
 
 /** The words only a reference's own words may say, about its elements: what
- * each shows, and the unit stripes are taken as. */
-export const STATED_INNER_WORDS: ReadonlySet<string> = new Set(["each", "unit"]);
+ * each shows, the unit stripes are taken as, and how many are still live
+ * (`live`: a step followed in part narrows its reference, and the count
+ * follows). */
+export const STATED_INNER_WORDS: ReadonlySet<string> = new Set([
+  "each",
+  "unit",
+  "live",
+]);
 
 /** The roles a slot may name: what the step decides, and the roles of
  * `says.marks`. */

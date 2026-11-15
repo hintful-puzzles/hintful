@@ -87,6 +87,19 @@ describe("a stated clause", () => {
     ).toThrow(/game's colors/);
   });
 
+  it("counts a reference's live elements, so a narrowed reference re-counts", () => {
+    const s = statedSentence(
+      { look: "it needs {ring: 1 more bulb | {live} more bulbs}", move: "go" },
+      cx(),
+    );
+    expect(s.text).toBe("It needs 2 more bulbs, so go.");
+    const one = statedSentence(
+      { look: "it needs {ring: 1 more bulb | {live} more bulbs}", move: "go" },
+      cx({ ring: [at(5)] }),
+    );
+    expect(one.text).toBe("It needs 1 more bulb, so go.");
+  });
+
   it("names a value in the game's word, and a number otherwise", () => {
     const say = (valueNoun?: string): string =>
       statedSentence(

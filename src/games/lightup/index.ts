@@ -39,8 +39,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newLightupDesc } from "./generator.ts";
-import { sentences } from "./hint-text.ts";
-import { SAYS_EACH, SAYS_KINDS, type SaysById } from "./lightup.compiled.ts";
+import { SAYS_EACH, SAYS_KINDS, type SaysById, STATED } from "./lightup.compiled.ts";
 import {
   border,
   colors,
@@ -360,7 +359,8 @@ const described = describedFiringHint<
       ...(about && wall ? { clue: about } : {}),
     };
   },
-  say: sentences,
+  stated: STATED,
+  say: {},
 });
 
 const { hint, hintKeepTrack, refreshHintStep } = described;

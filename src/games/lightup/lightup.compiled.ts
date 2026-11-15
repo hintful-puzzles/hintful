@@ -30,6 +30,16 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["square.forcedLight","square.clueSatisfied","square.clueSaturated","darkSet","clueSet"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "square.forcedLight": {"step":[{"move":"it must hold a bulb","look":"{outline: each outlined square} is ruled out or already lit","follows":"nothing else can light {ring: this dark square | these dark squares}"},{"move":"it must hold a bulb","look":"every other square that could light {ring: this dark square | these dark squares} is ruled out or already lit"},{"move":"it must hold a bulb","look":"{outline: the other outlined square | the other outlined squares} can't light {strand: the outlined dark square}","follows":"only {ring} can"},{"move":"it must hold a bulb","look":"only {ring} can still light {strand: the outlined dark square}"}]},
+  "square.clueSatisfied": {"step":[{"look":"{strand: the outlined clue} is 0","follows":"no bulb may sit beside it","move":"{ring: its ringed free neighbor | its ringed free neighbors} can't hold a bulb"},{"look":"{strand: the outlined clue} already has {outline: its bulb (outlined)}","move":"{ring: its other ringed free neighbor | its other ringed free neighbors} can't hold a bulb"},{"look":"{strand: the outlined clue} already has {outline: both its bulbs (outlined)}","move":"{ring: its other ringed free neighbor | its other ringed free neighbors} can't hold a bulb"},{"look":"{strand: the outlined clue} already has {outline: all {n} of its bulbs (outlined)}","move":"{ring: its other ringed free neighbor | its other ringed free neighbors} can't hold a bulb"}]},
+  "square.clueSaturated": {"step":[{"look":"{strand: the outlined clue} still needs {ring: 1 more bulb | {live} more bulbs} and has exactly {ring: 1 free neighbor | {live} free neighbors} left","move":"{ring: the ringed one | each ringed one} must be a bulb"}]},
+  "darkSet": {"step":[{"look":"a bulb on {ring} blocks {outline: every outlined square} that can light {strand: the outlined dark square}","move":"it can't hold a bulb"}]},
+  "clueSet": {"step":[{"look":"a bulb on {ring} blocks {outline: every outlined square} left for {strand: the outlined clue}'s bulb","move":"it can't hold a bulb"}]},
+} as const;
+
 /** The techniques whose step is made for each square the firing decides. */
 export const SAYS_EACH: readonly (keyof SaysById)[] = ["darkSet","clueSet"];
 
@@ -208,8 +218,8 @@ export interface SquareBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
 export type SquareSays =
-  | { arm: "forcedLight"; terms: { dark: number; }; marks: { strand: readonly number[]; outline: readonly number[]; } }
-  | { arm: "clueSatisfied"; terms: { n: number; }; marks: { strand: readonly number[]; outline: readonly number[]; reads: readonly number[]; } }
+  | { arm: "forcedLight"; terms: { dark: number; }; marks: { strand: readonly number[]; outline: readonly number[]; }; wording: number }
+  | { arm: "clueSatisfied"; terms: { n: number; }; marks: { strand: readonly number[]; outline: readonly number[]; reads: readonly number[]; }; wording: number }
   | { arm: "clueSaturated"; terms: {  }; marks: { strand: readonly number[]; reads: readonly number[]; } }
 ;
 
@@ -217,7 +227,7 @@ const squareFacts: number[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBinding, SquareSays> | null): number {
-  const _g69: number[] = [];
+  const _g70: number[] = [];
   const facts = squareFacts;
   let fired = 0;
   let changed = false;
@@ -232,6 +242,7 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
       const _h11 = clueAt(cl.wall, v_c);
       const v_n = _h9;
       const v_L = (_k10[v_c] ?? lights(sp, cl, v_c));
+      const _h69 = v_L.length;
       if (DEV && staleChecking) {
         freshBinding("square", [(sp.cols.includes(v_X)), (sp.lineCells[v_X].includes(v_c)), (v_n === clueAt(cl.number, v_c)), sameSet(v_L, lights(sp, cl, v_c))], ["X in", "c in", "n =", "L ="]);
       }
@@ -413,19 +424,26 @@ export function square(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SquareBind
           if ((v_n < 0)) _arm = 0; else if ((_g65 === v_n)) _arm = 1; else if ((v_n >= 0)) _arm = 2;
           let _says: SquareSays | null = null;
           if (_arm === 0) {
-            _says = { arm: "forcedLight", terms: { dark: v_c }, marks: { strand: setOf(v_c).slice(), outline: v_L.slice() } };
+            const _sw_dark = v_c;
+            const _sw_strand = setOf(v_c).slice();
+            const _sw_outline = v_L.slice();
+            _says = { arm: "forcedLight", terms: { dark: _sw_dark }, marks: { strand: _sw_strand, outline: _sw_outline }, wording: ((!((b.grid[v_c] !== 0)) && (_h69 > 1)) ? 0 : !((b.grid[v_c] !== 0)) ? 1 : (_h69 > 2) ? 2 : 3) };
           }
           if (_arm === 1) {
-            _g69.length = 0;
-            G70: {
-              const _a73 = sp.adj4[v_c];
-              for (let _i74 = 0; _i74 < _a73.length; _i74++) {
-                const v_p = _a73[_i74];
+            const _sw_n = v_n;
+            const _sw_strand = setOf(v_c).slice();
+            _g70.length = 0;
+            G71: {
+              const _a74 = sp.adj4[v_c];
+              for (let _i75 = 0; _i75 < _a74.length; _i75++) {
+                const v_p = _a74[_i75];
                 if (!(((b.grid[v_p] || -1) === 1))) continue;
-                _g69.push(v_p);
+                _g70.push(v_p);
               }
             }
-            _says = { arm: "clueSatisfied", terms: { n: v_n }, marks: { strand: setOf(v_c).slice(), outline: _g69.slice(), reads: sp.adj4[v_c].slice() } };
+            const _sw_outline = _g70.slice();
+            const _sw_reads = sp.adj4[v_c].slice();
+            _says = { arm: "clueSatisfied", terms: { n: _sw_n }, marks: { strand: _sw_strand, outline: _sw_outline, reads: _sw_reads }, wording: ((_sw_n === 0) ? 0 : (_sw_n === 1) ? 1 : (_sw_n === 2) ? 2 : 3) };
           }
           if (_arm === 2) {
             _says = { arm: "clueSaturated", terms: {  }, marks: { strand: setOf(v_c).slice(), reads: sp.adj4[v_c].slice() } };
