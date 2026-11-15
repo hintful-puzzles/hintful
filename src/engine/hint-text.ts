@@ -30,10 +30,10 @@ import {
   unshaped,
   whole,
 } from "./hint-words.ts";
-import { STATED as LATIN_STATED } from "./latin.compiled.ts";
+import { STATED as LATIN_STATED, STEPS as LATIN_STEPS } from "./latin.compiled.ts";
 import type { LatinWingReason } from "./latin.ts";
 import { type GenericLatinReason, hiddenSingleLine } from "./latin-hint.ts";
-import { statedParts } from "./stated.ts";
+import { plannedSentence, statedParts } from "./stated.ts";
 import type { Point } from "./types.ts";
 
 // --- lists and articles ------------------------------------------------------
@@ -311,21 +311,26 @@ export function narrateLatinReason(
   w: number,
   vocab: LatinVocab = NUMBER_VOCAB,
 ): Sentence {
-  const { noun } = vocab;
-  const v = vocab.value;
-  const cell = vocab.cell ?? "square";
-  const here = thisCell(at, cell);
+  const said = {
+    kind: CELL,
+    ring: [at],
+    value: vocab.value,
+    valueNoun: vocab.noun,
+    noun: vocab.cell,
+  };
+  const terms = { d: at.n };
   switch (reason.kind) {
     case "single":
-      return so({
-        look: phrase`Every other ${noun} has been ruled out in ${here}`,
-        move: phrase`it can only be ${v(at.n)}`,
-      });
+      return plannedSentence(LATIN_STEPS.single, { terms, marks: {} }, said);
     case "regionsFull":
-      return so({
-        look: phrase`${here}'s ${"regions" in reason ? joinWith([...reason.regions]) : "row and column"} already hold every other ${noun}`,
-        move: phrase`it can only be ${v(at.n)}`,
-      });
+      return plannedSentence(
+        LATIN_STEPS.regionsFull,
+        { terms, marks: {} },
+        {
+          ...said,
+          regions: "regions" in reason ? joinWith([...reason.regions]) : undefined,
+        },
+      );
     case "hiddenSingle": {
       const unit =
         "unit" in reason
@@ -334,11 +339,11 @@ export function narrateLatinReason(
               name: reason.line === "row" ? "row" : "column",
               cells: hiddenSingleLine(reason.line, reason.index, w),
             };
-      const line = mark.this("stripes", whole(CELL), unit.cells, unit.name);
-      return so({
-        look: phrase`No other ${cell} in ${line} can be ${v(reason.n)}`,
-        move: phrase`${here} must be ${v(reason.n)}`,
-      });
+      return plannedSentence(
+        LATIN_STEPS.hiddenSingle,
+        { terms: { d: reason.n }, marks: { stripes: { cell: unit.cells } } },
+        { ...said, kinds: { cell: whole(CELL) }, unit: () => unit.name },
+      );
     }
     default:
       throw new Error(`a ${reason.kind} strikes, and is narrated by latinPremise`);

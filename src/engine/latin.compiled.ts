@@ -1351,3 +1351,43 @@ export const STATED = {
   "fish.rows": {"step":[{"look":"{stripes: These {tally} rows} fit {d} only in {outline}, taking {if two: both | all {tally}} columns' {d}"}]},
   "wing": {"step":[{"look":"Whatever goes in {outline m: the middle {noun}}, {outline E: {if self: it or another | another} outlined {noun}} {alongside} {ring t: this {noun}} must have {x}"}]},
 } as const;
+
+/** What the planner supplies for each kind of step it emits, over the
+ * elements `E` it marks: its terms, and the elements marked by role and sort. */
+export interface StepsById<E> {
+  single: { ring: "cell"; terms: { d: number }; marks: {  } };
+  regionsFull: { ring: "cell"; terms: { d: number }; marks: {  } };
+  hiddenSingle: { ring: "cell"; terms: { d: number }; marks: { stripes: { cell: readonly E[] } } };
+}
+
+/** Each kind of step the planner emits: its clauses by wording, and the
+ * condition under which each wording is the one said (`null`: always). */
+export const STEPS: {
+  readonly [K in keyof StepsById<unknown>]: {
+    readonly ring: StepsById<unknown>[K]["ring"];
+    readonly clauses: readonly { look?: string; follows?: string; move?: string; effect?: string }[];
+    readonly when: readonly (
+      | null
+      | ((
+          t: StepsById<unknown>[K]["terms"],
+          m: StepsById<unknown>[K]["marks"],
+        ) => boolean)
+    )[];
+  };
+} = {
+  single: {
+    ring: "cell",
+    clauses: [{"look":"Every other {valueNoun} has been ruled out in {ring}","move":"it can only be {d}"}],
+    when: [null],
+  },
+  regionsFull: {
+    ring: "cell",
+    clauses: [{"look":"{ring}'s {regions} already hold every other {valueNoun}","move":"it can only be {d}"}],
+    when: [null],
+  },
+  hiddenSingle: {
+    ring: "cell",
+    clauses: [{"look":"No other {noun} in {stripes cell: this {unit}} can be {d}","move":"{ring} must be {d}"}],
+    when: [null],
+  },
+};

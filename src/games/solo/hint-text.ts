@@ -44,6 +44,7 @@ import {
 import type { Point } from "../../engine/types.ts";
 import type { CageOrigin, SoloRegion } from "./hint-reasons.ts";
 import { digitChar } from "./render.ts";
+import { WORDS } from "./solo.compiled.ts";
 
 /** The reader-facing name of a region — the one statement of what a sentence
  * calls each region, read both by the sentences below and by `regionsOf`, which
@@ -82,7 +83,7 @@ const any = (ns: number[]): string => joinOr(ns.map(g));
 
 /** Sudoku's board position is a cell: its help says so, and a square is also
  * the whole grid ("Latin square"). */
-const CELL_WORD = "cell";
+const CELL_WORD = WORDS.cell;
 const thisCell = thisCellNamed(CELL_WORD);
 
 /** Solo's values are numbers, printed as the board prints them, and a wing's
@@ -92,7 +93,7 @@ export const SOLO_VOCAB: LatinVocab = {
   noun: "number",
   cell: CELL_WORD,
   value: digitChar,
-  beside: "in a line or block with",
+  beside: WORDS.alongside,
 };
 
 export const say = {

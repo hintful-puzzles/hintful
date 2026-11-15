@@ -96,6 +96,7 @@ import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newGameDesc } from "./generator.ts";
 import type * as group from "./group.compiled.ts";
+import { WORDS } from "./group.compiled.ts";
 import { groupVocab, say } from "./hint-text.ts";
 import {
   colors,
@@ -684,7 +685,7 @@ function buildSteps(
     notes: {
       noun: "element",
       placedVerb: "placed",
-      cell: "cell",
+      cell: WORDS.cell,
       value: (n) => toChar(n, id),
     },
     rungs: [

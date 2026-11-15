@@ -89,6 +89,7 @@ import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newKeenDesc } from "./generator.ts";
 import { KEEN_VOCAB, say } from "./hint-text.ts";
+import { WORDS } from "./keen.compiled.ts";
 import {
   colors,
   computeSize,
@@ -419,7 +420,7 @@ function buildSteps(
       cageRung("cageLine"),
       ...latinStrikeRungs<KeenMove, KeenHint, HintReason>(on, w, byCell),
     ],
-    notes: { noun: "number", placedVerb: "standing", cell: "cell" },
+    notes: { noun: "number", placedVerb: "standing", cell: WORDS.cell },
   });
   return steps;
 }

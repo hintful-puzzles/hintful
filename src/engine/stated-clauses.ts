@@ -24,10 +24,12 @@
  * and the values a strike step removes (`struck`, each named once), and how
  * many parallel lines a step names (`tally`, in digits: a count is not a value
  * a game prints), and the kinds of region a value may not repeat in
- * (`regions`, "row and column" unless the game names more). */
+ * (`regions`, "row and column" unless the game names more), and what a value
+ * is called (`valueNoun`: "number", "letter"; a game's mode may decide it). */
 export const STATED_WORDS: ReadonlySet<string> = new Set([
   "noun",
   "nouns",
+  "valueNoun",
   "alongside",
   "struck",
   "tally",

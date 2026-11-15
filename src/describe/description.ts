@@ -92,7 +92,18 @@ export interface DescriptionJson {
   techniques?: TechniqueJson[];
   /** Kinds of step the game's planner emits (`StatedStep`), by id. */
   steps?: Record<string, StatedStep>;
+  /** What the game says that is not the lexicon's. */
+  words?: GameWords;
   variations?: Record<string, VariationJson>;
+}
+
+/** A game's nouns, compiled into its module as `WORDS`: the engine's
+ * lexicon words `{noun}` (a board position, "square" unless the game's genre
+ * says "cell") and `{alongside}` (how a deduction's cells share a unit with the
+ * one it decides, "in line with" unless the game's units differ). */
+export interface GameWords {
+  cell?: string;
+  alongside?: string;
 }
 
 /** A kind of hint step a planner emits: what its sentence reads, which the
@@ -293,6 +304,8 @@ export interface SaidMark {
 /** Techniques stated once, for every game that places them. */
 export interface LibraryJson {
   library: string;
+  /** Kinds of step a library's consumers emit without a firing (`StatedStep`). */
+  steps?: Record<string, StatedStep>;
   techniques: Record<string, StatedTechnique>;
 }
 

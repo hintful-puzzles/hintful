@@ -19,6 +19,9 @@ export const units: readonly string[] = ["box","rows","cols","diagonals"];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "boxSingle" | "cageSingle" | "regionRule" | "cageMinMax" | "partMinMax" | "cageSums" | "partSums" | "latin.hiddenSingle" | "latin.single" | "intersect" | "latin.set" | "digitSet" | "latin.wing";
 
+/** The game's nouns, which the engine's hint words read. */
+export const WORDS = {"cell":"cell","alongside":"in a line or block with"} as const;
+
 /** What a firing of each technique that says anything says, by id. */
 export interface SaysById {
   cageSingle: CageSingleSays;

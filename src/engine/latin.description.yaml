@@ -13,6 +13,30 @@
 # multiplicity behind a test that is true where it is 1, so that on a Latin
 # square it reads exactly what it would without it.
 library: latin
+# The singles. The candidate walk reads them off the notes rather than firing
+# `single` or `hiddenSingle`, so each is a step the walk emits, named by the
+# reason it carries. {valueNoun} is what the game calls a value, {regions} the
+# units a value may not repeat in.
+steps:
+  # The cell's notes are down to one.
+  single:
+    ring: cell
+    terms: { d: number }
+    look: "Every other {valueNoun} has been ruled out in {ring}"
+    move: "it can only be {d}"
+  # The cell has no notes, and its units already hold every other value.
+  regionsFull:
+    ring: cell
+    terms: { d: number }
+    look: "{ring}'s {regions} already hold every other {valueNoun}"
+    move: "it can only be {d}"
+  # The value has one home left in a unit, which the walk stripes whole.
+  hiddenSingle:
+    ring: cell
+    terms: { d: number }
+    marks: { stripes: [cell] }
+    look: "No other {noun} in {stripes cell: this {unit}} can be {d}"
+    move: "{ring} must be {d}"
 techniques:
   # A placed value leaves the rest of every unit holding it, once the unit
   # holds every copy of it. The engine runs it as each value is placed, one

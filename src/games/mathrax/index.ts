@@ -89,6 +89,7 @@ import type { Point } from "../../engine/types.ts";
 import { newMathraxDesc } from "./generator.ts";
 import { MATHRAX_VOCAB, say } from "./hint-text.ts";
 import type * as mathrax from "./mathrax.compiled.ts";
+import { WORDS } from "./mathrax.compiled.ts";
 import {
   colors,
   computeSize,
@@ -441,7 +442,7 @@ function buildSteps(
       clueRung("clueTricky"),
       ...latinStrikeRungs<MathraxMove, MathraxHint, HintReason>(on, o),
     ],
-    notes: { noun: "number", placedVerb: "standing", cell: "cell" },
+    notes: { noun: "number", placedVerb: "standing", cell: WORDS.cell },
   });
   return steps;
 }

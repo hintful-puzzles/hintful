@@ -34,6 +34,7 @@ import {
   type Says,
   type StatedClauses,
   type Step,
+  stepsOf,
   type Technique,
   UNPLACED,
   type Wording,
@@ -7120,7 +7121,21 @@ export function compileLibrary(
       );
     return out.code;
   });
-  const stated = statedTable(techniques).join("\n").trimEnd();
+  const steps = stepsBlock(
+    stepsOf(lib.steps ?? {}, (part, src) => {
+      try {
+        return parse(src);
+      } catch (e) {
+        throw new SyntaxError(`${lib.library} ${part}: ${(e as Error).message}`);
+      }
+    }),
+    techniques,
+  )
+    .join("\n")
+    .trimEnd();
+  const stated = [statedTable(techniques).join("\n").trimEnd(), steps]
+    .filter((s) => s !== "")
+    .join("\n\n");
   const body = (stated === "" ? parts : [...parts, stated]).join("\n\n");
   return `${[HEADER(source), "", runtimeImport(used, [], false, runtime, body), "", body].join("\n")}\n`;
 }
@@ -7366,6 +7381,13 @@ export function compileGame(
     "/** Every technique a rung runs, by id: the description's, in its order. */",
     `export type LadderId = ${quoted(ids)};`,
     "",
+    ...(json.words === undefined
+      ? []
+      : [
+          "/** The game's nouns, which the engine's hint words read. */",
+          `export const WORDS = ${JSON.stringify(json.words)} as const;`,
+          "",
+        ]),
     ...stepsBlock(d.steps, own),
     ...(own.some((t) => t.says !== null)
       ? [

@@ -138,6 +138,7 @@ import {
   validateParams,
 } from "./state.ts";
 import type * as towers from "./towers.compiled.ts";
+import { WORDS } from "./towers.compiled.ts";
 
 /** A player marking that contradicts the unique solution:
  * - `"cell"` — a filled-in tower whose height is wrong;
@@ -630,7 +631,7 @@ function buildSteps(
       ...premise(reason, marks, w),
       ...reasonReads(reason, w),
     }),
-    notes: { noun: "height", placedVerb: "standing", cell: "cell" },
+    notes: { noun: "height", placedVerb: "standing", cell: WORDS.cell },
     // clue == w fills the whole line 1..w in order as one journey; clue == 1
     // places the tallest tower next to the clue.
     rungs: [

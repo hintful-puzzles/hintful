@@ -137,7 +137,16 @@ words:
 This replaces the per-game declarations `standardize-hint-vocabulary` left in
 code (`LatinVocab.cell`, `notes.cell`, `thisCellNamed("cell")`).
 
-**Not built yet** (2026-11-14): Singles hands `describedFiringHint` its
+**Built for the Latin games (2026-11-15)**: `words: { cell, alongside }`
+compiles to the module's `WORDS`, which Keen, Group, Mathrax, Towers and Solo's
+hint text and `notes` read in place of their literals (`LatinVocab.cell` and
+`beside`, `thisCellNamed`). The value noun is not a description word: Salad's
+mode decides it at runtime, so `{valueNoun}` is the lexicon's, supplied by the
+game's `LatinVocab.noun`. The library states the three singles as `steps:`
+(`single`, `regionsFull`, `hiddenSingle`), which `narrateLatinReason` speaks
+through `plannedSentence`.
+
+**Not built yet** (2026-11-14, for Singles): Singles hands `describedFiringHint` its
 `shows` in code. Slide's trial needs the block (it names a piece, not a
 square), so the block is built there; the Latin games need it for the
 library's words (§ "Order of work").

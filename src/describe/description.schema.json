@@ -215,6 +215,7 @@
       "additionalProperties": false,
       "properties": {
         "library": { "type": "string", "pattern": "^[a-z]+$" },
+        "steps": { "$ref": "#/$defs/game/properties/steps" },
         "techniques": {
           "type": "object",
           "additionalProperties": {
@@ -639,6 +640,21 @@
           "type": "object",
           "additionalProperties": { "type": "string" },
           "description": "What the generator chooses, in words: consumed by nothing yet."
+        },
+        "words": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "What the game says that is not the lexicon's, compiled into the module as `WORDS`: the engine's hint words read it, so a game's code declares none.",
+          "properties": {
+            "cell": {
+              "type": "string",
+              "description": "What the game calls a board position, where its genre says \"cell\" and not the default \"square\"."
+            },
+            "alongside": {
+              "type": "string",
+              "description": "How a deduction's cells share a unit with the one it decides, in the game's units; default \"in line with\"."
+            }
+          }
         },
         "tiers": {
           "type": "array",

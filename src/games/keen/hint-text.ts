@@ -17,16 +17,15 @@ import {
 } from "../../engine/hint-text.ts";
 import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+import { WORDS } from "./keen.compiled.ts";
 import { C_ADD, C_DIV, C_MUL, C_SUB } from "./state.ts";
 
-/** Keen's board position is a cell: its help says so, and a square is also the
- * whole grid ("Latin square"). */
-const thisCell = thisCellNamed("cell");
+const thisCell = thisCellNamed(WORDS.cell);
 
-/** Keen's numbers print as numbers; the generic Latin arms say "cell". */
+/** Keen's numbers print as numbers. */
 export const KEEN_VOCAB: LatinVocab = {
   noun: "number",
-  cell: "cell",
+  cell: WORDS.cell,
   value: String,
 };
 

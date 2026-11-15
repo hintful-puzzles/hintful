@@ -58,6 +58,8 @@ help:
 
 name: Keen
 family: latin
+words:
+  cell: cell
 sizes:
   w: { min: 3, max: 9 }
 space:

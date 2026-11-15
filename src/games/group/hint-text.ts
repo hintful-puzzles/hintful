@@ -21,17 +21,16 @@ import {
   so,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+import { WORDS } from "./group.compiled.ts";
 import { toChar } from "./state.ts";
 
 /** Group's value vocabulary for the shared generic-Latin narration arms: its
  * values are the elements `a`–`z`, not digits. */
 export function groupVocab(id: boolean): LatinVocab {
-  return { noun: "element", cell: "cell", value: (n) => toChar(n, id) };
+  return { noun: "element", cell: WORDS.cell, value: (n) => toChar(n, id) };
 }
 
-/** A Latin square's board position is a cell, since a square is also the whole
- * grid; Group's help says so too. */
-const thisCell = thisCellNamed("cell");
+const thisCell = thisCellNamed(WORDS.cell);
 
 /** A product the grid shows, named by its equation and outlined at its cell. */
 const shows = (cell: Point, equation: string): Narration =>

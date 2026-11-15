@@ -77,6 +77,9 @@ export interface StatedContext<E> {
   /** How cells share a unit, in the game's units ("in a line or block
    * with"); "in line with" where the game declares none. */
   readonly alongside?: string;
+  /** What a value is called, for `{valueNoun}`: "number" unless the game's
+   * values are letters, elements or heights. */
+  readonly valueNoun?: string;
   /** The values a strike step removes, for `{struck}`: the order is the
    * solver's, and each is named once, smallest first. */
   readonly struck?: readonly number[];
@@ -146,6 +149,8 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
       return nounOf(noun, true);
     case "alongside":
       return cx.alongside ?? "in line with";
+    case "valueNoun":
+      return cx.valueNoun ?? "number";
     case "struck":
       if (!cx.struck)
         throw new Error("stated clause: {struck} needs the step's strikes");

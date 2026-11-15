@@ -43,6 +43,16 @@ describe("a stated clause", () => {
     );
   });
 
+  it("names a value in the game's word, and a number otherwise", () => {
+    const say = (valueNoun?: string): string =>
+      statedSentence(
+        { look: "No other {valueNoun} is left in {ring}", move: "go" },
+        cx({ valueNoun }),
+      ).text;
+    expect(say()).toBe("No other number is left in these squares, so go.");
+    expect(say("letter")).toBe("No other letter is left in these squares, so go.");
+  });
+
   it("takes the form a flag term holds, in a clause and inside a reference's words", () => {
     const say = (one: boolean, two: boolean): string =>
       statedSentence(
