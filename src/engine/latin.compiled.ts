@@ -1272,5 +1272,5 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding, WingSays> 
  * fact's, by wording (`engine/stated.ts`). */
 export const STATED = {
   "set": {"step":[{"look":"{outline S} already account for {struck} between them"}]},
-  "wing": {"step":[{"look":"Whatever goes in {outline m: the middle {noun}}, {outline E: {if self: it or another | another} outlined {noun}} {beside} {ring t: this {noun}} must have {x}"}]},
+  "wing": {"step":[{"look":"Whatever goes in {outline m: the middle {noun}}, {outline E: {if self: it or another | another} outlined {noun}} {alongside} {ring t: this {noun}} must have {x}"}]},
 } as const;

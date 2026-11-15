@@ -32,10 +32,10 @@ describe("a stated clause", () => {
   });
 
   it("says how cells share a unit in the game's words, and in line otherwise", () => {
-    const say = (beside?: string): string =>
+    const say = (alongside?: string): string =>
       statedSentence(
-        { look: "{outline} is {beside} {ring}", move: "go" },
-        cx({ beside }),
+        { look: "{outline} is {alongside} {ring}", move: "go" },
+        cx({ alongside }),
       ).text;
     expect(say()).toBe("The outlined square is in line with these squares, so go.");
     expect(say("in a block with")).toBe(

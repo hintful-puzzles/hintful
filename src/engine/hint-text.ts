@@ -400,7 +400,7 @@ function wingPremise(
     terms: said,
     value,
     noun: cell,
-    beside,
+    alongside: beside,
   });
   if (look === undefined) throw new Error("the library's wing states no look");
   return look;

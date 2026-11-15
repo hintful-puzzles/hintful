@@ -303,6 +303,15 @@ describe("a stated clause names only what its technique states", () => {
     ).not.toThrow();
   });
 
+  it("refuses a term named like a lexicon word, which a clause would read first", () => {
+    expect(() =>
+      stated({
+        terms: { n: "n", alongside: "n" },
+        look: "{alongside} is it",
+      }),
+    ).toThrow(/term named alongside is shadowed/);
+  });
+
   it.each([
     ["a term it does not state", { look: "{m} is it" }, /says look says \{m\}/],
     ["a set said as a number", { look: "{near} is it" }, /says look says \{near\}/],

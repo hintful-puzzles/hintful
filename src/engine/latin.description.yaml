@@ -132,7 +132,7 @@ techniques:
       E = set(first({k in peers(m) where not known(k) and cand(k) = {a, x} and k != t and k in peers(t)}) over a in R)
     conclude: "strike(t, x)"
     # Where m can be x itself, it is one of the cells x must be in. The ends
-    # take no noun of their own: they are named by their mark. {beside} is how
+    # take no noun of their own: they are named by their mark. {alongside} is how
     # an end and t share a unit, in the game's units.
     says:
       terms: { t: t, m: m, x: x, E: E, self: "x in cand(m)" }
@@ -140,4 +140,4 @@ techniques:
       look: >-
         Whatever goes in {outline m: the middle {noun}},
         {outline E: {if self: it or another | another} outlined {noun}}
-        {beside} {ring t: this {noun}} must have {x}
+        {alongside} {ring t: this {noun}} must have {x}

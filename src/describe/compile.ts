@@ -4490,6 +4490,17 @@ function checkStated(
   variants: readonly { sorts: ReadonlyMap<string, Sort> }[],
   factSorts: ReadonlyMap<string, Sort> | null,
 ): void {
+  // A clause reads a lexicon word before a term, so a term of that name would
+  // silently never be said.
+  for (const name of new Set(
+    [...variants, { sorts: factSorts ?? new Map() }].flatMap((v) => [
+      ...v.sorts.keys(),
+    ]),
+  ))
+    if (STATED_WORDS.has(name))
+      throw new CompileError(
+        `${id}: a term named ${name} is shadowed by the lexicon's word of that name: rename the term`,
+      );
   const isNum = (s?: Sort): boolean => s?.k === "num" || s?.k === "int";
   const isElems = (s?: Sort): boolean =>
     s !== undefined && (s.k === "elem" || (s.k === "set" && s.of.k === "elem"));
