@@ -17,9 +17,8 @@ import {
 } from "../../engine/described-firing-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Point } from "../../engine/types.ts";
-import { sentences } from "./hint-text.ts";
 import { hintWalk, type StarbattleRung } from "./solver.ts";
-import type { SaysById } from "./starbattle.compiled.ts";
+import { type SaysById, STATED } from "./starbattle.compiled.ts";
 import {
   BLANK,
   executeMove,
@@ -60,7 +59,8 @@ const described = describedFiringHint<
     kind: "mark",
     cells: targets.map((t) => ({ index: t.y * state.size + t.x, mark: t.value })),
   }),
-  say: sentences,
+  stated: STATED,
+  say: {},
 });
 
 export const starbattleHint = described.hint;

@@ -112,6 +112,8 @@ techniques:
     # step's, and the walk reads them all.
     says:
       marks: { outline: "{c}", reads: "{c} + adj8(c)" }
+      look: "no star may touch {outline: the outlined star}"
+      move: "{ring} must be empty"
   # A row or column that has its stars holds no more. One with more makes
   # the marks inconsistent.
   - id: fullLine
@@ -119,15 +121,20 @@ techniques:
     for: "L in lines, n = need(cells(L)) where n <= 0"
     conclude: "n = 0 and forall c in open(cells(L)): place(c, 2)"
     says:
-      terms: { L: L }
+      # Whether the line is a row: its squares share a row.
+      terms: { L: L, row: "forall c in cells(L): y(c) = y(first(cells(L)))", s: stars }
       marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {if row: row | column}} has {s: its star | its {s} stars}"
+      move: "{ring} must be empty"
   - id: fullRegion
     tier: Easy
     for: "r in region, n = need(cells(r)) where n <= 0"
     conclude: "n = 0 and forall c in open(cells(r)): place(c, 2)"
     says:
-      terms: { r: r }
+      terms: { r: r, s: stars }
       marks: { stripes: "cells(r)", reads: "cells(r)" }
+      look: "{stripes: this region} has {s: its star | its {s} stars}"
+      move: "{ring} must be empty"
   # A row or column with exactly as many open squares as it still needs
   # stars has a star in each. One with fewer makes the marks inconsistent.
   - id: exactLine
@@ -135,15 +142,20 @@ techniques:
     for: "L in lines, n = need(cells(L)), O = open(cells(L)) where n > 0 and n >= |O|"
     conclude: "n = |O| and forall c in O: place(c, 1)"
     says:
-      terms: { L: L, n: n }
+      # `placed`: the unit already holds some of its stars.
+      terms: { L: L, n: n, row: "forall c in cells(L): y(c) = y(first(cells(L)))", placed: "n < stars" }
       marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {if row: row | column}} needs {if placed: {n} more | {n}} {n: star | stars} and has only {n} open {n: square | squares}"
+      move: "{ring: the ringed square | each ringed square} must hold a star"
   - id: exactRegion
     tier: Easy
     for: "r in region, n = need(cells(r)), O = open(cells(r)) where n > 0 and n >= |O|"
     conclude: "n = |O| and forall c in O: place(c, 1)"
     says:
-      terms: { r: r, n: n }
+      terms: { r: r, n: n, placed: "n < stars" }
       marks: { stripes: "cells(r)", reads: "cells(r)" }
+      look: "{stripes: this region} needs {if placed: {n} more | {n}} {n: star | stars} and has only {n} open {n: square | squares}"
+      move: "{ring: the ringed square | each ringed square} must hold a star"
   # A row or column counted against its regions, two ways, the first where
   # it decides a square (`lines`): where the regions lying wholly inside it
   # need as many stars as it does, its other open squares are empty; where
@@ -166,17 +178,30 @@ techniques:
     # The hint names the lines (striped), the regions it counts them against
     # (outlined), and the stars they share.
     says:
-      terms: { dir: dir, k: "1", n: n }
+      # The regions the lines are counted against, and the stars: whichever
+      # of the two is named first holds its stars inside the other, which
+      # needs no more than those. `placed`: the first already holds some.
+      terms: { dir: dir, k: "1", n: n, row: "dir = 0", multi: "n > 1" }
       marks: { stripes: B, reads: B }
       arms:
         lines:
           when: lines
-          terms: { regionCount: "|I|" }
+          terms: { regionCount: "|I|", placed: "|I| * stars > n" }
           marks: { outline: "set(c over r in I, c in cells(r))" }
+          move: "{ring} must be empty"
+          wordings:
+            - when: "n = 1 and regionCount = 1"
+              look: "{outline: the outlined region} must put its {if placed: last star | star} in {stripes: this {if row: row | column}}, which needs only that one"
+            - look: "{outline: {regionCount: the outlined region | the {regionCount} outlined regions}} {regionCount: needs | need} {if placed: {n} more | {n}} {n: star | stars}, {if multi: all in | in} {stripes: {k: this {if row: row | column} | these {k} {if row: rows | columns}}}, which {k: needs | need} only {n}"
         regions:
           when: "true"
-          terms: { regionCount: "|R|" }
+          terms: { regionCount: "|R|", placed: "stars > n" }
           marks: { outline: "set(c over r in R, c in cells(r))" }
+          move: "{ring} must be empty"
+          wordings:
+            - when: "n = 1 and regionCount = 1"
+              look: "{stripes: this {if row: row | column}} must put its {if placed: last star | star} in {outline: the outlined region}, which needs only that one"
+            - look: "{stripes: {k: this {if row: row | column} | these {k} {if row: rows | columns}}} {k: needs | need} {if placed: {n} more | {n}} {n: star | stars}, {if multi: all in | in} {outline: {regionCount: the outlined region | the {regionCount} outlined regions}}, which {regionCount: needs | need} only {n}"
   # A row or column that would have room for too few stars without an open
   # square of its: a star is there.
   - id: neededLine
@@ -186,8 +211,10 @@ techniques:
       x in O, E = O - {x} where not fits(E, n), room = most(E, n)
     conclude: "place(x, 1)"
     says:
-      terms: { L: L, n: n, room: room }
+      terms: { L: L, n: n, room: room, row: "forall c in cells(L): y(c) = y(first(cells(L)))", placed: "n < stars", none: "room = 0" }
       marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {if row: row | column}} needs {if placed: {n} more | {n}} {n: star | stars} and without {ring} has room for {if none: none | only {room}}"
+      move: "{ring: that square} must hold a star"
   - id: neededRegion
     tier: Easy
     for: >-
@@ -195,8 +222,10 @@ techniques:
       x in O, E = O - {x} where not fits(E, n), room = most(E, n)
     conclude: "place(x, 1)"
     says:
-      terms: { r: r, n: n, room: room }
+      terms: { r: r, n: n, room: room, placed: "n < stars", none: "room = 0" }
       marks: { stripes: "cells(r)", reads: "cells(r)" }
+      look: "{stripes: this region} needs {if placed: {n} more | {n}} {n: star | stars} and without {ring} has room for {if none: none | only {room}}"
+      move: "{ring: that square} must hold a star"
   # A star tried in a square would rule out the open squares touching it,
   # leaving a row or column it touches room for too few stars: the square is
   # empty.
@@ -209,8 +238,15 @@ techniques:
       where n > 0 and not fits(E, n), room = most(E, n), Q = {c in open(S) where c in R}
     conclude: "place(x, 2)"
     says:
-      terms: { L: L, n: n, room: room, mine: "x in S", exhausted: "|E| = 0" }
+      terms: { L: L, n: n, room: room, mine: "x in S", exhausted: "|E| = 0", one: "room = 1", row: "forall c in cells(L): y(c) = y(first(cells(L)))" }
       marks: { stripes: S, outline: Q, reads: "Q + S" }
+      move: "it must be empty"
+      wordings:
+        - when: "exhausted and mine"
+          look: "a star on {ring} would touch the rest of {stripes: this {if row: row | column}}, which would still need {n} {n: star | stars}"
+        - when: "exhausted"
+          look: "a star on {ring} would touch every open square of {stripes: this {if row: row | column}}, leaving it no room for a star"
+        - look: "a star on {ring} would touch {outline}, leaving {stripes: this {if row: row | column}} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"
   - id: crowdedRegion
     tier: Easy
     for: >-
@@ -220,8 +256,15 @@ techniques:
       where n > 0 and not fits(E, n), room = most(E, n), Q = {c in open(S) where c in R}
     conclude: "place(x, 2)"
     says:
-      terms: { g: g, n: n, room: room, mine: "x in S", exhausted: "|E| = 0" }
+      terms: { g: g, n: n, room: room, mine: "x in S", exhausted: "|E| = 0", one: "room = 1" }
       marks: { stripes: S, outline: Q, reads: "Q + S" }
+      move: "it must be empty"
+      wordings:
+        - when: "exhausted and mine"
+          look: "a star on {ring} would touch the rest of {stripes: this region}, which would still need {n} {n: star | stars}"
+        - when: "exhausted"
+          look: "a star on {ring} would touch every open square of {stripes: this region}, leaving it no room for a star"
+        - look: "a star on {ring} would touch {outline}, leaving {stripes: this region} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"
   # Several neighboring rows or columns, fewer than all but one, counted
   # against their regions as one row or column is, the fewest first.
   - id: banded
@@ -240,17 +283,27 @@ techniques:
     # The hint names the lines (striped), the regions it counts them against
     # (outlined), and the stars they share.
     says:
-      terms: { dir: dir, k: k, n: n }
+      terms: { dir: dir, k: k, n: n, row: "dir = 0", multi: "n > 1" }
       marks: { stripes: B, reads: B }
       arms:
         lines:
           when: lines
-          terms: { regionCount: "|I|" }
+          terms: { regionCount: "|I|", placed: "|I| * stars > n" }
           marks: { outline: "set(c over r in I, c in cells(r))" }
+          move: "{ring} must be empty"
+          wordings:
+            - when: "n = 1 and k = 1 and regionCount = 1"
+              look: "{outline: the outlined region} must put its {if placed: last star | star} in {stripes: this {if row: row | column}}, which needs only that one"
+            - look: "{outline: {regionCount: the outlined region | the {regionCount} outlined regions}} {regionCount: needs | need} {if placed: {n} more | {n}} {n: star | stars}, {if multi: all in | in} {stripes: {k: this {if row: row | column} | these {k} {if row: rows | columns}}}, which {k: needs | need} only {n}"
         regions:
           when: "true"
-          terms: { regionCount: "|R|" }
+          terms: { regionCount: "|R|", placed: "k * stars > n" }
           marks: { outline: "set(c over r in R, c in cells(r))" }
+          move: "{ring} must be empty"
+          wordings:
+            - when: "n = 1 and k = 1 and regionCount = 1"
+              look: "{stripes: this {if row: row | column}} must put its {if placed: last star | star} in {outline: the outlined region}, which needs only that one"
+            - look: "{stripes: {k: this {if row: row | column} | these {k} {if row: rows | columns}}} {k: needs | need} {if placed: {n} more | {n}} {n: star | stars}, {if multi: all in | in} {outline: {regionCount: the outlined region | the {regionCount} outlined regions}}, which {regionCount: needs | need} only {n}"
   # A star tried in a square would also complete a row, column or region of
   # its own and rule out the rest of it, leaving another room for too few
   # stars: the square is empty.
@@ -264,10 +317,22 @@ techniques:
     conclude: "place(x, 2)"
     says:
       terms:
-        { L: L, n: n, room: room, mine: "x in S", exhausted: "|E| = 0",
+        { L: L, n: n, room: room, mine: "x in S", exhausted: "|E| = 0", one: "room = 1", row: "forall c in cells(L): y(c) = y(first(cells(L)))",
           closesRow: "closesRow(x, Q)", closesCol: "closesCol(x, Q)",
-          closesRegion: "closesRegion(x, Q)" }
+          closesRegion: "closesRegion(x, Q)",
+          cause: "(closesRow(x, Q) or closesCol(x, Q) or closesRegion(x, Q)) and not (closesRow(x, Q) and closesCol(x, Q) and closesRegion(x, Q))" }
       marks: { stripes: S, outline: Q, reads: "Q + S + completing(x, Q)" }
+      move: "it must be empty"
+      wordings:
+        - when: "cause and exhausted"
+          look: "a star on {ring} would complete its {if closesRow: {if closesCol: row and column | {if closesRegion: row and region | row}} | {if closesCol: {if closesRegion: column and region | column} | region}}, leaving {stripes: this {if row: row | column}} {if mine: nowhere for {n} more {n: star | stars} | no open square}"
+        - when: "cause"
+          look: "a star on {ring} would complete its {if closesRow: {if closesCol: row and column | {if closesRegion: row and region | row}} | {if closesCol: {if closesRegion: column and region | column} | region}}, leaving {stripes: this {if row: row | column}} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"
+        - when: "exhausted and mine"
+          look: "a star on {ring} would block the rest of {stripes: this {if row: row | column}}, which would still need {n} {n: star | stars}"
+        - when: "exhausted"
+          look: "a star on {ring} would block every open square of {stripes: this {if row: row | column}}, leaving it no room for a star"
+        - look: "a star on {ring} would block {outline}, leaving {stripes: this {if row: row | column}} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"
   - id: starvedRegion
     tier: Tricky
     for: >-
@@ -278,7 +343,19 @@ techniques:
     conclude: "place(x, 2)"
     says:
       terms:
-        { g: g, n: n, room: room, mine: "x in S", exhausted: "|E| = 0",
+        { g: g, n: n, room: room, mine: "x in S", exhausted: "|E| = 0", one: "room = 1",
           closesRow: "closesRow(x, Q)", closesCol: "closesCol(x, Q)",
-          closesRegion: "closesRegion(x, Q)" }
+          closesRegion: "closesRegion(x, Q)",
+          cause: "(closesRow(x, Q) or closesCol(x, Q) or closesRegion(x, Q)) and not (closesRow(x, Q) and closesCol(x, Q) and closesRegion(x, Q))" }
       marks: { stripes: S, outline: Q, reads: "Q + S + completing(x, Q)" }
+      move: "it must be empty"
+      wordings:
+        - when: "cause and exhausted"
+          look: "a star on {ring} would complete its {if closesRow: {if closesCol: row and column | {if closesRegion: row and region | row}} | {if closesCol: {if closesRegion: column and region | column} | region}}, leaving {stripes: this region} {if mine: nowhere for {n} more {n: star | stars} | no open square}"
+        - when: "cause"
+          look: "a star on {ring} would complete its {if closesRow: {if closesCol: row and column | {if closesRegion: row and region | row}} | {if closesCol: {if closesRegion: column and region | column} | region}}, leaving {stripes: this region} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"
+        - when: "exhausted and mine"
+          look: "a star on {ring} would block the rest of {stripes: this region}, which would still need {n} {n: star | stars}"
+        - when: "exhausted"
+          look: "a star on {ring} would block every open square of {stripes: this region}, leaving it no room for a star"
+        - look: "a star on {ring} would block {outline}, leaving {stripes: this region} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"

@@ -40,6 +40,26 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["around","fullLine","fullRegion","exactLine","exactRegion","confined.lines","confined.regions","neededLine","neededRegion","crowdedLine","crowdedRegion","banded.lines","banded.regions","starvedLine","starvedRegion"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "around": {"step":[{"look":"no star may touch {outline: the outlined star}","move":"{ring} must be empty"}]},
+  "fullLine": {"step":[{"look":"{stripes: this {if row: row | column}} has {s: its star | its {s} stars}","move":"{ring} must be empty"}]},
+  "fullRegion": {"step":[{"look":"{stripes: this region} has {s: its star | its {s} stars}","move":"{ring} must be empty"}]},
+  "exactLine": {"step":[{"look":"{stripes: this {if row: row | column}} needs {if placed: {n} more | {n}} {n: star | stars} and has only {n} open {n: square | squares}","move":"{ring: the ringed square | each ringed square} must hold a star"}]},
+  "exactRegion": {"step":[{"look":"{stripes: this region} needs {if placed: {n} more | {n}} {n: star | stars} and has only {n} open {n: square | squares}","move":"{ring: the ringed square | each ringed square} must hold a star"}]},
+  "confined.lines": {"step":[{"move":"{ring} must be empty","look":"{outline: the outlined region} must put its {if placed: last star | star} in {stripes: this {if row: row | column}}, which needs only that one"},{"move":"{ring} must be empty","look":"{outline: {regionCount: the outlined region | the {regionCount} outlined regions}} {regionCount: needs | need} {if placed: {n} more | {n}} {n: star | stars}, {if multi: all in | in} {stripes: {k: this {if row: row | column} | these {k} {if row: rows | columns}}}, which {k: needs | need} only {n}"}]},
+  "confined.regions": {"step":[{"move":"{ring} must be empty","look":"{stripes: this {if row: row | column}} must put its {if placed: last star | star} in {outline: the outlined region}, which needs only that one"},{"move":"{ring} must be empty","look":"{stripes: {k: this {if row: row | column} | these {k} {if row: rows | columns}}} {k: needs | need} {if placed: {n} more | {n}} {n: star | stars}, {if multi: all in | in} {outline: {regionCount: the outlined region | the {regionCount} outlined regions}}, which {regionCount: needs | need} only {n}"}]},
+  "neededLine": {"step":[{"look":"{stripes: this {if row: row | column}} needs {if placed: {n} more | {n}} {n: star | stars} and without {ring} has room for {if none: none | only {room}}","move":"{ring: that square} must hold a star"}]},
+  "neededRegion": {"step":[{"look":"{stripes: this region} needs {if placed: {n} more | {n}} {n: star | stars} and without {ring} has room for {if none: none | only {room}}","move":"{ring: that square} must hold a star"}]},
+  "crowdedLine": {"step":[{"move":"it must be empty","look":"a star on {ring} would touch the rest of {stripes: this {if row: row | column}}, which would still need {n} {n: star | stars}"},{"move":"it must be empty","look":"a star on {ring} would touch every open square of {stripes: this {if row: row | column}}, leaving it no room for a star"},{"move":"it must be empty","look":"a star on {ring} would touch {outline}, leaving {stripes: this {if row: row | column}} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"}]},
+  "crowdedRegion": {"step":[{"move":"it must be empty","look":"a star on {ring} would touch the rest of {stripes: this region}, which would still need {n} {n: star | stars}"},{"move":"it must be empty","look":"a star on {ring} would touch every open square of {stripes: this region}, leaving it no room for a star"},{"move":"it must be empty","look":"a star on {ring} would touch {outline}, leaving {stripes: this region} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"}]},
+  "banded.lines": {"step":[{"move":"{ring} must be empty","look":"{outline: the outlined region} must put its {if placed: last star | star} in {stripes: this {if row: row | column}}, which needs only that one"},{"move":"{ring} must be empty","look":"{outline: {regionCount: the outlined region | the {regionCount} outlined regions}} {regionCount: needs | need} {if placed: {n} more | {n}} {n: star | stars}, {if multi: all in | in} {stripes: {k: this {if row: row | column} | these {k} {if row: rows | columns}}}, which {k: needs | need} only {n}"}]},
+  "banded.regions": {"step":[{"move":"{ring} must be empty","look":"{stripes: this {if row: row | column}} must put its {if placed: last star | star} in {outline: the outlined region}, which needs only that one"},{"move":"{ring} must be empty","look":"{stripes: {k: this {if row: row | column} | these {k} {if row: rows | columns}}} {k: needs | need} {if placed: {n} more | {n}} {n: star | stars}, {if multi: all in | in} {outline: {regionCount: the outlined region | the {regionCount} outlined regions}}, which {regionCount: needs | need} only {n}"}]},
+  "starvedLine": {"step":[{"move":"it must be empty","look":"a star on {ring} would complete its {if closesRow: {if closesCol: row and column | {if closesRegion: row and region | row}} | {if closesCol: {if closesRegion: column and region | column} | region}}, leaving {stripes: this {if row: row | column}} {if mine: nowhere for {n} more {n: star | stars} | no open square}"},{"move":"it must be empty","look":"a star on {ring} would complete its {if closesRow: {if closesCol: row and column | {if closesRegion: row and region | row}} | {if closesCol: {if closesRegion: column and region | column} | region}}, leaving {stripes: this {if row: row | column}} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"},{"move":"it must be empty","look":"a star on {ring} would block the rest of {stripes: this {if row: row | column}}, which would still need {n} {n: star | stars}"},{"move":"it must be empty","look":"a star on {ring} would block every open square of {stripes: this {if row: row | column}}, leaving it no room for a star"},{"move":"it must be empty","look":"a star on {ring} would block {outline}, leaving {stripes: this {if row: row | column}} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"}]},
+  "starvedRegion": {"step":[{"move":"it must be empty","look":"a star on {ring} would complete its {if closesRow: {if closesCol: row and column | {if closesRegion: row and region | row}} | {if closesCol: {if closesRegion: column and region | column} | region}}, leaving {stripes: this region} {if mine: nowhere for {n} more {n: star | stars} | no open square}"},{"move":"it must be empty","look":"a star on {ring} would complete its {if closesRow: {if closesCol: row and column | {if closesRegion: row and region | row}} | {if closesCol: {if closesRegion: column and region | column} | region}}, leaving {stripes: this region} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"},{"move":"it must be empty","look":"a star on {ring} would block the rest of {stripes: this region}, which would still need {n} {n: star | stars}"},{"move":"it must be empty","look":"a star on {ring} would block every open square of {stripes: this region}, leaving it no room for a star"},{"move":"it must be empty","look":"a star on {ring} would block {outline}, leaving {stripes: this region} room for {if mine: {room} more | {if one: {room} star | {room}}}, not {n}"}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -236,7 +256,7 @@ export interface FullLineBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface FullLineSays {
-  terms: { L: number; };
+  terms: { L: number; row: boolean; s: number; };
   marks: { stripes: readonly number[]; reads: readonly number[]; };
 }
 
@@ -309,7 +329,19 @@ export function fullLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FullLine
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { L: v_L }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+          let _q34 = true;
+          Q35: {
+            const _a36 = sp.lineCells[v_L];
+            for (let _i37 = 0; _i37 < _a36.length; _i37++) {
+              const v_c = _a36[_i37];
+              const _t38 = sp.lineCells[v_L];
+              if (!((((v_c / sp.w) | 0) === (((_t38.length > 0 ? _t38[0] : -1) / sp.w) | 0)))) {
+                _q34 = false;
+                break Q35;
+              }
+            }
+          }
+          const _says = { terms: { L: v_L, row: _q34, s: cl.stars }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
           if (!fire({ L: v_L, n: v_n }, facts, _says)) return 1;
         }
       }
@@ -325,7 +357,7 @@ export interface FullRegionBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface FullRegionSays {
-  terms: { r: number; };
+  terms: { r: number; s: number; };
   marks: { stripes: readonly number[]; reads: readonly number[]; };
 }
 
@@ -398,7 +430,7 @@ export function fullRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<FullR
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { r: v_r }, marks: { stripes: cl.region.cells[v_r].slice(), reads: cl.region.cells[v_r].slice() } };
+          const _says = { terms: { r: v_r, s: cl.stars }, marks: { stripes: cl.region.cells[v_r].slice(), reads: cl.region.cells[v_r].slice() } };
           if (!fire({ r: v_r, n: v_n }, facts, _says)) return 1;
         }
       }
@@ -415,7 +447,7 @@ export interface ExactLineBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ExactLineSays {
-  terms: { L: number; n: number; };
+  terms: { L: number; n: number; row: boolean; placed: boolean; };
   marks: { stripes: readonly number[]; reads: readonly number[]; };
 }
 
@@ -500,7 +532,19 @@ export function exactLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ExactLi
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { L: v_L, n: v_n }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+          let _q49 = true;
+          Q50: {
+            const _a51 = sp.lineCells[v_L];
+            for (let _i52 = 0; _i52 < _a51.length; _i52++) {
+              const v_c = _a51[_i52];
+              const _t53 = sp.lineCells[v_L];
+              if (!((((v_c / sp.w) | 0) === (((_t53.length > 0 ? _t53[0] : -1) / sp.w) | 0)))) {
+                _q49 = false;
+                break Q50;
+              }
+            }
+          }
+          const _says = { terms: { L: v_L, n: v_n, row: _q49, placed: (v_n < cl.stars) }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
           if (!fire({ L: v_L, n: v_n, O: v_O.slice() }, facts, _says)) return 1;
         }
       }
@@ -517,7 +561,7 @@ export interface ExactRegionBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ExactRegionSays {
-  terms: { r: number; n: number; };
+  terms: { r: number; n: number; placed: boolean; };
   marks: { stripes: readonly number[]; reads: readonly number[]; };
 }
 
@@ -602,7 +646,7 @@ export function exactRegion(b: Marks, _sp: GridSpace, cl: Dealt, fire: Fire<Exac
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { r: v_r, n: v_n }, marks: { stripes: cl.region.cells[v_r].slice(), reads: cl.region.cells[v_r].slice() } };
+          const _says = { terms: { r: v_r, n: v_n, placed: (v_n < cl.stars) }, marks: { stripes: cl.region.cells[v_r].slice(), reads: cl.region.cells[v_r].slice() } };
           if (!fire({ r: v_r, n: v_n, O: v_O.slice() }, facts, _says)) return 1;
         }
       }
@@ -625,13 +669,13 @@ export interface ConfinedBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
 export type ConfinedSays =
-  | { arm: "lines"; terms: { dir: number; k: number; n: number; regionCount: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; } }
-  | { arm: "regions"; terms: { dir: number; k: number; n: number; regionCount: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; } }
+  | { arm: "lines"; terms: { dir: number; k: number; n: number; row: boolean; multi: boolean; regionCount: number; placed: boolean; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; }; wording: number }
+  | { arm: "regions"; terms: { dir: number; k: number; n: number; row: boolean; multi: boolean; regionCount: number; placed: boolean; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; }; wording: number }
 ;
 
 const confinedFacts: number[] = [];
-const confined_st464 = stamps();
-const confined_st477 = stamps();
+const confined_st465 = stamps();
+const confined_st478 = stamps();
 
 /** Its dearest read grows with the board as 1. */
 export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ConfinedBinding, ConfinedSays> | null): number {
@@ -642,13 +686,14 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
   const _g279: number[] = [];
   const _g432: number[] = [];
   const _g447: number[] = [];
-  const _g458: number[] = [];
-  const _g471: number[] = [];
+  const _g459: number[] = [];
+  const _g472: number[] = [];
   const facts = confinedFacts;
   let fired = 0;
   let changed = false;
   const _h145 = (sp.w - 1);
   for (let v_dir = 0; v_dir <= 1; v_dir++) {
+    const _h457 = (v_dir === 0);
     for (let v_a = 0; v_a <= _h145; v_a++) {
       const v_B = band(sp, 1, v_dir, v_a);
       let _g146 = 0;
@@ -708,7 +753,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
           }
         }
         const v_I = _g151;
-        const _h457 = v_I.length;
+        const _h458 = v_I.length;
         let _g205 = 0;
         G206: {
           const _a207 = v_I;
@@ -773,7 +818,7 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
           }
         }
         const v_R = _g214;
-        const _h470 = v_R.length;
+        const _h471 = v_R.length;
         let _g268 = 0;
         G269: {
           const _a270 = v_R;
@@ -1055,38 +1100,58 @@ export function confined(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Confined
               if (v_lines) _arm = 0; else if (true) _arm = 1;
               let _says: ConfinedSays | null = null;
               if (_arm === 0) {
-                _g458.length = 0;
-                confined_st464.pass++;
-                G459: {
-                  const _a465 = v_I;
-                  for (let _i466 = 0; _i466 < _a465.length; _i466++) {
-                    const v_r = _a465[_i466];
-                    const _a467 = cl.region.cells[v_r];
-                    for (let _i468 = 0; _i468 < _a467.length; _i468++) {
-                      const v_c = _a467[_i468];
-                      const _t469 = v_c;
-                      if (_g458.length < 16) { if (!_g458.includes(_t469)) _g458.push(_t469); } else addOnce(_g458, confined_st464, _t469);
+                const _sw_dir = v_dir;
+                const _sw_k = 1;
+                const _sw_n = v_n;
+                const _sw_row = _h457;
+                const _sw_multi = (v_n > 1);
+                const _sw_regionCount = _h458;
+                const _sw_placed = ((_h458 * cl.stars) > v_n);
+                const _sw_stripes = v_B.slice();
+                const _sw_reads = v_B.slice();
+                _g459.length = 0;
+                confined_st465.pass++;
+                G460: {
+                  const _a466 = v_I;
+                  for (let _i467 = 0; _i467 < _a466.length; _i467++) {
+                    const v_r = _a466[_i467];
+                    const _a468 = cl.region.cells[v_r];
+                    for (let _i469 = 0; _i469 < _a468.length; _i469++) {
+                      const v_c = _a468[_i469];
+                      const _t470 = v_c;
+                      if (_g459.length < 16) { if (!_g459.includes(_t470)) _g459.push(_t470); } else addOnce(_g459, confined_st465, _t470);
                     }
                   }
                 }
-                _says = { arm: "lines", terms: { dir: v_dir, k: 1, n: v_n, regionCount: _h457 }, marks: { stripes: v_B.slice(), reads: v_B.slice(), outline: _g458.slice() } };
+                const _sw_outline = _g459.slice();
+                _says = { arm: "lines", terms: { dir: _sw_dir, k: _sw_k, n: _sw_n, row: _sw_row, multi: _sw_multi, regionCount: _sw_regionCount, placed: _sw_placed }, marks: { stripes: _sw_stripes, reads: _sw_reads, outline: _sw_outline }, wording: (((_sw_n === 1) && (_sw_regionCount === 1)) ? 0 : 1) };
               }
               if (_arm === 1) {
-                _g471.length = 0;
-                confined_st477.pass++;
-                G472: {
-                  const _a478 = v_R;
-                  for (let _i479 = 0; _i479 < _a478.length; _i479++) {
-                    const v_r = _a478[_i479];
-                    const _a480 = cl.region.cells[v_r];
-                    for (let _i481 = 0; _i481 < _a480.length; _i481++) {
-                      const v_c = _a480[_i481];
-                      const _t482 = v_c;
-                      if (_g471.length < 16) { if (!_g471.includes(_t482)) _g471.push(_t482); } else addOnce(_g471, confined_st477, _t482);
+                const _sw_dir = v_dir;
+                const _sw_k = 1;
+                const _sw_n = v_n;
+                const _sw_row = _h457;
+                const _sw_multi = (v_n > 1);
+                const _sw_regionCount = _h471;
+                const _sw_placed = (cl.stars > v_n);
+                const _sw_stripes = v_B.slice();
+                const _sw_reads = v_B.slice();
+                _g472.length = 0;
+                confined_st478.pass++;
+                G473: {
+                  const _a479 = v_R;
+                  for (let _i480 = 0; _i480 < _a479.length; _i480++) {
+                    const v_r = _a479[_i480];
+                    const _a481 = cl.region.cells[v_r];
+                    for (let _i482 = 0; _i482 < _a481.length; _i482++) {
+                      const v_c = _a481[_i482];
+                      const _t483 = v_c;
+                      if (_g472.length < 16) { if (!_g472.includes(_t483)) _g472.push(_t483); } else addOnce(_g472, confined_st478, _t483);
                     }
                   }
                 }
-                _says = { arm: "regions", terms: { dir: v_dir, k: 1, n: v_n, regionCount: _h470 }, marks: { stripes: v_B.slice(), reads: v_B.slice(), outline: _g471.slice() } };
+                const _sw_outline = _g472.slice();
+                _says = { arm: "regions", terms: { dir: _sw_dir, k: _sw_k, n: _sw_n, row: _sw_row, multi: _sw_multi, regionCount: _sw_regionCount, placed: _sw_placed }, marks: { stripes: _sw_stripes, reads: _sw_reads, outline: _sw_outline }, wording: (((_sw_n === 1) && (_sw_regionCount === 1)) ? 0 : 1) };
               }
               if (_says === null) throw new Error("confined: no arm of says holds");
               if (!fire({ dir: v_dir, a: v_a, B: v_B.slice(), n: v_n, I: v_I.slice(), mi: v_mi, R: v_R.slice(), mr: v_mr, lines: v_lines }, facts, _says)) return 1;
@@ -1110,7 +1175,7 @@ export interface NeededLineBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface NeededLineSays {
-  terms: { L: number; n: number; room: number; };
+  terms: { L: number; n: number; room: number; row: boolean; placed: boolean; none: boolean; };
   marks: { stripes: readonly number[]; reads: readonly number[]; };
 }
 
@@ -1139,7 +1204,7 @@ export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Needed
   R1:
   for (let _i66 = 0; _i66 < _a65.length; _i66++) {
     const v_L = _a65[_i66];
-    const _m203_0 = b.made[0];
+    const _m209_0 = b.made[0];
     const _t67 = sp.lineCells[v_L];
     let _g68 = 0;
     G69: {
@@ -1151,6 +1216,7 @@ export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Needed
       }
     }
     const v_n = (cl.stars - _g68);
+    const _h208 = (v_n < cl.stars);
     const _t72 = sp.lineCells[v_L];
     _g73.length = 0;
     G74: {
@@ -1307,7 +1373,7 @@ export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Needed
             }
           }
           const v_room = _g108;
-          if (b.made[0] !== _m203_0) {
+          if (b.made[0] !== _m209_0) {
             const _t133 = sp.lineCells[v_L];
             let _g134 = 0;
             G135: {
@@ -1499,7 +1565,19 @@ export function neededLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Needed
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: { L: v_L, n: v_n, room: v_room }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+              let _q203 = true;
+              Q204: {
+                const _a205 = sp.lineCells[v_L];
+                for (let _i206 = 0; _i206 < _a205.length; _i206++) {
+                  const v_c = _a205[_i206];
+                  const _t207 = sp.lineCells[v_L];
+                  if (!((((v_c / sp.w) | 0) === (((_t207.length > 0 ? _t207[0] : -1) / sp.w) | 0)))) {
+                    _q203 = false;
+                    break Q204;
+                  }
+                }
+              }
+              const _says = { terms: { L: v_L, n: v_n, room: v_room, row: _q203, placed: _h208, none: (v_room === 0) }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
               if (!fire({ L: v_L, n: v_n, O: v_O.slice(), x: v_x, E: v_E.slice(), room: v_room }, facts, _says)) return 1;
             }
           }
@@ -1521,7 +1599,7 @@ export interface NeededRegionBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface NeededRegionSays {
-  terms: { r: number; n: number; room: number; };
+  terms: { r: number; n: number; room: number; placed: boolean; none: boolean; };
   marks: { stripes: readonly number[]; reads: readonly number[]; };
 }
 
@@ -1550,7 +1628,7 @@ export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
   R1:
   for (let _i66 = 0; _i66 < _a65.length; _i66++) {
     const v_r = _a65[_i66];
-    const _m203_0 = b.made[0];
+    const _m204_0 = b.made[0];
     const _t67 = cl.region.cells[v_r];
     let _g68 = 0;
     G69: {
@@ -1562,6 +1640,7 @@ export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
       }
     }
     const v_n = (cl.stars - _g68);
+    const _h203 = (v_n < cl.stars);
     const _t72 = cl.region.cells[v_r];
     _g73.length = 0;
     G74: {
@@ -1718,7 +1797,7 @@ export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
             }
           }
           const v_room = _g108;
-          if (b.made[0] !== _m203_0) {
+          if (b.made[0] !== _m204_0) {
             const _t133 = cl.region.cells[v_r];
             let _g134 = 0;
             G135: {
@@ -1910,7 +1989,7 @@ export function neededRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Need
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: { r: v_r, n: v_n, room: v_room }, marks: { stripes: cl.region.cells[v_r].slice(), reads: cl.region.cells[v_r].slice() } };
+              const _says = { terms: { r: v_r, n: v_n, room: v_room, placed: _h203, none: (v_room === 0) }, marks: { stripes: cl.region.cells[v_r].slice(), reads: cl.region.cells[v_r].slice() } };
               if (!fire({ r: v_r, n: v_n, O: v_O.slice(), x: v_x, E: v_E.slice(), room: v_room }, facts, _says)) return 1;
             }
           }
@@ -1934,8 +2013,10 @@ export interface CrowdedLineBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface CrowdedLineSays {
-  terms: { L: number; n: number; room: number; mine: boolean; exhausted: boolean; };
+  terms: { L: number; n: number; room: number; mine: boolean; exhausted: boolean; one: boolean; row: boolean; };
   marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const crowdedLineFacts: number[] = [];
@@ -1967,7 +2048,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
   R1:
   for (let _i108 = 0; _i108 < _a107.length; _i108++) {
     const v_x = _a107[_i108];
-    const _m326_0 = b.made[0];
+    const _m331_0 = b.made[0];
     if (!(!((b.grid[v_x] !== 0)))) continue;
     const _h117 = sp.rowOf[v_x];
     const _h118 = sp.colOf[v_x];
@@ -2200,7 +2281,7 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
           }
         }
         const v_Q = _g201;
-        if (b.made[0] !== _m326_0) {
+        if (b.made[0] !== _m331_0) {
           if (!(!((b.grid[v_x] !== 0)))) { continue R1; }
           _g219.length = 0;
           G220: {
@@ -2442,7 +2523,29 @@ export function crowdedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Crowd
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { L: v_L, n: v_n, room: v_room, mine: (v_S.includes(v_x)), exhausted: (_h161 === 0) }, marks: { stripes: v_S.slice(), outline: v_Q.slice(), reads: union(v_Q, v_S).slice() } };
+            const _sw_L = v_L;
+            const _sw_n = v_n;
+            const _sw_room = v_room;
+            const _sw_mine = (v_S.includes(v_x));
+            const _sw_exhausted = (_h161 === 0);
+            const _sw_one = (v_room === 1);
+            let _q326 = true;
+            Q327: {
+              const _a328 = sp.lineCells[v_L];
+              for (let _i329 = 0; _i329 < _a328.length; _i329++) {
+                const v_c = _a328[_i329];
+                const _t330 = sp.lineCells[v_L];
+                if (!((((v_c / sp.w) | 0) === (((_t330.length > 0 ? _t330[0] : -1) / sp.w) | 0)))) {
+                  _q326 = false;
+                  break Q327;
+                }
+              }
+            }
+            const _sw_row = _q326;
+            const _sw_stripes = v_S.slice();
+            const _sw_outline = v_Q.slice();
+            const _sw_reads = union(v_Q, v_S).slice();
+            const _says = { terms: { L: _sw_L, n: _sw_n, room: _sw_room, mine: _sw_mine, exhausted: _sw_exhausted, one: _sw_one, row: _sw_row }, marks: { stripes: _sw_stripes, outline: _sw_outline, reads: _sw_reads }, wording: ((_sw_exhausted && _sw_mine) ? 0 : _sw_exhausted ? 1 : 2) };
             if (!fire({ x: v_x, R: v_R.slice(), L: v_L, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts, _says)) return 1;
           }
         }
@@ -2465,8 +2568,10 @@ export interface CrowdedRegionBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface CrowdedRegionSays {
-  terms: { g: number; n: number; room: number; mine: boolean; exhausted: boolean; };
+  terms: { g: number; n: number; room: number; mine: boolean; exhausted: boolean; one: boolean; };
   marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const crowdedRegionFacts: number[] = [];
@@ -2972,7 +3077,16 @@ export function crowdedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cro
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { g: v_g, n: v_n, room: v_room, mine: (v_S.includes(v_x)), exhausted: (_h160 === 0) }, marks: { stripes: v_S.slice(), outline: v_Q.slice(), reads: union(v_Q, v_S).slice() } };
+            const _sw_g = v_g;
+            const _sw_n = v_n;
+            const _sw_room = v_room;
+            const _sw_mine = (v_S.includes(v_x));
+            const _sw_exhausted = (_h160 === 0);
+            const _sw_one = (v_room === 1);
+            const _sw_stripes = v_S.slice();
+            const _sw_outline = v_Q.slice();
+            const _sw_reads = union(v_Q, v_S).slice();
+            const _says = { terms: { g: _sw_g, n: _sw_n, room: _sw_room, mine: _sw_mine, exhausted: _sw_exhausted, one: _sw_one }, marks: { stripes: _sw_stripes, outline: _sw_outline, reads: _sw_reads }, wording: ((_sw_exhausted && _sw_mine) ? 0 : _sw_exhausted ? 1 : 2) };
             if (!fire({ x: v_x, R: v_R.slice(), g: v_g, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts, _says)) return 1;
           }
         }
@@ -2997,13 +3111,13 @@ export interface BandedBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
 export type BandedSays =
-  | { arm: "lines"; terms: { dir: number; k: number; n: number; regionCount: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; } }
-  | { arm: "regions"; terms: { dir: number; k: number; n: number; regionCount: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; } }
+  | { arm: "lines"; terms: { dir: number; k: number; n: number; row: boolean; multi: boolean; regionCount: number; placed: boolean; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; }; wording: number }
+  | { arm: "regions"; terms: { dir: number; k: number; n: number; row: boolean; multi: boolean; regionCount: number; placed: boolean; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; }; wording: number }
 ;
 
 const bandedFacts: number[] = [];
-const banded_st468 = stamps();
-const banded_st481 = stamps();
+const banded_st469 = stamps();
+const banded_st483 = stamps();
 
 /** Its dearest read grows with the board as 1. */
 export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBinding, BandedSays> | null): number {
@@ -3014,8 +3128,8 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
   const _g283: number[] = [];
   const _g436: number[] = [];
   const _g451: number[] = [];
-  const _g462: number[] = [];
-  const _g475: number[] = [];
+  const _g463: number[] = [];
+  const _g477: number[] = [];
   const facts = bandedFacts;
   let fired = 0;
   let changed = false;
@@ -3024,7 +3138,9 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
     const _h147 = (sp.w - v_k);
     const _h152 = (v_k - 1);
     const _h153 = (_h152 * cl.stars);
+    const _h476 = (v_k * cl.stars);
     for (let v_dir = 0; v_dir <= 1; v_dir++) {
+      const _h461 = (v_dir === 0);
       for (let v_a = 0; v_a <= _h147; v_a++) {
         const v_B = band(sp, v_k, v_dir, v_a);
         let _g148 = 0;
@@ -3084,7 +3200,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
             }
           }
           const v_I = _g155;
-          const _h461 = v_I.length;
+          const _h462 = v_I.length;
           let _g209 = 0;
           G210: {
             const _a211 = v_I;
@@ -3149,7 +3265,7 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
             }
           }
           const v_R = _g218;
-          const _h474 = v_R.length;
+          const _h475 = v_R.length;
           let _g272 = 0;
           G273: {
             const _a274 = v_R;
@@ -3431,38 +3547,58 @@ export function banded(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<BandedBind
                 if (v_lines) _arm = 0; else if (true) _arm = 1;
                 let _says: BandedSays | null = null;
                 if (_arm === 0) {
-                  _g462.length = 0;
-                  banded_st468.pass++;
-                  G463: {
-                    const _a469 = v_I;
-                    for (let _i470 = 0; _i470 < _a469.length; _i470++) {
-                      const v_r = _a469[_i470];
-                      const _a471 = cl.region.cells[v_r];
-                      for (let _i472 = 0; _i472 < _a471.length; _i472++) {
-                        const v_c = _a471[_i472];
-                        const _t473 = v_c;
-                        if (_g462.length < 16) { if (!_g462.includes(_t473)) _g462.push(_t473); } else addOnce(_g462, banded_st468, _t473);
+                  const _sw_dir = v_dir;
+                  const _sw_k = v_k;
+                  const _sw_n = v_n;
+                  const _sw_row = _h461;
+                  const _sw_multi = (v_n > 1);
+                  const _sw_regionCount = _h462;
+                  const _sw_placed = ((_h462 * cl.stars) > v_n);
+                  const _sw_stripes = v_B.slice();
+                  const _sw_reads = v_B.slice();
+                  _g463.length = 0;
+                  banded_st469.pass++;
+                  G464: {
+                    const _a470 = v_I;
+                    for (let _i471 = 0; _i471 < _a470.length; _i471++) {
+                      const v_r = _a470[_i471];
+                      const _a472 = cl.region.cells[v_r];
+                      for (let _i473 = 0; _i473 < _a472.length; _i473++) {
+                        const v_c = _a472[_i473];
+                        const _t474 = v_c;
+                        if (_g463.length < 16) { if (!_g463.includes(_t474)) _g463.push(_t474); } else addOnce(_g463, banded_st469, _t474);
                       }
                     }
                   }
-                  _says = { arm: "lines", terms: { dir: v_dir, k: v_k, n: v_n, regionCount: _h461 }, marks: { stripes: v_B.slice(), reads: v_B.slice(), outline: _g462.slice() } };
+                  const _sw_outline = _g463.slice();
+                  _says = { arm: "lines", terms: { dir: _sw_dir, k: _sw_k, n: _sw_n, row: _sw_row, multi: _sw_multi, regionCount: _sw_regionCount, placed: _sw_placed }, marks: { stripes: _sw_stripes, reads: _sw_reads, outline: _sw_outline }, wording: ((((_sw_n === 1) && (_sw_k === 1)) && (_sw_regionCount === 1)) ? 0 : 1) };
                 }
                 if (_arm === 1) {
-                  _g475.length = 0;
-                  banded_st481.pass++;
-                  G476: {
-                    const _a482 = v_R;
-                    for (let _i483 = 0; _i483 < _a482.length; _i483++) {
-                      const v_r = _a482[_i483];
-                      const _a484 = cl.region.cells[v_r];
-                      for (let _i485 = 0; _i485 < _a484.length; _i485++) {
-                        const v_c = _a484[_i485];
-                        const _t486 = v_c;
-                        if (_g475.length < 16) { if (!_g475.includes(_t486)) _g475.push(_t486); } else addOnce(_g475, banded_st481, _t486);
+                  const _sw_dir = v_dir;
+                  const _sw_k = v_k;
+                  const _sw_n = v_n;
+                  const _sw_row = _h461;
+                  const _sw_multi = (v_n > 1);
+                  const _sw_regionCount = _h475;
+                  const _sw_placed = (_h476 > v_n);
+                  const _sw_stripes = v_B.slice();
+                  const _sw_reads = v_B.slice();
+                  _g477.length = 0;
+                  banded_st483.pass++;
+                  G478: {
+                    const _a484 = v_R;
+                    for (let _i485 = 0; _i485 < _a484.length; _i485++) {
+                      const v_r = _a484[_i485];
+                      const _a486 = cl.region.cells[v_r];
+                      for (let _i487 = 0; _i487 < _a486.length; _i487++) {
+                        const v_c = _a486[_i487];
+                        const _t488 = v_c;
+                        if (_g477.length < 16) { if (!_g477.includes(_t488)) _g477.push(_t488); } else addOnce(_g477, banded_st483, _t488);
                       }
                     }
                   }
-                  _says = { arm: "regions", terms: { dir: v_dir, k: v_k, n: v_n, regionCount: _h474 }, marks: { stripes: v_B.slice(), reads: v_B.slice(), outline: _g475.slice() } };
+                  const _sw_outline = _g477.slice();
+                  _says = { arm: "regions", terms: { dir: _sw_dir, k: _sw_k, n: _sw_n, row: _sw_row, multi: _sw_multi, regionCount: _sw_regionCount, placed: _sw_placed }, marks: { stripes: _sw_stripes, reads: _sw_reads, outline: _sw_outline }, wording: ((((_sw_n === 1) && (_sw_k === 1)) && (_sw_regionCount === 1)) ? 0 : 1) };
                 }
                 if (_says === null) throw new Error("banded: no arm of says holds");
                 if (!fire({ k: v_k, dir: v_dir, a: v_a, B: v_B.slice(), n: v_n, I: v_I.slice(), mi: v_mi, R: v_R.slice(), mr: v_mr, lines: v_lines }, facts, _says)) return 1;
@@ -3489,8 +3625,10 @@ export interface StarvedLineBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface StarvedLineSays {
-  terms: { L: number; n: number; room: number; mine: boolean; exhausted: boolean; closesRow: boolean; closesCol: boolean; closesRegion: boolean; };
+  terms: { L: number; n: number; room: number; mine: boolean; exhausted: boolean; one: boolean; row: boolean; closesRow: boolean; closesCol: boolean; closesRegion: boolean; cause: boolean; };
   marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const starvedLineFacts: number[] = [];
@@ -3513,7 +3651,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
   const _s171: number[] = [];
   const _g189: number[] = [];
   const _g199: number[] = [];
-  const _g333: number[] = [];
+  const _g403: number[] = [];
   const facts = starvedLineFacts;
   let fired = 0;
   let changed = false;
@@ -3521,12 +3659,12 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
   R1:
   for (let _i102 = 0; _i102 < _a101.length; _i102++) {
     const v_x = _a101[_i102];
-    const _m403_0 = b.made[0];
+    const _m473_0 = b.made[0];
     if (!(!((b.grid[v_x] !== 0)))) continue;
     const _h105 = sp.rowOf[v_x];
     const _h106 = sp.colOf[v_x];
-    const _h322 = cl.region.of[v_x];
-    const _m404_1 = b.made[1];
+    const _h327 = cl.region.of[v_x];
+    const _m474_1 = b.made[1];
     const v_R = ruled(b, sp, cl, v_x);
     const _a103 = sp.lines;
     for (let _i104 = 0; _i104 < _a103.length; _i104++) {
@@ -3747,7 +3885,7 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
           }
         }
         const v_Q = _g189;
-        if (b.made[0] !== _m403_0 || b.made[1] !== _m404_1) {
+        if (b.made[0] !== _m473_0 || b.made[1] !== _m474_1) {
           if (!(!((b.grid[v_x] !== 0)))) { continue R1; }
           if (!(sameSet(v_R, ruled(b, sp, cl, v_x)))) { continue R1; }
         }
@@ -3971,174 +4109,370 @@ export function starvedLine(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Starv
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _t302 = sp.lineCells[_h105];
-            let _g303 = 0;
-            G304: {
-              const _a305 = _t302;
-              for (let _i306 = 0; _i306 < _a305.length; _i306++) {
-                const v_c = _a305[_i306];
-                if (!(((b.grid[v_c] || -1) === 1))) continue;
-                _g303++;
+            const _sw_L = v_L;
+            const _sw_n = v_n;
+            const _sw_room = v_room;
+            const _sw_mine = (v_S.includes(v_x));
+            const _sw_exhausted = (_h149 === 0);
+            const _sw_one = (v_room === 1);
+            let _q302 = true;
+            Q303: {
+              const _a304 = sp.lineCells[v_L];
+              for (let _i305 = 0; _i305 < _a304.length; _i305++) {
+                const v_c = _a304[_i305];
+                const _t306 = sp.lineCells[v_L];
+                if (!((((v_c / sp.w) | 0) === (((_t306.length > 0 ? _t306[0] : -1) / sp.w) | 0)))) {
+                  _q302 = false;
+                  break Q303;
+                }
               }
             }
-            let _c311: boolean = ((cl.stars - _g303) === 1);
-            if (_c311) {
-              let _q307 = false;
-              Q308: {
-                const _a309 = v_Q;
-                for (let _i310 = 0; _i310 < _a309.length; _i310++) {
-                  const v_p = _a309[_i310];
+            const _sw_row = _q302;
+            const _t307 = sp.lineCells[_h105];
+            let _g308 = 0;
+            G309: {
+              const _a310 = _t307;
+              for (let _i311 = 0; _i311 < _a310.length; _i311++) {
+                const v_c = _a310[_i311];
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
+                _g308++;
+              }
+            }
+            let _c316: boolean = ((cl.stars - _g308) === 1);
+            if (_c316) {
+              let _q312 = false;
+              Q313: {
+                const _a314 = v_Q;
+                for (let _i315 = 0; _i315 < _a314.length; _i315++) {
+                  const v_p = _a314[_i315];
                   if ((sp.rowOf[v_p] === _h105)) {
-                    _q307 = true;
-                    break Q308;
+                    _q312 = true;
+                    break Q313;
                   }
                 }
               }
-              _c311 = _q307;
+              _c316 = _q312;
             }
-            const _t312 = sp.lineCells[_h106];
-            let _g313 = 0;
-            G314: {
-              const _a315 = _t312;
-              for (let _i316 = 0; _i316 < _a315.length; _i316++) {
-                const v_c = _a315[_i316];
+            const _sw_closesRow = _c316;
+            const _t317 = sp.lineCells[_h106];
+            let _g318 = 0;
+            G319: {
+              const _a320 = _t317;
+              for (let _i321 = 0; _i321 < _a320.length; _i321++) {
+                const v_c = _a320[_i321];
                 if (!(((b.grid[v_c] || -1) === 1))) continue;
-                _g313++;
+                _g318++;
               }
             }
-            let _c321: boolean = ((cl.stars - _g313) === 1);
-            if (_c321) {
-              let _q317 = false;
-              Q318: {
-                const _a319 = v_Q;
-                for (let _i320 = 0; _i320 < _a319.length; _i320++) {
-                  const v_p = _a319[_i320];
+            let _c326: boolean = ((cl.stars - _g318) === 1);
+            if (_c326) {
+              let _q322 = false;
+              Q323: {
+                const _a324 = v_Q;
+                for (let _i325 = 0; _i325 < _a324.length; _i325++) {
+                  const v_p = _a324[_i325];
                   if ((sp.colOf[v_p] === _h106)) {
-                    _q317 = true;
-                    break Q318;
+                    _q322 = true;
+                    break Q323;
                   }
                 }
               }
-              _c321 = _q317;
+              _c326 = _q322;
             }
-            const _t323 = cl.region.cells[_h322];
-            let _g324 = 0;
-            G325: {
-              const _a326 = _t323;
-              for (let _i327 = 0; _i327 < _a326.length; _i327++) {
-                const v_c = _a326[_i327];
+            const _sw_closesCol = _c326;
+            const _t328 = cl.region.cells[_h327];
+            let _g329 = 0;
+            G330: {
+              const _a331 = _t328;
+              for (let _i332 = 0; _i332 < _a331.length; _i332++) {
+                const v_c = _a331[_i332];
                 if (!(((b.grid[v_c] || -1) === 1))) continue;
-                _g324++;
+                _g329++;
               }
             }
-            let _c332: boolean = ((cl.stars - _g324) === 1);
-            if (_c332) {
-              let _q328 = false;
-              Q329: {
-                const _a330 = v_Q;
-                for (let _i331 = 0; _i331 < _a330.length; _i331++) {
-                  const v_p = _a330[_i331];
-                  if ((cl.region.of[v_p] === _h322)) {
-                    _q328 = true;
-                    break Q329;
+            let _c337: boolean = ((cl.stars - _g329) === 1);
+            if (_c337) {
+              let _q333 = false;
+              Q334: {
+                const _a335 = v_Q;
+                for (let _i336 = 0; _i336 < _a335.length; _i336++) {
+                  const v_p = _a335[_i336];
+                  if ((cl.region.of[v_p] === _h327)) {
+                    _q333 = true;
+                    break Q334;
                   }
                 }
               }
-              _c332 = _q328;
+              _c337 = _q333;
             }
-            _g333.length = 0;
-            G334: {
-              const _a369 = sp.cells;
-              for (let _i370 = 0; _i370 < _a369.length; _i370++) {
-                const v_c = _a369[_i370];
-                const _t371 = sp.lineCells[_h105];
-                let _g372 = 0;
-                G373: {
-                  const _a374 = _t371;
-                  for (let _i375 = 0; _i375 < _a374.length; _i375++) {
-                    const v_c = _a374[_i375];
+            const _sw_closesRegion = _c337;
+            const _t338 = sp.lineCells[_h105];
+            let _g339 = 0;
+            G340: {
+              const _a341 = _t338;
+              for (let _i342 = 0; _i342 < _a341.length; _i342++) {
+                const v_c = _a341[_i342];
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
+                _g339++;
+              }
+            }
+            let _c347: boolean = ((cl.stars - _g339) === 1);
+            if (_c347) {
+              let _q343 = false;
+              Q344: {
+                const _a345 = v_Q;
+                for (let _i346 = 0; _i346 < _a345.length; _i346++) {
+                  const v_p = _a345[_i346];
+                  if ((sp.rowOf[v_p] === _h105)) {
+                    _q343 = true;
+                    break Q344;
+                  }
+                }
+              }
+              _c347 = _q343;
+            }
+            let _c358: boolean = _c347;
+            if (!_c358) {
+              const _t348 = sp.lineCells[_h106];
+              let _g349 = 0;
+              G350: {
+                const _a351 = _t348;
+                for (let _i352 = 0; _i352 < _a351.length; _i352++) {
+                  const v_c = _a351[_i352];
+                  if (!(((b.grid[v_c] || -1) === 1))) continue;
+                  _g349++;
+                }
+              }
+              let _c357: boolean = ((cl.stars - _g349) === 1);
+              if (_c357) {
+                let _q353 = false;
+                Q354: {
+                  const _a355 = v_Q;
+                  for (let _i356 = 0; _i356 < _a355.length; _i356++) {
+                    const v_p = _a355[_i356];
+                    if ((sp.colOf[v_p] === _h106)) {
+                      _q353 = true;
+                      break Q354;
+                    }
+                  }
+                }
+                _c357 = _q353;
+              }
+              _c358 = _c357;
+            }
+            let _c369: boolean = _c358;
+            if (!_c369) {
+              const _t359 = cl.region.cells[_h327];
+              let _g360 = 0;
+              G361: {
+                const _a362 = _t359;
+                for (let _i363 = 0; _i363 < _a362.length; _i363++) {
+                  const v_c = _a362[_i363];
+                  if (!(((b.grid[v_c] || -1) === 1))) continue;
+                  _g360++;
+                }
+              }
+              let _c368: boolean = ((cl.stars - _g360) === 1);
+              if (_c368) {
+                let _q364 = false;
+                Q365: {
+                  const _a366 = v_Q;
+                  for (let _i367 = 0; _i367 < _a366.length; _i367++) {
+                    const v_p = _a366[_i367];
+                    if ((cl.region.of[v_p] === _h327)) {
+                      _q364 = true;
+                      break Q365;
+                    }
+                  }
+                }
+                _c368 = _q364;
+              }
+              _c369 = _c368;
+            }
+            let _c402: boolean = _c369;
+            if (_c402) {
+              const _t370 = sp.lineCells[_h105];
+              let _g371 = 0;
+              G372: {
+                const _a373 = _t370;
+                for (let _i374 = 0; _i374 < _a373.length; _i374++) {
+                  const v_c = _a373[_i374];
+                  if (!(((b.grid[v_c] || -1) === 1))) continue;
+                  _g371++;
+                }
+              }
+              let _c379: boolean = ((cl.stars - _g371) === 1);
+              if (_c379) {
+                let _q375 = false;
+                Q376: {
+                  const _a377 = v_Q;
+                  for (let _i378 = 0; _i378 < _a377.length; _i378++) {
+                    const v_p = _a377[_i378];
+                    if ((sp.rowOf[v_p] === _h105)) {
+                      _q375 = true;
+                      break Q376;
+                    }
+                  }
+                }
+                _c379 = _q375;
+              }
+              let _c390: boolean = _c379;
+              if (_c390) {
+                const _t380 = sp.lineCells[_h106];
+                let _g381 = 0;
+                G382: {
+                  const _a383 = _t380;
+                  for (let _i384 = 0; _i384 < _a383.length; _i384++) {
+                    const v_c = _a383[_i384];
                     if (!(((b.grid[v_c] || -1) === 1))) continue;
-                    _g372++;
+                    _g381++;
                   }
                 }
-                let _c380: boolean = ((cl.stars - _g372) === 1);
-                if (_c380) {
-                  let _q376 = false;
-                  Q377: {
-                    const _a378 = v_Q;
-                    for (let _i379 = 0; _i379 < _a378.length; _i379++) {
-                      const v_p = _a378[_i379];
+                let _c389: boolean = ((cl.stars - _g381) === 1);
+                if (_c389) {
+                  let _q385 = false;
+                  Q386: {
+                    const _a387 = v_Q;
+                    for (let _i388 = 0; _i388 < _a387.length; _i388++) {
+                      const v_p = _a387[_i388];
+                      if ((sp.colOf[v_p] === _h106)) {
+                        _q385 = true;
+                        break Q386;
+                      }
+                    }
+                  }
+                  _c389 = _q385;
+                }
+                _c390 = _c389;
+              }
+              let _c401: boolean = _c390;
+              if (_c401) {
+                const _t391 = cl.region.cells[_h327];
+                let _g392 = 0;
+                G393: {
+                  const _a394 = _t391;
+                  for (let _i395 = 0; _i395 < _a394.length; _i395++) {
+                    const v_c = _a394[_i395];
+                    if (!(((b.grid[v_c] || -1) === 1))) continue;
+                    _g392++;
+                  }
+                }
+                let _c400: boolean = ((cl.stars - _g392) === 1);
+                if (_c400) {
+                  let _q396 = false;
+                  Q397: {
+                    const _a398 = v_Q;
+                    for (let _i399 = 0; _i399 < _a398.length; _i399++) {
+                      const v_p = _a398[_i399];
+                      if ((cl.region.of[v_p] === _h327)) {
+                        _q396 = true;
+                        break Q397;
+                      }
+                    }
+                  }
+                  _c400 = _q396;
+                }
+                _c401 = _c400;
+              }
+              _c402 = !(_c401);
+            }
+            const _sw_cause = _c402;
+            const _sw_stripes = v_S.slice();
+            const _sw_outline = v_Q.slice();
+            _g403.length = 0;
+            G404: {
+              const _a439 = sp.cells;
+              for (let _i440 = 0; _i440 < _a439.length; _i440++) {
+                const v_c = _a439[_i440];
+                const _t441 = sp.lineCells[_h105];
+                let _g442 = 0;
+                G443: {
+                  const _a444 = _t441;
+                  for (let _i445 = 0; _i445 < _a444.length; _i445++) {
+                    const v_c = _a444[_i445];
+                    if (!(((b.grid[v_c] || -1) === 1))) continue;
+                    _g442++;
+                  }
+                }
+                let _c450: boolean = ((cl.stars - _g442) === 1);
+                if (_c450) {
+                  let _q446 = false;
+                  Q447: {
+                    const _a448 = v_Q;
+                    for (let _i449 = 0; _i449 < _a448.length; _i449++) {
+                      const v_p = _a448[_i449];
                       if ((sp.rowOf[v_p] === _h105)) {
-                        _q376 = true;
-                        break Q377;
+                        _q446 = true;
+                        break Q447;
                       }
                     }
                   }
-                  _c380 = _q376;
+                  _c450 = _q446;
                 }
-                let _c391: boolean = (_c380 && (sp.rowOf[v_c] === _h105));
-                if (!_c391) {
-                  const _t381 = sp.lineCells[_h106];
-                  let _g382 = 0;
-                  G383: {
-                    const _a384 = _t381;
-                    for (let _i385 = 0; _i385 < _a384.length; _i385++) {
-                      const v_c = _a384[_i385];
+                let _c461: boolean = (_c450 && (sp.rowOf[v_c] === _h105));
+                if (!_c461) {
+                  const _t451 = sp.lineCells[_h106];
+                  let _g452 = 0;
+                  G453: {
+                    const _a454 = _t451;
+                    for (let _i455 = 0; _i455 < _a454.length; _i455++) {
+                      const v_c = _a454[_i455];
                       if (!(((b.grid[v_c] || -1) === 1))) continue;
-                      _g382++;
+                      _g452++;
                     }
                   }
-                  let _c390: boolean = ((cl.stars - _g382) === 1);
-                  if (_c390) {
-                    let _q386 = false;
-                    Q387: {
-                      const _a388 = v_Q;
-                      for (let _i389 = 0; _i389 < _a388.length; _i389++) {
-                        const v_p = _a388[_i389];
+                  let _c460: boolean = ((cl.stars - _g452) === 1);
+                  if (_c460) {
+                    let _q456 = false;
+                    Q457: {
+                      const _a458 = v_Q;
+                      for (let _i459 = 0; _i459 < _a458.length; _i459++) {
+                        const v_p = _a458[_i459];
                         if ((sp.colOf[v_p] === _h106)) {
-                          _q386 = true;
-                          break Q387;
+                          _q456 = true;
+                          break Q457;
                         }
                       }
                     }
-                    _c390 = _q386;
+                    _c460 = _q456;
                   }
-                  _c391 = (_c390 && (sp.colOf[v_c] === _h106));
+                  _c461 = (_c460 && (sp.colOf[v_c] === _h106));
                 }
-                let _c402: boolean = _c391;
-                if (!_c402) {
-                  const _t392 = cl.region.cells[_h322];
-                  let _g393 = 0;
-                  G394: {
-                    const _a395 = _t392;
-                    for (let _i396 = 0; _i396 < _a395.length; _i396++) {
-                      const v_c = _a395[_i396];
+                let _c472: boolean = _c461;
+                if (!_c472) {
+                  const _t462 = cl.region.cells[_h327];
+                  let _g463 = 0;
+                  G464: {
+                    const _a465 = _t462;
+                    for (let _i466 = 0; _i466 < _a465.length; _i466++) {
+                      const v_c = _a465[_i466];
                       if (!(((b.grid[v_c] || -1) === 1))) continue;
-                      _g393++;
+                      _g463++;
                     }
                   }
-                  let _c401: boolean = ((cl.stars - _g393) === 1);
-                  if (_c401) {
-                    let _q397 = false;
-                    Q398: {
-                      const _a399 = v_Q;
-                      for (let _i400 = 0; _i400 < _a399.length; _i400++) {
-                        const v_p = _a399[_i400];
-                        if ((cl.region.of[v_p] === _h322)) {
-                          _q397 = true;
-                          break Q398;
+                  let _c471: boolean = ((cl.stars - _g463) === 1);
+                  if (_c471) {
+                    let _q467 = false;
+                    Q468: {
+                      const _a469 = v_Q;
+                      for (let _i470 = 0; _i470 < _a469.length; _i470++) {
+                        const v_p = _a469[_i470];
+                        if ((cl.region.of[v_p] === _h327)) {
+                          _q467 = true;
+                          break Q468;
                         }
                       }
                     }
-                    _c401 = _q397;
+                    _c471 = _q467;
                   }
-                  _c402 = (_c401 && (cl.region.of[v_c] === _h322));
+                  _c472 = (_c471 && (cl.region.of[v_c] === _h327));
                 }
-                if (!(_c402)) continue;
-                _g333.push(v_c);
+                if (!(_c472)) continue;
+                _g403.push(v_c);
               }
             }
-            const _says = { terms: { L: v_L, n: v_n, room: v_room, mine: (v_S.includes(v_x)), exhausted: (_h149 === 0), closesRow: _c311, closesCol: _c321, closesRegion: _c332 }, marks: { stripes: v_S.slice(), outline: v_Q.slice(), reads: union(union(v_Q, v_S), _g333).slice() } };
+            const _sw_reads = union(union(v_Q, v_S), _g403).slice();
+            const _says = { terms: { L: _sw_L, n: _sw_n, room: _sw_room, mine: _sw_mine, exhausted: _sw_exhausted, one: _sw_one, row: _sw_row, closesRow: _sw_closesRow, closesCol: _sw_closesCol, closesRegion: _sw_closesRegion, cause: _sw_cause }, marks: { stripes: _sw_stripes, outline: _sw_outline, reads: _sw_reads }, wording: ((_sw_cause && _sw_exhausted) ? 0 : _sw_cause ? 1 : (_sw_exhausted && _sw_mine) ? 2 : _sw_exhausted ? 3 : 4) };
             if (!fire({ x: v_x, R: v_R.slice(), L: v_L, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts, _says)) return 1;
           }
         }
@@ -4161,8 +4495,10 @@ export interface StarvedRegionBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface StarvedRegionSays {
-  terms: { g: number; n: number; room: number; mine: boolean; exhausted: boolean; closesRow: boolean; closesCol: boolean; closesRegion: boolean; };
+  terms: { g: number; n: number; room: number; mine: boolean; exhausted: boolean; one: boolean; closesRow: boolean; closesCol: boolean; closesRegion: boolean; cause: boolean; };
   marks: { stripes: readonly number[]; outline: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const starvedRegionFacts: number[] = [];
@@ -4185,7 +4521,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
   const _s170: number[] = [];
   const _g188: number[] = [];
   const _g198: number[] = [];
-  const _g333: number[] = [];
+  const _g398: number[] = [];
   const facts = starvedRegionFacts;
   let fired = 0;
   let changed = false;
@@ -4193,12 +4529,12 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
   R1:
   for (let _i102 = 0; _i102 < _a101.length; _i102++) {
     const v_x = _a101[_i102];
-    const _m403_0 = b.made[0];
+    const _m468_0 = b.made[0];
     if (!(!((b.grid[v_x] !== 0)))) continue;
     const _h105 = cl.region.of[v_x];
     const _h301 = sp.rowOf[v_x];
     const _h312 = sp.colOf[v_x];
-    const _m404_1 = b.made[1];
+    const _m469_1 = b.made[1];
     const v_R = ruled(b, sp, cl, v_x);
     const _a103 = cl.region.parts;
     for (let _i104 = 0; _i104 < _a103.length; _i104++) {
@@ -4419,7 +4755,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
           }
         }
         const v_Q = _g188;
-        if (b.made[0] !== _m403_0 || b.made[1] !== _m404_1) {
+        if (b.made[0] !== _m468_0 || b.made[1] !== _m469_1) {
           if (!(!((b.grid[v_x] !== 0)))) { continue R1; }
           if (!(sameSet(v_R, ruled(b, sp, cl, v_x)))) { continue R1; }
         }
@@ -4643,6 +4979,12 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
+            const _sw_g = v_g;
+            const _sw_n = v_n;
+            const _sw_room = v_room;
+            const _sw_mine = (v_S.includes(v_x));
+            const _sw_exhausted = (_h148 === 0);
+            const _sw_one = (v_room === 1);
             const _t302 = sp.lineCells[_h301];
             let _g303 = 0;
             G304: {
@@ -4668,6 +5010,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
               }
               _c311 = _q307;
             }
+            const _sw_closesRow = _c311;
             const _t313 = sp.lineCells[_h312];
             let _g314 = 0;
             G315: {
@@ -4693,6 +5036,7 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
               }
               _c322 = _q318;
             }
+            const _sw_closesCol = _c322;
             const _t323 = cl.region.cells[_h105];
             let _g324 = 0;
             G325: {
@@ -4718,99 +5062,274 @@ export function starvedRegion(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Sta
               }
               _c332 = _q328;
             }
-            _g333.length = 0;
-            G334: {
-              const _a369 = sp.cells;
-              for (let _i370 = 0; _i370 < _a369.length; _i370++) {
-                const v_c = _a369[_i370];
-                const _t371 = sp.lineCells[_h301];
-                let _g372 = 0;
-                G373: {
-                  const _a374 = _t371;
-                  for (let _i375 = 0; _i375 < _a374.length; _i375++) {
-                    const v_c = _a374[_i375];
-                    if (!(((b.grid[v_c] || -1) === 1))) continue;
-                    _g372++;
-                  }
-                }
-                let _c380: boolean = ((cl.stars - _g372) === 1);
-                if (_c380) {
-                  let _q376 = false;
-                  Q377: {
-                    const _a378 = v_Q;
-                    for (let _i379 = 0; _i379 < _a378.length; _i379++) {
-                      const v_p = _a378[_i379];
-                      if ((sp.rowOf[v_p] === _h301)) {
-                        _q376 = true;
-                        break Q377;
-                      }
-                    }
-                  }
-                  _c380 = _q376;
-                }
-                let _c391: boolean = (_c380 && (sp.rowOf[v_c] === _h301));
-                if (!_c391) {
-                  const _t381 = sp.lineCells[_h312];
-                  let _g382 = 0;
-                  G383: {
-                    const _a384 = _t381;
-                    for (let _i385 = 0; _i385 < _a384.length; _i385++) {
-                      const v_c = _a384[_i385];
-                      if (!(((b.grid[v_c] || -1) === 1))) continue;
-                      _g382++;
-                    }
-                  }
-                  let _c390: boolean = ((cl.stars - _g382) === 1);
-                  if (_c390) {
-                    let _q386 = false;
-                    Q387: {
-                      const _a388 = v_Q;
-                      for (let _i389 = 0; _i389 < _a388.length; _i389++) {
-                        const v_p = _a388[_i389];
-                        if ((sp.colOf[v_p] === _h312)) {
-                          _q386 = true;
-                          break Q387;
-                        }
-                      }
-                    }
-                    _c390 = _q386;
-                  }
-                  _c391 = (_c390 && (sp.colOf[v_c] === _h312));
-                }
-                let _c402: boolean = _c391;
-                if (!_c402) {
-                  const _t392 = cl.region.cells[_h105];
-                  let _g393 = 0;
-                  G394: {
-                    const _a395 = _t392;
-                    for (let _i396 = 0; _i396 < _a395.length; _i396++) {
-                      const v_c = _a395[_i396];
-                      if (!(((b.grid[v_c] || -1) === 1))) continue;
-                      _g393++;
-                    }
-                  }
-                  let _c401: boolean = ((cl.stars - _g393) === 1);
-                  if (_c401) {
-                    let _q397 = false;
-                    Q398: {
-                      const _a399 = v_Q;
-                      for (let _i400 = 0; _i400 < _a399.length; _i400++) {
-                        const v_p = _a399[_i400];
-                        if ((cl.region.of[v_p] === _h105)) {
-                          _q397 = true;
-                          break Q398;
-                        }
-                      }
-                    }
-                    _c401 = _q397;
-                  }
-                  _c402 = (_c401 && (cl.region.of[v_c] === _h105));
-                }
-                if (!(_c402)) continue;
-                _g333.push(v_c);
+            const _sw_closesRegion = _c332;
+            const _t333 = sp.lineCells[_h301];
+            let _g334 = 0;
+            G335: {
+              const _a336 = _t333;
+              for (let _i337 = 0; _i337 < _a336.length; _i337++) {
+                const v_c = _a336[_i337];
+                if (!(((b.grid[v_c] || -1) === 1))) continue;
+                _g334++;
               }
             }
-            const _says = { terms: { g: v_g, n: v_n, room: v_room, mine: (v_S.includes(v_x)), exhausted: (_h148 === 0), closesRow: _c311, closesCol: _c322, closesRegion: _c332 }, marks: { stripes: v_S.slice(), outline: v_Q.slice(), reads: union(union(v_Q, v_S), _g333).slice() } };
+            let _c342: boolean = ((cl.stars - _g334) === 1);
+            if (_c342) {
+              let _q338 = false;
+              Q339: {
+                const _a340 = v_Q;
+                for (let _i341 = 0; _i341 < _a340.length; _i341++) {
+                  const v_p = _a340[_i341];
+                  if ((sp.rowOf[v_p] === _h301)) {
+                    _q338 = true;
+                    break Q339;
+                  }
+                }
+              }
+              _c342 = _q338;
+            }
+            let _c353: boolean = _c342;
+            if (!_c353) {
+              const _t343 = sp.lineCells[_h312];
+              let _g344 = 0;
+              G345: {
+                const _a346 = _t343;
+                for (let _i347 = 0; _i347 < _a346.length; _i347++) {
+                  const v_c = _a346[_i347];
+                  if (!(((b.grid[v_c] || -1) === 1))) continue;
+                  _g344++;
+                }
+              }
+              let _c352: boolean = ((cl.stars - _g344) === 1);
+              if (_c352) {
+                let _q348 = false;
+                Q349: {
+                  const _a350 = v_Q;
+                  for (let _i351 = 0; _i351 < _a350.length; _i351++) {
+                    const v_p = _a350[_i351];
+                    if ((sp.colOf[v_p] === _h312)) {
+                      _q348 = true;
+                      break Q349;
+                    }
+                  }
+                }
+                _c352 = _q348;
+              }
+              _c353 = _c352;
+            }
+            let _c364: boolean = _c353;
+            if (!_c364) {
+              const _t354 = cl.region.cells[_h105];
+              let _g355 = 0;
+              G356: {
+                const _a357 = _t354;
+                for (let _i358 = 0; _i358 < _a357.length; _i358++) {
+                  const v_c = _a357[_i358];
+                  if (!(((b.grid[v_c] || -1) === 1))) continue;
+                  _g355++;
+                }
+              }
+              let _c363: boolean = ((cl.stars - _g355) === 1);
+              if (_c363) {
+                let _q359 = false;
+                Q360: {
+                  const _a361 = v_Q;
+                  for (let _i362 = 0; _i362 < _a361.length; _i362++) {
+                    const v_p = _a361[_i362];
+                    if ((cl.region.of[v_p] === _h105)) {
+                      _q359 = true;
+                      break Q360;
+                    }
+                  }
+                }
+                _c363 = _q359;
+              }
+              _c364 = _c363;
+            }
+            let _c397: boolean = _c364;
+            if (_c397) {
+              const _t365 = sp.lineCells[_h301];
+              let _g366 = 0;
+              G367: {
+                const _a368 = _t365;
+                for (let _i369 = 0; _i369 < _a368.length; _i369++) {
+                  const v_c = _a368[_i369];
+                  if (!(((b.grid[v_c] || -1) === 1))) continue;
+                  _g366++;
+                }
+              }
+              let _c374: boolean = ((cl.stars - _g366) === 1);
+              if (_c374) {
+                let _q370 = false;
+                Q371: {
+                  const _a372 = v_Q;
+                  for (let _i373 = 0; _i373 < _a372.length; _i373++) {
+                    const v_p = _a372[_i373];
+                    if ((sp.rowOf[v_p] === _h301)) {
+                      _q370 = true;
+                      break Q371;
+                    }
+                  }
+                }
+                _c374 = _q370;
+              }
+              let _c385: boolean = _c374;
+              if (_c385) {
+                const _t375 = sp.lineCells[_h312];
+                let _g376 = 0;
+                G377: {
+                  const _a378 = _t375;
+                  for (let _i379 = 0; _i379 < _a378.length; _i379++) {
+                    const v_c = _a378[_i379];
+                    if (!(((b.grid[v_c] || -1) === 1))) continue;
+                    _g376++;
+                  }
+                }
+                let _c384: boolean = ((cl.stars - _g376) === 1);
+                if (_c384) {
+                  let _q380 = false;
+                  Q381: {
+                    const _a382 = v_Q;
+                    for (let _i383 = 0; _i383 < _a382.length; _i383++) {
+                      const v_p = _a382[_i383];
+                      if ((sp.colOf[v_p] === _h312)) {
+                        _q380 = true;
+                        break Q381;
+                      }
+                    }
+                  }
+                  _c384 = _q380;
+                }
+                _c385 = _c384;
+              }
+              let _c396: boolean = _c385;
+              if (_c396) {
+                const _t386 = cl.region.cells[_h105];
+                let _g387 = 0;
+                G388: {
+                  const _a389 = _t386;
+                  for (let _i390 = 0; _i390 < _a389.length; _i390++) {
+                    const v_c = _a389[_i390];
+                    if (!(((b.grid[v_c] || -1) === 1))) continue;
+                    _g387++;
+                  }
+                }
+                let _c395: boolean = ((cl.stars - _g387) === 1);
+                if (_c395) {
+                  let _q391 = false;
+                  Q392: {
+                    const _a393 = v_Q;
+                    for (let _i394 = 0; _i394 < _a393.length; _i394++) {
+                      const v_p = _a393[_i394];
+                      if ((cl.region.of[v_p] === _h105)) {
+                        _q391 = true;
+                        break Q392;
+                      }
+                    }
+                  }
+                  _c395 = _q391;
+                }
+                _c396 = _c395;
+              }
+              _c397 = !(_c396);
+            }
+            const _sw_cause = _c397;
+            const _sw_stripes = v_S.slice();
+            const _sw_outline = v_Q.slice();
+            _g398.length = 0;
+            G399: {
+              const _a434 = sp.cells;
+              for (let _i435 = 0; _i435 < _a434.length; _i435++) {
+                const v_c = _a434[_i435];
+                const _t436 = sp.lineCells[_h301];
+                let _g437 = 0;
+                G438: {
+                  const _a439 = _t436;
+                  for (let _i440 = 0; _i440 < _a439.length; _i440++) {
+                    const v_c = _a439[_i440];
+                    if (!(((b.grid[v_c] || -1) === 1))) continue;
+                    _g437++;
+                  }
+                }
+                let _c445: boolean = ((cl.stars - _g437) === 1);
+                if (_c445) {
+                  let _q441 = false;
+                  Q442: {
+                    const _a443 = v_Q;
+                    for (let _i444 = 0; _i444 < _a443.length; _i444++) {
+                      const v_p = _a443[_i444];
+                      if ((sp.rowOf[v_p] === _h301)) {
+                        _q441 = true;
+                        break Q442;
+                      }
+                    }
+                  }
+                  _c445 = _q441;
+                }
+                let _c456: boolean = (_c445 && (sp.rowOf[v_c] === _h301));
+                if (!_c456) {
+                  const _t446 = sp.lineCells[_h312];
+                  let _g447 = 0;
+                  G448: {
+                    const _a449 = _t446;
+                    for (let _i450 = 0; _i450 < _a449.length; _i450++) {
+                      const v_c = _a449[_i450];
+                      if (!(((b.grid[v_c] || -1) === 1))) continue;
+                      _g447++;
+                    }
+                  }
+                  let _c455: boolean = ((cl.stars - _g447) === 1);
+                  if (_c455) {
+                    let _q451 = false;
+                    Q452: {
+                      const _a453 = v_Q;
+                      for (let _i454 = 0; _i454 < _a453.length; _i454++) {
+                        const v_p = _a453[_i454];
+                        if ((sp.colOf[v_p] === _h312)) {
+                          _q451 = true;
+                          break Q452;
+                        }
+                      }
+                    }
+                    _c455 = _q451;
+                  }
+                  _c456 = (_c455 && (sp.colOf[v_c] === _h312));
+                }
+                let _c467: boolean = _c456;
+                if (!_c467) {
+                  const _t457 = cl.region.cells[_h105];
+                  let _g458 = 0;
+                  G459: {
+                    const _a460 = _t457;
+                    for (let _i461 = 0; _i461 < _a460.length; _i461++) {
+                      const v_c = _a460[_i461];
+                      if (!(((b.grid[v_c] || -1) === 1))) continue;
+                      _g458++;
+                    }
+                  }
+                  let _c466: boolean = ((cl.stars - _g458) === 1);
+                  if (_c466) {
+                    let _q462 = false;
+                    Q463: {
+                      const _a464 = v_Q;
+                      for (let _i465 = 0; _i465 < _a464.length; _i465++) {
+                        const v_p = _a464[_i465];
+                        if ((cl.region.of[v_p] === _h105)) {
+                          _q462 = true;
+                          break Q463;
+                        }
+                      }
+                    }
+                    _c466 = _q462;
+                  }
+                  _c467 = (_c466 && (cl.region.of[v_c] === _h105));
+                }
+                if (!(_c467)) continue;
+                _g398.push(v_c);
+              }
+            }
+            const _sw_reads = union(union(v_Q, v_S), _g398).slice();
+            const _says = { terms: { g: _sw_g, n: _sw_n, room: _sw_room, mine: _sw_mine, exhausted: _sw_exhausted, one: _sw_one, closesRow: _sw_closesRow, closesCol: _sw_closesCol, closesRegion: _sw_closesRegion, cause: _sw_cause }, marks: { stripes: _sw_stripes, outline: _sw_outline, reads: _sw_reads }, wording: ((_sw_cause && _sw_exhausted) ? 0 : _sw_cause ? 1 : (_sw_exhausted && _sw_mine) ? 2 : _sw_exhausted ? 3 : 4) };
             if (!fire({ x: v_x, R: v_R.slice(), g: v_g, S: v_S.slice(), n: v_n, E: v_E.slice(), room: v_room, Q: v_Q.slice() }, facts, _says)) return 1;
           }
         }

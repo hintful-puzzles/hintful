@@ -8,13 +8,16 @@
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
+import type { Point } from "../../engine/types.ts";
 import { starbattleGame } from "./index.ts";
 import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf } from "./solver.ts";
+import { STATED } from "./starbattle.compiled.ts";
 import {
   BLANK,
   CROSSED,
@@ -246,5 +249,70 @@ describe("starbattle hint frame", () => {
     expect(stepMarks(step).of("outline", CELL).length).toBeGreaterThan(0);
     expect(ringsOf(recording.ops).length).toBeGreaterThan(0);
     expect(recording.ops.some((op) => paintsWith(op, COL_HINT_EVIDENCE))).toBe(true);
+  });
+});
+
+// The walk's boards never meet a star that completes its unit and leaves it
+// nowhere for more, a starved star that completes all three or none, and a
+// needed square with no room left in its unit; their clauses are rendered
+// directly, so a change to their words or slots shows.
+describe("the wordings no walk reaches", () => {
+  const at = (c: number): Point => ({ x: c % 4, y: (c / 4) | 0 });
+  const words = (
+    clauses: readonly { look: string; move: string }[],
+    wording: number,
+    terms: Record<string, number | boolean>,
+  ): string =>
+    statedSentence(clauses[wording], {
+      kind: CELL,
+      at,
+      ring: [at(5)],
+      marks: { outline: [at(6), at(7)] },
+      terms: {
+        n: 2,
+        room: 1,
+        row: true,
+        mine: true,
+        one: true,
+        closesRow: true,
+        closesCol: false,
+        closesRegion: false,
+        ...terms,
+      },
+      value: String,
+    }).text;
+  const starved = STATED.starvedLine.step;
+
+  it("says a completing star that leaves its line nowhere for more", () => {
+    expect(words(starved, 0, {})).toBe(
+      "A star on this square would complete its row, leaving this row nowhere for 2 more stars, so it must be empty.",
+    );
+  });
+
+  it("says a star that blocks without completing anything", () => {
+    expect(words(starved, 2, {})).toBe(
+      "A star on this square would block the rest of this row, which would still need 2 stars, so it must be empty.",
+    );
+    expect(words(starved, 3, {})).toBe(
+      "A star on this square would block every open square of this row, leaving it no room for a star, so it must be empty.",
+    );
+    expect(words(starved, 4, { mine: false, one: false, room: 3 })).toBe(
+      "A star on this square would block the outlined squares, leaving this row room for 3, not 2, so it must be empty.",
+    );
+  });
+
+  it("names the kinds a star completes in pairs", () => {
+    const say = (r: boolean, c: boolean, g: boolean): string =>
+      words(starved, 1, { closesRow: r, closesCol: c, closesRegion: g });
+    expect(say(true, true, false)).toContain("complete its row and column,");
+    expect(say(true, false, true)).toContain("complete its row and region,");
+    expect(say(false, true, true)).toContain("complete its column and region,");
+    expect(say(false, false, true)).toContain("complete its region,");
+  });
+
+  it("says a needed square with no room left in the unit", () => {
+    expect(words(STATED.neededLine.step, 0, { none: true, placed: false })).toBe(
+      "This row needs 2 stars and without this square has room for none, so that square must hold a star.",
+    );
   });
 });
