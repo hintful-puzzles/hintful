@@ -164,6 +164,25 @@ describe("a stated clause", () => {
     );
   });
 
+  it("names the squares a step places by value, and those its placing techniques follow with, and drops a `has` with none", () => {
+    const placing = (n: number): Point[] => (n === 1 ? [at(5)] : [at(6), at(7)]);
+    const say = (consequences: Point[]): string =>
+      statedSentence(
+        {
+          look: "x",
+          move: "{ring 1} holds a boat, {ring 2: the water} is beside it{has 2+then: , with {ring 2+then: its water}}{has then: , and {ring then: more}}",
+        },
+        cx({ placing, consequences }),
+      ).text;
+    expect(say([])).toBe(
+      "X, so this square holds a boat, the water is beside it, with its water.",
+    );
+    expect(say([at(8)])).toBe(
+      "X, so this square holds a boat, the water is beside it, with its water, and more.",
+    );
+    expect(() => statedSentence({ move: "{ring 2}" }, cx())).toThrow(/places/);
+  });
+
   it("takes the one form or the several from the reference's live elements", () => {
     const s = statedSentence(
       {

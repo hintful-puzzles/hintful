@@ -1,19 +1,17 @@
 /**
- * Every sentence Boats' hint speaks, and the words inside them.
+ * The sentences Boats' hint speaks that its description cannot state: the
+ * three that refute a trial (`lastWater`, `lastShip`, `centerTrial`). Every
+ * other step's words are stated in `boats.description.yaml`.
  *
- * The deduction decides which sentence and with what values (`index.ts`'s
- * `narrate`); this file decides only how it reads. Each sentence runs
- * indication, reasoning, conclusion in the necessity voice
- * (docs/hints.md § "Writing the narration").
+ * A refutation names the rule the rejected trial broke, which only the
+ * validator says (`classifyBreach`, in `solver.ts`), and the squares it
+ * flagged: a breach is a term of the step that a formula cannot compute, and
+ * its words choose the longest wording that fits a sentence's length.
  *
  * Every word that points at the board is a reference to the mark it points at
  * (`engine/hint-words.ts`): the squares a step decides are ringed (drawn as a
  * boat or water mark in the hint color), the squares it reasons from are
- * outlined, and the row or column it counts with is striped. The never-touch
- * water a placement drags along is shown with the step, so the sentence names
- * it in a closing clause and no more: why it is there is a rule of the game,
- * and rules belong in the help (docs/hints.md § "Rules belong in the
- * help").
+ * outlined, and the row or column it counts with is striped.
  */
 
 import type { FiringSpoken } from "../../engine/described-firing-hint.ts";
@@ -28,45 +26,19 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import {
-  type BoatsBreach,
-  type BoatsLine,
-  type BoatsSays,
-  SEA,
-  SHIP,
-} from "./solver.ts";
-import type { BoatsState } from "./state.ts";
-import { NO_CLUE, SHIP_BOTTOM, SHIP_LEFT, SHIP_SINGLE, SHIP_TOP } from "./state.ts";
+import { type BoatsBreach, type BoatsSays, SEA, SHIP } from "./solver.ts";
 
-/** What each sentence below reads of its technique. */
-interface Techniques {
-  givenClue: { shape: number };
-  neverTouch: Record<never, never>;
-  lineSatisfied: { line: BoatsLine };
-  lineForced: { line: BoatsLine };
-  centerForced: { vertical: boolean; center: Point; water: Point };
-  centerCount: { line: BoatsLine; vertical: boolean };
-  growTooLong: { joined: number; largest: number };
-  mustGrow: { length: number };
-  runTooShort: { length: number };
-  onlyRunsLeft: { size: number; runs: number };
-  sharedDiagonal: { line: BoatsLine; room: number; middle: boolean };
-  refuted: {
-    trialShip: boolean;
-    breach: BoatsBreach;
-    center: { at: Point; vertical: boolean } | null;
-    filled: { horizontal: boolean; crossing: boolean } | null;
-  };
-}
-
-type T<K extends keyof Techniques> = Techniques[K];
-
-const plural = (n: number): string => (n === 1 ? "" : "s");
+type T = {
+  trialShip: boolean;
+  breach: BoatsBreach;
+  center: { at: Point; vertical: boolean } | null;
+  filled: { horizontal: boolean; crossing: boolean } | null;
+};
 
 /** What one step marks, as the sentence names it: the squares it decides,
  * split by what goes in them; the water that follows from its boat squares;
  * the squares it reasons from; and the line it counts with. */
-export interface BoatsMarks {
+interface BoatsMarks {
   ships: readonly Point[];
   waters: readonly Point[];
   follows: readonly Point[];
@@ -77,38 +49,13 @@ export interface BoatsMarks {
 const decided = (m: BoatsMarks): Point[] => [...m.ships, ...m.waters];
 
 /** The squares the step decides, in words that may count them. */
-const ringed = (
-  cells: readonly Point[],
-  words: string | ((els: readonly Point[]) => string),
-): Narration => mark.as("ring", CELL, cells, words);
-
-const outlined = (cells: readonly Point[], words: string): Narration =>
-  mark.as("outline", CELL, cells, words);
-
-/** A line as the player reads it: "this row", striped on the board. Never a
- * number, which the board does not draw (docs/hints-marks.md § "Hatch the line
- * the sentence names"). */
-const lineRef = (line: BoatsLine, m: BoatsMarks): Narration =>
-  mark.this("stripes", whole(CELL), m.line, line.horizontal ? "row" : "column");
-
-/**
- * A hidden occupancy number the deduction recovered is not a number the player
- * can see, so a narration citing it says where it came from first
- * (docs/hints.md § "Name elements by what the player can see"). Only
- * reachable with "Remove numbers" on.
- */
-const lineIntro = (line: BoatsLine, m: BoatsMarks): Narration | string =>
-  line.deduced
-    ? phrase`${lineRef(line, m).capitalized()}'s hidden number can only be ${line.clue}. `
-    : "";
+const ringed = (cells: readonly Point[], words: string): Narration =>
+  mark.as("ring", CELL, cells, words);
 
 /** The closing clause naming the water a step's boat squares bring with them,
- * which the step shows and places with it, and any other water it decides
- * round the boat (`also`). */
-const follows = (m: BoatsMarks, also: readonly Point[] = []): Narration | string => {
-  const water = [...also, ...m.follows];
-  return water.length ? phrase`, with ${ringed(water, "its water")}` : "";
-};
+ * which the step shows and places with it. */
+const follows = (m: BoatsMarks): Narration | string =>
+  m.follows.length ? phrase`, with ${ringed(m.follows, "its water")}` : "";
 
 /** The consequence clause of a refutation — the rule the rejected trial broke,
  * read off the validator's own rejection (docs/hints-marks.md § "Read the
@@ -137,263 +84,50 @@ function breachClause(breach: BoatsBreach, cells: readonly Point[], m: BoatsMark
   }
 }
 
-export const say = {
-  /** A given segment, deciding the squares around it. */
-  givenClue: (t: T<"givenClue">, m: BoatsMarks): Sentence => {
-    const side =
-      t.shape === SHIP_TOP
-        ? { on: "top", into: "below it", behind: "above it" }
-        : t.shape === SHIP_BOTTOM
-          ? { on: "bottom", into: "above it", behind: "below it" }
-          : t.shape === SHIP_LEFT
-            ? { on: "left", into: "to its right", behind: "to its left" }
-            : { on: "right", into: "to its left", behind: "to its right" };
-    const seg = (noun: string): Narration =>
-      mark.this("outline", CELL, m.evidence, noun);
-    if (t.shape === SHIP_SINGLE)
-      return so({
-        look: phrase`${seg("given segment")} is a whole one-square boat`,
-        move: phrase`${ringed(m.waters, (els) => (els.length > 1 ? "the squares beside it" : "the square beside it"))} must be water`,
-      });
-    const end = phrase`${seg("segment")} is a boat's ${side.on} end`;
-    if (m.ships.length === 0)
-      return so({
-        look: end,
-        follows: phrase`nothing can sit ${side.behind}`,
-        move: phrase`${ringed(m.waters, "that square")} must be water`,
-      });
-    // The square behind the end is water round the boat like the rest, so the
-    // closing clause names it with them.
-    return so({
-      look: end,
-      move: phrase`its boat must continue into ${ringed(m.ships, `the square ${side.into}`)}${follows(m, m.waters)}`,
-    });
-  },
-
-  neverTouch: (m: BoatsMarks): Sentence =>
-    so({
-      look: phrase`boats never touch, not even at a corner`,
-      move: phrase`${ringed(m.waters, (els) => `the ringed square${plural(els.length)} diagonally beside`)} ${mark.this("outline", CELL, m.evidence, "segment")} must be water`,
-    }),
-
-  // Read at both extremes (docs/hints.md § "Sanity-read at the
-  // degenerate extremes"): "shows the 0 ships its number allows" is nonsense,
-  // and a 0 line is the common case worth its own sentence.
-  lineSatisfied: (t: T<"lineSatisfied">, m: BoatsMarks): Sentence => {
-    const line = lineRef(t.line, m);
-    return t.line.clue === 0
-      ? so({
-          look: phrase`${line}'s ${t.line.deduced ? "hidden number can only be" : "number is"} 0`,
-          move: phrase`${ringed(m.waters, "every square in it")} must be water`,
-        })
-      : t.line.deduced
-        ? so({
-            look: phrase`${line}'s hidden number can only be ${t.line.clue}, and it already has that many boat squares`,
-            move: phrase`${ringed(m.waters, "every other square in it")} must be water`,
-          })
-        : so({
-            look: phrase`${line} already has ${t.line.clue === 1 ? "its one boat square" : t.line.clue === 2 ? "both its boat squares" : `all ${t.line.clue} of its boat squares`}`,
-            move: phrase`${ringed(m.waters, "every remaining square in it")} must be water`,
-          });
-  },
-
-  // A recovered number says only how many boat squares the line holds, so the
-  // deduced arms say what it leaves to place before the free squares take it.
-  lineForced: (t: T<"lineForced">, m: BoatsMarks): Sentence => {
-    const line = lineRef(t.line, m);
-    const n = m.ships.length;
-    const hidden = phrase`${line}'s hidden number can only be ${t.line.clue}`;
-    return n === 1
-      ? t.line.deduced
-        ? so({
-            look: hidden,
-            follows: phrase`it needs one more`,
-            move: phrase`${ringed(m.ships, "its one free square")} must hold a boat segment${follows(m)}`,
-          })
-        : so({
-            look: phrase`${line} needs one more boat square and has one free square`,
-            move: phrase`${ringed(m.ships, "that square")} must hold a boat segment${follows(m)}`,
-          })
-      : t.line.deduced
-        ? so({
-            look: hidden,
-            follows: phrase`it needs ${n} more`,
-            move: phrase`${ringed(m.ships, `all ${n} of its free squares`)} must hold boat segments${follows(m)}`,
-          })
-        : so({
-            look: phrase`${line} needs ${n} more boat squares and has ${ringed(m.ships, `${n} free squares (ringed)`)}`,
-            move: phrase`each must hold a boat segment${follows(m)}`,
-          });
-  },
-
-  allWaterPlaced: (m: BoatsMarks): Sentence =>
-    so({
-      look: phrase`every square of water the puzzle has room for is already marked`,
-      move: phrase`${ringed(m.ships, "every free square (ringed)")} must hold a boat segment${follows(m)}`,
-    }),
-
-  centerForced: (t: T<"centerForced">, m: BoatsMarks): Sentence => {
-    const seg = mark.this("outline", CELL, [t.center], "middle segment");
-    // Off the board counts as water, and the renderer outlines only squares on
-    // it, so the board's edge is named as itself.
-    const onBoard = m.evidence.some((c) => c.x === t.water.x && c.y === t.water.y);
-    const where = t.vertical ? "beside it" : "above or below";
-    const water = onBoard
-      ? outlined([t.water], `outlined water ${where}`)
-      : phrase`the board's edge ${where}`;
-    return so({
-      look: phrase`${seg} has ${water}`,
-      move: t.vertical
-        ? phrase`its boat must fill ${ringed(m.ships, "the squares above and below")}${follows(m)}`
-        : phrase`its boat must fill ${ringed(m.ships, "the squares beside it")}${follows(m)}`,
-    });
-  },
-
-  isolated: (m: BoatsMarks): Sentence =>
-    so({
-      look: phrase`every 1-boat is already placed, and ${outlined(m.evidence, "water")} or the board's edge surrounds ${ringed(m.waters, "this square")}`,
-      move: phrase`it must be water`,
-    }),
-
-  mustExtend: (m: BoatsMarks): Sentence =>
-    so({
-      look: phrase`every 1-boat is placed and ${mark.this("outline", CELL, m.evidence, "segment")} is shut in on three sides`,
-      move: phrase`its boat must use ${ringed(m.ships, "the ringed fourth")}${follows(m)}`,
-    }),
-
-  // A boat running along the line through the middle segment needs two more
-  // boat squares in it, one each side, and the line has room for one at most.
-  // The water follows with no step between: a boat square beside the segment
-  // in the line would be such a boat.
-  centerCount: (t: T<"centerCount">, m: BoatsMarks): Sentence => {
-    const way = t.vertical ? "across" : "up and down";
-    const line = lineRef(t.line, m);
-    const seg = mark.this("outline", CELL, m.evidence, "middle segment");
+function refuted(t: T, m: BoatsMarks): Sentence {
+  if (t.center) {
+    const cells = m.evidence.filter(
+      (c) => c.x !== t.center?.at.x || c.y !== t.center.at.y,
+    );
+    const seg = mark.this("outline", CELL, [t.center.at], "middle segment");
+    const way = t.center.vertical ? "up and down" : "across";
     const next = ringed(
       m.waters,
-      t.vertical ? "the square to its right" : "the square below",
+      t.center.vertical ? "the square below it" : "the square to its right",
     );
     return so({
-      look: t.line.deduced
-        ? phrase`${line}'s hidden number, ${t.line.clue}, leaves no room for a boat running ${way} through ${seg}`
-        : phrase`${line} has no room for a boat running ${way} through ${seg}`,
+      look: phrase`if the boat through ${seg} ran ${way}, ${breachClause(t.breach, cells, m)}`,
       move: phrase`${next} must be water`,
     });
-  },
-
-  growTooLong: (t: T<"growTooLong">, m: BoatsMarks): Sentence => {
-    const square = ringed(m.waters, "this square");
-    const beside = m.evidence.length
-      ? phrase`, beside ${mark.the("outline", CELL, m.evidence, "segment")},`
-      : "";
-    return t.largest === 0
+  }
+  const square = ringed(decided(m), "this square");
+  const why = breachClause(t.breach, m.evidence, m);
+  // The trial is the line's last of its kind, so the rest of the line is
+  // the other: every refutation leans on that fill, so the sentence says it
+  // ("its row's last water") where it fits within a sentence's length.
+  // The crossing line, where the trial filled it too, drops first.
+  const whose = (lines: number): string => {
+    if (lines === 0 || t.filled === null) return "";
+    const [a, b] = t.filled.horizontal ? ["row", "column"] : ["column", "row"];
+    return lines === 2 ? `its ${a}'s and ${b}'s last ` : `its ${a}'s last `;
+  };
+  const told = (lines: number): Sentence =>
+    t.trialShip
       ? so({
-          look: phrase`every boat in the fleet has been found`,
-          move: phrase`${square}${beside} must be water`,
-        })
-      : so({
-          look: phrase`filling ${square} joins ${mark.the("outline", CELL, m.evidence, "segment")} into a boat of ${t.joined}; the largest still missing is ${t.largest}`,
+          look: phrase`if ${square} held ${whose(lines) || "a "}boat segment, ${why}`,
           move: phrase`it must be water`,
-        });
-  },
-
-  mustGrow: (t: T<"mustGrow">, m: BoatsMarks): Sentence =>
-    so({
-      look: phrase`every ${t.length}-boat is already placed`,
-      follows: phrase`${mark.this("outline", whole(CELL), m.evidence, "unfinished boat")} can't stop at ${t.length}`,
-      move: phrase`it must continue into ${ringed(m.ships, "this square")}${follows(m)}`,
-    }),
-
-  runTooShort: (t: T<"runTooShort">, m: BoatsMarks): Sentence =>
-    so({
-      look: phrase`filling ${mark.this("outline", whole(CELL), m.evidence, "run")} would make a boat of ${t.length}, but every ${t.length}-boat is already placed`,
-      move: phrase`${ringed(m.waters, (els) => (els.length > 1 ? "its free squares" : "its free square"))} must be water`,
-    }),
-
-  onlyRunsLeft: (t: T<"onlyRunsLeft">, m: BoatsMarks): Sentence => {
-    // "Every ringed square is", so the verb agrees however many are left.
-    const covered = ringed(m.ships, (els) =>
-      els.length > 1 ? "every ringed square" : "the ringed square",
-    );
-    return t.runs === 1
-      ? so({
-          // "Wherever it sits" says it goes in that run.
-          look: phrase`only ${outlined(m.evidence, "the outlined run")} can hold the ${t.size}-boat`,
-          move: phrase`${covered} is covered wherever it sits${follows(m, m.waters)}`,
         })
       : so({
-          look: phrase`only ${outlined(m.evidence, `${t.runs} runs`)} can hold the ${t.runs} remaining ${t.size}-boats`,
-          follows: phrase`every one is used`,
-          move: phrase`${covered} is covered either way${follows(m, m.waters)}`,
+          look: phrase`if ${square} were ${whose(lines)}water, ${why}`,
+          move: phrase`it must hold a boat segment${follows(m)}`,
         });
-  },
-
-  // A boat on an outer square touches the ringed squares at a corner, which
-  // the help states; a boat on the middle square is the case only the words
-  // can explain, so they say it would fill the line crossing there.
-  sharedDiagonal: (t: T<"sharedDiagonal">, m: BoatsMarks): Sentence => {
-    const look = phrase`${lineIntro(t.line, m)}${lineRef(t.line, m).capitalized()} has ${t.room} water left`;
-    const one = outlined(m.evidence, "an outlined square");
-    return t.middle
-      ? so({
-          look,
-          follows: phrase`${one} must be a boat, which fills its ${t.line.horizontal ? "column" : "row"} if central`,
-          move: phrase`${ringed(m.waters, "the ringed sides")} are water`,
-        })
-      : so({
-          look,
-          follows: phrase`${one} must be a boat`,
-          move: phrase`${ringed(m.waters, "the ringed squares between them")} must be water`,
-        });
-  },
-
-  refuted: (t: T<"refuted">, m: BoatsMarks): Sentence => {
-    if (t.center) {
-      const cells = m.evidence.filter(
-        (c) => c.x !== t.center?.at.x || c.y !== t.center.at.y,
-      );
-      const seg = mark.this("outline", CELL, [t.center.at], "middle segment");
-      const way = t.center.vertical ? "up and down" : "across";
-      const next = ringed(
-        m.waters,
-        t.center.vertical ? "the square below it" : "the square to its right",
-      );
-      return so({
-        look: phrase`if the boat through ${seg} ran ${way}, ${breachClause(t.breach, cells, m)}`,
-        move: phrase`${next} must be water`,
-      });
-    }
-    const square = ringed(decided(m), "this square");
-    const why = breachClause(t.breach, m.evidence, m);
-    // The trial is the line's last of its kind, so the rest of the line is
-    // the other: every refutation leans on that fill, so the sentence says it
-    // ("its row's last water") where it fits within a sentence's length.
-    // The crossing line, where the trial filled it too, drops first.
-    const whose = (lines: number): string => {
-      if (lines === 0 || t.filled === null) return "";
-      const [a, b] = t.filled.horizontal ? ["row", "column"] : ["column", "row"];
-      return lines === 2 ? `its ${a}'s and ${b}'s last ` : `its ${a}'s last `;
-    };
-    const told = (lines: number): Sentence =>
-      t.trialShip
-        ? so({
-            look: phrase`if ${square} held ${whose(lines) || "a "}boat segment, ${why}`,
-            move: phrase`it must be water`,
-          })
-        : so({
-            look: phrase`if ${square} were ${whose(lines)}water, ${why}`,
-            move: phrase`it must hold a boat segment${follows(m)}`,
-          });
-    const most = t.filled?.crossing ? 2 : 1;
-    for (let lines = most; lines > 0; lines--) {
-      const sentence = told(lines);
-      if (sentence.text.length <= NARRATION_LIMIT) return sentence;
-    }
-    return told(0);
-  },
-};
-
-// --- the sentences as the engine hands a firing over -------------------------
+  const most = t.filled?.crossing ? 2 : 1;
+  for (let lines = most; lines > 0; lines--) {
+    const sentence = told(lines);
+    if (sentence.text.length <= NARRATION_LIMIT) return sentence;
+  }
+  return told(0);
+}
 
 /** What every firing's step marks, whatever its technique. */
 interface Basics {
@@ -405,101 +139,25 @@ interface Basics {
 
 /** What one step marks, as the sentences above name it. */
 const marksOf = (s: Basics): BoatsMarks => {
-  const follows = new Set(s.consequences.map(({ x, y }) => `${x},${y}`));
+  const dragged = new Set(s.consequences.map(({ x, y }) => `${x},${y}`));
   return {
     ships: s.placing(SHIP),
     waters: s.placing(SEA),
     follows: s.consequences,
     // What the step outlines is what it reasons from, not the water it drags.
-    evidence: s.outline.filter(({ x, y }) => !follows.has(`${x},${y}`)),
+    evidence: s.outline.filter(({ x, y }) => !dragged.has(`${x},${y}`)),
     line: s.stripes,
   };
 };
 
-/** The line `L` as the player reads it, with the number the step used. */
-function lineAt(state: BoatsState, L: number, number: number): BoatsLine {
-  const { w, h } = state.params;
-  const horizontal = L < h;
-  return {
-    horizontal,
-    index: horizontal ? L : L - h,
-    clue: number,
-    deduced: state.borderClues[horizontal ? w + L : L - h] === NO_CLUE,
-  };
-}
-
-/** The square beside `p` in direction `d` (1 up, 2 down, 3 left, 4 right), which
- * is off the board where the board's edge is there; the sentence names the edge. */
-const beside = ({ x, y }: Point, d: number): Point =>
-  d === 1
-    ? { x, y: y - 1 }
-    : d === 2
-      ? { x, y: y + 1 }
-      : d === 3
-        ? { x: x - 1, y }
-        : { x: x + 1, y };
-
-/** Each technique's sentence, read from what the firing says. */
+/** The refuting techniques' sentences, read from what the firing says. */
 export const sentences: {
-  [K in keyof BoatsSays]: (
+  [K in "lastWater" | "lastShip" | "centerTrial"]: (
     spoken: FiringSpoken<BoatsSays[K]>,
-    state: BoatsState,
   ) => Sentence;
 } = {
-  given: (s) => say.givenClue({ shape: s.terms.shape }, marksOf(s)),
-  near: (s) => say.neverTouch(marksOf(s)),
-  lineShips: (s, st) =>
-    say.lineForced({ line: lineAt(st, s.terms.line, s.terms.number) }, marksOf(s)),
-  total: (s) => say.allWaterPlaced(marksOf(s)),
-  center: (s) =>
-    say.centerForced(
-      {
-        vertical: s.terms.vertical,
-        center: s.at(s.terms.center),
-        water: beside(s.at(s.terms.center), s.terms.side),
-      },
-      marksOf(s),
-    ),
-  extend: (s) => say.mustExtend(marksOf(s)),
-  lineWater: (s, st) =>
-    say.lineSatisfied({ line: lineAt(st, s.terms.line, s.terms.number) }, marksOf(s)),
-  isolated: (s) => say.isolated(marksOf(s)),
-  grow: (s) => say.mustGrow({ length: s.terms.length }, marksOf(s)),
-  onlyFit: (s) => say.onlyRunsLeft({ size: s.terms.size, runs: 1 }, marksOf(s)),
-  centerRoom: (s, st) =>
-    say.centerCount(
-      {
-        line: lineAt(st, s.terms.line, s.terms.number),
-        // A row's boat runs up and down.
-        vertical: s.terms.line < st.params.h,
-      },
-      marksOf(s),
-    ),
-  tooLong: (s) =>
-    say.growTooLong(
-      { joined: s.terms.joined, largest: Math.max(s.terms.largest, 0) },
-      marksOf(s),
-    ),
-  shortRun: (s) => say.runTooShort({ length: s.terms.length }, marksOf(s)),
-  hidden: (s, st) => {
-    const line = { line: lineAt(st, s.terms.line, s.terms.number) };
-    return s.arm === "forced"
-      ? say.lineForced(line, marksOf(s))
-      : say.lineSatisfied(line, marksOf(s));
-  },
-  onlyRuns: (s) =>
-    say.onlyRunsLeft({ size: s.terms.size, runs: s.terms.runs }, marksOf(s)),
-  shared: (s, st) =>
-    say.sharedDiagonal(
-      {
-        line: lineAt(st, s.terms.line, s.terms.number),
-        room: s.terms.room,
-        middle: s.terms.middle,
-      },
-      marksOf(s),
-    ),
   lastWater: (s) =>
-    say.refuted(
+    refuted(
       {
         trialShip: false,
         breach: s.terms.breach,
@@ -509,7 +167,7 @@ export const sentences: {
       marksOf(s),
     ),
   lastShip: (s) =>
-    say.refuted(
+    refuted(
       {
         trialShip: true,
         breach: s.terms.breach,
@@ -519,7 +177,7 @@ export const sentences: {
       marksOf(s),
     ),
   centerTrial: (s) =>
-    say.refuted(
+    refuted(
       {
         trialShip: true,
         breach: s.terms.breach,

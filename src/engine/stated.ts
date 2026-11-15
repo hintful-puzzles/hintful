@@ -27,7 +27,7 @@ import {
   whole,
 } from "./hint-words.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
-import { type Piece, parseClause } from "./stated-clauses.ts";
+import { type Piece, parseClause, ringNames } from "./stated-clauses.ts";
 
 /** A step's parts as a description states them. */
 export interface Clauses {
@@ -64,6 +64,11 @@ export interface StatedContext<E> {
   at(index: number): E;
   /** What the step decides. */
   readonly ring: readonly E[];
+  /** What the step decides to be `n`, for `{ring n}`. */
+  placing?(n: number): readonly E[];
+  /** What the step's placing techniques follow with, which it shows and makes
+   * but does not decide, for `{ring then}`. */
+  readonly consequences?: readonly E[];
   /** The elements the step marks in each other role. */
   readonly marks: Readonly<
     Partial<
@@ -126,6 +131,11 @@ function expand<E>(pieces: readonly Piece[], cx: StatedContext<E>): Piece[] {
         throw new Error(`stated clause: {${p.name}: …} is no count term`);
       return expand((p.words as readonly (readonly Piece[])[])[n === 1 ? 0 : 1], cx);
     }
+    // Words that are said only where the squares they name are there.
+    if (p.role === "has")
+      return squaresNamed(p.name, cx).length === 0
+        ? []
+        : expand((p.words as readonly (readonly Piece[])[])[0], cx);
     if (p.role === "if") {
       const flag = cx.terms[p.name];
       if (typeof flag !== "boolean")
@@ -235,6 +245,16 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
   throw new Error(`stated clause: {${name}} is no word and no number term`);
 }
 
+/** The squares a `ring` reference or a `has` slot names (`ringNames`). */
+function squaresNamed<E>(name: string, cx: StatedContext<E>): readonly E[] {
+  return (ringNames(name) as readonly string[]).flatMap((n) => {
+    const els = n === "then" ? cx.consequences : cx.placing?.(Number(n));
+    if (els === undefined)
+      throw new Error(`stated clause: {… ${n}} needs the squares the step places`);
+    return els;
+  });
+}
+
 function reference<E>(
   p: Extract<Piece, { role: string | null }>,
   cx: StatedContext<E>,
@@ -253,7 +273,9 @@ function reference<E>(
       );
     els = bySort[p.name];
     kind = k;
-  } else if (p.name !== "") {
+  } else if (role === "ring" && ringNames(p.name) !== null)
+    els = squaresNamed(p.name, cx);
+  else if (p.name !== "") {
     const t = cx.terms[p.name];
     kind = cx.termKinds?.[p.name] ?? kind;
     if (typeof t === "number") els = [cx.at(t)];

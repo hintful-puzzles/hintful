@@ -15,6 +15,7 @@
 import { MADE } from "../engine/marks-made.ts";
 import {
   type Slot as ClauseSlot,
+  ringNames,
   STATED_INNER_WORDS,
   STATED_WORDS,
   slotsOf,
@@ -4531,7 +4532,12 @@ function checkStated(
             throw new CompileError(
               `${id}: says ${where}${part} chooses by {if ${flag}}, which is no flag term`,
             );
-        if (s.role === "if") continue;
+        // Squares the step places, whatever the description marks.
+        if (s.role === "if" || s.role === "has") continue;
+        if (s.role === "ring" && s.name !== null && ringNames(s.name) !== null) {
+          for (const n of s.inner) plain(n, true);
+          continue;
+        }
         if (s.role === null) plain(s.name as string, false);
         else if (s.name === null) {
           if (s.role !== "ring" && !roles.has(s.role))

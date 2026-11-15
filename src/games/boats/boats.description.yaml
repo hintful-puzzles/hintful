@@ -214,6 +214,40 @@ techniques:
     says:
       terms: { shape: v }
       marks: { outline: "{c}" }
+      # An end whose boat is already there says only that nothing sits behind
+      # it; otherwise the boat continues into the square ahead, and the square
+      # behind it is water like the rest (the closing clause names it).
+      wordings:
+        - when: "v = 9"
+          look: "{outline: this given segment} is a whole one-square boat"
+          move: "{ring 2: the square beside it | the squares beside it} must be water"
+        - when: "v = 4 and ship(step(c, 2))"
+          look: "{outline: this segment} is a boat's top end"
+          follows: "nothing can sit above it"
+          move: "{ring 2: that square} must be water"
+        - when: "v = 5 and ship(step(c, 1))"
+          look: "{outline: this segment} is a boat's bottom end"
+          follows: "nothing can sit below it"
+          move: "{ring 2: that square} must be water"
+        - when: "v = 7 and ship(step(c, 4))"
+          look: "{outline: this segment} is a boat's left end"
+          follows: "nothing can sit to its left"
+          move: "{ring 2: that square} must be water"
+        - when: "v = 8 and ship(step(c, 3))"
+          look: "{outline: this segment} is a boat's right end"
+          follows: "nothing can sit to its right"
+          move: "{ring 2: that square} must be water"
+        - when: "v = 4"
+          look: "{outline: this segment} is a boat's top end"
+          move: "its boat must continue into {ring 1: the square below it}{has 2+then: , with {ring 2+then: its water}}"
+        - when: "v = 5"
+          look: "{outline: this segment} is a boat's bottom end"
+          move: "its boat must continue into {ring 1: the square above it}{has 2+then: , with {ring 2+then: its water}}"
+        - when: "v = 7"
+          look: "{outline: this segment} is a boat's left end"
+          move: "its boat must continue into {ring 1: the square to its right}{has 2+then: , with {ring 2+then: its water}}"
+        - look: "{outline: this segment} is a boat's right end"
+          move: "its boat must continue into {ring 1: the square to its left}{has 2+then: , with {ring 2+then: its water}}"
     for: "c in cells, v = clue(seg, c) where v >= 2"
     conclude: >-
       (v = 2 implies place(c, 2)) and (v > 2 implies place(c, 1))
@@ -237,6 +271,8 @@ techniques:
     tier: Easy
     says:
       marks: { outline: "{c}" }
+      look: "boats never touch, not even at a corner"
+      move: "{ring: the ringed square diagonally beside | the ringed squares diagonally beside} {outline: this segment} must be water"
     for: >-
       c in cells where value(c) = 1,
       D = {d in adj8(c) where d not in adj4(c) and not known(d)} where |D| > 0
@@ -251,8 +287,14 @@ techniques:
   - id: lineShips
     tier: Easy
     says:
-      terms: { line: L, number: v }
+      terms: { line: L, number: v, free: "|O|" }
       marks: { stripes: "cells(L)", reads: "cells(L)" }
+      wordings:
+        - when: "|O| = 1"
+          look: "{stripes} needs one more boat square and has one free square"
+          move: "{ring: that square} must hold a boat segment{has then: , with {ring then: its water}}"
+        - look: "{stripes} needs {free} more boat squares and has {ring: {free} free squares (ringed)}"
+          move: "each must hold a boat segment{has then: , with {ring then: its water}}"
     for: >-
       L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0,
       left = v - ships(cells(L))
@@ -261,7 +303,9 @@ techniques:
   # needs: each holds one.
   - id: total
     tier: Easy
-    says: {}
+    says:
+      look: "every square of water the puzzle has room for is already marked"
+      move: "{ring: every free square (ringed)} must hold a boat segment{has then: , with {ring then: its water}}"
     for: "O = open(cells) where |O| > 0, left = total - ships(cells)"
     conclude: "left <= |O| and (left = |O| implies forall c in O: place(c, 1))"
   # A middle segment with water or the edge beside it runs up and down, and
@@ -274,7 +318,15 @@ techniques:
         center: c
         # The side with water, or the board's edge, that the sentence names.
         side: "first({e in {a, b} where wet(step(c, e))})"
+        water: "step(c, first({e in {a, b} where wet(step(c, e))}))"
       marks: { outline: "{x in {c, step(c, first({e in {a, b} where wet(step(c, e))}))} where x != none}" }
+      # Off the board counts as water, and the renderer outlines only squares on
+      # it, so the board's edge is named as itself.
+      move: "its boat must fill {ring 1: {if vertical: the squares above and below | the squares beside it}}{has then: , with {ring then: its water}}"
+      wordings:
+        - when: "step(c, first({e in {a, b} where wet(step(c, e))})) != none"
+          look: "{outline center: this middle segment} has {outline water: outlined water {if vertical: beside it | above or below}}"
+        - look: "{outline center: this middle segment} has the board's edge {if vertical: beside it | above or below}"
     for: "c in cells where clue(seg, c) = 6, a in {1, 3}, b = a + 1, p = 4 - a, q = 5 - a where wet(step(c, a)) or wet(step(c, b))"
     conclude: >-
       not wet(step(c, p)) and not wet(step(c, q))
@@ -285,6 +337,8 @@ techniques:
     tier: Easy
     says:
       marks: { outline: "{c}" }
+      look: "every 1-boat is placed and {outline: this segment} is shut in on three sides"
+      move: "its boat must use {ring 1: the ringed fourth}{has then: , with {ring then: its water}}"
     for: >-
       F = full(1), c in cells where F and value(c) = 1
       and not (exists x in adj4(c): value(x) = 1),
@@ -297,6 +351,19 @@ techniques:
     says:
       terms: { line: L, number: v }
       marks: { stripes: "cells(L)", reads: "cells(L)" }
+      # Read at both extremes (docs/hints.md § "Sanity-read at the degenerate
+      # extremes"): "shows the 0 ships its number allows" is nonsense, and a 0
+      # line is the common case worth its own sentence.
+      move: "{ring: every remaining square in it} must be water"
+      wordings:
+        - when: "v = 0"
+          look: "{stripes}'s number is 0"
+          move: "{ring: every square in it} must be water"
+        - when: "v = 1"
+          look: "{stripes} already has its one boat square"
+        - when: "v = 2"
+          look: "{stripes} already has both its boat squares"
+        - look: "{stripes} already has all {number} of its boat squares"
     for: >-
       L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0,
       left = v - ships(cells(L))
@@ -307,6 +374,8 @@ techniques:
     tier: Easy
     says:
       marks: { outline: "adj4(c)" }
+      look: "every 1-boat is already placed, and {outline: water} or the board's edge surrounds {ring: this square}"
+      move: "it must be water"
     for: "F = full(1), c in cells where F and not known(c) and (forall x in adj4(c): value(x) = 2)"
     conclude: "place(c, 2)"
   # A boat of m squares, not closed, with every boat of m squares closed,
@@ -316,6 +385,9 @@ techniques:
     says:
       terms: { length: "|G|" }
       marks: { outline: "set(x over x in G)" }
+      look: "every {length}-boat is already placed"
+      follows: "{outline: this unfinished boat} can't stop at {length}"
+      move: "it must continue into {ring 1: this square}{has then: , with {ring then: its water}}"
     for: >-
       c in cells where value(c) = 1, L in {row(c), col(c)},
       G = stretch(L, c, shipsOf(L)) where |G| >= 2 and nth(G, 0) = c,
@@ -331,6 +403,9 @@ techniques:
       terms: { size: m }
       # Every run that could take a boat of that size.
       marks: { outline: "set(x over K in lines, d in cells(K) where starts(K, d) and fits(K, run(K, d), m), x in run(K, d))" }
+      # "Wherever it sits" says it goes in that run.
+      look: "only {outline: the outlined run} can hold the {size}-boat"
+      move: "{ring 1: the ringed square | every ringed square} is covered wherever it sits{has 2+then: , with {ring 2+then: its water}}"
     for: >-
       M = top, L in lines, c in cells(L) where starts(L, c), R = run(L, c),
       m = |R| where m = M and fits(L, R, m),
@@ -342,8 +417,11 @@ techniques:
   - id: centerRoom
     tier: Normal
     says:
-      terms: { line: L, number: v }
+      terms: { line: L, number: v, row: "not vert(L)" }
       marks: { outline: "{c}", stripes: "cells(L)", reads: "cells(L)" }
+      # A row's boat runs up and down, so across is the other way.
+      look: "{stripes} has no room for a boat running {if row: across | up and down} through {outline: this middle segment}"
+      move: "{ring: {if row: the square to its right | the square below}} must be water"
     for: >-
       c in cells where clue(seg, c) = 6, L in {row(c), col(c)}, v = clue(n, L)
       where v >= 0, S = {x in adj4(c) where x in cells(L)} where |S| = 2
@@ -358,6 +436,15 @@ techniques:
         joined: "1 + sum(a in adj4(c) where value(a) = 1 of |boat(a)|)"
         largest: M
       marks: { outline: "set(x over a in adj4(c) where value(a) = 1, x in boat(a))" }
+      wordings:
+        - when: "M <= 0 and (exists a in adj4(c): value(a) = 1)"
+          look: "every boat in the fleet has been found"
+          move: "{ring: this square}, beside {outline: the outlined segment | the outlined segments}, must be water"
+        - when: "M <= 0"
+          look: "every boat in the fleet has been found"
+          move: "{ring: this square} must be water"
+        - look: "filling {ring: this square} joins {outline: the outlined segment | the outlined segments} into a boat of {joined}; the largest still missing is {largest}"
+          move: "it must be water"
     for: >-
       M = top, c in cells where not known(c)
       and 1 + sum(a in adj4(c) where value(a) = 1 of |boat(a)|) > M
@@ -369,6 +456,8 @@ techniques:
     says:
       terms: { length: "|R|" }
       marks: { outline: "set(x over x in R)" }
+      look: "filling {outline: this run} would make a boat of {length}, but every {length}-boat is already placed"
+      move: "{ring: its free square | its free squares} must be water"
     for: >-
       L in lines, c in cells(L), R = run(L, c) where |R| >= 2
       and nth(R, 0) = c, O = open(R) where |O| = 1 and full(|R|)
@@ -377,11 +466,29 @@ techniques:
   - id: hidden
     tier: Tricky
     says:
-      terms: { line: L, number: v }
+      terms: { line: L, number: v, left: left }
       marks: { stripes: "cells(L)", reads: "cells(L)" }
+      # A recovered number says only how many boat squares the line holds, so
+      # the forced arm says what it leaves to place before the free squares
+      # take it.
       arms:
-        satisfied: { when: "left = 0" }
-        forced: { when: "left = |O|" }
+        satisfied:
+          when: "left = 0"
+          wordings:
+            - when: "v = 0"
+              look: "{stripes}'s hidden number can only be 0"
+              move: "{ring: every square in it} must be water"
+            - look: "{stripes}'s hidden number can only be {number}, and it already has that many boat squares"
+              move: "{ring: every other square in it} must be water"
+        forced:
+          when: "left = |O|"
+          look: "{stripes}'s hidden number can only be {number}"
+          wordings:
+            - when: "|O| = 1"
+              follows: "it needs one more"
+              move: "{ring: its one free square} must hold a boat segment{has then: , with {ring then: its water}}"
+            - follows: "it needs {left} more"
+              move: "{ring: all {left} of its free squares} must hold boat segments{has then: , with {ring then: its water}}"
     for: >-
       L in lines where clue(n, L) < 0, O = open(cells(L)) where |O| > 0,
       v = rec(L) where v >= 0, left = v - ships(cells(L))
@@ -395,6 +502,13 @@ techniques:
     says:
       terms: { size: m, runs: r }
       marks: { outline: "set(x over K in lines, d in cells(K) where starts(K, d) and fits(K, run(K, d), m), x in run(K, d))" }
+      wordings:
+        - when: "r = 1"
+          look: "only {outline: the outlined run} can hold the {size}-boat"
+          move: "{ring 1: the ringed square | every ringed square} is covered wherever it sits{has 2+then: , with {ring 2+then: its water}}"
+        - look: "only {outline: {runs} runs} can hold the {runs} remaining {size}-boats"
+          follows: "every one is used"
+          move: "{ring 1: the ringed square | every ringed square} is covered either way{has 2+then: , with {ring 2+then: its water}}"
     for: >-
       m = top where m > 0, L in lines, c in cells(L) where starts(L, c),
       R = run(L, c) where ships(R) < |R| and fits(L, R, m) and |R| < 2 * m,
@@ -415,6 +529,28 @@ techniques:
         room: t
         # Whether the middle square could be the boat, which fills its crossing line.
         middle: "not known(k) and j >= 0 and j - ships(cells(K)) = 1"
+        deduced: "clue(n, L) < 0"
+        horizontal: "not vert(L)"
+      # A boat on an outer square touches the ringed squares at a corner, which
+      # the help states; a boat on the middle square is the case only the words
+      # can explain, so they say it would fill the line crossing there. A hidden
+      # number is said where it comes from first.
+      wordings:
+        - when: "deduced and middle"
+          look: "{stripes}'s hidden number can only be {number}. {stripes: This {unit}} has {room} water left"
+          follows: "{outline: an outlined square} must be a boat, which fills its {if horizontal: column | row} if central"
+          move: "{ring: the ringed sides} are water"
+        - when: "deduced"
+          look: "{stripes}'s hidden number can only be {number}. {stripes: This {unit}} has {room} water left"
+          follows: "{outline: an outlined square} must be a boat"
+          move: "{ring: the ringed squares between them} must be water"
+        - when: "middle"
+          look: "{stripes} has {room} water left"
+          follows: "{outline: an outlined square} must be a boat, which fills its {if horizontal: column | row} if central"
+          move: "{ring: the ringed sides} are water"
+        - look: "{stripes} has {room} water left"
+          follows: "{outline: an outlined square} must be a boat"
+          move: "{ring: the ringed squares between them} must be water"
       marks:
         outline: >-
           {x in adj4(k) where x in cells(L) and not known(x)}

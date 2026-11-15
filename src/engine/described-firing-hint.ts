@@ -321,6 +321,7 @@ export function describedFiringHint<
         for (let c = 0; c < m.grid.length; c++)
           if (before[c] === 0 && m.grid[c] !== 0 && !seen.has(c))
             followed.push(spec.target(pointOf(c), m.grid[c]));
+      const followedCells = new Set(followed.map((t) => t.y * w + t.x));
       // A step for the firing, or one for each square it decides, which is then
       // the only square the evidence is taken less.
       const each = spec.each?.includes(f.entry.id) === true;
@@ -367,8 +368,13 @@ export function describedFiringHint<
                 ...(spec.termKinds === undefined ? {} : { termKinds: spec.termKinds }),
                 at: pointOf,
                 ring: group.map(bare),
+                placing: (n: number) =>
+                  group.filter((t) => spec.want(t) === n).map(bare),
+                consequences: followed.map(bare),
                 marks: {
-                  outline: outline.map(pointOf),
+                  // What a step reasons from is not what its placing
+                  // techniques drag along.
+                  outline: outline.filter((c) => !followedCells.has(c)).map(pointOf),
                   stripes: stripes.map(pointOf),
                   strand: strand.map(pointOf),
                 },

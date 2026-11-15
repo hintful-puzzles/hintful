@@ -15,7 +15,9 @@
 
 import { describe, expect, it } from "vitest";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { CELL } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Clauses, statedSentence } from "../../engine/stated.ts";
 import {
   describeHintKindPins,
   describeHintPins,
@@ -31,7 +33,9 @@ import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import type { Point } from "../../engine/types.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
+import { STATED } from "./boats.compiled.ts";
 import { newBoatsDesc } from "./generator.ts";
 import { type BoatsHint, boatsGame } from "./index.ts";
 import { COL_HINT_CELL } from "./render.ts";
@@ -755,5 +759,69 @@ describe("boats hint — the two move shapes", () => {
     const hl = step.highlights as BoatsHint;
     expect(hl.targets.some((t) => t.ship)).toBe(true);
     expect(hl.targets.some((t) => !t.ship)).toBe(true);
+  });
+});
+
+// The walks' boards never meet a hidden number ("Remove numbers" is not a
+// preset the walks deal), or a fleet with nothing left to find; their clauses
+// are rendered directly, so a change to their words or slots shows.
+describe("boats hint — the wordings no walk reaches", () => {
+  const at = (c: number): Point => ({ x: c % 4, y: (c / 4) | 0 });
+  const words = (
+    clauses: Clauses,
+    terms: Record<string, number | boolean>,
+    ships: number[] = [],
+    waters: number[] = [],
+  ): string =>
+    statedSentence(clauses, {
+      kind: CELL,
+      at,
+      ring: [...ships, ...waters].map(at),
+      placing: (n) => (n === 1 ? ships : waters).map(at),
+      consequences: [],
+      marks: { outline: [at(1), at(2)], stripes: [at(4), at(5), at(6), at(7)] },
+      terms,
+      value: String,
+      unit: () => "row",
+    }).text;
+
+  it("says a hidden number, and what it leaves", () => {
+    const satisfied = STATED["hidden.satisfied"].step;
+    expect(words(satisfied[0], { number: 0 }, [], [4, 5])).toBe(
+      "This row's hidden number can only be 0, so every square in it must be water.",
+    );
+    expect(words(satisfied[1], { number: 2 }, [], [4, 5])).toBe(
+      "This row's hidden number can only be 2, and it already has that many boat squares, so every other square in it must be water.",
+    );
+    const forced = STATED["hidden.forced"].step;
+    expect(words(forced[0], { number: 1, left: 1 }, [5])).toBe(
+      "This row's hidden number can only be 1, so it needs one more: its one free square must hold a boat segment.",
+    );
+    expect(words(forced[1], { number: 3, left: 2 }, [4, 5])).toBe(
+      "This row's hidden number can only be 3, so it needs 2 more: all 2 of its free squares must hold boat segments.",
+    );
+  });
+
+  it("says where a hidden number is the line's reason, and a middle one fills its crossing line", () => {
+    const shared = STATED.shared.step;
+    const t = { number: 2, room: 1, horizontal: true };
+    expect(words(shared[0], t, [], [5])).toContain(
+      "hidden number can only be 2. This row has 1 water left",
+    );
+    expect(words(shared[0], t, [], [5])).toContain("fills its column if central");
+    expect(words(shared[1], t, [], [5])).toContain(
+      "hidden number can only be 2. This row has 1 water left",
+    );
+    expect(words(shared[1], t, [], [5])).not.toContain("central");
+  });
+
+  it("says a square water once every boat is found, with the segments it is beside", () => {
+    const tooLong = STATED.tooLong.step;
+    expect(words(tooLong[0], { joined: 3, largest: 0 }, [], [5])).toBe(
+      "Every boat in the fleet has been found, so this square, beside the outlined segments, must be water.",
+    );
+    expect(words(tooLong[1], { joined: 3, largest: 0 }, [], [5])).toBe(
+      "Every boat in the fleet has been found, so this square must be water.",
+    );
   });
 });

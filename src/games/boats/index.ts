@@ -71,7 +71,7 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
-import { SAYS_KINDS } from "./boats.compiled.ts";
+import { SAYS_KINDS, STATED } from "./boats.compiled.ts";
 import { newBoatsDesc, validateParams } from "./generator.ts";
 import { sentences } from "./hint-text.ts";
 import {
@@ -481,6 +481,9 @@ const described = describedFiringHint<
     w: state.params.w,
     h: state.params.h,
   }),
+  stated: STATED,
+  // The refuting techniques name the rule a trial broke, which only the
+  // validator says (`hint-text.ts`).
   say: sentences,
 });
 const { hint, hintKeepTrack } = described;

@@ -47,6 +47,28 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["given","near","lineShips","total","center","extend","lineWater","isolated","grow","onlyFit","centerRoom","tooLong","shortRun","hidden.satisfied","hidden.forced","onlyRuns","shared","lastWater","lastShip","centerTrial"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "given": {"step":[{"look":"{outline: this given segment} is a whole one-square boat","move":"{ring 2: the square beside it | the squares beside it} must be water"},{"look":"{outline: this segment} is a boat's top end","follows":"nothing can sit above it","move":"{ring 2: that square} must be water"},{"look":"{outline: this segment} is a boat's bottom end","follows":"nothing can sit below it","move":"{ring 2: that square} must be water"},{"look":"{outline: this segment} is a boat's left end","follows":"nothing can sit to its left","move":"{ring 2: that square} must be water"},{"look":"{outline: this segment} is a boat's right end","follows":"nothing can sit to its right","move":"{ring 2: that square} must be water"},{"look":"{outline: this segment} is a boat's top end","move":"its boat must continue into {ring 1: the square below it}{has 2+then: , with {ring 2+then: its water}}"},{"look":"{outline: this segment} is a boat's bottom end","move":"its boat must continue into {ring 1: the square above it}{has 2+then: , with {ring 2+then: its water}}"},{"look":"{outline: this segment} is a boat's left end","move":"its boat must continue into {ring 1: the square to its right}{has 2+then: , with {ring 2+then: its water}}"},{"look":"{outline: this segment} is a boat's right end","move":"its boat must continue into {ring 1: the square to its left}{has 2+then: , with {ring 2+then: its water}}"}]},
+  "near": {"step":[{"look":"boats never touch, not even at a corner","move":"{ring: the ringed square diagonally beside | the ringed squares diagonally beside} {outline: this segment} must be water"}]},
+  "lineShips": {"step":[{"look":"{stripes} needs one more boat square and has one free square","move":"{ring: that square} must hold a boat segment{has then: , with {ring then: its water}}"},{"look":"{stripes} needs {free} more boat squares and has {ring: {free} free squares (ringed)}","move":"each must hold a boat segment{has then: , with {ring then: its water}}"}]},
+  "total": {"step":[{"look":"every square of water the puzzle has room for is already marked","move":"{ring: every free square (ringed)} must hold a boat segment{has then: , with {ring then: its water}}"}]},
+  "center": {"step":[{"move":"its boat must fill {ring 1: {if vertical: the squares above and below | the squares beside it}}{has then: , with {ring then: its water}}","look":"{outline center: this middle segment} has {outline water: outlined water {if vertical: beside it | above or below}}"},{"move":"its boat must fill {ring 1: {if vertical: the squares above and below | the squares beside it}}{has then: , with {ring then: its water}}","look":"{outline center: this middle segment} has the board's edge {if vertical: beside it | above or below}"}]},
+  "extend": {"step":[{"look":"every 1-boat is placed and {outline: this segment} is shut in on three sides","move":"its boat must use {ring 1: the ringed fourth}{has then: , with {ring then: its water}}"}]},
+  "lineWater": {"step":[{"move":"{ring: every square in it} must be water","look":"{stripes}'s number is 0"},{"move":"{ring: every remaining square in it} must be water","look":"{stripes} already has its one boat square"},{"move":"{ring: every remaining square in it} must be water","look":"{stripes} already has both its boat squares"},{"move":"{ring: every remaining square in it} must be water","look":"{stripes} already has all {number} of its boat squares"}]},
+  "isolated": {"step":[{"look":"every 1-boat is already placed, and {outline: water} or the board's edge surrounds {ring: this square}","move":"it must be water"}]},
+  "grow": {"step":[{"look":"every {length}-boat is already placed","follows":"{outline: this unfinished boat} can't stop at {length}","move":"it must continue into {ring 1: this square}{has then: , with {ring then: its water}}"}]},
+  "onlyFit": {"step":[{"look":"only {outline: the outlined run} can hold the {size}-boat","move":"{ring 1: the ringed square | every ringed square} is covered wherever it sits{has 2+then: , with {ring 2+then: its water}}"}]},
+  "centerRoom": {"step":[{"look":"{stripes} has no room for a boat running {if row: across | up and down} through {outline: this middle segment}","move":"{ring: {if row: the square to its right | the square below}} must be water"}]},
+  "tooLong": {"step":[{"look":"every boat in the fleet has been found","move":"{ring: this square}, beside {outline: the outlined segment | the outlined segments}, must be water"},{"look":"every boat in the fleet has been found","move":"{ring: this square} must be water"},{"look":"filling {ring: this square} joins {outline: the outlined segment | the outlined segments} into a boat of {joined}; the largest still missing is {largest}","move":"it must be water"}]},
+  "shortRun": {"step":[{"look":"filling {outline: this run} would make a boat of {length}, but every {length}-boat is already placed","move":"{ring: its free square | its free squares} must be water"}]},
+  "hidden.satisfied": {"step":[{"look":"{stripes}'s hidden number can only be 0","move":"{ring: every square in it} must be water"},{"look":"{stripes}'s hidden number can only be {number}, and it already has that many boat squares","move":"{ring: every other square in it} must be water"}]},
+  "hidden.forced": {"step":[{"look":"{stripes}'s hidden number can only be {number}","follows":"it needs one more","move":"{ring: its one free square} must hold a boat segment{has then: , with {ring then: its water}}"},{"look":"{stripes}'s hidden number can only be {number}","follows":"it needs {left} more","move":"{ring: all {left} of its free squares} must hold boat segments{has then: , with {ring then: its water}}"}]},
+  "onlyRuns": {"step":[{"look":"only {outline: the outlined run} can hold the {size}-boat","move":"{ring 1: the ringed square | every ringed square} is covered wherever it sits{has 2+then: , with {ring 2+then: its water}}"},{"look":"only {outline: {runs} runs} can hold the {runs} remaining {size}-boats","follows":"every one is used","move":"{ring 1: the ringed square | every ringed square} is covered either way{has 2+then: , with {ring 2+then: its water}}"}]},
+  "shared": {"step":[{"look":"{stripes}'s hidden number can only be {number}. {stripes: This {unit}} has {room} water left","follows":"{outline: an outlined square} must be a boat, which fills its {if horizontal: column | row} if central","move":"{ring: the ringed sides} are water"},{"look":"{stripes}'s hidden number can only be {number}. {stripes: This {unit}} has {room} water left","follows":"{outline: an outlined square} must be a boat","move":"{ring: the ringed squares between them} must be water"},{"look":"{stripes} has {room} water left","follows":"{outline: an outlined square} must be a boat, which fills its {if horizontal: column | row} if central","move":"{ring: the ringed sides} are water"},{"look":"{stripes} has {room} water left","follows":"{outline: an outlined square} must be a boat","move":"{ring: the ringed squares between them} must be water"}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "touch";
 
@@ -426,6 +448,8 @@ export interface GivenBinding {
 export interface GivenSays {
   terms: { shape: number; };
   marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const givenFacts: number[] = [];
@@ -641,7 +665,29 @@ export function given(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<GivenBindin
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { shape: v_v }, marks: { outline: setOf(v_c).slice() } };
+          const _sw_shape = v_v;
+          const _sw_outline = setOf(v_c).slice();
+          let _c67: boolean = (v_v === 4);
+          if (_c67) {
+            const _t66 = step(sp, v_c, 2);
+            _c67 = ((_t66 !== -1) && ((b.grid[_t66] || -1) === 1));
+          }
+          let _c69: boolean = (v_v === 5);
+          if (_c69) {
+            const _t68 = step(sp, v_c, 1);
+            _c69 = ((_t68 !== -1) && ((b.grid[_t68] || -1) === 1));
+          }
+          let _c71: boolean = (v_v === 7);
+          if (_c71) {
+            const _t70 = step(sp, v_c, 4);
+            _c71 = ((_t70 !== -1) && ((b.grid[_t70] || -1) === 1));
+          }
+          let _c73: boolean = (v_v === 8);
+          if (_c73) {
+            const _t72 = step(sp, v_c, 3);
+            _c73 = ((_t72 !== -1) && ((b.grid[_t72] || -1) === 1));
+          }
+          const _says = { terms: { shape: _sw_shape }, marks: { outline: _sw_outline }, wording: ((v_v === 9) ? 0 : _c67 ? 1 : _c69 ? 2 : _c71 ? 3 : _c73 ? 4 : (v_v === 4) ? 5 : (v_v === 5) ? 6 : (v_v === 7) ? 7 : 8) };
           if (!fire({ c: v_c, v: v_v }, facts, _says)) return 1;
         }
       }
@@ -766,8 +812,10 @@ export interface LineShipsBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LineShipsSays {
-  terms: { line: number; number: number; };
+  terms: { line: number; number: number; free: number; };
   marks: { stripes: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const lineShipsFacts: number[] = [];
@@ -859,7 +907,12 @@ export function lineShips(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineShi
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { line: v_L, number: v_v }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+            const _sw_line = v_L;
+            const _sw_number = v_v;
+            const _sw_free = _h29;
+            const _sw_stripes = sp.lineCells[v_L].slice();
+            const _sw_reads = sp.lineCells[v_L].slice();
+            const _says = { terms: { line: _sw_line, number: _sw_number, free: _sw_free }, marks: { stripes: _sw_stripes, reads: _sw_reads }, wording: ((_h29 === 1) ? 0 : 1) };
             if (!fire({ L: v_L, v: v_v, O: v_O.slice(), left: v_left }, facts, _says)) return 1;
           }
         }
@@ -992,8 +1045,10 @@ export interface CenterBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface CenterSays {
-  terms: { vertical: boolean; center: number; side: number; };
+  terms: { vertical: boolean; center: number; side: number; water: number; };
   marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const centerFacts: number[] = [];
@@ -1056,6 +1111,8 @@ export function center(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterBind
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
+            const _sw_vertical = (v_a === 3);
+            const _sw_center = v_c;
             let _g27 = 0;
             G28: {
               for (let _m31 = ((1 << v_a) | (1 << v_b)); _m31 !== 0; _m31 &= _m31 - 1) {
@@ -1065,6 +1122,8 @@ export function center(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterBind
                 _g27 |= 1 << v_e;
               }
             }
+            const _sw_side = least(_g27);
+            const _sw_water = step(sp, v_c, least(_g27));
             _g33.length = 0;
             G34: {
               let _g55 = 0;
@@ -1084,7 +1143,17 @@ export function center(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CenterBind
                 _g33.push(v_x);
               }
             }
-            const _says = { terms: { vertical: (v_a === 3), center: v_c, side: least(_g27) }, marks: { outline: _g33.slice() } };
+            const _sw_outline = _g33.slice();
+            let _g63 = 0;
+            G64: {
+              for (let _m67 = ((1 << v_a) | (1 << v_b)); _m67 !== 0; _m67 &= _m67 - 1) {
+                const v_e = 31 - Math.clz32(_m67 & -_m67);
+                const _t68 = step(sp, v_c, v_e);
+                if (!(((_t68 === -1) || ((b.grid[_t68] || -1) === 2)))) continue;
+                _g63 |= 1 << v_e;
+              }
+            }
+            const _says = { terms: { vertical: _sw_vertical, center: _sw_center, side: _sw_side, water: _sw_water }, marks: { outline: _sw_outline }, wording: ((step(sp, v_c, least(_g63)) !== -1) ? 0 : 1) };
             if (!fire({ c: v_c, a: v_a, b: v_b, p: v_p, q: v_q }, facts, _says)) return 1;
           }
         }
@@ -1217,6 +1286,8 @@ export interface LineWaterBinding {
 export interface LineWaterSays {
   terms: { line: number; number: number; };
   marks: { stripes: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const lineWaterFacts: number[] = [];
@@ -1308,7 +1379,11 @@ export function lineWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineWat
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { line: v_L, number: v_v }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+            const _sw_line = v_L;
+            const _sw_number = v_v;
+            const _sw_stripes = sp.lineCells[v_L].slice();
+            const _sw_reads = sp.lineCells[v_L].slice();
+            const _says = { terms: { line: _sw_line, number: _sw_number }, marks: { stripes: _sw_stripes, reads: _sw_reads }, wording: ((v_v === 0) ? 0 : (v_v === 1) ? 1 : (v_v === 2) ? 2 : 3) };
             if (!fire({ L: v_L, v: v_v, O: v_O.slice(), left: v_left }, facts, _says)) return 1;
           }
         }
@@ -1890,7 +1965,7 @@ export interface CenterRoomBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface CenterRoomSays {
-  terms: { line: number; number: number; };
+  terms: { line: number; number: number; row: boolean; };
   marks: { outline: readonly number[]; stripes: readonly number[]; reads: readonly number[]; };
 }
 
@@ -2005,7 +2080,7 @@ export function centerRoom(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Center
           if (changed || facts.length > 0) {
             fired = 1;
             if (fire !== null) {
-              const _says = { terms: { line: v_L, number: v_v }, marks: { outline: setOf(v_c).slice(), stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+              const _says = { terms: { line: v_L, number: v_v, row: !((((sp.lineCells[v_L][0] ?? -1) % sp.w) === ((sp.lineCells[v_L][1] ?? -1) % sp.w))) }, marks: { outline: setOf(v_c).slice(), stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
               if (!fire({ c: v_c, L: v_L, v: v_v, S: v_S.slice() }, facts, _says)) return 1;
             }
           }
@@ -2025,6 +2100,8 @@ export interface TooLongBinding {
 export interface TooLongSays {
   terms: { joined: number; largest: number; };
   marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const tooLongFacts: number[] = [];
@@ -2042,8 +2119,8 @@ export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBi
   const facts = tooLongFacts;
   let fired = 0;
   let changed = false;
-  const _m132_0 = b.made[0];
-  const _m133_1 = b.made[1];
+  const _m138_0 = b.made[0];
+  const _m139_1 = b.made[1];
   let _g25 = -1;
   G26: {
     for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -2053,6 +2130,7 @@ export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBi
     }
   }
   const v_M = _g25;
+  const _h132 = (v_M <= 0);
   const _a28 = sp.cells;
   for (let _i29 = 0; _i29 < _a28.length; _i29++) {
     const v_c = _a28[_i29];
@@ -2090,7 +2168,7 @@ export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBi
       _c48 = ((1 + _g30) > v_M);
     }
     if (!(_c48)) continue;
-    if (b.made[0] !== _m132_0 || b.made[1] !== _m133_1) {
+    if (b.made[0] !== _m138_0 || b.made[1] !== _m139_1) {
       let _g49 = -1;
       G50: {
         for (let v_k = 0; v_k < cl.fleet.n; v_k++) {
@@ -2181,6 +2259,8 @@ export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBi
             _g74 += union(stretch(sp.lineCells[sp.rowOf[v_a]], v_a, _g79), stretch(sp.lineCells[sp.colOf[v_a]], v_a, _g86)).length;
           }
         }
+        const _sw_joined = (1 + _g74);
+        const _sw_largest = v_M;
         _g92.length = 0;
         tooLong_st112.pass++;
         G93: {
@@ -2216,7 +2296,23 @@ export function tooLong(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<TooLongBi
             }
           }
         }
-        const _says = { terms: { joined: (1 + _g74), largest: v_M }, marks: { outline: _g92.slice() } };
+        const _sw_outline = _g92.slice();
+        let _c137: boolean = _h132;
+        if (_c137) {
+          let _q133 = false;
+          Q134: {
+            const _a135 = sp.adj4[v_c];
+            for (let _i136 = 0; _i136 < _a135.length; _i136++) {
+              const v_a = _a135[_i136];
+              if (((b.grid[v_a] || -1) === 1)) {
+                _q133 = true;
+                break Q134;
+              }
+            }
+          }
+          _c137 = _q133;
+        }
+        const _says = { terms: { joined: _sw_joined, largest: _sw_largest }, marks: { outline: _sw_outline }, wording: (_c137 ? 0 : _h132 ? 1 : 2) };
         if (!fire({ M: v_M, c: v_c }, facts, _says)) return 1;
       }
     }
@@ -2346,8 +2442,8 @@ export interface HiddenBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
 export type HiddenSays =
-  | { arm: "satisfied"; terms: { line: number; number: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; } }
-  | { arm: "forced"; terms: { line: number; number: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; } }
+  | { arm: "satisfied"; terms: { line: number; number: number; left: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; }; wording: number }
+  | { arm: "forced"; terms: { line: number; number: number; left: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; }; wording: number }
 ;
 
 const hiddenFacts: number[] = [];
@@ -2464,10 +2560,20 @@ export function hidden(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<HiddenBind
             if ((v_left === 0)) _arm = 0; else if ((v_left === _h28)) _arm = 1;
             let _says: HiddenSays | null = null;
             if (_arm === 0) {
-              _says = { arm: "satisfied", terms: { line: v_L, number: v_v }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+              const _sw_line = v_L;
+              const _sw_number = v_v;
+              const _sw_left = v_left;
+              const _sw_stripes = sp.lineCells[v_L].slice();
+              const _sw_reads = sp.lineCells[v_L].slice();
+              _says = { arm: "satisfied", terms: { line: _sw_line, number: _sw_number, left: _sw_left }, marks: { stripes: _sw_stripes, reads: _sw_reads }, wording: ((v_v === 0) ? 0 : 1) };
             }
             if (_arm === 1) {
-              _says = { arm: "forced", terms: { line: v_L, number: v_v }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+              const _sw_line = v_L;
+              const _sw_number = v_v;
+              const _sw_left = v_left;
+              const _sw_stripes = sp.lineCells[v_L].slice();
+              const _sw_reads = sp.lineCells[v_L].slice();
+              _says = { arm: "forced", terms: { line: _sw_line, number: _sw_number, left: _sw_left }, marks: { stripes: _sw_stripes, reads: _sw_reads }, wording: ((_h28 === 1) ? 0 : 1) };
             }
             if (_says === null) throw new Error("hidden: no arm of says holds");
             if (!fire({ L: v_L, O: v_O.slice(), v: v_v, left: v_left }, facts, _says)) return 1;
@@ -2493,6 +2599,8 @@ export interface OnlyRunsBinding {
 export interface OnlyRunsSays {
   terms: { size: number; runs: number; };
   marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const onlyRunsFacts: number[] = [];
@@ -2740,6 +2848,8 @@ export function onlyRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRuns
               if (changed || facts.length > 0) {
                 fired = 1;
                 if (fire !== null) {
+                  const _sw_size = v_m;
+                  const _sw_runs = v_r;
                   _g145.length = 0;
                   onlyRuns_st183.pass++;
                   G146: {
@@ -2831,7 +2941,8 @@ export function onlyRuns(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OnlyRuns
                       }
                     }
                   }
-                  const _says = { terms: { size: v_m, runs: v_r }, marks: { outline: _g145.slice() } };
+                  const _sw_outline = _g145.slice();
+                  const _says = { terms: { size: _sw_size, runs: _sw_runs }, marks: { outline: _sw_outline }, wording: ((v_r === 1) ? 0 : 1) };
                   if (!fire({ m: v_m, L: v_L, c: v_c, R: v_R.slice(), C: v_C.slice(), b: v_b, r: v_r }, facts, _says)) return 1;
                 }
               }
@@ -2856,8 +2967,10 @@ export interface SharedBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SharedSays {
-  terms: { line: number; number: number; room: number; middle: boolean; };
+  terms: { line: number; number: number; room: number; middle: boolean; deduced: boolean; horizontal: boolean; };
   marks: { outline: readonly number[]; stripes: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const sharedFacts: number[] = [];
@@ -2865,8 +2978,8 @@ let sharedCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
 export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBinding, SharedSays> | null): number {
-  const _g81: number[] = [];
-  const _g87: number[] = [];
+  const _g83: number[] = [];
+  const _g89: number[] = [];
   const facts = sharedFacts;
   let fired = 0;
   let changed = false;
@@ -2878,8 +2991,10 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
   R1:
   for (let _i26 = 0; _i26 < _a25.length; _i26++) {
     const v_L = _a25[_i26];
-    const _m103_0 = b.made[0];
-    const _m104_1 = b.made[1];
+    const _h81 = clueAt(cl.n, v_L);
+    const _h82 = (_h81 < 0);
+    const _m105_0 = b.made[0];
+    const _m106_1 = b.made[1];
     L27: {
       const v_v = numMarked(b, sp, cl, cands, v_L);
       if (!((v_v >= 0))) break L27;
@@ -2935,7 +3050,7 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
           L49: {
             const v_s = (_g35 + _g39);
             if (!((v_s > v_t))) break L49;
-            if (b.made[0] !== _m103_0 || b.made[1] !== _m104_1) {
+            if (b.made[0] !== _m105_0 || b.made[1] !== _m106_1) {
               if (!((v_v === numMarked(b, sp, cl, cands, v_L)))) { continue R1; }
               let _g50 = 0;
               G51: {
@@ -3010,6 +3125,9 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
             if (changed || facts.length > 0) {
               fired = 1;
               if (fire !== null) {
+                const _sw_line = v_L;
+                const _sw_number = v_v;
+                const _sw_room = v_t;
                 let _c80: boolean = (!((b.grid[v_k] !== 0)) && (v_j >= 0));
                 if (_c80) {
                   const _t75 = sp.lineCells[v_K];
@@ -3024,38 +3142,44 @@ export function shared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedBind
                   }
                   _c80 = ((v_j - _g76) === 1);
                 }
-                _g81.length = 0;
-                G82: {
-                  const _a85 = sp.adj4[v_k];
-                  for (let _i86 = 0; _i86 < _a85.length; _i86++) {
-                    const v_x = _a85[_i86];
+                const _sw_middle = _c80;
+                const _sw_deduced = _h82;
+                const _sw_horizontal = !((((sp.lineCells[v_L][0] ?? -1) % sp.w) === ((sp.lineCells[v_L][1] ?? -1) % sp.w)));
+                _g83.length = 0;
+                G84: {
+                  const _a87 = sp.adj4[v_k];
+                  for (let _i88 = 0; _i88 < _a87.length; _i88++) {
+                    const v_x = _a87[_i88];
                     if (!(((sp.lineCells[v_L].includes(v_x)) && !((b.grid[v_x] !== 0))))) continue;
-                    _g81.push(v_x);
+                    _g83.push(v_x);
                   }
                 }
-                _g87.length = 0;
-                G88: {
-                  for (let _i96 = 0; _i96 < 1; _i96++) {
+                _g89.length = 0;
+                G90: {
+                  for (let _i98 = 0; _i98 < 1; _i98++) {
                     const v_x = v_k;
-                    let _c102: boolean = (!((b.grid[v_k] !== 0)) && _h42);
-                    if (_c102) {
-                      const _t97 = sp.lineCells[v_K];
-                      let _g98 = 0;
-                      G99: {
-                        const _a100 = _t97;
-                        for (let _i101 = 0; _i101 < _a100.length; _i101++) {
-                          const v_c = _a100[_i101];
+                    let _c104: boolean = (!((b.grid[v_k] !== 0)) && _h42);
+                    if (_c104) {
+                      const _t99 = sp.lineCells[v_K];
+                      let _g100 = 0;
+                      G101: {
+                        const _a102 = _t99;
+                        for (let _i103 = 0; _i103 < _a102.length; _i103++) {
+                          const v_c = _a102[_i103];
                           if (!(((b.grid[v_c] || -1) === 1))) continue;
-                          _g98++;
+                          _g100++;
                         }
                       }
-                      _c102 = ((v_j - _g98) === 1);
+                      _c104 = ((v_j - _g100) === 1);
                     }
-                    if (!(_c102)) continue;
-                    _g87.push(v_x);
+                    if (!(_c104)) continue;
+                    _g89.push(v_x);
                   }
                 }
-                const _says = { terms: { line: v_L, number: v_v, room: v_t, middle: _c80 }, marks: { outline: union(_g81, _g87).slice(), stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+                const _sw_outline = union(_g83, _g89).slice();
+                const _sw_stripes = sp.lineCells[v_L].slice();
+                const _sw_reads = sp.lineCells[v_L].slice();
+                const _says = { terms: { line: _sw_line, number: _sw_number, room: _sw_room, middle: _sw_middle, deduced: _sw_deduced, horizontal: _sw_horizontal }, marks: { outline: _sw_outline, stripes: _sw_stripes, reads: _sw_reads }, wording: ((_sw_deduced && _sw_middle) ? 0 : _sw_deduced ? 1 : _sw_middle ? 2 : 3) };
                 if (!fire({ L: v_L, v: v_v, t: v_t, k: v_k, K: v_K, j: v_j, s: v_s }, facts, _says)) return 1;
               }
               cands.fill(-1);

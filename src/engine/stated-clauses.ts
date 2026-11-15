@@ -10,6 +10,11 @@
  * - `{role}`, `{role: words}`, `{role term}`, `{role term: words}`: a reference
  *   in a role ({@link SLOT_ROLES}) to the step's marks in that role, or to the
  *   elements a term holds.
+ * - `{ring 1}`, `{ring then}`, `{ring 2+then: words}`: a reference to the squares
+ *   the step places that value on (`1`, `2`, ...), or to those its placing
+ *   techniques follow with (`then`), or both (`+`). {@link ringNames}
+ * - `{has 2+then: , with {ring 2+then: its water}}`: words, references among
+ *   them, said only where those squares are there.
  * - `{color term}`: the color word the number term names, in the scheme the
  *   player reads it in (inside a reference's words, the one word it has).
  * - `{spelled term}`: the number term in words, "zero" to "ten" (a count that
@@ -63,7 +68,17 @@ const SLOT_ROLES: ReadonlySet<string> = new Set([
   "if",
   "color",
   "spelled",
+  "has",
 ]);
+
+/** The squares a `ring` reference or a `has` slot is over, by name: `1`, `2`
+ * and so on are the squares the step places that value on, `then` the squares
+ * its placing techniques follow with, and `+` joins them (`2+then`); `null`
+ * where the name is none of these. */
+export function ringNames(name: string): readonly string[] | null {
+  const names = name.split("+");
+  return names.every((n) => n === "then" || /^[0-9]+$/.test(n)) ? names : null;
+}
 
 /** One piece of a clause: literal words, or a slot. */
 export type Piece =
@@ -120,6 +135,16 @@ function slot(body: string, src: string): Piece {
     throw new Error(`"{${body}}" is no color of a term, in "${src}"`);
   if (head.length === 1 && SLOT_ROLES.has(head[0]))
     return { name: "", role: head[0], words };
+  if (head[0] === "has") {
+    if (
+      head.length !== 2 ||
+      ringNames(head[1]) === null ||
+      words === null ||
+      words.length !== 1
+    )
+      throw new Error(`"{${body}}" is no has of squares and one form, in "${src}"`);
+    return { name: head[1], role: "has", words };
+  }
   if (head[0] === "if") {
     if (head.length !== 2 || words === null || words.length !== 2)
       throw new Error(`"{${body}}" is no if of a flag and two forms, in "${src}"`);
@@ -188,6 +213,12 @@ export function slotsOf(src: string): Slot[] {
   const walk = (pieces: readonly Piece[]): Slot[] =>
     pieces.flatMap((p): Slot[] => {
       if (!("name" in p)) return [];
+      // What a `has` holds is the clause's own, references and all.
+      if (p.role === "has")
+        return [
+          { name: p.name, role: "has", inner: [], flags: [] },
+          ...walk((p.words as readonly (readonly Piece[])[])[0]),
+        ];
       if (p.role === "if") {
         // Its forms' words are said plainly, wherever the `if` is.
         const into = { inner: [] as string[], flags: [] as string[] };
