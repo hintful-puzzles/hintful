@@ -146,6 +146,24 @@ describe("a stated clause", () => {
     ).toThrow(/no count term/);
   });
 
+  it("says a later leg's `again` after its move in place of look and follows, and a first leg ignores it", () => {
+    const clauses = {
+      look: "{outline} is shaded",
+      follows: "{ring} would clash",
+      move: "{ring} must be {n}",
+      again: "{outline} is shaded again",
+    };
+    const first = statedSentence(clauses, cx({ later: false }));
+    expect(first.text).toContain("is shaded, so");
+    expect(first.text).toContain("would clash");
+    const later = statedSentence(clauses, cx({ later: true }));
+    expect(later.text).not.toContain("would clash");
+    expect(later.text).toContain("is shaded again");
+    expect(later.text.indexOf("must be v3")).toBeLessThan(
+      later.text.indexOf("is shaded"),
+    );
+  });
+
   it("takes the one form or the several from the reference's live elements", () => {
     const s = statedSentence(
       {

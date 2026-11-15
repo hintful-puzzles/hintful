@@ -270,6 +270,9 @@ export interface StatedClauses {
   move?: string;
   /** What a move that no rule forces does: its `effect` relation. */
   effect?: string;
+  /** A later leg's reasoning, said after its move in place of `look` and
+   * `follows`: its `again` relation. */
+  again?: string;
 }
 
 /** Clauses, and the wordings tried before them in order, the first whose
@@ -765,12 +768,13 @@ export function parseTechnique(
 
 /** The clauses a part of a `says` states; `null` where it states none. */
 function clausesOf(part: StatedClauses): StatedClauses | null {
-  const { look, follows, move, effect } = part;
+  const { look, follows, move, effect, again } = part;
   if (
     look === undefined &&
     follows === undefined &&
     move === undefined &&
-    effect === undefined
+    effect === undefined &&
+    again === undefined
   )
     return null;
   return {
@@ -778,6 +782,7 @@ function clausesOf(part: StatedClauses): StatedClauses | null {
     ...(follows === undefined ? {} : { follows }),
     ...(move === undefined ? {} : { move }),
     ...(effect === undefined ? {} : { effect }),
+    ...(again === undefined ? {} : { again }),
   };
 }
 

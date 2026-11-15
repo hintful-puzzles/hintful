@@ -35,6 +35,10 @@ export interface Clauses {
   readonly follows?: string;
   readonly move?: string;
   readonly effect?: string;
+  /** What a later leg of a journey says after its move, in place of `look` and
+   * `follows`: the reasoning its first leg gave, as this square adds to it (an
+   * `again` relation). A first leg ignores it. */
+  readonly again?: string;
 }
 
 /** The role each slot role is drawn in: `strand` is outlined apart. */
@@ -76,6 +80,9 @@ export interface StatedContext<E> {
   value(n: number): string;
   /** The color word a number term names, for `{color term}`. */
   color?(n: number): ColorWord;
+  /** Whether the step is a later leg of its firing, which says its `again`
+   * clause after the move in place of `look` and `follows`. */
+  readonly later?: boolean;
   /** What an element shows, for `{each}`. */
   shows?(e: E): number;
   /** The noun for one element of `kind`: the lexicon's "square" unless the
@@ -281,8 +288,10 @@ export function statedParts<E>(
   follows?: Narration;
   move?: Narration;
   effect?: Narration;
+  again?: Narration;
 } {
   return {
+    ...(c.again === undefined ? {} : { again: render(c.again, cx) }),
     ...(c.look === undefined ? {} : { look: render(c.look, cx).capitalized() }),
     ...(c.follows === undefined ? {} : { follows: render(c.follows, cx) }),
     ...(c.move === undefined ? {} : { move: render(c.move, cx) }),
@@ -298,10 +307,12 @@ export function statedSentence<E>(
   closing: Narration | null = null,
   relation: Relation = { kind: "forced" },
 ): Sentence {
-  const { effect, ...parts } = statedParts(c, cx);
+  const { effect, again, ...parts } = statedParts(c, cx);
   const move = parts.move ?? closing;
   if (move === null)
     throw new Error("stated clause: no move, and no closing from the fact");
+  if (cx.later === true && again !== undefined)
+    return sentence({ move, relation: { kind: "again", basis: again } });
   return sentence({
     ...parts,
     move,

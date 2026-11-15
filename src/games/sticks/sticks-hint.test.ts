@@ -11,6 +11,7 @@
 import { describe, expect, it } from "vitest";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import {
   expectRing,
@@ -22,6 +23,7 @@ import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import type { Point } from "../../engine/types.ts";
 import { newSticksDesc } from "./generator.ts";
 import { sticksGame } from "./index.ts";
 import { COL_HINT_CELL, COL_LINE } from "./render.ts";
@@ -34,6 +36,7 @@ import {
   newState,
   type SticksState,
 } from "./state.ts";
+import { STATED } from "./sticks.compiled.ts";
 
 const PARAMS = defaultParams();
 const PARAM_STR = `${PARAMS.w}x${PARAMS.h}b${PARAMS.blackpc}s${PARAMS.symm}`;
@@ -378,5 +381,36 @@ describe("sticks hint — render frames (tier 2.5)", () => {
     expect(
       result.recording.ops.some((o) => o.op === "rect" && o.color === COL_LINE),
     ).toBe(false);
+  });
+});
+
+// A later leg of a number-joining step says "the same numbers" (its first leg
+// has named them); no walk's board has one, so its clause is rendered directly.
+describe("the wording no walk reaches", () => {
+  it("names the numbers a later leg joins as the same ones", () => {
+    const at = (c: number): Point => ({ x: c % 4, y: (c / 4) | 0 });
+    const clauses = STATED.twoClues.fact[2];
+    const words = (later: boolean): string =>
+      statedSentence(clauses, {
+        kind: CELL,
+        later,
+        at,
+        ring: [at(5)],
+        marks: { outline: [at(6)] },
+        terms: {
+          hor: true,
+          own: false,
+          clues: [6, 7],
+          run: [5, 6, 7],
+          first: 1,
+          second: 2,
+        },
+        value: String,
+        shows: () => 1,
+      }).text;
+    expect(words(true)).toBe(
+      "…and this square must be horizontal, for a vertical line would join the same numbers into one line, the outlined squares.",
+    );
+    expect(words(false)).toContain("would join the 1 and the 2 along");
   });
 });

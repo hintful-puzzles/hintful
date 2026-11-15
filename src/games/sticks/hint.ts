@@ -12,7 +12,6 @@ import {
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
-import { sentences } from "./hint-text.ts";
 import { hintWalk, type SticksRung } from "./solver.ts";
 import {
   executeMove,
@@ -21,7 +20,7 @@ import {
   type SticksMove,
   type SticksState,
 } from "./state.ts";
-import { SAYS_EACH, SAYS_LEGS, type SaysById } from "./sticks.compiled.ts";
+import { SAYS_EACH, SAYS_LEGS, type SaysById, STATED } from "./sticks.compiled.ts";
 
 /** What the description reads a square as holding: a line across, or up and
  * down. */
@@ -73,7 +72,10 @@ const described = describedFiringHint<
       line: t.value === ACROSS ? "hor" : "ver",
     })),
   }),
-  say: sentences,
+  stated: STATED,
+  // A square is named by its number where it has one ("this 2").
+  shows: (s, at) => s.numbers[at.y * s.w + at.x],
+  say: {},
 });
 
 export const {

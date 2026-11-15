@@ -363,6 +363,7 @@ export function describedFiringHint<
           clauses !== undefined
             ? statedSentence(clauses, {
                 kind: CELL,
+                later: continued && leg > 0,
                 ...(spec.termKinds === undefined ? {} : { termKinds: spec.termKinds }),
                 at: pointOf,
                 ring: group.map(bare),

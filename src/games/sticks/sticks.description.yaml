@@ -72,6 +72,8 @@ define:
   # The line through c.
   stick(c): "horiz(c) + vert(c)"
   numbered(x): "clue(length, x) >= 0"
+  # The numbered squares on the line a square is part of.
+  joined(k): "{j in stick(k) where numbered(j)}"
   # Whether the line in square p, beside block b, runs into it.
   meets(p, b): "(value(p) = 1 and y(p) = y(b)) or (value(p) = 2 and x(p) = x(b))"
   # A square of no block whose line is still open.
@@ -138,7 +140,18 @@ techniques:
       terms: { clue: b, value: n }
       marks: { reads: "{b}" }
       fact:
+        terms: { hor: "a = 2", own: "numbered(c)" }
         marks: { outline: "with place(c, a): {p in adj4(b) where meets(p, b)}" }
+        move: "{ring: {if own: this {each} | this square}} must be {if hor: horizontal | vertical}"
+        # A black 0 has no line yet for a later leg to name, and nothing
+        # runs into it yet, so "another" would be false exactly where the rule
+        # is starkest (docs/hints.md § "Sanity-read at the degenerate extremes").
+        wordings:
+          - when: "n = 0"
+            look: "{outline clue: the {value} block} takes no lines, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would run into it"
+            again: "a {if hor: vertical | horizontal} line would run into {outline clue: the {value} block}"
+          - look: "{outline clue: the {value} block} has {outline: its {value: 1 line | {value} lines}}, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would add another"
+            again: "{outline clue: the {value} block} already has {outline: its {value: 1 line | {value} lines}}, and a {if hor: vertical | horizontal} line would add another"
   # A line would carry two numbers. Before a line too long, which such a
   # line usually is too, since joining the numbers is the rule it breaks.
   - id: twoClues
@@ -155,8 +168,25 @@ techniques:
       terms: { clue: k }
       marks: { reads: "{k}" }
       fact:
-        terms: { clues: "with place(c, a): {j in stick(k) where numbered(j)}" }
+        terms:
+          hor: "a = 2"
+          own: "numbered(c)"
+          clues: "with place(c, a): joined(k)"
+          run: "with place(c, a): stick(k)"
+          n: "with place(c, a): |joined(k)|"
+          first: "with place(c, a): clue(length, nth(joined(k), 0))"
+          second: "with place(c, a): clue(length, nth(joined(k), 1))"
         marks: { outline: "with place(c, a): stick(k)" }
+        move: "{ring: {if own: this {each} | this square}} must be {if hor: horizontal | vertical}"
+        # One number per line is the rule, and the help teaches it
+        # (docs/hints.md § "Rules belong in the help").
+        again: "a {if hor: vertical | horizontal} line would join {outline clues: the same numbers} into one line, {outline run}"
+        wordings:
+          - when: "with place(c, a): |joined(k)| != 2"
+            look: "a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would put {outline clues: {n} numbers} on one line, {outline run}"
+          - when: "with place(c, a): clue(length, nth(joined(k), 0)) = clue(length, nth(joined(k), 1))"
+            look: "a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would join {outline clues: two {first}s} along {outline run}"
+          - look: "a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would join {outline clues: the {first} and the {second}} along {outline run}"
   # A number's line would run longer than it.
   - id: tooLong
     tier: Easy
@@ -172,8 +202,15 @@ techniques:
       terms: { clue: k, value: v }
       marks: { reads: "{k}" }
       fact:
-        terms: { size: "with place(c, a): |stick(k)|" }
+        terms:
+          hor: "a = 2"
+          own: "numbered(c)"
+          size: "with place(c, a): |stick(k)|"
+          run: "with place(c, a): stick(k)"
         marks: { outline: "with place(c, a): stick(k)" }
+        look: "a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would run {outline clue: the {value}}'s line to {outline run: {size} squares}, too long for it"
+        move: "{ring: {if own: this {each} | this square}} must be {if hor: horizontal | vertical}"
+        again: "a {if hor: vertical | horizontal} line would run {outline clue: the {value}}'s line to {outline run: {size} squares}"
   # A block would be left fewer sides a line could run into it from than its
   # number.
   - id: starved
@@ -192,6 +229,16 @@ techniques:
       marks:
         reads: "{b}"
         outline: "{p in adj4(b) where clue(block, p) < 0 and (not known(p) or meets(p, b))}"
+      fact:
+        terms: { hor: "a = 2", own: "numbered(c)" }
+        move: "{ring: {if own: this {each} | this square}} must be {if hor: horizontal | vertical}"
+        again: "a {if hor: vertical | horizontal} line would close a side {outline clue: the {value} block} needs, like {outline: the outlined one | the outlined ones}"
+        wordings:
+          - when: "n = 1"
+            look: "{outline clue: the {value} block} has one open side, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would close it"
+          - when: "n = 2"
+            look: "{outline clue: the {value} block} needs {outline: both outlined sides}, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} shuts one"
+          - look: "{outline clue: the {value} block} needs {outline: {value} outlined sides}, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} shuts one"
   # A number's line would be left no room to reach its length.
   - id: unreachable
     tier: Easy
@@ -208,7 +255,16 @@ techniques:
       terms: { clue: k, value: v }
       marks: { reads: "{k}" }
       fact:
-        terms: { max: "with place(c, a): reach(k)" }
+        terms:
+          hor: "a = 2"
+          own: "numbered(c)"
+          max: "with place(c, a): reach(k)"
+        # Leads with the clue, not with the ruled-out move: the signal a player
+        # has to learn to look for here is a number running out of room, which
+        # they will not spot from the square being acted on.
+        look: "{outline clue: the {value}} needs more room, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would leave it {outline: {max: 1 square | {max} squares}}"
+        move: "{ring: {if own: this {each} | this square}} must be {if hor: horizontal | vertical}"
+        again: "a {if hor: vertical | horizontal} line would leave {outline clue: the {value}} only {outline: {max: 1 square | {max} squares}}"
         marks:
           outline: >-
             with place(c, a):
