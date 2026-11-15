@@ -56,7 +56,6 @@ import {
   clustersKeepTrack,
   clustersRefreshHintStep,
 } from "./hint.ts";
-import { colorName } from "./hint-text.ts";
 import {
   border,
   type ClustersDrawState,
@@ -82,6 +81,7 @@ import {
   type ClustersState,
   type ClustersUi,
   COLMASK,
+  colorName,
   decodeParams,
   defaultParams,
   encodeParams,

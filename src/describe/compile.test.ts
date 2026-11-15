@@ -322,6 +322,13 @@ describe("a stated clause names only what its technique states", () => {
       /n is no term of elements/,
     ],
     ["a word only a reference says", { look: "{each} is it" }, /says \{each\}/],
+    ["a color of a set", { look: "{color near} is it" }, /says \{near\}/],
+    [
+      "a count in words of a term it does not state",
+      { look: "{spelled m} is it" },
+      /says \{m\}/,
+    ],
+    ["a color with no term", { look: "{color} is it" }, /no color of a term/],
     [
       "a malformed slot",
       { look: "{outline n: a | b | c} is it" },

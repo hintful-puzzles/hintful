@@ -97,17 +97,36 @@ techniques:
     says:
       terms: { fill: flip(d), refuted: d }
       marks: { outline: "{n}", reads: "{x} + adj4(x) + {n} + adj4(n)" }
+      # Where a second mark is on the board, "this square" is tied to it by
+      # geometry ("its outlined neighbor"), never by color: a sentence naming
+      # a hue is wrong where the scheme flips or the reader is color-blind.
+      # The two arms that break the square itself have no second mark.
       arms:
         selfSurrounded:
           when: "n = x and r < 1"
+          look: "Every neighbor of {ring} is {color fill}. As {color refuted}, it could never touch another {color refuted} tile"
+          move: "it must be {color fill}"
         selfReach:
           when: "n = x"
+          # An empty square is never a dot. Count- and edge-neutral: at a
+          # corner the board edge does part of the hemming, and "at most one"
+          # stays honest when one open neighbor remains.
+          look: "If {ring} were {color refuted}, at most one neighbor could ever match it, but it needs to touch two"
+          move: "it must be {color fill}"
         nearSurrounded:
           when: "e != d and r < 1"
+          look: "Painting {ring} {color refuted} would seal {outline: its outlined {color fill} neighbor} off from its color"
+          move: "{ring} must be {color fill}"
         nearReach:
           when: "e != d"
+          look: "If {ring} were {color refuted}, {outline: its outlined {color fill} neighbor} couldn't touch two {color fill} tiles"
+          move: "{ring} must be {color fill}"
         dotOvercount:
           when: "true"
+          # "its one" carries the rule (a dot touches exactly one tile of its
+          # color), and the rule itself is the help's to state.
+          look: "{outline: the outlined {color refuted} dot} beside {ring} already touches its one {color refuted} tile"
+          move: "{ring} must be {color fill}"
   # Two tiles over the empty squares both touch, S: b's count says at least
   # so many of them take a's color, and that is all a may take, so a's other
   # empty neighbors take the other color.
@@ -129,6 +148,14 @@ techniques:
       shown: each
       terms: { fill: flip(value(a)), a: a, aValue: value(a), aDot: dot(a), b: b, bValue: value(b), bDot: dot(b) }
       marks: { outline: "{a} + {b}", reads: "{a} + adj4(a) + {b} + adj4(b) + set(m over u in R, m in {u} + adj4(u))" }
+      # The squares the two tiles share are "also touch"; the tiles are told
+      # apart by color and kind, or, where those agree, by order ("the other").
+      wordings:
+        - when: "aValue = bValue and aDot = bDot"
+          look: "{outline a: the outlined {color aValue} {aDot: dot | tile}}'s last {color aValue} must also touch {outline b: the other outlined {aDot: dot | tile}}"
+          move: "{ring} must be {color fill}"
+        - look: "{outline a: the outlined {color aValue} {aDot: dot | tile}}'s last {color aValue} must also touch {outline b: the outlined {color bValue} {bDot: dot | tile}}"
+          move: "{ring} must be {color fill}"
   # Two tiles over the empty squares both touch, S: b's count says at most
   # `most` of them take a's color, fewer than all, and a needs every other
   # empty neighbor of its color too.
@@ -149,3 +176,15 @@ techniques:
       shown: each
       terms: { fill: value(a), a: a, aValue: value(a), aDot: dot(a), b: b, bValue: value(b), bDot: dot(b), most: most }
       marks: { outline: "{a} + {b}", reads: "{a} + adj4(a) + {b} + adj4(b) + set(m over u in R, m in {u} + adj4(u))" }
+      wordings:
+        - when: "most = 0 and aValue = bValue and aDot = bDot"
+          look: "{outline b: one outlined {color bValue} {bDot: dot | tile}} allows no {color aValue} beside {outline a: the other}"
+          move: "{ring} must be {color fill}"
+        - when: "most = 0"
+          look: "{outline b: the outlined {color bValue} {bDot: dot | tile}} allows no {color aValue} beside {outline a: the outlined {color aValue} {aDot: dot | tile}}"
+          move: "{ring} must be {color fill}"
+        - when: "aValue = bValue and aDot = bDot"
+          look: "{outline b: one outlined {color bValue} {bDot: dot | tile}} allows at most {spelled most} {color aValue} beside {outline a: the other}"
+          move: "{ring} must be {color fill}"
+        - look: "{outline b: the outlined {color bValue} {bDot: dot | tile}} allows at most {spelled most} {color aValue} beside {outline a: the outlined {color aValue} {aDot: dot | tile}}"
+          move: "{ring} must be {color fill}"

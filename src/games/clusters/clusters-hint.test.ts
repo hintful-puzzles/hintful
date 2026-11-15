@@ -22,12 +22,15 @@ import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import type { Point } from "../../engine/types.ts";
+import { STATED } from "./clusters.compiled.ts";
 import type { ClustersHint } from "./hint.ts";
 import { clustersGame } from "./index.ts";
 import { border, COL_0, COL_1, COL_HINT_CELL, PREFERRED_TILE_SIZE } from "./render.ts";
@@ -37,6 +40,7 @@ import {
   type ClustersMove,
   type ClustersState,
   COLMASK,
+  colorName,
   DIFF_TRICKY,
   F_COLOR_0,
   F_COLOR_1,
@@ -308,6 +312,55 @@ describe("hint", () => {
     const wrong: ClustersState = { ...hit.state, grid };
     expect(findErrors(grid, wrong.w, wrong.h)).toEqual([]);
     expect(clustersGame.findMistakes?.(wrong).map((m) => m.index)).toEqual([hit.index]);
+  });
+});
+
+// The Normal walk reaches the count wordings below only with a tile that allows
+// some of the other's color (`most` above 0) and tiles told apart by color or
+// kind. The three that no walk meets (a `most` of none, and "one outlined"
+// beside "the other" for a count that is not none) are rendered from the
+// compiled clauses, so a change to their words or slots shows.
+describe("countShort, the wordings no walk reaches", () => {
+  const at = (c: number): Point => ({ x: c % 3, y: (c / 3) | 0 });
+  const words = (wording: number, terms: Record<string, number>): string =>
+    statedSentence(STATED.countShort.step[wording], {
+      kind: CELL,
+      at,
+      ring: [at(8)],
+      marks: { outline: [at(0), at(4)] },
+      terms: {
+        fill: F_COLOR_1,
+        a: 0,
+        b: 4,
+        aValue: F_COLOR_1,
+        bValue: F_COLOR_1,
+        aDot: 1,
+        bDot: 1,
+        most: 0,
+        ...terms,
+      },
+      value: String,
+      color: (n) => colorName(n as ClustersFill),
+    }).text;
+  const first = TWO_NAMES[0].light;
+  const second = TWO_NAMES[1].light;
+
+  it("says a tile that allows none of the color beside the other, of one kind", () => {
+    expect(words(0, {})).toBe(
+      `One outlined ${first} dot allows no ${first} beside the other, so this square must be ${first}.`,
+    );
+  });
+
+  it("says a tile that allows none by the other's color and kind", () => {
+    expect(words(1, { bValue: F_COLOR_0, bDot: 0 })).toBe(
+      `The outlined ${second} tile allows no ${first} beside the outlined ${first} dot, so this square must be ${first}.`,
+    );
+  });
+
+  it("says how many it allows in words, of one kind", () => {
+    expect(words(2, { most: 3 })).toBe(
+      `One outlined ${first} dot allows at most three ${first} beside the other, so this square must be ${first}.`,
+    );
   });
 });
 

@@ -11,6 +11,8 @@
 
 import { searchTiers } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
+import type { ColorWord } from "../../engine/color/color-word.ts";
+import { TWO_NAMES } from "../../engine/color/colors.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
@@ -49,6 +51,8 @@ export const F_COLOR_1 = 0x02; // upstream's blue
  * `TWO_SHAPES`) a colored cell is. `F_COLOR_1` is the first, as the color the
  * primary button gives. */
 export const pairIndex = (cell: number): 0 | 1 => (cell & F_COLOR_1 ? 0 : 1);
+/** The word for a color: the palette's, so it is the color the piece is. */
+export const colorName = (fill: ClustersFill): ColorWord => TWO_NAMES[pairIndex(fill)];
 export const F_SINGLE = 0x04; // a "dot": touches exactly one same-color cell
 export const COLMASK = F_COLOR_0 | F_COLOR_1;
 

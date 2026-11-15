@@ -29,6 +29,18 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["refute.selfSurrounded","refute.selfReach","refute.nearSurrounded","refute.nearReach","refute.dotOvercount","countFull","countShort"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "refute.selfSurrounded": {"step":[{"look":"Every neighbor of {ring} is {color fill}. As {color refuted}, it could never touch another {color refuted} tile","move":"it must be {color fill}"}]},
+  "refute.selfReach": {"step":[{"look":"If {ring} were {color refuted}, at most one neighbor could ever match it, but it needs to touch two","move":"it must be {color fill}"}]},
+  "refute.nearSurrounded": {"step":[{"look":"Painting {ring} {color refuted} would seal {outline: its outlined {color fill} neighbor} off from its color","move":"{ring} must be {color fill}"}]},
+  "refute.nearReach": {"step":[{"look":"If {ring} were {color refuted}, {outline: its outlined {color fill} neighbor} couldn't touch two {color fill} tiles","move":"{ring} must be {color fill}"}]},
+  "refute.dotOvercount": {"step":[{"look":"{outline: the outlined {color refuted} dot} beside {ring} already touches its one {color refuted} tile","move":"{ring} must be {color fill}"}]},
+  "countFull": {"step":[{"look":"{outline a: the outlined {color aValue} {aDot: dot | tile}}'s last {color aValue} must also touch {outline b: the other outlined {aDot: dot | tile}}","move":"{ring} must be {color fill}"},{"look":"{outline a: the outlined {color aValue} {aDot: dot | tile}}'s last {color aValue} must also touch {outline b: the outlined {color bValue} {bDot: dot | tile}}","move":"{ring} must be {color fill}"}]},
+  "countShort": {"step":[{"look":"{outline b: one outlined {color bValue} {bDot: dot | tile}} allows no {color aValue} beside {outline a: the other}","move":"{ring} must be {color fill}"},{"look":"{outline b: the outlined {color bValue} {bDot: dot | tile}} allows no {color aValue} beside {outline a: the outlined {color aValue} {aDot: dot | tile}}","move":"{ring} must be {color fill}"},{"look":"{outline b: one outlined {color bValue} {bDot: dot | tile}} allows at most {spelled most} {color aValue} beside {outline a: the other}","move":"{ring} must be {color fill}"},{"look":"{outline b: the outlined {color bValue} {bDot: dot | tile}} allows at most {spelled most} {color aValue} beside {outline a: the outlined {color aValue} {aDot: dot | tile}}","move":"{ring} must be {color fill}"}]},
+} as const;
+
 /** The techniques whose step is made for each square the firing decides. */
 export const SAYS_EACH: readonly (keyof SaysById)[] = ["countFull","countShort"];
 
@@ -332,6 +344,8 @@ export interface CountFullBinding {
 export interface CountFullSays {
   terms: { fill: number; a: number; aValue: number; aDot: number; b: number; bValue: number; bDot: number; };
   marks: { outline: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const countFullFacts: number[] = [];
@@ -672,6 +686,14 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
           fired = 1;
           if (fire !== null) {
             const _t284 = (b.grid[v_a] || -1);
+            const _sw_fill = (3 - _t284);
+            const _sw_a = v_a;
+            const _sw_aValue = (b.grid[v_a] || -1);
+            const _sw_aDot = (_k103[v_a] ?? dot(sp, cl, v_a));
+            const _sw_b = v_b;
+            const _sw_bValue = (b.grid[v_b] || -1);
+            const _sw_bDot = (_k103[v_b] ?? dot(sp, cl, v_b));
+            const _sw_outline = union(setOf(v_a), setOf(v_b)).slice();
             _g285.length = 0;
             countFull_st291.pass++;
             G286: {
@@ -686,7 +708,8 @@ export function countFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountFu
                 }
               }
             }
-            const _says = { terms: { fill: (3 - _t284), a: v_a, aValue: (b.grid[v_a] || -1), aDot: (_k103[v_a] ?? dot(sp, cl, v_a)), b: v_b, bValue: (b.grid[v_b] || -1), bDot: (_k103[v_b] ?? dot(sp, cl, v_b)) }, marks: { outline: union(setOf(v_a), setOf(v_b)).slice(), reads: union(union(union(union(setOf(v_a), sp.adj4[v_a]), setOf(v_b)), sp.adj4[v_b]), _g285).slice() } };
+            const _sw_reads = union(union(union(union(setOf(v_a), sp.adj4[v_a]), setOf(v_b)), sp.adj4[v_b]), _g285).slice();
+            const _says = { terms: { fill: _sw_fill, a: _sw_a, aValue: _sw_aValue, aDot: _sw_aDot, b: _sw_b, bValue: _sw_bValue, bDot: _sw_bDot }, marks: { outline: _sw_outline, reads: _sw_reads }, wording: (((_sw_aValue === _sw_bValue) && (_sw_aDot === _sw_bDot)) ? 0 : 1) };
             if (!fire({ a: v_a, b: v_b, S: v_S.slice(), R: v_R.slice(), bo: v_bo }, facts, _says)) return 1;
           }
         }
@@ -710,6 +733,8 @@ export interface CountShortBinding {
 export interface CountShortSays {
   terms: { fill: number; a: number; aValue: number; aDot: number; b: number; bValue: number; bDot: number; most: number; };
   marks: { outline: readonly number[]; reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const countShortFacts: number[] = [];
@@ -964,6 +989,15 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
+            const _sw_fill = (b.grid[v_a] || -1);
+            const _sw_a = v_a;
+            const _sw_aValue = (b.grid[v_a] || -1);
+            const _sw_aDot = (_k81[v_a] ?? dot(sp, cl, v_a));
+            const _sw_b = v_b;
+            const _sw_bValue = (b.grid[v_b] || -1);
+            const _sw_bDot = (_k81[v_b] ?? dot(sp, cl, v_b));
+            const _sw_most = v_most;
+            const _sw_outline = union(setOf(v_a), setOf(v_b)).slice();
             _g218.length = 0;
             countShort_st224.pass++;
             G219: {
@@ -978,7 +1012,8 @@ export function countShort(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<CountS
                 }
               }
             }
-            const _says = { terms: { fill: (b.grid[v_a] || -1), a: v_a, aValue: (b.grid[v_a] || -1), aDot: (_k81[v_a] ?? dot(sp, cl, v_a)), b: v_b, bValue: (b.grid[v_b] || -1), bDot: (_k81[v_b] ?? dot(sp, cl, v_b)), most: v_most }, marks: { outline: union(setOf(v_a), setOf(v_b)).slice(), reads: union(union(union(union(setOf(v_a), sp.adj4[v_a]), setOf(v_b)), sp.adj4[v_b]), _g218).slice() } };
+            const _sw_reads = union(union(union(union(setOf(v_a), sp.adj4[v_a]), setOf(v_b)), sp.adj4[v_b]), _g218).slice();
+            const _says = { terms: { fill: _sw_fill, a: _sw_a, aValue: _sw_aValue, aDot: _sw_aDot, b: _sw_b, bValue: _sw_bValue, bDot: _sw_bDot, most: _sw_most }, marks: { outline: _sw_outline, reads: _sw_reads }, wording: ((((_sw_most === 0) && (_sw_aValue === _sw_bValue)) && (_sw_aDot === _sw_bDot)) ? 0 : (_sw_most === 0) ? 1 : ((_sw_aValue === _sw_bValue) && (_sw_aDot === _sw_bDot)) ? 2 : 3) };
             if (!fire({ a: v_a, b: v_b, S: v_S.slice(), R: v_R.slice(), bo: v_bo, alike: v_alike, most: v_most }, facts, _says)) return 1;
           }
         }

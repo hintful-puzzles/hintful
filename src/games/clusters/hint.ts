@@ -18,14 +18,14 @@ import {
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
-import type { SaysById } from "./clusters.compiled.ts";
-import { sentences } from "./hint-text.ts";
+import { type SaysById, STATED } from "./clusters.compiled.ts";
 import { type ClustersRung, hintWalk } from "./solver.ts";
 import {
   type ClustersFill,
   type ClustersMove,
   type ClustersState,
   COLMASK,
+  colorName,
   executeMove,
 } from "./state.ts";
 
@@ -59,7 +59,9 @@ const described = describedFiringHint<
     cells: targets.map((t) => ({ index: t.y * state.w + t.x, fill: t.value })),
   }),
   each: ["countFull", "countShort"],
-  say: sentences,
+  stated: STATED,
+  color: (n) => colorName(n as ClustersFill),
+  say: {},
 });
 
 export const { hint: clustersHint, hintKeepTrack: clustersKeepTrack } = described;

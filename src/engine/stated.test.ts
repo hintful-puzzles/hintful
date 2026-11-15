@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ColorWord } from "./color/color-word.ts";
 import { CELL, type MarkKind, stepMarks } from "./hint-words.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
 import { type StatedContext, statedParts, statedSentence } from "./stated.ts";
@@ -48,6 +49,42 @@ describe("a stated clause", () => {
       statedSentence({ look: clause, move: "go" }, cx({ struck: [3, 1, 3, 2] })).text;
     expect(say("with {struck}")).toBe("With v1, v2 and v3, so go.");
     expect(say("with {struckOr}")).toBe("With v1, v2 or v3, so go.");
+  });
+
+  it("names a color term in the game's color word, and a count in words", () => {
+    const colors = [
+      new ColorWord("gray"),
+      new ColorWord("gray"),
+      new ColorWord("purple"),
+      new ColorWord("yellow", "brown"),
+    ];
+    const s = statedSentence(
+      {
+        look: "{outline: the outlined {color one} {n: dot | tile}} allows at most {spelled n} {color n}",
+        move: "go",
+      },
+      cx({ color: (k) => colors[k] }),
+    );
+    // A color at the top of a clause follows the scheme; inside a reference's
+    // words it is the one word it has.
+    expect(s.textIn("light")).toBe(
+      "The outlined purple tile allows at most three yellow, so go.",
+    );
+    expect(s.textIn("dark")).toBe(
+      "The outlined purple tile allows at most three brown, so go.",
+    );
+  });
+
+  it("says a count past ten as its numeral, and refuses a color the game gives none", () => {
+    expect(
+      statedSentence(
+        { look: "{spelled n} bulbs", move: "go" },
+        cx({ terms: { n: 12 } }),
+      ).text,
+    ).toBe("12 bulbs, so go.");
+    expect(() =>
+      statedSentence({ look: "the {color n} bulb", move: "go" }, cx()),
+    ).toThrow(/game's colors/);
   });
 
   it("names a value in the game's word, and a number otherwise", () => {

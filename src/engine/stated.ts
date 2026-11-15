@@ -10,6 +10,7 @@
  * terms when the description is compiled, so a clause cannot name what its
  * technique does not state.
  */
+import type { ColorWord } from "./color/color-word.ts";
 import {
   joinNums,
   joinOr,
@@ -70,6 +71,8 @@ export interface StatedContext<E> {
   readonly terms: Readonly<Record<string, unknown>>;
   /** A value as the board draws it. */
   value(n: number): string;
+  /** The color word a number term names, for `{color term}`. */
+  color?(n: number): ColorWord;
   /** What an element shows, for `{each}`. */
   shows?(e: E): number;
   /** The noun for one element of `kind`: the lexicon's "square" unless the
@@ -127,16 +130,50 @@ function expand<E>(pieces: readonly Piece[], cx: StatedContext<E>): Piece[] {
 
 function render<E>(src: string, cx: StatedContext<E>): Narration {
   const lits: string[] = [""];
-  const vals: Narration[] = [];
+  const vals: (Narration | ColorWord)[] = [];
   for (const p of expand(parseClause(src), cx)) {
     if ("text" in p) lits[lits.length - 1] += p.text;
     else if (p.role === null) lits[lits.length - 1] += word(p.name, cx, null);
+    else if (p.role === "color") {
+      vals.push(colorOf(p.name, cx));
+      lits.push("");
+    } else if (p.role === "spelled") lits[lits.length - 1] += spelled(p.name, cx);
     else {
       vals.push(reference(p, cx));
       lits.push("");
     }
   }
   return phrase(Object.assign([...lits], { raw: lits }), ...vals);
+}
+
+const SPELLED = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+] as const;
+
+function spelled<E>(term: string, cx: StatedContext<E>): string {
+  const n = cx.terms[term];
+  if (typeof n !== "number")
+    throw new Error(`stated clause: {spelled ${term}} is no number term`);
+  return SPELLED[n] ?? String(n);
+}
+
+function colorOf<E>(term: string, cx: StatedContext<E>): ColorWord {
+  const n = cx.terms[term];
+  if (typeof n !== "number" || !cx.color)
+    throw new Error(
+      `stated clause: {color ${term}} needs a number term and the game's colors`,
+    );
+  return cx.color(n);
 }
 
 /** A word or a number term, said outside a reference, or inside one's words
@@ -213,7 +250,15 @@ function reference<E>(
   const say = (live: readonly E[]): string => {
     const many = role !== "stripes" && new Set(live.map((e) => kind.key(e))).size > 1;
     return forms[many && forms.length > 1 ? 1 : 0]
-      .map((q) => ("text" in q ? q.text : word(q.name, cx, live)))
+      .map((q) =>
+        "text" in q
+          ? q.text
+          : q.role === "color"
+            ? colorOf(q.name, cx).only
+            : q.role === "spelled"
+              ? spelled(q.name, cx)
+              : word(q.name, cx, live),
+      )
       .join("");
   };
   return mark.as(DRAWN[role], role === "stripes" ? whole(kind) : kind, els, say);
