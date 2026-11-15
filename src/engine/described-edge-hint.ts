@@ -156,6 +156,10 @@ export interface EdgeHintSpec<
    * technique's (the hubs a trial breaks): the technique declares its
    * `outline` with a placeholder and a `# supplied` comment. */
   outline?(marked: Marked): readonly number[];
+  /** The terms a stated clause draws on a mark kind of their own, apart from
+   * the squares (Path's tried edges), and the element each index of one names. */
+  termKinds?: Readonly<Record<string, MarkKind<Elem>>>;
+  termAt?: Readonly<Record<string, (index: number) => Elem>>;
   /** A number term as the board draws it; its numeral where absent. */
   value?(n: number, state: State): string;
   /** The sentences the description cannot state, each technique's an override
@@ -275,6 +279,8 @@ export function describedEdgeHint<
             kind,
             ...(spec.ringKind === undefined ? {} : { ringKind: spec.ringKind }),
             at: pointOf,
+            ...(spec.termKinds === undefined ? {} : { termKinds: spec.termKinds }),
+            ...(spec.termAt === undefined ? {} : { termAt: spec.termAt }),
             ring,
             marks: {
               outline: (spec.outline?.(marked) ?? says.marks.outline ?? []).map(

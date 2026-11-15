@@ -1,7 +1,9 @@
 /**
  * Path's explained hint: the compiled ladder walked one firing at a time from
  * the player's own lines and crosses (`pathWalk`), and each firing turned
- * into a step (docs/hints.md § "Recording the deduction").
+ * into a step (docs/hints.md § "Recording the deduction"). The sentences are
+ * [`path.description.yaml`](./path.description.yaml)'s; this file supplies the
+ * terms they cannot know.
  *
  * Every fact a step rests on is a number, a line or a cross on the board: the
  * ladder reads nothing else. The lines a Check tries are drawn thin where its
@@ -19,9 +21,9 @@ import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
-import { type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
+import { EDGE, type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/hint-words.ts";
 import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
 import {
   across,
@@ -30,7 +32,7 @@ import {
   squareEdges,
 } from "../../engine/square-edges.ts";
 import type { Point } from "../../engine/types.ts";
-import { type Clash, type Square, say, type Why } from "./hint-text.ts";
+import { STATED } from "./path.compiled.ts";
 import {
   type Broke,
   type PathFiring,
@@ -177,111 +179,145 @@ function clashOf(
   return null;
 }
 
-// --- the words ---------------------------------------------------------------
+// --- the terms ---------------------------------------------------------------
 
-/** The words for one firing on `state` with `edges` as the ladder had them
- * when it fired. */
-function wordsOf(state: PathState, edges: Uint8Array, firing: PathFiring): Sentence {
-  const { w, ends } = state;
-  const at = (i: number): Point => ({ x: i % w, y: (i / w) | 0 });
-  const square = (i: number): Square => ({
-    at: at(i),
-    number: ends[i] === NO_END ? null : ends[i],
-  });
-  const clash = (tried: readonly number[]): Clash => {
-    const found = clashOf(state, edges, tried);
-    if (found === null) throw new Error(`path: lines on ${tried} break nothing`);
-    return clashWords(state, edges, tried, found, square);
-  };
-  // What broke is the technique's witness; the board says only how it looks.
-  // The last line tried is the one that closes a loop or joins two numbers.
-  const witnessed = (tried: readonly number[], broke: Broke): Clash =>
-    clashWords(
-      state,
-      edges,
-      tried,
-      typeof broke === "object"
-        ? { kind: "stuck", cell: broke.stuck }
-        : { kind: broke, edge: tried[tried.length - 1] },
-      square,
-    );
-  const { reason } = firing;
-  switch (reason.kind) {
-    case "forced":
-      return say.forced(
-        square(reason.cell),
-        state.takes[reason.cell],
-        reason.need,
-        firing.edges,
-      );
-    case "lineBreaks":
-      return say.lineBreaks(firing.edges[0], witnessed(reason.tried, reason.broke));
-    case "pairBreaks":
-      return say.pairBreaks(
-        reason.tried,
-        firing.edges[0],
-        witnessed(reason.tried, reason.broke),
-      );
-    case "weighed": {
-      const whys = reason.ruledOut.map((tried) => whyOf(clash(tried)));
-      const s = square(reason.cell);
-      if (firing.mark === CROSS) return say.weighedCross(s, firing.edges[0], whys);
-      if (firing.edges.length > 1) return say.weighedPair(s, firing.edges, whys);
-      // The pairs ruled out are every pair of the square's other three edges.
-      const others = new Set(reason.ruledOut.flat());
-      return say.weighedLine([...others], firing.edges[0], whys);
-    }
-  }
-}
+/** What lines tried would break, in the terms the description's sentences
+ * read: squares are indices, and a number is the one on its square. */
+type Clash =
+  /** The square would have more lines than it takes. */
+  | { kind: "crowded"; cell: number; lines: number }
+  /** The square would have too few edges left for its lines: `ways` is its
+   * lines and its open edges together. */
+  | { kind: "stuck"; cell: number; ways: number }
+  /** The lines would make a loop of `cells`. */
+  | { kind: "closed"; cells: readonly number[] }
+  /** The lines would join the numbers on `a` and `b`, which may not meet. */
+  | { kind: "joined"; a: number; b: number };
+
+/** The kinds of break a weighed step's ruled-out ways make, in the order of
+ * the bits of the description's `why`. */
+const WHYS = ["closed", "crowded", "cut-off", "dead-end", "joined"] as const;
 
 /** A ruled-out way's clash as a weighed step says it, without the squares
  * it outlines: a step weighs several ways, too many to outline each break. */
-function whyOf(clash: Clash): Why {
+function whyOf(clash: Clash): (typeof WHYS)[number] {
   if (clash.kind !== "stuck") return clash.kind;
   return clash.ways > 0 ? "dead-end" : "cut-off";
 }
 
 /** A clash in the terms its words need, read off the board with the lines
  * on `tried` drawn. */
-function clashWords(
+function clashRead(
   state: PathState,
   edges: Uint8Array,
   tried: readonly number[],
   clash: TrialClash,
-  square: (i: number) => Square,
 ): Clash {
   const trial = new Reading(state, edges.slice());
   const { g } = trial;
   for (const e of tried) trial.edges[e] = LINE;
   switch (clash.kind) {
     case "crowded":
-      return {
-        kind: "crowded",
-        square: square(clash.cell),
-        lines: trial.lines(clash.cell),
-      };
+      return { kind: "crowded", cell: clash.cell, lines: trial.lines(clash.cell) };
     case "stuck": {
       const ways = trial.lines(clash.cell) + trial.liveAt(clash.cell).length;
-      return { kind: "stuck", square: square(clash.cell), ways };
+      return { kind: "stuck", cell: clash.cell, ways };
     }
     case "closed":
-      return {
-        kind: "closed",
-        squares: trial.piece(g.a[clash.edge]).map((i) => square(i).at),
-      };
+      return { kind: "closed", cells: trial.piece(g.a[clash.edge]) };
     case "joined": {
       // The two sides of the joining edge, each before it was laid: the
       // numbered square nearest each end of it.
       trial.edges[clash.edge] = CROSS;
-      const numberOn = (i: number): Square => {
+      const numberOn = (i: number): number => {
         const n = trial.near(i);
-        const found = trial.piece(i).find((j) => state.ends[j] === n);
-        return square(found ?? i);
+        return trial.piece(i).find((j) => state.ends[j] === n) ?? i;
       };
       const [a, b] = [numberOn(g.a[clash.edge]), numberOn(g.b[clash.edge])];
       // "The 3 to the 7": a Path line runs up its numbers, so the lower first.
-      const swap = state.mode === MODE_PATH && (a.number ?? 0) > (b.number ?? 0);
+      const swap =
+        state.mode === MODE_PATH && (state.ends[a] ?? 0) > (state.ends[b] ?? 0);
       return { kind: "joined", a: swap ? b : a, b: swap ? a : b };
+    }
+  }
+}
+
+/** A square's number and whether it has one, as the sentences' terms. */
+function numberOf(state: PathState, cell: number): { hasNum: boolean; num: number } {
+  const n = state.ends[cell];
+  return { hasNum: n !== NO_END, num: n === NO_END ? 0 : n };
+}
+
+/** The terms a clash fills in: the placeholders of the description's
+ * `lineBreaks` and `pairBreaks`. */
+function clashTerms(state: PathState, clash: Clash): Record<string, unknown> {
+  switch (clash.kind) {
+    case "crowded":
+      return {
+        crowd: true,
+        sq: clash.cell,
+        held: clash.lines,
+        ...numberOf(state, clash.cell),
+      };
+    case "stuck":
+      return {
+        short: true,
+        dead: clash.ways > 0,
+        sq: clash.cell,
+        ...numberOf(state, clash.cell),
+      };
+    case "closed":
+      return { loops: true, circuit: clash.cells };
+    case "joined":
+      return {
+        twoNums: [clash.a, clash.b],
+        n1: state.ends[clash.a],
+        n2: state.ends[clash.b],
+      };
+  }
+}
+
+/** The terms one firing supplies on `state`, with `edges` as the ladder had
+ * them when it fired: whether it sets several edges, and what its reason holds
+ * that the technique's binding does not. */
+function termsOf({ firing, before }: Fired, state: PathState): Record<string, unknown> {
+  const { reason } = firing;
+  const multi = firing.edges.length > 1;
+  // What broke is the technique's witness; the board says only how it looks.
+  // The last line tried is the one that closes a loop or joins two numbers.
+  const witnessed = (tried: readonly number[], broke: Broke): Clash =>
+    clashRead(
+      state,
+      before,
+      tried,
+      typeof broke === "object"
+        ? { kind: "stuck", cell: broke.stuck }
+        : { kind: broke, edge: tried[tried.length - 1] },
+    );
+  switch (reason.kind) {
+    case "forced":
+      return { multi, ...numberOf(state, reason.cell) };
+    case "lineBreaks":
+      return clashTerms(state, witnessed(reason.tried, reason.broke));
+    case "pairBreaks":
+      return {
+        tried: reason.tried,
+        ...clashTerms(state, witnessed(reason.tried, reason.broke)),
+      };
+    case "weighed": {
+      let why = 0;
+      for (const tried of reason.ruledOut) {
+        const found = clashOf(state, before, tried);
+        if (found === null) throw new Error(`path: lines on ${tried} break nothing`);
+        why |= 1 << WHYS.indexOf(whyOf(clashRead(state, before, tried, found)));
+      }
+      return {
+        multi,
+        why,
+        // The pairs ruled out are every pair of the square's other three edges.
+        tried: [...new Set(reason.ruledOut.flat())],
+        ...numberOf(state, reason.cell),
+      };
     }
   }
 }
@@ -330,6 +366,10 @@ function stepOf(
   ];
 }
 
+/** What a stated clause draws besides squares: the edges a Check tries. */
+type Element = Point | number;
+const TRIED = EDGE as unknown as MarkKind<Element>;
+
 /** The plan from the player's lines and crosses. */
 export const pathHint = describedEdgeHint<
   PathState,
@@ -338,7 +378,9 @@ export const pathHint = describedEdgeHint<
   Fired,
   PathWalkContext,
   PathSays,
-  PathRung
+  PathRung,
+  number,
+  Element
 >({
   name: "path hint",
   walk: (state) => pathWalk(state),
@@ -348,8 +390,13 @@ export const pathHint = describedEdgeHint<
   reads: (taken, ctx) => ctx.reads(taken),
   writes: (taken, ctx) => ctx.writes(taken),
   step: (fired) => stepOf(fired),
-  // Every technique's sentence is the one `wordsOf` says for its reason.
-  say: (_spoken, { firing, before }, state) => wordsOf(state, before, firing),
+  stated: STATED,
+  ringKind: EDGE,
+  ring: ({ firing }) => firing.edges,
+  width: (state) => state.w,
+  termKinds: { tried: TRIED },
+  termAt: { tried: (edge) => edge },
+  terms: termsOf,
 });
 
 /** Judge a move against the step on show by what it did to the edges, which

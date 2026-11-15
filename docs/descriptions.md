@@ -1109,7 +1109,12 @@ it for a choice inside one deduction's sentence (a verdict's "must be a line" or
 **`{fit: longest | shorter | shortest}`** says the first form with which the whole
 sentence stays within `NARRATION_LIMIT`, else the last (Boats names the line's last
 water where there is room); a `wording` cannot do that, for its `when` reads terms
-and no length. **A term or mark only the game's own code can supply** (Boats'
+and no length. **`{or flags: a | b | c}`** lists the forms whose bit the number term
+`flags` has set, as alternatives, for a reason that is a set of kinds (Path's
+weighed step: what its ruled-out ways break); it may stand in a `fit`'s forms, and
+holds literal words. **A term whose elements are drawn on a kind of their own**
+(`termKinds` and `termAt` of `describedEdgeHint`: Path's tried edges, among
+squares) is a reference `{outline tried: …}` like any term of elements. **A term or mark only the game's own code can supply** (Boats'
 trials name the rule the validator says they break) is declared in the technique's
 `says` with a placeholder formula and a `# supplied` comment, and the game's reason
 callback replaces it, so a clause can read it as any term.

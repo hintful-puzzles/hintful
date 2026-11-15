@@ -3,6 +3,7 @@ import { ColorWord } from "./color/color-word.ts";
 import { CELL, type MarkKind, stepMarks } from "./hint-words.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
 import { type StatedContext, statedParts, statedSentence } from "./stated.ts";
+import { parseClause } from "./stated-clauses.ts";
 import type { Point } from "./types.ts";
 
 const W = 4;
@@ -136,6 +137,34 @@ describe("a stated clause", () => {
       ).text;
     expect(say(3, 0)).toBe("It holds an A and 3 of an A, so go.");
     expect(say(12, 3)).toBe("It holds a D and 12 of a D, so go.");
+  });
+
+  it("lists the forms whose bit a term has set, and draws a term's elements on a kind of its own", () => {
+    const say = (flags: number): string =>
+      statedSentence(
+        {
+          look: "it would {or flags: close a loop | cut a square off | join them}",
+          move: "go",
+        },
+        cx({ terms: { flags } }),
+      ).text;
+    expect(say(0b001)).toBe("It would close a loop, so go.");
+    expect(say(0b101)).toBe("It would close a loop or join them, so go.");
+    expect(say(0b111)).toBe(
+      "It would close a loop, cut a square off or join them, so go.",
+    );
+    expect(() => parseClause("{or flags: a | {n}}")).toThrow(/no or of a term/);
+    const edge: MarkKind<number> = { name: "edge", key: String };
+    const s = statedSentence(
+      { look: "weigh {outline tried: the outlined edges}", move: "go" },
+      {
+        ...cx(),
+        termKinds: { tried: edge as unknown as MarkKind<Point> },
+        termAt: { tried: (i) => i as unknown as Point },
+        terms: { tried: [7, 9] },
+      },
+    );
+    expect(stepMarks({ words: s }).of("outline", edge)).toEqual([7, 9]);
   });
 
   it("draws the ring on a kind of its own", () => {

@@ -32,6 +32,15 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["forced","lineBreaks","pairBreaks","weighed"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "forced": {"step":[{"look":"{outline c: the outlined {if hasNum: {num} | square}} has only one edge left for its line","move":"{ring: this edge | these edges} must be {if multi: lines | a line}"},{"look":"{outline c: the outlined {if hasNum: {num} | square}} has only two edges left for its two lines","move":"{ring: this edge | these edges} must be {if multi: lines | a line}"},{"look":"{outline c: the outlined {if hasNum: {num} | square}} has only one edge left for its second line","move":"{ring: this edge | these edges} must be {if multi: lines | a line}"}]},
+  "lineBreaks": {"step":[{"look":"a line on {ring: this edge | these edges} would {if crowd: give {outline sq: the outlined {if hasNum: {num} | square}} {spelled held} lines | {if short: {if dead: leave {outline sq: the outlined {if hasNum: {num} | square}} a dead end | cut off {outline sq: the outlined {if hasNum: {num} | square}}} | {if loops: make a loop of {outline circuit: the outlined squares} | join {outline twoNums: the outlined {n1} to the {n2}}}}}","move":"it must be crossed out"}]},
+  "pairBreaks": {"step":[{"look":"lines on both {outline tried: outlined edges} would {if crowd: give {outline sq: the outlined {if hasNum: {num} | square}} {spelled held} lines | {if short: {if dead: leave {outline sq: the outlined {if hasNum: {num} | square}} a dead end | cut off {outline sq: the outlined {if hasNum: {num} | square}}} | {if loops: make a loop of {outline circuit: the outlined squares} | join {outline twoNums: the outlined {n1} to the {n2}}}}}","move":"{ring: this edge | these edges} must be a line"}]},
+  "weighed": {"step":[{"look":"lines on any two of {outline tried: the outlined edges} would {fit: {or why: close a loop | give a square too many lines | cut a square off | leave a square a dead end | join numbers that may not meet} | {or why: close a loop | overfill a square | cut a square off | leave a dead end | join numbers wrongly} | break a rule}","move":"{ring: this edge | these edges} must be {if multi: lines | a line}"},{"look":"lines on any other two edges of {outline c: the outlined {if hasNum: {num} | square}} would {fit: {or why: close a loop | give a square too many lines | cut a square off | leave a square a dead end | join numbers that may not meet} | {or why: close a loop | overfill a square | cut a square off | leave a dead end | join numbers wrongly} | break a rule}","move":"{ring: this edge | these edges} must be {if multi: lines | a line}"},{"look":"a line on {ring: this edge | these edges} and any other edge of {outline c: the outlined {if hasNum: {num} | square}} would {fit: {or why: close a loop | give a square too many lines | cut a square off | leave a square a dead end | join numbers that may not meet} | {or why: close a loop | overfill a square | cut a square off | leave a dead end | join numbers wrongly} | break a rule}","move":"it must be crossed out"}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -279,8 +288,10 @@ export interface ForcedBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ForcedSays {
-  terms: { c: number; n: number; };
+  terms: { c: number; n: number; t: number; hasNum: boolean; num: number; multi: boolean; };
   marks: {  };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const forcedFacts: number[] = [];
@@ -369,7 +380,13 @@ export function forced(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ForcedBind
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { c: v_c, n: v_n }, marks: {  } };
+          const _sw_c = v_c;
+          const _sw_n = v_n;
+          const _sw_t = (_k10[v_c] ?? takes(sp, cl, v_c));
+          const _sw_hasNum = false;
+          const _sw_num = 0;
+          const _sw_multi = false;
+          const _says = { terms: { c: _sw_c, n: _sw_n, t: _sw_t, hasNum: _sw_hasNum, num: _sw_num, multi: _sw_multi }, marks: {  }, wording: ((_sw_t === 1) ? 0 : (_sw_n === 2) ? 1 : 2) };
           if (!fire({ c: v_c, n: v_n, U: v_U.slice() }, facts, _says)) return 1;
         }
         cands.fill(-1);
@@ -388,7 +405,7 @@ export interface LineBreaksBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LineBreaksSays {
-  terms: { e: number; };
+  terms: { e: number; crowd: boolean; short: boolean; loops: boolean; dead: boolean; sq: number; hasNum: boolean; num: number; held: number; circuit: readonly number[]; twoNums: readonly number[]; n1: number; n2: number; };
   marks: {  };
   witness: Witness | null;
   reads: Reads;
@@ -5100,7 +5117,7 @@ export function lineBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBr
             _c3322 = _c3321;
           }
           const _r: Reads = { cells: [...new Set(_rc)], edges: [...new Set(_re)] };
-          const _says = { terms: { e: v_e }, marks: {  }, witness: _w, reads: _r };
+          const _says = { terms: { e: v_e, crowd: false, short: false, loops: false, dead: false, sq: v_a, hasNum: false, num: 0, held: 0, circuit: setOf(v_a).slice(), twoNums: setOf(v_a).slice(), n1: 0, n2: 0 }, marks: {  }, witness: _w, reads: _r };
           if (!fire({ e: v_e, a: v_a, b: v_b }, facts, _says)) return 1;
         }
         cands.fill(-1);
@@ -5123,7 +5140,7 @@ export interface PairBreaksBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface PairBreaksSays {
-  terms: { c: number; i: number; j: number; };
+  terms: { c: number; i: number; j: number; tried: readonly number[]; crowd: boolean; short: boolean; loops: boolean; dead: boolean; sq: number; hasNum: boolean; num: number; held: number; circuit: readonly number[]; twoNums: readonly number[]; n1: number; n2: number; };
   marks: {  };
   witness: Witness | null;
 }
@@ -8995,7 +9012,7 @@ export function pairBreaks(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<PairBr
                 _wo1672 = { held: "arm", arm: 1, of: { held: "supposing", cell: _wc1678, value: _wd1679, of: { held: "supposing", cell: _wc1680, value: _wd1681, of: { held: "def", name: "shortNear", of: _wm1682 } } } };
               }
               const _w: Witness | null = { held: "def", name: "bothBreak", of: _wo1672 };
-              const _says = { terms: { c: v_c, i: v_i, j: v_j }, marks: {  }, witness: _w };
+              const _says = { terms: { c: v_c, i: v_i, j: v_j, tried: setOf(v_c).slice(), crowd: false, short: false, loops: false, dead: false, sq: v_c, hasNum: false, num: 0, held: 0, circuit: setOf(v_c).slice(), twoNums: setOf(v_c).slice(), n1: 0, n2: 0 }, marks: {  }, witness: _w };
               if (!fire({ c: v_c, U: v_U.slice(), k: v_k, I: v_I.slice(), i: v_i, j: v_j }, facts, _says)) return 1;
             }
             cands.fill(-1);
@@ -9020,8 +9037,10 @@ export interface WeighedBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface WeighedSays {
-  terms: { c: number; U: readonly number[]; P: readonly number[]; X: readonly number[]; };
+  terms: { c: number; U: readonly number[]; P: readonly number[]; X: readonly number[]; single: boolean; twin: boolean; hasNum: boolean; num: number; tried: readonly number[]; why: number; multi: boolean; };
   marks: {  };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const weighedFacts: number[] = [];
@@ -13122,7 +13141,18 @@ export function weighed(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<WeighedBi
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { c: v_c, U: v_U.slice(), P: v_P.slice(), X: v_X.slice() }, marks: {  } };
+            const _sw_c = v_c;
+            const _sw_U = v_U.slice();
+            const _sw_P = v_P.slice();
+            const _sw_X = v_X.slice();
+            const _sw_single = (_h4454 === 1);
+            const _sw_twin = (_h4454 === 2);
+            const _sw_hasNum = false;
+            const _sw_num = 0;
+            const _sw_tried = v_U.slice();
+            const _sw_why = 0;
+            const _sw_multi = false;
+            const _says = { terms: { c: _sw_c, U: _sw_U, P: _sw_P, X: _sw_X, single: _sw_single, twin: _sw_twin, hasNum: _sw_hasNum, num: _sw_num, tried: _sw_tried, why: _sw_why, multi: _sw_multi }, marks: {  }, wording: (_sw_single ? 0 : _sw_twin ? 1 : 2) };
             if (!fire({ c: v_c, U: v_U.slice(), A: v_A.slice(), B: v_B.slice(), N: v_N.slice(), P: v_P.slice(), X: v_X.slice() }, facts, _says)) return 1;
           }
           cands.fill(-1);

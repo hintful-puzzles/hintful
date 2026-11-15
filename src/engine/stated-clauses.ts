@@ -30,6 +30,9 @@
  * - `{if flag: yes | no}`: the form the step's flag term holds, whole; its forms
  *   hold what a clause does, references included, except inside a reference's
  *   words, where they hold literal words, number terms and further `if`s.
+ * - `{or flags: a | b | c}`: the forms whose bit the number term `flags` has set
+ *   (the first form is bit 0), listed as alternatives: "a, b or c". Its forms
+ *   hold literal words only, and it may stand inside a `fit`'s.
  * - `{fit: longest | shorter | shortest}`: the first form with which the whole
  *   sentence fits `NARRATION_LIMIT`, else the last; its forms hold literal words,
  *   number terms and `if`s, and every `fit` of a sentence takes the same turn
@@ -83,6 +86,7 @@ const SLOT_ROLES: ReadonlySet<string> = new Set([
   "a",
   "has",
   "fit",
+  "or",
 ]);
 
 /** The squares a `ring` reference or a `has` slot is over, by name: `1`, `2`
@@ -153,9 +157,10 @@ function slot(body: string, src: string): Piece {
   const words =
     colon < 0
       ? null
-      : splitForms(body.slice(colon + 1).trim(), head[0] === "fit" ? Infinity : 2).map(
-          (f) => parseClause(f.trim()),
-        );
+      : splitForms(
+          body.slice(colon + 1).trim(),
+          head[0] === "fit" || head[0] === "or" ? Infinity : 2,
+        ).map((f) => parseClause(f.trim()));
   if (
     (head[0] === "color" ||
       head[0] === "spelled" ||
@@ -164,6 +169,18 @@ function slot(body: string, src: string): Piece {
     (head.length !== 2 || words !== null)
   )
     throw new Error(`"{${body}}" is no color of a term, in "${src}"`);
+  if (head[0] === "or") {
+    if (
+      head.length !== 2 ||
+      words === null ||
+      words.length < 2 ||
+      words.some((f) => f.some((q) => "name" in q))
+    )
+      throw new Error(
+        `"{${body}}" is no or of a term and two forms or more of literal words, in "${src}"`,
+      );
+    return { name: head[1], role: "or", words };
+  }
   if (head[0] === "fit") {
     if (head.length !== 1 || words === null || words.length < 2)
       throw new Error(`"{${body}}" is no fit of two forms or more, in "${src}"`);
@@ -246,7 +263,8 @@ export function slotsOf(src: string): Slot[] {
         p.role === "color" ||
         p.role === "spelled" ||
         p.role === "numeral" ||
-        p.role === "a"
+        p.role === "a" ||
+        p.role === "or"
       )
         into.inner.push(p.name);
       else throw new Error(`a reference inside the words of "${src}"`);
@@ -285,7 +303,8 @@ export function slotsOf(src: string): Slot[] {
         p.role === "color" ||
         p.role === "spelled" ||
         p.role === "numeral" ||
-        p.role === "a"
+        p.role === "a" ||
+        p.role === "or"
       )
         return [{ name: p.name, role: null, inner: [], flags: [] }];
       if (p.role === "count")

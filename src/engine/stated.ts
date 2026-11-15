@@ -70,6 +70,9 @@ export interface StatedContext<E, R = E> {
   /** Where a term's elements are drawn on a kind of their own, not the
    * step's: a number that lies inside the squares it outlines (Range's). */
   readonly termKinds?: Readonly<Record<string, MarkKind<E>>>;
+  /** The element a named term's index names, where `termKinds` draws it on a
+   * kind whose elements are not the step's (edges among squares). */
+  readonly termAt?: Readonly<Record<string, (index: number) => E>>;
   /** The element a term's index names. */
   at(index: number): E;
   /** What the step decides. */
@@ -149,6 +152,15 @@ function expand<E>(pieces: readonly Piece[], cx: StatedContext<E>): Piece[] {
       return squaresNamed(p.name, cx).length === 0
         ? []
         : expand((p.words as readonly (readonly Piece[])[])[0], cx);
+    if (p.role === "or") {
+      const bits = cx.terms[p.name];
+      if (typeof bits !== "number")
+        throw new Error(`stated clause: {or ${p.name}: …} is no number term`);
+      const said = (p.words as readonly (readonly Piece[])[])
+        .filter((_, i) => (bits >> i) & 1)
+        .map((form) => form.map((q) => ("text" in q ? q.text : "")).join(""));
+      return [{ text: joinOr(said) }];
+    }
     if (p.role === "fit") {
       const forms = p.words as readonly (readonly Piece[])[];
       return expand(forms[Math.min(cx.fit ?? 0, forms.length - 1)], cx);
@@ -311,8 +323,9 @@ function reference<E>(
   else if (p.name !== "") {
     const t = cx.terms[p.name];
     kind = cx.termKinds?.[p.name] ?? kind;
-    if (typeof t === "number") els = [cx.at(t)];
-    else if (Array.isArray(t)) els = (t as number[]).map((i) => cx.at(i));
+    const at = cx.termAt?.[p.name] ?? cx.at;
+    if (typeof t === "number") els = [at(t)];
+    else if (Array.isArray(t)) els = (t as number[]).map((i) => at(i));
     else throw new Error(`stated clause: {${role} ${p.name}} names no element term`);
   } else if (role === "ring") els = cx.ring;
   else els = (ofRole as readonly E[] | undefined) ?? [];
