@@ -262,6 +262,15 @@ technique is restated, or it stays an override.
   corner kinds, a wording) is met only if its hash covers it, which a planted
   `0 or 3` in `parityDot` showed for that kind alone.
 
+- **CI found two words the fingerprint cannot** (the hint-quality guards run
+  in the slow tier and on CI): a ring reference may not hold its verb, and may
+  not be a bare "the rest". `clueStarved` now says "{the ringed edge | each
+  ringed edge} must be a line", losing the "too" of 1.6a's note above (a verb
+  inside the reference was the only way to put it after one edge), and
+  `clueBlockedPair` names "the other edges", which takes it to 126 characters
+  and into `LONG_NARRATIONS` with a pinned board. Both moved the walk
+  fingerprint's snapshots, which were taken again.
+
 ### Unequal (2026-11-14, `59c6af093`)
 
 - **Stated whole, no override.** Its two sentences became four fact arms,

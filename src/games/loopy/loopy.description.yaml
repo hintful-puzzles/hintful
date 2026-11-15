@@ -259,7 +259,7 @@ techniques:
           look: "Only one of {outline face: this {n}'s} edges isn't ruled out"
           move: "{ring: the ringed edge | each ringed edge} must be a line"
         - look: "Only {n} of {outline face: this {n}'s} edges aren't ruled out"
-          move: "{ring: the ringed edge must be a line too | each ringed edge must be a line}"
+          move: "{ring: the ringed edge | each ringed edge} must be a line"
   # A clue that needs all but one of its open edges, and an open edge
   # whose dots both have a line from outside the face with the face's other
   # edges there open: a line on it would fill both dots, leave the edges
@@ -294,7 +294,7 @@ techniques:
       # the conclusion are said, as settling the whole face is the point.
       # Each half is its own reference (owner, 2026-09-19): the edge the dots
       # join, and the rest.
-      move: "{ring between: that edge} can't be one and {ring rest: the rest} must be lines"
+      move: "{ring between: that edge} can't be one and {ring rest: the other edges} must be lines"
   # A clue that needs all but one of its open edges, two of which meet at
   # a dot with a line: they cannot both be lines, so every other open edge
   # is.

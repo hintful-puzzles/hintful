@@ -122,6 +122,18 @@ const LONG_NARRATIONS: {
   spokenOn: Record<string, string>;
 }[] = [
   {
+    games: ["loopy"],
+    rungs: ["clueBlockedPair"],
+    why:
+      "It says both halves of the conclusion, because settling the whole face " +
+      "is the point (the owner, 2026-09-19), and the rest of the face is named " +
+      '"the other edges", as a bare "the rest" names nothing (7x7 Hard: 126 ' +
+      "characters).",
+    spokenOn: {
+      loopy: "7x7t0dh:1b321a2121c3c21a32a3a32a2b1a1b1b3e22a",
+    },
+  },
+  {
     games: ["solo"],
     rungs: ["wing"],
     why: WING_NAMES_ITS_CELLS,
