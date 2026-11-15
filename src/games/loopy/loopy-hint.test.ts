@@ -15,6 +15,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -35,6 +36,7 @@ import {
 } from "./hint.ts";
 import { CORNER, DOT, EDGE, FACE, type Marked, PAIR, say } from "./hint-text.ts";
 import { type LoopyMove, loopyGame } from "./index.ts";
+import { STATED } from "./loopy.compiled.ts";
 import {
   DIFF_EASY,
   DIFF_HARD,
@@ -1336,12 +1338,20 @@ describe("Loopy hint: two blocked dots settle a clue", () => {
   it("names the clue, and says the same thing with a different digit", () => {
     // The clue is the only part that varies. A 2 whose fourth edge is already
     // out reads with 2 throughout, a 3 in a square with 3.
-    const m = { ...NO_MARKS, targets: [0, 1, 2], faces: [0], dots: [0, 1] };
-    expect(say.clueBlockedPair(3, 0, m).text).toBe(
+    const spoken = (n: number): string =>
+      statedSentence(STATED.clueBlockedPair.step[0], {
+        kind: EDGE,
+        kinds: { face: FACE, cell: DOT, edge: EDGE, angle: CORNER },
+        at: (i) => i,
+        ring: [0, 1, 2],
+        marks: { outline: { face: [0], cell: [0, 1] } },
+        terms: { n, between: 0, rest: [1, 2] },
+        value: String,
+        noun: "edge",
+      }).text;
+    expect(spoken(3)).toBe(
       "Both outlined dots have a line, so joining them leaves this 3 short: that edge can't be one and the rest must be lines.",
     );
-    expect(say.clueBlockedPair(2, 0, m).text).toBe(
-      say.clueBlockedPair(3, 0, m).text.replaceAll("3", "2"),
-    );
+    expect(spoken(2)).toBe(spoken(3).replaceAll("3", "2"));
   });
 });

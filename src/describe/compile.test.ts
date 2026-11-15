@@ -369,6 +369,33 @@ describe("a stated clause names only what its technique states", () => {
     );
   });
 
+  describe("where a role marks several sorts", () => {
+    const sorts = (says: Record<string, unknown>): string =>
+      stated({
+        marks: { outline: { cell: "{c}", line: "{row(c)}" } },
+        ...says,
+      });
+
+    it("a reference names the sort it is over, and a wording reads each by role and sort", () => {
+      const code = sorts({
+        wordings: [
+          { when: "|outlineLine| = 0", look: "{outline cell: the dot}" },
+          { look: "{outline cell: the dot} on {outline line: the line}" },
+        ],
+        move: "{ring} must be {unshaded}",
+      });
+      expect(code).toContain("const _sw_outlineLine = ");
+      expect(code).toMatch(/wording: \(\(_sw_outlineLine\.length === 0\) \? 0 : 1\)/);
+    });
+
+    it.each([
+      ["no sort named", { look: "{outline} is it" }, /marks several sorts/],
+      ["a sort it does not mark", { look: "{outline face} is it" }, /face is no term/],
+    ])("and refuses %s", (_, says, error) => {
+      expect(() => sorts(says)).toThrow(error);
+    });
+  });
+
   it("a wording takes the parts it leaves out from the clauses beside it", () => {
     const { says } = parseTechnique("t", "x", {
       for: "c in cells",

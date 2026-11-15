@@ -1036,8 +1036,10 @@ cell it covers) is a set expression over the cells' own state, as `sameLine`'s.
 **A role that marks elements of several sorts states a set of each, by the
 sort's name**: `outline: { face: "{f}", cell: "{apex(a)}" }`, Loopy's clue and
 the dot beside it. The compiler refuses a set that is not of the sort it is
-named for, and the module types the role as an object of sets by sort, which a
-wording's `when` does not read. A game whose steps mark several kinds states
+named for, and the module types the role as an object of sets by sort. A
+stated clause names the sort it is over (`{outline face: this {n}}`), never the
+bare role, and a wording's `when` reads each set by the role and the sort
+(`|outlineFace| = 0`). A game whose steps mark several kinds states
 every role this way, so its hint reads each kind by its sort and never by which
 technique fired (Loopy's `outlineOf`, `solver.ts`).
 

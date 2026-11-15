@@ -46,13 +46,21 @@ const DRAWN: Readonly<Record<string, MarkRole>> = {
 export interface StatedContext<E> {
   /** What the references are drawn on. */
   readonly kind: MarkKind<E>;
+  /** Where a role marks elements of several sorts (its marks a set by sort),
+   * what a reference to one sort is drawn on. */
+  readonly kinds?: Readonly<Record<string, MarkKind<E>>>;
   /** The element a term's index names. */
   at(index: number): E;
   /** What the step decides. */
   readonly ring: readonly E[];
   /** The elements the step marks in each other role. */
   readonly marks: Readonly<
-    Partial<Record<"outline" | "stripes" | "strand", readonly E[]>>
+    Partial<
+      Record<
+        "outline" | "stripes" | "strand",
+        readonly E[] | Readonly<Record<string, readonly E[]>>
+      >
+    >
   >;
   /** The technique's terms, by name: numbers, and element indices or sets of
    * them. */
@@ -126,22 +134,33 @@ function reference<E>(
 ): Narration {
   const role = p.role as string;
   let els: readonly E[];
-  if (p.name !== "") {
+  let kind = cx.kind;
+  const ofRole = role === "ring" ? undefined : cx.marks[role as "outline"];
+  if (ofRole !== undefined && !Array.isArray(ofRole)) {
+    // A role of several sorts: the reference names the one it is over.
+    const bySort = ofRole as Readonly<Record<string, readonly E[]>>;
+    const k = cx.kinds?.[p.name];
+    if (p.name === "" || !(p.name in bySort) || k === undefined)
+      throw new Error(
+        `stated clause: {${role} ${p.name}} names no sort the step marks`,
+      );
+    els = bySort[p.name];
+    kind = k;
+  } else if (p.name !== "") {
     const t = cx.terms[p.name];
     if (typeof t === "number") els = [cx.at(t)];
     else if (Array.isArray(t)) els = (t as number[]).map((i) => cx.at(i));
     else throw new Error(`stated clause: {${role} ${p.name}} names no element term`);
   } else if (role === "ring") els = cx.ring;
-  else els = cx.marks[role as "outline" | "stripes" | "strand"] ?? [];
+  else els = (ofRole as readonly E[] | undefined) ?? [];
   const forms = p.words ?? DEFAULT_FORMS[role].map(parseClause);
   const say = (live: readonly E[]): string => {
-    const many =
-      role !== "stripes" && new Set(live.map((e) => cx.kind.key(e))).size > 1;
+    const many = role !== "stripes" && new Set(live.map((e) => kind.key(e))).size > 1;
     return forms[many && forms.length > 1 ? 1 : 0]
       .map((q) => ("text" in q ? q.text : word(q.name, cx, live)))
       .join("");
   };
-  return mark.as(DRAWN[role], role === "stripes" ? whole(cx.kind) : cx.kind, els, say);
+  return mark.as(DRAWN[role], role === "stripes" ? whole(kind) : kind, els, say);
 }
 
 /** A step's parts, rendered; `move` only where the clauses state one. */

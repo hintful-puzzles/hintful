@@ -208,6 +208,24 @@ technique is restated, or it stays an override.
 - The hint walk fingerprint is unchanged on both tiers. The word dump did not
   finish one deal a preset of Loopy in ten minutes (tasks 1.5).
 
+### Loopy's line-setting steps, stated (2026-11-15)
+
+- **A reference over a role of several sorts names the sort**, `{outline face:
+  this {n}}`, where a term's elements are named otherwise (`{ring between: …}`).
+  The renderer draws it on `kinds[sort]`; the compiler refuses the bare role
+  there. A wording's `when` reads a by-sort set as the role and the sort
+  (`outlineFace`), which is how `earlyLoop` is one kind with two wordings.
+- **`clueStarved`'s "too" now follows the live ring**: it sits inside the ring's
+  one-or-several words, so a step the player has half made says "…must be a
+  line too" of the one edge left, which the hand-written sentence fixed when it
+  was built. The walk's own words are unchanged.
+- **`clueBlockedPair`'s two halves are terms**: `between`, and `rest` (the face's
+  other open edges, a set), each a reference over the term's elements, so the
+  step still narrows by edge.
+- **Still in `hint-text.ts`**: the count steps, `corner`, the pair-reading steps
+  and every note-placing step (1.6), whose terms the plan reads when it places
+  the note, not when the firing is made.
+
 ### Unequal (2026-11-14, `59c6af093`)
 
 - **Stated whole, no override.** Its two sentences became four fact arms,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CELL, stepMarks } from "./hint-words.ts";
+import { CELL, type MarkKind, stepMarks } from "./hint-words.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
 import { type StatedContext, statedParts, statedSentence } from "./stated.ts";
 import type { Point } from "./types.ts";
@@ -73,6 +73,46 @@ describe("a stated clause", () => {
     expect(() => statedParts({ look: "{m} is it" }, cx())).toThrow(/\{m\}/);
     expect(() => statedParts({ look: "{outline m} is it" }, cx())).toThrow(
       /names no element term/,
+    );
+  });
+
+  it("draws a reference on the kind of the sort it names, where a role marks several", () => {
+    const FACE: MarkKind<number> = { name: "clue", key: String };
+    const DOT: MarkKind<number> = { name: "dot", key: String };
+    const { look } = statedParts(
+      { look: "{outline face: this {n}} and {outline cell: the outlined dot}" },
+      {
+        kind: FACE,
+        kinds: { face: FACE, cell: DOT },
+        at: (i) => i,
+        ring: [],
+        marks: { outline: { face: [4], cell: [7, 8] } },
+        terms: { n: 3 },
+        value: (n) => `${n}`,
+      },
+    );
+    expect(look?.text).toBe("This 3 and the outlined dot");
+    const marks = stepMarks({ words: look });
+    expect(marks.of("outline", FACE)).toEqual([4]);
+    expect(marks.of("outline", DOT)).toEqual([7, 8]);
+  });
+
+  it("refuses a reference that names no sort of a role of several", () => {
+    const FACE: MarkKind<number> = { name: "clue", key: String };
+    const several = {
+      kind: FACE,
+      kinds: { face: FACE },
+      at: (i: number) => i,
+      ring: [],
+      marks: { outline: { face: [4] } },
+      terms: {},
+      value: (n: number) => `${n}`,
+    };
+    expect(() => statedParts({ look: "{outline} is it" }, several)).toThrow(
+      /names no sort/,
+    );
+    expect(() => statedParts({ look: "{outline cell} is it" }, several)).toThrow(
+      /names no sort/,
     );
   });
 

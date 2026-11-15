@@ -52,6 +52,19 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["deadEnd","lineContinues","dotFull","clueFull","clueStarved","clueBlockedPair","clueOneShort","earlyLoop","related","cornerAtDot","cornerOther","cornerBoth","clueBound","cornerFromClue","cornerAcross","cornerExit","cornerOppositeExit","matchingPair","pairAtClue","parityClue","linkClue","pairFromCorner","cornerFromPair","pairAtDot","parityDot","linkDot"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "deadEnd": {"step":[{"look":"{outline cell: The outlined dot} has no line and no other open edge","follows":"a line on {ring} would dead-end","move":"it can't be a line"}]},
+  "lineContinues": {"step":[{"look":"The line at {outline cell: the outlined dot} has no other way to go on","move":"{ring} must be a line"}]},
+  "dotFull": {"step":[{"look":"{outline cell: The outlined dot} already has its two lines","move":"{ring: the ringed edge | each ringed edge} can't be a line"}]},
+  "clueFull": {"step":[{"move":"{ring: the ringed edge | each ringed edge} can't be a line","look":"{outline face: this {n}} takes no lines"},{"move":"{ring: the ringed edge | each ringed edge} can't be a line","look":"{outline face: this {n}} already has its line"},{"move":"{ring: the ringed edge | each ringed edge} can't be a line","look":"{outline face: this {n}} already has all {n} of its lines"}]},
+  "clueStarved": {"step":[{"look":"Only one of {outline face: this {n}'s} edges isn't ruled out","move":"{ring: the ringed edge | each ringed edge} must be a line"},{"look":"Only {n} of {outline face: this {n}'s} edges aren't ruled out","move":"{ring: the ringed edge must be a line too | each ringed edge must be a line}"}]},
+  "clueBlockedPair": {"step":[{"look":"{outline cell: Both outlined dots} have a line","follows":"joining them leaves {outline face: this {n}} short","move":"{ring between: that edge} can't be one and {ring rest: the rest} must be lines"}]},
+  "clueOneShort": {"step":[{"look":"{outline face: this {n}} can spare one edge and must spare it at {outline cell: the outlined dot}, which has a line","move":"{ring: the ringed edge | each ringed edge} must be a line"}]},
+  "earlyLoop": {"step":[{"move":"it can't be a line","look":"{ring} would close {outline edge: the marked lines} into a loop that leaves other lines out"},{"move":"it can't be a line","look":"{ring} would close {outline edge: the marked lines} into a loop with {outline face: the outlined clue | the outlined clues} still unmet"}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -561,6 +574,8 @@ export interface ClueFullBinding {
 export interface ClueFullSays {
   terms: { f: number; n: number; };
   marks: { outline: { "face": readonly number[]; }; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const clueFullFacts: number[] = [];
@@ -661,7 +676,10 @@ export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFull
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { f: v_f, n: _h16 }, marks: { outline: { "face": setOf(v_f).slice() } } };
+          const _sw_f = v_f;
+          const _sw_n = _h16;
+          const _sw_outlineFace = setOf(v_f).slice();
+          const _says = { terms: { f: _sw_f, n: _sw_n }, marks: { outline: { "face": _sw_outlineFace } }, wording: ((_sw_n === 0) ? 0 : (_sw_n === 1) ? 1 : 2) };
           if (!fire({ f: v_f, n: v_n }, facts, _says)) return 1;
         }
       }
@@ -680,6 +698,8 @@ export interface ClueStarvedBinding {
 export interface ClueStarvedSays {
   terms: { f: number; n: number; };
   marks: { outline: { "face": readonly number[]; }; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const clueStarvedFacts: number[] = [];
@@ -765,7 +785,10 @@ export function clueStarved(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueS
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { f: v_f, n: _h14 }, marks: { outline: { "face": setOf(v_f).slice() } } };
+          const _sw_f = v_f;
+          const _sw_n = _h14;
+          const _sw_outlineFace = setOf(v_f).slice();
+          const _says = { terms: { f: _sw_f, n: _sw_n }, marks: { outline: { "face": _sw_outlineFace } }, wording: ((_sw_n === 1) ? 0 : 1) };
           if (!fire({ f: v_f, n: v_n, o: v_o }, facts, _says)) return 1;
         }
       }
@@ -781,7 +804,7 @@ export interface ClueBlockedPairBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ClueBlockedPairSays {
-  terms: { f: number; n: number; between: number; };
+  terms: { f: number; n: number; between: number; rest: readonly number[]; };
   marks: { outline: { "face": readonly number[]; "cell": readonly number[]; }; };
 }
 
@@ -792,6 +815,7 @@ const clueBlockedPairFootprint: Footprint = {"sort":"face","reads":[{"steps":["f
 
 /** Its dearest read grows with the board as n. */
 export function clueBlockedPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBlockedPairBinding, ClueBlockedPairSays> | null): number {
+  const _g113: number[] = [];
   const facts = clueBlockedPairFacts;
   let fired = 0;
   let changed = false;
@@ -800,7 +824,7 @@ export function clueBlockedPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<C
   R1:
   for (let _i34 = 0; _i34 < _a33.length; _i34++) {
     const v_f = _a33[_i34];
-    const _m113_0 = b.made[0];
+    const _m119_0 = b.made[0];
     const _h35 = clueAt(cl.number, v_f);
     if (_visit !== null) { if (_visit[v_f] === 0) continue; _visit[v_f] = 0; }
     let _c44: boolean = (_h35 !== -1);
@@ -883,7 +907,7 @@ export function clueBlockedPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<C
         _c65 = _q52;
       }
       if (!(_c65)) continue;
-      if (b.made[0] !== _m113_0) {
+      if (b.made[0] !== _m119_0) {
         let _c74: boolean = (clueAt(cl.number, v_f) !== -1);
         if (_c74) {
           let _g66 = 0;
@@ -1023,7 +1047,16 @@ export function clueBlockedPair(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<C
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { f: v_f, n: _h35, between: v_e }, marks: { outline: { "face": setOf(v_f).slice(), "cell": [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].slice() } } };
+          _g113.length = 0;
+          G114: {
+            const _a117 = sp.faceEdges[v_f];
+            for (let _i118 = 0; _i118 < _a117.length; _i118++) {
+              const v_g = _a117[_i118];
+              if (!(((v_g !== v_e) && !((b.grid[v_g] !== 0))))) continue;
+              _g113.push(v_g);
+            }
+          }
+          const _says = { terms: { f: v_f, n: _h35, between: v_e, rest: _g113.slice() }, marks: { outline: { "face": setOf(v_f).slice(), "cell": [sp.edgeEnds[2 * v_e], sp.edgeEnds[2 * v_e + 1]].slice() } } };
           if (!fire({ f: v_f, e: v_e }, facts, _says)) return 1;
         }
       }
@@ -1265,6 +1298,8 @@ export interface EarlyLoopBinding {
 export interface EarlyLoopSays {
   terms: {  };
   marks: { outline: { "edge": readonly number[]; "face": readonly number[]; }; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const earlyLoopFacts: number[] = [];
@@ -1439,6 +1474,7 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
               _g87.push(v_g);
             }
           }
+          const _sw_outlineEdge = _g87.slice();
           _g93.length = 0;
           G94: {
             const _a110 = sp.faces;
@@ -1482,7 +1518,8 @@ export function earlyLoop(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<EarlyLo
               _g93.push(v_f);
             }
           }
-          const _says = { terms: {  }, marks: { outline: { "edge": _g87.slice(), "face": _g93.slice() } } };
+          const _sw_outlineFace = _g93.slice();
+          const _says = { terms: {  }, marks: { outline: { "edge": _sw_outlineEdge, "face": _sw_outlineFace } }, wording: ((_sw_outlineFace.length === 0) ? 0 : 1) };
           if (!fire({ L: v_L.slice(), e: v_e, G: v_G.slice() }, facts, _says)) return 1;
         }
       }

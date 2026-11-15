@@ -141,14 +141,6 @@ const counting = (m: Marked): Narration => {
     : phrase`, counting ${citedCorner(m, "each marked corner")} as one`;
 };
 
-/** The edges a step sets, named so a singular verb fits however many a
- * narrow leaves: "the ringed edge", "each ringed edge". */
-const eachSet = (m: Marked): Narration =>
-  setting(m, (n) => (n === 1 ? "the ringed edge" : "each ringed edge"));
-
-/** "the ringed edge can't be a line", or "each ringed edge" of several. */
-const ruledOut = (m: Marked): Narration => phrase`${eachSet(m)} can't be a line`;
-
 /** How a corner step ends: what the corner meets at its dot, and the move. */
 const cornerThen = (
   m: Marked,
@@ -185,115 +177,6 @@ const cornerThen = (
 
 export const say = {
   // --- steps that set lines ---------------------------------------------------
-
-  /** A clue with all its lines. */
-  clueFull: (clue: number, m: Marked): Sentence => {
-    if (clue === 0) {
-      return so({
-        look: phrase`${thisClue(m, 0)} takes no lines`,
-        move: ruledOut(m),
-      });
-    }
-    const has = clue === 1 ? "its line" : `all ${clue} of its lines`;
-    return so({
-      look: phrase`${thisClue(m, clue)} already has ${has}`,
-      move: ruledOut(m),
-    });
-  },
-
-  /** A clue with only as many edges left as it needs. */
-  clueStarved: (clue: number, m: Marked): Sentence => {
-    if (clue === 1)
-      return so({
-        look: phrase`Only one of ${thisClue(m, 1, "'s")} edges isn't ruled out`,
-        move: phrase`${eachSet(m)} must be a line`,
-      });
-    return so({
-      look: phrase`Only ${clue} of ${thisClue(m, clue, "'s")} edges aren't ruled out`,
-      move: phrase`${eachSet(m)} must be a line${m.targets.length === 1 ? " too" : ""}`,
-    });
-  },
-
-  // Two premises: the clue can spare one open edge, and the outlined dot already
-  // spends it, because the dot's existing line means the two edges there cannot
-  // both be lines.
-  clueOneShort: (clue: number, m: Marked): Sentence =>
-    so({
-      look: phrase`${thisClue(m, clue)} can spare one edge and must spare it at ${dot(m)}, which has a line`,
-      move: phrase`${eachSet(m)} must be a line`,
-    }),
-
-  /** The owner's shape, 2026-09-19, with the premise that makes it follow: the
-   * dots' existing lines are *why* joining them leaves the clue short, since
-   * each would then be full and rule out the clue's edge on its far side.
-   *
-   * Names the excluded edge by what it would join, never by direction, because
-   * most of Loopy's tilings have no top; says "already have a line" rather than
-   * "incoming", because the player sees lines and not a direction of travel;
-   * and gives both halves of the conclusion, because settling the whole face is
-   * the step's point. It uses no picture of the loop's path: "the long way
-   * around" fits a 3 in a square, and not a 2 whose fourth edge is already out.
-   *
-   * The clue appears twice and is right both times: the face ends with exactly
-   * the clue's count of lines, whether or not some edge was already ruled out. */
-  clueBlockedPair: (clue: number, between: number, m: Marked): Sentence =>
-    so({
-      look: phrase`${dot(m, "Both outlined dots")} have a line`,
-      follows: phrase`joining them leaves ${thisClue(m, clue)} short`,
-      // Each half its own reference (owner, 2026-09-19); the closings are the
-      // game's own, "can't be a line" and "must be lines" (2026-11-13).
-      move: phrase`${mark.as(
-        "ring",
-        EDGE,
-        m.targets.filter((e) => e === between),
-        "that edge",
-      )} can't be one and ${mark.as(
-        "ring",
-        EDGE,
-        m.targets.filter((e) => e !== between),
-        "the rest",
-      )} must be lines`,
-    }),
-
-  deadEnd: (m: Marked): Sentence =>
-    so({
-      look: phrase`${dot(m, "The outlined dot")} has no line and no other open edge`,
-      follows: phrase`a line on ${thisEdge(m)} would dead-end`,
-      move: phrase`it can't be a line`,
-    }),
-
-  lineContinues: (m: Marked): Sentence =>
-    so({
-      look: phrase`The line at ${dot(m)} has no other way to go on`,
-      move: phrase`${thisEdge(m)} must be a line`,
-    }),
-
-  dotFull: (m: Marked): Sentence =>
-    so({
-      look: phrase`${dot(m, "The outlined dot")} already has its two lines`,
-      move: ruledOut(m),
-    }),
-
-  /** The edge would close the marked lines too early: some drawn line would be left
-   * out of the loop, or the outlined clues would stay unmet. */
-  earlyLoop: (because: "strayLines" | "unmetClues", m: Marked): Sentence => {
-    const edge = thisEdge(m);
-    const lines = citedLine(m, "the marked lines");
-    const move = phrase`it can't be a line`;
-    if (because === "strayLines") {
-      return so({
-        look: phrase`${edge} would close ${lines} into a loop that leaves other lines out`,
-        move,
-      });
-    }
-    const clues = mark.as("outline", FACE, m.faces, (els) =>
-      els.length === 1 ? "the outlined clue" : "the outlined clues",
-    );
-    return so({
-      look: phrase`${edge} would close ${lines} into a loop with ${clues} still unmet`,
-      move,
-    });
-  },
 
   /** A clue's other edges can give it one line fewer than it needs. */
   boundLine: (clue: number, m: Marked): Sentence =>

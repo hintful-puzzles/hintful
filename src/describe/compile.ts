@@ -4496,7 +4496,7 @@ function checkStated(
     where: string,
     clauses: StatedClauses,
     sorts: ReadonlyMap<string, Sort>,
-    roles: ReadonlySet<string>,
+    roles: ReadonlyMap<string, ReadonlySet<string> | null>,
   ): void => {
     for (const [part, src] of Object.entries(clauses) as [string, string][]) {
       let slots: ClauseSlot[];
@@ -4519,6 +4519,12 @@ function checkStated(
             throw new CompileError(
               `${id}: says ${where}${part} names {${s.role}}, which it marks nothing in`,
             );
+          if (roles.get(s.role) != null)
+            throw new CompileError(
+              `${id}: says ${where}${part} names {${s.role}}, which marks several sorts: name one, as {${s.role} ${[...(roles.get(s.role) as ReadonlySet<string>)][0]}}`,
+            );
+        } else if (roles.get(s.role)?.has(s.name)) {
+          // A role of several sorts, and the reference names one of them.
         } else if (!isElems(sorts.get(s.name)))
           throw new CompileError(
             `${id}: says ${where}${part} names {${s.role} ${s.name}}, and ${s.name} is no term of elements`,
@@ -4527,6 +4533,19 @@ function checkStated(
       }
     }
   };
+  /** Each role a step marks, with the sorts it holds where it holds several. */
+  const rolesOf = (
+    marks: readonly { role: string; sort: string | null }[],
+  ): Map<string, ReadonlySet<string> | null> =>
+    new Map(
+      [...new Set(marks.map((m) => m.role))].map((role) => {
+        const sortsOf = marks.filter((m) => m.role === role && m.sort !== null);
+        return [
+          role,
+          sortsOf.length === 0 ? null : new Set(sortsOf.map((m) => m.sort as string)),
+        ];
+      }),
+    );
   const wording = (words: readonly Wording[], i: number): string =>
     words.length > 1 ? `wording ${i} ` : "";
   for (const [i, v] of says.variants.entries())
@@ -4535,13 +4554,13 @@ function checkStated(
         `${v.name === null ? "" : `${v.name} `}${wording(v.words, j)}`,
         w.clauses,
         variants[i].sorts,
-        new Set(v.marks.map((m) => m.role)),
+        rolesOf(v.marks),
       );
   if (says.fact !== null && factSorts !== null) {
     const sorts = new Map([...variants.flatMap((v) => [...v.sorts]), ...factSorts]);
-    const roles = new Set([
-      ...says.variants.flatMap((v) => v.marks.map((m) => m.role)),
-      ...says.fact.marks.map((m) => m.role),
+    const roles = new Map([
+      ...says.variants.flatMap((v) => [...rolesOf(v.marks)]),
+      ...rolesOf(says.fact.marks),
     ]);
     for (const [j, w] of says.fact.words.entries())
       check(`fact ${wording(says.fact.words, j)}`, w.clauses, sorts, roles);
@@ -6582,15 +6601,20 @@ function techniqueFunction(
             marks.push(read(ofRole[0].expr, "marks", role));
             continue;
           }
-          // A role holding several sorts is an object of a set by sort, which
-          // a wording's `when` does not read.
+          // A role holding several sorts is an object of a set by sort. A
+          // wording's `when` reads each by the role and the sort, `outlineFace`.
           const parts = ofRole.map((m) => {
             const r = compileExpr(m.expr, sc, { ...tenv, shared: inArm }, body);
             if (r.sort.k !== "set" || r.sort.of.k !== "elem" || r.sort.of.e !== m.sort)
               throw new CompileError(
                 `${t.id}: says marks ${role} ${m.sort} is not a set of ${m.sort}s, but ${show(r.sort)}`,
               );
-            return { sort: m.sort, code: `${r.code}.slice()` };
+            const code = `${r.code}.slice()`;
+            if (!worded) return { sort: m.sort, code };
+            const name = `${role}${(m.sort as string).replace(/^./, (c) => c.toUpperCase())}`;
+            body.emit(`const _sw_${name} = ${code};`);
+            named.set(name, { code: `_sw_${name}`, sort: r.sort });
+            return { sort: m.sort, code: `_sw_${name}` };
           });
           fields.marks.push(
             `${role}: { ${parts.map((p) => `${JSON.stringify(p.sort)}: readonly number[];`).join(" ")} };`,

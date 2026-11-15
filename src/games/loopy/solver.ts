@@ -478,7 +478,18 @@ export type LoopyReason =
   ) & {
     /** What its technique outlines. */
     readonly outline: Outline;
+    /** What its technique says of the firing, for the words a description
+     * states (`STATED`). */
+    readonly said: FiringSaid;
   };
+
+/** A firing's terms and marks, and the wording that held, as its technique
+ * said them. */
+export interface FiringSaid {
+  readonly terms: Readonly<Record<string, unknown>>;
+  readonly marks: Readonly<Record<string, Readonly<Record<string, readonly number[]>>>>;
+  readonly wording?: number;
+}
 
 export interface RecordedOp {
   edge: number;
@@ -817,12 +828,35 @@ function countOf(said: LoopySaid): Witness {
   return said.witness;
 }
 
+/** A reason before it carries what its technique said. */
+type Unsaid = LoopyReason extends infer R
+  ? R extends unknown
+    ? Omit<R, "said">
+    : never
+  : never;
+
 /** Why a firing that draws lines holds, in the hint's terms. */
 function lineReason(
   r: LoopySaid,
   ops: readonly RecordedOp[],
   chain: readonly Link[],
 ): LoopyReason {
+  const { terms, marks } = r.says as {
+    terms: Record<string, unknown>;
+    marks: Record<string, Record<string, readonly number[]>>;
+  };
+  const wording = (r.says as { wording?: number }).wording;
+  return {
+    ...unsaidReason(r, ops, chain),
+    said: { terms, marks, ...(wording === undefined ? {} : { wording }) },
+  };
+}
+
+function unsaidReason(
+  r: LoopySaid,
+  ops: readonly RecordedOp[],
+  chain: readonly Link[],
+): Unsaid {
   const outline = outlineOf(r);
   switch (r.id) {
     case "clueFull":

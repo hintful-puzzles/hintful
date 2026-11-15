@@ -28,15 +28,20 @@ import {
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import { type Clauses, statedSentence } from "../../engine/stated.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
+  CORNER,
   type CornerBound,
   type CornerThen,
+  DOT,
   EDGE,
+  FACE,
   type Marked,
   say,
 } from "./hint-text.ts";
 import type { LoopyMove, LoopyOp } from "./index.ts";
+import { STATED } from "./loopy.compiled.ts";
 import {
   type CornerNote,
   type HintBoard,
@@ -61,6 +66,9 @@ import {
 } from "./state.ts";
 
 type Marks = Omit<Marked, "targets">;
+
+/** What a reference to each sort a description names is drawn on. */
+const SORT_KINDS = { face: FACE, cell: DOT, edge: EDGE, angle: CORNER };
 
 /**
  * The hint's rungs: a line step is the solver's firing, by its reason's kind,
@@ -358,23 +366,34 @@ function narrate(pl: Planner, p: Planned): { words: Words; marks: Partial<Marks>
   const line = p.ops[0].state === LINE_YES;
   const marks = r.outline;
 
+  const stated = (STATED as Readonly<Record<string, { step?: readonly Clauses[] }>>)[
+    r.kind
+  ]?.step;
+  if (stated !== undefined) {
+    // The description states this kind's words; the ring is the edges it sets.
+    const spoken = statedSentence(stated[r.said.wording ?? 0], {
+      kind: EDGE,
+      kinds: SORT_KINDS,
+      at: (i) => i,
+      ring: p.ops.map((o) => o.edge),
+      marks: r.said.marks,
+      terms: r.said.terms,
+      value: String,
+      noun: "edge",
+    });
+    return { words: () => spoken, marks };
+  }
+
   switch (r.kind) {
     case "clueFull":
-      return { words: (m) => say.clueFull(r.clue, m), marks };
     case "clueStarved":
-      return { words: (m) => say.clueStarved(r.clue, m), marks };
     case "clueOneShort":
-      return { words: (m) => say.clueOneShort(r.clue, m), marks };
     case "clueBlockedPair":
-      return { words: (m) => say.clueBlockedPair(r.clue, r.between, m), marks };
     case "deadEnd":
-      return { words: say.deadEnd, marks };
     case "lineContinues":
-      return { words: say.lineContinues, marks };
     case "dotFull":
-      return { words: say.dotFull, marks };
     case "earlyLoop":
-      return { words: (m) => say.earlyLoop(r.because, m), marks };
+      throw new Error(`loopy hint: ${r.kind} is stated, and its clauses are missing`);
     case "clueBound":
       return {
         words: (m) => (line ? say.boundLine(r.clue, m) : say.boundEmpty(r.clue, m)),

@@ -199,6 +199,9 @@ techniques:
     says:
       terms: { c: c }
       marks: { outline: { cell: "{c}" } }
+      look: "{outline cell: The outlined dot} has no line and no other open edge"
+      follows: "a line on {ring} would dead-end"
+      move: "it can't be a line"
   # A dot with one line and one edge open: the line goes on along it. One
   # with no edge open is inconsistent.
   - id: lineContinues
@@ -208,6 +211,8 @@ techniques:
     says:
       terms: { c: c }
       marks: { outline: { cell: "{c}" } }
+      look: "The line at {outline cell: the outlined dot} has no other way to go on"
+      move: "{ring} must be a line"
   # A dot with two lines: its other edges are empty. One with more is
   # inconsistent.
   - id: dotFull
@@ -218,6 +223,8 @@ techniques:
     says:
       terms: { c: c }
       marks: { outline: { cell: "{c}" } }
+      look: "{outline cell: The outlined dot} already has its two lines"
+      move: "{ring: the ringed edge | each ringed edge} can't be a line"
   # A clue with all its lines: its other edges are empty. One with more is
   # inconsistent.
   - id: clueFull
@@ -229,6 +236,13 @@ techniques:
     says:
       terms: { f: f, n: "clue(number, f)" }
       marks: { outline: { face: "{f}" } }
+      move: "{ring: the ringed edge | each ringed edge} can't be a line"
+      wordings:
+        - when: "n = 0"
+          look: "{outline face: this {n}} takes no lines"
+        - when: "n = 1"
+          look: "{outline face: this {n}} already has its line"
+        - look: "{outline face: this {n}} already has all {n} of its lines"
   # A clue with only as many edges open as it still needs: each is a
   # line. One with fewer is inconsistent.
   - id: clueStarved
@@ -240,6 +254,12 @@ techniques:
     says:
       terms: { f: f, n: "clue(number, f)" }
       marks: { outline: { face: "{f}" } }
+      wordings:
+        - when: "n = 1"
+          look: "Only one of {outline face: this {n}'s} edges isn't ruled out"
+          move: "{ring: the ringed edge | each ringed edge} must be a line"
+        - look: "Only {n} of {outline face: this {n}'s} edges aren't ruled out"
+          move: "{ring: the ringed edge must be a line too | each ringed edge must be a line}"
   # A clue that needs all but one of its open edges, and an open edge
   # whose dots both have a line from outside the face with the face's other
   # edges there open: a line on it would fill both dots, leave the edges
@@ -256,10 +276,25 @@ techniques:
     conclude: >-
       place(e, 2) and (forall g in edges(f) where g != e and not known(g): place(g, 1))
     says:
-      terms: { f: f, n: "clue(number, f)", between: e }
+      terms:
+        f: f
+        n: "clue(number, f)"
+        between: e
+        rest: "{g in edges(f) where g != e and not known(g)}"
       # Both dots: the words say "both outlined dots", and with one the
       # reader cannot tell which edge joins them.
       marks: { outline: { face: "{f}", cell: "ends(e)" } }
+      look: "{outline cell: Both outlined dots} have a line"
+      follows: "joining them leaves {outline face: this {n}} short"
+      # The dots' existing lines are why joining them leaves the clue short:
+      # each would then be full and rule out the clue's edge on its far side.
+      # The edge is named by what it joins, never by direction, as most
+      # tilings have no top; "already have a line", not "incoming", as the
+      # player sees lines and not a direction of travel; and both halves of
+      # the conclusion are said, as settling the whole face is the point.
+      # Each half is its own reference (owner, 2026-09-19): the edge the dots
+      # join, and the rest.
+      move: "{ring between: that edge} can't be one and {ring rest: the rest} must be lines"
   # A clue that needs all but one of its open edges, two of which meet at
   # a dot with a line: they cannot both be lines, so every other open edge
   # is.
@@ -274,6 +309,8 @@ techniques:
     says:
       terms: { f: f, n: "clue(number, f)" }
       marks: { outline: { face: "{f}", cell: "{apex(a)}" } }
+      look: "{outline face: this {n}} can spare one edge and must spare it at {outline cell: the outlined dot}, which has a line"
+      move: "{ring: the ringed edge | each ringed edge} must be a line"
   # An open edge whose dots the lines already join: a line on it would
   # close a loop, which leaves a line out of it, or a clue unmet.
   - id: earlyLoop
@@ -297,6 +334,11 @@ techniques:
             {f in faces where not (exists g in L: end1(g) not in G)
             and clue(number, f) != none
             and need(f) != count(x in edges(f) where x = e)}
+      move: "it can't be a line"
+      wordings:
+        - when: "|outlineFace| = 0"
+          look: "{ring} would close {outline edge: the marked lines} into a loop that leaves other lines out"
+        - look: "{ring} would close {outline edge: the marked lines} into a loop with {outline face: the outlined clue | the outlined clues} still unmet"
   # The lines are one closed loop: every other edge is empty.
   - id: closed
     tier: Easy
