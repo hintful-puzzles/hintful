@@ -12,7 +12,9 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { techniqueFirings } from "../../engine/ladder-runtime.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { statedSentence } from "../../engine/stated.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides, ringsOf } from "../../engine/testing/mark-shape.ts";
@@ -21,7 +23,8 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { type SinglesHint, type SinglesRung, singlesGame } from "./index.ts";
 import { COL_HINT_CELL } from "./render.ts";
-import { solveSpecific } from "./solver.ts";
+import { STATED } from "./singles.compiled.ts";
+import { hintWalk, solveSpecific } from "./solver.ts";
 import {
   DIFF_ANY,
   F_BLACK,
@@ -209,6 +212,52 @@ describe("a hint step names the deduction that forces its cells", () => {
     const hl = step.highlights as SinglesHint;
     expect(hl.targets).toHaveLength(2);
     expect(hl.targets.every((t) => t.value === "black")).toBe(true);
+  });
+
+  // The ladder reaches these two wordings in no walk (`besideCovered` and
+  // `sameLine` fire on a marked square first), so the technique is asked
+  // directly: which wording it picks over a marked square, and what it says.
+  describe("corner.four, with a square of the diagonal already shaded", () => {
+    type FourSays = { arm?: string; wording?: number; terms: Record<string, unknown> };
+    const wordsWith = (shaded: number): { wording: number; text: string } => {
+      const marked = singlesGame.executeMove(craft(2, 2, [4, 4, 4, 4]), {
+        sets: [{ x: shaded % 2, y: shaded >> 1, value: "black" }],
+      });
+      const { marks, entries } = hintWalk(marked);
+      const firing = techniqueFirings(
+        { entries, placing: [], striking: [] },
+        "corner",
+        marks,
+      )
+        .map((f) => (f.reasons[0] as { says: FourSays }).says)
+        .find((says) => says.arm === "four" && says.terms["corner"] === 0);
+      if (firing?.wording === undefined)
+        throw new Error("expected a corner.four firing");
+      const at = (c: number): Point => ({ x: c % 2, y: c >> 1 });
+      const text = statedSentence(STATED["corner.four"].step[firing.wording], {
+        kind: CELL,
+        at,
+        ring: [at(3)],
+        marks: { outline: [1, 2, ...(shaded === 0 ? [0] : [])].map(at) },
+        terms: firing.terms,
+        value: String,
+      }).text;
+      return { wording: firing.wording, text };
+    };
+
+    it("says the corner is covered like the one inside, where the inside one is", () => {
+      const { wording, text } = wordsWith(3);
+      expect(wording).toBe(1);
+      expect(text).toContain("it must be");
+      expect(text).toContain("like the outlined 4 diagonally inside");
+    });
+
+    it("outlines the shaded corner and rings the one inside, where the corner is shaded", () => {
+      const { wording, text } = wordsWith(0);
+      expect(wording).toBe(2);
+      expect(text).toContain("the outlined corner 4");
+      expect(text).toContain("the 4 diagonally inside must be");
+    });
   });
 
   it("covers the cascade / connectivity / offset rules on generated boards", () => {

@@ -17,7 +17,7 @@
 
 ## 2. The catalog
 
-- [ ] 2.0 Pin Singles' second and third `corner.four` wordings with a unit test each (the owner's answer to 1.10, item 7); see `comparison.md`
+- [x] 2.0 Pin Singles' second and third `corner.four` wordings with a unit test each (the owner's answer to 1.10, item 7); see `comparison.md`. Done in `singles-hint.test.ts` "corner.four, with a square of the diagonal already shaded": the ladder never reaches them (`besideCovered` and `sameLine` fire on a marked square first, so no walk or plan can), so the test asks the compiled `corner` technique for its firings over a 2x2 of 4s with the inner square, then the corner, shaded, and checks the wording index it picks and the words that wording renders
 
 Written once the owner has answered 1.10. Library words first (design.md
 § "Order of work", step 6); a game with no `says` waits for
