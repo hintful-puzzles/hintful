@@ -53,11 +53,12 @@ import {
 } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
+  type LatinVocab,
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import type { Said } from "../../engine/ladder-runtime.ts";
 import type { LatinSolver } from "../../engine/latin.ts";
@@ -85,11 +86,10 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
+import { statedParts } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
 import { newMathraxDesc } from "./generator.ts";
-import { MATHRAX_VOCAB, say } from "./hint-text.ts";
-import type * as mathrax from "./mathrax.compiled.ts";
-import { WORDS } from "./mathrax.compiled.ts";
+import * as mathrax from "./mathrax.compiled.ts";
 import {
   colors,
   computeSize,
@@ -102,7 +102,6 @@ import {
   redraw,
 } from "./render.ts";
 import {
-  clueReason,
   type HintReason,
   mathraxLadder,
   mathraxSolve,
@@ -111,12 +110,7 @@ import {
   SOLVE_UNIQUE,
 } from "./solver.ts";
 import {
-  CLUE_EVN,
   cloneState,
-  clueCells,
-  clueIsParity,
-  clueOpposite,
-  clueType,
   DIFF_NAMES,
   DIFF_RECURSIVE,
   DIFF_TRICKY,
@@ -347,11 +341,15 @@ function findMistakes(state: MathraxState): readonly MathraxMistake[] {
 
 // --- hint ------------------------------------------------------------------
 
+const { WORDS } = mathrax;
+
+/** Mathrax's numbers print as numbers. */
+const MATHRAX_VOCAB: LatinVocab = { noun: "number", cell: WORDS.cell, value: String };
+
 /**
  * Why a strike is forced (docs/hints.md § "Writing the narration"):
  * indication, then reasoning, which the walk concludes with the move it makes.
- * `ns` is the struck value list. The words are
- * [`hint-text.ts`](./hint-text.ts)'s.
+ * The clue's words are the description's (`mathrax.description.yaml`).
  *
  * **Which of the clue's two sentences it speaks is read off the working board,
  * not off the record.** The solver reaches a clue elimination either from a
@@ -374,15 +372,22 @@ function premise(
       // diagonal pair, an `E`/`O` clue all four cells around it, and either set
       // meets at exactly one intersection, so outlining them points at the clue
       // without the board having any way to mark the intersection itself.
-      const { clue, cx, cy } = reason;
-      if (clueIsParity(clue))
-        return { premise: say.parity(clueType(clue) === CLUE_EVN, clueCells(cx, cy)) };
-      const across = clueOpposite(cx, cy, target);
-      const pair = [target, across];
-      const v = grid[across.y * o + across.x];
-      return v
-        ? { premise: say.paired(clue, pair, target, v) }
-        : { premise: say.open(clue, pair, valuesOf(marks)) };
+      const across = reason.cells.find((c) => c.x !== target.x && c.y !== target.y);
+      const v = across === undefined ? 0 : grid[across.y * o + across.x];
+      const { look } = statedParts(reason.clause, {
+        kind: CELL,
+        at: (i: number): Point => ({ x: i % o, y: (i / o) | 0 }),
+        ring: [],
+        marks: { outline: reason.cells },
+        // What a player can check is a number written across the clue, so
+        // the board says it, not the marks the firing read.
+        terms: { ...reason.terms, placed: v !== 0, v },
+        value: MATHRAX_VOCAB.value,
+        noun: WORDS.cell,
+        struck: valuesOf(marks),
+      });
+      if (look === undefined) throw new Error("a clue states no look");
+      return { premise: look };
     }
     // The generic Latin arms (dup / set) read identically to Keen's
     // and Unequal's — narrated once, shared.
@@ -423,8 +428,21 @@ function buildSteps(
   // A firing is one clue's strikes in one cell, so it is one leg.
   const clueRung = (id: "clueEasy" | "clue" | "clueTricky") =>
     techniqueRung<MathraxMove, MathraxHint, HintReason, LatinSolver>(on, id, (f) => {
-      const { k } = (f.reasons[0] as Said<unknown, mathrax.ClueSays>).says.terms;
-      return [{ strike: strikesOf(f, o), reason: clueReason(state.clues, k, o) }];
+      const { says } = f.reasons[0] as Said<unknown, mathrax.ClueSays>;
+      // The pair through an arithmetic clue is listed from the struck cell
+      // (the area a hint shows); the four round a parity clue as they lie.
+      const { at } = says.terms;
+      const outline = says.marks.outline;
+      const ordered =
+        outline.length === 2 ? [at, ...outline.filter((i) => i !== at)] : outline;
+      const cells = ordered.map((i) => ({ x: i % o, y: (i / o) | 0 }));
+      const reason: HintReason = {
+        kind: "clue",
+        cells,
+        clause: mathrax.STATED[id].step[says.wording],
+        terms: says.terms,
+      };
+      return [{ strike: strikesOf(f, o), reason }];
     });
   runLatinCandidatePlan<MathraxMove, MathraxHint, HintReason>({
     w: o,

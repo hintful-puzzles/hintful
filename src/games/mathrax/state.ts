@@ -29,7 +29,6 @@ import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { type ClueList, clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
-import type { Point } from "../../engine/types.ts";
 import * as mathrax from "./mathrax.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
@@ -121,31 +120,6 @@ export function clueLabel(clue: number): string {
     default:
       return "";
   }
-}
-
-/** Whether `clue` constrains all four cells around its intersection (`E`/`O`)
- * rather than the diagonal pair through it. The hint's sentence and its evidence
- * area both split on this, so the question is asked in one place. */
-export function clueIsParity(clue: number): boolean {
-  const t = clueType(clue);
-  return t === CLUE_EVN || t === CLUE_ODD;
-}
-
-/** The four cells around interior intersection `(cx, cy)`, top-left first. */
-export function clueCells(cx: number, cy: number): Point[] {
-  return [
-    { x: cx, y: cy },
-    { x: cx + 1, y: cy },
-    { x: cx, y: cy + 1 },
-    { x: cx + 1, y: cy + 1 },
-  ];
-}
-
-/** The cell diagonally across intersection `(cx, cy)` from `cell`, which is one
- * of the four {@link clueCells}: an arithmetic clue constrains exactly this
- * pair, so it is what a hint shades beside the cell it acts on. */
-export function clueOpposite(cx: number, cy: number, cell: Point): Point {
-  return { x: 2 * cx + 1 - cell.x, y: 2 * cy + 1 - cell.y };
 }
 
 // --- clue-type options (which clue kinds the generator may emit) ------------

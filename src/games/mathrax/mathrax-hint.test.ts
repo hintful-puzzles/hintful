@@ -10,7 +10,9 @@
  */
 import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
+import { CELL } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { statedParts } from "../../engine/stated.ts";
 import {
   describeHintKindPins,
   describeHintPins,
@@ -21,11 +23,12 @@ import {
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { itDeep } from "../../engine/testing/slow.ts";
+import type { Point } from "../../engine/types.ts";
 import { newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
+import { STATED } from "./mathrax.compiled.ts";
 import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
 import {
-  clueIsParity,
   encodeParams,
   F_IMMUTABLE,
   type MathraxMove,
@@ -440,19 +443,29 @@ describe("mathrax hint render", () => {
   });
 });
 
-// --- the clue shape helper --------------------------------------------------
+// --- the wording no walk reaches --------------------------------------------
 
-describe("clueIsParity", () => {
-  it("splits the clue kinds the two sentences need", () => {
-    // 1..4 are the arithmetic types, 5 and 6 are E and O; 0 is no clue.
-    expect([0, 1, 2, 3, 4, 5, 6].map(clueIsParity)).toEqual([
-      false,
-      false,
-      false,
-      false,
-      false,
-      true,
-      true,
-    ]);
+// The walk's boards deal no ÷ clue, so its clause is rendered directly.
+describe("the wordings no walk reaches", () => {
+  const at = (i: number): Point => ({ x: i % 4, y: (i / 4) | 0 });
+  const words = (placed: boolean): string =>
+    statedParts(STATED.clue.step[6], {
+      kind: CELL,
+      at,
+      ring: [],
+      marks: { outline: [at(5), at(10)] },
+      terms: { at: 5, quotient: 3, placed, v: 2 },
+      value: String,
+      noun: "cell",
+      struck: [1, 4],
+    }).look?.text ?? "";
+
+  it("says a ÷ clue read against a written number, and against an open one", () => {
+    expect(words(true)).toBe(
+      "The 3÷ clue means this cell and the 2 across it divide to give 3",
+    );
+    expect(words(false)).toBe(
+      "Nothing open across the 3÷ clue divides with 1 or 4 to give 3",
+    );
   });
 });

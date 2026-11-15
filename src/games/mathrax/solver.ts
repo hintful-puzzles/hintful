@@ -30,6 +30,8 @@ import {
   latinSolver,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
+import type { Clauses } from "../../engine/stated.ts";
+import type { Point } from "../../engine/types.ts";
 import * as mathrax from "./mathrax.compiled.ts";
 import { DIFF_RECURSIVE, dealtOf } from "./state.ts";
 
@@ -44,28 +46,25 @@ export const SOLVE_AMBIGUOUS = 2;
  * highlights it. Combined with {@link LatinReason} (the generic positional and
  * set steps) it covers every technique; the `kind` fields never collide.
  *
- * There is **one** clue arm, not one per clue shape, because everything else a
- * sentence needs is derivable: the packed `clue` carries its operation and
- * number, the intersection `(cx, cy)` plus the acted-on cell give the cell
- * diagonally across it, and whether that cell shows a digit is a fact about the
- * *working board* the hint re-derives at narration time
+ * There is **one** clue arm, not one per clue shape: the clause carries the
+ * clue's operation and number, and whether the cell across it shows a digit is
+ * a fact about the *working board* the hint re-derives at narration time
  * (docs/hints-candidates.md § "Re-derive a placement's why" applies the same
  * rule to a single).
  */
 export type MathraxReason =
-  /** The clue packed in `clue`, sitting at interior intersection `(cx, cy)`. */
-  | { kind: "clue"; clue: number; cx: number; cy: number }
+  /** The clue at corner `terms.k`, the cells it speaks of (the pair through
+   * it, or all four around it) and the clause the description states for it,
+   * with the terms the clause reads (`engine/stated.ts`). */
+  | { kind: "clue"; cells: Point[]; clause: Clauses; terms: StatedTerms }
   /** The singles the hint plan re-derives from the working board. */
   | SingleReason;
 
 /** A reason a Mathrax hint step gives. */
 export type HintReason = MathraxReason | LatinReason;
 
-/** Clue `k` of an order-`o` board as a {@link MathraxReason}. */
-export function clueReason(clues: Int32Array, k: number, o: number): MathraxReason {
-  const co = o - 1;
-  return { kind: "clue", clue: clues[k], cx: k % co, cy: (k / co) | 0 };
-}
+/** The terms a stated clause reads. */
+export type StatedTerms = Readonly<Record<string, unknown>>;
 
 /** The ladder `mathrax.description.yaml` states, over the dealt clues. */
 export function mathraxLadder(dl: mathrax.Dealt): Ladder<LatinSolver> {

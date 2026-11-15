@@ -36,6 +36,14 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["clueEasy","clue","clueTricky"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "clueEasy": {"step":[{"look":"{outline: The E clue} means all four numbers around it are even"},{"look":"{outline: The O clue} means all four numbers around it are odd"},{"look":"{if placed: {outline: The {sum}+ clue} means {ring at: this {noun}} and the {v} across it add to {sum} | Nothing open across {outline: the {sum}+ clue} adds with {struckOr} to make {sum}}"},{"look":"{if placed: {outline: The = clue} means {ring at: this {noun}} and the {v} across it are equal | Nothing open across {outline: the = clue} matches {struckOr}}"},{"look":"{if placed: {outline: The {difference}− clue} means {ring at: this {noun}} and the {v} across it differ by {difference} | Nothing open across {outline: the {difference}− clue} is {difference} away from {struckOr}}"},{"look":"{if placed: {outline: The {product}× clue} means {ring at: this {noun}} and the {v} across it multiply to {product} | Nothing open across {outline: the {product}× clue} multiplies with {struckOr} to make {product}}"},{"look":"{if placed: {outline: The {quotient}÷ clue} means {ring at: this {noun}} and the {v} across it divide to give {quotient} | Nothing open across {outline: the {quotient}÷ clue} divides with {struckOr} to give {quotient}}"},{}]},
+  "clue": {"step":[{"look":"{outline: The E clue} means all four numbers around it are even"},{"look":"{outline: The O clue} means all four numbers around it are odd"},{"look":"{if placed: {outline: The {sum}+ clue} means {ring at: this {noun}} and the {v} across it add to {sum} | Nothing open across {outline: the {sum}+ clue} adds with {struckOr} to make {sum}}"},{"look":"{if placed: {outline: The = clue} means {ring at: this {noun}} and the {v} across it are equal | Nothing open across {outline: the = clue} matches {struckOr}}"},{"look":"{if placed: {outline: The {difference}− clue} means {ring at: this {noun}} and the {v} across it differ by {difference} | Nothing open across {outline: the {difference}− clue} is {difference} away from {struckOr}}"},{"look":"{if placed: {outline: The {product}× clue} means {ring at: this {noun}} and the {v} across it multiply to {product} | Nothing open across {outline: the {product}× clue} multiplies with {struckOr} to make {product}}"},{"look":"{if placed: {outline: The {quotient}÷ clue} means {ring at: this {noun}} and the {v} across it divide to give {quotient} | Nothing open across {outline: the {quotient}÷ clue} divides with {struckOr} to give {quotient}}"},{}]},
+  "clueTricky": {"step":[{"look":"{outline: The E clue} means all four numbers around it are even"},{"look":"{outline: The O clue} means all four numbers around it are odd"},{"look":"{if placed: {outline: The {sum}+ clue} means {ring at: this {noun}} and the {v} across it add to {sum} | Nothing open across {outline: the {sum}+ clue} adds with {struckOr} to make {sum}}"},{"look":"{if placed: {outline: The = clue} means {ring at: this {noun}} and the {v} across it are equal | Nothing open across {outline: the = clue} matches {struckOr}}"},{"look":"{if placed: {outline: The {difference}− clue} means {ring at: this {noun}} and the {v} across it differ by {difference} | Nothing open across {outline: the {difference}− clue} is {difference} away from {struckOr}}"},{"look":"{if placed: {outline: The {product}× clue} means {ring at: this {noun}} and the {v} across it multiply to {product} | Nothing open across {outline: the {product}× clue} multiplies with {struckOr} to make {product}}"},{"look":"{if placed: {outline: The {quotient}÷ clue} means {ring at: this {noun}} and the {v} across it divide to give {quotient} | Nothing open across {outline: the {quotient}÷ clue} divides with {struckOr} to give {quotient}}"},{}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
 
@@ -191,8 +199,10 @@ export interface ClueEasyBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ClueEasySays {
-  terms: { k: number; };
-  marks: {  };
+  terms: { k: number; at: number; sum: number; difference: number; product: number; quotient: number; parity: number; placed: boolean; v: number; };
+  marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const clueEasyFacts: number[] = [];
@@ -200,6 +210,7 @@ let clueEasyCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
 export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasyBinding, ClueEasySays> | null): number {
+  const _g181: number[] = [];
   const facts = clueEasyFacts;
   let fired = 0;
   let changed = false;
@@ -210,7 +221,7 @@ export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasy
   R1:
   for (let _i37 = 0; _i37 < _a36.length; _i37++) {
     const v_c = _a36[_i37];
-    const _m181_1 = b.made[1];
+    const _m188_1 = b.made[1];
     let _g38 = 0;
     G39: {
       const _a54 = sp.cellCorners[v_c];
@@ -300,7 +311,8 @@ export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasy
         const _h174 = (_h158 === -1);
         const _h175 = (_h161 === -1);
         const _h176 = (_h164 === -1);
-        if (b.made[1] !== _m181_1) {
+        const _h187 = (_h154 !== -1);
+        if (b.made[1] !== _m188_1) {
           let _g90 = 0;
           G91: {
             const _a106 = sp.cellCorners[v_c];
@@ -439,7 +451,26 @@ export function clueEasy(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueEasy
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { k: v_k }, marks: {  } };
+            const _sw_k = v_k;
+            const _sw_at = v_c;
+            const _sw_sum = _h156;
+            const _sw_difference = _h158;
+            const _sw_product = _h161;
+            const _sw_quotient = _h164;
+            const _sw_parity = _h154;
+            const _sw_placed = false;
+            const _sw_v = 0;
+            _g181.length = 0;
+            G182: {
+              const _a185 = sp.cornerCells[v_k];
+              for (let _i186 = 0; _i186 < _a185.length; _i186++) {
+                const v_x = _a185[_i186];
+                if (!(((_h187 || (v_x === v_c)) || (v_x === _h169)))) continue;
+                _g181.push(v_x);
+              }
+            }
+            const _sw_outline = _g181.slice();
+            const _says = { terms: { k: _sw_k, at: _sw_at, sum: _sw_sum, difference: _sw_difference, product: _sw_product, quotient: _sw_quotient, parity: _sw_parity, placed: _sw_placed, v: _sw_v }, marks: { outline: _sw_outline }, wording: ((clueAt(cl.parity, _sw_k) === 0) ? 0 : (clueAt(cl.parity, _sw_k) === 1) ? 1 : (clueAt(cl.sum, _sw_k) !== -1) ? 2 : (clueAt(cl.difference, _sw_k) === 0) ? 3 : (clueAt(cl.difference, _sw_k) !== -1) ? 4 : (clueAt(cl.product, _sw_k) !== -1) ? 5 : (clueAt(cl.quotient, _sw_k) !== -1) ? 6 : 7) };
             if (!fire({ c: v_c, M: v_M, k: v_k }, facts, _says)) return 1;
           }
           cands.fill(-1);
@@ -458,8 +489,10 @@ export interface ClueBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ClueSays {
-  terms: { k: number; };
-  marks: {  };
+  terms: { k: number; at: number; sum: number; difference: number; product: number; quotient: number; parity: number; placed: boolean; v: number; };
+  marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const clueFacts: number[] = [];
@@ -467,6 +500,7 @@ let clueCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
 export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding, ClueSays> | null): number {
+  const _g143: number[] = [];
   const facts = clueFacts;
   let fired = 0;
   let changed = false;
@@ -477,7 +511,7 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding,
   R1:
   for (let _i27 = 0; _i27 < _a26.length; _i27++) {
     const v_c = _a26[_i27];
-    const _m143_1 = b.made[1];
+    const _m150_1 = b.made[1];
     let _g28 = 0;
     G29: {
       const _a39 = sp.cellCorners[v_c];
@@ -558,7 +592,8 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding,
         const _h136 = (_h120 === -1);
         const _h137 = (_h123 === -1);
         const _h138 = (_h126 === -1);
-        if (b.made[1] !== _m143_1) {
+        const _h149 = (_h116 !== -1);
+        if (b.made[1] !== _m150_1) {
           let _g72 = 0;
           G73: {
             const _a83 = sp.cellCorners[v_c];
@@ -669,7 +704,26 @@ export function clue(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueBinding,
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { k: v_k }, marks: {  } };
+            const _sw_k = v_k;
+            const _sw_at = v_c;
+            const _sw_sum = _h118;
+            const _sw_difference = _h120;
+            const _sw_product = _h123;
+            const _sw_quotient = _h126;
+            const _sw_parity = _h116;
+            const _sw_placed = false;
+            const _sw_v = 0;
+            _g143.length = 0;
+            G144: {
+              const _a147 = sp.cornerCells[v_k];
+              for (let _i148 = 0; _i148 < _a147.length; _i148++) {
+                const v_x = _a147[_i148];
+                if (!(((_h149 || (v_x === v_c)) || (v_x === _h133)))) continue;
+                _g143.push(v_x);
+              }
+            }
+            const _sw_outline = _g143.slice();
+            const _says = { terms: { k: _sw_k, at: _sw_at, sum: _sw_sum, difference: _sw_difference, product: _sw_product, quotient: _sw_quotient, parity: _sw_parity, placed: _sw_placed, v: _sw_v }, marks: { outline: _sw_outline }, wording: ((clueAt(cl.parity, _sw_k) === 0) ? 0 : (clueAt(cl.parity, _sw_k) === 1) ? 1 : (clueAt(cl.sum, _sw_k) !== -1) ? 2 : (clueAt(cl.difference, _sw_k) === 0) ? 3 : (clueAt(cl.difference, _sw_k) !== -1) ? 4 : (clueAt(cl.product, _sw_k) !== -1) ? 5 : (clueAt(cl.quotient, _sw_k) !== -1) ? 6 : 7) };
             if (!fire({ c: v_c, M: v_M, k: v_k }, facts, _says)) return 1;
           }
           cands.fill(-1);
@@ -688,8 +742,10 @@ export interface ClueTrickyBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ClueTrickySays {
-  terms: { k: number; };
-  marks: {  };
+  terms: { k: number; at: number; sum: number; difference: number; product: number; quotient: number; parity: number; placed: boolean; v: number; };
+  marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const clueTrickyFacts: number[] = [];
@@ -697,6 +753,7 @@ let clueTrickyCands = new Int32Array(0);
 
 /** Its dearest read grows with the board as n. */
 export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTrickyBinding, ClueTrickySays> | null): number {
+  const _g141: number[] = [];
   const facts = clueTrickyFacts;
   let fired = 0;
   let changed = false;
@@ -707,7 +764,7 @@ export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTr
   R1:
   for (let _i26 = 0; _i26 < _a25.length; _i26++) {
     const v_c = _a25[_i26];
-    const _m141_1 = b.made[1];
+    const _m148_1 = b.made[1];
     let _g27 = 0;
     G28: {
       const _a38 = sp.cellCorners[v_c];
@@ -786,7 +843,8 @@ export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTr
       const _h134 = (_h118 === -1);
       const _h135 = (_h121 === -1);
       const _h136 = (_h124 === -1);
-      if (b.made[1] !== _m141_1) {
+      const _h147 = (_h114 !== -1);
+      if (b.made[1] !== _m148_1) {
         let _g69 = 0;
         G70: {
           const _a80 = sp.cellCorners[v_c];
@@ -897,7 +955,26 @@ export function clueTricky(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueTr
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { k: v_k }, marks: {  } };
+          const _sw_k = v_k;
+          const _sw_at = v_c;
+          const _sw_sum = _h116;
+          const _sw_difference = _h118;
+          const _sw_product = _h121;
+          const _sw_quotient = _h124;
+          const _sw_parity = _h114;
+          const _sw_placed = false;
+          const _sw_v = 0;
+          _g141.length = 0;
+          G142: {
+            const _a145 = sp.cornerCells[v_k];
+            for (let _i146 = 0; _i146 < _a145.length; _i146++) {
+              const v_x = _a145[_i146];
+              if (!(((_h147 || (v_x === v_c)) || (v_x === _h131)))) continue;
+              _g141.push(v_x);
+            }
+          }
+          const _sw_outline = _g141.slice();
+          const _says = { terms: { k: _sw_k, at: _sw_at, sum: _sw_sum, difference: _sw_difference, product: _sw_product, quotient: _sw_quotient, parity: _sw_parity, placed: _sw_placed, v: _sw_v }, marks: { outline: _sw_outline }, wording: ((clueAt(cl.parity, _sw_k) === 0) ? 0 : (clueAt(cl.parity, _sw_k) === 1) ? 1 : (clueAt(cl.sum, _sw_k) !== -1) ? 2 : (clueAt(cl.difference, _sw_k) === 0) ? 3 : (clueAt(cl.difference, _sw_k) !== -1) ? 4 : (clueAt(cl.product, _sw_k) !== -1) ? 5 : (clueAt(cl.quotient, _sw_k) !== -1) ? 6 : 7) };
           if (!fire({ c: v_c, M: v_M, k: v_k }, facts, _says)) return 1;
         }
         cands.fill(-1);
