@@ -15,7 +15,7 @@
 
 import { describe, expect, it } from "vitest";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { CELL } from "../../engine/hint-words.ts";
+import { CELL, NARRATION_LIMIT } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Clauses, statedSentence } from "../../engine/stated.ts";
 import {
@@ -822,6 +822,80 @@ describe("boats hint — the wordings no walk reaches", () => {
     );
     expect(words(tooLong[1], { joined: 3, largest: 0 }, [], [5])).toBe(
       "Every boat in the fleet has been found, so this square must be water.",
+    );
+  });
+});
+
+// The trials' reasons come from the validator, and a walk's boards rarely meet
+// a long one with both lines filled, a middle segment's trial, or a rule that
+// flags no square.
+describe("boats hint — the trials' wordings no walk reaches", () => {
+  const at = (c: number): Point => ({ x: c % 4, y: (c / 4) | 0 });
+  const none = {
+    collision: false,
+    count: false,
+    fleet: false,
+    many: false,
+    few: false,
+    segment: false,
+    reach: 0,
+  };
+  const trial = (
+    id: "lastWater" | "lastShip" | "centerTrial",
+    terms: Record<string, number | boolean>,
+    ring: number[],
+  ): string =>
+    statedSentence(STATED[id].step[0], {
+      kind: CELL,
+      at,
+      ring: ring.map(at),
+      placing: () => ring.map(at),
+      consequences: [],
+      marks: { outline: [at(1), at(2)], stripes: [at(4), at(5), at(6), at(7)] },
+      terms: { ...none, ...terms },
+      value: String,
+      unit: () => "row",
+    }).text;
+  const line = { horizontal: true, crossing: true };
+
+  // Both lines' words ("its row's and column's last") are the longest wording:
+  // a boat's short move leaves room for them with a count, a water's does not,
+  // and a sentence takes the line's, or neither, as its length allows.
+  it("names the line's last water or boat where the sentence stays short", () => {
+    const count = { count: true, reach: 3 };
+    expect(trial("lastWater", { ...line, ship: false, ...count }, [5])).toBe(
+      "If this square were its row's last water, the striped row couldn't reach its 3, so it must hold a boat segment.",
+    );
+    expect(
+      trial("lastWater", { ...line, horizontal: false, ship: false, ...count }, [5]),
+    ).toContain("its column's last water");
+    expect(trial("lastShip", { ...line, ship: true, ...count }, [5])).toBe(
+      "If this square held its row's and column's last boat segment, the striped row couldn't reach its 3, so it must be water.",
+    );
+  });
+
+  it("says the last wording, whatever its length, when none fits", () => {
+    const said = trial("lastWater", { ...line, ship: false, few: true }, [5]);
+    expect(said).toBe(
+      "If this square were water, the rest of the fleet would no longer fit beside these boats (outlined), so it must hold a boat segment.",
+    );
+    expect(said.length).toBeGreaterThan(NARRATION_LIMIT);
+  });
+
+  it("says a rule that flagged no square in the catch-all's words", () => {
+    expect(trial("lastShip", { ...line, ship: true }, [5])).toBe(
+      "If this square held a boat segment, the rest of the fleet could no longer be placed legally, so it must be water.",
+    );
+  });
+
+  it("says a middle segment's trial, up and down or across", () => {
+    expect(
+      trial("centerTrial", { center: 1, vertical: true, count: true, reach: 3 }, [5]),
+    ).toBe(
+      "If the boat through this middle segment ran up and down, the striped row couldn't reach its 3, so the square below it must be water.",
+    );
+    expect(trial("centerTrial", { center: 1, vertical: false, many: true }, [5])).toBe(
+      "If the boat through this middle segment ran across, there would be more boat squares (outlined) than the whole fleet has, so the square to its right must be water.",
     );
   });
 });

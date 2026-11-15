@@ -44,6 +44,41 @@ describe("a stated clause", () => {
     );
   });
 
+  it("says a reference where a flag chooses it, and not the one it does not", () => {
+    const say = (yes: boolean): string =>
+      statedSentence(
+        { look: "{if flag: {outline} sits | {ring} stand}", move: "go" },
+        cx({ terms: { flag: yes } }),
+      ).text;
+    expect(say(true)).toBe("The outlined square sits, so go.");
+    expect(say(false)).toBe("These squares stand, so go.");
+  });
+
+  it("takes the longest form of a fit that keeps the sentence in its limit", () => {
+    // The sentence is the padding, a space, the form and ", so go." (120 at most).
+    const said = (padding: number): string =>
+      statedSentence(
+        { look: `${"x".repeat(padding)} {fit: aaaa | bb | c}`, move: "go" },
+        cx(),
+      ).text;
+    expect(said(5)).toContain(" aaaa,");
+    expect(said(107)).toContain(" aaaa,");
+    expect(said(108)).toContain(" bb,");
+    expect(said(110)).toContain(" c,");
+    // None fits: the last form is said whatever its length.
+    expect(said(119)).toContain(" c,");
+    // Every fit of a sentence takes the same turn.
+    expect(
+      statedSentence(
+        {
+          look: `${"x".repeat(104)} {fit: aaaa | bb | c} {fit: dddd | ee | f}`,
+          move: "go",
+        },
+        cx(),
+      ).text,
+    ).toContain(" bb ee,");
+  });
+
   it("names the struck values each once, as all of them or as alternatives", () => {
     const say = (clause: string): string =>
       statedSentence({ look: clause, move: "go" }, cx({ struck: [3, 1, 3, 2] })).text;

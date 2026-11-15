@@ -200,7 +200,7 @@ export interface BoatsSquare {
 
 /** A row or column, named the way the player reads it: 1-based, counting from
  * the top / the left, alongside the occupancy number drawn beside it. */
-export interface BoatsLine {
+interface BoatsLine {
   horizontal: boolean;
   /** 0-based row (`horizontal`) or column index. */
   index: number;
@@ -215,7 +215,7 @@ export interface BoatsLine {
 
 /** Why the board rejects a Hard tier's trial — read off the validators' own
  * error arrays (docs/hints-marks.md § "Read the reason off the validator"). */
-export type BoatsBreach =
+type BoatsBreach =
   /** Two boats would touch, if only at a corner. */
   | { kind: "collision" }
   /** A row or column's occupancy number could no longer be met. */
@@ -233,10 +233,19 @@ export type BoatsBreach =
    */
   | { kind: "unfinishable" };
 
-/** What a trial says beside what its description says of it: the rule its
- * supposition breaks, and the squares that rule flags. */
-interface TrialSays<T> {
-  terms: T & { breach: BoatsBreach };
+/** What a trial's description leaves for its reason to supply (the terms and
+ * marks it marks "supplied"): the rule its supposition breaks as flags, and
+ * the squares that rule flags. */
+interface TrialSupplied {
+  terms: {
+    collision: boolean;
+    count: boolean;
+    fleet: boolean;
+    many: boolean;
+    few: boolean;
+    segment: boolean;
+    reach: number;
+  };
   marks: {
     outline: readonly number[];
     stripes: readonly number[];
@@ -244,16 +253,36 @@ interface TrialSays<T> {
   };
 }
 
-/** What each technique says, as the hint's sentences read it: the compiled
- * module's, with the three trials' completed by their reason callbacks. */
-export type BoatsSays = Omit<
-  boats.SaysById,
-  "lastWater" | "lastShip" | "centerTrial"
-> & {
-  lastWater: TrialSays<boats.SaysById["lastWater"]["terms"]>;
-  lastShip: TrialSays<boats.SaysById["lastShip"]["terms"]>;
-  centerTrial: TrialSays<boats.SaysById["centerTrial"]["terms"]>;
-};
+/** A breach as the description's flags read it. A rule that flagged nothing
+ * has no square for its words to point at, so it reads as the catch-all. */
+function breachTerms(breach: BoatsBreach, flagged: boolean): TrialSupplied["terms"] {
+  const none = {
+    collision: false,
+    count: false,
+    fleet: false,
+    many: false,
+    few: false,
+    segment: false,
+    reach: 0,
+  };
+  switch (breach.kind) {
+    case "count":
+      return { ...none, count: true, reach: breach.line.clue };
+    case "unfinishable":
+      return none;
+  }
+  if (!flagged) return none;
+  switch (breach.kind) {
+    case "collision":
+      return { ...none, collision: true };
+    case "fleet":
+      return { ...none, fleet: true };
+    case "fleetTotal":
+      return breach.tooMany ? { ...none, many: true } : { ...none, few: true };
+    case "clue":
+      return { ...none, segment: true };
+  }
+}
 
 // --- the reasons, read off each firing's binding -----------------------------
 
@@ -388,14 +417,14 @@ function classifyBreach(
  * A line that could no longer reach its number is the one line the sentence
  * names, so it is hatched and not outlined.
  */
-function trialReason<Binding, T extends object>(
+function trialReason<Binding, Y extends TrialSupplied>(
   B: Board,
   m: CellMarks,
   binding: Binding,
-  says: { terms: T; marks: { outline?: readonly number[] } },
+  says: Y,
   ships: readonly number[],
   waters: readonly number[],
-): Said<Binding, TrialSays<T>> {
+): Said<Binding, Y> {
   const trial = cloneBoard(B.b);
   trial.grid.set(gameGrid(m));
   const { w } = B.sp;
@@ -403,7 +432,7 @@ function trialReason<Binding, T extends object>(
   for (const c of waters) placeWater(trial, c % w, (c / w) | 0);
   validateFullState(trial);
   const found = classifyBreach(B, m, trial);
-  const outline = says.marks.outline ?? [];
+  const { outline } = says.marks;
   const { breach } = found;
   const counted = breach.kind === "count";
   const stripes = counted
@@ -414,7 +443,8 @@ function trialReason<Binding, T extends object>(
   return {
     binding,
     says: {
-      terms: { ...says.terms, breach: found.breach },
+      ...says,
+      terms: { ...says.terms, ...breachTerms(breach, found.cells.length > 0) },
       marks: {
         outline: counted ? outline : [...outline, ...found.cells],
         stripes: [...stripes],

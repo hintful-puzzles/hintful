@@ -22,7 +22,12 @@
  * - `{count: one | several}`: the first form where the number term `count` is 1,
  *   the second otherwise; its forms hold what an `if`'s do.
  * - `{if flag: yes | no}`: the form the step's flag term holds, whole; its forms
- *   hold literal words, number terms and further `if`s, and no reference.
+ *   hold what a clause does, references included, except inside a reference's
+ *   words, where they hold literal words, number terms and further `if`s.
+ * - `{fit: longest | shorter | shortest}`: the first form with which the whole
+ *   sentence fits `NARRATION_LIMIT`, else the last; its forms hold literal words,
+ *   number terms and `if`s, and every `fit` of a sentence takes the same turn
+ *   (a slot with fewer forms takes its last).
  * - A reference's words are one form, or `one | several`; a slot inside them is
  *   a word, a number term, an `if`, or one of {@link STATED_INNER_WORDS}.
  */
@@ -69,6 +74,7 @@ const SLOT_ROLES: ReadonlySet<string> = new Set([
   "color",
   "spelled",
   "has",
+  "fit",
 ]);
 
 /** The squares a `ring` reference or a `has` slot is over, by name: `1`, `2`
@@ -127,12 +133,19 @@ function slot(body: string, src: string): Piece {
   const words =
     colon < 0
       ? null
-      : splitForms(body.slice(colon + 1).trim()).map((f) => parseClause(f.trim()));
+      : splitForms(body.slice(colon + 1).trim(), head[0] === "fit" ? Infinity : 2).map(
+          (f) => parseClause(f.trim()),
+        );
   if (
     (head[0] === "color" || head[0] === "spelled") &&
     (head.length !== 2 || words !== null)
   )
     throw new Error(`"{${body}}" is no color of a term, in "${src}"`);
+  if (head[0] === "fit") {
+    if (head.length !== 1 || words === null || words.length < 2)
+      throw new Error(`"{${body}}" is no fit of two forms or more, in "${src}"`);
+    return { name: "", role: "fit", words };
+  }
   if (head.length === 1 && SLOT_ROLES.has(head[0]))
     return { name: "", role: head[0], words };
   if (head[0] === "has") {
@@ -160,7 +173,7 @@ function slot(body: string, src: string): Piece {
 }
 
 /** `a | b` split at the top level, never inside a nested slot. */
-function splitForms(words: string): string[] {
+function splitForms(words: string, most = 2): string[] {
   const forms: string[] = [];
   let depth = 0;
   let from = 0;
@@ -173,7 +186,7 @@ function splitForms(words: string): string[] {
     }
   }
   forms.push(words.slice(from));
-  if (forms.length > 2) throw new Error(`more than two forms in "${words}"`);
+  if (forms.length > most) throw new Error(`more than two forms in "${words}"`);
   return forms;
 }
 
@@ -219,12 +232,18 @@ export function slotsOf(src: string): Slot[] {
           { name: p.name, role: "has", inner: [], flags: [] },
           ...walk((p.words as readonly (readonly Piece[])[])[0]),
         ];
-      if (p.role === "if") {
-        // Its forms' words are said plainly, wherever the `if` is.
+      // What an `if` holds is the clause's own, references and all.
+      if (p.role === "if")
+        return [
+          { name: p.name, role: "if", inner: [], flags: [p.name] },
+          ...(p.words as readonly (readonly Piece[])[]).flatMap(walk),
+        ];
+      // A `fit`'s forms are said plainly.
+      if (p.role === "fit") {
         const into = { inner: [] as string[], flags: [] as string[] };
         within(p.words, into);
         return [
-          { name: p.name, role: "if", inner: [], flags: [p.name, ...into.flags] },
+          { name: "", role: "fit", inner: [], flags: into.flags },
           ...into.inner.map(
             (n): Slot => ({ name: n, role: null, inner: [], flags: [] }),
           ),

@@ -18,6 +18,7 @@ import {
   type MarkKind,
   type MarkRole,
   mark,
+  NARRATION_LIMIT,
   type Narration,
   type Noun,
   phrase,
@@ -108,6 +109,9 @@ export interface StatedContext<E> {
   readonly tally?: number;
   /** The noun a set of elements in stripes is, taken whole ("row"). */
   unit?(els: readonly E[]): string;
+  /** Which form every `{fit: …}` of the sentence takes (`statedSentence`
+   * tries them in turn); the first where unset. */
+  readonly fit?: number;
 }
 
 const nounOf = (noun: Noun, many: boolean): string =>
@@ -136,6 +140,10 @@ function expand<E>(pieces: readonly Piece[], cx: StatedContext<E>): Piece[] {
       return squaresNamed(p.name, cx).length === 0
         ? []
         : expand((p.words as readonly (readonly Piece[])[])[0], cx);
+    if (p.role === "fit") {
+      const forms = p.words as readonly (readonly Piece[])[];
+      return expand(forms[Math.min(cx.fit ?? 0, forms.length - 1)], cx);
+    }
     if (p.role === "if") {
       const flag = cx.terms[p.name];
       if (typeof flag !== "boolean")
@@ -328,6 +336,37 @@ export function statedSentence<E>(
   cx: StatedContext<E>,
   closing: Narration | null = null,
   relation: Relation = { kind: "forced" },
+): Sentence {
+  const turns = Math.max(
+    1,
+    ...Object.values(c).map((src) =>
+      src === undefined ? 0 : fitForms(parseClause(src)),
+    ),
+  );
+  for (let fit = 0; fit < turns - 1; fit++) {
+    const said = statedOnce(c, { ...cx, fit }, closing, relation);
+    if (said.text.length <= NARRATION_LIMIT) return said;
+  }
+  return statedOnce(c, { ...cx, fit: turns - 1 }, closing, relation);
+}
+
+/** The most forms of any `fit` in `pieces`, those inside an `if` included. */
+function fitForms(pieces: readonly Piece[]): number {
+  return Math.max(
+    0,
+    ...pieces.map((p) => {
+      if (!("name" in p) || p.words === null) return 0;
+      const inner = Math.max(0, ...p.words.map(fitForms));
+      return p.role === "fit" ? Math.max(p.words.length, inner) : inner;
+    }),
+  );
+}
+
+function statedOnce<E>(
+  c: Clauses,
+  cx: StatedContext<E>,
+  closing: Narration | null,
+  relation: Relation,
 ): Sentence {
   const { effect, again, ...parts } = statedParts(c, cx);
   const move = parts.move ?? closing;

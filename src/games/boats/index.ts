@@ -24,7 +24,7 @@
  * four tiers' techniques), [`solver.ts`](./solver.ts) (the ladder's solve,
  * `findMistakes` and the hint's walk),
  * [`generator.ts`](./generator.ts) (solver-gated generation + `validateParams`),
- * [`hint-text.ts`](./hint-text.ts) (the hint's words), [`render.ts`](./render.ts).
+ * [`render.ts`](./render.ts).
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
@@ -71,9 +71,8 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
-import { SAYS_KINDS, STATED } from "./boats.compiled.ts";
+import { SAYS_KINDS, type SaysById, STATED } from "./boats.compiled.ts";
 import { newBoatsDesc, validateParams } from "./generator.ts";
-import { sentences } from "./hint-text.ts";
 import {
   BORDER,
   type BoatsDrawState,
@@ -87,7 +86,6 @@ import {
 } from "./render.ts";
 import {
   type BoatsMistake,
-  type BoatsSays,
   type BoatsSquare,
   findMistakes,
   hintWalk,
@@ -443,7 +441,7 @@ const described = describedFiringHint<
   BoatsState,
   BoatsMove,
   BoatsSquare,
-  BoatsSays,
+  SaysById,
   BoatsRung,
   BoatsHint
 >({
@@ -482,9 +480,7 @@ const described = describedFiringHint<
     h: state.params.h,
   }),
   stated: STATED,
-  // The refuting techniques name the rule a trial broke, which only the
-  // validator says (`hint-text.ts`).
-  say: sentences,
+  say: {},
 });
 const { hint, hintKeepTrack } = described;
 

@@ -67,6 +67,9 @@ export const STATED = {
   "hidden.forced": {"step":[{"look":"{stripes}'s hidden number can only be {number}","follows":"it needs one more","move":"{ring: its one free square} must hold a boat segment{has then: , with {ring then: its water}}"},{"look":"{stripes}'s hidden number can only be {number}","follows":"it needs {left} more","move":"{ring: all {left} of its free squares} must hold boat segments{has then: , with {ring then: its water}}"}]},
   "onlyRuns": {"step":[{"look":"only {outline: the outlined run} can hold the {size}-boat","move":"{ring 1: the ringed square | every ringed square} is covered wherever it sits{has 2+then: , with {ring 2+then: its water}}"},{"look":"only {outline: {runs} runs} can hold the {runs} remaining {size}-boats","follows":"every one is used","move":"{ring 1: the ringed square | every ringed square} is covered either way{has 2+then: , with {ring 2+then: its water}}"}]},
   "shared": {"step":[{"look":"{stripes}'s hidden number can only be {number}. {stripes: This {unit}} has {room} water left","follows":"{outline: an outlined square} must be a boat, which fills its {if horizontal: column | row} if central","move":"{ring: the ringed sides} are water"},{"look":"{stripes}'s hidden number can only be {number}. {stripes: This {unit}} has {room} water left","follows":"{outline: an outlined square} must be a boat","move":"{ring: the ringed squares between them} must be water"},{"look":"{stripes} has {room} water left","follows":"{outline: an outlined square} must be a boat, which fills its {if horizontal: column | row} if central","move":"{ring: the ringed sides} are water"},{"look":"{stripes} has {room} water left","follows":"{outline: an outlined square} must be a boat","move":"{ring: the ringed squares between them} must be water"}]},
+  "lastWater": {"step":[{"look":"if {ring} {if ship: held {fit: {if crossing: its {if horizontal: row's and column's | column's and row's} last | its {if horizontal: row's | column's} last} boat segment | its {if horizontal: row's | column's} last boat segment | a boat segment} | were {fit: {if crossing: its {if horizontal: row's and column's | column's and row's} last | its {if horizontal: row's | column's} last} water | its {if horizontal: row's | column's} last water | water}}, {if collision: two boats would end up touching {outline: corner to corner (outlined)} | {if count: {stripes: the striped {unit}} couldn't reach its {reach} | {if fleet: it would make {outline: one boat (outlined)} too many | {if many: there would be more {outline: boat squares (outlined)} than the whole fleet has | {if few: the rest of the fleet would no longer fit beside {outline: these boats (outlined)} | {if segment: {outline: a given segment's own shape (outlined)} would be contradicted | the rest of the fleet could no longer be placed legally}}}}}}","move":"it must hold a boat segment{has then: , with {ring then: its water}}"}]},
+  "lastShip": {"step":[{"look":"if {ring} {if ship: held {fit: {if crossing: its {if horizontal: row's and column's | column's and row's} last | its {if horizontal: row's | column's} last} boat segment | its {if horizontal: row's | column's} last boat segment | a boat segment} | were {fit: {if crossing: its {if horizontal: row's and column's | column's and row's} last | its {if horizontal: row's | column's} last} water | its {if horizontal: row's | column's} last water | water}}, {if collision: two boats would end up touching {outline: corner to corner (outlined)} | {if count: {stripes: the striped {unit}} couldn't reach its {reach} | {if fleet: it would make {outline: one boat (outlined)} too many | {if many: there would be more {outline: boat squares (outlined)} than the whole fleet has | {if few: the rest of the fleet would no longer fit beside {outline: these boats (outlined)} | {if segment: {outline: a given segment's own shape (outlined)} would be contradicted | the rest of the fleet could no longer be placed legally}}}}}}","move":"it must be water"}]},
+  "centerTrial": {"step":[{"look":"if the boat through {outline center: this middle segment} ran {if vertical: up and down | across}, {if collision: two boats would end up touching {outline: corner to corner (outlined)} | {if count: {stripes: the striped {unit}} couldn't reach its {reach} | {if fleet: it would make {outline: one boat (outlined)} too many | {if many: there would be more {outline: boat squares (outlined)} than the whole fleet has | {if few: the rest of the fleet would no longer fit beside {outline: these boats (outlined)} | {if segment: {outline: a given segment's own shape (outlined)} would be contradicted | the rest of the fleet could no longer be placed legally}}}}}}","move":"{ring: {if vertical: the square below it | the square to its right}} must be water"}]},
 } as const;
 
 /** Every technique run as each value is placed, by id. */
@@ -3206,8 +3209,8 @@ export interface LastWaterBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LastWaterSays {
-  terms: { horizontal: boolean; crossing: boolean; };
-  marks: {  };
+  terms: { horizontal: boolean; crossing: boolean; ship: boolean; collision: boolean; count: boolean; fleet: boolean; many: boolean; few: boolean; segment: boolean; reach: number; };
+  marks: { outline: readonly number[]; stripes: readonly number[]; reads: readonly number[]; };
 }
 
 const lastWaterFacts: number[] = [];
@@ -3234,6 +3237,9 @@ export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWat
   const _g552: number[] = [];
   const _g572: number[] = [];
   const _g586: number[] = [];
+  const _g902: number[] = [];
+  const _g906: number[] = [];
+  const _g910: number[] = [];
   const facts = lastWaterFacts;
   let fired = 0;
   let changed = false;
@@ -3255,8 +3261,8 @@ export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWat
   R1:
   for (let _i299 = 0; _i299 < _a298.length; _i299++) {
     const v_L = _a298[_i299];
-    const _m902_0 = b.made[0];
-    const _m903_1 = b.made[1];
+    const _m914_0 = b.made[0];
+    const _m915_1 = b.made[1];
     let _q300 = false;
     Q301: {
       const _a302 = sp.lineCells[v_L];
@@ -3635,7 +3641,7 @@ export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWat
             _c608 = _q421;
           }
           if (!(_c608)) break L343;
-          if (b.made[0] !== _m902_0 || b.made[1] !== _m903_1) {
+          if (b.made[0] !== _m914_0 || b.made[1] !== _m915_1) {
             if (!((v_v === numMarked(b, sp, cl, cands, v_L)))) { continue R1; }
             let _c613: boolean = (v_v >= 0);
             if (_c613) {
@@ -4012,7 +4018,31 @@ export function lastWater(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastWat
                   _g898++;
                 }
               }
-              const _says = { terms: { horizontal: !((((sp.lineCells[v_L][0] ?? -1) % sp.w) === ((sp.lineCells[v_L][1] ?? -1) % sp.w))), crossing: (_g898 > 0) }, marks: {  } };
+              _g902.length = 0;
+              G903: {
+                for (let _i905 = 0; _i905 < 1; _i905++) {
+                  const v_x = v_c;
+                  if (!(false)) continue;
+                  _g902.push(v_x);
+                }
+              }
+              _g906.length = 0;
+              G907: {
+                for (let _i909 = 0; _i909 < 1; _i909++) {
+                  const v_x = v_c;
+                  if (!(false)) continue;
+                  _g906.push(v_x);
+                }
+              }
+              _g910.length = 0;
+              G911: {
+                for (let _i913 = 0; _i913 < 1; _i913++) {
+                  const v_x = v_c;
+                  if (!(false)) continue;
+                  _g910.push(v_x);
+                }
+              }
+              const _says = { terms: { horizontal: !((((sp.lineCells[v_L][0] ?? -1) % sp.w) === ((sp.lineCells[v_L][1] ?? -1) % sp.w))), crossing: (_g898 > 0), ship: false, collision: false, count: false, fleet: false, many: false, few: false, segment: false, reach: 0 }, marks: { outline: _g902.slice(), stripes: _g906.slice(), reads: _g910.slice() } };
               if (!fire({ T: v_T, L: v_L, v: v_v, c: v_c, K: v_K, j: v_j, t: v_t, H: v_H.slice() }, facts, _says)) return 1;
             }
             cands.fill(-1);
@@ -4038,8 +4068,8 @@ export interface LastShipBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LastShipSays {
-  terms: { horizontal: boolean; crossing: boolean; };
-  marks: {  };
+  terms: { horizontal: boolean; crossing: boolean; ship: boolean; collision: boolean; count: boolean; fleet: boolean; many: boolean; few: boolean; segment: boolean; reach: number; };
+  marks: { outline: readonly number[]; stripes: readonly number[]; reads: readonly number[]; };
 }
 
 const lastShipFacts: number[] = [];
@@ -4066,6 +4096,9 @@ export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShip
   const _g556: number[] = [];
   const _g576: number[] = [];
   const _g590: number[] = [];
+  const _g909: number[] = [];
+  const _g913: number[] = [];
+  const _g917: number[] = [];
   const facts = lastShipFacts;
   let fired = 0;
   let changed = false;
@@ -4087,8 +4120,8 @@ export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShip
   R1:
   for (let _i301 = 0; _i301 < _a300.length; _i301++) {
     const v_L = _a300[_i301];
-    const _m909_0 = b.made[0];
-    const _m910_1 = b.made[1];
+    const _m921_0 = b.made[0];
+    const _m922_1 = b.made[1];
     let _q302 = false;
     Q303: {
       const _a304 = sp.lineCells[v_L];
@@ -4469,7 +4502,7 @@ export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShip
             _c612 = _q425;
           }
           if (!(_c612)) break L347;
-          if (b.made[0] !== _m909_0 || b.made[1] !== _m910_1) {
+          if (b.made[0] !== _m921_0 || b.made[1] !== _m922_1) {
             if (!((v_v === numMarked(b, sp, cl, cands, v_L)))) { continue R1; }
             let _c618: boolean = (v_v >= 0);
             if (_c618) {
@@ -4849,7 +4882,31 @@ export function lastShip(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LastShip
                   _g905++;
                 }
               }
-              const _says = { terms: { horizontal: !((((sp.lineCells[v_L][0] ?? -1) % sp.w) === ((sp.lineCells[v_L][1] ?? -1) % sp.w))), crossing: (_g905 > 0) }, marks: {  } };
+              _g909.length = 0;
+              G910: {
+                for (let _i912 = 0; _i912 < 1; _i912++) {
+                  const v_x = v_c;
+                  if (!(false)) continue;
+                  _g909.push(v_x);
+                }
+              }
+              _g913.length = 0;
+              G914: {
+                for (let _i916 = 0; _i916 < 1; _i916++) {
+                  const v_x = v_c;
+                  if (!(false)) continue;
+                  _g913.push(v_x);
+                }
+              }
+              _g917.length = 0;
+              G918: {
+                for (let _i920 = 0; _i920 < 1; _i920++) {
+                  const v_x = v_c;
+                  if (!(false)) continue;
+                  _g917.push(v_x);
+                }
+              }
+              const _says = { terms: { horizontal: !((((sp.lineCells[v_L][0] ?? -1) % sp.w) === ((sp.lineCells[v_L][1] ?? -1) % sp.w))), crossing: (_g905 > 0), ship: true, collision: false, count: false, fleet: false, many: false, few: false, segment: false, reach: 0 }, marks: { outline: _g909.slice(), stripes: _g913.slice(), reads: _g917.slice() } };
               if (!fire({ T: v_T, L: v_L, v: v_v, c: v_c, K: v_K, j: v_j, u: v_u, W: v_W.slice() }, facts, _says)) return 1;
             }
             cands.fill(-1);
@@ -4871,8 +4928,8 @@ export interface CenterTrialBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface CenterTrialSays {
-  terms: { center: number; vertical: boolean; };
-  marks: { outline: readonly number[]; };
+  terms: { center: number; vertical: boolean; collision: boolean; count: boolean; fleet: boolean; many: boolean; few: boolean; segment: boolean; reach: number; };
+  marks: { outline: readonly number[]; stripes: readonly number[]; reads: readonly number[]; };
 }
 
 const centerTrialFacts: number[] = [];
@@ -4898,6 +4955,8 @@ export function centerTrial(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cente
   const _g510: number[] = [];
   const _g530: number[] = [];
   const _g544: number[] = [];
+  const _g840: number[] = [];
+  const _g844: number[] = [];
   const facts = centerTrialFacts;
   let fired = 0;
   let changed = false;
@@ -5614,7 +5673,23 @@ export function centerTrial(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Cente
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _says = { terms: { center: v_c, vertical: (((sp.lineCells[v_L][0] ?? -1) % sp.w) === ((sp.lineCells[v_L][1] ?? -1) % sp.w)) }, marks: { outline: setOf(v_c).slice() } };
+            _g840.length = 0;
+            G841: {
+              for (let _i843 = 0; _i843 < 1; _i843++) {
+                const v_x = v_c;
+                if (!(false)) continue;
+                _g840.push(v_x);
+              }
+            }
+            _g844.length = 0;
+            G845: {
+              for (let _i847 = 0; _i847 < 1; _i847++) {
+                const v_x = v_c;
+                if (!(false)) continue;
+                _g844.push(v_x);
+              }
+            }
+            const _says = { terms: { center: v_c, vertical: (((sp.lineCells[v_L][0] ?? -1) % sp.w) === ((sp.lineCells[v_L][1] ?? -1) % sp.w)), collision: false, count: false, fleet: false, many: false, few: false, segment: false, reach: 0 }, marks: { outline: setOf(v_c).slice(), stripes: _g840.slice(), reads: _g844.slice() } };
             if (!fire({ T: v_T, c: v_c, L: v_L, S: v_S.slice() }, facts, _says)) return 1;
           }
           cands.fill(-1);

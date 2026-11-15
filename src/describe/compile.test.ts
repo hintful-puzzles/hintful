@@ -330,6 +330,17 @@ describe("a stated clause names only what its technique states", () => {
     ],
     ["a color with no term", { look: "{color} is it" }, /no color of a term/],
     [
+      "a flag chosen inside a fit that is no flag term",
+      { look: "{fit: {if n: a | b} | c} is it" },
+      /chooses by \{if n\}, which is no flag term/,
+    ],
+    [
+      "a word inside an if's reference that it does not state",
+      { look: "{if n: {outline: {m}} | c} is it" },
+      /chooses by \{if n\}/,
+    ],
+    ["a fit of one form", { look: "{fit: a} is it" }, /no fit of two forms/],
+    [
       "a malformed slot",
       { look: "{outline n: a | b | c} is it" },
       /more than two forms/,

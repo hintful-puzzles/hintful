@@ -1101,9 +1101,18 @@ terms and `|outlineAngle|`-style sizes) and `StepsById<E>` (what the planner
 supplies). The game's `speak` hands them to `engine/stated.ts`'s
 `plannedSentence`. A kind may share a technique's name where the technique
 states no words. **`{if flag: yes | no}`** says the form a flag term holds, in a
-clause or inside a reference's words; it holds words and number terms only. Use
+clause or inside a reference's words; in a clause its forms hold whatever a
+clause does, references included, and inside a reference's words words and
+number terms only. Use
 it for a choice inside one deduction's sentence (a verdict's "must be a line" or
 "can't be a line"), and a `wording` where the whole sentence differs.
+**`{fit: longest | shorter | shortest}`** says the first form with which the whole
+sentence stays within `NARRATION_LIMIT`, else the last (Boats names the line's last
+water where there is room); a `wording` cannot do that, for its `when` reads terms
+and no length. **A term or mark only the game's own code can supply** (Boats'
+trials name the rule the validator says they break) is declared in the technique's
+`says` with a placeholder formula and a `# supplied` comment, and the game's reason
+callback replaces it, so a clause can read it as any term.
 **`{n: one | several}`** takes the first form where the number term `n` is 1
 ("1 move" | "{n} moves"). **A move no rule forces** (a search game's slide)
 states its `move` and an `effect`, said after it ("that makes room for the

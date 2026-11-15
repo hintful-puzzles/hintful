@@ -569,11 +569,32 @@ techniques:
   # boat segments; where that breaks a rule, the square is one.
   # The three trials say the rule the supposition breaks, which only the
   # validator names (`classifyBreach`), so each keeps a reason callback in
-  # `solver.ts` that adds it to what is said here.
+  # `solver.ts` that supplies the terms and marks marked "supplied" below: the
+  # formula given there is the placeholder it replaces. The reason is flags, one
+  # a rule (the `if` chain in each look), `reach` the number a line could not
+  # meet, `outline` the squares the rule flags and `stripes` the line a count
+  # breaks. A trial that names its line's last water or boat says it where the
+  # sentence stays short (`fit`, the longest first).
   - id: lastWater
     tier: Hard
     says:
-      terms: { horizontal: "not vert(L)", crossing: "count(x in H where x not in cells(L)) > 0" }
+      terms:
+        horizontal: "not vert(L)"
+        crossing: "count(x in H where x not in cells(L)) > 0"
+        ship: "false"
+        collision: "false" # supplied
+        count: "false" # supplied
+        fleet: "false" # supplied
+        many: "false" # supplied
+        few: "false" # supplied
+        segment: "false" # supplied
+        reach: "0" # supplied
+      marks:
+        outline: "{x in {c} where false}" # supplied
+        stripes: "{x in {c} where false}" # supplied
+        reads: "{x in {c} where false}" # supplied
+      look: &trial "if {ring} {if ship: held {fit: {if crossing: its {if horizontal: row's and column's | column's and row's} last | its {if horizontal: row's | column's} last} boat segment | its {if horizontal: row's | column's} last boat segment | a boat segment} | were {fit: {if crossing: its {if horizontal: row's and column's | column's and row's} last | its {if horizontal: row's | column's} last} water | its {if horizontal: row's | column's} last water | water}}, {if collision: two boats would end up touching {outline: corner to corner (outlined)} | {if count: {stripes: the striped {unit}} couldn't reach its {reach} | {if fleet: it would make {outline: one boat (outlined)} too many | {if many: there would be more {outline: boat squares (outlined)} than the whole fleet has | {if few: the rest of the fleet would no longer fit beside {outline: these boats (outlined)} | {if segment: {outline: a given segment's own shape (outlined)} would be contradicted | the rest of the fleet could no longer be placed legally}}}}}}"
+      move: "it must hold a boat segment{has then: , with {ring then: its water}}"
     for: >-
       T = longest, L in lines, v = num(L) where v >= 0 and room(L, v) = 1,
       c in cells(L) where not known(c), K = crossing(L, c), j = num(K),
@@ -584,7 +605,23 @@ techniques:
   - id: lastShip
     tier: Hard
     says:
-      terms: { horizontal: "not vert(L)", crossing: "count(x in W where x not in cells(L)) > 0" }
+      terms:
+        horizontal: "not vert(L)"
+        crossing: "count(x in W where x not in cells(L)) > 0"
+        ship: "true"
+        collision: "false" # supplied
+        count: "false" # supplied
+        fleet: "false" # supplied
+        many: "false" # supplied
+        few: "false" # supplied
+        segment: "false" # supplied
+        reach: "0" # supplied
+      marks:
+        outline: "{x in {c} where false}" # supplied
+        stripes: "{x in {c} where false}" # supplied
+        reads: "{x in {c} where false}" # supplied
+      look: *trial
+      move: "it must be water"
     for: >-
       T = longest, L in lines, v = num(L) where v >= 0
       and v - ships(cells(L)) = 1, c in cells(L) where not known(c),
@@ -597,8 +634,22 @@ techniques:
   - id: centerTrial
     tier: Hard
     says:
-      terms: { center: c, vertical: "vert(L)" }
-      marks: { outline: "{c}" }
+      terms:
+        center: c
+        vertical: "vert(L)"
+        collision: "false" # supplied
+        count: "false" # supplied
+        fleet: "false" # supplied
+        many: "false" # supplied
+        few: "false" # supplied
+        segment: "false" # supplied
+        reach: "0" # supplied
+      marks:
+        outline: "{c}"
+        stripes: "{x in {c} where false}" # supplied
+        reads: "{x in {c} where false}" # supplied
+      look: "if the boat through {outline center: this middle segment} ran {if vertical: up and down | across}, {if collision: two boats would end up touching {outline: corner to corner (outlined)} | {if count: {stripes: the striped {unit}} couldn't reach its {reach} | {if fleet: it would make {outline: one boat (outlined)} too many | {if many: there would be more {outline: boat squares (outlined)} than the whole fleet has | {if few: the rest of the fleet would no longer fit beside {outline: these boats (outlined)} | {if segment: {outline: a given segment's own shape (outlined)} would be contradicted | the rest of the fleet could no longer be placed legally}}}}}}"
+      move: "{ring: {if vertical: the square below it | the square to its right}} must be water"
     for: >-
       T = longest, c in cells where clue(seg, c) = 6,
       L in {row(c), col(c)}, S = {x in adj4(c) where x in cells(L)}
