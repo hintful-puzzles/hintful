@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -19,8 +20,8 @@ import {
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
+import { STATED } from "./bricks.compiled.ts";
 import { type BricksHint, bricksSteps } from "./hint.ts";
-import { say } from "./hint-text.ts";
 import { bricksGame } from "./index.ts";
 import { COL_HINT_CELL, tileOrigin } from "./render.ts";
 import {
@@ -193,6 +194,25 @@ describe("bricks hint — each technique's step", () => {
       { index: 4, to: "unshade" },
       { index: 0, to: "unshade" },
     ]);
+  });
+});
+
+describe("bricks hint — the wording no walk reaches", () => {
+  // At a padded triangle a cell has no support to outline; the walk's boards
+  // never leave one there, so the clause is rendered directly.
+  it("says a cell with nothing beneath it to rest on", () => {
+    const at = (i: number) => ({ x: i, y: 0 });
+    const { text } = statedSentence(STATED.unsupported.step[0], {
+      kind: CELL,
+      at,
+      ring: [at(0)],
+      marks: {},
+      terms: {},
+      value: String,
+    });
+    expect(text).toBe(
+      "Shading this cell would leave it with no shaded brick beneath it to rest on, so it must stay clear.",
+    );
   });
 });
 
@@ -446,7 +466,14 @@ describe("bricks hint — rendering (tier 2.5)", () => {
     if (!planned?.ok) throw new Error("the fixture has no hint");
     const step = {
       ...planned.steps[0],
-      words: say.unsupported({ x: target % w, y: Math.floor(target / w) }, []),
+      words: statedSentence(STATED.unsupported.step[0], {
+        kind: CELL,
+        at: (i) => ({ x: i % w, y: Math.floor(i / w) }),
+        ring: [{ x: target % w, y: Math.floor(target / w) }],
+        marks: {},
+        terms: {},
+        value: String,
+      }),
     };
     const ts = bricksGame.preferredTileSize ?? 32;
     const size = bricksGame.computeSize(FIX_PARAMS, ts);

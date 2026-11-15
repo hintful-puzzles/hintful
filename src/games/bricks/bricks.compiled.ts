@@ -32,6 +32,16 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["strandSupport","undercount","three","unsupported","overcount"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "strandSupport": {"step":[{"look":"{outline: the outlined shaded brick above} rests only on {ring: this cell}; clearing it would strand that brick","move":"it must be shaded"}]},
+  "undercount": {"step":[{"look":"{outline clue: the outlined {value}} beside {ring: this cell} can't reach {value} shaded {value: neighbor | neighbors} without it","move":"it must be shaded"}]},
+  "three": {"fact":[{"look":"Shading {ring: this cell}, next to {outline: the outlined shaded brick | the outlined shaded bricks}, would make three in a row","move":"it must stay clear"}]},
+  "unsupported": {"step":[{"look":"Shading {ring: this cell} would leave it with no shaded brick beneath it to rest on","move":"it must stay clear"},{"look":"{outline: the outlined cell} below {ring: this cell} is all it could rest on, and it isn't a shaded brick","move":"it must stay clear"},{"look":"{outline: the outlined cells} below {ring: this cell} are all it could rest on, and neither is a shaded brick","move":"it must stay clear"}]},
+  "overcount": {"step":[{"look":"{outline clue: the outlined 0} beside {ring: this cell} allows no shaded neighbors at all","move":"it must stay clear"},{"look":"Shading {ring: this cell} would give {outline clue: the outlined {value}} beside it more than its {value} shaded {value: neighbor | neighbors}","move":"it must stay clear"}]},
+} as const;
+
 /** The techniques whose step is made for each square the firing decides. */
 export const SAYS_EACH: readonly (keyof SaysById)[] = ["strandSupport","undercount","three","unsupported","overcount"];
 
@@ -436,6 +446,8 @@ export interface UnsupportedBinding {
 export interface UnsupportedSays {
   terms: {  };
   marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const unsupportedFacts: number[] = [];
@@ -472,7 +484,8 @@ export function unsupported(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Unsup
             _g6.push(v_p);
           }
         }
-        const _says = { terms: {  }, marks: { outline: _g6.slice() } };
+        const _sw_outline = _g6.slice();
+        const _says = { terms: {  }, marks: { outline: _sw_outline }, wording: ((_sw_outline.length === 0) ? 0 : (_sw_outline.length === 1) ? 1 : 2) };
         if (!fire({ c: v_c }, facts, _says)) return 1;
       }
     }
@@ -489,6 +502,8 @@ export interface OvercountBinding {
 export interface OvercountSays {
   terms: { clue: number; value: number; };
   marks: { outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const overcountFacts: number[] = [];
@@ -536,7 +551,10 @@ export function overcount(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Overcou
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { clue: v_k, value: v_n }, marks: { outline: setOf(v_k).slice() } };
+          const _sw_clue = v_k;
+          const _sw_value = v_n;
+          const _sw_outline = setOf(v_k).slice();
+          const _says = { terms: { clue: _sw_clue, value: _sw_value }, marks: { outline: _sw_outline }, wording: ((_sw_value === 0) ? 0 : 1) };
           if (!fire({ k: v_k, n: v_n }, facts, _says)) return 1;
         }
       }

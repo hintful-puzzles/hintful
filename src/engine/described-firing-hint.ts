@@ -76,7 +76,7 @@ interface SaysOf {
   marks: SaidMarks;
   /** What each square the firing decides has of its own (`says.fact`), by
    * fact, in the order of the firing's facts. */
-  facts?: readonly { terms: object; marks: SaidMarks }[];
+  facts?: readonly { terms: object; marks: SaidMarks; wording?: number }[];
 }
 
 interface SaidMarks {
@@ -176,7 +176,12 @@ interface FiringShape<
   /** Each kind of step's words as the description states them: the compiled
    * module's `STATED`. A technique none of whose kinds it states is said by
    * `say`. */
-  stated?: Readonly<Record<string, { readonly step?: readonly Clauses[] }>>;
+  stated?: Readonly<
+    Record<
+      string,
+      { readonly step?: readonly Clauses[]; readonly fact?: readonly Clauses[] }
+    >
+  >;
   /** The number a square shows, for a stated clause's `{each}`. */
   shows?(state: State, at: Point): number;
   /** A number term as the board draws it; its numeral where absent. */
@@ -292,7 +297,10 @@ export function describedFiringHint<
       // The squares the firing decides, still open as it found them.
       const decided: Target[] = [];
       const seen = new Set<number>();
-      const own = new Map<number, { terms: object; marks: SaidMarks }>();
+      const own = new Map<
+        number,
+        { terms: object; marks: SaidMarks; wording?: number }
+      >();
       for (let i = 0; i < f.facts.length; i += 3) {
         const c = f.facts[i + 1];
         if (f.facts[i] !== PLACE || before[c] !== 0 || seen.has(c)) continue;
@@ -331,7 +339,17 @@ export function describedFiringHint<
           (c) => !fills.has(c) && !strand.includes(c),
         );
         const bare = (t: Point): Point => ({ x: t.x, y: t.y });
-        const clauses = stated[kind]?.step?.[says.wording ?? 0];
+        // A kind states its step, or what each square it decides has of its
+        // own (a fact), which only a step for one square can speak.
+        const factClauses = stated[kind]?.fact;
+        if (factClauses !== undefined && group.length !== 1)
+          throw new Error(
+            `${spec.name}: ${kind} states its facts, so its step is for one square (each)`,
+          );
+        const ownFact = factClauses === undefined ? undefined : own.get(squares[0]);
+        const clauses =
+          stated[kind]?.step?.[says.wording ?? 0] ??
+          (factClauses === undefined ? undefined : factClauses[ownFact?.wording ?? 0]);
         const override = say[f.entry.id];
         if (clauses === undefined && override === undefined)
           throw new Error(`${spec.name}: ${kind} is neither stated nor overridden`);
@@ -346,7 +364,10 @@ export function describedFiringHint<
                   stripes: stripes.map(pointOf),
                   strand: strand.map(pointOf),
                 },
-                terms: says.terms as Record<string, unknown>,
+                terms: {
+                  ...(says.terms as Record<string, unknown>),
+                  ...(ownFact?.terms as Record<string, unknown> | undefined),
+                },
                 value: (n) => spec.value?.(n, state) ?? String(n),
                 ...(shows === undefined
                   ? {}

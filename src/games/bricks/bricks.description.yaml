@@ -103,6 +103,8 @@ techniques:
     says:
       shown: each
       marks: { outline: "{a}" }
+      look: "{outline: the outlined shaded brick above} rests only on {ring: this cell}; clearing it would strand that brick"
+      move: "it must be shaded"
   # Clearing a square would leave a number too few squares to reach it.
   - id: undercount
     tier: Easy
@@ -115,6 +117,8 @@ techniques:
       shown: each
       terms: { clue: k, value: n }
       marks: { outline: "{k}" }
+      look: "{outline clue: the outlined {value}} beside {ring: this cell} can't reach {value} shaded {value: neighbor | neighbors} without it"
+      move: "it must be shaded"
   # Shading a square would make three in a row.
   - id: three
     tier: Easy
@@ -129,6 +133,8 @@ techniques:
       shown: each
       fact:
         marks: { outline: "with place(c, 1): run(c)" }
+        look: "Shading {ring: this cell}, next to {outline: the outlined shaded brick | the outlined shaded bricks}, would make three in a row"
+        move: "it must stay clear"
   # Shading a square would leave it nothing beneath it to rest on.
   - id: unsupported
     tier: Easy
@@ -139,6 +145,20 @@ techniques:
     says:
       shown: each
       marks: { outline: "{p in below(c) where clue(hole, p) < 0}" }
+      # An outlined cell below is an unshaded brick or a clue (a clue
+      # supports nothing), so "isn't a shaded brick" says it, not "is not
+      # shaded", which reads as a mark the player could place. The brick-wall
+      # corners leave a cell with one support, or, at the padded triangles,
+      # none to outline.
+      wordings:
+        - when: "|outline| = 0"
+          look: "Shading {ring: this cell} would leave it with no shaded brick beneath it to rest on"
+          move: "it must stay clear"
+        - when: "|outline| = 1"
+          look: "{outline: the outlined cell} below {ring: this cell} is all it could rest on, and it isn't a shaded brick"
+          move: "it must stay clear"
+        - look: "{outline: the outlined cells} below {ring: this cell} are all it could rest on, and neither is a shaded brick"
+          move: "it must stay clear"
   # Shading a square would give a number too many shaded around it.
   - id: overcount
     tier: Easy
@@ -151,3 +171,10 @@ techniques:
       shown: each
       terms: { clue: k, value: n }
       marks: { outline: "{k}" }
+      # A 0 allows none at all: "more than its 0 shaded neighbors" is nonsense.
+      wordings:
+        - when: "value = 0"
+          look: "{outline clue: the outlined 0} beside {ring: this cell} allows no shaded neighbors at all"
+          move: "it must stay clear"
+        - look: "Shading {ring: this cell} would give {outline clue: the outlined {value}} beside it more than its {value} shaded {value: neighbor | neighbors}"
+          move: "it must stay clear"
