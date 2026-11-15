@@ -20,6 +20,9 @@ export const units: readonly string[] = ["rows","cols"];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "border" | "latin.hiddenSingle" | "latin.single" | "latin.set" | "latin.fish" | "latin.wing";
 
+/** The game's nouns, which the engine's hint words read. */
+export const WORDS = {"cell":"square"} as const;
+
 /** What a firing of each technique that says anything says, by id. */
 export interface SaysById {
   border: BorderSays;

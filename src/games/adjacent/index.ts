@@ -121,7 +121,7 @@ function premise(reason: HintReason, marks: readonly Mark[], o: number): Premise
     // The generic Latin arms (dup / set) read identically to Keen's
     // — narrated once, shared.
     default:
-      return latinPremise(reason, marks, edgeClueVocab(o));
+      return latinPremise(reason, marks, edgeClueVocab(o, adjacent.WORDS.cell));
   }
 }
 
@@ -132,7 +132,7 @@ function narrate(reason: HintReason, m: Mark, o: number): Sentence {
     case "adjacentSet":
       throw new Error(`a ${reason.kind} deduction strikes`);
     default:
-      return narrateLatinReason(reason, m, o, edgeClueVocab(o));
+      return narrateLatinReason(reason, m, o, edgeClueVocab(o, adjacent.WORDS.cell));
   }
 }
 
@@ -202,8 +202,8 @@ function buildSteps(
     notes: {
       noun: "number",
       placedVerb: "standing",
-      cell: "cell",
-      value: edgeClueVocab(o).value,
+      cell: adjacent.WORDS.cell,
+      value: edgeClueVocab(o, adjacent.WORDS.cell).value,
     },
   });
   return steps;

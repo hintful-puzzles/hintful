@@ -34,11 +34,12 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+import { WORDS } from "./abcd.compiled.ts";
 
 /** The letters as a hint prints them: candidate `n` is the `n`th letter. */
 export const LETTERS: LatinVocab = {
   noun: "letter",
-  cell: "cell",
+  cell: WORDS.cell,
   value: (n) => String.fromCharCode(64 + n),
 };
 const L = LETTERS.value;
@@ -76,10 +77,10 @@ const count = (line: LineMarks, words: string): Narration =>
 
 /** Abcd's help calls a board position a cell, as the genre of a letters-in-a-grid
  * puzzle does. */
-const thisCell = thisCellNamed("cell");
+const thisCell = thisCellNamed(WORDS.cell);
 
 export const say = {
-  populate: populateText("letter", "cell"),
+  populate: populateText("letter", WORDS.cell),
 
   clean:
     (diag: boolean) =>
@@ -175,7 +176,7 @@ export const say = {
       look:
         need === 1
           ? phrase`${thisLine(line)} needs ${count(line, needs(1, at.n, more))} and no other cell in it can take one`
-          : phrase`${thisLine(line)} needs ${count(line, needs(need, at.n, more))} and only ${mark.the("outline", CELL, open, "cell")} can take one`,
+          : phrase`${thisLine(line)} needs ${count(line, needs(need, at.n, more))} and only ${mark.the("outline", CELL, open, WORDS.cell)} can take one`,
       move: phrase`${thisCell(at)} must be ${L(at.n)}`,
     }),
 
@@ -193,7 +194,7 @@ export const say = {
     open: readonly Point[],
   ): Sentence =>
     so({
-      look: phrase`${thisLine(line)} needs ${count(line, needs(need, at.n, more))}, and ${mark.the("outline", CELL, open, "cell")} fit only ${need} apart`,
+      look: phrase`${thisLine(line)} needs ${count(line, needs(need, at.n, more))}, and ${mark.the("outline", CELL, open, WORDS.cell)} fit only ${need} apart`,
       follows: phrase`each stretch is full`,
       move: phrase`${thisCell(at)} must be ${L(at.n)}`,
     }),

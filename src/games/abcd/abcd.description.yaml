@@ -36,6 +36,8 @@ help:
     Save your position, try a letter, and it carries on from whatever you enter.
 name: ABCD
 family: numbers
+words:
+  cell: cell
 sizes:
   # Unbounded but by the time a board takes to deal.
   w: { min: 2, max: 99999 }

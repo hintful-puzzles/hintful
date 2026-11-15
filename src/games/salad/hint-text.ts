@@ -32,6 +32,7 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+import { WORDS } from "./salad.compiled.ts";
 import { GAMEMODE_LETTERS, symbolChar } from "./state.ts";
 
 /** A border clue, by its index round the board (`clueSide`): marked by drawing
@@ -50,7 +51,7 @@ export function saladVocab(mode: number, nums: number): LatinVocab {
   return {
     noun: nounOf(mode),
     value: (n) => (n > nums ? "X" : symbolChar(mode, n)),
-    cell: "square",
+    cell: WORDS.cell,
   };
 }
 
@@ -72,7 +73,7 @@ const thisLine = (line: Line, cells: Squares): Narration =>
  * it, which the words name but the leg does not ring: each leg of the journey
  * rings its own. */
 const thisSquareAndTheRest = (at: Point): Narration =>
-  phrase`${mark.this("ring", CELL, [at], "square")} and the rest of it`;
+  phrase`${mark.this("ring", CELL, [at], WORDS.cell)} and the rest of it`;
 
 /** A border clue as a sentence opener, outlined: the outline says which, and
  * the squares the sentence counts are outlined along its line. */
@@ -100,12 +101,12 @@ interface ClueAt {
 export function say(mode: number) {
   const noun = nounOf(mode);
   const sym = (n: number): string => symbolChar(mode, n);
-  const square = (at: Point): Narration => thisCell(at, "square");
+  const square = (at: Point): Narration => thisCell(at, WORDS.cell);
 
   return {
     populate: `Start by penciling every candidate ${noun} into each empty square that has none yet.`,
 
-    cleanObvious: cleanObviousText(noun, "placed", "row or column", "square"),
+    cleanObvious: cleanObviousText(noun, "placed", "row or column", WORDS.cell),
 
     // The strike arms below are premises, which the walk concludes with the
     // move it makes (`engine/hint-text.ts`'s `Premise`).
@@ -125,7 +126,7 @@ export function say(mode: number) {
       // sees across, so it is outlined as the premise as well as ringed, and
       // named once, by its outline: the ring is its conclusion's.
       if (k === 0)
-        return phrase`${lead}, and ${mark.the("outline", CELL, [at], "square")} nearest it can hold only ${clue}`;
+        return phrase`${lead}, and ${mark.the("outline", CELL, [at], WORDS.cell)} nearest it can hold only ${clue}`;
       return phrase`${lead} past ${mark.as("outline", CELL, between, count(k, "empty square"))}, which leaves only ${clue} for ${square(at)}`;
     },
 
@@ -148,7 +149,7 @@ export function say(mode: number) {
       const clue = sym(p.clueVal);
       const named = thisClue(c.clue);
       if (p.blockedAt) {
-        return phrase`${named} sees ${clue} first, and ${mark.the("outline", CELL, [p.blockedAt], "square")} furthest from it holds a ${noun}`;
+        return phrase`${named} sees ${clue} first, and ${mark.the("outline", CELL, [p.blockedAt], WORDS.cell)} furthest from it holds a ${noun}`;
       }
       const bound =
         p.reach === 0
@@ -193,7 +194,7 @@ export function say(mode: number) {
       return so({
         look: allPlaced
           ? phrase`${nums === 1 ? `The one ${noun}` : nums === 2 ? `Both ${noun}s` : `All ${count(nums, noun)}`} of ${theLine} ${nums === 1 ? "is" : "are"} already placed`
-          : phrase`We already know which ${nums === 1 ? "square" : count(nums, "square")} of ${theLine} ${nums === 1 ? `holds its ${noun}` : `hold its ${noun}s`}`,
+          : phrase`We already know which ${nums === 1 ? WORDS.cell : count(nums, WORDS.cell)} of ${theLine} ${nums === 1 ? `holds its ${noun}` : `hold its ${noun}s`}`,
         move: phrase`${thisSquareAndTheRest(at)} must be empty`,
       });
     },
@@ -202,7 +203,7 @@ export function say(mode: number) {
      * `cells` its first leg named, as `empty` or as holding a symbol. */
     countAgain: (line: Line, cells: Squares, at: Point, empty: boolean): Sentence =>
       sentence({
-        move: phrase`${mark.this("ring", CELL, [at], "square")} must ${empty ? "be empty" : `hold a ${noun}`} too`,
+        move: phrase`${mark.this("ring", CELL, [at], WORDS.cell)} must ${empty ? "be empty" : `hold a ${noun}`} too`,
         relation: {
           kind: "again",
           basis: mark.as("stripes", whole(CELL), cells, `the same ${axisName(line)}`),
@@ -242,7 +243,7 @@ export function say(mode: number) {
           : k === 2
             ? "both empty squares"
             : `all ${k} empty squares`;
-      return phrase`${mark.the("outline", CELL, cells, "square").capitalized()} account for ${symbols}${holes} of their ${axisName(line)}`;
+      return phrase`${mark.the("outline", CELL, cells, WORDS.cell).capitalized()} account for ${symbols}${holes} of their ${axisName(line)}`;
     },
 
     /** What a set's strike calls the notes it crosses out of one square when
@@ -254,7 +255,7 @@ export function say(mode: number) {
     /** The squares `cells`, just settled as holding a symbol, keep no
      * empty-square mark. */
     circleXNote: (cells: Squares): Narration =>
-      phrase`${mark.this("ring", CELL, cells, "square").capitalized()} ${cells.length === 1 ? "is" : "are"} now known to hold a ${noun}`,
+      phrase`${mark.this("ring", CELL, cells, WORDS.cell).capitalized()} ${cells.length === 1 ? "is" : "are"} now known to hold a ${noun}`,
 
     /** What a strike of the "might be empty" note calls it, on `count` squares. */
     emptyMarks: (count: number): string =>

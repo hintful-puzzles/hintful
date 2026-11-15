@@ -35,6 +35,8 @@ help:
 
 name: Salad
 family: latin
+words:
+  cell: square
 sizes:
   order: { min: 3, max: 10 }
   nums: { min: 2, max: 9 }

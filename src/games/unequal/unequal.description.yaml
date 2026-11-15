@@ -59,6 +59,8 @@ help:
 
 name: Unequal
 family: latin
+words:
+  cell: cell
 sizes:
   order: { min: 3, max: 16 }
 space:

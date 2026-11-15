@@ -13,8 +13,8 @@ import type { Point } from "../types.ts";
 import { displayChar } from "./state.ts";
 
 /** The value vocabulary for the shared generic-Latin arms. */
-export function edgeClueVocab(order: number): LatinVocab {
-  return { noun: "number", cell: "cell", value: (n) => displayChar(n, order) };
+export function edgeClueVocab(order: number, cell: string): LatinVocab {
+  return { noun: "number", cell, value: (n) => displayChar(n, order) };
 }
 
 /** Values that all go ("clashes with 1 and 2"), as the board prints them. */

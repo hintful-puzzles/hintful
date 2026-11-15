@@ -20,10 +20,11 @@ import {
 import { displayChar } from "../../engine/edge-clue-latin/state.ts";
 import { joinOr, thisCellNamed } from "../../engine/hint-text.ts";
 import { type Narration, phrase } from "../../engine/hint-words.ts";
+import { WORDS } from "./adjacent.compiled.ts";
 
 /** A Latin square's board position is a cell, since a square is also the whole
  * grid; Adjacent's help says so too. */
-const thisCell = thisCellNamed("cell");
+const thisCell = thisCellNamed(WORDS.cell);
 
 /** A bar deduction's premise; the walk concludes it with the move it makes
  * (`engine/hint-text.ts`'s `Premise`). */
