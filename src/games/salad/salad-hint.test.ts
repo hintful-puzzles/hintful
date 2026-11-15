@@ -22,6 +22,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { narrate, premise, type SaladHint } from "./hint.ts";
 import { saladGame } from "./index.ts";
 import { saladSolution } from "./solver.ts";
+import { say } from "./speak.ts";
 import {
   CIRCLE,
   CROSS,
@@ -664,6 +665,71 @@ describe("salad hint — the strike move", () => {
     expect(saladGame.refreshHintStep?.(step as never, done)).toBeNull();
     expect(done.holes[move.y * state.order + move.x]).toBe(
       move.value === "cross" ? CROSS : CIRCLE,
+    );
+  });
+});
+
+describe("salad hint: the wordings no walk of the word dump reaches", () => {
+  // The dump's boards never leave a line with one empty square or all of a
+  // larger count, a clue whose empties are all spoken for, or a line of one
+  // symbol, so the description's words for them are rendered directly.
+  const row = [0, 1, 2, 3].map((x) => ({ x, y: 0 }));
+  const at = { x: 3, y: 0 };
+  const letters = say(GAMEMODE_LETTERS);
+  const numbers = say(GAMEMODE_NUMBERS);
+  const far = (reach: number, holes: number, tightenedBy: number) =>
+    letters.borderFar(4, {
+      axis: "row",
+      clueVal: 1,
+      blockedAt: null,
+      reach,
+      holes,
+      tightenedBy,
+      run: row.slice(0, reach + 1),
+    }).text;
+
+  it("says a clue whose line's empties are all marked later", () => {
+    expect(far(2, 2, 2)).toBe(
+      "This clue sees A first, and the row's empty squares are marked later, keeping it in the first 3",
+    );
+    expect(far(0, 1, 1)).toBe(
+      "This clue sees A first, and the row's empty square is marked later, keeping it in the square nearest it",
+    );
+  });
+
+  it("says a clue kept to the square nearest it", () => {
+    expect(far(0, 1, 0)).toBe(
+      "This clue sees A first, after at most 1 empty square, keeping it in the square nearest it",
+    );
+  });
+
+  it("says a line's count of empty squares in words", () => {
+    const look = (k: number): string =>
+      numbers.countHolesDone("row", row, k, at).text.split(",")[0];
+    expect(look(1)).toContain("already has its one empty square");
+    expect(look(2)).toContain("already has both of its empty squares");
+    expect(look(3)).toContain("already has all 3 of its empty squares");
+  });
+
+  it("says a line of one or two symbols, placed or known by their squares", () => {
+    const said = (placed: boolean, nums: number): string =>
+      letters.countLettersDone("col", row, placed, nums, at).text;
+    expect(said(true, 1)).toContain("The one letter of this column is already placed");
+    expect(said(true, 2)).toContain("Both letters of this column are already placed");
+    expect(said(false, 1)).toContain(
+      "We already know which square of this column holds its letter",
+    );
+    expect(said(false, 3)).toContain(
+      "We already know which 3 squares of this column hold its letters",
+    );
+  });
+
+  it("says a set that holds the one empty square or all of them", () => {
+    expect(letters.setHoles(row.slice(0, 2), [], "col", 1).text).toBe(
+      "The outlined squares account for the one empty square of their column",
+    );
+    expect(letters.setHoles(row.slice(0, 2), [1], "row", 3).text).toBe(
+      "The outlined squares account for A and all 3 empty squares of their row",
     );
   });
 });

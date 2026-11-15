@@ -23,6 +23,100 @@ export type LadderId = "border" | "latin.hiddenSingle" | "latin.single" | "latin
 /** The game's nouns, which the engine's hint words read. */
 export const WORDS = {"cell":"square"} as const;
 
+/** What the planner supplies for each kind of step it emits, over the
+ * elements `E` it marks: its terms, and the elements marked by role and sort. */
+export interface StepsById<E> {
+  populate: { ring: "cell"; terms: Record<string, never>; marks: {  } };
+  countHolesDone: { ring: "cell"; terms: { col: boolean; one: boolean; two: boolean; k: number }; marks: { stripes: { line: readonly E[] } } };
+  countLettersDone: { ring: "cell"; terms: { col: boolean; allPlaced: boolean; one: boolean; two: boolean; nums: number }; marks: { stripes: { line: readonly E[] } } };
+  crossNaked: { ring: "cell"; terms: Record<string, never>; marks: {  } };
+  xNoteGone: { ring: "cell"; terms: Record<string, never>; marks: {  } };
+  borderNear: { ring: "cell"; terms: { clueV: number; skipped: boolean; k: number; one: boolean }; marks: { outline: { clue: readonly E[]; between: readonly E[]; at: readonly E[] } } };
+  borderFar: { ring: "cell"; terms: { clueV: number; blocked: boolean; col: boolean; near: boolean; n: number; roomNone: boolean; holesOne: boolean; room: number; roomOne: boolean }; marks: { outline: { clue: readonly E[]; blockedAt: readonly E[]; run: readonly E[] } } };
+  borderFarWhere: { ring: "cell"; terms: { blocked: boolean }; marks: {  } };
+  setHoles: { ring: "cell"; terms: { any: boolean; one: boolean; two: boolean; k: number; col: boolean }; marks: { outline: { set: readonly E[] } } };
+  setHolesStruck: { ring: "cell"; terms: { any: boolean }; marks: {  } };
+  circleXNote: { ring: "cell"; terms: { one: boolean }; marks: {  } };
+  emptyMarks: { ring: "cell"; terms: { one: boolean }; marks: {  } };
+}
+
+/** Each kind of step the planner emits: its clauses by wording, and the
+ * condition under which each wording is the one said (`null`: always). */
+export const STEPS: {
+  readonly [K in keyof StepsById<unknown>]: {
+    readonly ring: StepsById<unknown>[K]["ring"];
+    readonly clauses: readonly { look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string }[];
+    readonly when: readonly (
+      | null
+      | ((
+          t: StepsById<unknown>[K]["terms"],
+          m: StepsById<unknown>[K]["marks"],
+        ) => boolean)
+    )[];
+  };
+} = {
+  populate: {
+    ring: "cell",
+    clauses: [{"look":"Start by penciling every candidate {valueNoun} into each empty {noun} that has none yet."}],
+    when: [null],
+  },
+  countHolesDone: {
+    ring: "cell",
+    clauses: [{"move":"{ring} and the rest of it must hold a {valueNoun}","look":"{stripes line: this {if col: column | row}} already has {if one: its one empty {noun} | {if two: both of its empty {nouns} | all {numeral k} of its empty {nouns}}}","again":"{stripes line: the same {if col: column | row}}","later":"{ring} must hold a {valueNoun} too"}],
+    when: [null],
+  },
+  countLettersDone: {
+    ring: "cell",
+    clauses: [{"move":"{ring} and the rest of it must be empty","look":"{if one: The one {valueNoun} | {if two: Both {valueNoun}s | All {numeral nums} {valueNoun}s}} of {stripes line: this {if col: column | row}} {if one: is | are} already placed","again":"{stripes line: the same {if col: column | row}}","later":"{ring} must be empty too"},{"move":"{ring} and the rest of it must be empty","look":"We already know which {if one: {noun} | {numeral nums} {nouns}} of {stripes line: this {if col: column | row}} {if one: holds its {valueNoun} | hold its {valueNoun}s}","again":"{stripes line: the same {if col: column | row}}","later":"{ring} must be empty too"}],
+    when: [(t, _m) => t.allPlaced, null],
+  },
+  crossNaked: {
+    ring: "cell",
+    clauses: [{"look":"Every {valueNoun} is ruled out in {ring}","follows":"the empty-square mark is the only one left","move":"the square must be empty"}],
+    when: [null],
+  },
+  xNoteGone: {
+    ring: "cell",
+    clauses: [{"look":"{ring}'s pencil marks have no empty-square mark among them","move":"it must hold a {valueNoun}"}],
+    when: [null],
+  },
+  borderNear: {
+    ring: "cell",
+    clauses: [{"look":"{outline clue: This clue} sees {clueV} first, and {outline at} nearest it can hold only {clueV}"},{"look":"{outline clue: This clue} sees {clueV} first past {outline between: {numeral k} empty {if one: {noun} | {nouns}}}, which leaves only {clueV} for {ring}"}],
+    when: [(t, _m) => !t.skipped, null],
+  },
+  borderFar: {
+    ring: "cell",
+    clauses: [{"look":"{outline clue: This clue} sees {clueV} first, and {outline blockedAt} furthest from it holds a {valueNoun}"},{"look":"{outline clue: This clue} sees {clueV} first, and the {if col: column | row}'s {if holesOne: empty {noun} is | empty {nouns} are} marked later, keeping it {outline run: {if near: in the {noun} nearest it | in the first {numeral n}}}"},{"look":"{outline clue: This clue} sees {clueV} first, after at most {numeral room} empty {if roomOne: {noun} | {nouns}}, keeping it {outline run: {if near: in the {noun} nearest it | in the first {numeral n}}}"}],
+    when: [(t, _m) => t.blocked, (t, _m) => t.roomNone, null],
+  },
+  borderFarWhere: {
+    ring: "cell",
+    clauses: [{"move":"{if blocked: past it | beyond that}"}],
+    when: [null],
+  },
+  setHoles: {
+    ring: "cell",
+    clauses: [{"look":"{outline set} account for {if any: {struck} and {if one: the one empty {noun} | {if two: both empty {nouns} | all {numeral k} empty {nouns}}} | {if one: the one empty {noun} | {if two: both empty {nouns} | all {numeral k} empty {nouns}}}} of their {if col: column | row}"}],
+    when: [null],
+  },
+  setHolesStruck: {
+    ring: "cell",
+    clauses: [{"move":"{if any: {struck} and the X | the X}"}],
+    when: [null],
+  },
+  circleXNote: {
+    ring: "cell",
+    clauses: [{"look":"{ring} {if one: is | are} now known to hold a {valueNoun}"}],
+    when: [null],
+  },
+  emptyMarks: {
+    ring: "cell",
+    clauses: [{"move":"{if one: its empty-square mark | their empty-square marks}"}],
+    when: [null],
+  },
+};
+
 /** What a firing of each technique that says anything says, by id. */
 export interface SaysById {
   border: BorderSays;

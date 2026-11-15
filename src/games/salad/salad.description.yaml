@@ -105,3 +105,138 @@ techniques:
   - { use: latin.set, tier: Normal, rung: set }
   - { use: latin.fish, tier: Normal, rung: set }
   - { use: latin.wing, tier: Normal, rung: wing }
+# What the hint says where no technique's firing states it. The planner supplies
+# each step's terms and marks. A line is "this row" or "this column", striped
+# whole, and a border clue is outlined by lighting its letter. The value noun
+# is the mode's: "letter" or "number".
+steps:
+  # The opener, whose words the plan speaks as it pencils every candidate in.
+  populate:
+    ring: cell
+    look: "Start by penciling every candidate {valueNoun} into each empty {noun} that has none yet."
+  # A line already has all its empty squares, so the rest of it holds a symbol:
+  # `one` and `two` say its count in words, `k` otherwise.
+  countHolesDone:
+    ring: cell
+    terms: { col: flag, one: flag, two: flag, k: number }
+    marks: { stripes: [line] }
+    move: "{ring} and the rest of it must hold a {valueNoun}"
+    wordings:
+      - again: "{stripes line: the same {if col: column | row}}"
+        later: "{ring} must hold a {valueNoun} too"
+        look: >-
+          {stripes line: this {if col: column | row}} already has {if one: its
+          one empty {noun} | {if two: both of its empty {nouns} | all {numeral k}
+          of its empty {nouns}}}
+  # A line has all its symbols, written in (`allPlaced`) or only known by their
+  # squares, so the rest of it is empty.
+  countLettersDone:
+    ring: cell
+    terms: { col: flag, allPlaced: flag, one: flag, two: flag, nums: number }
+    marks: { stripes: [line] }
+    move: "{ring} and the rest of it must be empty"
+    wordings:
+      - when: "allPlaced"
+        again: "{stripes line: the same {if col: column | row}}"
+        later: "{ring} must be empty too"
+        look: >-
+          {if one: The one {valueNoun} | {if two: Both {valueNoun}s | All
+          {numeral nums} {valueNoun}s}} of {stripes line: this {if col: column |
+          row}} {if one: is | are} already placed
+      - again: "{stripes line: the same {if col: column | row}}"
+        later: "{ring} must be empty too"
+        look: >-
+          We already know which {if one: {noun} | {numeral nums} {nouns}} of
+          {stripes line: this {if col: column | row}} {if one: holds its
+          {valueNoun} | hold its {valueNoun}s}
+  # A square whose notes are down to the empty-square mark alone.
+  crossNaked:
+    ring: cell
+    look: "Every {valueNoun} is ruled out in {ring}"
+    follows: "the empty-square mark is the only one left"
+    move: "the square must be empty"
+  # A square with notes, none of them the empty-square mark.
+  xNoteGone:
+    ring: cell
+    look: "{ring}'s pencil marks have no empty-square mark among them"
+    move: "it must hold a {valueNoun}"
+  # A clue sees `clueV` first. `skipped`: empty squares lie before the square
+  # it decides, outlined as `between`; else that square, `at`, is the nearest.
+  borderNear:
+    ring: cell
+    terms: { clueV: number, skipped: flag, k: number, one: flag }
+    marks: { outline: [clue, between, at] }
+    wordings:
+      - when: "not skipped"
+        look: >-
+          {outline clue: This clue} sees {clueV} first, and {outline at} nearest
+          it can hold only {clueV}
+      - look: >-
+          {outline clue: This clue} sees {clueV} first past {outline between:
+          {numeral k} empty {if one: {noun} | {nouns}}}, which leaves only
+          {clueV} for {ring}
+  # A clue's own symbol cannot sit this far in: cut off at the square `blocked`,
+  # known to hold a symbol; else past what the line's empties allow, `room` of
+  # them after it (`roomNone`: the rest are marked later), `n` the squares of
+  # `run` it is kept to (`near`: the one nearest it).
+  borderFar:
+    ring: cell
+    terms:
+      clueV: number
+      blocked: flag
+      col: flag
+      near: flag
+      n: number
+      roomNone: flag
+      holesOne: flag
+      room: number
+      roomOne: flag
+    marks: { outline: [clue, blockedAt, run] }
+    wordings:
+      - when: "blocked"
+        look: >-
+          {outline clue: This clue} sees {clueV} first, and {outline blockedAt}
+          furthest from it holds a {valueNoun}
+      - when: "roomNone"
+        look: >-
+          {outline clue: This clue} sees {clueV} first, and the {if col: column
+          | row}'s {if holesOne: empty {noun} is | empty {nouns} are} marked
+          later, keeping it {outline run: {if near: in the {noun} nearest it |
+          in the first {numeral n}}}
+      - look: >-
+          {outline clue: This clue} sees {clueV} first, after at most {numeral
+          room} empty {if roomOne: {noun} | {nouns}}, keeping it {outline run:
+          {if near: in the {noun} nearest it | in the first {numeral n}}}
+  # Where a far strike crosses the clue's symbol out. This and the two kinds
+  # below are fragments the strike's sentence joins to its own words, so each
+  # is a `move`, which is not capitalized as a `look` is.
+  borderFarWhere:
+    ring: cell
+    terms: { blocked: flag }
+    move: "{if blocked: past it | beyond that}"
+  # A set rules a square out as empty: the outlined `set` hold all `k` empty
+  # squares of their line, and `any` says the symbols struck with the mark.
+  setHoles:
+    ring: cell
+    terms: { any: flag, one: flag, two: flag, k: number, col: flag }
+    marks: { outline: [set] }
+    look: >-
+      {outline set} account for {if any: {struck} and {if one: the one empty
+      {noun} | {if two: both empty {nouns} | all {numeral k} empty {nouns}}} |
+      {if one: the one empty {noun} | {if two: both empty {nouns} | all
+      {numeral k} empty {nouns}}}} of their {if col: column | row}
+  # What that strike calls the notes it crosses out of a square.
+  setHolesStruck:
+    ring: cell
+    terms: { any: flag }
+    move: "{if any: {struck} and the X | the X}"
+  # Squares just settled as holding a symbol.
+  circleXNote:
+    ring: cell
+    terms: { one: flag }
+    look: "{ring} {if one: is | are} now known to hold a {valueNoun}"
+  # What a strike of the empty-square mark calls it.
+  emptyMarks:
+    ring: cell
+    terms: { one: flag }
+    move: "{if one: its empty-square mark | their empty-square marks}"

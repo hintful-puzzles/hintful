@@ -83,9 +83,10 @@ import {
 } from "../../engine/latin-notes.ts";
 import { noteEntryGesture } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
-import { CLUE, saladVocab, say } from "./hint-text.ts";
+import { CLUE } from "./kinds.ts";
 import type * as salad from "./salad.compiled.ts";
 import { holeSymbol, repeatsFor, saladLadder } from "./solver.ts";
+import { saladVocab, say } from "./speak.ts";
 import {
   borderScanFor,
   CIRCLE,
@@ -183,7 +184,7 @@ export interface SaladHint extends CandidateHighlights {
  * Narrate *why* a placement or a marker is forced (docs/hints.md §
  * "Writing the narration"): lead with the indication, give the reasoning,
  * conclude in the necessity voice. `n` is the placed symbol; a marker reads
- * none. The words are [`hint-text.ts`](./hint-text.ts)'s.
+ * none. The words are the description's, supplied by [`speak.ts`](./speak.ts).
  */
 export function narrate(
   reason: SaladReason,
@@ -235,6 +236,7 @@ function narrateAgain(
     hiddenSingleLine(reason.line, reason.index, state.order),
     at,
     reason.kind === "countLettersDone",
+    reason.kind === "countLettersDone" && reason.allPlaced,
   );
 }
 
@@ -278,16 +280,19 @@ export function premise(
     }
     case "borderNear": {
       const line = clueLine(reason.clue, o);
-      const c = { side: clueSide(reason.clue, o).side, clue: reason.clue, line };
       // The squares the "sees it first" argument walks over, known empty,
       // before the one it decides.
       return {
-        premise: text.borderNear(c, reason.clueVal, line.slice(0, reason.skipped), at),
+        premise: text.borderNear(
+          reason.clue,
+          reason.clueVal,
+          line.slice(0, reason.skipped),
+          at,
+        ),
       };
     }
     case "borderFar": {
-      const { side, axis } = clueSide(reason.clue, o);
-      const line = clueLine(reason.clue, o);
+      const { axis } = clueSide(reason.clue, o);
       // The run the clue's own symbol is confined to: up to the blocking ball,
       // else the counting bound.
       const s = borderScanFor(reason.clue, o);
@@ -304,18 +309,15 @@ export function premise(
           ? null
           : { x: reason.circleAt % o, y: (reason.circleAt / o) | 0 };
       return {
-        premise: text.borderFar(
-          { side, clue: reason.clue, line },
-          {
-            axis,
-            clueVal: reason.clueVal,
-            blockedAt,
-            reach: reason.reach,
-            holes: reason.holes,
-            tightenedBy: reason.tightenedBy,
-            run,
-          },
-        ),
+        premise: text.borderFar(reason.clue, {
+          axis,
+          clueVal: reason.clueVal,
+          blockedAt,
+          reach: reason.reach,
+          holes: reason.holes,
+          tightenedBy: reason.tightenedBy,
+          run,
+        }),
         where: text.borderFarWhere(blockedAt !== null),
       };
     }
