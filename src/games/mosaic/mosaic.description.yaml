@@ -113,11 +113,21 @@ techniques:
     says:
       terms: { clue: c, value: v(k), size: "|block(c)|" }
       marks: { reads: "block(c)" }
+      move: "{ring} must be {unshaded}"
       arms:
         met:
           when: "n = 0"
+          wordings:
+            - when: "v(k) = 0"
+              look: "{outline clue: this {value}} allows no {shaded} squares"
+            - look: "{outline clue: this {value}} already has its {value} {shaded} {value: square | squares}"
         needsAll:
           when: "n > 0"
+          move: "{ring} must be {shaded}"
+          wordings:
+            - when: "v(k) = |block(c)|"
+              look: "{outline clue: this {value}} needs all {size} of its squares {shaded}"
+            - look: "{outline clue: this {value}} needs {value} {shaded} {value: square | squares}, and only {value} of its squares are not {unshaded}"
   # Two numbers whose blocks overlap both count the squares they share, so
   # they differ by the squares only one counts. One that needs more than the
   # other, by as many as it has empty squares outside the other's block, O,
@@ -139,10 +149,33 @@ techniques:
     # the first still needs and by how many that is more than the second; it
     # reads both blocks.
     says:
-      terms: { clue: c, other: b, value: v(k), otherValue: "clue(count, b)", need: n, by: by }
+      # Two numbers of one value are named by where they sit, the upper and the
+      # lower or the left and the right (`vertical`: they sit in different rows;
+      # `first`: the first is the upper, or the left where they share a row).
+      terms:
+        clue: c
+        other: b
+        value: v(k)
+        otherValue: "clue(count, b)"
+        need: n
+        by: by
+        pair: "{c, b}"
+        vertical: "y(c) != y(b)"
+        first: "y(c) < y(b) or (y(c) = y(b) and x(c) < x(b))"
       marks: { reads: "block(c) + block(b)" }
       arms:
         needsMore:
           when: "by > 0"
+          wordings:
+            - when: "v(k) = clue(count, b)"
+              look: "{outline clue: the {if vertical: {if first: upper | lower} | {if first: left | right}} {value}} needs {by} more {shaded} {by: square | squares} than {outline other: the {if vertical: {if first: lower | upper} | {if first: right | left}} {value}}"
+              move: "{ring} outside the {if vertical: {if first: lower | upper} | {if first: right | left}} {value}'s block must be {shaded}"
+            - look: "{outline clue: this {value}} needs {by} more {shaded} {by: square | squares} than {outline other: this {otherValue}}"
+              move: "{ring} outside the {otherValue}'s block must be {shaded}"
         sameNeed:
           when: "by = 0"
+          move: "{ring} must be {unshaded}"
+          wordings:
+            - when: "v(k) = clue(count, b)"
+              look: "{outline pair: Both {value}s} need {need} {shaded} {need: square | squares}, and the {if vertical: {if first: upper | lower} | {if first: left | right}} {value}'s all lie in the {if vertical: {if first: lower | upper} | {if first: right | left}} {value}'s block"
+            - look: "{outline clue: this {value}} and {outline other: this {otherValue}} both need {need} {shaded} {need: square | squares}, and the {value}'s all lie in the {otherValue}'s block"

@@ -12,8 +12,8 @@ import {
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
-import { sentences } from "./hint-text.ts";
-import type { SaysById } from "./mosaic.compiled.ts";
+import { BLOCK } from "./kinds.ts";
+import { type SaysById, STATED } from "./mosaic.compiled.ts";
 import { hintWalk, type MosaicRung } from "./solver.ts";
 import {
   executeMove,
@@ -61,7 +61,11 @@ const described = describedFiringHint<
     cells: targets.map((t) => t.y * state.width + t.x),
     mark: targets[0].value,
   }),
-  say: sentences,
+  stated: STATED,
+  // A number is named apart from the squares of its block, which include its
+  // own square; two named together are one reference.
+  termKinds: { clue: BLOCK, other: BLOCK, pair: BLOCK },
+  say: {},
 });
 
 export const { hint: mosaicHint, hintKeepTrack: mosaicKeepTrack } = described;

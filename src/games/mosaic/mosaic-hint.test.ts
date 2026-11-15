@@ -13,8 +13,8 @@ import { expectRing } from "../../engine/testing/mark-shape.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { type MosaicHint, mosaicHint } from "./hint.ts";
-import { BLOCK, blockOf } from "./hint-marks.ts";
 import { mosaicGame } from "./index.ts";
+import { BLOCK, blockOf } from "./kinds.ts";
 import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf, newDesc, solveGameActual } from "./solver.ts";
 import {

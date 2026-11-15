@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/mosaic/mosaic.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, freshBinding, keptStore, rangeMask, sameSet, staleChecking, type Kept, union, within } from "../../engine/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, PLACE, clueAt, freshBinding, keptStore, rangeMask, sameSet, setOf, staleChecking, type Kept, union, within } from "../../engine/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -27,6 +27,15 @@ export interface SaysById {
 /** The kinds of step a firing can be: a technique's id, and for one whose
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["alone.met","alone.needsAll","compared.needsMore","compared.sameNeed"] as const;
+
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "alone.met": {"step":[{"move":"{ring} must be {unshaded}","look":"{outline clue: this {value}} allows no {shaded} squares"},{"move":"{ring} must be {unshaded}","look":"{outline clue: this {value}} already has its {value} {shaded} {value: square | squares}"}]},
+  "alone.needsAll": {"step":[{"move":"{ring} must be {shaded}","look":"{outline clue: this {value}} needs all {size} of its squares {shaded}"},{"move":"{ring} must be {shaded}","look":"{outline clue: this {value}} needs {value} {shaded} {value: square | squares}, and only {value} of its squares are not {unshaded}"}]},
+  "compared.needsMore": {"step":[{"look":"{outline clue: the {if vertical: {if first: upper | lower} | {if first: left | right}} {value}} needs {by} more {shaded} {by: square | squares} than {outline other: the {if vertical: {if first: lower | upper} | {if first: right | left}} {value}}","move":"{ring} outside the {if vertical: {if first: lower | upper} | {if first: right | left}} {value}'s block must be {shaded}"},{"look":"{outline clue: this {value}} needs {by} more {shaded} {by: square | squares} than {outline other: this {otherValue}}","move":"{ring} outside the {otherValue}'s block must be {shaded}"}]},
+  "compared.sameNeed": {"step":[{"move":"{ring} must be {unshaded}","look":"{outline pair: Both {value}s} need {need} {shaded} {need: square | squares}, and the {if vertical: {if first: upper | lower} | {if first: left | right}} {value}'s all lie in the {if vertical: {if first: lower | upper} | {if first: right | left}} {value}'s block"},{"move":"{ring} must be {unshaded}","look":"{outline clue: this {value}} and {outline other: this {otherValue}} both need {need} {shaded} {need: square | squares}, and the {value}'s all lie in the {otherValue}'s block"}]},
+} as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
@@ -94,8 +103,8 @@ export interface AloneBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
 export type AloneSays =
-  | { arm: "met"; terms: { clue: number; value: number; size: number; }; marks: { reads: readonly number[]; } }
-  | { arm: "needsAll"; terms: { clue: number; value: number; size: number; }; marks: { reads: readonly number[]; } }
+  | { arm: "met"; terms: { clue: number; value: number; size: number; }; marks: { reads: readonly number[]; }; wording: number }
+  | { arm: "needsAll"; terms: { clue: number; value: number; size: number; }; marks: { reads: readonly number[]; }; wording: number }
 ;
 
 const aloneFacts: number[] = [];
@@ -203,10 +212,18 @@ export function alone(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<AloneBindin
           if ((v_n === 0)) _arm = 0; else if ((v_n > 0)) _arm = 1;
           let _says: AloneSays | null = null;
           if (_arm === 0) {
-            _says = { arm: "met", terms: { clue: v_c, value: cl.count.v[v_k], size: within(sp, v_c, 1).length }, marks: { reads: within(sp, v_c, 1).slice() } };
+            const _sw_clue = v_c;
+            const _sw_value = cl.count.v[v_k];
+            const _sw_size = within(sp, v_c, 1).length;
+            const _sw_reads = within(sp, v_c, 1).slice();
+            _says = { arm: "met", terms: { clue: _sw_clue, value: _sw_value, size: _sw_size }, marks: { reads: _sw_reads }, wording: ((cl.count.v[v_k] === 0) ? 0 : 1) };
           }
           if (_arm === 1) {
-            _says = { arm: "needsAll", terms: { clue: v_c, value: cl.count.v[v_k], size: within(sp, v_c, 1).length }, marks: { reads: within(sp, v_c, 1).slice() } };
+            const _sw_clue = v_c;
+            const _sw_value = cl.count.v[v_k];
+            const _sw_size = within(sp, v_c, 1).length;
+            const _sw_reads = within(sp, v_c, 1).slice();
+            _says = { arm: "needsAll", terms: { clue: _sw_clue, value: _sw_value, size: _sw_size }, marks: { reads: _sw_reads }, wording: ((cl.count.v[v_k] === within(sp, v_c, 1).length) ? 0 : 1) };
           }
           if (_says === null) throw new Error("alone: no arm of says holds");
           if (!fire({ k: v_k, c: v_c, n: v_n, r: v_r }, facts, _says)) return 1;
@@ -228,8 +245,8 @@ export interface ComparedBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
 export type ComparedSays =
-  | { arm: "needsMore"; terms: { clue: number; other: number; value: number; otherValue: number; need: number; by: number; }; marks: { reads: readonly number[]; } }
-  | { arm: "sameNeed"; terms: { clue: number; other: number; value: number; otherValue: number; need: number; by: number; }; marks: { reads: readonly number[]; } }
+  | { arm: "needsMore"; terms: { clue: number; other: number; value: number; otherValue: number; need: number; by: number; pair: readonly number[]; vertical: boolean; first: boolean; }; marks: { reads: readonly number[]; }; wording: number }
+  | { arm: "sameNeed"; terms: { clue: number; other: number; value: number; otherValue: number; need: number; by: number; pair: readonly number[]; vertical: boolean; first: boolean; }; marks: { reads: readonly number[]; }; wording: number }
 ;
 
 const comparedFacts: number[] = [];
@@ -467,10 +484,30 @@ export function compared(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Compared
               if ((v_by > 0)) _arm = 0; else if ((v_by === 0)) _arm = 1;
               let _says: ComparedSays | null = null;
               if (_arm === 0) {
-                _says = { arm: "needsMore", terms: { clue: v_c, other: v_b, value: _h125, otherValue: _h43, need: v_n, by: v_by }, marks: { reads: union(within(sp, v_c, 1), within(sp, v_b, 1)).slice() } };
+                const _sw_clue = v_c;
+                const _sw_other = v_b;
+                const _sw_value = _h125;
+                const _sw_otherValue = _h43;
+                const _sw_need = v_n;
+                const _sw_by = v_by;
+                const _sw_pair = setOf(v_c, v_b).slice();
+                const _sw_vertical = (_h70 !== ((v_b / sp.w) | 0));
+                const _sw_first = ((_h70 < ((v_b / sp.w) | 0)) || ((_h70 === ((v_b / sp.w) | 0)) && (_h69 < (v_b % sp.w))));
+                const _sw_reads = union(within(sp, v_c, 1), within(sp, v_b, 1)).slice();
+                _says = { arm: "needsMore", terms: { clue: _sw_clue, other: _sw_other, value: _sw_value, otherValue: _sw_otherValue, need: _sw_need, by: _sw_by, pair: _sw_pair, vertical: _sw_vertical, first: _sw_first }, marks: { reads: _sw_reads }, wording: ((_h125 === _h43) ? 0 : 1) };
               }
               if (_arm === 1) {
-                _says = { arm: "sameNeed", terms: { clue: v_c, other: v_b, value: _h125, otherValue: _h43, need: v_n, by: v_by }, marks: { reads: union(within(sp, v_c, 1), within(sp, v_b, 1)).slice() } };
+                const _sw_clue = v_c;
+                const _sw_other = v_b;
+                const _sw_value = _h125;
+                const _sw_otherValue = _h43;
+                const _sw_need = v_n;
+                const _sw_by = v_by;
+                const _sw_pair = setOf(v_c, v_b).slice();
+                const _sw_vertical = (_h70 !== ((v_b / sp.w) | 0));
+                const _sw_first = ((_h70 < ((v_b / sp.w) | 0)) || ((_h70 === ((v_b / sp.w) | 0)) && (_h69 < (v_b % sp.w))));
+                const _sw_reads = union(within(sp, v_c, 1), within(sp, v_b, 1)).slice();
+                _says = { arm: "sameNeed", terms: { clue: _sw_clue, other: _sw_other, value: _sw_value, otherValue: _sw_otherValue, need: _sw_need, by: _sw_by, pair: _sw_pair, vertical: _sw_vertical, first: _sw_first }, marks: { reads: _sw_reads }, wording: ((_h125 === _h43) ? 0 : 1) };
               }
               if (_says === null) throw new Error("compared: no arm of says holds");
               if (!fire({ k: v_k, c: v_c, b: v_b, n: v_n, by: v_by, O: v_O.slice() }, facts, _says)) return 1;

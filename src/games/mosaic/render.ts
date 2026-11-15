@@ -38,7 +38,7 @@ import { ringFits, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { MosaicHint } from "./hint.ts";
-import { BLOCK, blockOf } from "./hint-marks.ts";
+import { BLOCK, blockOf } from "./kinds.ts";
 import {
   type MosaicMistake,
   type MosaicMove,
