@@ -23,7 +23,16 @@ export interface SaysById {
 
 /** The kinds of step a firing can be: a technique's id, and for one whose
  * `says` has arms, `<id>.<arm>` for each. */
-export const SAYS_KINDS = ["associativity","identity","notIdentity"] as const;
+export const SAYS_KINDS = ["associativity","identity","notIdentity.right","notIdentity.left"] as const;
+
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "associativity": {"fact":[{"look":"In any group, ({A}·{B})·{C} = {A}·({B}·{C}), and {outline p: {A}·{B} = {AB}}, {outline q: {B}·{C} = {BC}} and {outline third: ({A}·{B})·{C} = {V}}","move":"{ring: {A}·({B}·{C})} must also be {V}"},{"look":"In any group, ({A}·{B})·{C} = {A}·({B}·{C}), and {outline p: {A}·{B} = {AB}}, {outline q: {B}·{C} = {BC}} and {outline third: {A}·({B}·{C}) = {V}}","move":"{ring: ({A}·{B})·{C}} must also be {V}"}]},
+  "identity": {"fact":[{"look":"The product {outline w0: {A}·{B} = {A}} shows {B} is the identity","follows":"row {B} and column {B} are just the element labels","move":"{ring: this {noun}} must be {V}","again":"the identity {outline w0: the outlined product} shows"},{"look":"The product {outline w0: {A}·{B} = {B}} shows {A} is the identity","follows":"row {A} and column {A} are just the element labels","move":"{ring: this {noun}} must be {V}","again":"the identity {outline w0: the outlined product} shows"}]},
+  "notIdentity.right": {"step":[{"look":"The product {outline shown: {O}·{A} = {product}}, not {O} as it would be if {A} were the identity"}]},
+  "notIdentity.left": {"step":[{"look":"The product {outline shown: {A}·{O} = {product}}, not {O} as it would be if {A} were the identity"}]},
+} as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = "latin.placed";
@@ -123,16 +132,30 @@ export interface AssociativityBinding {
   r: number;
 }
 
-/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
-export interface AssociativitySays {
-  terms: { a: number; b: number; c: number; p: number; q: number; l: number; r: number; };
+/** What a square the firing decides has of its own, read where it is made. */
+export interface AssociativitySaysFact {
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
+  terms: { third: number; V: number; };
   marks: {  };
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; and `facts`, what each of its facts has of its own. */
+export interface AssociativitySays {
+  terms: { A: number; B: number; C: number; p: number; q: number; AB: number; BC: number; };
+  marks: {  };
+  facts: AssociativitySaysFact[];
+}
+
 const associativityFacts: number[] = [];
+const associativityFactSays: AssociativitySaysFact[] = [];
 
 /** Its dearest read grows with the board as 1. */
 export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityBinding, AssociativitySays> | null): number {
+  const _g22: number[] = [];
+  const _g26: number[] = [];
+  const _g32: number[] = [];
+  const _g36: number[] = [];
   const facts = associativityFacts;
   let fired = 0;
   let changed = false;
@@ -145,7 +168,7 @@ export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityB
       const _h14 = (v_b - 1);
       L12: {
         const v_p = (_h11 * sp.w + (v_b - 1));
-        const _m26_0 = b.made[0];
+        const _m42_0 = b.made[0];
         if (!((b.grid[v_p] !== 0))) break L12;
         for (let _m13 = b.domain; _m13 !== 0; _m13 &= _m13 - 1) {
           const v_c = 31 - Math.clz32(_m13 & -_m13);
@@ -158,7 +181,7 @@ export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityB
             L18: {
               const v_r = (_h11 * sp.w + (_t17 - 1));
               if (!(((b.grid[v_l] !== 0) !== (b.grid[v_r] !== 0)))) break L18;
-              if (b.made[0] !== _m26_0) {
+              if (b.made[0] !== _m42_0) {
                 if (!((b.grid[v_p] !== 0))) { continue R2; }
               }
               if (DEV && staleChecking) {
@@ -167,28 +190,78 @@ export function associativity(b: Marks, sp: GridSpace, fire: Fire<AssociativityB
                 freshBinding("associativity", [(((b.domain >> v_a) & 1) !== 0), (((b.domain >> v_b) & 1) !== 0), (v_p === ((v_a - 1) * sp.w + (v_b - 1))), (b.grid[v_p] !== 0), (((b.domain >> v_c) & 1) !== 0), (v_q === ((v_b - 1) * sp.w + (v_c - 1))), (b.grid[v_q] !== 0), (v_l === ((_t19 - 1) * sp.w + (v_c - 1))), (v_r === ((v_a - 1) * sp.w + (_t20 - 1))), ((b.grid[v_l] !== 0) !== (b.grid[v_r] !== 0))], ["a in", "b in", "p =", "where of p", "c in", "q =", "where of q", "l =", "r =", "where of r"]);
               }
               facts.length = 0;
+              associativityFactSays.length = 0;
               changed = false;
-              let _c22: boolean = !(((b.grid[v_l] !== 0) && (((b.cands[v_r] >> (b.grid[v_l] || -1)) & 1) !== 0)));
-              if (!_c22) {
+              let _c30: boolean = !(((b.grid[v_l] !== 0) && (((b.cands[v_r] >> (b.grid[v_l] || -1)) & 1) !== 0)));
+              if (!_c30) {
                 const _t21 = (b.grid[v_l] || -1);
-                if (!(b.grid[v_r] !== 0)) { if (fire === null) { b.placeAt(v_r, _t21); changed = true; } else facts.push(PLACE, v_r, _t21); }
-                _c22 = true;
-              }
-              let _c25: boolean = _c22;
-              if (_c25) {
-                let _c24: boolean = !(((b.grid[v_r] !== 0) && (((b.cands[v_l] >> (b.grid[v_r] || -1)) & 1) !== 0)));
-                if (!_c24) {
-                  const _t23 = (b.grid[v_r] || -1);
-                  if (!(b.grid[v_l] !== 0)) { if (fire === null) { b.placeAt(v_l, _t23); changed = true; } else facts.push(PLACE, v_l, _t23); }
-                  _c24 = true;
+                if (!(b.grid[v_r] !== 0)) {
+                  if (fire === null) { b.placeAt(v_r, _t21); changed = true; }
+                  if (fire !== null) {
+                    _g22.length = 0;
+                    G23: {
+                      for (let _i25 = 0; _i25 < 2; _i25++) {
+                        const v_x = _i25 === 0 ? v_l : v_r;
+                        if (_i25 === 1 && (v_x === v_l)) continue;
+                        if (!((b.grid[v_x] !== 0))) continue;
+                        _g22.push(v_x);
+                      }
+                    }
+                    _g26.length = 0;
+                    G27: {
+                      for (let _i29 = 0; _i29 < 2; _i29++) {
+                        const v_x = _i29 === 0 ? v_l : v_r;
+                        if (_i29 === 1 && (v_x === v_l)) continue;
+                        if (!((b.grid[v_x] !== 0))) continue;
+                        _g26.push(v_x);
+                      }
+                    }
+                    facts.push(PLACE, v_r, _t21);
+                    associativityFactSays.push({ wording: ((b.grid[v_l] !== 0) ? 0 : 1), terms: { third: (_g22.length > 0 ? _g22[0] : -1), V: (b.grid[(_g26.length > 0 ? _g26[0] : -1)] || -1) }, marks: {  } });
+                  }
                 }
-                _c25 = _c24;
+                _c30 = true;
               }
-              if (!(_c25)) return -1;
+              let _c41: boolean = _c30;
+              if (_c41) {
+                let _c40: boolean = !(((b.grid[v_r] !== 0) && (((b.cands[v_l] >> (b.grid[v_r] || -1)) & 1) !== 0)));
+                if (!_c40) {
+                  const _t31 = (b.grid[v_r] || -1);
+                  if (!(b.grid[v_l] !== 0)) {
+                    if (fire === null) { b.placeAt(v_l, _t31); changed = true; }
+                    if (fire !== null) {
+                      _g32.length = 0;
+                      G33: {
+                        for (let _i35 = 0; _i35 < 2; _i35++) {
+                          const v_x = _i35 === 0 ? v_l : v_r;
+                          if (_i35 === 1 && (v_x === v_l)) continue;
+                          if (!((b.grid[v_x] !== 0))) continue;
+                          _g32.push(v_x);
+                        }
+                      }
+                      _g36.length = 0;
+                      G37: {
+                        for (let _i39 = 0; _i39 < 2; _i39++) {
+                          const v_x = _i39 === 0 ? v_l : v_r;
+                          if (_i39 === 1 && (v_x === v_l)) continue;
+                          if (!((b.grid[v_x] !== 0))) continue;
+                          _g36.push(v_x);
+                        }
+                      }
+                      facts.push(PLACE, v_l, _t31);
+                      associativityFactSays.push({ wording: ((b.grid[v_l] !== 0) ? 0 : 1), terms: { third: (_g32.length > 0 ? _g32[0] : -1), V: (b.grid[(_g36.length > 0 ? _g36[0] : -1)] || -1) }, marks: {  } });
+                    }
+                  }
+                  _c40 = true;
+                }
+                _c41 = _c40;
+              }
+              if (!(_c41)) return -1;
               if (changed || facts.length > 0) {
                 fired = 1;
                 if (fire !== null) {
-                  const _says = { terms: { a: v_a, b: v_b, c: v_c, p: v_p, q: v_q, l: v_l, r: v_r }, marks: {  } };
+                  if (associativityFactSays.length * 3 !== facts.length) throw new Error("associativity: a fact of its conclusion is made where says.fact is not read");
+                  const _says = { terms: { A: v_a, B: v_b, C: v_c, p: v_p, q: v_q, AB: (b.grid[v_p] || -1), BC: (b.grid[v_q] || -1) }, marks: {  }, facts: associativityFactSays.slice() };
                   if (!fire({ a: v_a, b: v_b, p: v_p, c: v_c, q: v_q, l: v_l, r: v_r }, facts, _says)) return 1;
                 }
               }
@@ -206,13 +279,23 @@ export interface IdentityBinding {
   e: number;
 }
 
-/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
-export interface IdentitySays {
-  terms: { w0: number; e: number; };
+/** What a square the firing decides has of its own, read where it is made. */
+export interface IdentitySaysFact {
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
+  terms: { V: number; };
   marks: {  };
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; and `facts`, what each of its facts has of its own. */
+export interface IdentitySays {
+  terms: { w0: number; e: number; A: number; B: number; };
+  marks: {  };
+  facts: IdentitySaysFact[];
+}
+
 const identityFacts: number[] = [];
+const identityFactSays: IdentitySaysFact[] = [];
 
 /** Its dearest read grows with the board as n. */
 export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding, IdentitySays> | null): number {
@@ -269,6 +352,7 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding, Id
         freshBinding("identity", [(v_w0 === (_g29.length > 0 ? _g29[0] : -1)), (v_w0 !== -1), (((b.domain >> v_e) & 1) !== 0), ((((b.grid[v_w0] || -1) === (((v_w0 / sp.w) | 0) + 1)) && (v_e === ((v_w0 % sp.w) + 1))) || (((b.grid[v_w0] || -1) !== (((v_w0 / sp.w) | 0) + 1)) && (v_e === (((v_w0 / sp.w) | 0) + 1))))], ["w0 =", "where of w0", "e in", "where of e"]);
       }
       facts.length = 0;
+      identityFactSays.length = 0;
       changed = false;
       let _q35 = true;
       Q36: {
@@ -282,7 +366,13 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding, Id
             if (!(!((b.grid[v_c] !== 0)))) continue;
             let _c42: boolean = (((b.cands[v_c] >> v_j) & 1) !== 0);
             if (_c42) {
-              if (!(b.grid[v_c] !== 0)) { if (fire === null) { b.placeAt(v_c, v_j); changed = true; } else facts.push(PLACE, v_c, v_j); }
+              if (!(b.grid[v_c] !== 0)) {
+                if (fire === null) { b.placeAt(v_c, v_j); changed = true; }
+                if (fire !== null) {
+                  facts.push(PLACE, v_c, v_j);
+                  identityFactSays.push({ wording: (((b.grid[v_w0] || -1) === _h19) ? 0 : 1), terms: { V: v_j }, marks: {  } });
+                }
+              }
               _c42 = true;
             }
             if (!(_c42)) {
@@ -296,7 +386,8 @@ export function identity(b: Marks, sp: GridSpace, fire: Fire<IdentityBinding, Id
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { w0: v_w0, e: v_e }, marks: {  } };
+          if (identityFactSays.length * 3 !== facts.length) throw new Error("identity: a fact of its conclusion is made where says.fact is not read");
+          const _says = { terms: { w0: v_w0, e: v_e, A: _h19, B: _h22 }, marks: {  }, facts: identityFactSays.slice() };
           if (!fire({ w0: v_w0, e: v_e }, facts, _says)) return 1;
         }
       }
@@ -310,11 +401,11 @@ export interface NotIdentityBinding {
   o: number;
 }
 
-/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
-export interface NotIdentitySays {
-  terms: { a: number; o: number; };
-  marks: {  };
-}
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type NotIdentitySays =
+  | { arm: "right"; terms: { A: number; O: number; shown: number; product: number; }; marks: {  } }
+  | { arm: "left"; terms: { A: number; O: number; shown: number; product: number; }; marks: {  } }
+;
 
 const notIdentityFacts: number[] = [];
 
@@ -341,6 +432,9 @@ export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBindi
     L15: {
       const v_o = _g7;
       if (!((v_o !== -1))) break L15;
+      const _h26 = (b.grid[((v_o - 1) * sp.w + (v_a - 1))] !== 0);
+      const _h27 = (b.grid[((v_o - 1) * sp.w + (v_a - 1))] || -1);
+      const _h28 = (b.grid[((v_a - 1) * sp.w + (v_o - 1))] || -1);
       if (DEV && staleChecking) {
         let _g16 = -1;
         G17: {
@@ -380,7 +474,16 @@ export function notIdentity(b: Marks, sp: GridSpace, fire: Fire<NotIdentityBindi
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
-          const _says = { terms: { a: v_a, o: v_o }, marks: {  } };
+          let _arm = -1;
+          if ((_h26 && (_h27 !== v_o))) _arm = 0; else if (true) _arm = 1;
+          let _says: NotIdentitySays | null = null;
+          if (_arm === 0) {
+            _says = { arm: "right", terms: { A: v_a, O: v_o, shown: ((v_o - 1) * sp.w + (v_a - 1)), product: _h27 }, marks: {  } };
+          }
+          if (_arm === 1) {
+            _says = { arm: "left", terms: { A: v_a, O: v_o, shown: ((v_a - 1) * sp.w + (v_o - 1)), product: _h28 }, marks: {  } };
+          }
+          if (_says === null) throw new Error("notIdentity: no arm of says holds");
           if (!fire({ a: v_a, o: v_o }, facts, _says)) return 1;
         }
       }

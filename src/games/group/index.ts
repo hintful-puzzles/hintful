@@ -49,11 +49,12 @@ import {
 } from "../../engine/game.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
+  type LatinVocab,
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import {
@@ -93,11 +94,10 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
+import { statedParts, statedSentence } from "../../engine/stated.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newGameDesc } from "./generator.ts";
-import type * as group from "./group.compiled.ts";
-import { WORDS } from "./group.compiled.ts";
-import { groupVocab, say } from "./hint-text.ts";
+import * as group from "./group.compiled.ts";
 import {
   colors,
   computeSize,
@@ -109,14 +109,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import {
-  associativityReason,
-  groupLadder,
-  type HintReason,
-  identityElimReason,
-  identityFillReason,
-  solveGroup,
-} from "./solver.ts";
+import { groupLadder, type HintReason, solveGroup } from "./solver.ts";
 import {
   cloneState,
   DIFF_EXTREME,
@@ -501,6 +494,14 @@ function findMistakes(state: GroupState): readonly GroupMistake[] {
 
 // --- hint ------------------------------------------------------------------
 
+const { WORDS } = group;
+
+/** Group's value vocabulary for the shared generic-Latin narration arms: its
+ * values are the elements `a`–`z`, not digits. */
+function groupVocab(id: boolean): LatinVocab {
+  return { noun: "element", cell: WORDS.cell, value: (n) => toChar(n, id) };
+}
+
 /** The reasons a hint step narrates: the Group-specific deductions, the generic
  * Latin reasons, and the naked/hidden/forced classification a placement's `single`
  * reason is re-derived into. */
@@ -520,7 +521,8 @@ export type GroupRung = (typeof GROUP_RUNGS)[number];
  * narration"). `n` is the value placed. The generic Latin arms go to
  * `narrateLatinReason` under {@link groupVocab}; only Group's own placing
  * techniques are chosen here. `identityFill`'s continuation legs are narrated
- * by `buildSteps`' `placeWords`. The words are [`hint-text.ts`](./hint-text.ts)'s. */
+ * by `buildSteps`' `placeWords`. Group's own words are the description's
+ * (`group.STATED`), carried by the reason. */
 function narrate(
   reason: NarratableReason,
   m: Mark,
@@ -528,38 +530,21 @@ function narrate(
   id: boolean,
   continues: boolean,
 ): Sentence {
-  const ch = (v: number): string => toChar(v, id);
-  const at = { x: m.x, y: m.y };
   // The premise cells are outlined by the words that name them: associativity's
   // three known products, an identity fill's revealing product.
   switch (reason.kind) {
     case "associativity":
-      return say.associativity({
-        A: ch(reason.a),
-        B: ch(reason.b),
-        C: ch(reason.c),
-        ab: ch(reason.ab),
-        bc: ch(reason.bc),
-        v: ch(reason.v),
-        knownLeft: reason.knownLeft,
-        abCell: reason.abCell,
-        bcCell: reason.bcCell,
-        thirdCell: reason.thirdCell,
-        at,
+    case "identityFill":
+      return statedSentence(reason.clause, {
+        kind: CELL,
+        at: (c): Point => ({ x: c % w, y: (c / w) | 0 }),
+        ring: [{ x: m.x, y: m.y }],
+        marks: {},
+        terms: reason.terms,
+        value: (n) => toChar(n, id),
+        noun: WORDS.cell,
+        later: continues,
       });
-    case "identityFill": {
-      const via = { x: reason.viaX, y: reason.viaY };
-      return continues
-        ? say.identityFillNext(ch(m.n), via, at)
-        : say.identityFill(
-            ch(reason.a),
-            ch(reason.b),
-            reason.prod === reason.a,
-            ch(m.n),
-            via,
-            at,
-          );
-    }
     case "identityElim":
       throw new Error("an identity elimination strikes");
     default:
@@ -572,21 +557,23 @@ function narrate(
 function premise(
   reason: NarratableReason,
   marks: readonly Mark[],
+  w: number,
   id: boolean,
 ): Premise {
   const ch = (v: number): string => toChar(v, id);
   switch (reason.kind) {
-    case "identityElim":
-      return {
-        premise: say.identityElim(
-          ch(reason.elem),
-          ch(reason.other),
-          ch(reason.product),
-          reason.left,
-          { x: reason.wx, y: reason.wy },
-        ),
-        struck: say.identityMarks(ch(reason.elem)),
-      };
+    case "identityElim": {
+      const { look } = statedParts(reason.clause, {
+        kind: CELL,
+        at: (c): Point => ({ x: c % w, y: (c / w) | 0 }),
+        ring: [],
+        marks: {},
+        terms: reason.terms,
+        value: ch,
+      });
+      if (look === undefined) throw new Error("identityElim states no look");
+      return { premise: look, struck: `${ch(reason.elem)}'s identity marks` };
+    }
     case "associativity":
     case "identityFill":
       throw new Error(`a ${reason.kind} deduction places`);
@@ -619,7 +606,10 @@ function buildSteps(
     Math.min(state.diff, DIFF_EXTREME),
   );
   type Legs = Firing<GroupMove, GroupHint, NarratableReason>;
-  const places = (f: LadderFiring, reason: (c: number) => NarratableReason): Legs => {
+  const places = (
+    f: LadderFiring,
+    reason: (fact: number) => NarratableReason,
+  ): Legs => {
     const legs: Legs[number][] = [];
     for (let k = 0; k < f.facts.length; k += 3) {
       if (f.facts[k] !== PLACE) throw new Error("a placing technique that strikes");
@@ -627,7 +617,7 @@ function buildSteps(
       if (wGrid[c]) continue;
       legs.push({
         place: { x: c % w, y: (c / w) | 0, n: f.facts[k + 2] },
-        reason: reason(c),
+        reason: reason(k / 3),
       });
     }
     return legs;
@@ -643,8 +633,13 @@ function buildSteps(
     on,
     "associativity",
     (f) => {
-      const { terms } = (f.reasons[0] as Said<unknown, group.AssociativitySays>).says;
-      return places(f, (c) => associativityReason(terms, c, wGrid, w));
+      const { terms, facts } = (f.reasons[0] as Said<unknown, group.AssociativitySays>)
+        .says;
+      return places(f, (i) => ({
+        kind: "associativity",
+        clause: group.STATED.associativity.fact[facts[i].wording],
+        terms: { ...terms, ...facts[i].terms },
+      }));
     },
     { leads: true },
   );
@@ -654,9 +649,12 @@ function buildSteps(
     on,
     "identity",
     (f) => {
-      const { terms } = (f.reasons[0] as Said<unknown, group.IdentitySays>).says;
-      const reason = identityFillReason(terms, wGrid, w);
-      return places(f, () => reason);
+      const { terms, facts } = (f.reasons[0] as Said<unknown, group.IdentitySays>).says;
+      return places(f, (i) => ({
+        kind: "identityFill",
+        clause: group.STATED.identity.fact[facts[i].wording],
+        terms: { ...terms, ...facts[i].terms },
+      }));
     },
     { leads: true },
   );
@@ -666,8 +664,18 @@ function buildSteps(
     NarratableReason,
     LatinSolver
   >(on, "notIdentity", (f) => {
-    const { terms } = (f.reasons[0] as Said<unknown, group.NotIdentitySays>).says;
-    return [{ strike: strikesOf(f, w), reason: identityElimReason(terms, wGrid, w) }];
+    const says = (f.reasons[0] as Said<unknown, group.NotIdentitySays>).says;
+    return [
+      {
+        strike: strikesOf(f, w),
+        reason: {
+          kind: "identityElim",
+          clause: group.STATED[`notIdentity.${says.arm}`].step[0],
+          terms: says.terms,
+          elem: says.terms.A,
+        },
+      },
+    ];
   });
   runLatinCandidatePlan<GroupMove, GroupHint, NarratableReason>({
     w,
@@ -681,7 +689,7 @@ function buildSteps(
     placeWords: (m, reason, continues) => ({
       words: narrate(reason, m, w, id, continues),
     }),
-    strikeWords: (marks, reason) => premise(reason, marks, id),
+    strikeWords: (marks, reason) => premise(reason, marks, w, id),
     notes: {
       noun: "element",
       placedVerb: "placed",

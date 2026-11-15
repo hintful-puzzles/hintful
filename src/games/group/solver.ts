@@ -22,123 +22,27 @@ import {
   latinLadder,
   latinSolver,
 } from "../../engine/latin.ts";
-import type { Point } from "../../engine/types.ts";
+import type { Clauses } from "../../engine/stated.ts";
 import * as group from "./group.compiled.ts";
 import { DIFF_UNREASONABLE } from "./state.ts";
 
-/** Why a Group-specific step placed or struck, as the hint narrates and
- * highlights it. Combined with {@link LatinReason} (the generic positional
- * and set steps) it covers every technique; the `kind` fields never collide.
- *
- * All cell fields are **grid** coordinates (`{x = col, y = row}`); the value
- * fields (`a`/`b`/`c`/…) are 1-based element numbers.
- */
+/** The terms a stated clause reads: element numbers, and cell indices, which
+ * are numbered `y·o + x`. */
+export type StatedTerms = Readonly<Record<string, number>>;
+
+/** Why a Group-specific step placed or struck, as the hint narrates it: the
+ * clause the description states for what holds, and the terms it reads
+ * (`engine/stated.ts`). Combined with {@link LatinReason} (the generic
+ * positional and set steps) it covers every technique; the `kind` fields never
+ * collide. `identityElim` also names the element it rules out as the identity,
+ * for its strike's words. */
 export type GroupReason =
-  /** Associativity forced a **placement**: the player has filled `a·b`, `b·c`
-   * and one of `(a·b)·c` / `a·(b·c)`; since `(a·b)·c = a·(b·c)` in any group the
-   * remaining fourth product is forced to the same value `v`. `knownLeft` = the
-   * *left* association `(a·b)·c` is the one already filled (so `a·(b·c)` is the
-   * cell placed); the three premise cells are carried for shading. */
-  | {
-      kind: "associativity";
-      a: number;
-      b: number;
-      c: number;
-      ab: number;
-      bc: number;
-      v: number;
-      knownLeft: boolean;
-      abCell: Point;
-      bcCell: Point;
-      thirdCell: Point;
-    }
-  /** The identity `e` is known (the filled cell `(viaX, viaY)` shows `a·b`
-   * equals `a` or `b`, so the other factor is the identity), so the identity's
-   * whole row and column are just the element labels — this cell is one of them
-   * (a **placement**). */
-  | {
-      kind: "identityFill";
-      e: number;
-      viaX: number;
-      viaY: number;
-      a: number;
-      b: number;
-      prod: number;
-    }
-  /** Identity-hidden **elimination**: the filled product at `(wx, wy)` shows
-   * `elem` combined with `other` gives `product` (≠ `other`), so `elem` can't be
-   * the identity — its identity marks are struck. `left` = `elem` was the left
-   * factor (`elem·other`), else the right (`other·elem`). */
-  | {
-      kind: "identityElim";
-      elem: number;
-      other: number;
-      product: number;
-      wx: number;
-      wy: number;
-      left: boolean;
-    };
+  | { kind: "associativity"; clause: Clauses; terms: StatedTerms }
+  | { kind: "identityFill"; clause: Clauses; terms: StatedTerms }
+  | { kind: "identityElim"; clause: Clauses; terms: StatedTerms; elem: number };
 
 /** A reason a Group hint step gives. */
 export type HintReason = GroupReason | LatinReason;
-
-const cellAt = (w: number, c: number): Point => ({ x: c % w, y: (c / w) | 0 });
-
-/** An associativity firing's reason, for its placement in `cell`, on `grid`
- * as it stood before the placement. */
-export function associativityReason(
-  { a, b, c, p, q, l, r }: group.AssociativitySays["terms"],
-  cell: number,
-  grid: ArrayLike<number>,
-  w: number,
-): GroupReason {
-  const knownLeft = cell === r;
-  return {
-    kind: "associativity",
-    a,
-    b,
-    c,
-    ab: grid[p],
-    bc: grid[q],
-    v: grid[knownLeft ? l : r],
-    knownLeft,
-    abCell: cellAt(w, p),
-    bcCell: cellAt(w, q),
-    thirdCell: cellAt(w, knownLeft ? l : r),
-  };
-}
-
-/** An identity firing's reason: the product in `w0` revealed `e`. */
-export function identityFillReason(
-  { w0, e }: group.IdentitySays["terms"],
-  grid: ArrayLike<number>,
-  w: number,
-): GroupReason {
-  const { x, y } = cellAt(w, w0);
-  return {
-    kind: "identityFill",
-    e,
-    viaX: x,
-    viaY: y,
-    a: y + 1,
-    b: x + 1,
-    prod: grid[w0],
-  };
-}
-
-/** A notIdentity firing's reason: which way `a` fails as the identity,
- * `o·a ≠ o` first, else `a·o ≠ o`. */
-export function identityElimReason(
-  { a, o }: group.NotIdentitySays["terms"],
-  grid: ArrayLike<number>,
-  w: number,
-): GroupReason {
-  const right = (o - 1) * w + (a - 1);
-  const left = !(grid[right] !== 0 && grid[right] !== o);
-  const c = left ? (a - 1) * w + (o - 1) : right;
-  const { x: wx, y: wy } = cellAt(w, c);
-  return { kind: "identityElim", elem: a, other: o, product: grid[c], wx, wy, left };
-}
 
 // --- the described ladder ----------------------------------------------------
 

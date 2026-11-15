@@ -153,10 +153,20 @@ techniques:
     conclude: >-
       ((known(l) and value(l) in cand(r)) implies place(r, value(l)))
       and ((known(r) and value(r) in cand(l)) implies place(l, value(r)))
-    # The hint names the three factors and the products' cells.
+    # The hint names the three factors and the products' cells. Of the two
+    # bracketings, the filled one is the premise and the other is placed.
     says:
-      terms: { a: a, b: b, c: c, p: p, q: q, l: l, r: r }
+      terms: { A: a, B: b, C: c, p: p, q: q, AB: "value(p)", BC: "value(q)" }
       marks: {}
+      fact:
+        terms: { third: "first({x in {l, r} where known(x)})", V: "value(first({x in {l, r} where known(x)}))" }
+        marks: {}
+        wordings:
+          - when: "known(l)"
+            look: "In any group, ({A}·{B})·{C} = {A}·({B}·{C}), and {outline p: {A}·{B} = {AB}}, {outline q: {B}·{C} = {BC}} and {outline third: ({A}·{B})·{C} = {V}}"
+            move: "{ring: {A}·({B}·{C})} must also be {V}"
+          - look: "In any group, ({A}·{B})·{C} = {A}·({B}·{C}), and {outline p: {A}·{B} = {AB}}, {outline q: {B}·{C} = {BC}} and {outline third: {A}·({B}·{C}) = {V}}"
+            move: "{ring: ({A}·{B})·{C}} must also be {V}"
   # The first placed product, in reading order, that is one of its own
   # factors shows the other factor is the identity, e, so e's row and column
   # are the elements in order: for each j, j·e and then e·j. A cell that can
@@ -172,10 +182,27 @@ techniques:
     conclude: >-
       forall j in domain, c in {mul(j, e), mul(e, j)} where not known(c):
       j in cand(c) and place(c, j)
-    # The hint names the revealing product and the identity.
+    # The hint names the revealing product and the identity, and says each
+    # element of its row and column that follows. A later leg adds only its
+    # own cell, to the product the first showed. "The product" opens the
+    # sentence because a sentence capitalizes its first letter, which would
+    # turn an element's letter into another symbol.
     says:
-      terms: { w0: w0, e: e }
+      terms: { w0: w0, e: e, A: "left(w0)", B: "right(w0)" }
       marks: {}
+      fact:
+        terms: { V: j }
+        marks: {}
+        wordings:
+          - when: "value(w0) = left(w0)"
+            look: "The product {outline w0: {A}·{B} = {A}} shows {B} is the identity"
+            follows: "row {B} and column {B} are just the element labels"
+            move: "{ring: this {noun}} must be {V}"
+            again: "the identity {outline w0: the outlined product} shows"
+          - look: "The product {outline w0: {A}·{B} = {B}} shows {A} is the identity"
+            follows: "row {A} and column {A} are just the element labels"
+            move: "{ring: this {noun}} must be {V}"
+            again: "the identity {outline w0: the outlined product} shows"
   # A placed product of a with some j that is not j shows a is not the
   # identity, so no j·a or a·j can be j. The witness, o, is the least such j.
   - id: notIdentity
@@ -187,10 +214,24 @@ techniques:
       or (known(mul(a, j)) and value(mul(a, j)) != j))
       where o != none
     conclude: "forall j in domain: strike(mul(j, a), j) and (j = a or strike(mul(a, j), j))"
-    # The hint names the element and the least witness.
+    # The hint names the element and the least witness, and the product that
+    # shows it: o·a where that is not o, else a·o. The sentence opens on "The
+    # product", not the equation, so that its capital does not change an
+    # element's letter.
     says:
-      terms: { a: a, o: o }
+      terms: { A: a, O: o }
       marks: {}
+      arms:
+        right:
+          when: "known(mul(o, a)) and value(mul(o, a)) != o"
+          terms: { shown: "mul(o, a)", product: "value(mul(o, a))" }
+          marks: {}
+          look: "The product {outline shown: {O}·{A} = {product}}, not {O} as it would be if {A} were the identity"
+        left:
+          when: "true"
+          terms: { shown: "mul(a, o)", product: "value(mul(a, o))" }
+          marks: {}
+          look: "The product {outline shown: {A}·{O} = {product}}, not {O} as it would be if {A} were the identity"
   - { use: latin.set, tier: Tricky, rung: set }
   - { use: latin.fish, tier: Hard, rung: set }
   - { use: latin.wing, tier: Hard, rung: wing }

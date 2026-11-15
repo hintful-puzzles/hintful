@@ -165,6 +165,18 @@ describe("group hint — associativity", () => {
   });
 });
 
+describe("group hint — identity elimination", () => {
+  it("names the product that shows an element is not the identity, and what it strikes", () => {
+    // The word dump's boards never reach this tier, so the words are pinned
+    // here, on the identity-hidden board that does.
+    const text = pinned("identityElim").step.explanation;
+    expect(text).toMatch(
+      /The product ([a-z])·([a-z]) = [a-z], not ([a-z]) as it would be if ([a-z]) were the identity/,
+    );
+    expect(text).toMatch(/[a-z]'s identity marks/);
+  });
+});
+
 describe("group hint — plan solves boards", () => {
   it("solves a Normal (identity-shown) board by following hints", () => {
     const { solved } = walk(NORMAL, "solve-normal");
