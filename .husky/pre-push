@@ -1,15 +1,9 @@
-# The push runs, once, what its commits left out: the gate in scripts/gate.sh,
-# told which commit the remote already has (GATE_SINCE). A commit runs the
-# per-game work of the games it stages and no other, so that it costs a couple
-# of minutes whatever it touches; a commit to shared code therefore leaves every
-# other game's cases of the cross-game sweeps to this hook. A push whose
-# commits left nothing out (documentation, or each a game's own) ends in a
-# second or two.
-#
-# This is why a session pushes once, at its end, or when the owner asks to see
-# the work sooner: each push that carries a change to shared code is one whole
-# run (`AGENTS.md`, "Rules for every session"; `docs/work-management.md`
-# § "Pushing and deploying").
+# The push runs the gate's fast checks (scripts/gate.sh, told which commit the
+# remote already has: GATE_SINCE) and no test. CI's gate is the whole run, and
+# measured over its last 100 runs it found what a push's narrowed tests would
+# have missed: scripts/gate.sh § "1d-ii" has the figures. The tests a commit
+# left out run here only on request, `GATE_PUSH_TESTS=1 git push`, for a push
+# that carries a change to shared code and wants the verdict before CI's.
 #
 # GATE_PRECOMMIT=1 is the same toggle the commit hook sets, and means the same:
 # a sweep's cases narrowed to the games the run is about, with CI as the

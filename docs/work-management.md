@@ -213,12 +213,14 @@ deploys, and the deployment is how the owner looks at player-visible work, so
 work the owner is waiting to look at is a reason to end the session's commits
 there and push.
 
-- **Once, because the push is where the suite is paid for whole.** A commit
-  tests the games it stages; the push hook runs what the session's commits
-  left out, which for a change to shared code is every game's boards, and a
-  second push pays that again ([`testing.md`](./testing.md) § "What runs
-  when"). `.github/workflows/ci.yml` defines what a push publishes, and
-  `gate.yml` beside it runs the whole gate.
+- **The push costs seconds, and the whole suite is CI's.** A commit tests the
+  games it stages; the push hook runs the fast checks and no test, and
+  `GATE_PUSH_TESTS=1 git push` adds the tests the commits left out
+  ([`testing.md`](./testing.md) § "What runs when"). Before pushing a change to
+  shared code run `npm run test:hint-sweeps`, the cross-game hint sweeps CI's
+  gate most often failed on. `.github/workflows/ci.yml` defines what a push
+  publishes, and `gate.yml` beside it runs the whole gate; the next hook
+  prints its red verdict, which is fixed before other work.
 - **Verify a deploy against the deployed origin, never against `dist/`.**
   Headers, clean URLs and service-worker scope are host behavior, and each
   fails invisibly. A browser tab registers no service worker by design, so an

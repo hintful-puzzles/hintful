@@ -661,7 +661,7 @@ and their reasons.
 | Run | When | What it tests |
 | --- | --- | --- |
 | The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and no other, up to a ceiling of CPU time. |
-| The push hook | once, at a session's end | What the commits left out: the own tests and the cross-game cases of every game that reaches a path the push carries. Nothing, when every commit was a game's own or documentation. Up to its own ceiling. |
+| The push hook | every push | The gate's fast checks and no test. Asked with `GATE_PUSH_TESTS=1`, it also runs what the commits left out: the own tests and the cross-game cases of every game that reaches a path the push carries (nothing, when every commit was a game's own or documentation), up to its own ceiling. |
 | CI | every push | Everything but the games' deep tiers. Never canceled by a newer push. |
 
 - **Each hook's run has a ceiling of CPU time** (`test-cost.ts`'s `BUDGET`).
@@ -695,6 +695,17 @@ The selector is `scripts/checks/select-tests.ts`, and its `--verify` holds
 both plans to known cases. The spec is `build-pipeline`, "A commit runs the
 per-game work of the games it stages" and "The push runs what its commits
 left out, and nothing when they left nothing".
+
+**Why the push runs no test by default** (measured 2026-11-15 over the last 100
+runs of CI's gate: 71 green, 19 red, 10 canceled). Of the 19, sixteen were a
+cross-game hint sweep (the hint text convention 5, hint quality 5, the hint
+walk fingerprint 3, firing replay 2, the hint frontier 1, ladder continuity 1;
+all under `src/engine/`) and three a cost budget that only CI's runners can judge.
+Those sweeps are narrowed to the games a push reaches and cut to the push's
+ceiling, so the push's tests found them no sooner than CI did, at minutes a push.
+`npm run test:hint-sweeps` runs the sweeps whole (about four minutes): run it
+after a change to a hint planner, a sentence engine or a hint guard, before the
+push.
 
 ### Running the slow tier
 

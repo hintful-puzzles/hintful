@@ -109,13 +109,15 @@ if [ -n "${GATE_SINCE:-}" ]; then
     ci_notice
     exit 0
   fi
-  if ! git diff --quiet HEAD; then
+  if [ "${GATE_PUSH_TESTS:-}" = "1" ] && ! git diff --quiet HEAD; then
     echo "✗ the push runs the tests its commits left out, and it runs them on the"
     echo "  working tree, which has uncommitted changes. Commit or stash them."
     exit 1
   fi
-  echo "The push runs what its commits left to it: every game's cases of the"
-  echo "cross-game sweeps a commit to shared code reaches. Once a push, not a commit."
+  if [ "${GATE_PUSH_TESTS:-}" = "1" ]; then
+    echo "The push runs what its commits left to it: every game's cases of the"
+    echo "cross-game sweeps a commit to shared code reaches. Once a push, not a commit."
+  fi
 fi
 
 # --- 0. Reap orphaned vitest workers from a previously-interrupted run. ---
@@ -383,6 +385,24 @@ fi
 if [ "${GATE_PRECOMMIT:-}" = "1" ] && doc_only; then
   echo "✓ documentation-only commit — skipping vitest and vite build."
   echo "  (CI runs the full gate on push; \`npm run gate\` runs it here.)"
+  ci_notice
+  exit 0
+fi
+
+# --- 1d-ii. The push runs the fast checks, and the tests only when asked. ---
+#
+# Measured 2026-11-15 over the last 100 runs of CI's gate: 19 failed, 16 of them
+# on a cross-game hint sweep (`npm run test:hint-sweeps` runs those whole) and 3 on
+# a cost budget that only the CI runners can judge. A push's narrowed run
+# found neither before CI did, and a session waiting on it waited minutes for
+# a verdict CI gives anyway. So the push is the prefix above, which is what a
+# commit has passed already plus whatever the later commits changed, and the
+# plan below (the tests the commits left out) runs only on request:
+# `GATE_PUSH_TESTS=1 git push`. CI is the whole run, and the next commit and
+# push print its red verdict (`ci_notice`).
+if [ -n "${GATE_SINCE:-}" ] && [ "${GATE_PUSH_TESTS:-}" != "1" ]; then
+  echo "✓ the push ran the fast checks. The tests are CI's: \`GATE_PUSH_TESTS=1 git push\`"
+  echo "  runs the ones the commits left out here, \`npm run test:hint-sweeps\` the hint sweeps."
   ci_notice
   exit 0
 fi
