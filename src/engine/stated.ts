@@ -80,6 +80,8 @@ export interface StatedContext<E> {
   /** The values a strike step removes, for `{struck}`: the order is the
    * solver's, and each is named once, smallest first. */
   readonly struck?: readonly number[];
+  /** The kinds of region a value may not repeat in, for `{regions}`. */
+  readonly regions?: string;
   /** How many parallel lines the step names, for `{tally}`. */
   readonly tally?: number;
   /** The noun a set of elements in stripes is, taken whole ("row"). */
@@ -148,6 +150,8 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
       if (!cx.struck)
         throw new Error("stated clause: {struck} needs the step's strikes");
       return joinWith([...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value));
+    case "regions":
+      return cx.regions ?? "row and column";
     case "tally":
       if (cx.tally === undefined)
         throw new Error("stated clause: {tally} needs the step's line count");

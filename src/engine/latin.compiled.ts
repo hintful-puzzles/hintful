@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/engine/latin.description.yaml: edit that, not this.
 
-import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, addOnce, cellsValued, freshBinding, least, minus, popcount, rangeMask, sameSet, staleChecking, stamps, valuesOf } from "./describe-runtime.ts";
+import { type Fire, type GridSpace, type Marks, PLACE, STRIKE, addOnce, cellsValued, freshBinding, least, minus, popcount, rangeMask, sameSet, setOf, staleChecking, stamps, valuesOf } from "./describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -11,10 +11,16 @@ export interface PlacedBinding {
   u: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
+export interface PlacedSays {
+  terms: { d: number; };
+  marks: { outline: readonly number[]; };
+}
+
 const placedFacts: number[] = [];
 
 /** Its dearest read grows with the board as n^0.5. */
-export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBinding> | null): number {
+export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBinding, PlacedSays> | null): number {
   const facts = placedFacts;
   let fired = 0;
   let changed = false;
@@ -71,7 +77,10 @@ export function placed(b: Marks, sp: GridSpace, v_c: number, fire: Fire<PlacedBi
     if (!(_c21)) return -1;
     if (changed || facts.length > 0) {
       fired = 1;
-      if (fire !== null) fire({ c: v_c, d: v_d, k: v_k, u: v_u }, facts);
+      if (fire !== null) {
+        const _says = { terms: { d: v_d }, marks: { outline: setOf(v_c).slice() } };
+        fire({ c: v_c, d: v_d, k: v_k, u: v_u }, facts, _says);
+      }
     }
   }
   return fired;
@@ -1336,6 +1345,7 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding, WingSays> 
 /** Each kind of step's words as the description states them, and each
  * fact's, by wording (`engine/stated.ts`). */
 export const STATED = {
+  "placed": {"step":[{"look":"{outline: the {d} just placed} can't repeat in its {regions}"}]},
   "set": {"step":[{"look":"{outline S} already account for {struck} between them"}]},
   "fish.cols": {"step":[{"look":"{stripes: These {tally} columns} fit {d} only in {outline}, taking {if two: both | all {tally}} rows' {d}"}]},
   "fish.rows": {"step":[{"look":"{stripes: These {tally} rows} fit {d} only in {outline}, taking {if two: both | all {tally}} columns' {d}"}]},

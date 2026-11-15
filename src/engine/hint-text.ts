@@ -427,7 +427,7 @@ export function latinPremise(
   switch (reason.kind) {
     case "dup":
       return {
-        premise: placedRulesOut(reason, v(reason.n)),
+        premise: placedRulesOut(reason, v),
         where: `from the other ${cell}s`,
       };
     case "set": {
@@ -463,10 +463,21 @@ export function latinPremise(
  * the value as the game prints it, `regions` where it may not repeat.
  */
 export function placedRulesOut(
-  placed: { px: number; py: number },
-  value: string,
-  regions = "row and column",
+  placed: { px: number; py: number; n: number },
+  value: (n: number) => string,
+  regions?: string,
 ): Narration {
-  const at = { x: placed.px, y: placed.py };
-  return phrase`${mark.as("outline", CELL, [at], `The ${value} just placed`)} can't repeat in its ${regions}`;
+  const { look } = statedParts(LATIN_STATED.placed.step[0], {
+    kind: CELL,
+    at: (): Point => {
+      throw new Error("a placement's cull names no element term");
+    },
+    ring: [],
+    marks: { outline: [{ x: placed.px, y: placed.py }] },
+    terms: { d: placed.n },
+    value,
+    regions,
+  });
+  if (look === undefined) throw new Error("the library's placed states no look");
+  return look;
 }

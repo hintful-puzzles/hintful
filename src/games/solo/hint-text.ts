@@ -119,7 +119,7 @@ export const say = {
   /** The `n` just placed at `placed`; `regions` names the kinds of region it
    * lies in. */
   dup: (placed: Point, n: number, regions: string[]): Narration =>
-    placedRulesOut({ px: placed.x, py: placed.y }, g(n), joinOr(regions)),
+    placedRulesOut({ px: placed.x, py: placed.y, n }, g, joinOr(regions)),
 
   /** Where the placement's cull strikes from. */
   dupWhere: "from the other cells",

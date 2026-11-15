@@ -121,7 +121,7 @@ export const say = {
   dup: (placed: Point, n: number): Narration =>
     // The bare value, as the board shows it: right after its placement "the 3
     // just placed" needs no "height", and the qualified form ran over length.
-    placedRulesOut({ px: placed.x, py: placed.y }, String(n)),
+    placedRulesOut({ px: placed.x, py: placed.y, n }, String),
 
   /** Where the placement's cull strikes from. */
   dupWhere: "from the other cells",

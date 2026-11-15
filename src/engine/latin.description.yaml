@@ -23,6 +23,13 @@ techniques:
     conclude: >-
       (k = 1 or count(p in cells(u) where value(p) = d) >= k)
       implies (forall p in cells(u) where p != c and (k = 1 or value(p) != d): strike(p, d))
+    # The walk speaks it as the cull after a placement, whose premise is the
+    # value just placed. {regions} is the game's units, "row and column" unless
+    # it names more.
+    says:
+      terms: { d: d }
+      marks: { outline: "{c}" }
+      look: "{outline: the {d} just placed} can't repeat in its {regions}"
 
   # A value with as many places left in a unit as it has copies to place goes
   # in each, the rows before the columns. With fewer, the marks are
