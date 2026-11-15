@@ -38,6 +38,22 @@ export interface SaysById {
  * `says` has arms, `<id>.<arm>` for each. */
 export const SAYS_KINDS = ["oneWayIn","bothSidesLeft","clueFull","clueExact","closeLoop","strand","finishEarly","looseEnd","sharedFate","sharedFateEmpties","parity"] as const;
 
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/stated.ts`). */
+export const STATED = {
+  "oneWayIn": {"step":[{"look":"{outline shut: the outlined side | the outlined sides} block every way into {ring: the ringed square}","follows":"no track can reach it","move":"it must be empty"},{"look":"{outline shut: the outlined side | the outlined sides} leave {ring: the ringed square} one way in, and track needs two","move":"it must be empty"}]},
+  "bothSidesLeft": {"step":[{"look":"The track can't cross {outline shut: the outlined side | the outlined sides}","move":"it must run through {ring: the ringed one | the ringed ones}"}]},
+  "clueFull": {"step":[{"look":"{stripes L: This {if col: column | row}} has {outline clueAt: clue 0}","follows":"no track can run along it at all","move":"{ring: every square in it} must be empty"},{"look":"By {outline clueAt: clue {target}}, {stripes L: this {if col: column | row}}'s track {target: square is | squares are} {outline: the outlined one | the outlined ones}","move":"{ring: every other square in it} must be empty"}]},
+  "clueExact": {"step":[{"look":"{outline clueAt: Clue {target}} is the length of {stripes L: this {if col: column | row}}","move":"{ring: every square in it} must carry track"},{"look":"By {outline clueAt: clue {target}}, {stripes L: this {if col: column | row}} has {room} empty {room: square | squares}, {outline: the outlined one | the outlined ones}","move":"{ring: every other square in it} must carry track"}]},
+  "closeLoop": {"step":[{"look":"{outline: The outlined track} already joins the squares {ring: this side} separates","follows":"crossing it would close a loop","move":"it must be blocked"}]},
+  "strand": {"step":[{"look":"Crossing {ring: this side | these sides} would finish the track from A to B, stranding {outline: the outlined track}","move":"the side must be blocked"}]},
+  "finishEarly": {"step":[{"look":"Crossing {ring: this side | these sides} would finish the track from A to B short of {stripes short: this {if col: column | row}}'s {outline unmet: outlined clue}","move":"the side must be blocked"}]},
+  "looseEnd": {"step":[{"look":"{stripes L: This {if col: column | row}} has {outline clueAt: 2 track squares left}, and none of {outline unable: the outlined ones} can cross it","move":"the loose end must run {ring: on (ringed)}"}]},
+  "sharedFate": {"step":[{"look":"{outline shut: the outlined side | the outlined sides} send track in {ring: this square | these squares} {if up: upward | {if down: downward | {if left: to the left | to the right}}}, but {stripes L: this {if col: column | row}}'s {outline lineClue: clue {target}} allows one more","move":"it must be empty"}]},
+  "sharedFateEmpties": {"step":[{"look":"Emptying {ring: this square | these squares} empties {outline shut: the outlined one} too, but {stripes L: this {if col: column | row}}'s {outline lineClue: clue {target}} spares one more","move":"it must carry track"}]},
+  "parity": {"step":[{"look":"Every entry to {stripes: the striped block} needs an exit, and {if none: no crossing is marked yet | it has {outline crossing: {k} outlined {k: crossing | crossings}}}","move":"{ring: this last side} must {if carries: carry track | be blocked}"}]},
+} as const;
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 
@@ -225,6 +241,8 @@ export interface OneWayInBinding {
 export interface OneWayInSays {
   terms: { c: number; open: number; shut: readonly number[]; };
   marks: { reads: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const oneWayInFacts: number[] = [];
@@ -371,6 +389,7 @@ export function oneWayIn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneWayIn
     if (changed || facts.length > 0) {
       fired = 1;
       if (fire !== null) {
+        const _sw_c = v_c;
         _g123.length = 0;
         G124: {
           const _a140 = sp.adj4[v_c];
@@ -415,6 +434,7 @@ export function oneWayIn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneWayIn
             _g153++;
           }
         }
+        const _sw_open = (_g123.length + (_g153 + (_k68[v_c] ?? exits(sp, cl, v_c))));
         _g158.length = 0;
         oneWayIn_st174.pass++;
         G159: {
@@ -449,7 +469,9 @@ export function oneWayIn(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<OneWayIn
             if (_g158.length < 16) { if (!_g158.includes(_t188)) _g158.push(_t188); } else addOnce(_g158, oneWayIn_st174, _t188);
           }
         }
-        const _says = { terms: { c: v_c, open: (_g123.length + (_g153 + (_k68[v_c] ?? exits(sp, cl, v_c)))), shut: _g158.slice() }, marks: { reads: setOf(v_c).slice() } };
+        const _sw_shut = _g158.slice();
+        const _sw_reads = setOf(v_c).slice();
+        const _says = { terms: { c: _sw_c, open: _sw_open, shut: _sw_shut }, marks: { reads: _sw_reads }, wording: ((_sw_open === 0) ? 0 : 1) };
         if (!fire({ c: v_c }, facts, _says)) return 1;
       }
     }
@@ -715,8 +737,10 @@ export interface ClueFullBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ClueFullSays {
-  terms: { L: number; };
+  terms: { L: number; clueAt: number; target: number; col: boolean; };
   marks: { reads: readonly number[]; outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const clueFullFacts: number[] = [];
@@ -810,6 +834,11 @@ export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFull
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
+          const _sw_L = v_L;
+          const _sw_clueAt = v_L;
+          const _sw_target = _h42;
+          const _sw_col = (sp.cols.includes(v_L));
+          const _sw_reads = sp.lineCells[v_L].slice();
           _g64.length = 0;
           G65: {
             const _a73 = sp.lineCells[v_L];
@@ -832,7 +861,8 @@ export function clueFull(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueFull
               _g64.push(v_c);
             }
           }
-          const _says = { terms: { L: v_L }, marks: { reads: sp.lineCells[v_L].slice(), outline: _g64.slice() } };
+          const _sw_outline = _g64.slice();
+          const _says = { terms: { L: _sw_L, clueAt: _sw_clueAt, target: _sw_target, col: _sw_col }, marks: { reads: _sw_reads, outline: _sw_outline }, wording: ((_sw_target === 0) ? 0 : 1) };
           if (!fire({ L: v_L, O: v_O.slice() }, facts, _says)) return 1;
         }
         cands.fill(-1);
@@ -850,8 +880,10 @@ export interface ClueExactBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ClueExactSays {
-  terms: { L: number; };
+  terms: { L: number; clueAt: number; target: number; room: number; col: boolean; };
   marks: { reads: readonly number[]; outline: readonly number[]; };
+  /** The index of the wording that held (`STATED`). */
+  wording: number;
 }
 
 const clueExactFacts: number[] = [];
@@ -975,6 +1007,12 @@ export function clueExact(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueExa
       if (changed || facts.length > 0) {
         fired = 1;
         if (fire !== null) {
+          const _sw_L = v_L;
+          const _sw_clueAt = v_L;
+          const _sw_target = _h51;
+          const _sw_room = (sp.lineCells[v_L].length - _h51);
+          const _sw_col = (sp.cols.includes(v_L));
+          const _sw_reads = sp.lineCells[v_L].slice();
           _g83.length = 0;
           G84: {
             const _a87 = sp.lineCells[v_L];
@@ -984,7 +1022,8 @@ export function clueExact(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ClueExa
               _g83.push(v_c);
             }
           }
-          const _says = { terms: { L: v_L }, marks: { reads: sp.lineCells[v_L].slice(), outline: _g83.slice() } };
+          const _sw_outline = _g83.slice();
+          const _says = { terms: { L: _sw_L, clueAt: _sw_clueAt, target: _sw_target, room: _sw_room, col: _sw_col }, marks: { reads: _sw_reads, outline: _sw_outline }, wording: ((_sw_room === 0) ? 0 : 1) };
           if (!fire({ L: v_L, O: v_O.slice() }, facts, _says)) return 1;
         }
       }
@@ -1558,14 +1597,14 @@ export interface FinishEarlyBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface FinishEarlySays {
-  terms: { e: number; G: readonly number[]; H: readonly number[]; short: readonly number[]; };
+  terms: { e: number; G: readonly number[]; H: readonly number[]; short: readonly number[]; col: boolean; unmet: readonly number[]; };
   marks: { reads: readonly number[]; outline: readonly number[]; };
 }
 
 const finishEarlyFacts: number[] = [];
 const finishEarly_st192 = stamps();
-const finishEarly_st263 = stamps();
-const finishEarly_st341 = stamps();
+const finishEarly_st272 = stamps();
+const finishEarly_st350 = stamps();
 
 /** Its dearest read grows with the board as n^2. */
 export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<FinishEarlyBinding, FinishEarlySays> | null): number {
@@ -1573,17 +1612,17 @@ export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Finis
   const _g160: number[] = [];
   const _g193: number[] = [];
   const _g208: number[] = [];
-  const _g229: number[] = [];
-  const _g264: number[] = [];
-  const _g279: number[] = [];
-  const _g302: number[] = [];
-  const _g342: number[] = [];
-  const _g357: number[] = [];
+  const _g238: number[] = [];
+  const _g273: number[] = [];
+  const _g288: number[] = [];
+  const _g311: number[] = [];
+  const _g351: number[] = [];
+  const _g366: number[] = [];
   const facts = finishEarlyFacts;
   let fired = 0;
   let changed = false;
   const _k66 = exitsKept.board(cl);
-  const _m385_0 = b.made[0];
+  const _m394_0 = b.made[0];
   _g53.length = 0;
   G54: {
     const _a57 = sp.edges;
@@ -1594,8 +1633,8 @@ export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Finis
     }
   }
   const v_R = _g53;
-  const _m386_1 = b.made[1];
-  const _m387_2 = b.made[2];
+  const _m395_1 = b.made[1];
+  const _m396_2 = b.made[2];
   const _eg90 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true);
   const _a59 = sp.edges;
   R1:
@@ -1725,7 +1764,7 @@ export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Finis
         _c107 = _q98;
       }
       if (!(_c107)) break L91;
-      if (b.made[0] !== _m385_0 || b.made[1] !== _m386_1 || b.made[2] !== _m387_2) {
+      if (b.made[0] !== _m394_0 || b.made[1] !== _m395_1 || b.made[2] !== _m396_2) {
         const _now108 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e]);
         if (!(_now108 === _eg90.of(sp.edgeEnds[2 * v_e]) || sameSet(_now108, _eg90.of(sp.edgeEnds[2 * v_e])))) { continue R1; }
         const _now109 = keptEdgeGroups(sp, b, null, edgeHolds0, 0, true).of(sp.edgeEnds[2 * v_e + 1]);
@@ -1923,136 +1962,158 @@ export function finishEarly(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Finis
               if (_g160.length < 16) { if (!_g160.includes(_t228)) _g160.push(_t228); } else addOnce(_g160, finishEarly_st192, _t228);
             }
           }
-          _g229.length = 0;
-          finishEarly_st263.pass++;
-          G230: {
-            _g264.length = 0;
-            G265: {
-              const _a272 = sp.cols;
-              for (let _i273 = 0; _i273 < _a272.length; _i273++) {
-                const v_L = _a272[_i273];
-                const _h278 = clueAt(cl.count, v_L);
-                let _g274 = 0;
-                G275: {
-                  const _a276 = sp.lineCells[v_L];
-                  for (let _i277 = 0; _i277 < _a276.length; _i277++) {
-                    const v_c = _a276[_i277];
-                    if (!(((_eg90.of(v_c) === v_G) || (_eg90.of(v_c) === v_H)))) continue;
-                    _g274++;
-                  }
+          let _q229 = false;
+          Q230: {
+            const _a231 = sp.cols;
+            for (let _i232 = 0; _i232 < _a231.length; _i232++) {
+              const v_L = _a231[_i232];
+              const _h237 = clueAt(cl.count, v_L);
+              let _g233 = 0;
+              G234: {
+                const _a235 = sp.lineCells[v_L];
+                for (let _i236 = 0; _i236 < _a235.length; _i236++) {
+                  const v_c = _a235[_i236];
+                  if (!(((_eg90.of(v_c) === v_G) || (_eg90.of(v_c) === v_H)))) continue;
+                  _g233++;
                 }
-                if (!((_g274 < _h278))) continue;
-                _g264.push(v_L);
               }
-            }
-            const v_C = _g264;
-            const _h296 = v_C.length;
-            const _h297 = (_h296 > 0);
-            const _h298 = (_h296 === 0);
-            _g279.length = 0;
-            G280: {
-              const _a287 = sp.rows;
-              for (let _i288 = 0; _i288 < _a287.length; _i288++) {
-                const v_L = _a287[_i288];
-                const _h293 = clueAt(cl.count, v_L);
-                let _g289 = 0;
-                G290: {
-                  const _a291 = sp.lineCells[v_L];
-                  for (let _i292 = 0; _i292 < _a291.length; _i292++) {
-                    const v_c = _a291[_i292];
-                    if (!(((_eg90.of(v_c) === v_G) || (_eg90.of(v_c) === v_H)))) continue;
-                    _g289++;
-                  }
-                }
-                if (!((_g289 < _h293))) continue;
-                _g279.push(v_L);
-              }
-            }
-            const v_R = _g279;
-            const _a294 = sp.lines;
-            for (let _i295 = 0; _i295 < _a294.length; _i295++) {
-              const v_L = _a294[_i295];
-              if (!(((_h297 && (v_L === (v_C.length > 0 ? v_C[0] : -1))) || (_h298 && (v_L === (v_R.length > 0 ? v_R[0] : -1)))))) continue;
-              const _a299 = sp.lineCells[v_L];
-              for (let _i300 = 0; _i300 < _a299.length; _i300++) {
-                const v_c = _a299[_i300];
-                const _t301 = v_c;
-                if (_g229.length < 16) { if (!_g229.includes(_t301)) _g229.push(_t301); } else addOnce(_g229, finishEarly_st263, _t301);
+              if (!((_g233 < _h237))) continue;
+              if (true) {
+                _q229 = true;
+                break Q230;
               }
             }
           }
-          _g302.length = 0;
-          finishEarly_st341.pass++;
-          G303: {
-            _g342.length = 0;
-            G343: {
-              const _a350 = sp.cols;
-              for (let _i351 = 0; _i351 < _a350.length; _i351++) {
-                const v_L = _a350[_i351];
-                const _h356 = clueAt(cl.count, v_L);
-                let _g352 = 0;
-                G353: {
-                  const _a354 = sp.lineCells[v_L];
-                  for (let _i355 = 0; _i355 < _a354.length; _i355++) {
-                    const v_c = _a354[_i355];
+          _g238.length = 0;
+          finishEarly_st272.pass++;
+          G239: {
+            _g273.length = 0;
+            G274: {
+              const _a281 = sp.cols;
+              for (let _i282 = 0; _i282 < _a281.length; _i282++) {
+                const v_L = _a281[_i282];
+                const _h287 = clueAt(cl.count, v_L);
+                let _g283 = 0;
+                G284: {
+                  const _a285 = sp.lineCells[v_L];
+                  for (let _i286 = 0; _i286 < _a285.length; _i286++) {
+                    const v_c = _a285[_i286];
                     if (!(((_eg90.of(v_c) === v_G) || (_eg90.of(v_c) === v_H)))) continue;
-                    _g352++;
+                    _g283++;
                   }
                 }
-                if (!((_g352 < _h356))) continue;
-                _g342.push(v_L);
+                if (!((_g283 < _h287))) continue;
+                _g273.push(v_L);
               }
             }
-            const v_C = _g342;
-            const _h374 = v_C.length;
-            const _h375 = (_h374 > 0);
-            const _h376 = (_h374 === 0);
-            _g357.length = 0;
-            G358: {
-              const _a365 = sp.rows;
-              for (let _i366 = 0; _i366 < _a365.length; _i366++) {
-                const v_L = _a365[_i366];
-                const _h371 = clueAt(cl.count, v_L);
-                let _g367 = 0;
-                G368: {
-                  const _a369 = sp.lineCells[v_L];
-                  for (let _i370 = 0; _i370 < _a369.length; _i370++) {
-                    const v_c = _a369[_i370];
+            const v_C = _g273;
+            const _h305 = v_C.length;
+            const _h306 = (_h305 > 0);
+            const _h307 = (_h305 === 0);
+            _g288.length = 0;
+            G289: {
+              const _a296 = sp.rows;
+              for (let _i297 = 0; _i297 < _a296.length; _i297++) {
+                const v_L = _a296[_i297];
+                const _h302 = clueAt(cl.count, v_L);
+                let _g298 = 0;
+                G299: {
+                  const _a300 = sp.lineCells[v_L];
+                  for (let _i301 = 0; _i301 < _a300.length; _i301++) {
+                    const v_c = _a300[_i301];
                     if (!(((_eg90.of(v_c) === v_G) || (_eg90.of(v_c) === v_H)))) continue;
-                    _g367++;
+                    _g298++;
                   }
                 }
-                if (!((_g367 < _h371))) continue;
-                _g357.push(v_L);
+                if (!((_g298 < _h302))) continue;
+                _g288.push(v_L);
               }
             }
-            const v_R = _g357;
-            const _a372 = sp.lines;
-            for (let _i373 = 0; _i373 < _a372.length; _i373++) {
-              const v_L = _a372[_i373];
-              if (!(((_h375 && (v_L === (v_C.length > 0 ? v_C[0] : -1))) || (_h376 && (v_L === (v_R.length > 0 ? v_R[0] : -1)))))) continue;
-              const _a377 = sp.lineCells[v_L];
-              for (let _i378 = 0; _i378 < _a377.length; _i378++) {
-                const v_c = _a377[_i378];
-                let _c383: boolean = !(((b.edgeCand(v_c) >> 2) & 1) !== 0);
-                if (!_c383) {
-                  let _g379 = 0;
-                  G380: {
-                    const _a381 = sp.adj4[v_c];
-                    for (let _i382 = 0; _i382 < _a381.length; _i382++) {
-                      if (!(((b.grid[sp.adj4Edges[v_c][_i382]] || -1) === 1))) continue;
-                      _g379++;
+            const v_R = _g288;
+            const _a303 = sp.lines;
+            for (let _i304 = 0; _i304 < _a303.length; _i304++) {
+              const v_L = _a303[_i304];
+              if (!(((_h306 && (v_L === (v_C.length > 0 ? v_C[0] : -1))) || (_h307 && (v_L === (v_R.length > 0 ? v_R[0] : -1)))))) continue;
+              const _a308 = sp.lineCells[v_L];
+              for (let _i309 = 0; _i309 < _a308.length; _i309++) {
+                const v_c = _a308[_i309];
+                const _t310 = v_c;
+                if (_g238.length < 16) { if (!_g238.includes(_t310)) _g238.push(_t310); } else addOnce(_g238, finishEarly_st272, _t310);
+              }
+            }
+          }
+          _g311.length = 0;
+          finishEarly_st350.pass++;
+          G312: {
+            _g351.length = 0;
+            G352: {
+              const _a359 = sp.cols;
+              for (let _i360 = 0; _i360 < _a359.length; _i360++) {
+                const v_L = _a359[_i360];
+                const _h365 = clueAt(cl.count, v_L);
+                let _g361 = 0;
+                G362: {
+                  const _a363 = sp.lineCells[v_L];
+                  for (let _i364 = 0; _i364 < _a363.length; _i364++) {
+                    const v_c = _a363[_i364];
+                    if (!(((_eg90.of(v_c) === v_G) || (_eg90.of(v_c) === v_H)))) continue;
+                    _g361++;
+                  }
+                }
+                if (!((_g361 < _h365))) continue;
+                _g351.push(v_L);
+              }
+            }
+            const v_C = _g351;
+            const _h383 = v_C.length;
+            const _h384 = (_h383 > 0);
+            const _h385 = (_h383 === 0);
+            _g366.length = 0;
+            G367: {
+              const _a374 = sp.rows;
+              for (let _i375 = 0; _i375 < _a374.length; _i375++) {
+                const v_L = _a374[_i375];
+                const _h380 = clueAt(cl.count, v_L);
+                let _g376 = 0;
+                G377: {
+                  const _a378 = sp.lineCells[v_L];
+                  for (let _i379 = 0; _i379 < _a378.length; _i379++) {
+                    const v_c = _a378[_i379];
+                    if (!(((_eg90.of(v_c) === v_G) || (_eg90.of(v_c) === v_H)))) continue;
+                    _g376++;
+                  }
+                }
+                if (!((_g376 < _h380))) continue;
+                _g366.push(v_L);
+              }
+            }
+            const v_R = _g366;
+            const _a381 = sp.lines;
+            for (let _i382 = 0; _i382 < _a381.length; _i382++) {
+              const v_L = _a381[_i382];
+              if (!(((_h384 && (v_L === (v_C.length > 0 ? v_C[0] : -1))) || (_h385 && (v_L === (v_R.length > 0 ? v_R[0] : -1)))))) continue;
+              const _a386 = sp.lineCells[v_L];
+              for (let _i387 = 0; _i387 < _a386.length; _i387++) {
+                const v_c = _a386[_i387];
+                let _c392: boolean = !(((b.edgeCand(v_c) >> 2) & 1) !== 0);
+                if (!_c392) {
+                  let _g388 = 0;
+                  G389: {
+                    const _a390 = sp.adj4[v_c];
+                    for (let _i391 = 0; _i391 < _a390.length; _i391++) {
+                      if (!(((b.grid[sp.adj4Edges[v_c][_i391]] || -1) === 1))) continue;
+                      _g388++;
                     }
                   }
-                  _c383 = ((_g379 + (_k66[v_c] ?? exits(sp, cl, v_c))) > 0);
+                  _c392 = ((_g388 + (_k66[v_c] ?? exits(sp, cl, v_c))) > 0);
                 }
-                if (!(_c383)) continue;
-                const _t384 = v_c;
-                if (_g302.length < 16) { if (!_g302.includes(_t384)) _g302.push(_t384); } else addOnce(_g302, finishEarly_st341, _t384);
+                if (!(_c392)) continue;
+                const _t393 = v_c;
+                if (_g311.length < 16) { if (!_g311.includes(_t393)) _g311.push(_t393); } else addOnce(_g311, finishEarly_st350, _t393);
               }
             }
           }
-          const _says = { terms: { e: v_e, G: v_G.slice(), H: v_H.slice(), short: _g160.slice() }, marks: { reads: union(setOf(sp.edgeEnds[2 * v_e]), _g229).slice(), outline: _g302.slice() } };
+          const _says = { terms: { e: v_e, G: v_G.slice(), H: v_H.slice(), short: _g160.slice(), col: _q229, unmet: v_G.slice() }, marks: { reads: union(setOf(sp.edgeEnds[2 * v_e]), _g238).slice(), outline: _g311.slice() } };
           if (!fire({ R: v_R.slice(), e: v_e, G: v_G.slice(), H: v_H.slice() }, facts, _says)) return 1;
         }
       }
@@ -2071,7 +2132,7 @@ export interface LooseEndBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface LooseEndSays {
-  terms: { L: number; shut: readonly number[]; };
+  terms: { L: number; clueAt: number; col: boolean; unable: readonly number[]; };
   marks: { reads: readonly number[]; outline: readonly number[]; };
 }
 
@@ -2377,7 +2438,7 @@ export function looseEnd(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LooseEnd
                 _g230.push(v_c);
               }
             }
-            const _says = { terms: { L: v_L, shut: _g187.slice() }, marks: { reads: sp.lineCells[v_L].slice(), outline: _g230.slice() } };
+            const _says = { terms: { L: v_L, clueAt: v_L, col: (sp.cols.includes(v_L)), unable: _g187.slice() }, marks: { reads: sp.lineCells[v_L].slice(), outline: _g230.slice() } };
             if (!fire({ L: v_L, F: v_F.slice(), P: v_P.slice(), p: v_p, Q: v_Q.slice() }, facts, _says)) return 1;
           }
           cands.fill(-1);
@@ -2397,21 +2458,21 @@ export interface SharedFateBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SharedFateSays {
-  terms: { L: number; p: number; q: number; shut: readonly number[]; };
+  terms: { L: number; p: number; q: number; col: boolean; target: number; up: boolean; down: boolean; left: boolean; shut: readonly number[]; lineClue: readonly number[]; };
   marks: { reads: readonly number[]; outline: readonly number[]; };
 }
 
 const sharedFateFacts: number[] = [];
 let sharedFateCands = new Int32Array(0);
-const sharedFate_st197 = stamps();
+const sharedFate_st201 = stamps();
 
 /** Its dearest read grows with the board as n. */
 export function sharedFate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedFateBinding, SharedFateSays> | null): number {
   const _g60: number[] = [];
   const _g82: number[] = [];
   const _g115: number[] = [];
-  const _g181: number[] = [];
-  const _g212: number[] = [];
+  const _g185: number[] = [];
+  const _g216: number[] = [];
   const facts = sharedFateFacts;
   let fired = 0;
   let changed = false;
@@ -2424,11 +2485,12 @@ export function sharedFate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shared
   R1:
   for (let _i58 = 0; _i58 < _a57.length; _i58++) {
     const v_L = _a57[_i58];
-    const _m229_0 = b.made[0];
-    const _m230_1 = b.made[1];
-    const _m231_2 = b.made[2];
+    const _m233_0 = b.made[0];
+    const _m234_1 = b.made[1];
+    const _m235_2 = b.made[2];
     const _h59 = clueAt(cl.count, v_L);
     if (!(((_h59 - laidMarked(b, sp, cl, cands, v_L)) === 1))) continue;
+    const _h181 = (sp.cols.includes(v_L));
     _g60.length = 0;
     G61: {
       const _a69 = sp.lineCells[v_L];
@@ -2455,6 +2517,9 @@ export function sharedFate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shared
     R2:
     for (let _i79 = 0; _i79 < _a78.length; _i79++) {
       const v_p = _a78[_i79];
+      const _h182 = step(sp, v_p, 1);
+      const _h183 = step(sp, v_p, 2);
+      const _h184 = step(sp, v_p, 3);
       const _a80 = sp.adj4[v_p];
       for (let _i81 = 0; _i81 < _a80.length; _i81++) {
         const v_q = _a80[_i81];
@@ -2520,7 +2585,7 @@ export function sharedFate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shared
           _c114 = (_g99 < 2);
         }
         if (!(_c114)) continue;
-        if (b.made[0] !== _m229_0 || b.made[1] !== _m230_1 || b.made[2] !== _m231_2) {
+        if (b.made[0] !== _m233_0 || b.made[1] !== _m234_1 || b.made[2] !== _m235_2) {
           if (!(((clueAt(cl.count, v_L) - laidMarked(b, sp, cl, cands, v_L)) === 1))) { continue R1; }
           _g115.length = 0;
           G116: {
@@ -2642,63 +2707,63 @@ export function sharedFate(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Shared
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            _g181.length = 0;
-            sharedFate_st197.pass++;
-            G182: {
-              const _a198 = sp.adj4[v_p];
-              for (let _i199 = 0; _i199 < _a198.length; _i199++) {
-                const v_y = _a198[_i199];
-                const _h200 = (b.grid[sp.adj4Edges[v_p][_i199]] || -1);
-                let _c209: boolean = (((_h200 === 2) || !(((b.edgeCand(v_p) >> 1) & 1) !== 0)) || !(((b.edgeCand(v_y) >> 1) & 1) !== 0));
-                if (!_c209) {
-                  let _c208: boolean = (_h200 !== 1);
-                  if (_c208) {
-                    let _c207: boolean = (drawn(b, sp, cl, v_p) === 2);
-                    if (!_c207) {
-                      let _g201 = 0;
-                      G202: {
-                        const _a204 = sp.adj4[v_y];
-                        for (let _i205 = 0; _i205 < _a204.length; _i205++) {
-                          const _h206 = (b.grid[sp.adj4Edges[v_y][_i205]] || -1);
-                          if (!((_h206 === 1))) continue;
-                          _g201++;
+            _g185.length = 0;
+            sharedFate_st201.pass++;
+            G186: {
+              const _a202 = sp.adj4[v_p];
+              for (let _i203 = 0; _i203 < _a202.length; _i203++) {
+                const v_y = _a202[_i203];
+                const _h204 = (b.grid[sp.adj4Edges[v_p][_i203]] || -1);
+                let _c213: boolean = (((_h204 === 2) || !(((b.edgeCand(v_p) >> 1) & 1) !== 0)) || !(((b.edgeCand(v_y) >> 1) & 1) !== 0));
+                if (!_c213) {
+                  let _c212: boolean = (_h204 !== 1);
+                  if (_c212) {
+                    let _c211: boolean = (drawn(b, sp, cl, v_p) === 2);
+                    if (!_c211) {
+                      let _g205 = 0;
+                      G206: {
+                        const _a208 = sp.adj4[v_y];
+                        for (let _i209 = 0; _i209 < _a208.length; _i209++) {
+                          const _h210 = (b.grid[sp.adj4Edges[v_y][_i209]] || -1);
+                          if (!((_h210 === 1))) continue;
+                          _g205++;
                         }
                       }
-                      _c207 = ((_g201 + (_k76[v_y] ?? exits(sp, cl, v_y))) === 2);
+                      _c211 = ((_g205 + (_k76[v_y] ?? exits(sp, cl, v_y))) === 2);
                     }
-                    _c208 = _c207;
+                    _c212 = _c211;
                   }
-                  _c209 = _c208;
+                  _c213 = _c212;
                 }
-                if (!(_c209)) continue;
-                const _t210 = sp.adj4Edges[v_p][_i199];
-                const _t211 = _t210;
-                if (_g181.length < 16) { if (!_g181.includes(_t211)) _g181.push(_t211); } else addOnce(_g181, sharedFate_st197, _t211);
+                if (!(_c213)) continue;
+                const _t214 = sp.adj4Edges[v_p][_i203];
+                const _t215 = _t214;
+                if (_g185.length < 16) { if (!_g185.includes(_t215)) _g185.push(_t215); } else addOnce(_g185, sharedFate_st201, _t215);
               }
             }
-            _g212.length = 0;
-            G213: {
-              const _a221 = sp.lineCells[v_L];
-              for (let _i222 = 0; _i222 < _a221.length; _i222++) {
-                const v_c = _a221[_i222];
-                let _c228: boolean = !(((b.edgeCand(v_c) >> 2) & 1) !== 0);
-                if (!_c228) {
-                  let _g223 = 0;
-                  G224: {
-                    const _a225 = sp.adj4[v_c];
-                    for (let _i226 = 0; _i226 < _a225.length; _i226++) {
-                      const _h227 = (b.grid[sp.adj4Edges[v_c][_i226]] || -1);
-                      if (!((_h227 === 1))) continue;
-                      _g223++;
+            _g216.length = 0;
+            G217: {
+              const _a225 = sp.lineCells[v_L];
+              for (let _i226 = 0; _i226 < _a225.length; _i226++) {
+                const v_c = _a225[_i226];
+                let _c232: boolean = !(((b.edgeCand(v_c) >> 2) & 1) !== 0);
+                if (!_c232) {
+                  let _g227 = 0;
+                  G228: {
+                    const _a229 = sp.adj4[v_c];
+                    for (let _i230 = 0; _i230 < _a229.length; _i230++) {
+                      const _h231 = (b.grid[sp.adj4Edges[v_c][_i230]] || -1);
+                      if (!((_h231 === 1))) continue;
+                      _g227++;
                     }
                   }
-                  _c228 = ((_g223 + (_k76[v_c] ?? exits(sp, cl, v_c))) > 0);
+                  _c232 = ((_g227 + (_k76[v_c] ?? exits(sp, cl, v_c))) > 0);
                 }
-                if (!(_c228)) continue;
-                _g212.push(v_c);
+                if (!(_c232)) continue;
+                _g216.push(v_c);
               }
             }
-            const _says = { terms: { L: v_L, p: v_p, q: v_q, shut: _g181.slice() }, marks: { reads: sp.lineCells[v_L].slice(), outline: _g212.slice() } };
+            const _says = { terms: { L: v_L, p: v_p, q: v_q, col: _h181, target: _h59, up: (_h182 === v_q), down: (_h183 === v_q), left: (_h184 === v_q), shut: _g185.slice(), lineClue: setOf(v_p).slice() }, marks: { reads: sp.lineCells[v_L].slice(), outline: _g216.slice() } };
             if (!fire({ L: v_L, p: v_p, q: v_q }, facts, _says)) return 1;
           }
           cands.fill(-1);
@@ -2718,20 +2783,20 @@ export interface SharedFateEmptiesBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface SharedFateEmptiesSays {
-  terms: { L: number; p: number; q: number; shut: readonly number[]; };
+  terms: { L: number; p: number; q: number; col: boolean; target: number; shut: readonly number[]; lineClue: readonly number[]; };
   marks: { reads: readonly number[]; outline: readonly number[]; };
 }
 
 const sharedFateEmptiesFacts: number[] = [];
-const sharedFateEmpties_st213 = stamps();
+const sharedFateEmpties_st214 = stamps();
 
 /** Its dearest read grows with the board as n. */
 export function sharedFateEmpties(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<SharedFateEmptiesBinding, SharedFateEmptiesSays> | null): number {
   const _g68: number[] = [];
   const _g90: number[] = [];
   const _g127: number[] = [];
-  const _g197: number[] = [];
-  const _g228: number[] = [];
+  const _g198: number[] = [];
+  const _g229: number[] = [];
   const facts = sharedFateEmptiesFacts;
   let fired = 0;
   let changed = false;
@@ -2740,7 +2805,7 @@ export function sharedFateEmpties(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire
   R1:
   for (let _i62 = 0; _i62 < _a61.length; _i62++) {
     const v_L = _a61[_i62];
-    const _m235_2 = b.made[2];
+    const _m236_2 = b.made[2];
     const _h63 = clueAt(cl.count, v_L);
     let _g64 = 0;
     G65: {
@@ -2752,7 +2817,8 @@ export function sharedFateEmpties(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire
       }
     }
     if (!((((sp.lineCells[v_L].length - _h63) - _g64) === 1))) continue;
-    const _m234_0 = b.made[0];
+    const _h197 = (sp.cols.includes(v_L));
+    const _m235_0 = b.made[0];
     _g68.length = 0;
     G69: {
       const _a77 = sp.lineCells[v_L];
@@ -2844,7 +2910,7 @@ export function sharedFateEmpties(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire
           _c122 = (_g107 < 2);
         }
         if (!(_c122)) continue;
-        if (b.made[0] !== _m234_0 || b.made[2] !== _m235_2) {
+        if (b.made[0] !== _m235_0 || b.made[2] !== _m236_2) {
           let _g123 = 0;
           G124: {
             const _a125 = sp.lineCells[v_L];
@@ -2984,50 +3050,50 @@ export function sharedFateEmpties(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            _g197.length = 0;
-            sharedFateEmpties_st213.pass++;
-            G198: {
-              const _a214 = sp.adj4[v_p];
-              for (let _i215 = 0; _i215 < _a214.length; _i215++) {
-                const v_y = _a214[_i215];
-                const _h216 = (b.grid[sp.adj4Edges[v_p][_i215]] || -1);
-                let _c225: boolean = (((_h216 === 2) || !(((b.edgeCand(v_p) >> 1) & 1) !== 0)) || !(((b.edgeCand(v_y) >> 1) & 1) !== 0));
-                if (!_c225) {
-                  let _c224: boolean = (_h216 !== 1);
-                  if (_c224) {
-                    let _c223: boolean = (drawn(b, sp, cl, v_p) === 2);
-                    if (!_c223) {
-                      let _g217 = 0;
-                      G218: {
-                        const _a220 = sp.adj4[v_y];
-                        for (let _i221 = 0; _i221 < _a220.length; _i221++) {
-                          const _h222 = (b.grid[sp.adj4Edges[v_y][_i221]] || -1);
-                          if (!((_h222 === 1))) continue;
-                          _g217++;
+            _g198.length = 0;
+            sharedFateEmpties_st214.pass++;
+            G199: {
+              const _a215 = sp.adj4[v_p];
+              for (let _i216 = 0; _i216 < _a215.length; _i216++) {
+                const v_y = _a215[_i216];
+                const _h217 = (b.grid[sp.adj4Edges[v_p][_i216]] || -1);
+                let _c226: boolean = (((_h217 === 2) || !(((b.edgeCand(v_p) >> 1) & 1) !== 0)) || !(((b.edgeCand(v_y) >> 1) & 1) !== 0));
+                if (!_c226) {
+                  let _c225: boolean = (_h217 !== 1);
+                  if (_c225) {
+                    let _c224: boolean = (drawn(b, sp, cl, v_p) === 2);
+                    if (!_c224) {
+                      let _g218 = 0;
+                      G219: {
+                        const _a221 = sp.adj4[v_y];
+                        for (let _i222 = 0; _i222 < _a221.length; _i222++) {
+                          const _h223 = (b.grid[sp.adj4Edges[v_y][_i222]] || -1);
+                          if (!((_h223 === 1))) continue;
+                          _g218++;
                         }
                       }
-                      _c223 = ((_g217 + (_k84[v_y] ?? exits(sp, cl, v_y))) === 2);
+                      _c224 = ((_g218 + (_k84[v_y] ?? exits(sp, cl, v_y))) === 2);
                     }
-                    _c224 = _c223;
+                    _c225 = _c224;
                   }
-                  _c225 = _c224;
+                  _c226 = _c225;
                 }
-                if (!(_c225)) continue;
-                const _t226 = sp.adj4Edges[v_p][_i215];
-                const _t227 = _t226;
-                if (_g197.length < 16) { if (!_g197.includes(_t227)) _g197.push(_t227); } else addOnce(_g197, sharedFateEmpties_st213, _t227);
+                if (!(_c226)) continue;
+                const _t227 = sp.adj4Edges[v_p][_i216];
+                const _t228 = _t227;
+                if (_g198.length < 16) { if (!_g198.includes(_t228)) _g198.push(_t228); } else addOnce(_g198, sharedFateEmpties_st214, _t228);
               }
             }
-            _g228.length = 0;
-            G229: {
-              const _a232 = sp.lineCells[v_L];
-              for (let _i233 = 0; _i233 < _a232.length; _i233++) {
-                const v_c = _a232[_i233];
+            _g229.length = 0;
+            G230: {
+              const _a233 = sp.lineCells[v_L];
+              for (let _i234 = 0; _i234 < _a233.length; _i234++) {
+                const v_c = _a233[_i234];
                 if (!(!(((b.edgeCand(v_c) >> 1) & 1) !== 0))) continue;
-                _g228.push(v_c);
+                _g229.push(v_c);
               }
             }
-            const _says = { terms: { L: v_L, p: v_p, q: v_q, shut: _g197.slice() }, marks: { reads: sp.lineCells[v_L].slice(), outline: _g228.slice() } };
+            const _says = { terms: { L: v_L, p: v_p, q: v_q, col: _h197, target: _h63, shut: _g198.slice(), lineClue: setOf(v_p).slice() }, marks: { reads: sp.lineCells[v_L].slice(), outline: _g229.slice() } };
             if (!fire({ L: v_L, p: v_p, q: v_q }, facts, _says)) return 1;
           }
         }
@@ -3046,7 +3112,7 @@ export interface ParityBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface ParitySays {
-  terms: { e: number; k: number; crossing: readonly number[]; };
+  terms: { e: number; k: number; none: boolean; carries: boolean; crossing: readonly number[]; };
   marks: { reads: readonly number[]; stripes: readonly number[]; };
 }
 
@@ -3275,7 +3341,7 @@ export function parity(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<ParityBind
             }
           }
         }
-        const _says = { terms: { e: v_e, k: v_k, crossing: _g169.slice() }, marks: { reads: union(setOf(sp.edgeEnds[2 * v_e]), v_G).slice(), stripes: v_G.slice() } };
+        const _says = { terms: { e: v_e, k: v_k, none: (v_k === 0), carries: ((v_k % 2) === 1), crossing: _g169.slice() }, marks: { reads: union(setOf(sp.edgeEnds[2 * v_e]), v_G).slice(), stripes: v_G.slice() } };
         if (!fire({ O: v_O.slice(), e: v_e, G: v_G.slice(), k: v_k }, facts, _says)) return 1;
       }
     }

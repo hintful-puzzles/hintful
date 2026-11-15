@@ -154,8 +154,20 @@ techniques:
       terms:
         c: c
         open: "|open(c)| + drawn(c)"
-        shut: "set(edge(c, y) over y in adj4(c) where shut(c, y))"
+        # The game adds the sides on the board's rim to these.
+        shut: "set(edge(c, y) over y in adj4(c) where shut(c, y))" # supplied
       marks: { reads: "{c}" }
+      wordings:
+        - when: "open = 0"
+          look: >-
+            {outline shut: the outlined side | the outlined sides} block every way
+            into {ring: the ringed square}
+          follows: "no track can reach it"
+          move: "it must be empty"
+        - look: >-
+            {outline shut: the outlined side | the outlined sides} leave {ring: the
+            ringed square} one way in, and track needs two
+          move: "it must be empty"
   # A track square with as many sides left as it still needs rails: the
   # track crosses every one.
   - id: bothSidesLeft
@@ -165,8 +177,11 @@ techniques:
       F = open(c) where |F| > 0 and |F| + drawn(c) <= 2
     conclude: "|F| + drawn(c) = 2 and (forall y in F: place(edge(c, y), 1))"
     says:
-      terms: { c: c, shut: "set(edge(c, y) over y in adj4(c) where shut(c, y))" }
+      # The game adds the sides on the board's rim to `shut`.
+      terms: { c: c, shut: "set(edge(c, y) over y in adj4(c) where shut(c, y))" } # supplied
       marks: { reads: "{c}" }
+      look: "The track can't cross {outline shut: the outlined side | the outlined sides}"
+      move: "it must run through {ring: the ringed one | the ringed ones}"
   # A row or column with all the track squares its clue allows: the rest
   # hold none. One with more is inconsistent.
   - id: clueFull
@@ -174,8 +189,23 @@ techniques:
     for: "L in lines, O = undecided(L) where |O| > 0 and laid(L) >= clue(count, L)"
     conclude: "laid(L) = clue(count, L) and (forall c in O: strike(c, 1))"
     says:
-      terms: { L: L }
+      # `clueAt` is the line's clue in the margin, which the sentence outlines.
+      terms:
+        L: L
+        clueAt: L
+        target: "clue(count, L)"
+        col: "L in cols"
       marks: { reads: "cells(L)", outline: "{c in cells(L) where on(c)}" }
+      wordings:
+        - when: "target = 0"
+          look: "{stripes L: This {if col: column | row}} has {outline clueAt: clue 0}"
+          follows: "no track can run along it at all"
+          move: "{ring: every square in it} must be empty"
+        - look: >-
+            By {outline clueAt: clue {target}}, {stripes L: this {if col: column |
+            row}}'s track {target: square is | squares are} {outline: the outlined
+            one | the outlined ones}
+          move: "{ring: every other square in it} must be empty"
   # A row or column with all the empty squares its clue allows: the rest
   # hold track. One with more is inconsistent.
   - id: clueExact
@@ -186,8 +216,24 @@ techniques:
     conclude: >-
       |cells(L)| - emptied(L) = clue(count, L) and (forall c in O: strike(c, 2))
     says:
-      terms: { L: L }
+      terms:
+        L: L
+        clueAt: L
+        target: "clue(count, L)"
+        room: "|cells(L)| - clue(count, L)"
+        col: "L in cols"
       marks: { reads: "cells(L)", outline: "{c in cells(L) where off(c)}" }
+      wordings:
+        - when: "room = 0"
+          look: >-
+            {outline clueAt: Clue {target}} is the length of {stripes L: this {if
+            col: column | row}}
+          move: "{ring: every square in it} must carry track"
+        - look: >-
+            By {outline clueAt: clue {target}}, {stripes L: this {if col: column |
+            row}} has {room} empty {room: square | squares}, {outline: the outlined
+            one | the outlined ones}
+          move: "{ring: every other square in it} must carry track"
   # An open side between two track squares the rails already join: crossing
   # it would close a loop.
   - id: closeLoop
@@ -201,6 +247,9 @@ techniques:
     says:
       terms: { e: e, G: G }
       marks: { reads: "{end1(e)}", outline: "G" }
+      look: "{outline: The outlined track} already joins the squares {ring: this side} separates"
+      follows: "crossing it would close a loop"
+      move: "it must be blocked"
   # An open side between two track squares the rails join to the track's
   # two ends: crossing it would finish the track, leaving a track square
   # off it.
@@ -220,6 +269,10 @@ techniques:
       marks:
         reads: "{end1(e)}"
         outline: "{c in cells where on(c) and c not in G and c not in H}"
+      look: >-
+        Crossing {ring: this side | these sides} would finish the track from A to B,
+        stranding {outline: the outlined track}
+      move: "the side must be blocked"
   # The same, where crossing it would finish the track short of a row's or
   # column's clue.
   - id: finishEarly
@@ -246,6 +299,11 @@ techniques:
           C = {L in cols where count(c in cells(L) where c in G or c in H) < clue(count, L)},
           R = {L in rows where count(c in cells(L) where c in G or c in H) < clue(count, L)},
           L in lines where (|C| > 0 and L = first(C)) or (|C| = 0 and L = first(R)))
+        col: >-
+          exists L in cols where count(c in cells(L) where c in G or c in H) < clue(count, L): true
+        # The short line's clue and the squares the track already has in it,
+        # which the game reads.
+        unmet: "G" # supplied
       marks:
         reads: >-
           {end1(e)} + set(c over
@@ -259,6 +317,11 @@ techniques:
           R = {L in rows where count(c in cells(L) where c in G or c in H) < clue(count, L)},
           L in lines where (|C| > 0 and L = first(C)) or (|C| = 0 and L = first(R)),
           c in cells(L) where on(c))
+      look: >-
+        Crossing {ring: this side | these sides} would finish the track from A to B
+        short of {stripes short: this {if col: column | row}}'s {outline unmet:
+        outlined clue}
+      move: "the side must be blocked"
   # A row or column two track squares short of its clue, besides its
   # finished ones, with one loose end running along it, and no square
   # unfinished in it that the track could cross it through: the loose end
@@ -280,12 +343,18 @@ techniques:
     says:
       # Every unfinished square has a side shut across the line, which is
       # why none can be crossed straight through.
+      # `unable` is those squares and the sides that shut them, the board's
+      # rim included, which the game reads.
       terms:
         L: L
-        shut: >-
-          set(edge(c, y) over c in cells(L) where drawn(c) != 2,
-          y in adj4(c) where y not in cells(L) and shut(c, y))
+        clueAt: L
+        col: "L in cols"
+        unable: "set(edge(c, y) over c in cells(L) where drawn(c) != 2, y in adj4(c) where y not in cells(L) and shut(c, y))" # supplied
       marks: { reads: "cells(L)", outline: "{c in cells(L) where drawn(c) != 2}" }
+      look: >-
+        {stripes L: This {if col: column | row}} has {outline clueAt: 2 track
+        squares left}, and none of {outline unable: the outlined ones} can cross it
+      move: "the loose end must run {ring: on (ringed)}"
   # A row or column one track square short of its clue: a square whose
   # only way on, were it track, is into the next square along the line
   # would take two, so it holds none.
@@ -298,8 +367,26 @@ techniques:
       and count(y in adj4(p) where y != q and not shut(p, y)) < 2
     conclude: "strike(p, 1)"
     says:
-      terms: { L: L, p: p, q: q, shut: "set(edge(p, y) over y in adj4(p) where shut(p, y))" }
+      # The game adds the sides on the board's rim to `shut`, and reads `lineClue`:
+      # the line's clue and the squares it counts.
+      terms:
+        L: L
+        p: p
+        q: q
+        col: "L in cols"
+        target: "clue(count, L)"
+        up: "step(p, 1) = q"
+        down: "step(p, 2) = q"
+        left: "step(p, 3) = q"
+        shut: "set(edge(p, y) over y in adj4(p) where shut(p, y))" # supplied
+        lineClue: "{p}" # supplied
       marks: { reads: "cells(L)", outline: "{c in cells(L) where on(c)}" }
+      look: >-
+        {outline shut: the outlined side | the outlined sides} send track in {ring:
+        this square | these squares} {if up: upward | {if down: downward | {if left:
+        to the left | to the right}}}, but {stripes L: this {if col: column |
+        row}}'s {outline lineClue: clue {target}} allows one more
+      move: "it must be empty"
   # A row or column one empty square short of its clue: the same square
   # left empty would empty the next too, so the next holds track.
   - id: sharedFateEmpties
@@ -311,8 +398,21 @@ techniques:
       and count(y in adj4(p) where y != q and not shut(p, y)) < 2
     conclude: "strike(q, 2)"
     says:
-      terms: { L: L, p: p, q: q, shut: "set(edge(p, y) over y in adj4(p) where shut(p, y))" }
+      # As `sharedFate`'s.
+      terms:
+        L: L
+        p: p
+        q: q
+        col: "L in cols"
+        target: "clue(count, L)"
+        shut: "set(edge(p, y) over y in adj4(p) where shut(p, y))" # supplied
+        lineClue: "{p}" # supplied
       marks: { reads: "cells(L)", outline: "{c in cells(L) where off(c)}" }
+      look: >-
+        Emptying {ring: this square | these squares} empties {outline shut: the
+        outlined one} too, but {stripes L: this {if col: column | row}}'s {outline
+        lineClue: clue {target}} spares one more
+      move: "it must carry track"
   # An open side whose squares no other open side joins: the track crosses
   # into the block on one side of it as often as it leaves, its ends
   # counted, so the side carries track where the block's crossings so far
@@ -332,10 +432,17 @@ techniques:
     says:
       # The block is the argument, striped, and the rails across its border
       # are the crossings counted.
+      # `crossing` is those rails and the places an end in the block leaves the
+      # board by, which the game reads.
       terms:
         e: e
         k: k
-        crossing: >-
-          set(edge(c, y) over c in G,
-          y in adj4(c) where y not in G and value(edge(c, y)) = 1)
+        none: "k = 0"
+        carries: "k mod 2 = 1"
+        crossing: "set(edge(c, y) over c in G, y in adj4(c) where y not in G and value(edge(c, y)) = 1)" # supplied
       marks: { reads: "{end1(e)} + G", stripes: "G" }
+      look: >-
+        Every entry to {stripes: the striped block} needs an exit, and {if none: no
+        crossing is marked yet | it has {outline crossing: {k} outlined {k:
+        crossing | crossings}}}
+      move: "{ring: this last side} must {if carries: carry track | be blocked}"

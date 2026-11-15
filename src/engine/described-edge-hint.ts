@@ -151,7 +151,7 @@ export interface EdgeHintSpec<
   width?(state: State): number;
   /** What a stated clause's outlines and terms are drawn on, where it is not
    * the board's squares (Spokes' hubs), and the element each index names. */
-  elements?: { kind: MarkKind<Elem>; at(index: number): Elem };
+  elements?: { kind: MarkKind<Elem>; at(index: number, state: State): Elem };
   /** The squares a leg outlines, where they are the game's to find and not the
    * technique's (the hubs a trial breaks): the technique declares its
    * `outline` with a placeholder and a `# supplied` comment. */
@@ -159,7 +159,7 @@ export interface EdgeHintSpec<
   /** The terms a stated clause draws on a mark kind of their own, apart from
    * the squares (Path's tried edges), and the element each index of one names. */
   termKinds?: Readonly<Record<string, MarkKind<Elem>>>;
-  termAt?: Readonly<Record<string, (index: number) => Elem>>;
+  termAt?: Readonly<Record<string, (index: number, state: State) => Elem>>;
   /** A number term as the board draws it; its numeral where absent. */
   value?(n: number, state: State): string;
   /** The sentences the description cannot state, each technique's an override
@@ -278,15 +278,24 @@ export function describedEdgeHint<
           const cx: StatedContext<Elem, Ring> = {
             kind,
             ...(spec.ringKind === undefined ? {} : { ringKind: spec.ringKind }),
-            at: pointOf,
+            at: (index) => pointOf(index, state),
             ...(spec.termKinds === undefined ? {} : { termKinds: spec.termKinds }),
-            ...(spec.termAt === undefined ? {} : { termAt: spec.termAt }),
+            ...(spec.termAt === undefined
+              ? {}
+              : {
+                  termAt: Object.fromEntries(
+                    Object.entries(spec.termAt).map(([name, at]) => [
+                      name,
+                      (index: number) => at(index, state),
+                    ]),
+                  ),
+                }),
             ring,
             marks: {
-              outline: (spec.outline?.(marked) ?? says.marks.outline ?? []).map(
-                pointOf,
+              outline: (spec.outline?.(marked) ?? says.marks.outline ?? []).map((i) =>
+                pointOf(i, state),
               ),
-              stripes: (says.marks.stripes ?? []).map(pointOf),
+              stripes: (says.marks.stripes ?? []).map((i) => pointOf(i, state)),
             },
             terms: {
               ...(says.terms as Record<string, unknown>),

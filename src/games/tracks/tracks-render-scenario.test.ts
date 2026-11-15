@@ -15,8 +15,8 @@ import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import { LINE, PIECE } from "./hint-text.ts";
 import { tracksGame } from "./index.ts";
+import { LINE, PIECE } from "./kinds.ts";
 import { COL_CURSOR, COL_ERROR, COL_HINT_CELL } from "./render.ts";
 import type { TracksMove, TracksParams } from "./state.ts";
 

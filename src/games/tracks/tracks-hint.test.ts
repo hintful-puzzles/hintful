@@ -25,15 +25,12 @@ import type { HintStep } from "../../engine/game.ts";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { D, dirX, dirY, opposite, R, U } from "../../engine/square-edges.ts";
+import type { Clauses } from "../../engine/stated.ts";
+import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import {
-  narrate,
-  type TracksPicture,
-  type TracksReason,
-  type TracksRung,
-} from "./hint.ts";
-import { PIECE } from "./hint-text.ts";
+import type { TracksRung } from "./hint.ts";
 import { tracksGame } from "./index.ts";
+import { LINE, PIECE, type Piece } from "./kinds.ts";
 import { uiCanFlipEdge, uiCanFlipSquare } from "./moves.ts";
 import { tracksSolve } from "./solver.ts";
 import {
@@ -52,6 +49,7 @@ import {
   type TracksParams,
   type TracksState,
 } from "./state.ts";
+import { STATED } from "./tracks.compiled.ts";
 
 const SHAPES: TracksParams[] = [
   { w: 8, h: 8, diff: DIFF_EASY, singleOnes: true },
@@ -398,58 +396,58 @@ describe("every narratable premise is reached", () => {
   });
 });
 
-describe("narration reads correctly at the degenerate extremes", () => {
-  // Every arm whose wording branches on a count, read at the value that breaks
-  // the typical phrasing (docs/hints.md § "Sanity-read at the degenerate
-  // extremes"). Reasons are built by hand: the corpus does not reliably reach a
-  // clue of 0 or a full-width row.
-  const board = stateToBoard(
-    tracksGame.newState(SHAPES[0], tracksGame.newDesc(SHAPES[0], randomNew("x")).desc),
-  );
-  const ev = { cells: [], edges: [], clues: [] };
-  // No marks: the words are read apart from any picture.
-  const hl: TracksPicture = {
-    targets: [],
-    targetEdges: [],
-    area: [],
-    areaEdges: [],
-    clues: [],
-    line: null,
-    hatch: [],
-  };
-  const narrateText = (b: typeof board, r: TracksReason): string =>
-    narrate(b, r, hl).text;
-  const say = (r: TracksReason) => narrateText(board, r);
+describe("the wordings at the degenerate extremes", () => {
+  // Every wording that branches on a count, read at the value that breaks the
+  // typical phrasing (docs/hints.md § "Sanity-read at the degenerate extremes"),
+  // from the compiled module's clauses as the engine renders them. The corpus
+  // does not reliably reach a clue of 0 or a full-width row, and `finishEarly`
+  // is one firing among 450 small boards.
+  const W = 8;
+  const H = 8;
+  const square = (x: number, y: number): Piece => ({ x, y });
+  const rendered = (
+    clauses: Clauses,
+    terms: Record<string, number | boolean | number[]>,
+    ring: Piece[] = [],
+    marks: { outline?: Piece[]; stripes?: Piece[] } = {},
+  ): string =>
+    statedSentence(clauses, {
+      kind: PIECE,
+      at: (i) => square(i % W, Math.floor(i / W)),
+      ring,
+      marks: { outline: marks.outline ?? [], stripes: marks.stripes ?? [] },
+      terms,
+      termAt: { clueAt: (i) => ({ clue: i }), L: (i) => i as never },
+      termKinds: { L: LINE as never },
+      value: String,
+    }).text;
+  const ring = [square(0, 0)];
 
   it("a square with no side left open does not claim it has one", () => {
-    expect(say({ kind: "onlyOneSideLeft", x: 0, y: 0, open: 0, ev })).toContain(
+    const [none, one] = STATED.oneWayIn.step;
+    expect(rendered(none, { open: 0, shut: [] }, ring)).toContain(
       "block every way into the ringed square",
     );
-    expect(say({ kind: "onlyOneSideLeft", x: 0, y: 0, open: 1, ev })).toContain(
-      "one way in",
-    );
+    expect(rendered(one, { open: 1, shut: [] }, ring)).toContain("one way in");
   });
 
   it("a clue of one is singular, and a clue of zero says so", () => {
-    const b0 = { ...board, numbers: Int32Array.from(board.numbers) };
-    b0.numbers[0] = 0;
-    expect(narrateText(b0, { kind: "clueFull", line: 0, ev })).toContain(
+    const [zero, some] = STATED.clueFull.step;
+    const terms = (target: number) => ({ L: 0, clueAt: 0, target, col: true });
+    const at = (target: number, n: number) =>
+      rendered(some, terms(target), ring, {
+        outline: Array.from({ length: n }, (_, i) => square(i, 1)),
+      });
+    expect(rendered(zero, terms(0), ring)).toContain(
       "clue 0, so no track can run along it",
     );
-    b0.numbers[0] = 1;
-    expect(narrateText(b0, { kind: "clueFull", line: 0, ev })).toContain(
-      "track square is the outlined one,",
-    );
-    b0.numbers[0] = 2;
-    expect(narrateText(b0, { kind: "clueFull", line: 0, ev })).toContain(
-      "track squares are the outlined ones,",
-    );
+    expect(at(1, 1)).toContain("track square is the outlined one,");
+    expect(at(2, 2)).toContain("track squares are the outlined ones,");
   });
 
   it("a line with no room to be empty is not asked to leave 0 squares empty", () => {
-    const bFull = { ...board, numbers: Int32Array.from(board.numbers) };
-    bFull.numbers[0] = board.h;
-    const s = narrateText(bFull, { kind: "clueExact", line: 0, ev });
+    const [full] = STATED.clueExact.step;
+    const s = rendered(full, { L: 0, clueAt: 0, target: H, room: 0, col: true }, ring);
     expect(s).toContain(
       "is the length of this column, so every square in it must carry track",
     );
@@ -457,31 +455,36 @@ describe("narration reads correctly at the degenerate extremes", () => {
   });
 
   it("a parity step with nothing marked yet does not say it crosses 0 times", () => {
-    const s = say({ kind: "crossingParity", x: 0, y: 0, dir: 8, crossings: 0, ev });
+    const [clauses] = STATED.parity.step;
+    const terms = (k: number) => ({
+      k,
+      none: k === 0,
+      carries: k % 2 === 1,
+      crossing: [],
+    });
+    const s = rendered(clauses, terms(0), ring);
     expect(s).toContain("and no crossing is marked yet");
     expect(s).not.toMatch(/\b0 crossings?\b/);
     expect(s).toContain("must be blocked");
-    expect(
-      say({ kind: "crossingParity", x: 0, y: 0, dir: 8, crossings: 1, ev }),
-    ).toContain("and it has 1 outlined crossing,");
+    expect(rendered(clauses, terms(1), ring)).toContain(
+      "and it has 1 outlined crossing,",
+    );
   });
 
   // An arm few boards reach: one firing among 450 small boards.
   it("the rarest arm is still English, and still in the necessity voice", () => {
     const NECESSITY = /\bmust\b|\bcan(?:no|')t\b|\bcannot\b|\bno other\b|\bonly\b/;
-    for (const reason of [
-      { kind: "wouldFinishEarly", x: 1, y: 1, dir: 8, unmet: 0, ev } as const,
-    ]) {
-      const s = say(reason);
-      expect(s.length, `${reason.kind} narrates nothing`).toBeGreaterThan(60);
-      expect(
-        s.length,
-        `${reason.kind} is over the 300-char ceiling`,
-      ).toBeLessThanOrEqual(300);
-      expect(NECESSITY.test(s), `${reason.kind}: "${s}"`).toBe(true);
-      expect(s).not.toContain("—");
-      expect(s, `${reason.kind} left a template hole`).not.toContain("undefined");
-    }
+    const [clauses] = STATED.finishEarly.step;
+    const s = rendered(clauses, { short: [0], col: true, unmet: [] }, [
+      { x: 1, y: 1, dir: D },
+    ]);
+    expect(s.length, "finishEarly narrates nothing").toBeGreaterThan(60);
+    expect(s.length, "finishEarly is over the 300-char ceiling").toBeLessThanOrEqual(
+      300,
+    );
+    expect(NECESSITY.test(s), `finishEarly: "${s}"`).toBe(true);
+    expect(s).not.toContain("—");
+    expect(s, "finishEarly left a template hole").not.toContain("undefined");
   });
 });
 

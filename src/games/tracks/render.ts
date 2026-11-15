@@ -58,7 +58,7 @@ import {
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import { pieceOfOp } from "./hint.ts";
-import { LINE, PIECE, type Piece } from "./hint-text.ts";
+import { LINE, PIECE, type Piece } from "./kinds.ts";
 import { copyAndApplyDrag } from "./moves.ts";
 import {
   ALLDIR,
