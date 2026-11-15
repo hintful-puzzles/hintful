@@ -98,7 +98,10 @@ techniques:
       and (forall L in X0 - X, c in cells(L) where y(c) in Y0 - T and d in cand(c) and (k = 1 or not known(c)): strike(c, d))
     # Either view gives the strikes: the columns X hold d only in the rows
     # Y0 - T, and the rows T only in the other columns. A step names the one
-    # over fewer lines, and the places d can still take in it.
+    # over fewer lines, and the places d can still take in it. The lines are
+    # striped whole, since the claim is about all of them: the value is gone
+    # from each cell that is not outlined. {tally} is how many lines, and as
+    # many the other way.
     says:
       terms: { d: d }
       marks: {}
@@ -108,13 +111,25 @@ techniques:
           terms:
             lines: X
             places: "set(c over L in X, c in cells(L) where y(c) in Y0 - T and d in cand(c))"
-          marks: {}
+            two: "|X| = 2"
+          marks:
+            stripes: "set(c over L in X, c in cells(L))"
+            outline: "set(c over L in X, c in cells(L) where y(c) in Y0 - T and d in cand(c))"
+          look: >-
+            {stripes: These {tally} columns} fit {d} only in {outline},
+            taking {if two: both | all {tally}} rows' {d}
         rows:
           when: "|X| > |T|"
           terms:
             lines: T
             places: "set(c over L in X0 - X, c in cells(L) where y(c) in T and d in cand(c))"
-          marks: {}
+            two: "|T| = 2"
+          marks:
+            stripes: "set(c over r in T, c in cells(row(cell(0, r))))"
+            outline: "set(c over L in X0 - X, c in cells(L) where y(c) in T and d in cand(c))"
+          look: >-
+            {stripes: These {tally} rows} fit {d} only in {outline},
+            taking {if two: both | all {tally}} columns' {d}
 
   # engine/wing.ts: for each value a of an open middle cell m but x, an end that
   # sees m and is down to a and x; a cell t seeing every end, and m too where m

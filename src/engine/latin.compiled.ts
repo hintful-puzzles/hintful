@@ -449,13 +449,17 @@ export interface FishBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
 export type FishSays =
-  | { arm: "cols"; terms: { d: number; lines: readonly number[]; places: readonly number[]; }; marks: {  } }
-  | { arm: "rows"; terms: { d: number; lines: number; places: readonly number[]; }; marks: {  } }
+  | { arm: "cols"; terms: { d: number; lines: readonly number[]; places: readonly number[]; two: boolean; }; marks: { stripes: readonly number[]; outline: readonly number[]; } }
+  | { arm: "rows"; terms: { d: number; lines: number; places: readonly number[]; two: boolean; }; marks: { stripes: readonly number[]; outline: readonly number[]; } }
 ;
 
 const fishFacts: number[] = [];
 const fish_st343 = stamps();
 const fish_st355 = stamps();
+const fish_st367 = stamps();
+const fish_st379 = stamps();
+const fish_st390 = stamps();
+const fish_st401 = stamps();
 
 /** Its dearest read grows with the board as n. */
 export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding, FishSays> | null): number {
@@ -464,6 +468,10 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding, FishSays> 
   const _g178: number[] = [];
   const _g337: number[] = [];
   const _g349: number[] = [];
+  const _g361: number[] = [];
+  const _g373: number[] = [];
+  const _g385: number[] = [];
+  const _g395: number[] = [];
   const facts = fishFacts;
   let fired = 0;
   let changed = false;
@@ -475,7 +483,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding, FishSays> 
     const v_k = (v_d === b.repeat ? b.times : 1);
     const _h104 = (v_k > 1);
     const _h127 = (v_k === 1);
-    const _m361_0 = b.made[0];
+    const _m407_0 = b.made[0];
     _g83.length = 0;
     G84: {
       const _a97 = sp.cols;
@@ -518,7 +526,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding, FishSays> 
     const v_X0 = _g83;
     const _h140 = v_X0.length;
     const _h141 = (_h140 - 2);
-    const _m362_1 = b.made[1];
+    const _m408_1 = b.made[1];
     let _g114 = 0;
     G115: {
       const _a124 = cellsValued(b, sp.cells, v_d);
@@ -624,7 +632,7 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding, FishSays> 
           _c177 = _c176;
         }
         if (!(_c177)) break L157;
-        if (b.made[0] !== _m361_0 || b.made[1] !== _m362_1) {
+        if (b.made[0] !== _m407_0 || b.made[1] !== _m408_1) {
           _g178.length = 0;
           G179: {
             const _a192 = sp.cols;
@@ -940,25 +948,82 @@ export function fish(b: Marks, sp: GridSpace, fire: Fire<FishBinding, FishSays> 
                   }
                 }
               }
-              _says = { arm: "cols", terms: { d: v_d, lines: v_X.slice(), places: _g337.slice() }, marks: {  } };
-            }
-            if (_arm === 1) {
               _g349.length = 0;
               fish_st355.pass++;
               G350: {
-                const _a356 = minus(v_X0, v_X);
+                const _a356 = v_X;
                 for (let _i357 = 0; _i357 < _a356.length; _i357++) {
                   const v_L = _a356[_i357];
                   const _a358 = sp.lineCells[v_L];
                   for (let _i359 = 0; _i359 < _a358.length; _i359++) {
                     const v_c = _a358[_i359];
-                    if (!(((((v_T >> ((v_c / sp.w) | 0)) & 1) !== 0) && (((b.cands[v_c] >> v_d) & 1) !== 0)))) continue;
                     const _t360 = v_c;
                     if (_g349.length < 16) { if (!_g349.includes(_t360)) _g349.push(_t360); } else addOnce(_g349, fish_st355, _t360);
                   }
                 }
               }
-              _says = { arm: "rows", terms: { d: v_d, lines: v_T, places: _g349.slice() }, marks: {  } };
+              _g361.length = 0;
+              fish_st367.pass++;
+              G362: {
+                const _a368 = v_X;
+                for (let _i369 = 0; _i369 < _a368.length; _i369++) {
+                  const v_L = _a368[_i369];
+                  const _a370 = sp.lineCells[v_L];
+                  for (let _i371 = 0; _i371 < _a370.length; _i371++) {
+                    const v_c = _a370[_i371];
+                    if (!(((((_h334 >> ((v_c / sp.w) | 0)) & 1) !== 0) && (((b.cands[v_c] >> v_d) & 1) !== 0)))) continue;
+                    const _t372 = v_c;
+                    if (_g361.length < 16) { if (!_g361.includes(_t372)) _g361.push(_t372); } else addOnce(_g361, fish_st367, _t372);
+                  }
+                }
+              }
+              _says = { arm: "cols", terms: { d: v_d, lines: v_X.slice(), places: _g337.slice(), two: (_h158 === 2) }, marks: { stripes: _g349.slice(), outline: _g361.slice() } };
+            }
+            if (_arm === 1) {
+              _g373.length = 0;
+              fish_st379.pass++;
+              G374: {
+                const _a380 = minus(v_X0, v_X);
+                for (let _i381 = 0; _i381 < _a380.length; _i381++) {
+                  const v_L = _a380[_i381];
+                  const _a382 = sp.lineCells[v_L];
+                  for (let _i383 = 0; _i383 < _a382.length; _i383++) {
+                    const v_c = _a382[_i383];
+                    if (!(((((v_T >> ((v_c / sp.w) | 0)) & 1) !== 0) && (((b.cands[v_c] >> v_d) & 1) !== 0)))) continue;
+                    const _t384 = v_c;
+                    if (_g373.length < 16) { if (!_g373.includes(_t384)) _g373.push(_t384); } else addOnce(_g373, fish_st379, _t384);
+                  }
+                }
+              }
+              _g385.length = 0;
+              fish_st390.pass++;
+              G386: {
+                for (let _m391 = v_T; _m391 !== 0; _m391 &= _m391 - 1) {
+                  const v_r = 31 - Math.clz32(_m391 & -_m391);
+                  const _a392 = sp.lineCells[sp.rowOf[(v_r * sp.w + 0)]];
+                  for (let _i393 = 0; _i393 < _a392.length; _i393++) {
+                    const v_c = _a392[_i393];
+                    const _t394 = v_c;
+                    if (_g385.length < 16) { if (!_g385.includes(_t394)) _g385.push(_t394); } else addOnce(_g385, fish_st390, _t394);
+                  }
+                }
+              }
+              _g395.length = 0;
+              fish_st401.pass++;
+              G396: {
+                const _a402 = minus(v_X0, v_X);
+                for (let _i403 = 0; _i403 < _a402.length; _i403++) {
+                  const v_L = _a402[_i403];
+                  const _a404 = sp.lineCells[v_L];
+                  for (let _i405 = 0; _i405 < _a404.length; _i405++) {
+                    const v_c = _a404[_i405];
+                    if (!(((((v_T >> ((v_c / sp.w) | 0)) & 1) !== 0) && (((b.cands[v_c] >> v_d) & 1) !== 0)))) continue;
+                    const _t406 = v_c;
+                    if (_g395.length < 16) { if (!_g395.includes(_t406)) _g395.push(_t406); } else addOnce(_g395, fish_st401, _t406);
+                  }
+                }
+              }
+              _says = { arm: "rows", terms: { d: v_d, lines: v_T, places: _g373.slice(), two: (_h139 === 2) }, marks: { stripes: _g385.slice(), outline: _g395.slice() } };
             }
             if (_says === null) throw new Error("fish: no arm of says holds");
             if (!fire({ d: v_d, k: v_k, X0: v_X0.slice(), Y0: v_Y0, T: v_T, X: v_X.slice() }, facts, _says)) return 1;
@@ -1272,5 +1337,7 @@ export function wing(b: Marks, sp: GridSpace, fire: Fire<WingBinding, WingSays> 
  * fact's, by wording (`engine/stated.ts`). */
 export const STATED = {
   "set": {"step":[{"look":"{outline S} already account for {struck} between them"}]},
+  "fish.cols": {"step":[{"look":"{stripes: These {tally} columns} fit {d} only in {outline}, taking {if two: both | all {tally}} rows' {d}"}]},
+  "fish.rows": {"step":[{"look":"{stripes: These {tally} rows} fit {d} only in {outline}, taking {if two: both | all {tally}} columns' {d}"}]},
   "wing": {"step":[{"look":"Whatever goes in {outline m: the middle {noun}}, {outline E: {if self: it or another | another} outlined {noun}} {alongside} {ring t: this {noun}} must have {x}"}]},
 } as const;

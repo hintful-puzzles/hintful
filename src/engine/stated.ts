@@ -80,6 +80,8 @@ export interface StatedContext<E> {
   /** The values a strike step removes, for `{struck}`: the order is the
    * solver's, and each is named once, smallest first. */
   readonly struck?: readonly number[];
+  /** How many parallel lines the step names, for `{tally}`. */
+  readonly tally?: number;
   /** The noun a set of elements in stripes is, taken whole ("row"). */
   unit?(els: readonly E[]): string;
 }
@@ -146,6 +148,10 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
       if (!cx.struck)
         throw new Error("stated clause: {struck} needs the step's strikes");
       return joinWith([...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value));
+    case "tally":
+      if (cx.tally === undefined)
+        throw new Error("stated clause: {tally} needs the step's line count");
+      return String(cx.tally);
     case "shaded":
       return SHADED_NAME;
     case "unshaded":

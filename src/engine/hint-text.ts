@@ -363,18 +363,27 @@ function confinedPremise(
     cells: readonly Point[];
   },
   set: readonly Point[],
-  value: string,
+  n: number,
+  value: (n: number) => string,
   cell = "square",
 ): Narration {
-  const [along, across] =
-    lines.axis === "row" ? ["rows", "columns"] : ["columns", "rows"];
-  const striped = mark.as(
-    "stripes",
-    CELL,
-    lines.cells,
-    `These ${lines.count} ${along}`,
+  const { look } = statedParts(
+    LATIN_STATED[lines.axis === "row" ? "fish.rows" : "fish.cols"].step[0],
+    {
+      kind: CELL,
+      at: (): Point => {
+        throw new Error("a fish names no element term");
+      },
+      ring: [],
+      marks: { stripes: lines.cells, outline: set },
+      terms: { d: n, two: lines.count === 2 },
+      value,
+      noun: cell,
+      tally: lines.count,
+    },
   );
-  return phrase`${striped} fit ${value} only in ${mark.the("outline", CELL, set, cell)}, taking ${lines.count === 2 ? "both" : `all ${lines.count}`} ${across}' ${value}`;
+  if (look === undefined) throw new Error("the library's fish states no look");
+  return look;
 }
 
 /**
@@ -424,7 +433,7 @@ export function latinPremise(
     case "set": {
       if ("lines" in reason)
         return {
-          premise: confinedPremise(reason.lines, reason.cells, v(marks[0].n), cell),
+          premise: confinedPremise(reason.lines, reason.cells, marks[0].n, v, cell),
         };
       const { look } = statedParts(LATIN_STATED.set.step[0], {
         kind: CELL,
