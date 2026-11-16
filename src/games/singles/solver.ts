@@ -25,7 +25,7 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import * as singles from "./singles.compiled.ts";
+import * as singles from "../../generated/games/singles/singles.compiled.ts";
 import { F_BLACK, F_CIRCLE, F_ERROR, type SinglesState } from "./state.ts";
 
 /** Defined here, beside the solver, rather than in `state.ts`: imported from

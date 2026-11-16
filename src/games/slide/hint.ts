@@ -29,8 +29,8 @@ import {
   plannedSentence,
 } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
+import { STEPS } from "../../generated/games/slide/slide.compiled.ts";
 import { computeReachable, executeMove } from "./moves.ts";
-import { STEPS } from "./slide.compiled.ts";
 import { findExit } from "./solver.ts";
 import {
   EMPTY,

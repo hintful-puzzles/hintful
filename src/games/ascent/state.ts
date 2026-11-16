@@ -6,7 +6,7 @@
  */
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import * as ascent from "./ascent.compiled.ts";
+import * as ascent from "../../generated/games/ascent/ascent.compiled.ts";
 
 // --- number sentinels (upstream `NUMBER_*`) ------------------------
 

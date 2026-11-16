@@ -23,8 +23,8 @@ import {
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
+import * as magnets from "../../generated/games/magnets/magnets.compiled.ts";
 import { SQUARE } from "./kinds.ts";
-import * as magnets from "./magnets.compiled.ts";
 import {
   lineCells,
   lineTarget,

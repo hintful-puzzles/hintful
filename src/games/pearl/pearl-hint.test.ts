@@ -25,11 +25,11 @@ import { randomNew } from "../../engine/random/index.ts";
 import { dirX, dirY, opposite } from "../../engine/square-edges.ts";
 import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { STATED } from "../../generated/games/pearl/pearl.compiled.ts";
 import { type PearlHint, type PearlRung, pearlKeepTrack } from "./hint.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";
 import { SQUARE } from "./kinds.ts";
 import { executeMove } from "./moves.ts";
-import { STATED } from "./pearl.compiled.ts";
 import { pearlSolve } from "./solver.ts";
 import {
   CORNER,

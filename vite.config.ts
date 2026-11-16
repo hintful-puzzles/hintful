@@ -18,6 +18,7 @@ import { puzzleIds, puzzleCatalog as puzzles } from "./src/puzzle/catalog-data.t
 import { canonicalCoverage } from "./vite-plugins/canonical-coverage.ts";
 import { withControls } from "./vite-plugins/controls.ts";
 import { dependencyNotices } from "./vite-plugins/dependency-notices.ts";
+import { describeFirst } from "./vite-plugins/describe.ts";
 import { withDescription } from "./vite-plugins/description-page.ts";
 import { draftPuzzles } from "./vite-plugins/draft-puzzles.ts";
 import {
@@ -495,6 +496,7 @@ export default defineConfig(async ({ command, mode }) => {
       headers: securityHeaders({ env, extraScriptSrc }),
     },
     plugins: [
+      describeFirst(),
       visualizer({
         filename: "dist-stats.html",
         gzipSize: true,

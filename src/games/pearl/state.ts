@@ -20,7 +20,7 @@ import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import { D, L, R, U } from "../../engine/square-edges.ts";
-import * as pearl from "./pearl.compiled.ts";
+import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 
 // --- clue kinds (upstream NOCLUE / CORNER=black / STRAIGHT=white) ----------
 export const NOCLUE = 0;

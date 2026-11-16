@@ -25,7 +25,7 @@ import {
   offset,
   parseWireDesc,
 } from "../../engine/wires.ts";
-import * as net from "./net.compiled.ts";
+import * as net from "../../generated/games/net/net.compiled.ts";
 
 /* ----------------------------------------------------------------------
  * Bit vocabulary.

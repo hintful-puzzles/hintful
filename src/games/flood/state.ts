@@ -12,7 +12,7 @@ import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import * as flood from "./flood.compiled.ts";
+import * as flood from "../../generated/games/flood/flood.compiled.ts";
 import { choosemove, completed, fill, SolverScratch } from "./solver.ts";
 
 // --- constants --------------------------------------------------------

@@ -15,9 +15,9 @@ import { spokenOf } from "../../engine/described-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { CellMarks, Ladder, Taken } from "../../engine/ladder-runtime.ts";
 import type { Rect } from "../../engine/types.ts";
+import type * as rect from "../../generated/games/rect/rect.compiled.ts";
 import { say } from "./hint-text.ts";
 import { executeMove, isSolved, readClaims } from "./moves.ts";
-import type * as rect from "./rect.compiled.ts";
 import {
   deduction,
   HINT_TIER,

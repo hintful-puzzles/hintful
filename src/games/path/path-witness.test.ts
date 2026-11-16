@@ -16,8 +16,11 @@ import {
   techniqueFirings,
 } from "../../engine/ladder-runtime.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import type {
+  LineBreaksBinding,
+  LineBreaksSays,
+} from "../../generated/games/path/path.compiled.ts";
 import { pathGame } from "./index.ts";
-import type { LineBreaksBinding, LineBreaksSays } from "./path.compiled.ts";
 import { pathWalk } from "./solver.ts";
 import { DIFF_NORMAL, MODE_PAIRS, MODE_PATH, newState } from "./state.ts";
 

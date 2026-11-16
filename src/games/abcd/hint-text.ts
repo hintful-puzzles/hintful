@@ -34,7 +34,7 @@ import {
   whole,
 } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import { WORDS } from "./abcd.compiled.ts";
+import { WORDS } from "../../generated/games/abcd/abcd.compiled.ts";
 
 /** The letters as a hint prints them: candidate `n` is the `n`th letter. */
 export const LETTERS: LatinVocab = {

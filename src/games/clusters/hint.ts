@@ -18,7 +18,10 @@ import {
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
-import { type SaysById, STATED } from "./clusters.compiled.ts";
+import {
+  type SaysById,
+  STATED,
+} from "../../generated/games/clusters/clusters.compiled.ts";
 import { type ClustersRung, hintWalk } from "./solver.ts";
 import {
   type ClustersFill,

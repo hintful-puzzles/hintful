@@ -31,7 +31,7 @@ import {
 } from "../../engine/ladder-runtime.ts";
 import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import * as guess from "./guess.compiled.ts";
+import * as guess from "../../generated/games/guess/guess.compiled.ts";
 import { COLOR, type Reason, say } from "./hint-text.ts";
 import {
   FEEDBACK_CORRECTPLACE,

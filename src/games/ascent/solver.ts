@@ -23,7 +23,7 @@ import {
   TIERS,
   WideCellMarks,
 } from "../../engine/ladder-runtime.ts";
-import * as ascent from "./ascent.compiled.ts";
+import * as ascent from "../../generated/games/ascent/ascent.compiled.ts";
 import {
   type AscentState,
   DIFF_HARD,

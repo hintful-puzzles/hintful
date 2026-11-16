@@ -6,7 +6,7 @@
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
-import * as bridges from "./bridges.compiled.ts";
+import * as bridges from "../../generated/games/bridges/bridges.compiled.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
 import { solveFromScratch } from "./solver.ts";

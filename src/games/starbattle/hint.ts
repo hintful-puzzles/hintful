@@ -17,8 +17,11 @@ import {
 } from "../../engine/described-firing-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Point } from "../../engine/types.ts";
+import {
+  type SaysById,
+  STATED,
+} from "../../generated/games/starbattle/starbattle.compiled.ts";
 import { hintWalk, type StarbattleRung } from "./solver.ts";
-import { type SaysById, STATED } from "./starbattle.compiled.ts";
 import {
   BLANK,
   executeMove,

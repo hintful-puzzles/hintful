@@ -43,6 +43,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import type { Color, GameStatus, Point, Size } from "../../engine/types.ts";
+import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import { newSignpostDesc } from "./generator.ts";
 import {
   SIGNPOST_RUNGS,
@@ -53,7 +54,6 @@ import {
 } from "./hint.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
 import { BORDER, buildPalette, redrawSignpost } from "./render.ts";
-import * as signpost from "./signpost.compiled.ts";
 import { answerOf, isAnswer, solverFinishes } from "./solver.ts";
 import {
   checkCompletion,

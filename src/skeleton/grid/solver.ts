@@ -26,7 +26,7 @@ import {
   runLadder,
   TIERS as SCALE,
 } from "../../engine/ladder-runtime.ts";
-import * as skeleton from "./skeleton.compiled.ts";
+import * as skeleton from "../../generated/skeleton/grid/skeleton.compiled.ts";
 import {
   BLANK,
   CROSSED,

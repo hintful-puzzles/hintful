@@ -83,8 +83,11 @@ fi
 PASCAL="$(printf '%s' "${GAME}" | awk '{ print toupper(substr($0,1,1)) substr($0,2) }')"
 UPPER="$(printf '%s' "${GAME}" | tr '[:lower:]' '[:upper:]')"
 
+# A skeleton's compiled module is generated under src/generated/skeleton/<kind>/,
+# and a game's under src/generated/games/<gameId>/, at the same depth.
 rename() {
-  sed -e "s/SKELETON/${UPPER}/g" -e "s/Skeleton/${PASCAL}/g" -e "s/skeleton/${GAME}/g"
+  sed -e "s#generated/skeleton/${KIND}/#generated/games/skeleton/#g" \
+    -e "s/SKELETON/${UPPER}/g" -e "s/Skeleton/${PASCAL}/g" -e "s/skeleton/${GAME}/g"
 }
 
 # Every file of the skeleton, under its renamed path: its description, which
@@ -116,10 +119,10 @@ cd "${REPO_ROOT}"
 # A longer name reflows lines, and the import above wants its sorted place.
 npx biome check --write "src/games/${GAME}" > /dev/null
 
-# The compiled module names the description it was compiled from, so the
-# copy's is compiled afresh. Its techniques are the skeleton's as written, so
-# the skeleton's soundness verdicts are the copy's: each is a fingerprint of
-# the technique, which src/describe/compile.test.ts checks against the copy.
+# The copy's module is compiled from its description. Its techniques are the
+# skeleton's as written, so the skeleton's soundness verdicts are the copy's:
+# each is a fingerprint of the technique, which src/describe/compile.test.ts
+# checks against the copy.
 npm run -s describe > /dev/null
 node -e '
   const fs = require("node:fs");

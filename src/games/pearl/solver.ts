@@ -31,7 +31,7 @@ import {
 } from "../../engine/ladder-runtime.ts";
 import { DIRECTIONS, dirX, dirY, opposite } from "../../engine/square-edges.ts";
 import { type SquareTiling, squareTiling } from "../../engine/square-tiling.ts";
-import * as pearl from "./pearl.compiled.ts";
+import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 import { NOCLUE, type PearlState } from "./state.ts";
 
 /** What the description reads a line as, and an edge with none. */

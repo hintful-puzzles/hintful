@@ -17,7 +17,10 @@ import {
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
-import { SAYS_KINDS, STATED } from "./palisade.compiled.ts";
+import {
+  SAYS_KINDS,
+  STATED,
+} from "../../generated/games/palisade/palisade.compiled.ts";
 import {
   type PalisadeSays,
   type PalisadeWalkContext,

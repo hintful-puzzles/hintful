@@ -10,9 +10,9 @@ import {
   planByStage,
 } from "../../engine/permutation-planner.ts";
 import { moveEffect } from "../../engine/position-runtime.ts";
+import * as twiddle from "../../generated/games/twiddle/twiddle.compiled.ts";
 import type { TwiddleMove, TwiddleState } from "./state.ts";
 import { positionOf, rulesOf, turnOf } from "./state.ts";
-import * as twiddle from "./twiddle.compiled.ts";
 
 /** A turn by its index: block `t >> 1` in row-major order of top-left
  * corners, anticlockwise when `t` is even and clockwise when odd. */

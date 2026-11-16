@@ -36,9 +36,9 @@ import {
   statedSentence,
 } from "../../engine/stated.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { STATED, STEPS } from "../../generated/games/loopy/loopy.compiled.ts";
 import type { LoopyMove, LoopyOp } from "./index.ts";
 import { CORNER, DOT, EDGE, FACE, PAIR } from "./kinds.ts";
-import { STATED, STEPS } from "./loopy.compiled.ts";
 import {
   type CornerNote,
   type HintBoard,

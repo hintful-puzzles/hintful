@@ -15,7 +15,6 @@ import {
 import type { GridSpace } from "../../engine/describe-runtime.ts";
 import { PLACE, valuesOf } from "../../engine/describe-runtime.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
-import type { SetSays } from "../../engine/latin.compiled.ts";
 import {
   type ConfinedLines,
   confinedLines,
@@ -23,7 +22,8 @@ import {
 } from "../../engine/latin.ts";
 import { byCell } from "../../engine/latin-notes.ts";
 import type { Point } from "../../engine/types.ts";
-import type * as solo from "./solo.compiled.ts";
+import type { SetSays } from "../../generated/engine/latin.compiled.ts";
+import type * as solo from "../../generated/games/solo/solo.compiled.ts";
 import { soloNotesLadder } from "./solver.ts";
 import { dealtOf, NO_CAGES, type SoloState, soloSpace } from "./state.ts";
 

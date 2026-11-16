@@ -32,7 +32,7 @@ import {
   squareEdges,
 } from "../../engine/square-edges.ts";
 import type { Point } from "../../engine/types.ts";
-import { STATED } from "./path.compiled.ts";
+import { STATED } from "../../generated/games/path/path.compiled.ts";
 import {
   type Broke,
   type PathFiring,

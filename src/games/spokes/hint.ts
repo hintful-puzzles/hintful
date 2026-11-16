@@ -9,6 +9,7 @@
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import type { HintResult } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import { STATED } from "../../generated/games/spokes/spokes.compiled.ts";
 import { HUB, SPOKE, type Spoke } from "./kinds.ts";
 import {
   type SpokesFiring,
@@ -18,7 +19,6 @@ import {
   spokesAnswer,
   spokesWalk,
 } from "./solver.ts";
-import { STATED } from "./spokes.compiled.ts";
 import {
   canonicalEdge,
   DIFF_TRICKY,

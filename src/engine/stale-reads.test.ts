@@ -26,7 +26,7 @@ import { dealt, dealtAgain } from "./testing/dealt.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
 import { seedBudget } from "./testing/slow.ts";
 
-const modules = import.meta.glob<string>("../games/*/*.compiled.ts", {
+const modules = import.meta.glob<string>("../generated/games/*/*.compiled.ts", {
   eager: true,
   query: "?raw",
   import: "default",
@@ -35,7 +35,7 @@ const modules = import.meta.glob<string>("../games/*/*.compiled.ts", {
 /** The games whose compiled module guards a binding, by what it compiled. */
 const GUARDED = Object.entries(modules)
   .filter(([, text]) => text.includes("staleChecking) {"))
-  .map(([path]) => path.split("/")[2])
+  .map(([path]) => path.split("/").at(-2) ?? "")
   .sort();
 
 /** Hint requests made of each board. */

@@ -35,10 +35,13 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import {
+  ladder,
+  tiers as ladderTiers,
+} from "../../generated/games/mathrax/mathrax.compiled.ts";
 import cReference from "./__fixtures__/mathrax-c-reference.json" with { type: "json" };
 import { mathraxCandidateClue, newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
-import { ladder, tiers as ladderTiers } from "./mathrax.compiled.ts";
 import {
   COL_ERROR,
   COL_FLASH,

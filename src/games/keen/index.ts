@@ -89,8 +89,8 @@ import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { statedParts } from "../../engine/stated.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
+import * as keen from "../../generated/games/keen/keen.compiled.ts";
 import { newKeenDesc } from "./generator.ts";
-import * as keen from "./keen.compiled.ts";
 import {
   colors,
   computeSize,

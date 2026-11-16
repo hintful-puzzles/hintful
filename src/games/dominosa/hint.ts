@@ -9,7 +9,10 @@
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
-import { SAYS_KINDS, STATED } from "./dominosa.compiled.ts";
+import {
+  SAYS_KINDS,
+  STATED,
+} from "../../generated/games/dominosa/dominosa.compiled.ts";
 import { SPOT, type Spot } from "./kinds.ts";
 import {
   answerOf,

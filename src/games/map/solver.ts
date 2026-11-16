@@ -30,8 +30,8 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
+import * as map from "../../generated/games/map/map.compiled.ts";
 import { graphNeighbors } from "./graph.ts";
-import * as map from "./map.compiled.ts";
 import { DIFF_RECURSE, DIFFCOUNT } from "./state.ts";
 
 export const SOLVER_IMPOSSIBLE = 0;

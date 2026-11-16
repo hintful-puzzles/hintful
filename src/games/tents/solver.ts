@@ -39,6 +39,7 @@ import {
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import type { GameStatus } from "../../engine/types.ts";
+import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import {
   BLANK,
   DX,
@@ -51,7 +52,6 @@ import {
   type TentsState,
   TREE,
 } from "./state.ts";
-import * as tents from "./tents.compiled.ts";
 
 /** The description's values: a tent, grass and a tree. */
 const D_TENT = 1;

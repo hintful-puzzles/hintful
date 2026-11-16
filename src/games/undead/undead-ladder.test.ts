@@ -6,6 +6,7 @@
 
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import * as undead from "../../generated/games/undead/undead.compiled.ts";
 import { newUndeadDesc } from "./generator.ts";
 import { solveDeductive, TIER_RUNG } from "./solver.ts";
 import {
@@ -16,7 +17,6 @@ import {
   newState,
   type UndeadParams,
 } from "./state.ts";
-import * as undead from "./undead.compiled.ts";
 
 /** One shape a tier, since the tier is what gates the ladder. */
 const SHAPES: UndeadParams[] = [

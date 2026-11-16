@@ -35,7 +35,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
-import * as spokes from "./spokes.compiled.ts";
+import * as spokes from "../../generated/games/spokes/spokes.compiled.ts";
 
 // --- spoke states -----------------------------------------------------------
 

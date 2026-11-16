@@ -41,7 +41,7 @@ import {
   latinSolver,
   latinVerdict,
 } from "../../engine/latin.ts";
-import * as salad from "./salad.compiled.ts";
+import * as salad from "../../generated/games/salad/salad.compiled.ts";
 import {
   CIRCLE,
   CROSS,

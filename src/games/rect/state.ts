@@ -30,7 +30,7 @@ import {
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import type { Rect } from "../../engine/types.ts";
-import * as rect from "./rect.compiled.ts";
+import * as rect from "../../generated/games/rect/rect.compiled.ts";
 
 /** The two puzzles, indexed by `mode`. */
 export const MODE_RECT = 0;

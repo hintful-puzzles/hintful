@@ -31,7 +31,7 @@ import { modifierItem } from "../../engine/modifier.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
-import * as abcd from "./abcd.compiled.ts";
+import * as abcd from "../../generated/games/abcd/abcd.compiled.ts";
 
 // --- constants -------------------------------------------------------------
 

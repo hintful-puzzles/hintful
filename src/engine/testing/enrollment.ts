@@ -212,11 +212,19 @@ export interface SourceFile {
  * libraries (`grid/`, `color/`) and flat helpers are not a game's own code:
  * they are the mechanics the guards ask after. */
 export const gameSourceFiles: ReadonlyMap<string, readonly SourceFile[]> = (() => {
-  const modules = import.meta.glob<string>("../../games/*/**/*.ts", {
-    query: "?raw",
-    import: "default",
-    eager: true,
-  });
+  // A game's compiled module is its own code, generated outside its directory.
+  const modules = {
+    ...import.meta.glob<string>("../../games/*/**/*.ts", {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    }),
+    ...import.meta.glob<string>("../../generated/games/*/*.ts", {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    }),
+  };
   const engineDirs = import.meta.glob<string>("../*/*.ts", {
     query: "?raw",
     import: "default",
@@ -235,7 +243,7 @@ export const gameSourceFiles: ReadonlyMap<string, readonly SourceFile[]> = (() =
   const familiesOf = new Map<string, Set<string>>();
   for (const [path, text] of Object.entries(modules)) {
     if (path.includes(".test.")) continue;
-    const id = path.split("/")[3];
+    const id = /\/games\/([^/]+)\//.exec(path)?.[1];
     if (!id) continue;
     byGame.set(id, [...(byGame.get(id) ?? []), { path, text }]);
     const dirs = familiesOf.get(id) ?? new Set<string>();

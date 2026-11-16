@@ -13,7 +13,7 @@ import { choice, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
-import * as towers from "./towers.compiled.ts";
+import * as towers from "../../generated/games/towers/towers.compiled.ts";
 
 /**
  * Types and pure state helpers for Towers (Skyscrapers) — the state/codec

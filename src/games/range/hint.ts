@@ -12,8 +12,8 @@ import {
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
+import { type SaysById, STATED } from "../../generated/games/range/range.compiled.ts";
 import { CLUE } from "./kinds.ts";
-import { type SaysById, STATED } from "./range.compiled.ts";
 import { hintWalk, type RangeRung } from "./solver.ts";
 import { BLACK, executeMove, type RangeMove, type RangeState, WHITE } from "./state.ts";
 

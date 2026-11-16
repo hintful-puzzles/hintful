@@ -36,7 +36,7 @@ import {
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import * as filling from "./filling.compiled.ts";
+import * as filling from "../../generated/games/filling/filling.compiled.ts";
 import { dealtOf, spaceOf } from "./state.ts";
 
 /** Why a *set* of cells is forced — drives the hint's narration. A single

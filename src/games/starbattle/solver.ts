@@ -28,7 +28,7 @@ import {
   TIERS as SCALE,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import * as starbattle from "./starbattle.compiled.ts";
+import * as starbattle from "../../generated/games/starbattle/starbattle.compiled.ts";
 import {
   BLANK,
   CROSSED,

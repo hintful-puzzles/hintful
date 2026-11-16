@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { clueList, describedSpace, latinSpace } from "../engine/describe-runtime.ts";
-import * as unequal from "../games/unequal/unequal.compiled.ts";
-import * as unruly from "../games/unruly/unruly.compiled.ts";
+import * as unequal from "../generated/games/unequal/unequal.compiled.ts";
+import * as unruly from "../generated/games/unruly/unruly.compiled.ts";
 
 describe("a compiled answer check", () => {
   it("refuses a value outside the domain, however the rest reads", () => {

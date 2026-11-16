@@ -83,8 +83,10 @@
  * plans to known positives on the real tree.
  */
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import ts from "typescript";
+import { compiledPath } from "../../src/describe/sources.ts";
 import {
   allTestFiles,
   commitPlan,
@@ -158,9 +160,19 @@ function sameCode(before: string, after: string): boolean {
  */
 function changeOf(since: string | null): Change {
   const range = since === null ? ["--cached"] : [since, "HEAD"];
-  const paths = git(["diff", "--name-only", "--no-renames", ...range])
+  const listed = git(["diff", "--name-only", "--no-renames", ...range])
     .split("\n")
     .filter(Boolean);
+  // A description's module is generated and never in a diff, and the code
+  // reaches the description only through it: an edited description is an
+  // edited module.
+  const paths = [
+    ...listed,
+    ...listed
+      .filter((p) => p.startsWith("src/") && p.endsWith(".description.yaml"))
+      .map(compiledPath)
+      .filter((p) => existsSync(path.join(ROOT, p))),
+  ];
   const prose = new Set(
     paths.filter((p) => {
       if (!p.endsWith(".ts") || p.endsWith(".test.ts") || gameOf(p) !== null)

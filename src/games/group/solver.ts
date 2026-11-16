@@ -23,7 +23,7 @@ import {
   latinSolver,
 } from "../../engine/latin.ts";
 import type { Clauses } from "../../engine/stated.ts";
-import * as group from "./group.compiled.ts";
+import * as group from "../../generated/games/group/group.compiled.ts";
 import { DIFF_UNREASONABLE } from "./state.ts";
 
 /** The terms a stated clause reads: element numbers, and cell indices, which

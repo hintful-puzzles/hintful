@@ -13,7 +13,11 @@ import {
 import type { HintResult } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import type { Point } from "../../engine/types.ts";
-import { SAYS_EACH, type SaysById, STATED } from "./bricks.compiled.ts";
+import {
+  SAYS_EACH,
+  type SaysById,
+  STATED,
+} from "../../generated/games/bricks/bricks.compiled.ts";
 import { answerOf, type BricksRung, hintWalk } from "./solver.ts";
 import {
   type BricksMove,

@@ -16,8 +16,10 @@
 // with them: a config entry that matches nothing is not where history goes, and
 // it costs the next reader a trip to the filesystem to discover it is inert.
 import { defineConfig } from "vitest/config";
+import { describeFirst } from "../../vite-plugins/describe.ts";
 
 export default defineConfig({
+  plugins: [describeFirst()],
   test: {
     include: [
       "scripts/checks/color-inventory.test.ts",

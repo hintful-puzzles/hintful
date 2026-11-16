@@ -29,7 +29,7 @@ import {
 } from "../../engine/ladder-runtime.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import * as mines from "./mines.compiled.ts";
+import * as mines from "../../generated/games/mines/mines.compiled.ts";
 
 /** What the marks hold: a mine, or a safe square. */
 const MINE = 1;

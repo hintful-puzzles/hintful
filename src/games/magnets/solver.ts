@@ -33,7 +33,7 @@ import {
   uncluedPlacingRung,
 } from "../../engine/ladder-runtime.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import * as magnets from "./magnets.compiled.ts";
+import * as magnets from "../../generated/games/magnets/magnets.compiled.ts";
 import {
   COLUMN,
   GS_SET,

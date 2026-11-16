@@ -17,6 +17,7 @@ import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { keepTrackBy } from "../../engine/hint-track.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import { lineSquares, pointOf } from "./hint-marks.ts";
 import { type Counted, type Dir, type LineKind, say } from "./hint-text.ts";
 import {
@@ -49,7 +50,6 @@ import {
   TREE,
   U,
 } from "./state.ts";
-import * as tents from "./tents.compiled.ts";
 
 export type { TentsRung } from "./solver.ts";
 

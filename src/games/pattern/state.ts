@@ -30,7 +30,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
-import * as pattern from "./pattern.compiled.ts";
+import * as pattern from "../../generated/games/pattern/pattern.compiled.ts";
 
 // --- cell values (upstream #defines) -------------------------------------
 export const GRID_EMPTY = 0;

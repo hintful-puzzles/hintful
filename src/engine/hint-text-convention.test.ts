@@ -26,14 +26,14 @@ const WITH_TEXT = new Set(
  * nothing. */
 const STATED_GAMES = new Set(
   Object.entries(
-    import.meta.glob<Record<string, object>>("../games/*/*.compiled.ts", {
+    import.meta.glob<Record<string, object>>("../generated/games/*/*.compiled.ts", {
       eager: true,
     }),
   )
     .filter(([, m]) =>
       ["STATED", "STEPS"].some((name) => name in m && Object.keys(m[name]).length > 0),
     )
-    .map(([p]) => p.split("/")[2]),
+    .map(([p]) => p.split("/").at(-2) ?? ""),
 );
 
 /** Where a game's sentences may live: its text module or its description. */

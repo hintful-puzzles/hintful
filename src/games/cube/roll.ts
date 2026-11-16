@@ -6,7 +6,7 @@
 
 import { rejectMove } from "../../engine/assert-never.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
-import * as cube from "./cube.compiled.ts";
+import * as cube from "../../generated/games/cube/cube.compiled.ts";
 import { Direction, type GridSquare } from "./grid.ts";
 import {
   alignPolyKeys,

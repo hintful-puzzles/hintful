@@ -19,8 +19,8 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
+import { STATED } from "../../generated/games/bricks/bricks.compiled.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
-import { STATED } from "./bricks.compiled.ts";
 import { type BricksHint, bricksSteps } from "./hint.ts";
 import { bricksGame } from "./index.ts";
 import { COL_HINT_CELL, tileOrigin } from "./render.ts";

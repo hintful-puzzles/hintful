@@ -10,7 +10,7 @@ import { EDGE, type ForcedBorderEdge } from "../../engine/border-grid-hint.ts";
 import { CELL } from "../../engine/hint-words.ts";
 import { type Clauses, statedParts, statedSentence } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
-import { STATED } from "./separate.compiled.ts";
+import { STATED } from "../../generated/games/separate/separate.compiled.ts";
 
 const at = (c: number): Point => ({ x: c % 4, y: (c / 4) | 0 });
 const wall = (x: number, y: number): ForcedBorderEdge => ({

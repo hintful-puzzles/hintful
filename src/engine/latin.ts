@@ -35,6 +35,7 @@
  * multiplicity is 1, and the techniques read as on a Latin square.
  */
 
+import * as compiled from "../generated/engine/latin.compiled.ts";
 import type { CompiledTechniques } from "./deduction-fixpoint.ts";
 import { latinSpace, valuesOf } from "./describe-runtime.ts";
 import type { DifficultyVerdict } from "./difficulty.ts";
@@ -54,7 +55,6 @@ import {
   uncluedRung,
   withSearch,
 } from "./ladder-runtime.ts";
-import * as compiled from "./latin.compiled.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { shuffle } from "./shuffle.ts";
 

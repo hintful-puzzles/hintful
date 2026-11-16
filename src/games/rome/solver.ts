@@ -35,7 +35,7 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import * as rome from "./rome.compiled.ts";
+import * as rome from "../../generated/games/rome/rome.compiled.ts";
 import {
   dirBit,
   EMPTY,

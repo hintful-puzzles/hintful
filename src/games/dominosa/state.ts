@@ -30,7 +30,7 @@ import { noSuchTier } from "../../engine/difficulty.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import * as dominosa from "./dominosa.compiled.ts";
+import * as dominosa from "../../generated/games/dominosa/dominosa.compiled.ts";
 
 // --- combinatorial helpers (upstream TRI / DCOUNT / DINDEX macros) ----------
 

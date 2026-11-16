@@ -14,6 +14,10 @@
  * nothing here decides anything.
  */
 
+import {
+  STATED as LATIN_STATED,
+  STEPS as LATIN_STEPS,
+} from "../generated/engine/latin.compiled.ts";
 import { EDGE, type ForcedBorderEdge } from "./border-grid-hint.ts";
 import {
   CELL,
@@ -32,7 +36,6 @@ import {
   unshaped,
   whole,
 } from "./hint-words.ts";
-import { STATED as LATIN_STATED, STEPS as LATIN_STEPS } from "./latin.compiled.ts";
 import type { LatinWingReason } from "./latin.ts";
 import { type GenericLatinReason, hiddenSingleLine } from "./latin-hint.ts";
 import { plannedSentence, statedParts } from "./stated.ts";

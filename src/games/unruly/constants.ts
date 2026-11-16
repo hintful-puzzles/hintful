@@ -6,7 +6,7 @@
  * vocabulary. `solver.ts`'s remaining import from `state.ts` is types only,
  * which `verbatimModuleSyntax` erases.
  */
-import * as unruly from "./unruly.compiled.ts";
+import * as unruly from "../../generated/games/unruly/unruly.compiled.ts";
 
 // --- cell values (upstream `enum { EMPTY, N_ONE, N_ZERO, BOGUS }`) -------
 // BOGUS was upstream's solver-internal temporary fill, which the described

@@ -39,7 +39,7 @@ import {
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import type { Point } from "../../engine/types.ts";
-import * as galaxies from "./galaxies.compiled.ts";
+import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import {
   addAssoc,
   F_DOT,

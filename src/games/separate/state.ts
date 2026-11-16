@@ -39,7 +39,7 @@ import {
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import * as separate from "./separate.compiled.ts";
+import * as separate from "../../generated/games/separate/separate.compiled.ts";
 import { isSolved } from "./solver.ts";
 
 // --- types ----------------------------------------------------------------

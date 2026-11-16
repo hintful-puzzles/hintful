@@ -95,9 +95,9 @@ import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { statedParts } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
+import * as unequal from "../../generated/games/unequal/unequal.compiled.ts";
 import type { HintReason } from "./solver.ts";
 import { decodeParams, defaultParams, menu, SIGNS, validateParams } from "./state.ts";
-import * as unequal from "./unequal.compiled.ts";
 
 // --- hint ------------------------------------------------------------------
 

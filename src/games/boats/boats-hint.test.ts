@@ -35,7 +35,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
-import { STATED } from "./boats.compiled.ts";
+import { STATED } from "../../generated/games/boats/boats.compiled.ts";
 import { newBoatsDesc } from "./generator.ts";
 import { type BoatsHint, boatsGame } from "./index.ts";
 import { COL_HINT_CELL } from "./render.ts";

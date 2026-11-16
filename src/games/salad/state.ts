@@ -38,7 +38,7 @@ import { choice, letters, num, paramsCodec, size } from "../../engine/params-cod
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
-import * as salad from "./salad.compiled.ts";
+import * as salad from "../../generated/games/salad/salad.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 

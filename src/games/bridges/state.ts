@@ -21,7 +21,7 @@ import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
-import * as bridges from "./bridges.compiled.ts";
+import * as bridges from "../../generated/games/bridges/bridges.compiled.ts";
 
 // --- Grid flag bits (bridges.c lines 127-142) ---
 export const G_ISLAND = 0x0001;

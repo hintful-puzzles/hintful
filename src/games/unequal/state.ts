@@ -19,9 +19,9 @@ import {
   F_ADJ_UP,
 } from "../../engine/edge-clue-latin/state.ts";
 import type { PresetBoards } from "../../engine/game.ts";
+import * as unequal from "../../generated/games/unequal/unequal.compiled.ts";
 import { drawSigns } from "./render.ts";
 import { signAnswer, signLadder } from "./solver.ts";
-import * as unequal from "./unequal.compiled.ts";
 
 /** A sign: the cell it is flagged at holds the greater number. */
 export const SIGNS: ClueKind = {

@@ -96,7 +96,9 @@ function resolve(from: string, spec: string): string | null {
   return null;
 }
 
-const gameOf = (p: string) => /^src\/games\/([^/]+)\//.exec(p)?.[1] ?? null;
+/** A game's compiled module, generated outside its directory, is the game's. */
+const gameOf = (p: string) =>
+  /^src\/(?:generated\/)?games\/([^/]+)\//.exec(p)?.[1] ?? null;
 
 describe("module layering", () => {
   it("resolves the imports the rules below are counting", () => {
@@ -199,7 +201,7 @@ describe("module layering", () => {
       if (!path.startsWith("src/engine/") || ALLOWED.has(path)) continue;
       for (const { spec } of imports(text)) {
         const target = resolve(path, spec);
-        if (target?.startsWith("src/games/")) offenders.push(`${path} → ${target}`);
+        if (target && gameOf(target)) offenders.push(`${path} → ${target}`);
       }
     }
     expect(offenders).toEqual([]);
@@ -223,7 +225,9 @@ describe("module layering", () => {
     // Comlink adapter up, the violation count including tests is zero, so it
     // lands as a ratchet rather than a wish. The rules above cannot — an engine
     // test legitimately imports the games barrel to populate the registry.
-    const OWN = ["src/engine/", "src/games/"];
+    // The compiled descriptions are the engine's and the games' own code,
+    // generated outside their directories.
+    const OWN = ["src/engine/", "src/games/", "src/generated/"];
     const offenders: string[] = [];
     for (const [path, text] of Object.entries(sources).map(
       ([p, t]) => [p.replace(/^\.\//, "src/"), t] as const,

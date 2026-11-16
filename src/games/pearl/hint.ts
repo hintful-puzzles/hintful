@@ -28,10 +28,10 @@ import {
   squareEdges,
   U,
 } from "../../engine/square-edges.ts";
+import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
+import { STATED } from "../../generated/games/pearl/pearl.compiled.ts";
 import { SQUARE } from "./kinds.ts";
 import { executeMove } from "./moves.ts";
-import * as pearl from "./pearl.compiled.ts";
-import { STATED } from "./pearl.compiled.ts";
 import {
   LINE,
   ladderOf,

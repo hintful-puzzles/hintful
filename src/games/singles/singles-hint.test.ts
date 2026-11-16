@@ -21,9 +21,9 @@ import { expectRing, markSides, ringsOf } from "../../engine/testing/mark-shape.
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
+import { STATED } from "../../generated/games/singles/singles.compiled.ts";
 import { type SinglesHint, type SinglesRung, singlesGame } from "./index.ts";
 import { COL_HINT_CELL } from "./render.ts";
-import { STATED } from "./singles.compiled.ts";
 import { hintWalk, solveSpecific } from "./solver.ts";
 import {
   DIFF_ANY,

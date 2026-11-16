@@ -29,7 +29,7 @@ import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { type ClueList, clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
-import * as mathrax from "./mathrax.compiled.ts";
+import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 

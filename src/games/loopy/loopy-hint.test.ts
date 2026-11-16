@@ -26,6 +26,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { itDeep } from "../../engine/testing/slow.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
+import { STATED, STEPS } from "../../generated/games/loopy/loopy.compiled.ts";
 import { dlineEnds } from "./dlines.ts";
 import {
   deduceLoopyPlan,
@@ -37,7 +38,6 @@ import {
 } from "./hint.ts";
 import { type LoopyMove, loopyGame } from "./index.ts";
 import { CORNER, DOT, EDGE, FACE, PAIR } from "./kinds.ts";
-import { STATED, STEPS } from "./loopy.compiled.ts";
 import {
   DIFF_EASY,
   DIFF_HARD,

@@ -26,8 +26,8 @@ import {
   latinSolver,
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
+import * as towers from "../../generated/games/towers/towers.compiled.ts";
 import { DIFF_UNREASONABLE, dealtOf } from "./state.ts";
-import * as towers from "./towers.compiled.ts";
 
 export { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE };
 

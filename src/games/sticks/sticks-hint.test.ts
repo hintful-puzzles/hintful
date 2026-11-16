@@ -24,6 +24,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
+import { STATED } from "../../generated/games/sticks/sticks.compiled.ts";
 import { newSticksDesc } from "./generator.ts";
 import { sticksGame } from "./index.ts";
 import { COL_HINT_CELL, COL_LINE } from "./render.ts";
@@ -36,7 +37,6 @@ import {
   newState,
   type SticksState,
 } from "./state.ts";
-import { STATED } from "./sticks.compiled.ts";
 
 const PARAMS = defaultParams();
 const PARAM_STR = `${PARAMS.w}x${PARAMS.h}b${PARAMS.blackpc}s${PARAMS.symm}`;

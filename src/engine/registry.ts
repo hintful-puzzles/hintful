@@ -29,6 +29,16 @@ export function registerGame<P, S, M, U, D>(game: Game<P, S, M, U, D>): void {
     }
     return;
   }
+  assertRegistrable(game);
+  factories.set(game.id, () => new Midend(game));
+  games.set(game.id, game);
+}
+
+/**
+ * Throws where `game` breaks a rule every registered game keeps. Exported for
+ * the skeletons, which are games that never register: the copy of one does.
+ */
+export function assertRegistrable<P, S, M, U, D>(game: Game<P, S, M, U, D>): void {
   // A pasted board is held to the game's solver through one of the two, and a
   // game that names neither would load every board as if it had been asked.
   const tiered = game.difficulty !== undefined;
@@ -57,8 +67,6 @@ export function registerGame<P, S, M, U, D>(game: Game<P, S, M, U, D>): void {
       `${game.id}: a game with a tier that allows trial and error says how one element of the answer is put on the board (revealOne)`,
     );
   }
-  factories.set(game.id, () => new Midend(game));
-  games.set(game.id, game);
 }
 
 /** True iff a game is registered for `puzzleId`. */

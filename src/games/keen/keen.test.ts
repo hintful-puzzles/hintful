@@ -67,7 +67,10 @@ describe("multiplication alone, where a tier is found seldom", () => {
 
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
-import { ladder, tiers as ladderTiers } from "./keen.compiled.ts";
+import {
+  ladder,
+  tiers as ladderTiers,
+} from "../../generated/games/keen/keen.compiled.ts";
 import {
   border,
   COL_ERROR,

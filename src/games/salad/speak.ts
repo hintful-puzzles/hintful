@@ -27,8 +27,12 @@ import {
   statedParts,
 } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
+import {
+  STEPS,
+  type StepsById,
+  WORDS,
+} from "../../generated/games/salad/salad.compiled.ts";
 import { CLUE } from "./kinds.ts";
-import { STEPS, type StepsById, WORDS } from "./salad.compiled.ts";
 import { GAMEMODE_LETTERS, symbolChar } from "./state.ts";
 
 type Line = "row" | "col";

@@ -11,7 +11,7 @@ import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import * as pegs from "./pegs.compiled.ts";
+import * as pegs from "../../generated/games/pegs/pegs.compiled.ts";
 
 // --- grid cell values ------------------------------------------------
 

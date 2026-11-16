@@ -90,6 +90,8 @@ import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
+import type * as towers from "../../generated/games/towers/towers.compiled.ts";
+import { WORDS } from "../../generated/games/towers/towers.compiled.ts";
 import { newTowersDesc } from "./generator.ts";
 import {
   colors,
@@ -137,8 +139,6 @@ import {
   textFormat,
   validateParams,
 } from "./state.ts";
-import type * as towers from "./towers.compiled.ts";
-import { WORDS } from "./towers.compiled.ts";
 
 /** A player marking that contradicts the unique solution:
  * - `"cell"` — a filled-in tower whose height is wrong;

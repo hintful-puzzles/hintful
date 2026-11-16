@@ -12,8 +12,11 @@
 
 import type { MarkKind, Sentence } from "../../engine/hint-words.ts";
 import { type PlannedKind, plannedSentence } from "../../engine/stated.ts";
+import {
+  STEPS,
+  type StepsById,
+} from "../../generated/games/magnets/magnets.compiled.ts";
 import { CLUE, LINE, type LineEl, SQUARE } from "./kinds.ts";
-import { STEPS, type StepsById } from "./magnets.compiled.ts";
 import { NEGATIVE, POSITIVE } from "./state.ts";
 
 export type Axis = "row" | "column";

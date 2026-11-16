@@ -17,7 +17,7 @@ import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
-import * as inertia from "./inertia.compiled.ts";
+import * as inertia from "../../generated/games/inertia/inertia.compiled.ts";
 
 // --- cells -----------------------------------------------------------
 

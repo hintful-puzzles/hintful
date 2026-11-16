@@ -50,7 +50,7 @@ import {
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import * as range from "./range.compiled.ts";
+import * as range from "../../generated/games/range/range.compiled.ts";
 import {
   BLACK,
   EMPTY,

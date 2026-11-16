@@ -32,6 +32,7 @@ import {
 } from "../../engine/square-edges.ts";
 import type { TargetVerbs } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
+import * as net from "../../generated/games/net/net.compiled.ts";
 import { Facts, type Rung, record, type Side, type Step, survey } from "./explain.ts";
 import {
   type Fit,
@@ -40,7 +41,6 @@ import {
   type Stranded,
   say,
 } from "./hint-text.ts";
-import * as net from "./net.compiled.ts";
 import type { NetDrawState } from "./render.ts";
 import { type Fired, ladderOf, marksOn, NONE, recordedMarks, WIRE } from "./solver.ts";
 import {

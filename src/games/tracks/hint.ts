@@ -21,6 +21,8 @@ import { keepTrackBy } from "../../engine/hint-track.ts";
 import type { MarkKind } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
 import { D, dirX, dirY, L, opposite, R, U } from "../../engine/square-edges.ts";
+import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
+import { STATED } from "../../generated/games/tracks/tracks.compiled.ts";
 import { LINE, PIECE, type Piece, pieceCode, pieceOfCode } from "./kinds.ts";
 import { executeMove } from "./moves.ts";
 import {
@@ -49,8 +51,6 @@ import {
   type TracksOp,
   type TracksState,
 } from "./state.ts";
-import * as tracks from "./tracks.compiled.ts";
-import { STATED } from "./tracks.compiled.ts";
 
 // --- what a firing's sentence points at -----------------------------------
 

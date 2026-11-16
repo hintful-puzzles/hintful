@@ -33,7 +33,7 @@ import {
   runLadder,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import * as signpost from "./signpost.compiled.ts";
+import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import {
   cloneState,
   FLAG_IMMUTABLE,

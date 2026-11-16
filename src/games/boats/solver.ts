@@ -35,7 +35,7 @@ import {
 } from "../../engine/ladder-runtime.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
 import type { Point } from "../../engine/types.ts";
-import * as boats from "./boats.compiled.ts";
+import * as boats from "../../generated/games/boats/boats.compiled.ts";
 import {
   type BoatsBoard,
   type BoatsState,

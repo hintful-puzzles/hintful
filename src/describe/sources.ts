@@ -1,7 +1,7 @@
 /**
  * Which module each description compiles to, and with which libraries: what
- * `npm run describe` writes and `compile.test.ts` holds it to, in one place.
- * Paths are relative to the repository's root.
+ * `npm run describe` writes, in one place. Paths are relative to the
+ * repository's root.
  */
 
 import { compileGame, compileLibrary } from "./compile.ts";
@@ -16,9 +16,18 @@ import {
 const RUNTIME = "src/engine/describe-runtime.ts";
 const POSITION_RUNTIME = "src/engine/position-runtime.ts";
 
-/** `x.description.yaml` compiles to `x.compiled.ts` beside it. */
+/** Where every compiled module is written: generated, and ignored by git. */
+export const GENERATED = "src/generated";
+
+/** `src/d/x.description.yaml` compiles to `src/generated/d/x.compiled.ts`: the
+ * same place under the generated directory, so a module's imports of the
+ * runtime are as deep as its description's directory. */
 export function compiledPath(source: string): string {
-  return source.replace(/\.description\.yaml$/, ".compiled.ts");
+  if (!source.startsWith("src/")) throw new Error(`${source} is not under src/`);
+  return `${GENERATED}/${source.slice("src/".length)}`.replace(
+    /\.description\.yaml$/,
+    ".compiled.ts",
+  );
 }
 
 /** A library compiles, a description that states techniques, and a planning

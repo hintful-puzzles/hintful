@@ -54,7 +54,7 @@ import {
   initBorders,
   outOfBounds,
 } from "../../engine/border-grid.ts";
-import * as palisade from "./palisade.compiled.ts";
+import * as palisade from "../../generated/games/palisade/palisade.compiled.ts";
 import { isSolved } from "./solver.ts";
 
 /** Clue sentinel: no clue shown in this cell. */

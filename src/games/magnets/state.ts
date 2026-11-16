@@ -27,7 +27,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import * as magnets from "./magnets.compiled.ts";
+import * as magnets from "../../generated/games/magnets/magnets.compiled.ts";
 
 // --- cell values (upstream: EMPTY == NEUTRAL) -----------------------------
 export const EMPTY = 0;

@@ -29,15 +29,20 @@ itself is § "The file". A game whose techniques are stated:
    that runs them. It places the library's with `use` and states its own
    (§ "The formula syntax", § "A statement's order is behavior"); the Latin
    library is [`engine/latin.description.yaml`](../src/engine/latin.description.yaml).
-2. **Runs `npm run describe`**, which writes `<name>.compiled.ts` beside each
-   description. Edit the description, never the compiled module:
-   `src/describe/compile.test.ts` compiles every description again in the
-   gate and fails where a module differs. The module's diff is read by
+2. **Imports its compiled module from `src/generated/`**, where
+   `npm run describe` writes `src/d/x.description.yaml` as
+   `src/generated/d/x.compiled.ts`: generated, ignored by git, and never
+   edited. Every command that reads one writes them first (the typecheck,
+   Vitest and Vite through `vite-plugins/describe.ts`, the gate, the npm
+   scripts that run a game through their `pre` script, a fresh clone's
+   `npm ci`), and a dev server compiles a description again on its edit; a
+   new Vitest config or npm script that imports a game takes the same step.
+   A compiler change shows in the three samples `compile.test.ts` keeps
+   under `src/describe/__snapshots__/`, written again with
+   `npx vitest run src/describe/compile.test.ts --update`. A module reads by
    function: each numbers its own fresh names, and what a rung keeps at the
    module's scope is named after it (`Out.own`), so a function moves only
-   when its own code does. A module new to the tree reads
-   there as missing until `npx vitest --clearCache`: Vitest's module
-   cache keeps the test's glob as it was first expanded.
+   when its own code does.
 3. **Checks every technique it states sound** with
    `npx vitest run -c research/technique-check/vitest.config.ts describe-check`,
    which records each verdict in `src/describe/soundness.json`. The gate

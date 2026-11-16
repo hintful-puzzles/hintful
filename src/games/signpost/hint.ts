@@ -18,8 +18,8 @@ import {
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
 import type { Point } from "../../engine/types.ts";
+import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import { say } from "./hint-text.ts";
-import * as signpost from "./signpost.compiled.ts";
 import {
   deduction,
   firingOf,

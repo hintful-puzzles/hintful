@@ -219,6 +219,12 @@ export const skeletonGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes: (state, mistakes) => [
+    {
+      kind: "mark",
+      cells: mistakes.map(({ x, y }) => ({ index: y * state.w + x, mark: BLANK })),
+    },
+  ],
   textFormat,
 
   hint: skeletonHint,

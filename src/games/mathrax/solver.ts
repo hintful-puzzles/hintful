@@ -32,7 +32,7 @@ import {
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import type { Clauses } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
-import * as mathrax from "./mathrax.compiled.ts";
+import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 import { DIFF_RECURSIVE, dealtOf } from "./state.ts";
 
 /** Solver verdicts, upstream `mathrax_solve`'s return codes. */

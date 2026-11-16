@@ -47,8 +47,8 @@ import {
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import type { Rect } from "../../engine/types.ts";
+import * as rect from "../../generated/games/rect/rect.compiled.ts";
 import type { RectEdge } from "./hint-marks.ts";
-import * as rect from "./rect.compiled.ts";
 import { clueDimensions, HIDDEN, type RectClues } from "./state.ts";
 
 /** What the description reads an edge as holding. */

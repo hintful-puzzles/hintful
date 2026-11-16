@@ -9,7 +9,7 @@ import { EDGE } from "../../engine/edge-hint.ts";
 import { CELL, type MarkKind } from "../../engine/hint-words.ts";
 import { type Clauses, statedSentence } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
-import { STATED } from "./path.compiled.ts";
+import { STATED } from "../../generated/games/path/path.compiled.ts";
 
 type Element = Point | number;
 const W = 4;

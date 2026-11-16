@@ -35,7 +35,7 @@ import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import * as mosaic from "./mosaic.compiled.ts";
+import * as mosaic from "../../generated/games/mosaic/mosaic.compiled.ts";
 import {
   countAround,
   DIFF_NORMAL,

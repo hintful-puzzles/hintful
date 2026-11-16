@@ -46,7 +46,7 @@ import {
   gapLetters,
   readRegionWalls,
 } from "../../engine/wall-runs.ts";
-import * as rome from "./rome.compiled.ts";
+import * as rome from "../../generated/games/rome/rome.compiled.ts";
 
 // --- cell bit-field (upstream values, verbatim) -----------------------------
 

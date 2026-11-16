@@ -28,6 +28,7 @@ import { D, dirX, dirY, opposite, R, U } from "../../engine/square-edges.ts";
 import type { Clauses } from "../../engine/stated.ts";
 import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { STATED } from "../../generated/games/tracks/tracks.compiled.ts";
 import type { TracksRung } from "./hint.ts";
 import { tracksGame } from "./index.ts";
 import { LINE, PIECE, type Piece } from "./kinds.ts";
@@ -49,7 +50,6 @@ import {
   type TracksParams,
   type TracksState,
 } from "./state.ts";
-import { STATED } from "./tracks.compiled.ts";
 
 const SHAPES: TracksParams[] = [
   { w: 8, h: 8, diff: DIFF_EASY, singleOnes: true },

@@ -27,12 +27,6 @@ const texts = import.meta.glob<string>("../**/*.description.yaml", {
   query: "?raw",
   import: "default",
 });
-const modules = import.meta.glob<string>("../**/*.compiled.ts", {
-  eager: true,
-  query: "?raw",
-  import: "default",
-});
-
 /** From the root, as `npm run describe` names them. */
 const fromRoot = (p: string): string => `src/${p.slice("../".length)}`;
 const sources = new Map(
@@ -41,18 +35,32 @@ const sources = new Map(
     loadDescriptionFile(t, fromRoot(p)),
   ]),
 );
-const compiled = new Map(Object.entries(modules).map(([p, m]) => [fromRoot(p), m]));
+
+/**
+ * The modules are generated and never committed, so a commit does not show
+ * what a change to the compiler did to them. These three do: a planning game,
+ * a game that states its own techniques, and one that places a library's.
+ * After a compiler change, `npx vitest run src/describe/compile.test.ts -u`
+ * writes them again, and the diff is the change's effect.
+ */
+const SAMPLES = [
+  "src/games/flip/flip.description.yaml",
+  "src/games/pattern/pattern.description.yaml",
+  "src/games/adjacent/adjacent.description.yaml",
+];
 
 describe("compiled descriptions", () => {
   it("finds the descriptions that compile", () => {
     expect([...sources.values()].filter(compiles).length).toBeGreaterThan(0);
   });
 
-  for (const [source, file] of sources)
-    if (compiles(file))
-      it(`${source} is compiled as it reads now (npm run describe)`, () => {
-        expect(compiled.get(compiledPath(source))).toBe(compileSource(source, sources));
-      });
+  for (const source of SAMPLES)
+    it(`${source} compiles as its committed sample reads`, async () => {
+      const name = compiledPath(source).split("/").at(-1);
+      await expect(compileSource(source, sources)).toMatchFileSnapshot(
+        `./__snapshots__/${name}.txt`,
+      );
+    });
 
   it("compiles only techniques checked sound as they read now", () => {
     const unchecked: string[] = [];
@@ -91,13 +99,6 @@ describe("compiled descriptions", () => {
     // Run `npx vitest run -c research/technique-check/vitest.config.ts
     // dead-end-check`, which records each claim it finds sound.
     expect(unchecked).toEqual([]);
-  });
-
-  it("leaves no compiled module without its description", () => {
-    const orphans = [...compiled.keys()].filter(
-      (m) => ![...sources].some(([s, file]) => compiles(file) && compiledPath(s) === m),
-    );
-    expect(orphans).toEqual([]);
   });
 });
 

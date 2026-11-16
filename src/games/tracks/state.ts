@@ -43,7 +43,7 @@ import {
   U,
 } from "../../engine/square-edges.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import * as tracks from "./tracks.compiled.ts";
+import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 
 // --- difficulty (upstream's Easy, Tricky, Hard; named by the description) ---
 export const DIFF_EASY = 0;

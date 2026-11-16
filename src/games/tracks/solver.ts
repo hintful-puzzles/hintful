@@ -34,6 +34,7 @@ import {
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import { D, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
+import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 import {
   type Board,
   checkCompletion,
@@ -50,7 +51,6 @@ import {
   sEFlags,
   sESet,
 } from "./state.ts";
-import * as tracks from "./tracks.compiled.ts";
 
 /** What the description reads an edge the track crosses as, and one it does
  * not; a square's mark holds the same two values. */

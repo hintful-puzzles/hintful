@@ -10,9 +10,9 @@ import {
   type Marked as CrossingMarked,
   say as crossing,
 } from "../games/crossing/hint-text.ts";
-import { STATED as DOMINOSA } from "../games/dominosa/dominosa.compiled.ts";
 import { SPOT } from "../games/dominosa/kinds.ts";
-import { STATED as KEEN } from "../games/keen/keen.compiled.ts";
+import { STATED as DOMINOSA } from "../generated/games/dominosa/dominosa.compiled.ts";
+import { STATED as KEEN } from "../generated/games/keen/keen.compiled.ts";
 import { indefinite } from "./hint-text.ts";
 import { CELL } from "./hint-words.ts";
 import { statedParts, statedSentence } from "./stated.ts";

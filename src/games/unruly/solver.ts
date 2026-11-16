@@ -18,9 +18,9 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
+import * as unruly from "../../generated/games/unruly/unruly.compiled.ts";
 import { EMPTY, ONE, ZERO } from "./constants.ts";
 import type { UnrulyMistake, UnrulyState } from "./state.ts";
-import * as unruly from "./unruly.compiled.ts";
 
 /** The minimal grid view the validators/solver operate on. `UnrulyState`
  * structurally satisfies it. */

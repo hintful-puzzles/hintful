@@ -14,8 +14,8 @@ import {
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
+import type { SaysById } from "../../generated/skeleton/grid/skeleton.compiled.ts";
 import { sentences } from "./hint-text.ts";
-import type { SaysById } from "./skeleton.compiled.ts";
 import { hintWalk, type SkeletonBoard, type SkeletonRung } from "./solver.ts";
 import {
   BLANK,

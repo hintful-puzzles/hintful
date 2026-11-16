@@ -25,7 +25,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { WinTone } from "../../engine/win-wave.ts";
-import * as untangle from "./untangle.compiled.ts";
+import * as untangle from "../../generated/games/untangle/untangle.compiled.ts";
 
 /**
  * A point as the rational `(x/d, y/d)`. **Invariant: `x`, `y`, `d` are

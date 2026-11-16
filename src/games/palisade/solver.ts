@@ -48,7 +48,7 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import * as palisade from "./palisade.compiled.ts";
+import * as palisade from "../../generated/games/palisade/palisade.compiled.ts";
 import type { PalisadeShape } from "./state.ts";
 
 /** What the description reads an edge as holding. */

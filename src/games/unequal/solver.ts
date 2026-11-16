@@ -10,7 +10,7 @@ import type { Narration } from "../../engine/hint-words.ts";
 import { compiledRung } from "../../engine/ladder-runtime.ts";
 import { type LatinReason, latinLadder } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
-import * as unequal from "./unequal.compiled.ts";
+import * as unequal from "../../generated/games/unequal/unequal.compiled.ts";
 
 /** Why a sign ruled a candidate out: the larger end (`greater`) or the
  * smaller (`lesser`), with the premise `sign` states for that end. */

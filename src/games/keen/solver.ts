@@ -29,7 +29,7 @@ import {
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import type { Clauses } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
-import * as keen from "./keen.compiled.ts";
+import * as keen from "../../generated/games/keen/keen.compiled.ts";
 import {
   type Cages,
   cagesOf,

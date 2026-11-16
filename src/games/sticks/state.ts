@@ -32,7 +32,7 @@ import {
   SYMM_ROT4,
   SYMMETRY_CHOICES,
 } from "../../engine/symmetric-blacks.ts";
-import * as sticks from "./sticks.compiled.ts";
+import * as sticks from "../../generated/games/sticks/sticks.compiled.ts";
 
 // --- cell flag bits (upstream values) ---------------------------------------
 

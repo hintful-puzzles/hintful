@@ -97,7 +97,7 @@ import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { statedParts } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
-import * as adjacent from "./adjacent.compiled.ts";
+import * as adjacent from "../../generated/games/adjacent/adjacent.compiled.ts";
 import type { HintReason } from "./solver.ts";
 import { BARS, decodeParams, defaultParams, menu, validateParams } from "./state.ts";
 

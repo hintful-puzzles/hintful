@@ -16,7 +16,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { numberItem } from "../../engine/params.ts";
 import { choice, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import * as numgame from "./numgame.compiled.ts";
+import * as numgame from "../../generated/games/numgame/numgame.compiled.ts";
 import { OPS, type Op, type Step } from "./solver.ts";
 
 // --- the board --------------------------------------------------------------

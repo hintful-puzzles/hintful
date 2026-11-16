@@ -36,6 +36,11 @@ import {
   verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
+import {
+  SAYS_KINDS,
+  type SaysById,
+  STATED,
+} from "../../generated/games/singles/singles.compiled.ts";
 import { newSinglesDesc } from "./generator.ts";
 import {
   border,
@@ -46,7 +51,6 @@ import {
   redraw,
   type SinglesDrawState,
 } from "./render.ts";
-import { SAYS_KINDS, type SaysById, STATED } from "./singles.compiled.ts";
 import {
   CLEAR,
   COVERED,

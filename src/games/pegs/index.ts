@@ -33,6 +33,7 @@ import {
 } from "../../engine/pointer.ts";
 import { solveBySearch } from "../../engine/search-outcome.ts";
 import type { Point } from "../../engine/types.ts";
+import type * as pegs from "../../generated/games/pegs/pegs.compiled.ts";
 import { newDesc } from "./generator.ts";
 import {
   hasNoSolution,
@@ -42,7 +43,6 @@ import {
   type PegsRung,
 } from "./hint.ts";
 import { HINT_MARKS } from "./hint-text.ts";
-import type * as pegs from "./pegs.compiled.ts";
 import {
   colors,
   computeSize,

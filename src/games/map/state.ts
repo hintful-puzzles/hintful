@@ -19,7 +19,7 @@ import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
-import * as map from "./map.compiled.ts";
+import * as map from "../../generated/games/map/map.compiled.ts";
 import type { MapData } from "./map-data.ts";
 
 // --- difficulty ------------------------------------------------------

@@ -23,7 +23,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import * as sokoban from "./sokoban.compiled.ts";
+import * as sokoban from "../../generated/games/sokoban/sokoban.compiled.ts";
 
 // --- the cell alphabet (char codes) -----------------------------------
 // Upstream's #defines: each value is the character a game ID uses for it.

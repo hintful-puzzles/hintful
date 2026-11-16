@@ -33,7 +33,7 @@ import {
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import * as slant from "./slant.compiled.ts";
+import * as slant from "../../generated/games/slant/slant.compiled.ts";
 import { ALIKE_DOWN, ALIKE_RIGHT, DIFF_HARD, type Slash } from "./state.ts";
 
 /** Solver verdicts (upstream's 0 / 1 / 2 return codes). */

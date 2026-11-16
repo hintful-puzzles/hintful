@@ -38,6 +38,7 @@ import {
   toroidalDist,
 } from "../../engine/slide-planner.ts";
 import type { Point } from "../../engine/types.ts";
+import * as sixteen from "../../generated/games/sixteen/sixteen.compiled.ts";
 import { say } from "./hint-text.ts";
 import {
   ANIM_TIME,
@@ -52,7 +53,6 @@ import {
   type SixteenDrawState,
   type SixteenHintHighlights,
 } from "./render.ts";
-import * as sixteen from "./sixteen.compiled.ts";
 import {
   CursorMode,
   decodeParams,

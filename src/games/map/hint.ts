@@ -52,8 +52,8 @@ import type {
   Taken,
 } from "../../engine/ladder-runtime.ts";
 import { techniqueFirings } from "../../engine/ladder-runtime.ts";
+import * as map from "../../generated/games/map/map.compiled.ts";
 import { type Conclusion, colorsOf, say } from "./hint-text.ts";
-import * as map from "./map.compiled.ts";
 import { dealtOf, gridOf, mapLadder, mapMarks } from "./solver.ts";
 import type { MapMove, MapOp, MapState } from "./state.ts";
 

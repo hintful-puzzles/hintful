@@ -36,7 +36,7 @@ import { Dsf } from "../../engine/dsf.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
-import * as keen from "./keen.compiled.ts";
+import * as keen from "../../generated/games/keen/keen.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 

@@ -9,7 +9,7 @@ import { EDGE, type ForcedBorderEdge } from "../../engine/border-grid-hint.ts";
 import { CELL } from "../../engine/hint-words.ts";
 import { type Clauses, statedParts, statedSentence } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
-import { STATED } from "./palisade.compiled.ts";
+import { STATED } from "../../generated/games/palisade/palisade.compiled.ts";
 
 const at = (c: number): Point => ({ x: c % 4, y: (c / 4) | 0 });
 const edge = (kind: "wall" | "nowall", x = 0, y = 0): ForcedBorderEdge => ({

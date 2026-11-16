@@ -12,7 +12,7 @@ import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import * as samegame from "./samegame.compiled.ts";
+import * as samegame from "../../generated/games/samegame/samegame.compiled.ts";
 
 // --- types ------------------------------------------------------------
 

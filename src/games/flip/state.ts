@@ -6,7 +6,7 @@
 import type { DescReader } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import * as flip from "./flip.compiled.ts";
+import * as flip from "../../generated/games/flip/flip.compiled.ts";
 
 // --- types ----------------------------------------------------------
 

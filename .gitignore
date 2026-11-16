@@ -34,6 +34,11 @@ node_modules/
 # "Capture icons" (src/puzzle/icon-capture.ts); see openspec/specs/puzzle-icons.
 # Nothing here ignores that directory, and nothing generates into it.
 
+# Each description's compiled module, written by `npm run describe` and by
+# every command that reads one (docs/descriptions.md § "What every game
+# does").
+/src/generated/
+
 # TypeScript incremental build info (from `tsc -b`)
 *.tsbuildinfo
 

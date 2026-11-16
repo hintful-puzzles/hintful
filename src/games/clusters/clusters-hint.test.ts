@@ -30,7 +30,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
-import { STATED } from "./clusters.compiled.ts";
+import { STATED } from "../../generated/games/clusters/clusters.compiled.ts";
 import type { ClustersHint } from "./hint.ts";
 import { clustersGame } from "./index.ts";
 import { border, COL_0, COL_1, COL_HINT_CELL, PREFERRED_TILE_SIZE } from "./render.ts";

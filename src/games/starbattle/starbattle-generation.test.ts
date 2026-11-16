@@ -9,10 +9,10 @@ import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { deepBudget } from "../../engine/testing/slow.ts";
+import { ladder } from "../../generated/games/starbattle/starbattle.compiled.ts";
 import { newStarbattleDesc } from "./generator.ts";
 import { starbattleGame } from "./index.ts";
 import { StarbattleBoard, solveStarbattle } from "./solver.ts";
-import { ladder } from "./starbattle.compiled.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,

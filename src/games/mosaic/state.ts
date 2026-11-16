@@ -25,7 +25,7 @@ import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { Point } from "../../engine/types.ts";
-import * as mosaic from "./mosaic.compiled.ts";
+import * as mosaic from "../../generated/games/mosaic/mosaic.compiled.ts";
 
 // --- cell-state flags (upstream `enum cell_state`) ----------------------
 

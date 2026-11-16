@@ -30,9 +30,9 @@
 # unresolved `?raw`/asset imports, plugin/dep regressions) is otherwise
 # invisible until deploy — exactly how two such bugs sat undetected on main.
 # The prefix already covers the typecheck half of `npm run build`, so run
-# `vite build` directly (leaner, no double typecheck). Needs no generated assets
-# at all: the catalog is committed source (`retire-c-engine`) and the manual, the
-# last generated artifact, is deleted (`retire-the-upstream-help-tree`).
+# `vite build` directly (leaner, no double typecheck). The one thing it reads
+# that is generated is the descriptions' compiled modules, which the prefix
+# writes first.
 #
 # Do NOT gate the concurrency on the load average: a probe that serialized the
 # two branches on a busy box read "busy" nearly always here and put the build on
@@ -101,6 +101,9 @@ if [ -n "${GATE_SINCE:-}" ]; then
   # wrote them down, and the push then owes its whole plan.
   owed=""
   [ -s node_modules/.cache/test-cost/deferred ] && owed="--owed"
+  # The plan follows imports through the compiled modules, so they are
+  # written before it is made (section 1 says what they are).
+  node scripts/describe.ts --quiet
   # shellcheck disable=SC2086 # empty, or one flag.
   plan=$(node scripts/checks/select-tests.ts --since "$GATE_SINCE" $owed 2>/dev/null) || plan="ALL"
   [ -n "$plan" ] || plan="ALL"
@@ -129,6 +132,12 @@ fi
 sh "$(dirname -- "$0")/reap-orphaned-workers.sh" || true
 
 # --- 1. Fast fail-fast prefix. ---
+#
+# Every description's compiled module, which the typechecks, the guards, the
+# tests and the build all import: generated, never committed, and written
+# here so that the two heavy branches below find nothing to write. ~1s, and
+# nothing written when nothing changed.
+node scripts/describe.ts --quiet
 # `npm run tsc` is TypeScript 7's compiler, installed under the alias
 # `typescript-7` and run by path: it checks this tree in ~2.5s against ~13s for
 # tsc 5.9. By path and never `npx tsc`, because `typescript` (5.x) is installed

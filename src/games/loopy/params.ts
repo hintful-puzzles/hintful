@@ -14,7 +14,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { type GridType, gridValidateParams } from "../../engine/grid/index.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, num, paramsCodec } from "../../engine/params-codec.ts";
-import * as loopy from "./loopy.compiled.ts";
+import * as loopy from "../../generated/games/loopy/loopy.compiled.ts";
 
 /**
  * Loopy's grid types, in **Loopy's own ordering** — which is deliberately not

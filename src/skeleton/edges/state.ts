@@ -22,7 +22,7 @@ import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
-import * as skeleton from "./skeleton.compiled.ts";
+import * as skeleton from "../../generated/skeleton/edges/skeleton.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
 

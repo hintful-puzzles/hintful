@@ -18,7 +18,7 @@ import { choice, num, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { encodeRegionWalls, readRegionWalls } from "../../engine/wall-runs.ts";
-import * as starbattle from "./starbattle.compiled.ts";
+import * as starbattle from "../../generated/games/starbattle/starbattle.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
 

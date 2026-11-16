@@ -15,8 +15,8 @@ import {
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import * as solo from "../../generated/games/solo/solo.compiled.ts";
 import { soloGame } from "./index.ts";
-import * as solo from "./solo.compiled.ts";
 import {
   DIFF_BLOCK,
   DIFF_KINTERSECT,

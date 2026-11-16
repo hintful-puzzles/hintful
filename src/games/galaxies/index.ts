@@ -68,7 +68,7 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import * as galaxies from "./galaxies.compiled.ts";
+import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import { newGameDesc } from "./generator.ts";
 import {
   GALAXIES_RUNGS,

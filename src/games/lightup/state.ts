@@ -32,7 +32,7 @@ import {
   SYMM_ROT4,
 } from "../../engine/symmetric-blacks.ts";
 import type { Point } from "../../engine/types.ts";
-import * as lightup from "./lightup.compiled.ts";
+import * as lightup from "../../generated/games/lightup/lightup.compiled.ts";
 
 // --- cell flags (upstream values) -------------------------------------------
 

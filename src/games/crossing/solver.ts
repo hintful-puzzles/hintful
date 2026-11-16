@@ -46,7 +46,7 @@ import {
   type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import * as crossing from "./crossing.compiled.ts";
+import * as crossing from "../../generated/games/crossing/crossing.compiled.ts";
 import {
   type CrossingPuzzle,
   type CrossingState,

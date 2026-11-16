@@ -43,7 +43,7 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import * as bricks from "./bricks.compiled.ts";
+import * as bricks from "../../generated/games/bricks/bricks.compiled.ts";
 import {
   BRICKS_STEPS,
   type BricksMistake,

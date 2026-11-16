@@ -49,7 +49,7 @@ import {
   type SquareEdges,
   squareEdges,
 } from "../../engine/square-edges.ts";
-import * as path from "./path.compiled.ts";
+import * as path from "../../generated/games/path/path.compiled.ts";
 import {
   DIFF_TRICKY,
   MODE_PATH,

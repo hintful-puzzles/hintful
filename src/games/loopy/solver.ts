@@ -43,7 +43,7 @@ import {
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
-import * as loopy from "./loopy.compiled.ts";
+import * as loopy from "../../generated/games/loopy/loopy.compiled.ts";
 import { DIFF_HARD } from "./params.ts";
 import {
   checkCompletion,

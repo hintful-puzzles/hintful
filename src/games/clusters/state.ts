@@ -20,7 +20,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import * as clusters from "./clusters.compiled.ts";
+import * as clusters from "../../generated/games/clusters/clusters.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
 

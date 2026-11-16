@@ -41,7 +41,7 @@ import {
   gapLetters,
   readRegionWalls,
 } from "../../engine/wall-runs.ts";
-import * as seismic from "./seismic.compiled.ts";
+import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 

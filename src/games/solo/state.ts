@@ -39,7 +39,7 @@ import { Dsf } from "../../engine/dsf.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
-import * as solo from "./solo.compiled.ts";
+import * as solo from "../../generated/games/solo/solo.compiled.ts";
 
 // --- difficulty (standard axis) --------------------------------------------
 // DIFF_AMBIGUOUS and DIFF_IMPOSSIBLE are solver verdicts, not params.

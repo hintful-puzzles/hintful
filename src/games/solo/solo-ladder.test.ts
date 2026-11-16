@@ -8,7 +8,7 @@
  * `maxdiff * 10 + maxkdiff`, and every pair is walked.
  */
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
-import * as solo from "./solo.compiled.ts";
+import * as solo from "../../generated/games/solo/solo.compiled.ts";
 import { solveSolo } from "./solver.ts";
 import {
   DIFF_EXTREME,

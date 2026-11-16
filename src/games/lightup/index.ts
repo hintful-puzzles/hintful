@@ -38,8 +38,13 @@ import {
   verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
+import {
+  SAYS_EACH,
+  SAYS_KINDS,
+  type SaysById,
+  STATED,
+} from "../../generated/games/lightup/lightup.compiled.ts";
 import { newLightupDesc } from "./generator.ts";
-import { SAYS_EACH, SAYS_KINDS, type SaysById, STATED } from "./lightup.compiled.ts";
 import {
   border,
   colors,

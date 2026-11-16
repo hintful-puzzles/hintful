@@ -24,7 +24,7 @@ import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { SHADED_NAME } from "../../engine/piece.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import * as range from "./range.compiled.ts";
+import * as range from "../../generated/games/range/range.compiled.ts";
 
 // --- cells -----------------------------------------------------------------
 

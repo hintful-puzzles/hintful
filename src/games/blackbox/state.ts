@@ -31,7 +31,7 @@ import { unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
-import { units } from "./blackbox.compiled.ts";
+import { units } from "../../generated/games/blackbox/blackbox.compiled.ts";
 
 // --- flag constants (upstream BALL_* / LASER_*) -----------------------
 

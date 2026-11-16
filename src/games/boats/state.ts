@@ -23,7 +23,7 @@ import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { newCursor, newDrag } from "../../engine/pointer.ts";
-import * as boats from "./boats.compiled.ts";
+import * as boats from "../../generated/games/boats/boats.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 

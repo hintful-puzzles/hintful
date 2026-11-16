@@ -67,8 +67,8 @@ import {
 } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
+import * as rome from "../../generated/games/rome/rome.compiled.ts";
 import { say } from "./hint-text.ts";
-import * as rome from "./rome.compiled.ts";
 import { dealtOf, romeLadder } from "./solver.ts";
 import {
   DIFFCOUNT,

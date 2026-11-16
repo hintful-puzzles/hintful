@@ -10,7 +10,7 @@ import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import * as singles from "./singles.compiled.ts";
+import * as singles from "../../generated/games/singles/singles.compiled.ts";
 /**
  * Types and pure state helpers for Singles (Hitori), from the state/codec
  * parts of `singles.c`.

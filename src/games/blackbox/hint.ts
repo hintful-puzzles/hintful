@@ -45,7 +45,7 @@ import {
 import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
-import * as blackbox from "./blackbox.compiled.ts";
+import * as blackbox from "../../generated/games/blackbox/blackbox.compiled.ts";
 import { type Seen, type Settled, say, type Would } from "./hint-text.ts";
 import {
   BALL_GUESS,

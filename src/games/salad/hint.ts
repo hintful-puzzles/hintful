@@ -83,8 +83,8 @@ import {
 } from "../../engine/latin-notes.ts";
 import { noteEntryGesture } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
+import type * as salad from "../../generated/games/salad/salad.compiled.ts";
 import { CLUE } from "./kinds.ts";
-import type * as salad from "./salad.compiled.ts";
 import { holeSymbol, repeatsFor, saladLadder } from "./solver.ts";
 import { saladVocab, say } from "./speak.ts";
 import {

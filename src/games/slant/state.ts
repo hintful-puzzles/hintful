@@ -30,7 +30,7 @@ import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
-import * as slant from "./slant.compiled.ts";
+import * as slant from "../../generated/games/slant/slant.compiled.ts";
 
 // --- difficulty (upstream's DIFFLIST: Easy, Hard; named by the description) ---
 export const DIFF_EASY = 0;

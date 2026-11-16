@@ -184,6 +184,22 @@ const files = execFileSync(
   { encoding: "utf8" },
 )
   .split("\0")
+  // The compiled modules are generated and ignored by git, and the runtime's
+  // exports that only compiled code calls are used through them.
+  .concat(
+    execFileSync(
+      "git",
+      [
+        "ls-files",
+        "-z",
+        "--others",
+        "--ignored",
+        "--exclude-standard",
+        "src/generated",
+      ],
+      { encoding: "utf8" },
+    ).split("\0"),
+  )
   .filter((f) => f.endsWith(".ts") && !f.endsWith(".d.ts"));
 
 if (files.length < FLOORS.files)

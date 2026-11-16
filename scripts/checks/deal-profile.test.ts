@@ -29,6 +29,7 @@
 import { appendFileSync, existsSync, readdirSync, writeFileSync } from "node:fs";
 import { Session } from "node:inspector/promises";
 import { expect, it } from "vitest";
+import { compiledPath } from "../../src/describe/sources.ts";
 import "../../src/games/index.ts";
 import type { Game } from "../../src/engine/game.ts";
 import { paramsError } from "../../src/engine/params.ts";
@@ -50,9 +51,10 @@ const TOP = Number(process.env["DEAL_PROFILE_TOP"] ?? 6);
 const STEPS = 400;
 const ROUNDS = 80;
 
-/** The described games: those with a compiled module. */
+/** The described games: those with a compiled module, which the config wrote
+ * before this file loaded. */
 const DESCRIBED = readdirSync("src/games")
-  .filter((id) => existsSync(`src/games/${id}/${id}.compiled.ts`))
+  .filter((id) => existsSync(compiledPath(`src/games/${id}/${id}.description.yaml`)))
   .sort();
 
 /** Code that runs only because a game is described. */

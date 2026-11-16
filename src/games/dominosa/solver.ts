@@ -33,7 +33,7 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import * as dominosa from "./dominosa.compiled.ts";
+import * as dominosa from "../../generated/games/dominosa/dominosa.compiled.ts";
 import {
   DIFF_BASIC,
   DIFF_EXTREME,

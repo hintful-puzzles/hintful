@@ -40,6 +40,7 @@ import {
   runLadder,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
+import * as sticks from "../../generated/games/sticks/sticks.compiled.ts";
 import {
   F_BLOCK,
   F_HOR,
@@ -47,7 +48,6 @@ import {
   type SticksMistake,
   type SticksState,
 } from "./state.ts";
-import * as sticks from "./sticks.compiled.ts";
 
 /** The kinds of step a hint can be, which the description's `says` names. */
 export const STICKS_RUNGS = sticks.SAYS_KINDS;

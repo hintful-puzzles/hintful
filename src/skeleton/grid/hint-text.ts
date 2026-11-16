@@ -25,7 +25,7 @@ import {
 } from "../../engine/hint-words.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import type { Point } from "../../engine/types.ts";
-import type { SaysById } from "./skeleton.compiled.ts";
+import type { SaysById } from "../../generated/skeleton/grid/skeleton.compiled.ts";
 
 const squares = (n: number): string => (n === 1 ? "square" : "squares");
 

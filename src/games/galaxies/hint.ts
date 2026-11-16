@@ -19,7 +19,7 @@ import { spokenOf } from "../../engine/described-hint.ts";
 import type { HintStep } from "../../engine/index.ts";
 import type { CellMarks } from "../../engine/ladder-runtime.ts";
 import type { Point } from "../../engine/types.ts";
-import type * as galaxies from "./galaxies.compiled.ts";
+import type * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import { type GalaxiesSaid, say } from "./hint-text.ts";
 import type { GalaxiesMove } from "./index.ts";
 import { okToAddAssocWithOpposite } from "./moves.ts";

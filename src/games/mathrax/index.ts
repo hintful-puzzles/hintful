@@ -88,8 +88,8 @@ import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { statedParts } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
+import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 import { newMathraxDesc } from "./generator.ts";
-import * as mathrax from "./mathrax.compiled.ts";
 import {
   colors,
   computeSize,

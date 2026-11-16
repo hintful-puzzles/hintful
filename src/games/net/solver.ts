@@ -34,7 +34,7 @@ import {
 } from "../../engine/ladder-runtime.ts";
 import { D, DIRECTIONS, L, R, U } from "../../engine/square-edges.ts";
 import { type SquareTiling, squareTiling } from "../../engine/square-tiling.ts";
-import * as net from "./net.compiled.ts";
+import * as net from "../../generated/games/net/net.compiled.ts";
 import { LOCKED, type NetState, NOTE_NONE, NOTE_WIRE, sideIndex } from "./state.ts";
 
 /** What the description reads a wire as, and a side with none. */

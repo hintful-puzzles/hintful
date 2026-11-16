@@ -14,10 +14,10 @@ import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
+import { STATED } from "../../generated/games/starbattle/starbattle.compiled.ts";
 import { starbattleGame } from "./index.ts";
 import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf } from "./solver.ts";
-import { STATED } from "./starbattle.compiled.ts";
 import {
   BLANK,
   CROSSED,

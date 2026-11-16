@@ -14,7 +14,7 @@ import { dealt, dealtAgain } from "./testing/dealt.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
 import { FIRST_SHARE, ofThisShare } from "./testing/sweep-share.ts";
 
-const modules = import.meta.glob<string>("../games/*/*.compiled.ts", {
+const modules = import.meta.glob<string>("../generated/games/*/*.compiled.ts", {
   eager: true,
   query: "?raw",
   import: "default",
@@ -23,7 +23,7 @@ const modules = import.meta.glob<string>("../games/*/*.compiled.ts", {
 /** The games whose compiled module emits a footprint, by what it compiled. */
 const SKIPPING = Object.entries(modules)
   .filter(([, text]) => /: Footprint = /.test(text))
-  .map(([path]) => path.split("/")[2])
+  .map(([path]) => path.split("/").at(-2) ?? "")
   .sort();
 
 /**

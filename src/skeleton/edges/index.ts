@@ -128,6 +128,11 @@ export const skeletonGame: Game<
   solve,
   difficulty,
   findMistakes,
+  clearMistakes: (state, mistakes) =>
+    input.clearEdges(
+      state,
+      mistakes.map((m) => m.edge),
+    ),
   textFormat,
 
   hint: skeletonHint,

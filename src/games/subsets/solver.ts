@@ -36,6 +36,7 @@ import {
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 import {
   ADJTHAN,
   ALL_BITS,
@@ -44,7 +45,6 @@ import {
   type SubsetsMistake,
   type SubsetsState,
 } from "./state.ts";
-import * as subsets from "./subsets.compiled.ts";
 
 export type SubsetsStatus = "complete" | "unfinished" | "invalid";
 

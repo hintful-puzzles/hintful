@@ -26,8 +26,8 @@ import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
+import { tiers as ladderTiers } from "../../generated/games/group/group.compiled.ts";
 import { newGameDesc } from "./generator.ts";
-import { tiers as ladderTiers } from "./group.compiled.ts";
 import { groupGame } from "./index.ts";
 import {
   COL_FLASH,

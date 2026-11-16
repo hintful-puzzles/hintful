@@ -30,7 +30,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import * as subsets from "./subsets.compiled.ts";
+import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 
 // --- difficulty --------------------------------------------------------------
 

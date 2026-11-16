@@ -28,7 +28,11 @@ import {
   statedParts,
 } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
-import { STEPS, type StepsById, WORDS } from "./towers.compiled.ts";
+import {
+  STEPS,
+  type StepsById,
+  WORDS,
+} from "../../generated/games/towers/towers.compiled.ts";
 
 /** A clue and the line it sees along, as the sentence names them: the clue's
  * slot (`at`, outlined) and its line of sight through both clue slots

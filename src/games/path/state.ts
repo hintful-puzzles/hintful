@@ -38,7 +38,7 @@ import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts
 import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
-import * as path from "./path.compiled.ts";
+import * as path from "../../generated/games/path/path.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
 

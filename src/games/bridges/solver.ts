@@ -31,7 +31,7 @@ import {
   type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import * as bridges from "./bridges.compiled.ts";
+import * as bridges from "../../generated/games/bridges/bridges.compiled.ts";
 import {
   type BridgesOp,
   type BridgesState,

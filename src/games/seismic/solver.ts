@@ -28,7 +28,7 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import * as seismic from "./seismic.compiled.ts";
+import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
 import {
   DIFF_EASY,
   FM_ERRORDIST,

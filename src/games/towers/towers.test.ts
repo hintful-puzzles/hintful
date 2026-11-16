@@ -30,6 +30,7 @@ describeAbsentTiers(towersGame, ["3dx", "3du"]);
 
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
+import { tiers as ladderTiers } from "../../generated/games/towers/towers.compiled.ts";
 import {
   COL_ERROR,
   COL_FLASH,
@@ -65,7 +66,6 @@ import {
   type TowersParams,
   type TowersState,
 } from "./state.ts";
-import { tiers as ladderTiers } from "./towers.compiled.ts";
 
 function gen(w: number, diff: TowersParams["diff"], seed: string) {
   const p: TowersParams = { w, diff };

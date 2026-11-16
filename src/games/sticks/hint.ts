@@ -12,6 +12,12 @@ import {
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
+import {
+  SAYS_EACH,
+  SAYS_LEGS,
+  type SaysById,
+  STATED,
+} from "../../generated/games/sticks/sticks.compiled.ts";
 import { hintWalk, type SticksRung } from "./solver.ts";
 import {
   executeMove,
@@ -20,7 +26,6 @@ import {
   type SticksMove,
   type SticksState,
 } from "./state.ts";
-import { SAYS_EACH, SAYS_LEGS, type SaysById, STATED } from "./sticks.compiled.ts";
 
 /** What the description reads a square as holding: a line across, or up and
  * down. */

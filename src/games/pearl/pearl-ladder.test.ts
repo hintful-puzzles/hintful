@@ -8,8 +8,8 @@
  */
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 import { newDesc } from "./generator.ts";
-import * as pearl from "./pearl.compiled.ts";
 import { pearlMarks } from "./solver.ts";
 import { DIFF_EASY, DIFF_TRICKY, newState, type PearlParams } from "./state.ts";
 

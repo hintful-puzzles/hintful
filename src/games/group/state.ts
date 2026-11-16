@@ -32,7 +32,7 @@ import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
-import * as group from "./group.compiled.ts";
+import * as group from "../../generated/games/group/group.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 // Upstream DIFFLIST order: Trivial, Normal, Hard, Extreme, Unreasonable. The

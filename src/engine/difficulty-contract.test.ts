@@ -62,7 +62,7 @@ const registered = registeredGameIds()
 /** Each game's compiled module, by its path; a planning game's has no
  * `tiers`. */
 const compiledModules = import.meta.glob<{ tiers?: readonly string[] }>(
-  "../games/*/*.compiled.ts",
+  "../generated/games/*/*.compiled.ts",
   { eager: true },
 );
 

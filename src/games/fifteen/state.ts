@@ -6,7 +6,7 @@ import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import * as fifteen from "./fifteen.compiled.ts";
+import * as fifteen from "../../generated/games/fifteen/fifteen.compiled.ts";
 
 // --- types -----------------------------------------------------------
 

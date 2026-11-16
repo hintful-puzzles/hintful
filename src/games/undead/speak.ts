@@ -33,8 +33,12 @@ import {
   statedParts,
 } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
+import {
+  STEPS,
+  type StepsById,
+  WORDS,
+} from "../../generated/games/undead/undead.compiled.ts";
 import { MON_GHOST, MON_VAMPIRE, MONSTERS } from "./state.ts";
-import { STEPS, type StepsById, WORDS } from "./undead.compiled.ts";
 
 /** What a step marks: the cells it decides, the pencil marks it crosses out
  * (a note's `n` is the monster's bit), and the sightline it reasons from. */

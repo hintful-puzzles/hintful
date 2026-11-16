@@ -20,7 +20,7 @@ import {
 } from "../../engine/described-edge-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
-import { SAYS_KINDS } from "./bridges.compiled.ts";
+import { SAYS_KINDS } from "../../generated/games/bridges/bridges.compiled.ts";
 import { SPAN, say } from "./hint-text.ts";
 import {
   type BridgesSays,

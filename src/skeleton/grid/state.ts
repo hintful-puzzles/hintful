@@ -19,7 +19,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import * as skeleton from "./skeleton.compiled.ts";
+import * as skeleton from "../../generated/skeleton/grid/skeleton.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
 

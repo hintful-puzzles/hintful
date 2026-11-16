@@ -38,7 +38,7 @@ import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import * as filling from "./filling.compiled.ts";
+import * as filling from "../../generated/games/filling/filling.compiled.ts";
 
 const EMPTY = 0;
 

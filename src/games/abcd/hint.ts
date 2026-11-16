@@ -48,7 +48,7 @@ import {
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
-import type { SaysById } from "./abcd.compiled.ts";
+import type { SaysById } from "../../generated/games/abcd/abcd.compiled.ts";
 import { LETTERS, type LineMarks, type LineWord, say } from "./hint-text.ts";
 import { abcdLadder, abcdSpace, dealtOf, neighbors } from "./solver.ts";
 import {

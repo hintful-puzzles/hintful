@@ -29,7 +29,7 @@ import type { FactGraph } from "../../engine/fact-graph.ts";
 import type { CellMarks } from "../../engine/ladder-runtime.ts";
 import { anticlockwise, DIRECTIONS, opposite } from "../../engine/square-edges.ts";
 import { offset } from "../../engine/wires.ts";
-import type { Dealt } from "./net.compiled.ts";
+import type { Dealt } from "../../generated/games/net/net.compiled.ts";
 import { type Fired, type NetGeometry, NONE, recordedMarks, WIRE } from "./solver.ts";
 import {
   LOCKED,

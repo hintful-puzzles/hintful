@@ -7,7 +7,7 @@ import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/para
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import * as twiddle from "./twiddle.compiled.ts";
+import * as twiddle from "../../generated/games/twiddle/twiddle.compiled.ts";
 
 // --- types -----------------------------------------------------------
 

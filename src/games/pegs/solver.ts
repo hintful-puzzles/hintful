@@ -16,7 +16,7 @@ import {
 } from "../../engine/finish-search.ts";
 import type { Allowance, Verdict } from "../../engine/rival-judging.ts";
 import { type SearchOutcome, searchVerdict } from "../../engine/search-outcome.ts";
-import type * as pegs from "./pegs.compiled.ts";
+import type * as pegs from "../../generated/games/pegs/pegs.compiled.ts";
 import { GRID_OBST, GRID_PEG, type PegsState, rulesOf } from "./state.ts";
 
 /** A jump as three grid indices: the peg that jumps, the peg it takes, and the

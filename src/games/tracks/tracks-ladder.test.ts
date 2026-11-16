@@ -6,6 +6,7 @@
 
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 import { newDesc } from "./generator.ts";
 import { tracksSolve } from "./solver.ts";
 import {
@@ -16,7 +17,6 @@ import {
   stateToBoard,
   type TracksParams,
 } from "./state.ts";
-import * as tracks from "./tracks.compiled.ts";
 
 /** Board shapes wide enough to need the harder rungs, small enough to generate
  * quickly. One params set per tier, since the tier is what gates the ladder. */

@@ -42,7 +42,7 @@ import {
   uncluedPlacingRung,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import * as abcd from "./abcd.compiled.ts";
+import * as abcd from "../../generated/games/abcd/abcd.compiled.ts";
 import {
   type AbcdParams,
   type AbcdState,

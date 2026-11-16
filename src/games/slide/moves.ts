@@ -9,7 +9,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import * as slide from "./slide.compiled.ts";
+import * as slide from "../../generated/games/slide/slide.compiled.ts";
 import {
   ANCHOR,
   EMPTY,

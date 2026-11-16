@@ -31,7 +31,7 @@ import {
   offset,
   parseWireDesc,
 } from "../../engine/wires.ts";
-import * as netslide from "./netslide.compiled.ts";
+import * as netslide from "../../generated/games/netslide/netslide.compiled.ts";
 
 /* ----------------------------------------------------------------------
  * Bit vocabulary.

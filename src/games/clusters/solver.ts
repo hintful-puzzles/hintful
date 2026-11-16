@@ -26,7 +26,7 @@ import {
   runLadder,
   TIERS as SCALE,
 } from "../../engine/ladder-runtime.ts";
-import * as clusters from "./clusters.compiled.ts";
+import * as clusters from "../../generated/games/clusters/clusters.compiled.ts";
 import { COLMASK, DIFF_TRICKY, F_COLOR_0, F_COLOR_1, F_SINGLE } from "./state.ts";
 
 export const COMPLETE = 0;

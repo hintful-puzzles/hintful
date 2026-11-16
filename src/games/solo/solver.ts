@@ -29,9 +29,9 @@ import {
   uncluedRung,
   withSearch,
 } from "../../engine/ladder-runtime.ts";
-import { set as latinSet } from "../../engine/latin.compiled.ts";
 import { latinLadder } from "../../engine/latin.ts";
-import * as solo from "./solo.compiled.ts";
+import { set as latinSet } from "../../generated/engine/latin.compiled.ts";
+import * as solo from "../../generated/games/solo/solo.compiled.ts";
 import type { BlockStructure, SoloState } from "./state.ts";
 import {
   DIFF_AMBIGUOUS,

@@ -40,6 +40,7 @@ import {
 } from "../../engine/ladder-runtime.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
 import type { GameStatus } from "../../engine/types.ts";
+import * as undead from "../../generated/games/undead/undead.compiled.ts";
 import {
   CELL_MIRROR_L,
   CELL_MIRROR_R,
@@ -53,7 +54,6 @@ import {
   type UndeadCommon,
   type UndeadState,
 } from "./state.ts";
-import * as undead from "./undead.compiled.ts";
 
 /** The description's value of a mirror. */
 const D_MIRROR = 4;

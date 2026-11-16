@@ -36,7 +36,7 @@ import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
-import * as crossing from "./crossing.compiled.ts";
+import * as crossing from "../../generated/games/crossing/crossing.compiled.ts";
 
 // --- params ----------------------------------------------------------------
 

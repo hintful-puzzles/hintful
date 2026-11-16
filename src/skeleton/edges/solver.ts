@@ -35,7 +35,7 @@ import {
 } from "../../engine/ladder-runtime.ts";
 import { CROSS, type EdgeMark, LINE, OPEN } from "../../engine/line-drawing.ts";
 import { type SquareEdges, squareEdges } from "../../engine/square-edges.ts";
-import * as skeleton from "./skeleton.compiled.ts";
+import * as skeleton from "../../generated/skeleton/edges/skeleton.compiled.ts";
 import { DIFF_NORMAL, LINES_PER_SQUARE } from "./state.ts";
 
 /** What the description reads an edge as holding. */

@@ -42,8 +42,8 @@ import { CellMarks, type Said, TIERS } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
+import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
 import { say } from "./hint-text.ts";
-import * as seismic from "./seismic.compiled.ts";
 import { dealtOf, seismicLadder } from "./solver.ts";
 import {
   areaBits,

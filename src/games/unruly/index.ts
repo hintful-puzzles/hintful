@@ -25,6 +25,7 @@ import {
   verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
+import { type SaysById, STATED } from "../../generated/games/unruly/unruly.compiled.ts";
 import { type Cell, EMPTY, ONE, pairIndex, ZERO } from "./constants.ts";
 import { newDesc, solvableAt } from "./generator.ts";
 import {
@@ -55,7 +56,6 @@ import {
   type UnrulyUi,
   validateParams,
 } from "./state.ts";
-import { type SaysById, STATED } from "./unruly.compiled.ts";
 
 /** The word for a piece: the palette's, so it is the color the piece is. */
 const colorName = (c: number): ColorWord => TWO_NAMES[pairIndex(c)];

@@ -38,7 +38,7 @@ import {
   type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import * as spokes from "./spokes.compiled.ts";
+import * as spokes from "../../generated/games/spokes/spokes.compiled.ts";
 import {
   DIFF_HARD,
   DIFF_TRICKY,

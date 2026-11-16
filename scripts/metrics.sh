@@ -50,14 +50,15 @@ echo "→ metrics into $OUT"
 # --- duplication ------------------------------------------------------------
 # min-tokens 60 is the level at which a clone is a shared decision rather than a
 # coincidence of shape (two grid loops will always look alike). Tests, snapshots
-# and fixtures are excluded: a snapshot is generated data and a fixture is
-# frozen, so duplication in either is not a refactoring signal.
+# and fixtures are excluded: a snapshot and a compiled module are generated
+# data and a fixture is frozen, so duplication in any of them is not a
+# refactoring signal.
 echo "  jscpd…"
 npx jscpd src \
   --min-tokens 60 \
   --reporters json \
   --output "$OUT/jscpd" \
-  --ignore '**/*.test.ts,**/__snapshots__/**,**/__fixtures__/**' \
+  --ignore '**/*.test.ts,**/__snapshots__/**,**/__fixtures__/**,src/generated/**' \
   >"$OUT/jscpd.txt" 2>&1 || true
 
 # --- import cycles ----------------------------------------------------------

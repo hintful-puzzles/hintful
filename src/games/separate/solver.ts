@@ -50,7 +50,7 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import * as separate from "./separate.compiled.ts";
+import * as separate from "../../generated/games/separate/separate.compiled.ts";
 import type { SeparateShape } from "./state.ts";
 
 /** What the description reads an edge as holding. */

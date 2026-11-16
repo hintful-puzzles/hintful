@@ -6,7 +6,7 @@ import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import * as sixteen from "./sixteen.compiled.ts";
+import * as sixteen from "../../generated/games/sixteen/sixteen.compiled.ts";
 
 // --- types -----------------------------------------------------------
 

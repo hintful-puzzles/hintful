@@ -71,7 +71,11 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
-import { SAYS_KINDS, type SaysById, STATED } from "./boats.compiled.ts";
+import {
+  SAYS_KINDS,
+  type SaysById,
+  STATED,
+} from "../../generated/games/boats/boats.compiled.ts";
 import { newBoatsDesc, validateParams } from "./generator.ts";
 import {
   BORDER,

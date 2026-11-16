@@ -33,9 +33,10 @@ export const ROOT = path.resolve(import.meta.dirname, "../..");
 const TEST_ROOTS = ["src", "vite-plugins"];
 
 const SCRIPT = /\.[mc]?[jt]s$/;
-const GAME_PATH = /^src\/games\/([^/]+)\//;
+const GAME_PATH = /^src\/(?:generated\/)?games\/([^/]+)\//;
 
-/** The game whose directory holds `file` (repo-relative), or `null`. */
+/** The game whose directory holds `file` (repo-relative), or `null`. A game's
+ * compiled module, generated outside its directory, is the game's too. */
 export function gameOf(file: string): string | null {
   return GAME_PATH.exec(file)?.[1] ?? null;
 }

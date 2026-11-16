@@ -41,7 +41,7 @@ import {
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import * as lightup from "./lightup.compiled.ts";
+import * as lightup from "../../generated/games/lightup/lightup.compiled.ts";
 import {
   F_BLACK,
   F_IMPOSSIBLE,

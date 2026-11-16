@@ -24,9 +24,9 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { itDeep } from "../../engine/testing/slow.ts";
 import type { Point } from "../../engine/types.ts";
+import { STATED } from "../../generated/games/mathrax/mathrax.compiled.ts";
 import { newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
-import { STATED } from "./mathrax.compiled.ts";
 import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
 import {
   encodeParams,
