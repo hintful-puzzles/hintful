@@ -39,16 +39,11 @@ const SEEDS = ["lad-a", "lad-b", "lad-c"];
 const cases = SHAPES.flatMap((p) =>
   SEEDS.map((seed) => {
     const label = `${p.w}x${p.h} diff=${p.diff} ${seed}`;
-    const { desc } = galaxiesGame.newDesc(p, randomNew(`galaxies-ladder-${label}`));
-    const base = galaxiesGame.newState(p, desc);
     return {
       label,
       board: (): GalaxiesState => {
-        // Clear the player-side associations so the ladder starts from the dots
-        // alone, exactly as the generator and `solve` do.
-        const s = cloneState(base);
-        clearForSolve(s);
-        return s;
+        const { desc } = galaxiesGame.newDesc(p, randomNew(`galaxies-ladder-${label}`));
+        return galaxiesGame.newState(p, desc);
       },
     };
   }),
@@ -68,5 +63,11 @@ describeLadderCensus<GalaxiesState>({
   // enum's other values are verdicts, not harder tiers.
   caps: [GalaxiesDiff.Normal],
   cases,
-  solve: (s, cap, firings) => solverState(s, cap, firings),
+  solve: (base, cap, firings) => {
+    // Clear the player-side associations so the ladder starts from the dots
+    // alone, exactly as the generator and `solve` do.
+    const s = cloneState(base);
+    clearForSolve(s);
+    return solverState(s, cap, firings);
+  },
 });

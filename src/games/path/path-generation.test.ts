@@ -13,6 +13,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { dealOnce } from "../../engine/testing/dealt.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { deepBudget } from "../../engine/testing/slow.ts";
@@ -74,7 +75,8 @@ const SEEDS = ["a", "b", "c"].slice(0, deepBudget(1, 3));
 const dealt = SHAPES.flatMap((p) =>
   SEEDS.map((seed) => {
     const label = `${encodeParams(p, true)} ${seed}`;
-    return { label, p, desc: newPathDesc(p, randomNew(`ladder ${label}`)).desc };
+    const desc = dealOnce(() => newPathDesc(p, randomNew(`ladder ${label}`)).desc);
+    return { label, p, desc };
   }),
 );
 
@@ -83,7 +85,10 @@ describeLadderCensus<PathParams & { desc: string }>({
   rungs: PATH_RUNGS,
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY],
-  cases: dealt.map(({ label, p, desc }) => ({ label, board: () => ({ ...p, desc }) })),
+  cases: dealt.map(({ label, p, desc }) => ({
+    label,
+    board: () => ({ ...p, desc: desc() }),
+  })),
   solve: (p, cap, firings) => {
     const s = newState(p, p.desc);
     return solvePath(s, cap, { edges: s.edges, firings }).verdict;
@@ -100,13 +105,13 @@ describe("path dealt boards", () => {
       ({ p }) => p.w * p.h <= (p.mode === MODE_PATH ? ONE_PATH_COUNTED : 49),
     ),
   )("$label has exactly one answer", ({ p, desc }) => {
-    expect(countAnswers(newState(p, desc))).toBe(1);
+    expect(countAnswers(newState(p, desc()))).toBe(1);
   });
 
   it.each(
     dealt.filter(({ p }) => p.mode === MODE_PAIRS),
   )("$label has no straight path of four squares or more", ({ p, desc }) => {
-    const start = newState(p, desc);
+    const start = newState(p, desc());
     const answer = answerOf(start);
     if (answer.kind !== "one") throw new Error("every dealt board has one answer");
     const solved = executeMove(start, { kind: "solve", edges: answer.solution });

@@ -42,11 +42,12 @@ interface Board {
 const cases = SHAPES.flatMap((params) =>
   SEEDS.map((seed) => {
     const label = `${params.w}x${params.h} n${params.n}${params.diag ? " diag" : ""}${params.removenums ? " hidden" : ""} ${seed}`;
-    const { desc } = newAbcdDesc(params, randomNew(`abcd-ladder-${label}`));
-    const { numbers } = newState(params, desc);
     return {
       label,
-      board: (): Board => ({ params, numbers }),
+      board: (): Board => {
+        const { desc } = newAbcdDesc(params, randomNew(`abcd-ladder-${label}`));
+        return { params, numbers: newState(params, desc).numbers };
+      },
     };
   }),
 );

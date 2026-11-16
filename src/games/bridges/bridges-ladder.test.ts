@@ -10,7 +10,7 @@ import * as bridges from "../../generated/games/bridges/bridges.compiled.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
 import { solveFromScratch } from "./solver.ts";
-import { type BridgesParams, type BridgesState, newStateFromDesc } from "./state.ts";
+import { type BridgesParams, newStateFromDesc } from "./state.ts";
 
 /** Every line of the menu, in order. */
 const BRIDGES_PRESETS = leafPresets(bridgesGame).map((l) => l.params);
@@ -29,17 +29,23 @@ const SEEDS = ["lad-a", "lad-b", "lad-c"];
 const cases = SHAPES.flatMap((params) =>
   SEEDS.map((seed) => {
     const label = `${params.w}x${params.h} d${params.difficulty} ${seed}`;
-    const { desc } = newBridgesDesc(params, randomNew(`bridges-ladder-${label}`));
-    return { label, board: () => newStateFromDesc(params, desc) };
+    return {
+      label,
+      board: () => ({
+        params,
+        desc: newBridgesDesc(params, randomNew(`bridges-ladder-${label}`)).desc,
+      }),
+    };
   }),
 );
 
-describeLadderCensus<BridgesState>({
+describeLadderCensus<{ params: BridgesParams; desc: string }>({
   game: "bridges",
   rungs: [...bridges.ladder.map((e) => e.id)],
   unreached: {},
   // The stages' own tiers, plus one above the top, where `difficulty` caps nothing.
   caps: [0, 1, 2, 3],
   cases,
-  solve: (s, cap, firings) => solveFromScratch(s, cap, firings),
+  solve: ({ params, desc }, cap, firings) =>
+    solveFromScratch(newStateFromDesc(params, desc), cap, firings),
 });

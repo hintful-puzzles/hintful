@@ -54,13 +54,18 @@ const cases = [
   ...SHAPES.flatMap((params) =>
     SEEDS.map((seed) => {
       const label = `${params.w}x${params.h} diff=${params.diff} ${seed}`;
-      const { desc } = newRomeDesc(params, randomNew(`rome-ladder-${label}`));
-      return { label, board: () => descValue(parseDesc(params, desc)) };
+      return {
+        label,
+        board: () => ({
+          params,
+          desc: newRomeDesc(params, randomNew(`rome-ladder-${label}`)).desc,
+        }),
+      };
     }),
   ),
   ...PAIR_BOARDS.map(({ label, params, desc }) => ({
     label,
-    board: () => descValue(parseDesc(params, desc)),
+    board: () => ({ params, desc }),
   })),
 ];
 
@@ -73,5 +78,6 @@ describeLadderCensus({
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY],
   cases,
-  solve: romeSolve,
+  solve: ({ params, desc }, cap, firings) =>
+    romeSolve(descValue(parseDesc(params, desc)), cap, firings),
 });

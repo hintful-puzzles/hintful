@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
+import { dealOnce } from "../../engine/testing/dealt.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { deepBudget } from "../../engine/testing/slow.ts";
 import { newNorinoriDesc } from "./generator.ts";
@@ -44,15 +45,13 @@ describeDealtTiers(
 // the hint pins hold each rung to a written-down board there.
 const SEEDS = ["a", "b", "c", "d", "e", "f"].slice(0, deepBudget(1, 6));
 
-// Dealt when a test asks, so a run that skips the census deals nothing.
 const DEALT = DEALT_SHAPES.flatMap((p) =>
   SEEDS.map((seed) => {
     const label = `${encodeParams(p, true)} ${seed}`;
-    let desc: string | null = null;
-    const board = () => {
-      desc ??= newNorinoriDesc(p, randomNew(`ladder ${label}`)).desc;
-      return { ...p, desc };
-    };
+    const board = dealOnce(() => ({
+      ...p,
+      desc: newNorinoriDesc(p, randomNew(`ladder ${label}`)).desc,
+    }));
     return { label, board };
   }),
 );

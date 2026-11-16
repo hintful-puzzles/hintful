@@ -112,9 +112,23 @@ export function underDealTries<T>(tries: number, deal: () => T): T {
   }
 }
 
-/** The tries every guard has made under {@link countingTries}, by label, or
- * `null` where nothing counts. */
+/** The tries every guard has made under {@link countingTries} or
+ * {@link countTriesInto}, by label, or `null` where nothing counts. */
 let tally: Map<string, number> | null = null;
+
+/**
+ * Counts every guard's tries into `tries` from now on, or stops counting;
+ * returns where they were counted before. For a span no callback encloses:
+ * the test setup counts what a test file deals while it loads
+ * (`testing/dealt.ts`).
+ */
+export function countTriesInto(
+  tries: Map<string, number> | null,
+): Map<string, number> | null {
+  const before = tally;
+  tally = tries;
+  return before;
+}
 
 /**
  * Run `deal`, writing into `tries` how many tries each guard under it made,

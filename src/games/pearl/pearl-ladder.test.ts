@@ -38,9 +38,13 @@ const cases = [
   ...SHAPES.flatMap((p) =>
     SEEDS.map((seed) => {
       const label = `${p.w}x${p.h} d${p.difficulty} ${seed}`;
-      const { desc } = newDesc(p, randomNew(`pearl-ladder-${label}`));
-      const { clues } = newState(p, desc);
-      return { label, board: (): Board => ({ p, clues }) };
+      return {
+        label,
+        board: (): Board => {
+          const { desc } = newDesc(p, randomNew(`pearl-ladder-${label}`));
+          return { p, clues: newState(p, desc).clues };
+        },
+      };
     }),
   ),
   {

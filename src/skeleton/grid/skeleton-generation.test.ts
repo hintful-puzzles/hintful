@@ -42,8 +42,13 @@ describeLadderCensus<SkeletonParams & { desc: string }>({
   cases: SHAPES.flatMap((p) =>
     SEEDS.map((seed) => {
       const label = `${encodeParams(p, true)} ${seed}`;
-      const { desc } = newSkeletonDesc(p, randomNew(`ladder ${label}`));
-      return { label, board: () => ({ ...p, desc }) };
+      return {
+        label,
+        board: () => ({
+          ...p,
+          desc: newSkeletonDesc(p, randomNew(`ladder ${label}`)).desc,
+        }),
+      };
     }),
   ),
   solve: (p, cap, firings) => {

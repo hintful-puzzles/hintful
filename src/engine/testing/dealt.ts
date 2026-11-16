@@ -30,7 +30,12 @@
  */
 import { type RandomState, randomNew } from "../random/index.ts";
 import { getTsGame } from "../registry.ts";
-import { MAX_REGENERATE, RetryLimitExceeded, underDealTries } from "../retry-limit.ts";
+import {
+  countTriesInto,
+  MAX_REGENERATE,
+  RetryLimitExceeded,
+  underDealTries,
+} from "../retry-limit.ts";
 
 /** A dealt board, as `newDesc` returns it. */
 type Board = { desc: string; aux?: string };
@@ -134,6 +139,45 @@ export function openCostWindow(): void {
   costWindow++;
   inherited = new Set();
   dealtHere = 0;
+}
+
+/**
+ * `deal`, called when first asked and kept: for a file's own boards, which
+ * several of its tests share and a run may skip every one of.
+ */
+export function dealOnce<T>(deal: () => T): () => T {
+  let kept: { board: T } | null = null;
+  return () => {
+    kept ??= { board: deal() };
+    return kept.board;
+  };
+}
+
+/** The generators' tries while this file loads, by guard label; `null`
+ * before its load window opens. */
+let loadingTries: Map<string, number> | null = null;
+
+/**
+ * Starts counting what a test file deals while it loads, until
+ * {@link closeLoadWindow}. Every generator's retry loop takes a guard
+ * (`retry-limit.ts`), so a deal is seen as the tries it made, whichever
+ * function it went through.
+ */
+export function openLoadWindow(): void {
+  loadingTries = new Map();
+  countTriesInto(loadingTries);
+}
+
+/** Stops the count {@link openLoadWindow} started: the file has loaded, and
+ * what its tests deal is theirs. */
+export function closeLoadWindow(): void {
+  countTriesInto(null);
+}
+
+/** The tries each generator's guards made while this file loaded, by label:
+ * empty where it dealt nothing until a test asked. */
+export function triesWhileLoading(): ReadonlyMap<string, number> | null {
+  return loadingTries;
 }
 
 /** The CPU microseconds of the boards this file used and did not deal. */

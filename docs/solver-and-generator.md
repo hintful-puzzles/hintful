@@ -167,6 +167,13 @@ which reads the runner's `firings` tally through one optional parameter of
 the game's solve. Exemplar:
 [`skeleton-generation.test.ts`](../src/skeleton/grid/skeleton-generation.test.ts).
 
+- **Deal inside each case's `board`, never where the case is listed.** The
+  census is the deep tier's, and a deal at the top of the file runs in every
+  run, CI's included. The census calls `board` once and hands the board to
+  every cap, so a solver that changes its input builds it in `solve`, from
+  the desc `board` returned. A census fails in every run when a generator
+  ran while its file loaded. A board the file's CI checks share is dealt
+  through `dealOnce` (`testing/dealt.ts`).
 - **Record a rung the corpus cannot reach in the census's `unreached`, with
   its reason, and check it against the C first**: an unreachable deduction is
   the shape a porting bug takes. An entry may be structural, a rung foreclosed

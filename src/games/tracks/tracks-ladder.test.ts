@@ -44,9 +44,13 @@ const FINISHES_EARLY_DESC = "j5d9d,S2,3,3,3,3,3,3,S4,4";
 const dealt = SHAPES.flatMap((params) =>
   SEEDS.map((seed) => {
     const label = `${params.w}x${params.h} diff=${params.diff} ${seed}`;
-    // Generated once per case, decoded fresh per solve.
-    const { desc } = newDesc(params, randomNew(`tracks-ladder-${label}`));
-    return { label, board: () => stateToBoard(newState(params, desc)) };
+    return {
+      label,
+      board: () => ({
+        params,
+        desc: newDesc(params, randomNew(`tracks-ladder-${label}`)).desc,
+      }),
+    };
   }),
 );
 
@@ -54,7 +58,7 @@ const cases = [
   ...dealt,
   {
     label: "5x4, finishes early",
-    board: () => stateToBoard(newState(FINISHES_EARLY, FINISHES_EARLY_DESC)),
+    board: () => ({ params: FINISHES_EARLY, desc: FINISHES_EARLY_DESC }),
   },
 ];
 
@@ -64,5 +68,6 @@ describeLadderCensus({
   unreached: {},
   caps: [DIFF_EASY, DIFF_TRICKY, DIFF_HARD],
   cases,
-  solve: tracksSolve,
+  solve: ({ params, desc }, cap, firings) =>
+    tracksSolve(stateToBoard(newState(params, desc)), cap, firings),
 });

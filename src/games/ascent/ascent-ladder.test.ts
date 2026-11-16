@@ -13,7 +13,6 @@ import { newAscentDesc } from "./generator.ts";
 import { ascentSolve } from "./solver.ts";
 import {
   type AscentParams,
-  type AscentState,
   DIFF_EASY,
   DIFF_HARD,
   DIFF_NORMAL,
@@ -46,12 +45,17 @@ const SEEDS = ["lad-a", "lad-b", "lad-c"];
 const cases = SHAPES.flatMap(([name, params]) =>
   SEEDS.map((seed) => {
     const label = `${name} ${seed}`;
-    const { desc } = newAscentDesc(params, randomNew(`ascent-ladder-${label}`));
-    return { label, board: (): AscentState => newAscentState(params, desc) };
+    return {
+      label,
+      board: () => ({
+        params,
+        desc: newAscentDesc(params, randomNew(`ascent-ladder-${label}`)).desc,
+      }),
+    };
   }),
 );
 
-describeLadderCensus<AscentState>({
+describeLadderCensus<{ params: AscentParams; desc: string }>({
   game: "ascent",
   rungs: [
     "onlySquare",
@@ -66,7 +70,8 @@ describeLadderCensus<AscentState>({
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD],
   cases,
-  solve: (s, cap, firings) => {
+  solve: ({ params, desc }, cap, firings) => {
+    const s = newAscentState(params, desc);
     ascentSolve(s.grid, s.w, s.h, s.mode, cap, firings);
   },
 });

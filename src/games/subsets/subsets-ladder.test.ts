@@ -22,8 +22,13 @@ const SEEDS = ["lad-a", "lad-b", "lad-c", "lad-d", "lad-e"];
 const cases = SHAPES.flatMap((params) =>
   SEEDS.map((seed) => {
     const label = `diff=${params.diff} ${seed}`;
-    const { desc } = newSubsetsDesc(params, randomNew(`subsets-ladder-${label}`));
-    return { label, board: () => newState(params, desc) };
+    return {
+      label,
+      board: () => ({
+        params,
+        desc: newSubsetsDesc(params, randomNew(`subsets-ladder-${label}`)).desc,
+      }),
+    };
   }),
 );
 
@@ -42,5 +47,6 @@ describeLadderCensus({
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL],
   cases,
-  solve: subsetsSolveGame,
+  solve: ({ params, desc }, cap, firings) =>
+    subsetsSolveGame(newState(params, desc), cap, firings),
 });

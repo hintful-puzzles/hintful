@@ -30,8 +30,13 @@ const SEEDS = ["lad-a", "lad-b", "lad-c"];
 const cases = SHAPES.flatMap((params) =>
   SEEDS.map((seed) => {
     const label = `${params.w}x${params.h} ${params.diff} ${seed}`;
-    const { desc } = newUndeadDesc(params, randomNew(`undead-ladder-${label}`));
-    return { label, board: () => newState(params, desc).common };
+    return {
+      label,
+      board: () => ({
+        params,
+        desc: newUndeadDesc(params, randomNew(`undead-ladder-${label}`)).desc,
+      }),
+    };
   }),
 );
 
@@ -41,11 +46,13 @@ describeLadderCensus({
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY],
   cases,
-  solve: (common, cap, firings) =>
-    solveDeductive(
+  solve: ({ params, desc }, cap, firings) => {
+    const { common } = newState(params, desc);
+    return solveDeductive(
       common,
       new Uint8Array(common.numTotal).fill(MON_NONE),
       TIER_RUNG[cap],
       firings,
-    ),
+    );
+  },
 });

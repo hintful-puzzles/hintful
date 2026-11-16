@@ -21,6 +21,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { FiringTally } from "../deduction-fixpoint.ts";
+import { triesWhileLoading } from "./dealt.ts";
 import { inDeepTier } from "./slow.ts";
 
 export interface LadderCensusSpec<Board> {
@@ -38,11 +39,19 @@ export interface LadderCensusSpec<Board> {
   unreached: Readonly<Record<string, string>>;
   /** The caps to walk each board at: the game's own tier values. */
   caps: readonly number[];
-  /** One labeled case per board; the factory is called fresh per cap. */
+  /**
+   * One labeled case per board. `board` deals it: the census calls it once,
+   * in its own test, and hands the board to every cap.
+   *
+   * **Deal inside `board`, never beside it.** A deal written where the case
+   * is listed runs when the file loads: in every run, CI's included, where
+   * the census is skipped, and in a run narrowed to other cases.
+   */
   cases: readonly { label: string; board: () => Board }[];
   /**
    * The solver, taking the tally it forwards to `runDeductionFixpoint`'s
-   * `firings` option.
+   * `firings` option. It is handed the same board at every cap, so it builds
+   * what it changes from the board and changes nothing of the board's own.
    *
    * **Why a game's solver carries a parameter only a test supplies.** A rung's
    * reachability cannot be observed from the game's own results, which is this
@@ -54,6 +63,18 @@ export interface LadderCensusSpec<Board> {
 
 export function describeLadderCensus<Board>(spec: LadderCensusSpec<Board>): void {
   const { game, rungs, unreached, caps, cases, solve } = spec;
+
+  // In every run: the census is the deep tier's, and a board dealt while the
+  // file loads is paid for by every run, which mostly never walk it.
+  it(`${game}: the census file dealt no board while loading`, () => {
+    const tries = triesWhileLoading();
+    expect(tries, "the test setup opens a load window for every file").not.toBeNull();
+    expect(
+      [...(tries as ReadonlyMap<string, number>).keys()],
+      `${game}: a generator ran while the file loaded; deal inside each case's ` +
+        "`board`, which the census calls in its own test",
+    ).toEqual([]);
+  });
 
   // The game's deep tier. In CI a hinted game's pins still hold each of its
   // hint's rungs to firing on a written-down board (`describeHintPins`).
@@ -67,8 +88,9 @@ export function describeLadderCensus<Board>(spec: LadderCensusSpec<Board>): void
 
       for (const { label, board } of cases) {
         it(`${label}: solves at every cap`, () => {
+          const dealt = board();
           for (const cap of caps) {
-            solve(board(), cap, fired);
+            solve(dealt, cap, fired);
             solved++;
           }
         });

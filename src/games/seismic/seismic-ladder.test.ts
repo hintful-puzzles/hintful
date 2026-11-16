@@ -31,8 +31,13 @@ const SEEDS = ["lad-a", "lad-b", "lad-c"];
 const cases = SHAPES.flatMap((params) =>
   SEEDS.map((seed) => {
     const label = `${params.w}x${params.h} mode=${params.mode} diff=${params.diff} ${seed}`;
-    const { desc } = newSeismicDesc(params, randomNew(`seismic-ladder-${label}`));
-    return { label, board: () => newState(params, desc) };
+    return {
+      label,
+      board: () => ({
+        params,
+        desc: newSeismicDesc(params, randomNew(`seismic-ladder-${label}`)).desc,
+      }),
+    };
   }),
 );
 
@@ -42,5 +47,6 @@ describeLadderCensus({
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL],
   cases,
-  solve: solveGame,
+  solve: ({ params, desc }, cap, firings) =>
+    solveGame(newState(params, desc), cap, firings),
 });

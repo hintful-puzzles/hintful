@@ -32,10 +32,15 @@ interface Board {
 const cases = SHAPES.flatMap((p) =>
   SEEDS.map((seed) => {
     const label = `${p.w}x${p.h} d${p.diff} ${seed}`;
-    const { desc } = newTentsDesc(p, randomNew(`tents-ladder-${label}`));
-    const { grid, numbers } = newState(p, desc);
-    const puzzle = Int8Array.from(grid, (v) => (v === TREE ? TREE : 0));
-    return { label, board: (): Board => ({ p, puzzle, numbers }) };
+    return {
+      label,
+      board: (): Board => {
+        const { desc } = newTentsDesc(p, randomNew(`tents-ladder-${label}`));
+        const { grid, numbers } = newState(p, desc);
+        const puzzle = Int8Array.from(grid, (v) => (v === TREE ? TREE : 0));
+        return { p, puzzle, numbers };
+      },
+    };
   }),
 );
 

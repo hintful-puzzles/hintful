@@ -25,10 +25,12 @@
  * games' cases before it starts.
  */
 import { appendFileSync, readdirSync } from "node:fs";
-import { afterAll, afterEach, beforeEach } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
 import {
+  closeLoadWindow,
   inheritedDealCost,
   openCostWindow,
+  openLoadWindow,
   ownDealCost,
 } from "../../src/engine/testing/dealt.ts";
 import { scopeFromEnv } from "../../src/engine/testing/game-scope.ts";
@@ -59,6 +61,11 @@ function gameOf(fullName: string): string | null {
 }
 
 openCostWindow();
+// What the file deals before its first test runs, which a run pays for
+// whatever cases it goes on to skip (`describeLadderCensus` holds a census
+// file to none).
+openLoadWindow();
+beforeAll(closeLoadWindow);
 const start = cost();
 const games: Record<string, number> = {};
 let caseStart = 0;

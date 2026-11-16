@@ -59,17 +59,12 @@ describeLadderCensus<StarbattleParams & { desc: string }>({
   cases: SMALL.flatMap((p) =>
     SEEDS.map((seed) => {
       const label = `${encodeParams(p, true)} ${seed}`;
-      // Dealt when the census runs, which CI's run does not.
-      let board: (StarbattleParams & { desc: string }) | null = null;
       return {
         label,
-        board: () => {
-          board ??= {
-            ...p,
-            desc: newStarbattleDesc(p, randomNew(`ladder ${label}`)).desc,
-          };
-          return board;
-        },
+        board: () => ({
+          ...p,
+          desc: newStarbattleDesc(p, randomNew(`ladder ${label}`)).desc,
+        }),
       };
     }),
   ),

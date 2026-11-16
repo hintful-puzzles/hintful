@@ -47,9 +47,14 @@ interface Board {
 const cases = SHAPES.flatMap((params) =>
   SEEDS.map((seed) => {
     const label = `${params.w}x${params.h} diff=${params.diff}${params.stripclues ? " strip" : ""} ${seed}`;
-    const { desc } = newMagnetsDesc(params, randomNew(`magnets-ladder-${label}`));
-    const { w, h, common } = newState(params, desc);
-    return { label, board: (): Board => ({ w, h, common }) };
+    return {
+      label,
+      board: (): Board => {
+        const { desc } = newMagnetsDesc(params, randomNew(`magnets-ladder-${label}`));
+        const { w, h, common } = newState(params, desc);
+        return { w, h, common };
+      },
+    };
   }),
 );
 
