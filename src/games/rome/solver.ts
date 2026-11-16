@@ -26,14 +26,11 @@ import {
 import { Dsf } from "../../engine/dsf.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  placingRung,
   runLadder,
   TIERS,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as rome from "../../generated/games/rome/rome.compiled.ts";
 import {
@@ -258,15 +255,7 @@ export function dealtOf(board: RomeBoard): rome.Dealt {
 /** The ladder over the dealt areas and goals. A strike's firing says what its
  * sentence names (`says` in the description). */
 export function romeLadder(dl: rome.Dealt): Ladder {
-  return describedLadder(rome, {
-    cull: placingRung(rome.cull, dl),
-    lone: uncluedRung(rome.lone),
-    loop: uncluedRung(rome.loop),
-    onlyHome: compiledRung(rome.onlyHome, dl),
-    pair: compiledRung(rome.pair, dl),
-    reach: compiledRung(rome.reach, dl),
-    opposite: compiledRung(rome.opposite, dl),
-  });
+  return describedLadder(rome, dl);
 }
 
 /**

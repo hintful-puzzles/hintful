@@ -19,14 +19,11 @@ import { describedSpace, partition, rangeMask } from "../../engine/describe-runt
 import type { Dsf } from "../../engine/dsf.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  placingRung,
   runLadder,
   TIERS,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
 import {
@@ -65,12 +62,7 @@ export function dealtOf(board: SeismicBoard): seismic.Dealt {
 /** The ladder over the dealt areas. A starved area's firing says the area and
  * its number (`says` in the description). */
 export function seismicLadder(dl: seismic.Dealt): Ladder {
-  return describedLadder(seismic, {
-    cull: placingRung(seismic.cull, dl),
-    lone: uncluedRung(seismic.lone),
-    areaSingle: compiledRung(seismic.areaSingle, dl),
-    starve: compiledRung(seismic.starve, dl),
-  });
+  return describedLadder(seismic, dl);
 }
 
 /**

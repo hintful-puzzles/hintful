@@ -22,15 +22,11 @@ import {
 } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  placingRung,
   runLadder,
-  strikingRung,
   TIERS,
-  uncluedPlacingRung,
 } from "../../engine/ladder-runtime.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import * as magnets from "../../generated/games/magnets/magnets.compiled.ts";
@@ -129,18 +125,7 @@ export function dealtOf(w: number, h: number, common: MagnetsCommon): magnets.De
 /** The ladder over the dealt board, each technique with the hint's reason
  * for it. */
 export function magnetsLadder(dl: magnets.Dealt): Ladder {
-  return describedLadder(magnets, {
-    pair: placingRung(magnets.pair, dl),
-    repel: uncluedPlacingRung(magnets.repel),
-    tile: strikingRung(magnets.tile, dl),
-    single: compiledRung(magnets.single, dl),
-    count: compiledRung(magnets.count, dl),
-    oddGap: compiledRung(magnets.oddGap, dl),
-    marked: compiledRung(magnets.marked, dl),
-    oneNeutral: compiledRung(magnets.oneNeutral, dl),
-    everyTile: compiledRung(magnets.everyTile, dl),
-    onlyEnd: compiledRung(magnets.onlyEnd, dl),
-  });
+  return describedLadder(magnets, dl);
 }
 
 /** The premise a firing acted on, from what its technique said. */

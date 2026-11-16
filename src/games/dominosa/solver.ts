@@ -24,14 +24,11 @@ import {
 import { type GridSpace, rangeMask } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  placingRung,
   runLadder,
   TIERS,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as dominosa from "../../generated/games/dominosa/dominosa.compiled.ts";
 import {
@@ -55,18 +52,7 @@ export function endsOf(sp: GridSpace, e: number): [number, number] {
 
 /** The ladder over the dealt numbers. */
 function dominosaLadder(dl: dominosa.Dealt): Ladder {
-  return describedLadder(dominosa, {
-    placed: placingRung(dominosa.placed, dl),
-    onlySpot: compiledRung(dominosa.onlySpot, dl),
-    squareOnly: uncluedRung(dominosa.squareOnly),
-    squareSingleDomino: compiledRung(dominosa.squareSingleDomino, dl),
-    mustOverlap: compiledRung(dominosa.mustOverlap, dl),
-    localDuplicate: compiledRung(dominosa.localDuplicate, dl),
-    localDuplicate2: compiledRung(dominosa.localDuplicate2, dl),
-    parity: uncluedRung(dominosa.parity),
-    set: compiledRung(dominosa.set, dl),
-    setDoubles: compiledRung(dominosa.setDoubles, dl),
-  });
+  return describedLadder(dominosa, dl);
 }
 
 /** The working state of a deduction: the marks on the spots, and the ladder

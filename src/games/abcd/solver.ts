@@ -33,13 +33,11 @@ import {
 } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
   runLadder,
   TIERS,
-  uncluedPlacingRung,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as abcd from "../../generated/games/abcd/abcd.compiled.ts";
@@ -171,13 +169,8 @@ export function dealtOf(p: AbcdParams, numbers: Int32Array): abcd.Dealt {
 export function abcdLadder(p: AbcdParams, dl: abcd.Dealt): Ladder {
   return describedLadder(
     abcd,
-    {
-      placed: uncluedPlacingRung(abcd.placed),
-      placedDiagonal: uncluedPlacingRung(abcd.placedDiagonal),
-      satisfied: compiledRung(abcd.satisfied, dl),
-      single: uncluedRung(abcd.single, () => ({ kind: "single" })),
-      runs: compiledRung(abcd.runs, dl),
-    },
+    dl,
+    { single: uncluedRung(abcd.single, () => ({ kind: "single" })) },
     undefined,
     variationsOf(p),
   );

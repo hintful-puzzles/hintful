@@ -235,7 +235,7 @@ function reasonOf(
  * the marks before any of its facts land. */
 function patternLadder(dl: pattern.Dealt): Ladder {
   const made = new WeakMap<pattern.LineBinding, PatternHintReason>();
-  return describedLadder(pattern, {
+  return describedLadder(pattern, dl, {
     line: compiledRung(pattern.line, dl, (binding, _c, _n, m): PatternHintReason => {
       let reason = made.get(binding);
       if (reason === undefined) {

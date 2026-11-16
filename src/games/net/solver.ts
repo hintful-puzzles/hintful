@@ -126,7 +126,7 @@ function netLadder(dl: net.Dealt): Ladder {
       (b: B): Fired =>
         b.e === undefined ? { kind, c: b.c } : { kind, c: b.c, e: b.e },
     );
-  return describedLadder(net, {
+  return describedLadder(net, dl, {
     fitLock: rung("fitLock", net.fitLock),
     fitNote: rung("fitNote", net.fitNote),
     loopLock: rung("loopLock", net.loopLock),

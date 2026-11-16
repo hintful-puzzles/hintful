@@ -21,7 +21,6 @@ import type {
 import {
   type Caps,
   CellMarks,
-  compiledRung,
   type Ladder,
   ladderTechniques,
   runLadder,
@@ -96,18 +95,7 @@ function removeFromBlock(cages: Cages, b: number, n: number): void {
  * says its unit: the hint names the region it reads.
  */
 function soloLadder(dealt: solo.Dealt): Ladder<SolverUsage> {
-  return latinLadder(solo, {
-    boxSingle: uncluedRung(solo.boxSingle),
-    cageSingle: compiledRung(solo.cageSingle, dealt),
-    regionRule: compiledRung(solo.regionRule, dealt),
-    cageMinMax: compiledRung(solo.cageMinMax, dealt),
-    partMinMax: compiledRung(solo.partMinMax, dealt),
-    cageSums: compiledRung(solo.cageSums, dealt),
-    partSums: compiledRung(solo.partSums, dealt),
-    intersect: uncluedRung(solo.intersect),
-    "latin.set": uncluedRung(latinSet),
-    digitSet: uncluedRung(solo.digitSet),
-  });
+  return latinLadder(solo, dealt, { "latin.set": uncluedRung(latinSet) });
 }
 
 // --- solver usage -----------------------------------------------------------

@@ -18,7 +18,6 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
-  placingRung,
   runLadder,
   TIERS,
   WideCellMarks,
@@ -87,10 +86,10 @@ const reasonOf =
 /** The ladder over the board `dl`, with an Edges board's own techniques where
  * it has arrows. */
 function ascentLadder(dl: ascent.Dealt, mode: number): Ladder<WideCellMarks> {
-  return describedLadder<ascent.LadderId, ascent.PlacingId, WideCellMarks>(
+  return describedLadder(
     ascent,
+    dl,
     {
-      once: placingRung(ascent.once, dl),
       onlySquare: compiledRung(ascent.onlySquare, dl, reasonOf("onlySquare")),
       nextTo: compiledRung(ascent.nextTo, dl, reasonOf("nextTo")),
       reach: compiledRung(ascent.reach, dl, reasonOf("reach")),

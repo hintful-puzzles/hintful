@@ -23,7 +23,6 @@ import {
 } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
@@ -298,20 +297,7 @@ class Reads {
  * it, a firing recording what it says. */
 function bridgesLadder(geo: Geometry): Ladder {
   const dl = geo.dealt;
-  return describedLadder(
-    bridges,
-    {
-      exactSpace: compiledRung(bridges.exactSpace, dl),
-      everyNeighbor: compiledRung(bridges.everyNeighbor, dl),
-      needsThisWay: compiledRung(bridges.needsThisWay, dl),
-      sealing: compiledRung(bridges.sealing, dl),
-      loop: compiledRung(bridges.loop, dl),
-      tooMany: compiledRung(bridges.tooMany, dl),
-      mustReachOut: compiledRung(bridges.mustReachOut, dl),
-    },
-    undefined,
-    geo.variations,
-  );
+  return describedLadder(bridges, dl, {}, undefined, geo.variations);
 }
 
 // --- solving -----------------------------------------------------------------

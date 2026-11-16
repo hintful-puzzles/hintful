@@ -17,7 +17,7 @@
  */
 
 import { latinSpace } from "../../engine/describe-runtime.ts";
-import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
+import type { Ladder } from "../../engine/ladder-runtime.ts";
 import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
@@ -66,11 +66,7 @@ export function cageCells(cages: Cages, r: number, w: number): Point[] {
 /** The ladder `keen.description.yaml` states, over the board's cages. */
 export function keenLadder(cages: Cages): Ladder<LatinSolver> {
   const dl = dealtOf(cages);
-  return latinLadder(keen, {
-    cageEasy: compiledRung(keen.cageEasy, dl),
-    cage: compiledRung(keen.cage, dl),
-    cageLine: compiledRung(keen.cageLine, dl),
-  });
+  return latinLadder(keen, dl);
 }
 
 // --- driver ----------------------------------------------------------------

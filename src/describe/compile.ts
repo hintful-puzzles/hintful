@@ -7470,7 +7470,8 @@ export function compileGame(
     cellDomain(d.domain, env, d.json.sizes),
   );
   const own = d.techniques.filter((t) => !t.id.includes("."));
-  const code = own.map((t) => compileTechnique(t, env).code);
+  const compiled = own.map((t) => ({ id: t.id, ...compileTechnique(t, env) }));
+  const code = compiled.map((c) => c.code);
   const kept = env.kept?.defs ?? new Map();
   for (const fn of kept.keys())
     if (own.some((t) => t.id === fn))
@@ -7612,6 +7613,13 @@ export function compileGame(
     "export const striking: readonly { id: StrikingId; variation?: string }[] = [",
     ...striking.map(onCellEntry),
     "];",
+    "",
+    "/** Each of the description's own techniques, by id, and whether it reads",
+    " * what the board deals: the engine runs each on the board's clues where it",
+    " * does (`describedLadder`). */",
+    "export const techniques = {",
+    ...compiled.map((c) => `  ${c.id}: { dealt: ${c.clues}, run: ${c.id} },`),
+    "} as const;",
     "",
     "/** The ladder: each technique's tier, on its scale where that is not the",
     " * description's tiers, the least cap it runs at where that is above its",

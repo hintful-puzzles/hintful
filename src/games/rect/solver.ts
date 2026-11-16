@@ -39,7 +39,6 @@ import {
 } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
@@ -297,15 +296,7 @@ export function reasonOf(
 
 /** The ladder over the dealt board: the description's techniques, compiled. */
 function rectLadder(dl: rect.Dealt): Ladder {
-  return describedLadder(rect, {
-    fit: compiledRung(rect.fit, dl),
-    uncovered: compiledRung(rect.uncovered, dl),
-    boxed: compiledRung(rect.boxed, dl),
-    reach: compiledRung(rect.reach, dl),
-    overlap: compiledRung(rect.overlap, dl),
-    starve: compiledRung(rect.starve, dl),
-    line: compiledRung(rect.line, dl),
-  });
+  return describedLadder(rect, dl);
 }
 
 // --- deduction ---------------------------------------------------------------

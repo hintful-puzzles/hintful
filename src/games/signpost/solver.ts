@@ -26,7 +26,6 @@ import {
 } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
@@ -188,10 +187,7 @@ export function firingOf(
 
 /** The ladder over the dealt board. */
 function signpostLadder(dl: signpost.Dealt): Ladder {
-  return describedLadder(signpost, {
-    onlyNext: compiledRung(signpost.onlyNext, dl),
-    onlyBefore: compiledRung(signpost.onlyBefore, dl),
-  });
+  return describedLadder(signpost, dl);
 }
 
 /** The marks over a board's links and the ladder over its arrows and

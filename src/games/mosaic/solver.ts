@@ -21,7 +21,6 @@ import {
 import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   type LadderEntry,
@@ -73,10 +72,7 @@ function dealtOf(board: MosaicBoard): mosaic.Dealt {
 
 /** The ladder over the numbers `dealt` deals. */
 function mosaicLadder(dealt: mosaic.Dealt): Ladder {
-  return describedLadder(mosaic, {
-    alone: compiledRung(mosaic.alone, dealt),
-    compared: compiledRung(mosaic.compared, dealt),
-  });
+  return describedLadder(mosaic, dealt);
 }
 
 /** The values a square may hold: shaded or clear. */

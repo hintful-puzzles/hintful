@@ -32,7 +32,6 @@ import {
 import { Dsf } from "../../engine/dsf.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   type LadderEntry,
@@ -111,13 +110,7 @@ function sticksMarks(sp: GridSpace, dl: sticks.Dealt, values: Uint8Array): CellM
 
 /** The ladder over the dealt board. */
 function sticksLadder(dl: sticks.Dealt): Ladder {
-  return describedLadder(sticks, {
-    overConnected: compiledRung(sticks.overConnected, dl),
-    tooLong: compiledRung(sticks.tooLong, dl),
-    twoClues: compiledRung(sticks.twoClues, dl),
-    starved: compiledRung(sticks.starved, dl),
-    unreachable: compiledRung(sticks.unreachable, dl),
-  });
+  return describedLadder(sticks, dl);
 }
 
 /** Run the ladder on `m` to a fixpoint and say what it reached. */

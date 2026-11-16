@@ -30,12 +30,10 @@ import {
 } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   type LadderEntry,
   ladderTechniques,
-  placingRung,
   runLadder,
   type Said,
   TIERS,
@@ -108,12 +106,7 @@ function lightsOf(sp: GridSpace, dl: lightup.Dealt, c: number): number[] {
 /** The ladder over the dealt board. A technique that says builds its own steps
  * (`lightup.description.yaml`'s `says`), so no rung builds a reason. */
 function lightupLadder(dl: lightup.Dealt): Ladder {
-  return describedLadder(lightup, {
-    shine: placingRung(lightup.shine, dl),
-    square: compiledRung(lightup.square, dl),
-    darkSet: compiledRung(lightup.darkSet, dl),
-    clueSet: compiledRung(lightup.clueSet, dl),
-  });
+  return describedLadder(lightup, dl);
 }
 
 /** The marks over `values`, every free square either way, the walls and

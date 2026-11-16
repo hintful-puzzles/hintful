@@ -18,7 +18,6 @@ import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   type LadderEntry,
@@ -63,10 +62,7 @@ function dealtOf({ clues }: SkeletonBoard): skeleton.Dealt {
 
 /** The ladder over the numbers `dealt` deals. */
 function skeletonLadder(dealt: skeleton.Dealt): Ladder {
-  return describedLadder(skeleton, {
-    count: compiledRung(skeleton.count, dealt),
-    shared: compiledRung(skeleton.shared, dealt),
-  });
+  return describedLadder(skeleton, dealt);
 }
 
 /** The values a square may hold: shaded or clear. */

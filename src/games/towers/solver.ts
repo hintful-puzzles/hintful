@@ -16,7 +16,7 @@
  */
 
 import { clueAt, type GridSpace, latinSpace } from "../../engine/describe-runtime.ts";
-import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
+import type { Ladder } from "../../engine/ladder-runtime.ts";
 import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
@@ -75,11 +75,7 @@ export function facingReason(
 
 /** The ladder `towers.description.yaml` states, over the dealt clues. */
 export function towersLadder(cl: towers.Dealt): Ladder<LatinSolver> {
-  return latinLadder(towers, {
-    facing: compiledRung(towers.facing, cl),
-    bounds: compiledRung(towers.bounds, cl),
-    arrangement: compiledRung(towers.arrangement, cl),
-  });
+  return latinLadder(towers, cl);
 }
 
 // --- driver ----------------------------------------------------------------

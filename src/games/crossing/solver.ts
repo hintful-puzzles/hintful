@@ -34,7 +34,6 @@ import {
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Firing,
   type Ladder,
@@ -186,15 +185,7 @@ function crossingLadder(p: CrossingPuzzle): Ladder {
   const kept = ladders.get(p);
   if (kept !== undefined) return kept;
   const dl = dealtOf(p);
-  const made = describedLadder(crossing, {
-    onlyNumber: compiledRung(crossing.onlyNumber, dl),
-    onlyRun: compiledRung(crossing.onlyRun, dl),
-    sharedDigit: compiledRung(crossing.sharedDigit, dl),
-    crossRuns: compiledRung(crossing.crossRuns, dl),
-    narrow: compiledRung(crossing.narrow, dl),
-    misread: compiledRung(crossing.misread, dl),
-    twice: compiledRung(crossing.twice, dl),
-  });
+  const made = describedLadder(crossing, dl);
   ladders.set(p, made);
   return made;
 }

@@ -30,8 +30,6 @@ import {
   runLadder,
   type Said,
   TIERS,
-  uncluedPlacingRung,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
 import type { Point } from "../../engine/types.ts";
@@ -446,24 +444,7 @@ function trialReason<Binding, Y extends boats.SaysById[keyof boats.SuppliedById]
 /** The ladder over the dealt board: each technique records what it says
  * for the hint, the three trials adding the rule they break. */
 function boatsLadder(B: Board, dl: boats.Dealt): Ladder {
-  return describedLadder(boats, {
-    given: compiledRung(boats.given, dl),
-    near: uncluedRung(boats.near),
-    touch: uncluedPlacingRung(boats.touch),
-    lineShips: compiledRung(boats.lineShips, dl),
-    total: compiledRung(boats.total, dl),
-    center: compiledRung(boats.center, dl),
-    extend: compiledRung(boats.extend, dl),
-    lineWater: compiledRung(boats.lineWater, dl),
-    isolated: compiledRung(boats.isolated, dl),
-    grow: compiledRung(boats.grow, dl),
-    onlyFit: compiledRung(boats.onlyFit, dl),
-    centerRoom: compiledRung(boats.centerRoom, dl),
-    tooLong: compiledRung(boats.tooLong, dl),
-    shortRun: compiledRung(boats.shortRun, dl),
-    hidden: compiledRung(boats.hidden, dl),
-    onlyRuns: compiledRung(boats.onlyRuns, dl),
-    shared: compiledRung(boats.shared, dl),
+  return describedLadder(boats, dl, {
     lastWater: compiledRung(boats.lastWater, dl, (binding, _c, _n, m, says) =>
       trialReason(B, m, binding, says, binding.H, [binding.c]),
     ),

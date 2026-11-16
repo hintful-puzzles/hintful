@@ -547,7 +547,7 @@ hook, `cubeOut` and the family's generator shapes are in
 `keen/solver.ts`. Its singles, sets, fish and wing are
 `latin.compiled.ts`, compiled from `latin.description.yaml` by
 `npm run describe` and never edited by hand; `latinLadder` pairs each with
-its reason, and a described game's own through `compiledRung`
+its reason, and runs a described game's own on its clues
 ([`descriptions.md`](./descriptions.md); exemplar `unequal/solver.ts`).
 `describe-runtime.ts` is what compiled code reads: the marks' interface, the
 numbered grid (`describedSpace`, `latinSpace`) and a game's `ClueList`s and

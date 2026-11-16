@@ -29,7 +29,6 @@ import {
 } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
@@ -264,17 +263,10 @@ export function reasonOf(
 /** The ladder over the dealt board: each technique as the description states
  * it, a firing recording what it says. */
 function galaxiesLadder(dl: galaxies.Dealt): Ladder {
-  return describedLadder(galaxies, {
-    dotTile: compiledRung(galaxies.dotTile, dl),
+  return describedLadder(galaxies, dl, {
     split: uncluedRung(galaxies.split, () => {
       throw new Error("a line inside a galaxy makes no fact, only a contradiction");
     }),
-    separate: uncluedRung(galaxies.separate),
-    enclosed: compiledRung(galaxies.enclosed, dl),
-    soleOwner: compiledRung(galaxies.soleOwner, dl),
-    onlyReach: compiledRung(galaxies.onlyReach, dl),
-    exclave: compiledRung(galaxies.exclave, dl),
-    mirrorWall: compiledRung(galaxies.mirrorWall, dl),
   });
 }
 

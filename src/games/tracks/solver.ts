@@ -26,7 +26,6 @@ import {
 } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
@@ -109,22 +108,7 @@ function dealtOf(b: Board): tracks.Dealt {
 
 /** The ladder over the dealt clues. */
 function tracksLadder(dl: tracks.Dealt): Ladder {
-  const rung = <B extends object>(
-    run: (b: never, sp: GridSpace, cl: tracks.Dealt, fire: never) => number,
-  ) => compiledRung(run as Parameters<typeof compiledRung<B, tracks.Dealt>>[0], dl);
-  return describedLadder(tracks, {
-    oneWayIn: rung(tracks.oneWayIn),
-    bothSidesLeft: rung(tracks.bothSidesLeft),
-    clueFull: rung(tracks.clueFull),
-    clueExact: rung(tracks.clueExact),
-    closeLoop: rung(tracks.closeLoop),
-    strand: rung(tracks.strand),
-    finishEarly: rung(tracks.finishEarly),
-    looseEnd: rung(tracks.looseEnd),
-    sharedFate: rung(tracks.sharedFate),
-    sharedFateEmpties: rung(tracks.sharedFateEmpties),
-    parity: rung(tracks.parity),
-  });
+  return describedLadder(tracks, dl);
 }
 
 /** The techniques a hint asks before any other, and the one it asks only

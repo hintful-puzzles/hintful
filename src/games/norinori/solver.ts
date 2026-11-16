@@ -18,14 +18,12 @@ import { describedSpace, partition } from "../../engine/describe-runtime.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   type LadderEntry,
   ladderTechniques,
   runLadder,
   TIERS as SCALE,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as norinori from "../../generated/games/norinori/norinori.compiled.ts";
 import { BLANK, CROSSED, DIFF_TRICKY, type NorinoriMark, SHADED } from "./state.ts";
@@ -60,18 +58,7 @@ function dealtOf(board: NorinoriBoard): norinori.Dealt {
 
 /** The ladder over the regions `dealt` deals. */
 function norinoriLadder(dealt: norinori.Dealt): Ladder {
-  return describedLadder(norinori, {
-    domino: uncluedRung(norinori.domino),
-    partner: uncluedRung(norinori.partner),
-    between: uncluedRung(norinori.between),
-    alone: uncluedRung(norinori.alone),
-    claimed: compiledRung(norinori.claimed, dealt),
-    fullRegion: compiledRung(norinori.fullRegion, dealt),
-    exactRegion: compiledRung(norinori.exactRegion, dealt),
-    neededRegion: compiledRung(norinori.neededRegion, dealt),
-    blocked: compiledRung(norinori.blocked, dealt),
-    crowded: compiledRung(norinori.crowded, dealt),
-  });
+  return describedLadder(norinori, dealt);
 }
 
 /** The values a square may hold: shaded or clear. */

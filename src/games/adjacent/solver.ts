@@ -7,7 +7,6 @@
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { ADJTHAN, type ClueKind } from "../../engine/edge-clue-latin/state.ts";
 import type { Narration } from "../../engine/hint-words.ts";
-import { compiledRung } from "../../engine/ladder-runtime.ts";
 import { type LatinReason, latinLadder } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import * as adjacent from "../../generated/games/adjacent/adjacent.compiled.ts";
@@ -44,8 +43,5 @@ export const barAnswer: ClueKind["isAnswer"] = (grid, o, flags) =>
 
 export const barLadder: ClueKind["ladder"] = (o, flags) => {
   const cl = dealtOf(o, flags);
-  return latinLadder(adjacent, {
-    adjacent: compiledRung(adjacent.adjacent, cl),
-    adjacentSet: compiledRung(adjacent.adjacentSet, cl),
-  });
+  return latinLadder(adjacent, cl);
 };

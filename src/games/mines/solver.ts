@@ -158,7 +158,7 @@ const meet = (a: readonly number[], b: readonly number[]): number[] =>
 
 /** The ladder over the numbers `dealt` holds, each firing with its reason. */
 function minesLadder(dealt: mines.Dealt): Ladder {
-  return describedLadder(mines, {
+  return describedLadder(mines, dealt, {
     alone: compiledRung(mines.alone, dealt, ({ c, U, n }, _c, _n, m): Firing => {
       const group = groupOf(m, dealt, c);
       return n === 0

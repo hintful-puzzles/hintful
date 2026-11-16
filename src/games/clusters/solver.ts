@@ -18,7 +18,6 @@ import { type Answer, searchAnswers } from "../../engine/answer-search.ts";
 import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   type LadderEntry,
@@ -157,12 +156,7 @@ function dealtOf(grid: Uint8Array): clusters.Dealt {
 
 /** The ladder over the dots `dealt` deals. */
 function clustersLadder(dealt: clusters.Dealt): Ladder {
-  return describedLadder(clusters, {
-    broken: compiledRung(clusters.broken, dealt),
-    refute: compiledRung(clusters.refute, dealt),
-    countFull: compiledRung(clusters.countFull, dealt),
-    countShort: compiledRung(clusters.countShort, dealt),
-  });
+  return describedLadder(clusters, dealt);
 }
 
 /** The values a square may hold: either color. */

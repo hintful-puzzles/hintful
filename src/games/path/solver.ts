@@ -35,7 +35,6 @@ import { spokenOf } from "../../engine/described-hint.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
@@ -225,12 +224,7 @@ function deduce(d: Deduction, cap: number, firings?: FiringTally): Deduced {
 
 /** The ladder over the dealt board. */
 function pathLadder(dl: path.Dealt): Ladder {
-  return describedLadder(path, {
-    forced: compiledRung(path.forced, dl),
-    lineBreaks: compiledRung(path.lineBreaks, dl),
-    pairBreaks: compiledRung(path.pairBreaks, dl),
-    weighed: compiledRung(path.weighed, dl),
-  });
+  return describedLadder(path, dl);
 }
 
 // --- solving -----------------------------------------------------------------

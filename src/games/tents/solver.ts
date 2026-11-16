@@ -25,7 +25,6 @@ import {
 import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Firing,
   keptRung,
@@ -194,17 +193,7 @@ export function reasonOf(
 /** The ladder over the dealt board: each technique as the description states
  * it, a firing recording what it says. */
 function tentsLadder(dl: tents.Dealt): Ladder {
-  return describedLadder(tents, {
-    tentLink: compiledRung(tents.tentLink, dl),
-    noTree: compiledRung(tents.noTree, dl),
-    treesDone: compiledRung(tents.treesDone, dl),
-    nextToTent: compiledRung(tents.nextToTent, dl),
-    treeSingle: compiledRung(tents.treeSingle, dl),
-    treeLink: compiledRung(tents.treeLink, dl),
-    treeDiagonal: compiledRung(tents.treeDiagonal, dl),
-    lineCount: compiledRung(tents.lineCount, dl),
-    lineNeighbors: compiledRung(tents.lineNeighbors, dl),
-  });
+  return describedLadder(tents, dl);
 }
 
 /** A board's space, deal and ladder. */

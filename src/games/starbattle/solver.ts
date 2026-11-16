@@ -19,14 +19,12 @@ import { describedSpace, partition } from "../../engine/describe-runtime.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   type LadderEntry,
   ladderTechniques,
   runLadder,
   TIERS as SCALE,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as starbattle from "../../generated/games/starbattle/starbattle.compiled.ts";
 import {
@@ -173,21 +171,7 @@ export function isComplete(board: StarbattleBoard): boolean {
 
 /** The ladder over the board `dealt` deals. */
 function starbattleLadder(dealt: starbattle.Dealt): Ladder {
-  return describedLadder(starbattle, {
-    around: uncluedRung(starbattle.around),
-    fullLine: compiledRung(starbattle.fullLine, dealt),
-    fullRegion: compiledRung(starbattle.fullRegion, dealt),
-    exactLine: compiledRung(starbattle.exactLine, dealt),
-    exactRegion: compiledRung(starbattle.exactRegion, dealt),
-    confined: compiledRung(starbattle.confined, dealt),
-    neededLine: compiledRung(starbattle.neededLine, dealt),
-    neededRegion: compiledRung(starbattle.neededRegion, dealt),
-    crowdedLine: compiledRung(starbattle.crowdedLine, dealt),
-    crowdedRegion: compiledRung(starbattle.crowdedRegion, dealt),
-    banded: compiledRung(starbattle.banded, dealt),
-    starvedLine: compiledRung(starbattle.starvedLine, dealt),
-    starvedRegion: compiledRung(starbattle.starvedRegion, dealt),
-  });
+  return describedLadder(starbattle, dealt);
 }
 
 /** The values a square may hold: a star, or none. */

@@ -40,13 +40,11 @@ import {
 import { Dsf } from "../../engine/dsf.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
   runLadder,
   TIERS,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as palisade from "../../generated/games/palisade/palisade.compiled.ts";
 import type { PalisadeShape } from "./state.ts";
@@ -135,15 +133,7 @@ export function isSolved(
 
 /** The ladder over the dealt board. */
 function palisadeLadder(dl: palisade.Dealt): Ladder {
-  return describedLadder(palisade, {
-    cluesVersusRegionSize: compiledRung(palisade.cluesVersusRegionSize, dl),
-    numberExhausted: compiledRung(palisade.numberExhausted, dl),
-    notTooBig: compiledRung(palisade.notTooBig, dl),
-    notTooSmall: compiledRung(palisade.notTooSmall, dl),
-    noDanglingEdges: uncluedRung(palisade.noDanglingEdges),
-    equivalentEdges: compiledRung(palisade.equivalentEdges, dl),
-    inside: uncluedRung(palisade.inside),
-  });
+  return describedLadder(palisade, dl);
 }
 
 /** The working state of a deduction: the marks on the edges, and the ladder

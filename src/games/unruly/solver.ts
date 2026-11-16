@@ -16,7 +16,6 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as unruly from "../../generated/games/unruly/unruly.compiled.ts";
 import { EMPTY, ONE, ZERO } from "./constants.ts";
@@ -45,18 +44,7 @@ export const FE_COL_MATCH = 0x0040;
 
 /** The ladder, with the technique the unique-rows rule adds where it is on. */
 function unrulyLadder(unique: boolean): Ladder {
-  return describedLadder(
-    unruly,
-    {
-      threes: uncluedRung(unruly.threes),
-      lastGap: uncluedRung(unruly.lastGap),
-      quota: uncluedRung(unruly.quota),
-      unique: uncluedRung(unruly.unique),
-      lastOne: uncluedRung(unruly.lastOne),
-    },
-    undefined,
-    unique ? ["unique"] : [],
-  );
+  return describedLadder(unruly, null, {}, undefined, unique ? ["unique"] : []);
 }
 
 export const LADDERS = { plain: unrulyLadder(false), unique: unrulyLadder(true) };

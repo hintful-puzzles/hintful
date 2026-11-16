@@ -21,14 +21,11 @@ import { type Deduced, searchAnswers } from "../../engine/answer-search.ts";
 import { describedSpace, popcount, rangeMask } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  placingRung,
   runLadder,
   TIERS,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as map from "../../generated/games/map/map.compiled.ts";
 import { graphNeighbors } from "./graph.ts";
@@ -57,12 +54,7 @@ export function dealtOf(graph: Int32Array, n: number): map.Dealt {
 
 /** The ladder over the dealt borders, each technique with its reason. */
 export function mapLadder(dl: map.Dealt): Ladder {
-  return describedLadder(map, {
-    placed: placingRung(map.placed, dl),
-    lone: uncluedRung(map.lone),
-    pair: compiledRung(map.pair, dl),
-    weigh: compiledRung(map.weigh, dl),
-  });
+  return describedLadder(map, dl);
 }
 
 /** The marks over `n` regions, each able to be any color. */

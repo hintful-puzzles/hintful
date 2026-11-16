@@ -169,6 +169,7 @@ function guessLadder(p: GuessParams, dealt: guess.Dealt): Ladder {
   });
   return describedLadder(
     guess,
+    dealt,
     {
       scoredNothing: compiledRung(guess.scoredNothing, dealt, ({ k }) =>
         row(k, { kind: "scoredNothing" }),

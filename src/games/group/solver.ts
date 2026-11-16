@@ -15,7 +15,7 @@
  */
 
 import { latinSpace } from "../../engine/describe-runtime.ts";
-import { type Ladder, uncluedRung } from "../../engine/ladder-runtime.ts";
+import type { Ladder } from "../../engine/ladder-runtime.ts";
 import {
   type LatinReason,
   type LatinSolver,
@@ -47,11 +47,7 @@ export type HintReason = GroupReason | LatinReason;
 // --- the described ladder ----------------------------------------------------
 
 /** The ladder `group.description.yaml` states. */
-export const groupLadder: Ladder<LatinSolver> = latinLadder(group, {
-  associativity: uncluedRung(group.associativity),
-  identity: uncluedRung(group.identity),
-  notIdentity: uncluedRung(group.notIdentity),
-});
+export const groupLadder: Ladder<LatinSolver> = latinLadder(group, null);
 
 // --- driver ----------------------------------------------------------------
 

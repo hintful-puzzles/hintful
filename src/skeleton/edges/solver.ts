@@ -31,7 +31,6 @@ import {
   runLadder,
   TIERS as SCALE,
   type Taken,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import { CROSS, type EdgeMark, LINE, OPEN } from "../../engine/line-drawing.ts";
 import { type SquareEdges, squareEdges } from "../../engine/square-edges.ts";
@@ -99,10 +98,7 @@ function dealtOf(board: SkeletonBoard, geo: Geometry): skeleton.Dealt {
 
 /** The ladder. It reads the walls as the marks hold them, crossed out. */
 function skeletonLadder(): Ladder {
-  return describedLadder(skeleton, {
-    forced: uncluedRung(skeleton.forced),
-    pairBreaks: uncluedRung(skeleton.pairBreaks),
-  });
+  return describedLadder(skeleton, null);
 }
 
 /** The ladder's marks over `board`, and what it reads them by. */

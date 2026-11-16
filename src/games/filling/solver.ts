@@ -88,7 +88,7 @@ function filledNeighbors(m: CellMarks, c: number): number[] {
  * the binding on the marks before the firing. It reads no clue, the numbers
  * given being placed on the marks, so one serves every board. */
 function fillingLadder(): Ladder {
-  return describedLadder(filling, {
+  return describedLadder(filling, null, {
     mustGrow: uncluedRung(
       filling.mustGrow,
       ({ A, d, Y }: filling.MustGrowBinding): Recorded => ({

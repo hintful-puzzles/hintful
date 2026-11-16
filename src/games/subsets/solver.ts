@@ -32,7 +32,6 @@ import {
   runLadder,
   type Taken,
   TIERS,
-  uncluedPlacingRung,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
@@ -198,8 +197,7 @@ const BOARD: SubsetsFiring = { kind: "board" };
 
 /** The ladder over the dealt horseshoes, each technique with its reason. */
 function subsetsLadder(dl: subsets.Dealt): Ladder {
-  return describedLadder(subsets, {
-    placed: uncluedPlacingRung(subsets.placed),
+  return describedLadder(subsets, dl, {
     carryIn: compiledRung(
       subsets.carryIn,
       dl,

@@ -42,6 +42,8 @@ import type { DifficultyVerdict } from "./difficulty.ts";
 import {
   CellMarks,
   type CompiledLadder,
+  type CompiledTechniquesOf,
+  type DealtOf,
   describedLadder,
   type Ladder,
   type Library,
@@ -358,13 +360,19 @@ const LATIN_LIBRARY: Library = {
   placing: { "latin.placed": LATIN_PLACING[0] },
 };
 
-/** A Latin game's ladder: its compiled module's, its own techniques paired
- * by `own` and the library's by the engine. */
-export function latinLadder<Id extends string, P extends string, S extends CellMarks>(
-  module: CompiledLadder<Id, P>,
-  own: OwnRungs<Id, P, S>,
+/** A Latin game's ladder: its compiled module's, on the clues `dealt`, with
+ * the rungs the game supplies in `own` and the library's by the engine. */
+export function latinLadder<
+  Id extends string,
+  P extends string,
+  S extends CellMarks,
+  T extends CompiledTechniquesOf<Id, P, never>,
+>(
+  module: CompiledLadder<Id, P, never, T>,
+  dealt: DealtOf<T>,
+  own: OwnRungs<Id, P, S> = {},
 ): Ladder<S> {
-  return describedLadder(module, own, LATIN_LIBRARY);
+  return describedLadder(module, dealt, own, LATIN_LIBRARY);
 }
 
 /** A fish as a set confined across lines, in the view its `says` names: the

@@ -8,7 +8,7 @@ import {
 } from "./latin-notes.ts";
 
 describe("a Latin ladder run on the notes", () => {
-  const ladder = latinLadder<string, string, LatinSolver>(
+  const ladder = latinLadder<string, string, LatinSolver, Record<never, never>>(
     {
       ladder: [
         { id: "latin.single", tier: 0 },
@@ -16,8 +16,9 @@ describe("a Latin ladder run on the notes", () => {
       ],
       placing: [{ id: "latin.placed" }],
       striking: [],
+      techniques: {},
     },
-    {},
+    null,
   );
   const context = (
     shown: ArrayLike<number>,

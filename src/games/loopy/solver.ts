@@ -40,7 +40,6 @@ import {
   type Said,
   type Taken,
   TIERS,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
 import * as loopy from "../../generated/games/loopy/loopy.compiled.ts";
@@ -180,19 +179,7 @@ const placeOf = (sp: GridSpace, f: number, e: number): number =>
 
 /** The ladder over the dealt numbers, each technique with its reason. */
 function loopyLadder(dl: loopy.Dealt): Ladder {
-  return describedLadder(loopy, {
-    clueFull: compiledRung(loopy.clueFull, dl),
-    clueStarved: compiledRung(loopy.clueStarved, dl),
-    clueBlockedPair: compiledRung(loopy.clueBlockedPair, dl),
-    clueOneShort: compiledRung(loopy.clueOneShort, dl),
-    deadEnd: uncluedRung(loopy.deadEnd),
-    lineContinues: uncluedRung(loopy.lineContinues),
-    dotFull: uncluedRung(loopy.dotFull),
-    earlyLoop: compiledRung(loopy.earlyLoop, dl),
-    closed: uncluedRung(loopy.closed),
-    cornerAtDot: uncluedRung(loopy.cornerAtDot),
-    cornerOther: uncluedRung(loopy.cornerOther),
-    cornerBoth: uncluedRung(loopy.cornerBoth),
+  return describedLadder(loopy, dl, {
     // A count's witness: the clue's other edges, from the one after `e`
     // round to the one before it, for the bound that settles `e`.
     clueBound: compiledRung(loopy.clueBound, dl, (binding, _e, _d, m, says) => {
@@ -231,19 +218,6 @@ function loopyLadder(dl: loopy.Dealt): Ladder {
         };
       },
     ),
-    cornerAcross: uncluedRung(loopy.cornerAcross),
-    cornerExit: uncluedRung(loopy.cornerExit),
-    cornerOppositeExit: uncluedRung(loopy.cornerOppositeExit),
-    matchingPair: compiledRung(loopy.matchingPair, dl),
-    pairAtClue: compiledRung(loopy.pairAtClue, dl),
-    parityClue: compiledRung(loopy.parityClue, dl),
-    linkClue: compiledRung(loopy.linkClue, dl),
-    pairFromCorner: uncluedRung(loopy.pairFromCorner),
-    cornerFromPair: uncluedRung(loopy.cornerFromPair),
-    pairAtDot: uncluedRung(loopy.pairAtDot),
-    parityDot: uncluedRung(loopy.parityDot),
-    linkDot: uncluedRung(loopy.linkDot),
-    related: uncluedRung(loopy.related),
   });
 }
 

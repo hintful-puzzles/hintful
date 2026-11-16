@@ -16,14 +16,12 @@ import {
 } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   type LadderEntry,
   ladderTechniques,
   runLadder,
   TIERS,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as singles from "../../generated/games/singles/singles.compiled.ts";
 import { F_BLACK, F_CIRCLE, F_ERROR, type SinglesState } from "./state.ts";
@@ -59,16 +57,7 @@ function dealtOf({ n, nums }: SinglesState): singles.Dealt {
 /** The ladder over the dealt board. A technique that says builds its own steps
  * (`singles.description.yaml`'s `says`), so no rung builds a reason. */
 function singlesLadder(dl: singles.Dealt): Ladder {
-  return describedLadder(singles, {
-    besideCovered: uncluedRung(singles.besideCovered),
-    sameLine: compiledRung(singles.sameLine, dl),
-    sandwich: compiledRung(singles.sandwich, dl),
-    pair: compiledRung(singles.pair, dl),
-    corner: compiledRung(singles.corner, dl),
-    boxedIn: compiledRung(singles.boxedIn, dl),
-    offset: compiledRung(singles.offset, dl),
-    split: compiledRung(singles.split, dl),
-  });
+  return describedLadder(singles, dl);
 }
 
 /** The values the description reads off a state's marks: covered, clear, or

@@ -31,7 +31,7 @@
 
 import { latinSpace } from "../../engine/describe-runtime.ts";
 import { type EntryBoard, entryMistake } from "../../engine/entry-mistakes.ts";
-import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
+import type { Ladder } from "../../engine/ladder-runtime.ts";
 import {
   DIFF_IMPOSSIBLE,
   type LatinRepeats,
@@ -106,7 +106,7 @@ function markersFromCube(b: SaladBoard, grid: Uint8Array, cube: Uint8Array): voi
  * the library's. No technique reads the balls, since a ball is seeded as a
  * strike. */
 export function saladLadder(cl: salad.Dealt): Ladder<LatinSolver> {
-  return latinLadder(salad, { border: compiledRung(salad.border, cl) });
+  return latinLadder(salad, cl);
 }
 
 // --- the driver ------------------------------------------------------------

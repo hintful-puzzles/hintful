@@ -41,14 +41,12 @@ import {
 import { Dsf } from "../../engine/dsf.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
   runLadder,
   type Said,
   TIERS,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as separate from "../../generated/games/separate/separate.compiled.ts";
 import type { SeparateShape } from "./state.ts";
@@ -116,11 +114,7 @@ export function isSolved(
 
 /** The ladder over the dealt board. */
 function separateLadder(dl: separate.Dealt): Ladder {
-  return describedLadder(separate, {
-    sharedLetter: compiledRung(separate.sharedLetter, dl),
-    walledApart: uncluedRung(separate.walledApart),
-    onlyWay: compiledRung(separate.onlyWay, dl),
-  });
+  return describedLadder(separate, dl);
 }
 
 /** The working state of a deduction: the marks on the edges, and the ladder

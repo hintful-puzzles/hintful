@@ -28,7 +28,6 @@ import {
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
@@ -36,7 +35,6 @@ import {
   type Said,
   TIERS,
   techniqueFirings,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -207,11 +205,7 @@ export function status(state: UndeadState): GameStatus {
 /** The ladder over `board`. */
 function ladderOf(board: Board): Ladder {
   const { dl } = board;
-  return describedLadder(undead, {
-    single: uncluedRung(undead.single),
-    sightline: compiledRung(undead.sightline, dl),
-    total: compiledRung(undead.total, dl),
-  });
+  return describedLadder(undead, dl);
 }
 
 /** A ladder run's marks and their verdict. */

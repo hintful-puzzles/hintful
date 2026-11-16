@@ -7,7 +7,6 @@
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { ADJTHAN, type ClueKind } from "../../engine/edge-clue-latin/state.ts";
 import type { Narration } from "../../engine/hint-words.ts";
-import { compiledRung } from "../../engine/ladder-runtime.ts";
 import { type LatinReason, latinLadder } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import * as unequal from "../../generated/games/unequal/unequal.compiled.ts";
@@ -46,4 +45,4 @@ export const signAnswer: ClueKind["isAnswer"] = (grid, o, flags) =>
   unequal.isAnswer(grid, latinSpace(o), dealtOf(o, flags));
 
 export const signLadder: ClueKind["ladder"] = (o, flags) =>
-  latinLadder(unequal, { sign: compiledRung(unequal.sign, dealtOf(o, flags)) });
+  latinLadder(unequal, dealtOf(o, flags));

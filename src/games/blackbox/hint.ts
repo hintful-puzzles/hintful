@@ -128,7 +128,7 @@ export interface Firing {
 /** The ladder over the lasers `dealt` holds, each firing with its reason. */
 function ladderOf(state: BlackboxState, dealt: blackbox.Dealt) {
   const hit = 2 * (state.w + state.h);
-  return describedLadder(blackbox, {
+  return describedLadder(blackbox, dealt, {
     ray: compiledRung(
       blackbox.ray,
       dealt,

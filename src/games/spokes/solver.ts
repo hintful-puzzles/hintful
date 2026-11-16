@@ -30,7 +30,6 @@ import { spokenOf } from "../../engine/described-hint.ts";
 import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
@@ -296,13 +295,7 @@ function breakOf(
 
 /** The ladder over the dealt board. */
 function spokesLadder(dl: spokes.Dealt): Ladder {
-  return describedLadder(spokes, {
-    saturation: compiledRung(spokes.saturation, dl),
-    twoOnes: compiledRung(spokes.twoOnes, dl),
-    exhaustion: compiledRung(spokes.exhaustion, dl),
-    lineBreaks: compiledRung(spokes.lineBreaks, dl),
-    spareBreaks: compiledRung(spokes.spareBreaks, dl),
-  });
+  return describedLadder(spokes, dl);
 }
 
 // --- solving -----------------------------------------------------------------

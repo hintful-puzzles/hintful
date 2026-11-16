@@ -22,7 +22,6 @@ import {
 } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
@@ -79,20 +78,7 @@ function dealtOf(clues: Uint8Array): pearl.Dealt {
 
 /** The ladder over the dealt pearls. */
 function pearlLadder(dl: pearl.Dealt): Ladder {
-  const rung = <B extends object>(
-    run: (b: never, sp: GridSpace, cl: pearl.Dealt, fire: never) => number,
-  ) => compiledRung(run as Parameters<typeof compiledRung<B, pearl.Dealt>>[0], dl);
-  return describedLadder(pearl, {
-    square: rung(pearl.square),
-    blackPearl: rung(pearl.blackPearl),
-    blackRunsOn: rung(pearl.blackRunsOn),
-    blackCannotRunOn: rung(pearl.blackCannotRunOn),
-    whiteCannotTurn: rung(pearl.whiteCannotTurn),
-    whiteTurnsOpposite: rung(pearl.whiteTurnsOpposite),
-    closed: rung(pearl.closed),
-    earlyLoop: rung(pearl.earlyLoop),
-    earlyThrough: rung(pearl.earlyThrough),
-  });
+  return describedLadder(pearl, dl);
 }
 
 /** A board's ladder and what it reads the board as. */

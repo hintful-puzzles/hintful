@@ -50,15 +50,16 @@ itself is § "The file". A game whose techniques are stated:
    which records each verdict in `src/describe/soundness.json`. The gate
    fails on a compiled technique with no verdict for its statement as it
    reads now (§ "Checking a technique sound").
-4. **Pairs each of its own techniques with the reason its records carry**,
-   by `describedLadder`, or `latinLadder` where it places the Latin library,
-   whose techniques the engine pairs: a technique of its own the
-   description adds and the game does not pair is a type error. It pairs
-   through `compiledRung`, or `uncluedRung` for a technique that reads
-   nothing the board deals, `placingRung` for one run on placing
-   ([`seismic/solver.ts`](../src/games/seismic/solver.ts)), and
-   `strikingRung` for one run on striking; § "A firing's reason is built
-   from its binding".
+4. **Builds its ladder on the board's clues** with
+   `describedLadder(module, dealt)`, or `latinLadder` where it places the
+   Latin library ([`norinori/solver.ts`](../src/games/norinori/solver.ts)).
+   The engine runs every technique on `dealt` where the module's
+   `techniques` says it reads it, on placing and on striking too; a module
+   none of whose techniques reads the clues takes `null`. The game names a
+   rung only where it supplies something: a reason the description cannot
+   state, through `compiledRung` (or `uncluedRung` for a technique that
+   reads no clue), or a `keptRung`; § "A firing's reason is built from its
+   binding".
 5. **Deals its board as the description reads it**, the compiled module's
    `Dealt`: one `ClueList` a kind, in the order the techniques should meet
    them; one `Partition` a dealt partition; and each size a technique reads
@@ -1016,7 +1017,7 @@ the `terms` its step's sentence reads and the `marks` (`outline`, `stripes`,
 `strike`, `strand`) it shows, each a formula over the binding; the compiler reads them
 at the firing, on the marks before its facts are made and under the
 technique's own `with`, and only where a hint asks (a solve passes no `fire`).
-`compiledRung(run, clues)` then records `{ binding, says }` for each fact, and
+The rung `describedLadder` builds for it then records `{ binding, says }` for each fact, and
 `describedHint` (`engine/described-hint.ts`, a step a fact) or
 `describedFiringHint` (`engine/described-firing-hint.ts`, a step a firing)
 builds the steps from it: the firing's facts are the ringed targets, evidence

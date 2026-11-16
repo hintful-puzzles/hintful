@@ -34,14 +34,12 @@ import {
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   type LadderEntry,
   ladderTechniques,
   runLadder,
   TIERS,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import * as bricks from "../../generated/games/bricks/bricks.compiled.ts";
 import {
@@ -128,13 +126,7 @@ function bricksMarks(sp: GridSpace, dl: bricks.Dealt, values: Uint8Array): CellM
 
 /** The ladder over the dealt board. */
 function bricksLadder(dl: bricks.Dealt): Ladder {
-  return describedLadder(bricks, {
-    strandSupport: uncluedRung(bricks.strandSupport),
-    undercount: compiledRung(bricks.undercount, dl),
-    three: uncluedRung(bricks.three),
-    unsupported: compiledRung(bricks.unsupported, dl),
-    overcount: compiledRung(bricks.overcount, dl),
-  });
+  return describedLadder(bricks, dl);
 }
 
 /** Run the ladder on `m` to a fixpoint and say what it reached. */

@@ -38,14 +38,12 @@ import {
 import { Dsf } from "../../engine/dsf.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   type LadderEntry,
   ladderTechniques,
   runLadder,
   TIERS,
-  uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -119,12 +117,7 @@ function writeBack(grid: Int8Array, values: ArrayLike<number>): void {
 
 /** The ladder over the dealt board. */
 function rangeLadder(dl: range.Dealt): Ladder {
-  return describedLadder(range, {
-    besideShaded: uncluedRung(range.besideShaded),
-    capped: compiledRung(range.capped, dl),
-    reach: compiledRung(range.reach, dl),
-    cut: uncluedRung(range.cut),
-  });
+  return describedLadder(range, dl);
 }
 
 /** The marks over a grid and the ladder over its numbers, or `null` where

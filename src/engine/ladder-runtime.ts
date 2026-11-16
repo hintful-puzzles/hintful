@@ -778,7 +778,7 @@ export function keptRung<S extends CellMarks = CellMarks>(
  * A compiled technique that runs as each value is placed, its strikes
  * recorded as the placement's cull ({@link CellMarks.cullReason}).
  */
-export function placingRung<B, C>(
+function placingRung<B, C>(
   run: (b: Marks, sp: GridSpace, cl: C, c: number, fire: Fire<B> | null) => number,
   cl: C,
 ): PlaceRung {
@@ -808,7 +808,7 @@ export function placingRung<B, C>(
  * A compiled technique that runs as a value is struck from a cell, its
  * strikes recorded as following that one ({@link StruckReason}).
  */
-export function strikingRung<B, C>(
+function strikingRung<B, C>(
   run: (b: Marks, sp: GridSpace, cl: C, c: number, fire: Fire<B> | null) => number,
   cl: C,
 ): StrikeRung {
@@ -888,29 +888,111 @@ export function techniqueFirings<S extends CellMarks>(
  * `<library>.<technique>`. */
 export type OwnId<Id extends string> = Exclude<Id, `${string}.${string}`>;
 
-/** What a compiled module says about its ladder. */
+/** A `fire` any compiled technique takes: its binding and facts are read
+ * only by the reason the rung builds. */
+type AnyFire = Fire<unknown, never>;
+
+/** A compiled rung's technique, as the module lists it: run on the board's
+ * clues where it reads them. */
+type CompiledRun<C> =
+  | {
+      readonly dealt: true;
+      readonly run: (b: Marks, sp: GridSpace, cl: C, fire: AnyFire | null) => number;
+    }
+  | {
+      readonly dealt: false;
+      readonly run: (b: Marks, sp: GridSpace, fire: AnyFire | null) => number;
+    };
+
+/** A compiled technique run on placing or on striking, as the module lists
+ * it. */
+type CompiledOnCell<C> =
+  | {
+      readonly dealt: true;
+      readonly run: (
+        b: Marks,
+        sp: GridSpace,
+        cl: C,
+        c: number,
+        fire: AnyFire | null,
+      ) => number;
+    }
+  | {
+      readonly dealt: false;
+      readonly run: (
+        b: Marks,
+        sp: GridSpace,
+        c: number,
+        fire: AnyFire | null,
+      ) => number;
+    };
+
+/** A compiled module's own techniques by id, each with whether it reads
+ * what the board deals: a rung's, and one run on placing or on striking. */
+export type CompiledTechniquesOf<
+  Id extends string,
+  P extends string,
+  K extends string,
+> = Readonly<Record<OwnId<Id>, CompiledRun<never>>> &
+  Readonly<Record<OwnId<P> | OwnId<K>, CompiledOnCell<never>>>;
+
+/** The clues the techniques `T` read: the module's `Dealt`, or `null` where
+ * none reads any. */
+export type DealtOf<T> = [ReadDealt<T>] extends [never] ? null : ReadDealt<T>;
+type ReadDealt<T> = {
+  [Id in keyof T]: T[Id] extends {
+    readonly dealt: true;
+    readonly run: (b: Marks, sp: GridSpace, cl: infer C, ...rest: never[]) => number;
+  }
+    ? C
+    : never;
+}[keyof T];
+
+/** What a compiled module says about its ladder, and its own techniques. */
 export interface CompiledLadder<
   Id extends string,
   P extends string,
   K extends string = never,
+  T extends CompiledTechniquesOf<Id, P, K> = CompiledTechniquesOf<Id, P, K>,
 > {
   ladder: readonly CompiledEntry<Id>[];
   placing: readonly { id: P; variation?: string }[];
   striking: readonly { id: K; variation?: string }[];
+  techniques: T;
 }
 
-/** A game's pairing of its own techniques: each rung, and each technique
- * run on placing or on striking, by its id. A library technique may be
- * paired too, where the game's reason for it is not the library's. */
+/** The rungs a game supplies itself, by id: where it builds a technique's
+ * reason, runs it otherwise than as compiled ({@link keptRung}), or gives a
+ * library technique a reason that is not the library's. Every technique it
+ * does not name the engine runs as compiled. */
 export type OwnRungs<
   Id extends string,
   P extends string,
   S extends CellMarks,
   K extends string = never,
-> = Record<OwnId<Id>, Rung<S>> &
-  Record<OwnId<P>, PlaceRung> &
-  Record<OwnId<K>, StrikeRung> &
-  Partial<Record<Exclude<Id, OwnId<Id>>, Rung<S>>>;
+> = Partial<
+  Record<Id, Rung<S>> & Record<OwnId<P>, PlaceRung> & Record<OwnId<K>, StrikeRung>
+>;
+
+/** A compiled module's own technique as a rung on the clues `dealt`. */
+function compiledOf<C, S extends CellMarks>(t: CompiledRun<C>, dealt: C): Rung<S> {
+  return t.dealt ? compiledRung(t.run, dealt) : uncluedRung(t.run);
+}
+
+/** A compiled module's own technique run on placing, on the clues `dealt`. */
+function placingOf<C>(t: CompiledOnCell<C>, dealt: C): PlaceRung {
+  return t.dealt ? placingRung(t.run, dealt) : uncluedPlacingRung(t.run);
+}
+
+/** A compiled module's own technique run on striking, on the clues `dealt`. */
+function strikingOf<C>(t: CompiledOnCell<C>, dealt: C): StrikeRung {
+  if (t.dealt) return strikingRung(t.run, dealt);
+  const { run } = t;
+  return strikingRung(
+    (b, sp, _: null, c, fire: AnyFire | null) => run(b, sp, c, fire),
+    null,
+  );
+}
 
 /** A library's techniques, paired by the engine: by id, a rung or what runs
  * on placing. */
@@ -922,39 +1004,63 @@ export interface Library {
 const NO_LIBRARY: Library = { rungs: {}, placing: {} };
 
 /**
- * A compiled module's ladder with its rungs: the game's own from `own`, and
- * each library technique from `library`, where `own` does not pair it. A
- * technique a variation adds is left out unless `variations` has it on.
+ * A compiled module's ladder with its rungs: those the game supplies from
+ * `own`, each library technique from `library`, and every other technique as
+ * compiled, run on the clues `dealt` where it reads them. A technique a
+ * variation adds is left out unless `variations` has it on.
  */
 export function describedLadder<
   Id extends string,
   P extends string,
   S extends CellMarks,
   K extends string = never,
+  T extends CompiledTechniquesOf<Id, P, K> = CompiledTechniquesOf<Id, P, K>,
 >(
-  module: CompiledLadder<Id, P, K>,
-  own: OwnRungs<Id, P, S, K>,
+  module: CompiledLadder<Id, P, K, T>,
+  dealt: DealtOf<T>,
+  own: OwnRungs<Id, P, S, K> = {},
   library: Library = NO_LIBRARY,
   variations: readonly string[] = [],
 ): Ladder<S> {
+  type C = DealtOf<T>;
   const pairs = own as Readonly<
     Record<string, Rung<S> | PlaceRung | StrikeRung | undefined>
   >;
+  const compiled = module.techniques as unknown as Readonly<
+    Record<string, CompiledRun<C> | CompiledOnCell<C> | undefined>
+  >;
   const on = (e: { variation?: string }): boolean =>
     e.variation === undefined || variations.includes(e.variation);
-  const pick = <T>(id: string, lib: Readonly<Record<string, T>>): T => {
-    const run = (pairs[id] as T | undefined) ?? lib[id];
-    if (run === undefined) throw new Error(`no rung pairs ${id}`);
-    return run;
+  // The module lists a rung's technique as a `CompiledRun` and one run on a
+  // cell as a `CompiledOnCell`, by the list its id is in.
+  const pick = <T, U>(
+    id: string,
+    lib: Readonly<Record<string, T>>,
+    ofCompiled: (t: U) => T,
+  ): T => {
+    const supplied = (pairs[id] as T | undefined) ?? lib[id];
+    if (supplied !== undefined) return supplied;
+    const t = compiled[id];
+    if (t === undefined) throw new Error(`no rung pairs ${id}`);
+    return ofCompiled(t as U);
   };
   return {
-    entries: module.ladder
-      .filter(on)
-      .map((e) => ({ ...e, run: pick<Rung<S>>(e.id, library.rungs) })),
+    entries: module.ladder.filter(on).map((e) => ({
+      ...e,
+      run: pick(
+        e.id,
+        library.rungs as Readonly<Record<string, Rung<S>>>,
+        (t: CompiledRun<C>) => compiledOf<C, S>(t, dealt),
+      ),
+    })),
     placing: module.placing
       .filter(on)
-      .map((e) => pick<PlaceRung>(e.id, library.placing)),
-    striking: module.striking.filter(on).map((e) => pick<StrikeRung>(e.id, {})),
+      .map((e) =>
+        pick(e.id, library.placing, (t: CompiledOnCell<C>) => placingOf(t, dealt)),
+      ),
+    striking: module.striking
+      .filter(on)
+      .map((e) => pick(e.id, {}, (t: CompiledOnCell<C>) => strikingOf(t, dealt))),
   };
 }
 

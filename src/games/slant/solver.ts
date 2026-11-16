@@ -29,7 +29,6 @@ import {
   runLadder,
   type Taken,
   TIERS,
-  uncluedPlacingRung,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
@@ -95,7 +94,7 @@ type SlantReason =
 
 /** The ladder over the dealt numbers, each technique with its reason. */
 function slantLadder(dl: slant.Dealt): Ladder {
-  return describedLadder(slant, {
+  return describedLadder(slant, dl, {
     clue: compiledRung(
       slant.clue,
       dl,
@@ -129,7 +128,6 @@ function slantLadder(dl: slant.Dealt): Ladder {
       slant.same,
       ({ q }): SlantReason => ({ kind: "same", anchor: q }),
     ),
-    drawn: uncluedPlacingRung(slant.drawn),
     one: compiledRung(
       slant.one,
       dl,

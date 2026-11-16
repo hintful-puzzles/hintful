@@ -19,8 +19,8 @@ In this order, each step as the skeleton
 ([`src/skeleton/grid/`](../src/skeleton/grid/)) already does it:
 
 1. **Write the deductions once, as techniques in the game's description**
-   ([`descriptions.md`](./descriptions.md)). `solver.ts` pairs each compiled
-   technique with its reason (`describedLadder`); `runLadder` runs the ladder
+   ([`descriptions.md`](./descriptions.md)). `solver.ts` builds the ladder
+   on the board's clues (`describedLadder`); `runLadder` runs the ladder
    to a fixpoint for the generator, Solve and the mistake check, and
    `ladderWalk` runs the same rungs one firing at a time for the hint. See
    § "One engine, two projections" and § "The deduction fixpoint".

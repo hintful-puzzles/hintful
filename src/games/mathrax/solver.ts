@@ -19,7 +19,7 @@
  */
 
 import { latinSpace } from "../../engine/describe-runtime.ts";
-import { compiledRung, type Ladder } from "../../engine/ladder-runtime.ts";
+import type { Ladder } from "../../engine/ladder-runtime.ts";
 import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
@@ -68,11 +68,7 @@ export type StatedTerms = Readonly<Record<string, unknown>>;
 
 /** The ladder `mathrax.description.yaml` states, over the dealt clues. */
 export function mathraxLadder(dl: mathrax.Dealt): Ladder<LatinSolver> {
-  return latinLadder(mathrax, {
-    clueEasy: compiledRung(mathrax.clueEasy, dl),
-    clue: compiledRung(mathrax.clue, dl),
-    clueTricky: compiledRung(mathrax.clueTricky, dl),
-  });
+  return latinLadder(mathrax, dl);
 }
 
 /**
