@@ -30,7 +30,7 @@ import {
   whole,
 } from "./hint-words.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
-import { type Piece, parseClause, ringNames } from "./stated-clauses.ts";
+import { DEFAULT_FORMS, type Piece, parseClause, ringNames } from "./stated-clauses.ts";
 
 /** A step's parts as a description states them. */
 export interface Clauses {
@@ -45,7 +45,13 @@ export interface Clauses {
   /** What a later leg says as its move in place of `move`, where it differs
    * ("can't hold a domino either"); said with the `again` relation. */
   readonly later?: string;
+  /** Why the sentence may run past the line, which it carries
+   * (`Sentence.long`). */
+  readonly long?: string;
 }
+
+/** A part of a step's sentence a description states. */
+export type ClausePart = Exclude<keyof Clauses, "long">;
 
 /** The role each slot role is drawn in: `strand` is outlined apart. */
 const DRAWN: Readonly<Record<string, MarkRole>> = {
@@ -128,14 +134,6 @@ export interface StatedContext<E, R = E> {
 
 const nounOf = (noun: Noun, many: boolean): string =>
   typeof noun === "string" ? (many ? `${noun}s` : noun) : many ? noun[1] : noun[0];
-
-/** The words a reference takes when its slot gives none. */
-const DEFAULT_FORMS: Readonly<Record<string, readonly string[]>> = {
-  ring: ["this {noun}", "these {nouns}"],
-  stripes: ["this {unit}"],
-  outline: ["the outlined {noun}", "the outlined {nouns}"],
-  strand: ["the outlined {noun}", "the outlined {nouns}"],
-};
 
 /** A clause's pieces with each `if` replaced by the form its flag term holds. */
 function expand<E>(pieces: readonly Piece[], cx: StatedContext<E>): Piece[] {
@@ -396,9 +394,10 @@ export function statedSentence<E, R = E>(
   relation: Relation = { kind: "forced" },
 ): Sentence {
   const cx = context as unknown as StatedContext<E>;
+  const { long: _, ...parts } = c;
   const turns = Math.max(
     1,
-    ...Object.values(c).map((src) =>
+    ...Object.values(parts).map((src) =>
       src === undefined ? 0 : fitForms(parseClause(src)),
     ),
   );
@@ -435,10 +434,12 @@ function statedOnce<E>(
     return sentence({
       move: later ?? move,
       relation: { kind: "again", basis: again },
+      ...(c.long === undefined ? {} : { long: c.long }),
     });
   return sentence({
     ...parts,
     move,
     relation: effect === undefined ? relation : { kind: "effect", effect },
+    ...(c.long === undefined ? {} : { long: c.long }),
   });
 }

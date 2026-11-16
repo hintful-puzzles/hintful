@@ -4625,6 +4625,12 @@ function checkStated(
   }
 }
 
+/** A wording's clauses as `engine/stated.ts` renders them, with the reason it
+ * may run past the line where it has one, which the sentence carries. */
+function spokenClauses(w: Wording): StatedClauses & { long?: string } {
+  return w.long === null ? w.clauses : { ...w.clauses, long: w.long.why };
+}
+
 /** The module's `STATED`: each kind of step's clauses as the description
  * states them, by wording, and each fact's, for `engine/stated.ts` to render.
  * A firing's `wording`, and a fact's, is the index of the one that held; it is
@@ -4636,7 +4642,7 @@ function statedTable(own: readonly Technique[]): string[] {
     const fact =
       t.says.fact === null || t.says.fact.words.length === 0
         ? null
-        : t.says.fact.words.map((w) => w.clauses);
+        : t.says.fact.words.map(spokenClauses);
     for (const v of t.says.variants) {
       if (v.words.length === 0 && fact === null) continue;
       const kind = v.name === null ? t.id : `${t.id}.${v.name}`;
@@ -4644,7 +4650,7 @@ function statedTable(own: readonly Technique[]): string[] {
         .filter((x) => x.supplied === "several")
         .map((x) => x.name);
       const entry = {
-        ...(v.words.length === 0 ? {} : { step: v.words.map((w) => w.clauses) }),
+        ...(v.words.length === 0 ? {} : { step: v.words.map(spokenClauses) }),
         ...(fact === null ? {} : { fact }),
         ...(several.length === 0 ? {} : { several }),
       };
@@ -4797,7 +4803,7 @@ export function stepsBlock(
     "export const STEPS: {",
     "  readonly [K in keyof StepsById<unknown>]: {",
     '    readonly ring: StepsById<unknown>[K]["ring"];',
-    "    readonly clauses: readonly { look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string }[];",
+    "    readonly clauses: readonly { look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string; long?: string }[];",
     "    readonly when: readonly (",
     "      | null",
     "      | ((",
@@ -4810,7 +4816,7 @@ export function stepsBlock(
     ...steps.flatMap((s) => [
       `  ${s.id}: {`,
       `    ring: ${JSON.stringify(s.ring)},`,
-      `    clauses: ${JSON.stringify(s.words.map((w) => w.clauses))},`,
+      `    clauses: ${JSON.stringify(s.words.map(spokenClauses))},`,
       `    when: [${s.words.map((w) => (w.when === null ? "null" : stepWhen(s, w.when, "when"))).join(", ")}],`,
       "  },",
     ]),

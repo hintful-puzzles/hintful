@@ -40,7 +40,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "./game.ts";
-import { NARRATION_LIMIT } from "./hint-words.ts";
+import { NARRATION_LIMIT, Sentence } from "./hint-words.ts";
 import { paramsError } from "./params.ts";
 import { dealt } from "./testing/dealt.ts";
 import { bindingDefects } from "./testing/hint-binding.ts";
@@ -76,8 +76,14 @@ const SHARE_IDS = new Set(SHARE_GAMES.map(([id]) => id));
 const MAX_NARRATION_CHARS = 300;
 
 /**
- * The override: the rungs whose sentences are allowed past
- * {@link NARRATION_LIMIT}, an entry per reason they need the room. An entry
+ * The override for sentences a game's code writes or assembles: the rungs
+ * whose sentences are allowed past {@link NARRATION_LIMIT}, an entry per reason
+ * they need the room. A sentence a description's wording states whole says
+ * why beside the wording instead (`long:`), which the sentence carries
+ * (`Sentence.long`), and `npm run describe` holds it both ways: a wording past
+ * the limit on every board needs one, and one on wordings no board makes long
+ * is refused (docs/descriptions.md § "What the compiler checks of a wording").
+ * An entry
  * lists rungs by id (`HintStep.rung`), never a pattern over the sentence, so
  * rewording a sentence cannot silently take it out of its listing.
  *
@@ -101,12 +107,6 @@ const MAX_NARRATION_CHARS = 300;
  * dead whenever the seeds missed it. So a roster is the games a board has been
  * found for, and a game that cannot be pinned is not listed.
  */
-/** Why Pearl's step runs long. */
-const PEARL_CARRIES_ON =
-  "The owner's 2026-09-27 request (pearl/hint.ts, carryOn): a step also " +
-  "draws the line on through a white pearl it runs into, and says so in a " +
-  "second sentence after its own deduction, whichever deduction that is.";
-
 /** Why a wing's step runs long. */
 const WING_NAMES_ITS_CELLS =
   "The owner's 2026-10-28 wording: \"whatever goes in the middle cell, another " +
@@ -122,18 +122,6 @@ const LONG_NARRATIONS: {
   spokenOn: Record<string, string>;
 }[] = [
   {
-    games: ["loopy"],
-    rungs: ["clueBlockedPair"],
-    why:
-      "It says both halves of the conclusion, because settling the whole face " +
-      "is the point (the owner, 2026-09-19), and the rest of the face is named " +
-      '"the other edges", as a bare "the rest" names nothing (7x7 Hard: 126 ' +
-      "characters).",
-    spokenOn: {
-      loopy: "7x7t0dh:1b321a2121c3c21a32a3a32a2b1a1b1b3e22a",
-    },
-  },
-  {
     games: ["solo"],
     rungs: ["wing"],
     why: WING_NAMES_ITS_CELLS,
@@ -147,16 +135,6 @@ const LONG_NARRATIONS: {
     why: WING_NAMES_ITS_CELLS,
     spokenOn: {
       map: "15x20n30dh:faiaaaaaafdabamaacabacabdaabdabbacdbaafaaafeaaababbadbbdkaaalacaadcdgadabaaacaccahdabcbagbbbdaaaccbadaccdaafadbabbebcadadaacdcccacfacabbjadcacgaabdadbdadbfabahabbbabafcbabbagbaladabdecbaaaaabaaaaddaaaabaabbfbaabadalccac,02033322d31a303f11a022",
-    },
-  },
-  {
-    // Spoken over the limit on 18 of 300 boards from 6x6 to 10x12, none of
-    // them a board the walk deals (2026-10-27): pinned on one.
-    games: ["pearl"],
-    rungs: ["earlyThrough"],
-    why: PEARL_CARRIES_ON,
-    spokenOn: {
-      pearl: "8x10dt:BbBBbBjWdBbWdBWhBaBWbBbBaBgWaWeWaWaBeWa",
     },
   },
   {
@@ -182,34 +160,6 @@ const LONG_NARRATIONS: {
     spokenOn: {
       crossing:
         "15x15Sde:7b6a1b1a4a1b7a1b1a4b1a7a1a5a1a1a1a2a1a1a3a2a1a7a1b4a2b1a2a2a1b2a4b1a7a1a2a3a1a1a2a1a1a1a5a1a7a1b4a1b1a7b1a4a1b1a6b7,25,27,28,45,47,62,71,73,77,79,84,87,89,92,95,99,142,143,197,247,317,345,365,411,413,425,498,499,513,557,671,765,814,815,869,927,947,949,975,984,2311,2472,4478,5194,7183,7212,7926,9659,22499,33464,79354,82855,87427,88392,456457,575287,749691,754341,3814167,4483998,8789149,8857768,42828377,49641451",
-    },
-  },
-  {
-    games: ["magnets"],
-    rungs: ["onlyEnd"],
-    why:
-      "Where a tile lies along the line, its count premise carries three: the " +
-      "line's count of tiles, why each other square of it cannot take the pole, " +
-      "and why the tile's far end cannot. The owner's 2026-09-22 playtest found " +
-      "the second missing, and a step that rests on a fact has to say it " +
-      "(magnets spec, the hidden facts a later step names in board terms).",
-    spokenOn: {
-      magnets:
-        "7x8dtS:4.13.4.,..2..2.2,4..1..4,.33..3.1,TLRLRLRBLRLRTTLRLRTBBTTLRBTTBBTTTBBTTBBBLRBBLRLRTLRLRLRB",
-    },
-  },
-  {
-    games: ["magnets"],
-    rungs: ["count.exact"],
-    why:
-      "The count premise and why every other empty square of the line can't " +
-      "take the pole are two premises, already cut to one clause per kind of " +
-      "reason (owner, 2026-10-18). Naming the ruled-out squares and the poles " +
-      "they would touch by their marks, not 'elsewhere', costs the room on a " +
-      "line needing several poles (name-every-reference-by-its-mark).",
-    spokenOn: {
-      magnets:
-        "7x8dtS:.24.32.,312....2,...2.3.,.1.21.24,LRTTLRTLRBBLRBLRTTTLRLRBBBLRLRTLRTTLRBLRBBLRTLRTTLRBLRBB",
     },
   },
   {
@@ -243,18 +193,6 @@ const LONG_NARRATIONS: {
     },
   },
   {
-    games: ["boats"],
-    rungs: ["shared"],
-    why:
-      "Where the middle of the three squares could be the boat, the step rests " +
-      "on a second premise: that boat would fill the line crossing there. " +
-      "Without it the sentence read as unsound to the owner (2026-10-22), " +
-      "since a middle boat need not touch the ringed squares at a corner.",
-    spokenOn: {
-      boats: "6x6f3dt,3,2,1:2,3,1,1,3,0,2,1,1,3,1,2,vCgL",
-    },
-  },
-  {
     games: ["rect"],
     rungs: ["line"],
     why:
@@ -264,18 +202,6 @@ const LONG_NARRATIONS: {
       "different clue's rectangle, so neither can go.",
     spokenOn: {
       rect: "12x14du:a2a2e8d6g8b4c10n10e2a6g8j6c21o16h2b3d3d3c9m3d4a6a8e12p4c2",
-    },
-  },
-  {
-    games: ["norinori"],
-    rungs: ["neededRegion", "blocked", "crowded"],
-    why:
-      "A region left without room names three things: the square left out or " +
-      "tried, the region, and the outlined shaded squares that close its room, " +
-      'with the rule ("as dominoes") that says why. The conclusion says "this ' +
-      'square" and not "it", as "it" would follow the region.',
-    spokenOn: {
-      norinori: "6x6dt:ad1ba3a1aa1bedbb2ad3ab",
     },
   },
 ];
@@ -1029,12 +955,14 @@ describe("hint narration stays readable at a glance", () => {
                 `${name} ${label}/${seed}: "${text}" is over the hard ceiling of ${MAX_NARRATION_CHARS}`,
               ).toBeLessThanOrEqual(MAX_NARRATION_CHARS);
               if (text.length <= NARRATION_LIMIT) continue;
+              // A description's wording says why beside it (`long:`).
+              if (step.words instanceof Sentence && step.words.long !== null) continue;
               const entry = LONG_NARRATIONS.findIndex(
                 (e) => e.games.includes(name) && e.rungs.includes(step.rung),
               );
               expect(
                 entry,
-                `${name} ${label}/${seed}: "${text}" (rung ${step.rung}) is ${text.length} characters, over ${NARRATION_LIMIT}. Shorten it, or list the rung in LONG_NARRATIONS with the reason it needs the room.`,
+                `${name} ${label}/${seed}: "${text}" (rung ${step.rung}) is ${text.length} characters, over ${NARRATION_LIMIT}. Shorten it; or where its description states it, say why it needs the room with long: beside the wording; or else list the rung in LONG_NARRATIONS with the reason.`,
               ).toBeGreaterThanOrEqual(0);
             }
             // Walk on through the whole plan, not just its first step: the

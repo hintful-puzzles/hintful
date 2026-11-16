@@ -1,14 +1,9 @@
 /**
- * The phrases the hint vocabulary retired (`standardize-hint-vocabulary`, owner
- * 2026-11-13), checked at the source of every hinting game and of the engine's
- * shared narration, the way `hint-em-dash.test.ts` checks the em-dash.
- *
- * - "rule out" as a verb for what a move does: a mark ends "must be {the
- *   game's off-mark}" and a struck value or note ends "must go".
- * - "is out" / "are out" as the same closing. Mastermind's framed colors keep
- *   it: the color is out of the answer, and no mark of the player's is.
- * - ", so there is something to cross out", which said why a populate step
- *   exists and nothing the board does not already show.
+ * The phrases the hint vocabulary retired (`wording-rules.ts`), checked at the
+ * source of every hinting game and of the engine's shared narration, the way
+ * `hint-em-dash.test.ts` checks the em-dash. A description's wordings are
+ * checked when it compiles (`describe/lint.ts`), and its compiled module is
+ * scanned here as well.
  *
  * The scan is a superset (any code line, not only a narration string), and the
  * population is derived (`HINT_GAMES`), so a game that joins is held at once.
@@ -20,9 +15,7 @@ import {
 } from "./testing/engine-source.ts";
 import { codeLinesMatching, SCANNED_SOURCE_FILES } from "./testing/enrollment.ts";
 import { HINT_GAMES } from "./testing/hint-games.ts";
-
-const RETIRED = /\brule out\b|phrase`[^`]*\brules out\b|something to cross out/i;
-const IS_OUT = /\b(?:is|are) out\b/i;
+import { IS_OUT, RETIRED_PHRASE as RETIRED } from "./wording-rules.ts";
 
 /** Loopy's preference label, which names a setting and not a hint step; a
  * label is the player's to be asked about, so it is left as it is. */
@@ -57,10 +50,11 @@ describe("no hint says a retired phrase", () => {
   });
 
   it("holds the engine's shared narration to both", () => {
+    // The rules' own module states the phrases it retires.
     const hits = [
       ...engineCodeLinesMatching(RETIRED),
       ...engineCodeLinesMatching(IS_OUT),
-    ];
+    ].filter((h) => h.id !== "engine/wording-rules.ts");
     expect(hits.map((h) => `${h.id}: ${h.line}`)).toEqual([]);
   });
 });

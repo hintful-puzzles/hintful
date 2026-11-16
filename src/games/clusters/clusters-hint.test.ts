@@ -347,7 +347,7 @@ describe("countShort, the wordings no walk reaches", () => {
 
   it("says a tile that allows none of the color beside the other, of one kind", () => {
     expect(words(0, {})).toBe(
-      `One outlined ${first} dot allows no ${first} beside the other, so this square must be ${first}.`,
+      `One outlined ${first} dot allows no ${first} beside the other outlined dot, so this square must be ${first}.`,
     );
   });
 
@@ -359,7 +359,7 @@ describe("countShort, the wordings no walk reaches", () => {
 
   it("says how many it allows in words, of one kind", () => {
     expect(words(2, { most: 3 })).toBe(
-      `One outlined ${first} dot allows at most three ${first} beside the other, so this square must be ${first}.`,
+      `One outlined ${first} dot allows at most three ${first} beside the other outlined dot, so this square must be ${first}.`,
     );
   });
 });

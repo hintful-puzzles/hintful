@@ -80,10 +80,13 @@ const trace = (s: string): void => {
   const log = process.env["CHECK_LOG"];
   if (log) appendFileSync(log, `${s}\n`);
 };
-const line = (where: string, v: Verdict, want: string): void => {
+/** A verdict's line. One found on sampled boards alone (`onSamples`) says
+ * `held`, as its record does, not `sound`. */
+const line = (where: string, v: Verdict, want: string, onSamples = false): void => {
   const ok = v.verdict === want || want === "either";
+  const said = onSamples && v.verdict === "sound" ? "held" : v.verdict;
   say(
-    `${ok ? "ok " : "BAD"} ${where.padEnd(10)} ${v.technique.padEnd(30)} ${String(v.order).padEnd(2)} ${v.verdict.padEnd(8)} (want ${want.padEnd(8)}) ${String(v.queries).padStart(5)} queries ${v.seconds.toFixed(1).padStart(6)}s${v.at ? `   at ${v.at}` : ""}`,
+    `${ok ? "ok " : "BAD"} ${where.padEnd(10)} ${v.technique.padEnd(30)} ${String(v.order).padEnd(2)} ${said.padEnd(8)} (want ${want.padEnd(8)}) ${String(v.queries).padStart(5)} queries ${v.seconds.toFixed(1).padStart(6)}s${v.at ? `   at ${v.at}` : ""}`,
   );
 };
 
@@ -107,9 +110,12 @@ async function checkAll(
   worlds: readonly World[],
   id: string,
   stated: Plants,
-): Promise<{ failed: string[]; held: boolean }> {
+): Promise<{ failed: string[]; held: boolean; whole: number; boards: number }> {
   const bad: string[] = [];
   let held = false;
+  // The boards the technique was asked on, and those it was proved on whole.
+  let boardsAsked = 0;
+  let whole = 0;
   const start = performance.now();
   const deadline = start + CHECK_BUDGET_MS;
   const own = stated.techniques[id];
@@ -156,15 +162,17 @@ async function checkAll(
           trace(`..  ${where} ${id} ${order}: ${done} of ${of}, at ${at}`),
         deadline: Math.min(deadline, start + CHECK_BUDGET_MS * WHOLE),
       });
-      if (v.outOfTime) {
+      boardsAsked++;
+      const onSamples = v.outOfTime === true;
+      if (onSamples) {
         held = true;
         v = await pinned(
           t,
           SPLIT,
           Math.min(deadline, start + CHECK_BUDGET_MS * SAMPLED),
         );
-      }
-      line(where, v, "sound");
+      } else whole++;
+      line(where, v, "sound", onSamples);
       // Out of time with no defect found holds; a defect, or a verdict z3
       // could not reach for another reason, does not.
       if (v.verdict === "unsound" || (v.verdict === "unknown" && !v.outOfTime))
@@ -179,11 +187,13 @@ async function checkAll(
         let p = await checkTechnique(d, tp, order, sizes, 1, cells, {
           deadline: Math.min(deadline, performance.now() + CHECK_BUDGET_MS / 10),
         });
-        if (p.outOfTime) p = await pinned(tp, 1, deadline);
+        const plantSampled = p.outOfTime === true;
+        if (plantSampled) p = await pinned(tp, 1, deadline);
         line(
           where,
           p,
           p.verdict === "unsound" || boards.length === 1 ? "unsound" : "either",
+          plantSampled,
         );
         if (p.verdict === "unsound") caught[i] = true;
       }
@@ -194,7 +204,7 @@ async function checkAll(
         if (tried && !c) bad.push(`${id} ${plants[i].label} ${order}`);
     if (performance.now() > deadline) break;
   }
-  return { failed: bad, held };
+  return { failed: bad, held, whole, boards: boardsAsked };
 }
 
 /** The shares of {@link CHECK_BUDGET_MS} by which a technique's whole proof,
@@ -235,9 +245,19 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
     (SHARD === null && (techniques?.includes(id) ?? false)) ||
     (!checkedAs(fp, recorded[key]) && !checkedAs(fp, recorded[at(key)]));
   /** Record a technique found sound, or found holding on sampled answers
-   * alone where `held` says so. */
-  const record = (key: string, fp: string, held: boolean): void => {
+   * alone where `held` says so, and say which, with how many of the boards it
+   * was asked on it was proved on whole. */
+  const record = (
+    key: string,
+    fp: string,
+    { held, whole, boards }: { held: boolean; whole: number; boards: number },
+  ): void => {
     const v = held ? heldVerdict(fp) : fp;
+    say(
+      held
+        ? `ok  ${key}: recorded held, proved whole on ${whole} of ${boards} boards and asked on sampled answers on the rest`
+        : `ok  ${key}: recorded sound, proved whole on all ${boards} boards`,
+    );
     let now = { ...readVerdicts(), [at(key)]: v };
     if (SHARD === null) verdicts[key] = v;
     else {
@@ -252,7 +272,9 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
         );
         now[key] = all;
         verdicts[key] = all;
-        say(`ok  ${key}: all ${SHARD.of} shards sound, recorded`);
+        say(
+          `ok  ${key}: all ${SHARD.of} shards checked, recorded ${all === fp ? "sound" : "held"}`,
+        );
       }
     }
     writeFileSync(
@@ -291,9 +313,9 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
           keep(key, fp, id, file.library);
           continue;
         }
-        const { failed, held } = await checkAll(worlds, id, plants());
+        const { failed, ...how } = await checkAll(worlds, id, plants());
         bad.push(...failed);
-        if (failed.length === 0) record(key, fp, held);
+        if (failed.length === 0) record(key, fp, how);
       }
       continue;
     }
@@ -337,9 +359,9 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
         keep(key, fp, stated.id, file.game);
         continue;
       }
-      const { failed, held } = await checkAll(worlds, stated.id, plants());
+      const { failed, ...how } = await checkAll(worlds, stated.id, plants());
       bad.push(...failed);
-      if (failed.length === 0) record(key, fp, held);
+      if (failed.length === 0) record(key, fp, how);
     }
   }
   writeFileSync(

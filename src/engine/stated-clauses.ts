@@ -90,6 +90,14 @@ const SLOT_ROLES: ReadonlySet<string> = new Set([
   "or",
 ]);
 
+/** The words a reference takes when its slot gives none, by role. */
+export const DEFAULT_FORMS: Readonly<Record<string, readonly string[]>> = {
+  ring: ["this {noun}", "these {nouns}"],
+  stripes: ["this {unit}"],
+  outline: ["the outlined {noun}", "the outlined {nouns}"],
+  strand: ["the outlined {noun}", "the outlined {nouns}"],
+};
+
 /** The squares a `ring` reference or a `has` slot is over, by name: `1`, `2`
  * and so on are the squares the step places that value on, `then` the squares
  * its placing techniques follow with, and `+` joins them (`2+then`); `null`

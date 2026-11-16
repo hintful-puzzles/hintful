@@ -478,8 +478,8 @@ techniques:
             - when: "v = 0"
               look: "{stripes}'s hidden number can only be 0"
               move: "{ring: every square in it} must be water"
-            - look: "{stripes}'s hidden number can only be {number}, and it already has that many boat squares"
-              move: "{ring: every other square in it} must be water"
+            - look: "{stripes}'s hidden number can only be {number}, and it has that many boat squares"
+              move: "{ring: its other square | its other squares} must be water"
         forced:
           when: "left = |O|"
           look: "{stripes}'s hidden number can only be {number}"
@@ -523,6 +523,11 @@ techniques:
   - id: shared
     tier: Tricky
     says:
+      long: >-
+        Where the middle of the three squares could be the boat, the step rests
+        on a second premise: that boat would fill the line crossing there.
+        Without it the sentence read as unsound to the owner (2026-10-22),
+        since a middle boat need not touch the ringed squares at a corner.
       terms:
         line: L
         number: v
@@ -634,6 +639,11 @@ techniques:
   - id: centerTrial
     tier: Hard
     says:
+      long: >-
+        A trial says what it supposes, the boat through the middle segment one
+        way, then what that would break and the square it decides: the
+        supposition alone is half the line, and each thing it may break names
+        its own mark.
       terms:
         center: c
         vertical: "vert(L)"

@@ -290,8 +290,14 @@ export interface StatedClauses {
  * the clauses'. A wording with no `when` holds always, and comes last. A
  * firing's `when` reads the binding, the terms, and the marks by role; a
  * fact's reads the conclusion's scope. */
-export interface Worded extends StatedClauses {
-  wordings?: (StatedClauses & { when?: string })[];
+export interface Worded extends StatedClauses, Long {
+  wordings?: (StatedClauses & Long & { when?: string })[];
+}
+
+/** Why a wording may run past the line (`NARRATION_LIMIT`), said beside it
+ * where it can; on a part, it covers every wording the part states. */
+interface Long {
+  long?: string;
 }
 
 /** The roles a technique's `says` marks elements in; the firing's facts are
@@ -660,6 +666,11 @@ export interface Says {
 export interface Wording {
   when: Expr | null;
   clauses: StatedClauses;
+  /** The `long` that covers it: where it is stated, and why the wording needs
+   * the room; `null` where none does. */
+  long: { at: string; why: string } | null;
+  /** Where it is stated, for a message. */
+  label: string;
 }
 
 export interface Definition {
@@ -826,22 +837,27 @@ function wordingsOf(
   label: string,
   at: (part: string, src: string) => Expr,
   base: StatedClauses | null = null,
+  baseLong: Wording["long"] = null,
 ): Wording[] {
   const own = { ...base, ...clausesOf(part) };
+  const partLong = part.long === undefined ? baseLong : { at: label, why: part.long };
   const list = part.wordings ?? [];
   const words: Wording[] = list.map((w, i) => {
     if (w.when === undefined && i < list.length - 1)
       throw new SyntaxError(
         `${label} wording ${i}: only the last wording may have no when`,
       );
+    const here = `${label} wording ${i}`;
     return {
-      when: w.when === undefined ? null : at(`${label} wording ${i} when`, w.when),
+      when: w.when === undefined ? null : at(`${here} when`, w.when),
       clauses: { ...own, ...clausesOf(w) },
+      long: w.long === undefined ? partLong : { at: here, why: w.long },
+      label: here,
     };
   });
   const last = words.at(-1);
   if (last === undefined ? Object.keys(own).length > 0 : last.when !== null)
-    words.push({ when: null, clauses: own });
+    words.push({ when: null, clauses: own, long: partLong, label });
   return words;
 }
 
@@ -883,7 +899,13 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
       words:
         name === null
           ? wordingsOf(stated, label, at)
-          : wordingsOf(own, label, at, clausesOf(stated)),
+          : wordingsOf(
+              own,
+              label,
+              at,
+              clausesOf(stated),
+              stated.long === undefined ? null : { at: "says", why: stated.long },
+            ),
     };
   };
   const witness = stated.witness === true;

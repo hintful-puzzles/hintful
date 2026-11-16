@@ -266,7 +266,7 @@ techniques:
         Ruling {ring: this spoke | these spokes} out would
         {if hasFilled: leave {outline filled: {if same: one outlined {fn} |
         the outlined {fn}}} no spare spoke and
-        {if starved: {outline broken: {if same: the other |
+        {if starved: {outline broken: {if same: the other outlined {bn} |
         {if many: the outlined hubs | the outlined {bn}}}} too few spokes |
         strand {outline broken: the outlined hubs}} |
         {if starved: leave {outline broken: {if many: the outlined hubs |

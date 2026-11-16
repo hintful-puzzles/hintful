@@ -21,47 +21,35 @@
 import { ColorWord, type Scheme } from "./color/color-word.ts";
 import type { RivalsLost } from "./rival-judging.ts";
 import type { HintSpan, Point } from "./types.ts";
+import {
+  adjectiveDefect,
+  type MarkRole,
+  ROLE_WORDS,
+  unboundDefect,
+} from "./wording-rules.ts";
 
-/**
- * How long a step's sentence may be: short enough to read at a glance (owner,
- * 2026-09-10: *"a character limit as a linter"*), with no exception as the aim
- * (owner, 2026-10-18). `hint-quality.test.ts` holds every step to it, and a
- * sentence with an optional clause (an example) drops the clause where it
- * would run over.
- */
-export const NARRATION_LIMIT = 120;
+export type { MarkRole } from "./wording-rules.ts";
+export { NARRATION_LIMIT } from "./wording-rules.ts";
 
-/** What a mark means. The engine owns the four, and a game adds one only when
- * none fits, saying why in its change. A ring is round, and only the engine
- * draws one (`GameDrawing.drawRing`); a note a step rules out is struck, not
- * ringed, because a grid of notes leaves no room for a ring round one
- * (`make-rings-round`, D6). */
-export type MarkRole = "ring" | "outline" | "stripes" | "strike";
-
-/** A role's words. What each role marks is the `engine-hints` requirement "The
- * engine SHALL own the hint mark roles and the words for them". */
+/** A role's words, beside its adjective (`wording-rules.ts`'s `ROLE_WORDS`).
+ * What each role marks is the `engine-hints` requirement "The engine SHALL own
+ * the hint mark roles and the words for them". */
 interface MarkRoleWords {
-  /** A marked element, described: "the ringed square". */
-  readonly adjective: string;
   /** How the help's list of marks opens its entry: "**A ring** marks …". */
   readonly listed: readonly [lead: string, verb: string];
 }
 
 const MARK_ROLES: Readonly<Record<MarkRole, MarkRoleWords>> = {
   ring: {
-    adjective: "ringed",
     listed: ["A ring", "marks"],
   },
   outline: {
-    adjective: "outlined",
     listed: ["An outline", "marks"],
   },
   stripes: {
-    adjective: "striped",
     listed: ["Stripes", "mark"],
   },
   strike: {
-    adjective: "struck",
     // How it looks is the engine's (`drawStrike`), so the legend says it here
     // and a game's entry says only what it marks.
     listed: ["A strike through a note", "marks"],
@@ -87,32 +75,9 @@ export function legendMarkdown(roles: Partial<Record<MarkRole, string>>): string
     .join("\n");
 }
 
-/** Adjectives the collection used for marks before the roles were fixed. A
- * bound sentence never says them: each named a mark that now has a role's word.
- * "Shaded" is not among them although it once named a mark, because in a
- * shading genre it is what the rules call a cell's state (Bricks: "each shaded
- * cell must have one below it"), and a hint speaks the rules' words. */
-const RETIRED_ADJECTIVES = ["hatched", "highlighted"] as const;
-
-/** Every role's adjective ("ringed", "struck", …), as a sentence says it. */
-export const ROLE_ADJECTIVES: readonly string[] = Object.values(MARK_ROLES).map(
-  (r) => r.adjective,
-);
-
-/** `role`'s adjective, as a sentence says it: "outlined". */
-export const roleAdjective = (role: MarkRole): string => MARK_ROLES[role].adjective;
-
 /** The roles {@link Narration.whereToLook} looks in, in turn: what the step
  * reasons from before what it decides. */
 const LOOK_ORDER: readonly MarkRole[] = ["outline", "stripes", "ring", "strike"];
-
-/** A literal that says what only a reference may. "There" names a place except
- * as the existential ("there is one way left"), which points at nothing; "there
- * would" alone is still a place ("a bulb there would…"). */
-const UNBOUND = new RegExp(
-  `\\b(?:this|these|here|there(?!\\s+(?:is|are|would\\s+be)\\b|['’]s\\b)|${[...ROLE_ADJECTIVES, ...RETIRED_ADJECTIVES].join("|")})\\b`,
-  "i",
-);
 
 /**
  * What a mark is drawn on. A kind keys its elements, so the same edge named
@@ -187,26 +152,15 @@ const isReference = (p: Part): p is Reference<unknown> =>
   typeof p !== "string" && !(p instanceof ColorWord);
 
 function lint(s: string): void {
-  const m = UNBOUND.exec(s);
-  if (m)
-    throw new Error(
-      `hint words: "${m[0]}" in "${s}" must be a reference to a mark (hint-words.ts's mark.*)`,
-    );
+  const why = unboundDefect(s);
+  if (why !== null) throw new Error(`hint words: ${why}`);
 }
 
 /** The adjectives of every role but `role`, and the retired ones: words a
  * reference to `role` may not use. */
 function checkAdjective(role: MarkRole, s: string): void {
-  for (const other of Object.keys(MARK_ROLES) as MarkRole[]) {
-    if (other === role) continue;
-    const adj = MARK_ROLES[other].adjective;
-    if (new RegExp(`\\b${adj}\\b`, "i").test(s))
-      throw new Error(`hint words: a ${role} reference says "${adj}" in "${s}"`);
-  }
-  for (const adj of RETIRED_ADJECTIVES) {
-    if (new RegExp(`\\b${adj}\\b`, "i").test(s))
-      throw new Error(`hint words: "${adj}" is no mark's word, in "${s}"`);
-  }
+  const why = adjectiveDefect(role, s);
+  if (why !== null) throw new Error(`hint words: ${why}`);
 }
 
 /** How many units a noun about `elements` counts. */
@@ -517,6 +471,9 @@ export interface Said {
   /** The action or the forced state, as it reads mid-sentence. */
   readonly move: Narration;
   readonly relation: Relation;
+  /** Why the sentence may run past {@link NARRATION_LIMIT}: a description's
+   * wording's `long:`. */
+  readonly long?: string;
 }
 
 /**
@@ -547,17 +504,20 @@ export class Sentence extends Narration {
   private constructor(
     parts: readonly Part[],
     readonly form: Form,
+    /** Why it may run past {@link NARRATION_LIMIT}, where its description's
+     * wording says so (`long:`); `null` where it may not. */
+    readonly long: string | null,
   ) {
     super(parts);
   }
 
   protected override remade(parts: readonly Part[]): this {
-    return new Sentence(parts, this.form) as this;
+    return new Sentence(parts, this.form, this.long) as this;
   }
 
   /** @internal {@link sentence} and {@link unshaped}'s constructor. */
-  static of(words: Narration, form: Form): Sentence {
-    return new Sentence(Narration.partsOf(words), form);
+  static of(words: Narration, form: Form, long: string | null = null): Sentence {
+    return new Sentence(Narration.partsOf(words), form, long);
   }
 }
 
@@ -635,7 +595,7 @@ export function sentence(said: Said): Sentence {
     r.kind === "forced" && r.rivals
       ? { relation: r.kind, rivals: "lost" }
       : { relation: r.kind };
-  return Sentence.of(words, form);
+  return Sentence.of(words, form, said.long ?? null);
 }
 
 /** The common case: the look forces the move. "L, so M.", or with what follows
@@ -704,7 +664,7 @@ export const mark = {
     det = "the",
   ): Narration {
     checkWhole(kind, noun);
-    const adj = MARK_ROLES[role].adjective;
+    const adj = ROLE_WORDS[role];
     return Narration.ref({
       role,
       kind,
@@ -723,7 +683,7 @@ export const mark = {
     elements: readonly E[],
     words: string,
   ): Narration {
-    const adj = MARK_ROLES[role].adjective;
+    const adj = ROLE_WORDS[role];
     return Narration.ref({ role, kind, elements, words: () => `${words} (${adj})` });
   },
 

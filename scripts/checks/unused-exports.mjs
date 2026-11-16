@@ -106,6 +106,14 @@ const KEPT_UNUSED = {
   // read, so that it checks at the orders the fingerprint names.
   "src/describe/soundness.ts::CHECKED_ORDERS":
     "read by research/technique-check/describe-check.test.ts",
+  "src/describe/soundness.ts::soundnessKey":
+    "read by research/technique-check/describe-check.test.ts, which records a technique's verdict under it",
+  "src/describe/soundness.ts::libraryFingerprint":
+    "read by research/technique-check/describe-check.test.ts, which records a library technique's verdict against it",
+  "src/describe/soundness.ts::gameFingerprint":
+    "read by research/technique-check/describe-check.test.ts, which records a game technique's verdict against it",
+  "src/describe/soundness.ts::deadEndKey":
+    "read by research/technique-check/dead-end-check.test.ts, which records a dead-end claim's verdict under it",
   "src/describe/soundness.ts::CHECKED_POSITIONS":
     "read by research/technique-check/dead-end-check.ts",
   "src/describe/soundness.ts::isDeadEndKey":
@@ -114,6 +122,10 @@ const KEPT_UNUSED = {
     "read by research/technique-check/describe-check.test.ts, which bounds each technique's check by it",
   "src/describe/soundness.ts::heldVerdict":
     "read by research/technique-check/describe-check.test.ts, which records a held verdict in the form checkedAs reads",
+  "src/describe/soundness.ts::checkedAs":
+    "read by research/technique-check/describe-check.test.ts, which skips a technique already checked for what it reads",
+  "src/describe/soundness.ts::deadEndFingerprint":
+    "read by research/technique-check/dead-end-check.test.ts, which records a dead-end claim's verdict against it",
   "src/describe/description.ts::withVariations":
     "read by the interpreter and the soundness checker under research/",
   "src/engine/describe-runtime.ts::SightAt":

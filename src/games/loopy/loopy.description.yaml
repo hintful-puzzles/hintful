@@ -276,6 +276,10 @@ techniques:
     conclude: >-
       place(e, 2) and (forall g in edges(f) where g != e and not known(g): place(g, 1))
     says:
+      long: >-
+        It says both halves of the conclusion, because settling the whole face
+        is the point (the owner, 2026-09-19), and the rest of the face is named
+        "the other edges", as a bare "the rest" names nothing.
       terms:
         f: f
         n: "clue(number, f)"

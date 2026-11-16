@@ -363,7 +363,7 @@ describe("boats hint — narration", () => {
   const REFUTED =
     /^If this square (?:were|held) (?:a |its (?:row|column)'s (?:and (?:row|column)'s )?last )?(?:water|boat segment),/;
   const SATISFIED =
-    /(already has the \d+ boat squares? its number allows|number is 0|can only be \d+, and it already has)/;
+    /(already has the \d+ boat squares? its number allows|number is 0|can only be \d+, and it has that many)/;
   const NARRATIONS: [Parameters<typeof pinnedFiring>[0], RegExp][] = [
     ["given", /boat's (top|bottom|left|right) end|one-square boat/],
     ["near", /Boats never touch, not even at a corner/],
@@ -791,7 +791,7 @@ describe("boats hint — the wordings no walk reaches", () => {
       "This row's hidden number can only be 0, so every square in it must be water.",
     );
     expect(words(satisfied[1], { number: 2 }, [], [4, 5])).toBe(
-      "This row's hidden number can only be 2, and it already has that many boat squares, so every other square in it must be water.",
+      "This row's hidden number can only be 2, and it has that many boat squares, so its other squares must be water.",
     );
     const forced = STATED["hidden.forced"].step;
     expect(words(forced[0], { number: 1, left: 1 }, [5])).toBe(

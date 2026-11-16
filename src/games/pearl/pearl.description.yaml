@@ -476,6 +476,10 @@ techniques:
       forall e in F: (e in W or e in N)
       and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
     says:
+      long: >-
+        The owner's 2026-09-27 request (pearl/hint.ts, carryOn): a step also
+        draws the line on through a white pearl it runs into, and says so after
+        its own deduction, whichever deduction that is.
       terms:
         c: c
         # Its open sides, which the hint reads its way through from.

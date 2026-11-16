@@ -187,7 +187,7 @@ techniques:
             - when: "not known(c) and not known(i)"
               move: "it and {ring inner: the {n} diagonally inside} must be {shaded}"
             - when: "not known(c)"
-              move: "it must be {shaded}, like {outline inner: the outlined {n} diagonally inside}"
+              move: "it must be {shaded}, as {outline inner: the {n} inside} is"
             - look: "Left {unshaded}, {outline corner: the outlined corner {n}} would box itself in with {outline sides: its two {n}s} {shaded}"
               move: "{ring inner: the {n} diagonally inside} must be {shaded}"
         # The corner matches both squares beside it, and is covered itself.

@@ -1,23 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { CompileError, compileGame, compileLibrary } from "./compile.ts";
-import {
-  isFormal,
-  isLibrary,
-  isPlanning,
-  parseTechnique,
-  planningWith,
-  withEveryVariation,
-} from "./description.ts";
+import { isFormal, isLibrary, parseTechnique } from "./description.ts";
+import { lintDescription } from "./lint.ts";
 import { loadDescriptionFile } from "./load.ts";
 import soundnessJson from "./soundness.json" with { type: "json" };
-import {
-  checkedAs,
-  deadEndFingerprint,
-  deadEndKey,
-  gameFingerprint,
-  libraryFingerprint,
-  soundnessKey,
-} from "./soundness.ts";
+import { unchecked } from "./soundness.ts";
 import { compiledPath, compileSource, compiles } from "./sources.ts";
 
 const soundness: Record<string, string> = soundnessJson;
@@ -63,42 +50,24 @@ describe("compiled descriptions", () => {
     });
 
   it("compiles only techniques checked sound as they read now", () => {
-    const unchecked: string[] = [];
-    for (const [source, d] of sources) {
-      if (isLibrary(d)) {
-        for (const id of Object.keys(d.techniques))
-          if (
-            !checkedAs(libraryFingerprint(d, id), soundness[soundnessKey(source, id)])
-          )
-            unchecked.push(soundnessKey(source, id));
-        continue;
-      }
-      if (!isFormal(d)) continue;
-      // A variation's techniques are compiled too.
-      for (const t of withEveryVariation(d).techniques ?? [])
-        if (
-          !("use" in t) &&
-          !checkedAs(gameFingerprint(d, t), soundness[soundnessKey(source, t.id)])
-        )
-          unchecked.push(soundnessKey(source, t.id));
-    }
     // Run `npx vitest run -c research/technique-check/vitest.config.ts
     // describe-check`, which records each technique it finds sound.
-    expect(unchecked).toEqual([]);
+    expect(unchecked(sources, soundness).techniques).toEqual([]);
   });
 
   it("compiles only dead-end claims checked sound as they read now", () => {
-    const unchecked: string[] = [];
-    for (const [source, d] of sources) {
-      if (!isPlanning(d)) continue;
-      for (const { id, src } of planningWith(d, Object.keys(d.variations ?? {}))
-        .deadEnds)
-        if (soundness[deadEndKey(source, id)] !== deadEndFingerprint(d, src))
-          unchecked.push(deadEndKey(source, id));
-    }
     // Run `npx vitest run -c research/technique-check/vitest.config.ts
     // dead-end-check`, which records each claim it finds sound.
-    expect(unchecked).toEqual([]);
+    expect(unchecked(sources, soundness).deadEnds).toEqual([]);
+  });
+
+  it("finds no wording or formula npm run describe refuses", () => {
+    const errors = [...sources].flatMap(([f, d]) =>
+      lintDescription(d)
+        .filter((x) => x.error)
+        .map((x) => `${f} ${x.where}: ${x.message}`),
+    );
+    expect(errors).toEqual([]);
   });
 });
 

@@ -249,7 +249,7 @@ describe("a hint step names the deduction that forces its cells", () => {
       const { wording, text } = wordsWith(3);
       expect(wording).toBe(1);
       expect(text).toContain("it must be");
-      expect(text).toContain("like the outlined 4 diagonally inside");
+      expect(text).toContain("as the 4 inside is");
     });
 
     it("outlines the shaded corner and rings the one inside, where the corner is shaded", () => {

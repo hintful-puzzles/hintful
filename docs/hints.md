@@ -577,9 +577,12 @@ bound walk in `hint-quality.test.ts` holds every leg to it (`journeyDefects`).
 every step to the limit, over a board of every mode and tier into the middle
 game. A sentence over the limit fails the commit that wrote it.
 
-**A sentence that needs more room is listed in `LONG_NARRATIONS`**, held to
-300, with a board that speaks it for each game listed; its doc says what an
-entry holds.
+**A sentence that needs more room says why.** One a description's wording
+states whole says it beside the wording, `long:`, which `npm run describe`
+holds both ways (docs/descriptions.md § "What the compiler checks of a
+wording"). One a game's code writes or assembles is listed in
+`LONG_NARRATIONS`, held to 300, with a board that speaks it for each game
+listed; its doc says what an entry holds.
 
 - **Shortening a sentence means deleting its listing.** The ledger fails an
   unlisted long step, and a listing whose pinned board no longer speaks it

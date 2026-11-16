@@ -104,6 +104,7 @@ and techniques, and:
 | A conclusion that is false is a contradiction | a technique must refuse a board, or a solver reports a false ambiguity |
 | The answer check | you decide whether a board is solved, or write an error overlay |
 | A firing's reason is built from its binding | a hint's words need a fact about a firing |
+| What the compiler checks of a wording | you write a wording, or `npm run describe` reports one |
 | Checking a technique sound | you state or edit a technique, or the gate reports one unchecked |
 | A planning game's position and moves | you describe a planning game, or its moves or finish change |
 | Checking a dead-end claim sound | you state or edit a dead-end claim, a move or a finish, or the gate reports a claim unchecked |
@@ -1293,6 +1294,39 @@ fired. A reason names the unit it reads where that is not a row or a
 column (Solo's blocks and diagonals), so the engine's Latin sentences
 (`engine/hint-text.ts`) speak it in every game.
 
+## What the compiler checks of a wording
+
+`npm run describe` checks every description beyond what compiles it
+([`describe/lint.ts`](../src/describe/lint.ts)), reports every finding in one
+run, and fails on an error, so the typecheck and every `pre` script fail on
+one too. Read a wording's findings here before a hint walk: each walk takes
+tens of seconds and hears only the forms its boards reach.
+
+- **Every form of a wording is held to the render's rules**, read from the
+  render's own lists (`engine/wording-rules.ts`) and reference judge
+  (`testing/hint-reference.ts`): each `if`, count, `has`, `or` and `fit`
+  form, so a fault in a form no board has spoken is found. A reference the
+  game's hint legend may teach ("the marked corner") is left to the walk,
+  which knows the legend.
+- **A wording past the limit at its shortest reading** (one-digit numbers,
+  one-member lists, the shortest noun a game says) is long on every board,
+  and needs `long:` with the reason it needs the room, or a shorter form. A
+  `long:` on wordings that all fit at their longest reading (two digits, three
+  members) is refused. Between the two, the hint walk decides
+  (docs/hints.md § "Keep the narration terse"). `long:` sits on a wording, or
+  on a part (`says`, an arm, `fact`, a step) to cover its wordings; the
+  sentence carries it (`Sentence.long`), so the walk needs no ledger entry
+  and no pinned board. A sentence a game assembles round a described
+  fragment (the Latin `wing`'s `look`) is the ledger's, not a `long:`.
+- **A binder over the whole board kept near another** (`e in cells where …
+  e in adj4(d)`) is warned of with the local binder that replaces it, `e in
+  set(q over d in D, q in adj4(d))`. The compiler does not rewrite it: the
+  elements come in another order, and a firing's order is behavior (§ "A
+  statement's order is behavior").
+- **A technique or dead-end claim edited since it was last checked** is
+  named, with the `CHECK_GAMES=<game>` run that checks it. A `define` is part
+  of every technique's fingerprint, so adding one names them all.
+
 ## Checking a technique sound
 
 [`research/technique-check/describe-check.ts`](../research/technique-check/describe-check.ts)
@@ -1485,7 +1519,9 @@ of the budget for its whole proof, then sampled boards to the deadline, and
 **a plant not caught within the budget fails the run**: a check that cannot
 catch the planted defect in the time cannot vouch for the technique either.
 A held verdict is evidence, not proof; a technique whose held verdict a
-wrong hint later contradicts is the first place to look. **The check is a
+wrong hint later contradicts is the first place to look. A line asked on
+sampled boards says `held`, not `sound`, and a technique's record line says
+on how many of its boards it was proved whole. **The check is a
 net, not a proof program**: the hand-written solvers and upstream's C played
 correctly with no such check, so a session does not widen what a held
 verdict samples, or spend past the budget, for rigor's sake (the owner,

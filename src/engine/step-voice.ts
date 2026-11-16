@@ -7,6 +7,7 @@
  */
 import type { MarkKind, Narration, Noun, Sentence } from "./hint-words.ts";
 import {
+  type ClausePart,
   type Clauses,
   type StatedContext,
   statedParts,
@@ -84,7 +85,7 @@ export interface StepVoice<S extends { readonly [K in keyof S]: StepType }, E> {
    * joins to its own words. */
   part<K extends keyof S & string>(
     id: K,
-    part: keyof Clauses,
+    part: ClausePart,
     said: Said<S[K], E>,
   ): Narration;
 }
@@ -123,7 +124,7 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
   };
   const part = (
     id: keyof S & string,
-    which: keyof Clauses,
+    which: ClausePart,
     said: Said<StepType, E>,
   ): Narration => {
     const { clauses, cx } = spoken(id, said);

@@ -34,12 +34,10 @@
  */
 
 import type { HintMarkLegend } from "../game.ts";
-import {
-  type MarkRef,
-  type Narration,
-  ROLE_ADJECTIVES,
-  roleAdjective,
-} from "../hint-words.ts";
+import type { MarkRef, Narration } from "../hint-words.ts";
+import { type MarkRole, ROLE_ADJECTIVES, ROLE_WORDS } from "../wording-rules.ts";
+
+const roleAdjective = (role: MarkRole): string => ROLE_WORDS[role];
 
 /** The roles' words, read from the engine's roles. */
 const ROLE_WORD = new RegExp(`\\b(?:${ROLE_ADJECTIVES.join("|")})\\b`, "i");
@@ -113,11 +111,14 @@ function deicticNoun(words: string): string | null {
   return m ? m[1].toLowerCase().replace(/s$/, "") : null;
 }
 
-/** Why one reference's words fail, or `null` when they name their mark. */
-function judge(
-  ref: MarkRef,
+/** Why one reference's words fail, or `null` when they name their mark. The
+ * describe compiler asks it of every reference a description states, where
+ * the legend is the game's code and `taught` is `null`: words a legend could
+ * teach are then left to the walk. */
+export function judge(
+  ref: Pick<MarkRef, "kind">,
   words: string,
-  taught: string,
+  taught: string | null,
   rivals: (noun: string) => boolean,
 ): string | null {
   if (ref.kind.name === "move") return null;
@@ -127,15 +128,17 @@ function judge(
   if (PRO_FORM.test(words))
     return `is a bare "${words}": name the thing, by its role's word or its value`;
   if (VALUE.test(words)) return null;
-  if (taught.includes(words.toLowerCase())) return null;
+  if (taught?.includes(words.toLowerCase())) return null;
   if (!DETERMINER.test(words))
-    return "is not a noun phrase: a reference names a thing on the board";
+    return taught === null
+      ? null
+      : "is not a noun phrase: a reference names a thing on the board";
   const noun = deicticNoun(words);
   if (noun !== null)
     return rivals(noun)
       ? `says "${words}" beside another reference of its kind in another role that says it too`
       : null;
-  if (RELATION.test(words)) return null;
+  if (RELATION.test(words) || taught === null) return null;
   return "names a thing but not which mark it is: say its role's word or its value";
 }
 

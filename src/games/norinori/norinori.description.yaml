@@ -182,6 +182,11 @@ techniques:
       move: "{ring: this square} must be {shaded}"
       wordings:
         - when: "|outline| > 0"
+          long: &noRoom >-
+            A region left without room names three things: the square left out
+            or tried, the region, and the outlined shaded squares that close its
+            room, with the rule ("as dominoes") that says why. The conclusion
+            says "this square" and not "it", as "it" would follow the region.
           look: "without {ring}, {stripes: this region} has no room for {if placed: {n} more | {n}} {shaded} {n: square in a domino | squares as dominoes}, given {outline}"
         - look: "without {ring}, {stripes: this region} has no room for {if placed: {n} more | {n}} {shaded} {n: square in a domino | squares as dominoes}"
   # A region that needs both its shaded squares, whose other open squares
@@ -199,6 +204,7 @@ techniques:
       move: "{ring: this square} must be {unshaded}"
       wordings:
         - when: "|outline| > 0"
+          long: *noRoom
           look: "with {ring} {shaded}, {stripes: this region} has no room for its second {shaded} square in a domino, given {outline}"
         - look: "with {ring} {shaded}, {stripes: this region} has no room for its second {shaded} square in a domino"
   # A shaded square tried at x would leave clear the squares `ruled` names,
@@ -224,5 +230,6 @@ techniques:
       move: "{ring: this square} must be {unshaded}"
       wordings:
         - when: "|outline| > 0"
+          long: *noRoom
           look: "with {ring} {shaded}, {stripes: this region} has no room for {if mine: {n} more | {n}} {shaded} {n: square in a domino | squares as dominoes}, given {outline}"
         - look: "with {ring} {shaded}, {stripes: this region} has no room for {if mine: {n} more | {n}} {shaded} {n: square in a domino | squares as dominoes}"

@@ -178,13 +178,13 @@ techniques:
       marks: { outline: "{a} + {b}", reads: "{a} + adj4(a) + {b} + adj4(b) + set(m over u in R, m in {u} + adj4(u))" }
       wordings:
         - when: "most = 0 and aValue = bValue and aDot = bDot"
-          look: "{outline b: one outlined {color bValue} {bDot: dot | tile}} allows no {color aValue} beside {outline a: the other}"
+          look: "{outline b: one outlined {color bValue} {bDot: dot | tile}} allows no {color aValue} beside {outline a: the other outlined {aDot: dot | tile}}"
           move: "{ring} must be {color fill}"
         - when: "most = 0"
           look: "{outline b: the outlined {color bValue} {bDot: dot | tile}} allows no {color aValue} beside {outline a: the outlined {color aValue} {aDot: dot | tile}}"
           move: "{ring} must be {color fill}"
         - when: "aValue = bValue and aDot = bDot"
-          look: "{outline b: one outlined {color bValue} {bDot: dot | tile}} allows at most {spelled most} {color aValue} beside {outline a: the other}"
+          look: "{outline b: one outlined {color bValue} {bDot: dot | tile}} allows at most {spelled most} {color aValue} beside {outline a: the other outlined {aDot: dot | tile}}"
           move: "{ring} must be {color fill}"
         - look: "{outline b: the outlined {color bValue} {bDot: dot | tile}} allows at most {spelled most} {color aValue} beside {outline a: the outlined {color aValue} {aDot: dot | tile}}"
           move: "{ring} must be {color fill}"

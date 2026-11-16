@@ -91,6 +91,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `latin-hint.ts` — regions and the reasons of a single |
 | – `latin-notes.ts` — a Latin ladder run on the player's notes |
 | – `hint-words.ts` — a hint's words bound to its marks |
+| – `wording-rules.ts` — what a hint's words may not say |
 | – `hint-text.ts` — the sentences several games share |
 | – `stated.ts` — a step's words as its description states them |
 | – `slide-planner.ts` — sliding-permutation search |
@@ -995,6 +996,16 @@ Write every step's words through it. Exemplar:
   `testing/hint-binding.ts` holds the rendered frame to the words.
   `legendMarkdown` is the help's list of marks. See
   [`hints.md`](./hints.md) § "Bind the words to the marks".
+
+### `wording-rules.ts` — what a hint's words may not say
+
+The one copy of the rules a sentence's words are held to: the length limit,
+the role adjectives, place words outside a reference and the retired
+phrases. `hint-words.ts` throws on them as it renders, and the describe
+compiler checks every wording against them before any board speaks it. It
+imports nothing, so `npm run describe` runs it under Node's type stripping.
+See [`descriptions.md`](./descriptions.md) § "What the compiler checks of a
+wording".
 
 ### `stated.ts` — a step's words as its description states them
 

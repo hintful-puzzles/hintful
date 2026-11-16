@@ -23,7 +23,9 @@ import {
 import { dirname } from "node:path";
 import { globSync } from "tinyglobby";
 import { WARN_GROWTH } from "../src/describe/compile.ts";
+import { lintDescription } from "../src/describe/lint.ts";
 import { loadDescriptionFile } from "../src/describe/load.ts";
+import { unchecked } from "../src/describe/soundness.ts";
 import {
   compiledPath,
   compileSource,
@@ -74,6 +76,43 @@ if (!quiet || written.length + removed.length > 0)
   console.log(
     `describe: ${wanted.size} compiled modules, ${written.length} written, ${removed.length} removed.`,
   );
+const findings = [...sources].flatMap(([f, file]) =>
+  lintDescription(file).map((x) => ({ ...x, source: f })),
+);
+for (const x of findings)
+  console.warn(`${x.error ? "error" : "warning"} ${x.source} ${x.where}: ${x.message}`);
+// A technique edited, or its rules, since it was last checked sound: the gate
+// fails on it, so the writer hears it here with the command that checks it.
+const verdicts = JSON.parse(
+  readFileSync(`${root}src/describe/soundness.json`, "utf8"),
+) as Record<string, string>;
+const due = unchecked(sources, verdicts);
+const gamesOf = (keys: readonly string[]): string =>
+  [
+    ...new Set(
+      keys.map((k) => {
+        const file = sources.get(k.split("#")[0]);
+        return file === undefined ? "" : "library" in file ? file.library : file.game;
+      }),
+    ),
+  ].join(",");
+if (due.techniques.length > 0)
+  console.warn(
+    [
+      `${due.techniques.length} techniques read differently from when they were last checked sound:`,
+      ...due.techniques.map((k) => `  ${k}`),
+      `Check them: CHECK_GAMES=${gamesOf(due.techniques)} npx vitest run -c research/technique-check/vitest.config.ts describe-check`,
+    ].join("\n"),
+  );
+if (due.deadEnds.length > 0)
+  console.warn(
+    [
+      `${due.deadEnds.length} dead-end claims read differently from when they were last checked sound:`,
+      ...due.deadEnds.map((k) => `  ${k}`),
+      `Check them: GAMES=${gamesOf(due.deadEnds)} npx vitest run -c research/technique-check/vitest.config.ts dead-end-check`,
+    ].join("\n"),
+  );
+if (findings.some((x) => x.error)) process.exitCode = 1;
 if (steep.length > 0)
   console.warn(
     [

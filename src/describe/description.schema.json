@@ -77,9 +77,15 @@
           "move": { "$ref": "#/$defs/clause" },
           "effect": { "$ref": "#/$defs/clause" },
           "again": { "$ref": "#/$defs/clause" },
-          "later": { "$ref": "#/$defs/clause" }
+          "later": { "$ref": "#/$defs/clause" },
+          "long": { "$ref": "#/$defs/long" }
         }
       }
+    },
+    "long": {
+      "type": "string",
+      "minLength": 40,
+      "description": "Why this wording may run past the line a hint's sentence keeps to (`NARRATION_LIMIT`), which the hint walk then lets it. On a part it covers every wording the part states. `npm run describe` refuses one on wordings that cannot run past the line, and asks for one on a wording past it on every board."
     },
     "rung": {
       "description": "The game's hint rungs a firing of this is recorded under, among its hintRungs: one, or several where one firing records under more than one (an Unequal sign's two ends).",
@@ -172,6 +178,7 @@
                 "move": { "$ref": "#/$defs/clause" },
                 "again": { "$ref": "#/$defs/clause" },
                 "later": { "$ref": "#/$defs/clause" },
+                "long": { "$ref": "#/$defs/long" },
                 "wordings": {
                   "$ref": "#/$defs/wordings",
                   "description": "Where a square's step reads differently by what holds where its fact is made, each `when` read in the conclusion's scope."
@@ -179,6 +186,7 @@
               }
             },
             "wordings": { "$ref": "#/$defs/wordings" },
+            "long": { "$ref": "#/$defs/long" },
             "arms": {
               "type": "object",
               "description": "Where a step reads differently by what holds of the binding: each arm is a name and a condition, tried in order, the first true one winning, and adds its own `terms` and `marks` to the shared ones above. The step's kind is `<id>.<arm>`.",
@@ -192,6 +200,7 @@
                   "follows": { "$ref": "#/$defs/clause" },
                   "move": { "$ref": "#/$defs/clause" },
                   "wordings": { "$ref": "#/$defs/wordings" },
+                  "long": { "$ref": "#/$defs/long" },
                   "terms": { "$ref": "#/$defs/saidTerms" },
                   "marks": { "$ref": "#/$defs/saidMarks" }
                 }
@@ -737,7 +746,8 @@
                 "$ref": "#/$defs/clause",
                 "description": "What the move does, where no rule forces it: said after the move as an `effect` relation (Slide's \"that makes room for the outlined block\")."
               },
-              "wordings": { "$ref": "#/$defs/wordings" }
+              "wordings": { "$ref": "#/$defs/wordings" },
+              "long": { "$ref": "#/$defs/long" }
             }
           }
         },
