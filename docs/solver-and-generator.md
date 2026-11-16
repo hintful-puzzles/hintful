@@ -1092,8 +1092,11 @@ property the draw could have had from the start.
 
 Diagnose first:
 
-- **Count the tries each filter turns away, by size.**
-- **Look at where a failed try stopped**, not only at how many fail.
+- **Count the tries each filter turns away, by size**: name each filter
+  with `drawRejected` and read the deal walk's census of the cells
+  (§ "Bound a generator by its tail, not its median").
+- **Look at where a failed try stopped**, not only at how many fail. A
+  mend's end is in the census, with the fewest squares it left open.
 - **Run a failed draw again before blaming it.** If the same draw finishes
   as often as a fresh one on a second fill, the draw is not what failed.
 - **Sort the failures by what the search says of them before blaming the
@@ -1254,10 +1257,14 @@ leaves a second and not enough to place a line; count the sizes each side of
 a bound before writing it.
 
 **The census of a generator you are writing is the same tool with the cells
-named** (`DEAL_WALK_CELLS`, `DEAL_WALK_SEEDS`): it prints each cell's time,
-its deals' tries at the outermost retry loop, and its boards by the easiest
-tier that finishes each. The game must be registered. Do not write a
-throwaway test that throws its table.
+named** (`DEAL_WALK_CELLS`, `DEAL_WALK_SEEDS`, or `DEAL_WALK_CELLS=presets`):
+it prints each cell's time, its deals' tries at the outermost retry loop,
+its boards by the easiest tier that finishes each, the draws thrown away by
+stage, and how each mend ended with the fewest squares it left open. A stage
+is named where the draw is thrown away, with `drawRejected`
+([`deal-census.ts`](../src/engine/deal-census.ts)). The game must be
+registered. Do not write a throwaway test, a debug export or a log file:
+name the stage and run the census.
 
 ### A Custom size is not refused for its wait
 

@@ -28,14 +28,10 @@
  *
  * Dev/test-only; never imported by production code.
  */
+import { type DealCensus, newDealCensus, takeCensusInto } from "../deal-census.ts";
 import { type RandomState, randomNew } from "../random/index.ts";
 import { getTsGame } from "../registry.ts";
-import {
-  countTriesInto,
-  MAX_REGENERATE,
-  RetryLimitExceeded,
-  underDealTries,
-} from "../retry-limit.ts";
+import { MAX_REGENERATE, RetryLimitExceeded, underDealTries } from "../retry-limit.ts";
 
 /** A dealt board, as `newDesc` returns it. */
 type Board = { desc: string; aux?: string };
@@ -153,9 +149,9 @@ export function dealOnce<T>(deal: () => T): () => T {
   };
 }
 
-/** The generators' tries while this file loads, by guard label; `null`
- * before its load window opens. */
-let loadingTries: Map<string, number> | null = null;
+/** What the generators drew while this file loads; `null` before its load
+ * window opens. */
+let loading: DealCensus | null = null;
 
 /**
  * Starts counting what a test file deals while it loads, until
@@ -164,20 +160,20 @@ let loadingTries: Map<string, number> | null = null;
  * function it went through.
  */
 export function openLoadWindow(): void {
-  loadingTries = new Map();
-  countTriesInto(loadingTries);
+  loading = newDealCensus();
+  takeCensusInto(loading);
 }
 
 /** Stops the count {@link openLoadWindow} started: the file has loaded, and
  * what its tests deal is theirs. */
 export function closeLoadWindow(): void {
-  countTriesInto(null);
+  takeCensusInto(null);
 }
 
 /** The tries each generator's guards made while this file loaded, by label:
  * empty where it dealt nothing until a test asked. */
 export function triesWhileLoading(): ReadonlyMap<string, number> | null {
-  return loadingTries;
+  return loading?.tries ?? null;
 }
 
 /** The CPU microseconds of the boards this file used and did not deal. */

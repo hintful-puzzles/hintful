@@ -17,6 +17,7 @@
  * fixtures pin them.
  */
 
+import { drawRejected } from "./deal-census.ts";
 import { Dsf } from "./dsf.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { adjacentCells } from "./redivide.ts";
@@ -172,7 +173,8 @@ export function mergeToCount<T>(
         tightest = [root];
       } else if (beside.size === fewest) tightest.push(root);
     }
-    if (tightest.length === 0) return null;
+    if (tightest.length === 0)
+      return drawRejected("divide: no join left before the count of regions");
 
     const root = tightest[randomUpto(rng, tightest.length)];
     const beside = [...(choices.get(root) as Map<number, number>).values()];
@@ -400,7 +402,8 @@ export function growFromSeeds(
   }
 
   if (owner.includes(FREE)) {
-    if (aside.size > 0) return null;
+    if (aside.size > 0)
+      return drawRejected("divide: a square walled off from every seed");
     throw new Error("growFromSeeds: a cell no region could take");
   }
   const regions = new Dsf(wh);

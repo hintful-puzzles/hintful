@@ -12,6 +12,7 @@
  * it still, so that the answer fits the regions before and after.
  */
 
+import { countMend, MENDED } from "./deal-census.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { adjacentCells } from "./redivide.ts";
 
@@ -153,18 +154,24 @@ export function mendDivision<Position>(m: DivisionMend<Position>): boolean {
   let sinceFewest = 0;
   // The moves the walk toward a harder board has left.
   let walk: number | null = null;
+  /** Says how the mend ended, to a deal's census. */
+  const end = (why: string): boolean => {
+    countMend({ why, open: fewest, cells });
+    return why === MENDED;
+  };
   for (let moves = 0; moves < MENDS_PER_CELL * cells; moves++) {
     if (at.open.length === 0) {
+      fewest = 0;
       // A move taken back leaves the easier tier where it was.
-      if (judge.tooEasy === null || (changed && !judge.tooEasy())) return true;
+      if (judge.tooEasy === null || (changed && !judge.tooEasy())) return end(MENDED);
       walk ??= spent.moves;
-      if (walk-- <= 0) return false;
+      if (walk-- <= 0) return end("too easy, its walk to a harder board spent");
       const ways = waysFrom(regions.keys());
-      if (ways.length === 0) return false;
+      if (ways.length === 0) return end("too easy, and no move keeps it finished");
       changed = move(ways, (next) => next.open.length === 0) !== null;
       continue;
     }
-    if (sinceFewest >= STALL) return false;
+    if (sinceFewest >= STALL) return end(`stalled, ${STALL} moves without a new best`);
     spent.moves++;
     const resting = quiet && sinceGain < QUIET;
     if (changed && others.length === 0 && !resting) {
@@ -179,7 +186,7 @@ export function mendDivision<Position>(m: DivisionMend<Position>): boolean {
     // anywhere: the next pass meets a different one.
     if (ways.length === 0 && other) ways = waysFrom(regions.keys());
     if (ways.length === 0) {
-      if (!resting) return false;
+      if (!resting) return end("no square it may move");
       // The open cells have nowhere to go: ask the search after all.
       sinceGain = QUIET;
       changed = true;
@@ -197,5 +204,9 @@ export function mendDivision<Position>(m: DivisionMend<Position>): boolean {
       sinceFewest = 0;
     } else sinceFewest++;
   }
-  return false;
+  return end(
+    at.open.length === 0
+      ? "too easy, out of moves on its walk to a harder board"
+      : "out of moves",
+  );
 }

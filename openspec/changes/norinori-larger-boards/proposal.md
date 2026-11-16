@@ -46,3 +46,8 @@ sizes that do on the menu. Directions, to be measured before one is taken:
 - **A ladder rung the stalled positions ask for**, read from the boards the
   mend gave up on (the instrument is the stuck-position dump this change's
   parent used; it lived in a scratch test and was not kept).
+
+The deal walk's census (`DEAL_WALK_CELLS=presets npm run deal-walk --
+norinori`) gives each preset's draws thrown away by stage and how each mend
+ended, with the fewest squares it left open. On 2026-11-16 the joins that
+stop short of the count of regions threw away the most draws.

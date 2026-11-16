@@ -94,7 +94,11 @@ guides is for a game that is not yours.
   layers, meaning first", without its parts; `rendering.md` § "What a board
   looks like: pieces on a quiet surface".
 - [`solver-and-generator.md`](./solver-and-generator.md) § "Every retry loop
-  is bounded".
+  is bounded". While the deal is written, the first instrument is the deal
+  walk's census of named cells, which says why each draw was thrown away,
+  and `deal-profile` says where a slow one's time goes:
+  `solver-and-generator.md` § "Bound a generator by its tail, not its
+  median".
 - [`hints.md`](./hints.md) § "The quality bar"; `hints.md` § "Writing the
   narration", without its parts; `hints.md` § "A sentence has parts";
   `hints.md` § "Bind the words to the marks"; `hints.md` § "The sentences

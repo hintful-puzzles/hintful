@@ -9,6 +9,7 @@
  */
 
 import { solvedPositions } from "../../engine/answer-search.ts";
+import { drawRejected } from "../../engine/deal-census.ts";
 import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
 import {
   growFromSeeds,
@@ -135,7 +136,7 @@ function regionsRound(
       closed.add(i).add(partner);
   }
   const open = seeds.filter((i) => !closed.has(i));
-  if (open.length === 0) return null;
+  if (open.length === 0) return drawRejected("norinori: every domino closed");
   const grown = growFromSeeds(grid, open, rng, closed);
   if (grown === null) return null;
   for (const i of closed)
@@ -260,13 +261,14 @@ function drawRegions(
   spent: { moves: number },
 ): Int32Array | null {
   const seeds = placeDominoes(p, rng);
-  if (seeds.length === 0) return null;
+  if (seeds.length === 0) return drawRejected("norinori: no room for a domino");
   const round = regionsRound(p, seeds, rng);
   if (round === null) return null;
   const { regions, closed } = round;
   const sizes = new Int32Array(seeds.length / 2);
   for (const r of regions) sizes[r]++;
-  if (regions.some((r, i) => !closed.has(i) && sizes[r] < SMALLEST_REGION)) return null;
+  if (regions.some((r, i) => !closed.has(i) && sizes[r] < SMALLEST_REGION))
+    return drawRejected(`norinori: a region under ${SMALLEST_REGION} squares`);
   const answer = new Set(seeds);
   const mended = mendDivision({
     grid: { w: p.w, h: p.h },

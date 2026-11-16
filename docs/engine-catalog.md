@@ -50,6 +50,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `shuffle.ts` — Fisher–Yates + permutation parity |
 | Generation |
 | – `retry-limit.ts` — a bound on generate-until-it-works |
+| – `deal-census.ts` — why a draw was thrown away |
 | – `divvy.ts` — random equal-omino partition |
 | – `redivide.ts` — divide a few regions of a partition again |
 | – `divide.ts` — regions of unequal size |
@@ -443,6 +444,18 @@ board. A legal but rare seed wants a recovery path with the cap outside it;
 the header says when. `retry-bound.test.ts` scans for the loops that owe a
 bound ([`solver-and-generator.md`](./solver-and-generator.md) § "Every retry
 loop is bounded"). Exemplar: `src/skeleton/grid/generator.ts`.
+
+### `deal-census.ts` — why a draw was thrown away
+
+**Name the stage where a draw is thrown away** with `return
+drawRejected("<game>: <why>")`, which counts it where a census is taken and
+returns `null`. Add no counter or debug export of your own: the guards'
+tries, `divide.ts`'s and `solvableAtExactlyTier`'s refusals and each mend's
+end are counted already, and `npm run deal-walk` prints them for a named
+cell ([`solver-and-generator.md`](./solver-and-generator.md) § "Bound a
+generator by its tail, not its median"). Where no census is taken, as in
+the app, a count costs one test of a `null`. Exemplar:
+`norinori/generator.ts`.
 
 ### `divvy.ts` — random equal-omino partition
 

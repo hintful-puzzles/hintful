@@ -31,8 +31,11 @@
  * many never come back, and prints the line instead of writing the report. A
  * size the game refuses is dealt too, which is how a refusal is measured.
  * A named cell's line also has its deals' tries at their outermost retry loop
- * and its boards by the easiest tier that finishes each, which is the census
- * of a generator still being written: register the game, and name its params.
+ * and its boards by the easiest tier that finishes each, and under it the
+ * draws thrown away by stage and how each mend ended, with the fewest squares
+ * it left open (`src/engine/deal-census.ts`). That is the census of a
+ * generator still being written: register the game, and name its params, or
+ * `DEAL_WALK_CELLS=presets` for its menu.
  *
  * Settings, all environment variables: `DEAL_WALK_SEEDS` deals a cell at most (4),
  * `DEAL_WALK_STOP_MS` the deal that ends a ladder (10,000),
@@ -53,6 +56,7 @@ import {
 } from "node:fs";
 import { freemem, loadavg, tmpdir } from "node:os";
 import path from "node:path";
+import { MENDED } from "../src/engine/deal-census.ts";
 import {
   type DealWalkCell,
   type DealWalkState,
@@ -186,10 +190,12 @@ function renderCell(cell: DealWalkCell): string {
   const deals = cell.ms.length + cell.lost;
   // A cell asked for by name also says how its deals went, for a generator
   // still being written.
-  if (cell.tiers.length > 0) {
+  if (cell.named && cell.tries.length > 0) {
     const sorted = [...cell.tries].sort((a, b) => a - b);
     const median = sorted[Math.floor(sorted.length / 2)];
     parts.push(`tries median ${median}, most ${sorted[sorted.length - 1]}`);
+  }
+  if (cell.tiers.length > 0) {
     const byTier = new Map<string, number>();
     for (const t of cell.tiers) byTier.set(t, (byTier.get(t) ?? 0) + 1);
     parts.push(
@@ -199,7 +205,31 @@ function renderCell(cell: DealWalkCell): string {
   if (cell.gaveUp > 0) parts.push(`gave up on ${cell.gaveUp} of ${deals}`);
   if (cell.threw !== null) parts.push(`threw ${cell.threw}`);
   if (cell.died !== null) parts.push(`**${cell.died}** on ${cell.lost} of ${deals}`);
-  return `${name} ${parts.join(", ")}`;
+  return `${name} ${parts.join(", ")}${renderCensus(cell)}`;
+}
+
+/** A named cell's draws thrown away and mends, over all its deals, as lines
+ * under the cell's. */
+function renderCensus(cell: DealWalkCell): string {
+  const lines: string[] = [];
+  const stages = Object.entries(cell.rejected);
+  if (stages.length > 0)
+    lines.push(`draws thrown away: ${stages.map(([s, n]) => `${s} ${n}`).join("; ")}`);
+  const ends = Object.entries(cell.mends).sort(
+    ([a, x], [b, y]) =>
+      Number(b === MENDED) - Number(a === MENDED) || y.length - x.length,
+  );
+  if (ends.length > 0) {
+    const total = ends.reduce((n, [, opens]) => n + opens.length, 0);
+    const shown = ends.map(([why, opens]) => {
+      if (why === MENDED) return `${why} ${opens.length}`;
+      const sorted = [...opens].sort((a, b) => a - b);
+      const median = sorted[Math.floor(sorted.length / 2)];
+      return `${why} ${opens.length} (fewest open: median ${median}, least ${sorted[0]}, most ${sorted[sorted.length - 1]})`;
+    });
+    lines.push(`mends ${total} on ${cell.squares} squares: ${shown.join("; ")}`);
+  }
+  return lines.map((line) => `\n  - ${line}`).join("");
 }
 
 function renderGame(state: DealWalkState): string {

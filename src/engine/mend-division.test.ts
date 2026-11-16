@@ -8,6 +8,7 @@
  * breaks. Star Battle's generation tests run it with a real ladder.
  */
 import { describe, expect, it } from "vitest";
+import { MENDED, newDealCensus, takingCensus } from "./deal-census.ts";
 import { type MendJudge, mendDivision } from "./mend-division.ts";
 import { randomNew } from "./random/index.ts";
 import { adjacentCells } from "./redivide.ts";
@@ -101,6 +102,28 @@ describe("mendDivision", () => {
       expect(cells.length).toBeGreaterThanOrEqual(4);
       expect(connected(grid, cells)).toBe(true);
     }
+  });
+
+  it("tells a deal's census how each mend ended and the fewest cells it left open", () => {
+    const census = newDealCensus();
+    const mend = (most: number, seed: string): boolean => {
+      const regions = quarters();
+      return mendDivision({
+        grid: { w: 6, h: 6 },
+        regions,
+        fixed: new Set(),
+        smallest: 4,
+        judge: shrinkRegionZero(regions, most),
+        rng: randomNew(seed),
+        spent: { moves: 0 },
+      });
+    };
+    takingCensus(census, () => [mend(6, "met"), mend(2, "unmet")]);
+    expect(census.mends.map((m) => m.why === MENDED)).toEqual([true, false]);
+    expect(census.mends[0].open).toBe(0);
+    // Region 0 keeps at least the least size, all of it open.
+    expect(census.mends[1].open).toBeGreaterThanOrEqual(4);
+    expect(census.mends.every((m) => m.cells === 36)).toBe(true);
   });
 
   it("a division the easier tier finishes too, with no moves spent, is given up", () => {

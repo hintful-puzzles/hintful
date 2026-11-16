@@ -46,6 +46,8 @@
  * straight into `do…while` and rejection-sampling loops without reshaping them.
  */
 
+import { countTry } from "./deal-census.ts";
+
 /** The tries a guard given no count allows where no deadline is armed. A
  * board rarer than this is one the app deals and a direct call does not
  * ({@link underDealTries}). */
@@ -112,40 +114,6 @@ export function underDealTries<T>(tries: number, deal: () => T): T {
   }
 }
 
-/** The tries every guard has made under {@link countingTries} or
- * {@link countTriesInto}, by label, or `null` where nothing counts. */
-let tally: Map<string, number> | null = null;
-
-/**
- * Counts every guard's tries into `tries` from now on, or stops counting;
- * returns where they were counted before. For a span no callback encloses:
- * the test setup counts what a test file deals while it loads
- * (`testing/dealt.ts`).
- */
-export function countTriesInto(
-  tries: Map<string, number> | null,
-): Map<string, number> | null {
-  const before = tally;
-  tally = tries;
-  return before;
-}
-
-/**
- * Run `deal`, writing into `tries` how many tries each guard under it made,
- * by its label, in the order the guards first tried: so the first is the
- * deal's outermost loop. For a census of a generator (`npm run deal-walk`),
- * which wants to know how often a draw comes to nothing.
- */
-export function countingTries<T>(tries: Map<string, number>, deal: () => T): T {
-  const outer = tally;
-  tally = tries;
-  try {
-    return deal();
-  } finally {
-    tally = outer;
-  }
-}
-
 /**
  * Returns a guard to call once per attempt, at the top of a retry loop. It
  * throws {@link RetryLimitExceeded} when the bound is spent:
@@ -171,7 +139,7 @@ export function retryLimit(label: string, max?: number): () => void {
   let attempts = 0;
   return () => {
     attempts++;
-    tally?.set(label, (tally.get(label) ?? 0) + 1);
+    countTry(label);
     if (deadline !== null) {
       if (performance.now() > deadline)
         throw new RetryLimitExceeded(label, attempts - 1, ", at the deal's deadline");

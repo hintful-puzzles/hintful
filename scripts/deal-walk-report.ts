@@ -16,6 +16,17 @@ export interface DealWalkCell {
   /** Each board's easiest tier that finishes it, for a cell asked for by
    * name (`DEAL_WALK_CELLS`). */
   tiers: string[];
+  /** Whether the cell was asked for by name (`DEAL_WALK_CELLS`), which is
+   * dealt as the app deals and says how its deals went. */
+  named: boolean;
+  /** The draws thrown away over the cell's deals, by stage, for a cell
+   * asked for by name (`deal-census.ts`). */
+  rejected: Record<string, number>;
+  /** The mends over the cell's deals, by how each ended: the fewest squares
+   * each left open, for a cell asked for by name. */
+  mends: Record<string, number[]>;
+  /** The board's squares, as its mends count them; `null` with no mend. */
+  squares: number | null;
   /** How many deals ran their retry bound out. */
   gaveUp: number;
   /** The error of a deal that threw anything else, which a player gets as a

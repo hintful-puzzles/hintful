@@ -35,6 +35,7 @@
  */
 // Type-only, so the `game.ts` ⇄ `difficulty.ts` pair is erased at compile time
 // and no runtime cycle exists.
+import { drawRejected } from "./deal-census.ts";
 import type { ParamConfigItem } from "./game.ts";
 
 /**
@@ -331,10 +332,17 @@ export function dealGaveUp(tier: string | null): string {
  * question is asked first.
  *
  * The easiest tier has nothing below it, so there it means "solvable at all".
+ * A board it refuses is counted in a deal's census by which of the two it
+ * failed (`deal-census.ts`).
  */
 export function solvableAtExactlyTier(solve: CappedSolve, tier: number): boolean {
-  if (tier > 0 && solve(tier - 1) === "solved") return false;
-  return solve(tier) === "solved";
+  if (tier > 0 && solve(tier - 1) === "solved") {
+    drawRejected("tier: a lower tier finishes it");
+    return false;
+  }
+  if (solve(tier) === "solved") return true;
+  drawRejected("tier: the tier does not finish it");
+  return false;
 }
 
 /**

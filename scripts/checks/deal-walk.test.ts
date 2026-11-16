@@ -19,7 +19,8 @@
  * up to that foot, the fields stepped together. `tier-walk.test.ts` deals
  * those sizes for a game with tiers and lists the slow ones.
  *
- * **`DEAL_WALK_CELLS` deals the params it names and nothing else**, each
+ * **`DEAL_WALK_CELLS` deals the params it names and nothing else**, or the
+ * game's presets where it is `presets`, each
  * `DEAL_WALK_SEEDS` times whatever they take, a size `validateParams` refuses
  * included, which is how the sizes each side of a line are counted before the
  * line is drawn or kept. A named cell is dealt as the app deals it, by
@@ -36,12 +37,13 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { it } from "vitest";
 import "../../src/games/index.ts";
 import { generate } from "../../src/engine/deal.ts";
+import { newDealCensus, takingCensus } from "../../src/engine/deal-census.ts";
 import { difficultyChoiceItem, withTier } from "../../src/engine/difficulty.ts";
 import type { Game, ParamConfigItem } from "../../src/engine/game.ts";
 import { paramsError } from "../../src/engine/params.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { getTsGame, registeredGameIds } from "../../src/engine/registry.ts";
-import { countingTries, RetryLimitExceeded } from "../../src/engine/retry-limit.ts";
+import { RetryLimitExceeded } from "../../src/engine/retry-limit.ts";
 import { leafPresets } from "../../src/engine/testing/presets.ts";
 import type { DealWalkCell, DealWalkState } from "../deal-walk-report.ts";
 
@@ -175,9 +177,14 @@ function walk(id: string, statePath: string): void {
     save();
   }
 
+  const named: Params[] | null =
+    CELLS === null
+      ? null
+      : CELLS.join(" ") === "presets"
+        ? (leafPresets(game) as { params: Params }[]).map((p) => p.params)
+        : CELLS.map((cell) => game.decodeParams(cell) as Params);
   const asked: Rung[][] | null =
-    CELLS?.map((cell) => [{ params: game.decodeParams(cell), climbing: false }]) ??
-    null;
+    named?.map((params) => [{ params, climbing: false }]) ?? null;
   state.ladders = [];
   for (const rungs of asked ?? ladders(game)) {
     const ladder: string[] = [];
@@ -194,6 +201,10 @@ function walk(id: string, statePath: string): void {
           ms: [],
           tries: [],
           tiers: [],
+          named: asked !== null,
+          rejected: {},
+          mends: {},
+          squares: null,
           gaveUp: 0,
           threw: null,
           died: null,
@@ -209,12 +220,12 @@ function walk(id: string, statePath: string): void {
         state.inFlight = label;
         save();
         const started = performance.now();
-        const tries = new Map<string, number>();
+        const census = newDealCensus();
         try {
           const rng = randomNew(`deal-walk-${id}-${label}-${seed}`);
-          if (asked === null) countingTries(tries, () => game.newDesc(params, rng));
+          if (asked === null) takingCensus(census, () => game.newDesc(params, rng));
           else {
-            const dealt = countingTries(tries, () => generate(game, params, rng));
+            const dealt = takingCensus(census, () => generate(game, params, rng));
             if (dealt === null) cell.gaveUp++;
             else cell.tiers.push(lowestTier(game, params, dealt.desc));
           }
@@ -225,7 +236,17 @@ function walk(id: string, statePath: string): void {
         cell.ms.push(Math.round(performance.now() - started));
         // The game's outermost loop is the guard that tried first, after
         // `generate`'s own where it dealt.
-        cell.tries.push([...tries.values()][asked === null ? 0 : 1] ?? 0);
+        cell.tries.push([...census.tries.values()][asked === null ? 0 : 1] ?? 0);
+        if (asked !== null) {
+          for (const [stage, n] of census.rejected)
+            cell.rejected[stage] = (cell.rejected[stage] ?? 0) + n;
+          for (const { why, open, cells } of census.mends) {
+            const opens = cell.mends[why] ?? [];
+            opens.push(open);
+            cell.mends[why] = opens;
+            cell.squares = cells;
+          }
+        }
         // A slow cell on a ladder is dealt for about as long as the deal that
         // would end the ladder, and no longer: the slow cells are most of a
         // walk. A cell asked for by name has every deal it was promised.
