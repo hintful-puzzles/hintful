@@ -31,6 +31,13 @@ import {
   MarkOutlines,
 } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import {
+  drawPiecePart,
+  JOIN_DOWN,
+  JOIN_LEFT,
+  JOIN_RIGHT,
+  JOIN_UP,
+} from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD } from "../../engine/win-wave.ts";
@@ -105,6 +112,13 @@ const TYPE_T = 2;
 const TYPE_B = 3;
 const TYPE_BLANK = 4;
 const TYPE_MASK = 0x0f;
+/** The side each type's other half is on: a left half's is on its right. */
+const JOINS: Readonly<Record<number, number>> = {
+  [TYPE_L]: JOIN_RIGHT,
+  [TYPE_R]: JOIN_LEFT,
+  [TYPE_T]: JOIN_DOWN,
+  [TYPE_B]: JOIN_UP,
+};
 
 const DF_HIGHLIGHT_1 = 0x10;
 const DF_HIGHLIGHT_2 = 0x20;
@@ -142,8 +156,6 @@ const gutter = (ts: number) => Math.floor(ts / 16);
  * ([`docs/mechanics.md`](../../../docs/mechanics.md)). */
 export const border = (ts: number) => -gutter(ts);
 const coord = (n: number, ts: number) => n * ts + border(ts);
-const dominoRadius = (ts: number) => Math.floor(ts / 8);
-const coffset = (ts: number) => gutter(ts) + dominoRadius(ts);
 const cursorRadius = (ts: number) => Math.floor(ts / 4);
 
 export function computeSize(p: DominosaShape, ts: number): Size {
@@ -295,8 +307,6 @@ function drawTile(
   const cx = coord(x, ts);
   const cy = coord(y, ts);
   const g = gutter(ts);
-  const co = coffset(ts);
-  const rad = dominoRadius(ts);
 
   // No hint role in the background: every square carries a number, so the
   // spot's ring goes round it and the evidence outline on the square's own
@@ -314,27 +324,10 @@ function drawTile(
     nc = COL_DOMINOTEXT;
     if (flags & DF_FLASH) bg = flags & DF_FLASH_LEAD ? COL_FLASH_LEAD : COL_FLASH;
 
-    // Rounded corners: filled circles at the domino's outer corners.
-    if (type === TYPE_L || type === TYPE_T)
-      dr.drawCircle({ x: cx + co, y: cy + co }, rad, bg, bg);
-    if (type === TYPE_R || type === TYPE_T)
-      dr.drawCircle({ x: cx + ts - 1 - co, y: cy + co }, rad, bg, bg);
-    if (type === TYPE_L || type === TYPE_B)
-      dr.drawCircle({ x: cx + co, y: cy + ts - 1 - co }, rad, bg, bg);
-    if (type === TYPE_R || type === TYPE_B)
-      dr.drawCircle({ x: cx + ts - 1 - co, y: cy + ts - 1 - co }, rad, bg, bg);
-
-    for (let i = 0; i < 2; i++) {
-      let x1 = cx + (i ? g : co);
-      let y1 = cy + (i ? co : g);
-      let x2 = cx + ts - 1 - (i ? g : co);
-      let y2 = cy + ts - 1 - (i ? co : g);
-      if (type === TYPE_L) x2 = cx + ts + Math.floor(ts / 16);
-      else if (type === TYPE_R) x1 = cx - Math.floor(ts / 16);
-      else if (type === TYPE_T) y2 = cy + ts + Math.floor(ts / 16);
-      else if (type === TYPE_B) y1 = cy - Math.floor(ts / 16);
-      dr.drawRect({ x: x1, y: y1, w: x2 - x1 + 1, h: y2 - y1 + 1 }, bg);
-    }
+    drawPiecePart(dr, { x: cx, y: cy, w: ts, h: ts }, JOINS[type], bg, {
+      ends: "square",
+      divider: COL_BACKGROUND,
+    });
   } else {
     if (flags & EDGE_T)
       dr.drawRect({ x: cx + g, y: cy, w: ts - 2 * g, h: 1 }, COL_EDGE);

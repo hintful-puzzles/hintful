@@ -8,10 +8,9 @@
  *
  * Each cell paints its own background (water blue for anything the player
  * decided and for given water, the lifted surface under a given segment, the
- * plain cell surface for an undecided square), a thin grid outline, and the boat
- * segment as a circle, a rectangle, or both — the six segment shapes are all
- * the same two primitives clipped differently, so there is one `drawSegment`
- * for the board and the fleet list alike.
+ * plain cell surface for an undecided square), a thin grid outline, and its
+ * part of the boat's hull, one `drawSegment` for the board and the fleet list
+ * alike.
  *
  * **Two error layers, deliberately:**
  *  - the *live* rule violations upstream already draws as you play — a line
@@ -54,8 +53,15 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
+import {
+  drawPiecePart,
+  JOIN_DOWN,
+  JOIN_LEFT,
+  JOIN_RIGHT,
+  JOIN_UP,
+} from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
-import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { BoatsHint } from "./index.ts";
 import type { BoatsMistake } from "./solver.ts";
@@ -280,7 +286,8 @@ export interface BoatsDrawState {
   fleet: number;
   /** Per-tile last-drawn contents (−1 = never drawn): the segment shape in bits
    * 0–3, the live error/cursor flags in bits 4–7, the displayed hint step's role
-   * for this square in bits 9–12, and the win flash's tone in bits 13–14. */
+   * for this square in bits 9–12, the win flash's tone in bits 13–14, and the
+   * sides a segment joins the rest of its boat on in bits 15–18. */
   tiles: Int32Array;
   /** Last-drawn `STATUS_*` for each of the `w + h` border numbers. */
   border: Int32Array;
@@ -308,11 +315,32 @@ export function newDrawState(state: BoatsState, tileSize: number): BoatsDrawStat
 
 // --- primitives ------------------------------------------------------------
 
+/** The sides a segment of each resolved shape joins the rest of its boat on;
+ * a center's are its boat's axis, which the shape does not say. */
+const SHAPE_JOINS: Readonly<Record<number, number>> = {
+  [SHIP_TOP]: JOIN_DOWN,
+  [SHIP_BOTTOM]: JOIN_UP,
+  [SHIP_LEFT]: JOIN_RIGHT,
+  [SHIP_RIGHT]: JOIN_LEFT,
+  [SHIP_SINGLE]: 0,
+};
+
+/** The sides segment `(x, y)` of `grid` joins its boat on: a center's along
+ * whichever axis has a segment on both sides. */
+function shipJoins(at: (i: number) => number, w: number, x: number, y: number): number {
+  const ship = at(y * w + x);
+  if (ship !== SHIP_CENTER) return SHAPE_JOINS[ship] ?? 0;
+  const across =
+    x > 0 && x < w - 1 && isShip(at(y * w + x - 1)) && isShip(at(y * w + x + 1));
+  return across ? JOIN_LEFT | JOIN_RIGHT : JOIN_UP | JOIN_DOWN;
+}
+
 /**
- * Upstream `boats_draw_ship`: one boat segment. Every shape is a circle, a
- * rectangle, or both — an end cap is a circle with a rectangle filling the half
- * that continues into the next segment, a center is a plain rectangle, a single
- * is a bare circle, and an unresolved segment is a small square.
+ * One boat segment, upstream `boats_draw_ship`: the engine's spanning piece
+ * (`drawPiecePart`) with round ends, so a boat is one hull whose bow and stern
+ * are its rounded ends, and a boat of one is a disc. No divider: a boat is
+ * one hull, and its squares are counted by the grid lines beside it. A
+ * segment not yet known to be an end or a middle is a small square.
  */
 function drawSegment(
   dr: GameDrawing,
@@ -321,51 +349,21 @@ function drawSegment(
   ts: number,
   ship: number,
   color: number,
+  joins: number = SHAPE_JOINS[ship] ?? 0,
+  reach?: Rect,
 ): void {
-  const off = ts / 20;
-  const cx = tx + ts / 2;
-  const cy = ty + ts / 2;
-  let r = ts / 2 - off * 2;
-
-  if (ship !== SHIP_CENTER && ship !== SHIP_VAGUE)
-    dr.drawCircle({ x: cx, y: cy }, r, color, color);
-
-  if (ship === SHIP_VAGUE) r *= 0.7;
-
-  let x0 = 0;
-  let y0 = 0;
-  let x1 = 0;
-  let y1 = 0;
-  switch (ship) {
-    case SHIP_CENTER:
-    case SHIP_VAGUE:
-      [x0, y0, x1, y1] = [cx - r, cy - r, cx + r, cy + r];
-      break;
-    case SHIP_TOP: // the half that continues downward
-      [x0, y0, x1, y1] = [cx - r, cy, cx + r, cy + r];
-      break;
-    case SHIP_BOTTOM:
-      [x0, y0, x1, y1] = [cx - r, cy - r, cx + r, cy];
-      break;
-    case SHIP_LEFT:
-      [x0, y0, x1, y1] = [cx, cy - r, cx + r, cy + r];
-      break;
-    case SHIP_RIGHT:
-      [x0, y0, x1, y1] = [cx - r, cy - r, cx, cy + r];
-      break;
+  if (ship === SHIP_VAGUE) {
+    const r = (ts / 2 - ts / 10) * 0.7;
+    const cx = tx + ts / 2;
+    const cy = ty + ts / 2;
+    dr.drawRect({ x: cx - r, y: cy - r, w: 2 * r, h: 2 * r }, color);
+    return;
   }
-
-  if (ship !== SHIP_SINGLE)
-    dr.drawPolygon(
-      [
-        { x: x0, y: y0 },
-        { x: x1, y: y0 },
-        { x: x1, y: y1 },
-        { x: x0, y: y1 },
-      ],
-      color,
-      color,
-    );
+  drawPiecePart(dr, { x: tx, y: ty, w: ts, h: ts }, joins, color, {
+    ends: "round",
+    divider: null,
+    reach,
+  });
 }
 
 /** Upstream `boats_draw_collision` (itself copied from `tents.c`): a warning
@@ -442,7 +440,9 @@ function drawFleet(
             : k === size
               ? SHIP_RIGHT
               : SHIP_CENTER;
-      drawSegment(dr, fxCoord(fx), fyCoord(row), ts * FLEET_SIZE, ship, color);
+      const joins = ship === SHIP_CENTER ? JOIN_LEFT | JOIN_RIGHT : SHAPE_JOINS[ship];
+      const cell = ts * FLEET_SIZE;
+      drawSegment(dr, fxCoord(fx), fyCoord(row), cell, ship, color, joins);
       fx += FLEET_SIZE;
     }
 
@@ -479,8 +479,14 @@ const HINT_LINE = 1 << 12; // a square of the line the sentence names (hatched)
 const BORDER_HATCHED = 0x100;
 
 /** Pack a cell's drawn appearance into the per-tile cache word. */
-function tileKey(ship: number, flags: number, tone: WinTone, hint: number): number {
-  return ship | (flags << 4) | hint | (tone << 13);
+function tileKey(
+  ship: number,
+  flags: number,
+  tone: WinTone,
+  hint: number,
+  joins: number,
+): number {
+  return ship | (flags << 4) | hint | (tone << 13) | (joins << 15);
 }
 
 /** The per-cell hint bits for the displayed step. */
@@ -619,6 +625,28 @@ export function redraw(
   const drag = dragBounds(ui);
   const hints = flash.winning ? null : hintBits(hint ?? null, w, h);
 
+  /** What square `i` shows: its given or its played content, or what an
+   * in-progress drag would make it, previewed without committing a move. */
+  const shown = (i: number): number => {
+    const ship = state.gridClues[i] !== EMPTY ? state.gridClues[i] : board.grid[i];
+    const x = i % w;
+    const y = (i - x) / w;
+    if (
+      drag &&
+      x >= drag.xmin &&
+      x <= drag.xmax &&
+      y >= drag.ymin &&
+      y <= drag.ymax &&
+      state.gridClues[i] === EMPTY &&
+      (ui.dragFrom === "*" ||
+        (ui.dragFrom === "-" && ship === EMPTY) ||
+        (ui.dragFrom === "W" && ship === WATER) ||
+        (ui.dragFrom === "B" && isShip(ship)))
+    )
+      return ui.dragTo === "B" ? SHIP_VAGUE : ui.dragTo === "W" ? WATER : EMPTY;
+    return ship;
+  };
+
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       const i = y * w + x;
@@ -629,27 +657,12 @@ export function redraw(
         cellFlags[i] |= FD_CURSOR;
       else cellFlags[i] &= ~FD_CURSOR;
 
-      let ship = state.gridClues[i] !== EMPTY ? state.gridClues[i] : board.grid[i];
-
-      // Preview the in-progress drag without committing a move.
-      if (
-        drag &&
-        x >= drag.xmin &&
-        x <= drag.xmax &&
-        y >= drag.ymin &&
-        y <= drag.ymax &&
-        state.gridClues[i] === EMPTY &&
-        (ui.dragFrom === "*" ||
-          (ui.dragFrom === "-" && ship === EMPTY) ||
-          (ui.dragFrom === "W" && ship === WATER) ||
-          (ui.dragFrom === "B" && isShip(ship)))
-      ) {
-        ship = ui.dragTo === "B" ? SHIP_VAGUE : ui.dragTo === "W" ? WATER : EMPTY;
-      }
+      const ship = shown(i);
+      const joins = isShip(ship) ? shipJoins(shown, w, x, y) : 0;
 
       const hintBit = hints ? hints[i] : 0;
       const tone = flash.win(sweepStep(x, y));
-      const key = tileKey(ship, cellFlags[i], tone, hintBit);
+      const key = tileKey(ship, cellFlags[i], tone, hintBit, joins);
       if (ds.tiles[i] === key && !ds.wrong.stale(i)) continue;
       ds.tiles[i] = key;
 
@@ -666,12 +679,23 @@ export function redraw(
       dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, surface);
       if (hintBit & HINT_LINE)
         dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, hatchPeriod(ts));
-      drawRectOutline(dr, tx, ty, ts + 1, ts + 1, COL_GRID);
+      // A square's own lines are its top and left, and the last row's and
+      // column's the board's edge: a hull covers the line between two of its
+      // squares, and a line both squares drew would show or not by which
+      // repainted last.
+      dr.drawRect({ x: tx, y: ty, w: ts + 1, h: 1 }, COL_GRID);
+      dr.drawRect({ x: tx, y: ty, w: 1, h: ts + 1 }, COL_GRID);
+      if (x === w - 1) dr.drawRect({ x: tx + ts, y: ty, w: 1, h: ts + 1 }, COL_GRID);
+      if (y === h - 1) dr.drawRect({ x: tx, y: ty + ts, w: ts + 1, h: 1 }, COL_GRID);
 
       if (isShip(ship)) {
         const color =
           cellFlags[i] & FE_MISMATCH || ds.wrong.at(i) ? COL_SHIP_ERROR : COL_SHIP;
-        drawSegment(dr, tx, ty, ts + 1, ship, color);
+        // Clipped to the square, as a polygon's edge spills half a pixel.
+        const square = { x: tx, y: ty, w: ts, h: ts };
+        dr.clip(square);
+        drawSegment(dr, tx, ty, ts + 1, ship, color, joins, square);
+        dr.unclip();
       } else if (state.gridClues[i] === WATER) {
         // A *given* water square is marked with waves; player water is the
         // plain blue fill.

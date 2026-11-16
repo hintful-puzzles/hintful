@@ -10,6 +10,8 @@ help:
     {{controls}}
 
     You need not mark anything clear to finish: the puzzle is solved as soon as the {{pair:0}} squares are all in place. A {{pair:0}} square turns red when it touches two others, and a region turns red when it holds more than two.
+
+    A domino rules out the open squares beside it, and a region's second {{pair:0}} square rules out the rest of the region. {{rules-out}}
   origins: |-
     Norinori is a Nikoli puzzle.
   hints: |-

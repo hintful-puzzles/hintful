@@ -183,6 +183,17 @@ export function neighbors(w: number, h: number, i: number): number[] {
   return out;
 }
 
+/** The other half of the domino shaded square `i` is half of, or `null`:
+ * the two are beside each other and beside no other shaded square. A run of
+ * three is no domino. */
+export function dominoPartner(s: NorinoriState, i: number): number | null {
+  const shadedBeside = (k: number): number[] =>
+    neighbors(s.w, s.h, k).filter((j) => s.grid[j] === SHADED);
+  if (s.grid[i] !== SHADED) return null;
+  const mine = shadedBeside(i);
+  return mine.length === 1 && shadedBeside(mine[0]).length === 1 ? mine[0] : null;
+}
+
 // --- text format ------------------------------------------------------------
 
 /** The letters the text form names the regions by, the alphabet over again

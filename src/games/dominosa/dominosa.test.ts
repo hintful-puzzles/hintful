@@ -452,7 +452,7 @@ describe("dominosa render", () => {
       moves: two?.map(([d1, d2]): DominosaMove => ({ type: "domino", d1, d2 })),
     });
     const clash = recording.ops.some(
-      (o) => o.op === "rect" && o.color === COL_DOMINOCLASH,
+      (o) => o.op === "polygon" && o.fill === COL_DOMINOCLASH,
     );
     expect(clash).toBe(true);
   });
@@ -491,7 +491,7 @@ describe("dominosa render", () => {
       let tile = -1;
       for (const op of dr.ops) {
         if (op.op === "clip") tile++;
-        else if (op.op === "rect" && isLit(op.color)) lit.add(tile);
+        else if (op.op === "polygon" && isLit(op.fill)) lit.add(tile);
       }
       expect(tile).toBe(w * h - 1);
       return [...lit];

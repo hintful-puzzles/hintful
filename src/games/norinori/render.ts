@@ -4,8 +4,8 @@
  * key").
  *
  * A square is drawn inside its region's walls (`engine/region-walls.ts`), on
- * its region's fill; a shaded one holds the shaded piece and a clear one the
- * cross.
+ * its region's fill; a shaded one holds the shaded piece, or half a domino
+ * where it and one neighbor are shaded alone, and a clear one the cross.
  */
 
 import { REGION_FILLS } from "../../engine/color/colors.ts";
@@ -26,7 +26,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
+import { drawPiecePart, drawRuledOutCross, joinToward } from "../../engine/piece.ts";
 import { regionFills } from "../../engine/region-fill.ts";
 import {
   drawWalledSquare,
@@ -40,6 +40,7 @@ import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-w
 import type { NorinoriMistake } from "./index.ts";
 import {
   CROSSED,
+  dominoPartner,
   type NorinoriMove,
   type NorinoriParams,
   type NorinoriState,
@@ -109,12 +110,14 @@ function boxAt(ts: number, x: number, y: number): Rect {
 
 // --- draw state -------------------------------------------------------------
 
-// The tile key: the mark in bits 0-1, then one bit a cue and two for the win
-// flash's tone. The hint's marks are the sidecar's.
+// The tile key: the mark in bits 0-1, then one bit a cue, two for the win
+// flash's tone and four for the side a domino's other half is on. The hint's
+// marks are the sidecar's.
 const F_ERROR = 1 << 2;
 const F_WRONG = 1 << 3;
 const F_CURSOR = 1 << 4;
 const K_TONE = 5;
+const K_JOIN = 7;
 
 export interface NorinoriDrawState {
   started: boolean;
@@ -167,6 +170,9 @@ function markBand(ds: NorinoriDrawState, w: number, x: number, y: number): MarkB
 
 interface Tile {
   mark: number;
+  /** The side of a shaded square its domino's other half is on, a `JOIN_*`
+   * bit (`piece.ts`), or 0. */
+  join: number;
   error: boolean;
   wrong: boolean;
   cursor: boolean;
@@ -183,28 +189,38 @@ function drawTile(
 ): void {
   const ts = ds.tileSize;
   const box = boxAt(ts, x, y);
-  const [, inside] = walledBoxes(ts, box.x, box.y, ds.walls[i]);
+  const surface = t.wrong
+    ? COL_WRONG
+    : t.tone
+      ? winSlot(t.tone, COL_FLASH, COL_FLASH_LEAD)
+      : ds.surfaces[i];
+  // Clipped, so a domino's half, which reaches its partner's edge, does not
+  // paint over the partner's own half of the divider.
+  dr.clip(box);
   drawWalledSquare(
     dr,
     ts,
     box,
     ds.walls[i],
     { grid: COL_GRID, wall: COL_WALL },
-    (surface) => {
-      dr.drawRect(
-        surface,
-        t.wrong
-          ? COL_WRONG
-          : t.tone
-            ? winSlot(t.tone, COL_FLASH, COL_FLASH_LEAD)
-            : ds.surfaces[i],
-      );
-      ds.hint.drawHatch(dr, i, surface, ts);
+    (inside) => {
+      dr.drawRect(inside, surface);
+      ds.hint.drawHatch(dr, i, inside, ts);
     },
   );
 
+  // The piece sits on the square inside its thin lines, whatever its walls,
+  // so the two halves of a domino across a region's border are one height. A
+  // domino covers the line or wall between its halves: a wall through it
+  // reads as two pieces, and the wall still shows beside it.
   if (t.mark === SHADED)
-    drawPiece(dr, inside, SHADED_SHAPE, t.error ? COL_ERROR : COL_SHADED);
+    drawPiecePart(
+      dr,
+      { x: box.x + 1, y: box.y + 1, w: ts - 1, h: ts - 1 },
+      t.join,
+      t.error ? COL_ERROR : COL_SHADED,
+      { ends: "square", divider: COL_BACKGROUND, reach: box },
+    );
   else if (t.mark === CROSSED)
     drawRuledOutCross(
       dr,
@@ -225,10 +241,22 @@ function drawTile(
       Math.max(2, ts >> 4),
     );
 
+  dr.unclip();
   dr.drawUpdate(box);
 }
 
 // --- redraw -----------------------------------------------------------------
+
+/** Each shaded square that is half of a domino, to the side its other half
+ * is on. A square of a run of three stays a piece apart. */
+function dominoJoins(state: NorinoriState): Map<number, number> {
+  const out = new Map<number, number>();
+  state.grid.forEach((_, i) => {
+    const partner = dominoPartner(state, i);
+    if (partner !== null) out.set(i, joinToward(state.w, i, partner));
+  });
+  return out;
+}
 
 /** The shaded squares that break a rule as the board stands: each beside two
  * others or more, and every one of a region that holds more than two. */
@@ -271,6 +299,7 @@ export function redraw(
   }
 
   const errors = shadedInError(state);
+  const joins = dominoJoins(state);
   const wrong = new Set(mistakes?.map((m) => m.y * w + m.x));
 
   // The displayed step's marks, read from its words and from nowhere else.
@@ -284,6 +313,7 @@ export function redraw(
       const i = y * w + x;
       const tile: Tile = {
         mark: grid[i],
+        join: joins.get(i) ?? 0,
         error: errors.has(i),
         wrong: wrong.has(i),
         cursor: ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y,
@@ -294,7 +324,8 @@ export function redraw(
         (tile.error ? F_ERROR : 0) |
         (tile.wrong ? F_WRONG : 0) |
         (tile.cursor ? F_CURSOR : 0) |
-        (tile.tone << K_TONE);
+        (tile.tone << K_TONE) |
+        (tile.join << K_JOIN);
       if (ds.cache[i] === key && !ds.hint.stale(i)) continue;
       drawTile(dr, ds, i, x, y, tile);
       ds.cache[i] = key;

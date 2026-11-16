@@ -836,8 +836,10 @@ describe("boats rendering", () => {
     ).toBe(true);
     // The row/column numbers are drawn as text.
     expect(result.recording.ops.some((o) => o.op === "text")).toBe(true);
-    // The fleet display draws boat segments as circles.
-    expect(result.recording.ops.some((o) => o.op === "circle")).toBe(true);
+    // The fleet display draws its boats as hulls.
+    expect(
+      result.recording.ops.some((o) => o.op === "polygon" && o.fill === COL_SHIP),
+    ).toBe(true);
 
     expect(result.recording.ops).toMatchSnapshot();
   });
@@ -936,9 +938,10 @@ describe("boats rendering", () => {
     const lit = (ops: ReturnType<typeof paint>): string[] =>
       ops.flatMap((o) => (o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : []));
     const boats = (ops: ReturnType<typeof paint>): number =>
-      ops.filter((o) => o.op === "circle" && o.fill === COL_SHIP).length;
+      ops.filter((o) => o.op === "polygon" && o.fill === COL_SHIP).length;
     const settled = paint(NO_FLASH);
     expect(lit(settled)).toEqual([]);
+    expect(boats(settled)).toBeGreaterThan(0);
     const run = winFlashRun(paint, (ops) => {
       // The pieces are drawn on a lit square as on any other frame.
       expect(boats(ops)).toBe(boats(settled));

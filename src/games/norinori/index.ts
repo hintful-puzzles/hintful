@@ -21,6 +21,7 @@ import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
+  rulingOut,
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
@@ -55,6 +56,7 @@ import {
   CROSSED,
   decodeParams,
   defaultParams,
+  dominoPartner,
   encodeParams,
   executeMove,
   menu,
@@ -63,12 +65,41 @@ import {
   type NorinoriParams,
   type NorinoriState,
   type NorinoriUi,
+  neighbors,
   newState,
   paramConfig,
   SHADED,
   textFormat,
   validateParams,
 } from "./state.ts";
+
+/**
+ * The blank squares each new shaded square rules out at a glance: the ones
+ * beside a domino it completes, and the rest of its region where it is the
+ * region's second. A third shaded square beside a domino breaks it, and
+ * brings nothing.
+ */
+function ruledOut(before: NorinoriState, after: NorinoriState): NorinoriMove | null {
+  const { w, h, grid, regions } = after;
+  const out = new Set<number>();
+  const shadedIn = (r: number): number =>
+    grid.reduce((n, m, k) => (m === SHADED && regions[k] === r ? n + 1 : n), 0);
+  grid.forEach((mark, i) => {
+    if (mark !== SHADED || before.grid[i] === SHADED) return;
+    const partner = dominoPartner(after, i);
+    if (partner !== null)
+      for (const k of [i, partner]) for (const j of neighbors(w, h, k)) out.add(j);
+    if (shadedIn(regions[i]) === 2)
+      regions.forEach((r, j) => {
+        if (r === regions[i]) out.add(j);
+      });
+  });
+  const cells = [...out]
+    .filter((i) => grid[i] === BLANK)
+    .sort((a, b) => a - b)
+    .map((index) => ({ index, mark: CROSSED as NorinoriMark }));
+  return cells.length === 0 ? null : { kind: "mark", cells };
+}
 
 /** A square whose mark is not the answer's. */
 export interface NorinoriMistake extends Point {
@@ -120,7 +151,7 @@ const targetVerbs: TargetVerbs<
   geometry: squareGrid({ size: (s) => s, border: (ts) => border(ts) }),
   sweep: { holds: (s, { x, y }) => s.grid[y * s.w + x] },
   primary: shade,
-  secondary: cross,
+  secondary: rulingOut(cross),
   keyOnly: [
     {
       does: "clear it",
@@ -221,6 +252,7 @@ export const norinoriGame: Game<
     },
   ],
   textFormat,
+  rulesOut: { name: "Cross out the squares a domino rules out", bring: ruledOut },
 
   hint: norinoriHint,
   hintRungs: NORINORI_RUNGS,

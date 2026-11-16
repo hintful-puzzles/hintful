@@ -1065,7 +1065,10 @@ Reach for it when a cell holds a piece, is shaded or is ruled out. Take a
 piece's shape and name by index, and name neither a hue nor a shape
 of your own ([`rendering.md`](./rendering.md) § "What a board looks like:
 pieces on a quiet surface"). `drawPiece` draws what a cell holds, with
-`grown` for one being placed or taken away. `TWO_SHAPES` goes with `TWO`
+`grown` for one being placed or taken away, and `drawPiecePart` a cell's
+part of a piece over several cells, a domino or a boat, joined on the
+`JOIN_*` sides (`joinToward` names the side a neighbor is on). Exemplar:
+`src/games/dominosa/render.ts`. `TWO_SHAPES` goes with `TWO`
 and `TWO_NAMES` (`colors.ts`), and `expandPair` is what a help page's
 `{{pair:0}}` becomes. `SHADED_SHAPE`, `SHADED_NAME` and `UNSHADED_NAME` are
 the same for a game whose cells are shaded or not. **`drawRuledOutCross` is

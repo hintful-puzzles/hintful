@@ -828,6 +828,15 @@ names the one it applies.
 - **A state is a piece, drawn with `drawPiece`**
   ([`engine/piece.ts`](../src/engine/piece.ts); "A piece is drawn inset on
   its cell"). State is never a step of gray alone.
+- **A piece over two cells or more is one tile, drawn with `drawPiecePart`**:
+  a domino (Dominosa, Norinori's shaded pairs) or a boat. Each cell draws its
+  part, reaching its cell's edge on the joined sides, so the side its partner
+  is on goes in the tile key, and the tile is clipped to its cell, or the
+  later half's edge paints over its partner's half of the divider. A domino
+  has a divider in the board's own color; a boat has round ends and none, as
+  it is one hull. A joined piece covers the line or wall between its cells:
+  a wall through it reads as two pieces, and the wall still shows beside it.
+  Two rounded pieces with a bar between them read as a lump, not a tile.
 - **Two states where neither is the important one are `TWO`, and the game
   names no hue** ("A game that uses the pair names no hue or shape of its
   own"). It takes `TWO[i]`, `TWO_SHAPES[i]` and, for its hint words and

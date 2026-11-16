@@ -21,6 +21,13 @@ exports[`norinori frame > draws the board 1`] = `
     "y": 10,
   },
   {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 10,
+    "y": 10,
+  },
+  {
     "color": 1,
     "h": 40,
     "op": "rect",
@@ -86,6 +93,16 @@ exports[`norinori frame > draws the board 1`] = `
     "y2": 21,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 50,
+    "y": 10,
+  },
+  {
     "color": 1,
     "h": 40,
     "op": "rect",
@@ -120,6 +137,16 @@ exports[`norinori frame > draws the board 1`] = `
     "w": 39,
     "x": 51,
     "y": 12,
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 90,
+    "y": 10,
   },
   {
     "color": 1,
@@ -166,7 +193,7 @@ exports[`norinori frame > draws the board 1`] = `
     "points": [
       [
         126,
-        42,
+        41,
       ],
       [
         126,
@@ -182,11 +209,11 @@ exports[`norinori frame > draws the board 1`] = `
       ],
       [
         121,
-        47,
+        46,
       ],
       [
         100,
-        47,
+        46,
       ],
       [
         98,
@@ -202,7 +229,7 @@ exports[`norinori frame > draws the board 1`] = `
       ],
       [
         95,
-        42,
+        41,
       ],
       [
         95,
@@ -210,41 +237,51 @@ exports[`norinori frame > draws the board 1`] = `
       ],
       [
         95,
-        19,
+        18,
       ],
       [
         96,
-        17,
+        16,
       ],
       [
         98,
-        16,
+        15,
       ],
       [
         100,
-        16,
+        15,
       ],
       [
         121,
-        16,
+        15,
       ],
       [
         123,
-        16,
+        15,
       ],
       [
         125,
-        17,
+        16,
       ],
       [
         126,
-        19,
+        18,
       ],
       [
         126,
         20,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 130,
+    "y": 10,
   },
   {
     "color": 1,
@@ -283,6 +320,16 @@ exports[`norinori frame > draws the board 1`] = `
     "y": 12,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 10,
+    "y": 50,
+  },
+  {
     "color": 1,
     "h": 40,
     "op": "rect",
@@ -317,6 +364,16 @@ exports[`norinori frame > draws the board 1`] = `
     "w": 37,
     "x": 12,
     "y": 51,
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 50,
+    "y": 50,
   },
   {
     "color": 1,
@@ -364,6 +421,16 @@ exports[`norinori frame > draws the board 1`] = `
     "y": 52,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 90,
+    "y": 50,
+  },
+  {
     "color": 1,
     "h": 40,
     "op": "rect",
@@ -398,6 +465,16 @@ exports[`norinori frame > draws the board 1`] = `
     "w": 1,
     "x": 129,
     "y": 89,
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 130,
+    "y": 50,
   },
   {
     "color": 1,
@@ -436,6 +513,16 @@ exports[`norinori frame > draws the board 1`] = `
     "y": 51,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 10,
+    "y": 90,
+  },
+  {
     "color": 1,
     "h": 40,
     "op": "rect",
@@ -470,6 +557,16 @@ exports[`norinori frame > draws the board 1`] = `
     "w": 37,
     "x": 12,
     "y": 91,
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 50,
+    "y": 90,
   },
   {
     "color": 1,
@@ -517,6 +614,16 @@ exports[`norinori frame > draws the board 1`] = `
     "y": 91,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 90,
+    "y": 90,
+  },
+  {
     "color": 1,
     "h": 40,
     "op": "rect",
@@ -551,6 +658,16 @@ exports[`norinori frame > draws the board 1`] = `
     "w": 37,
     "x": 92,
     "y": 91,
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 130,
+    "y": 90,
   },
   {
     "color": 1,
@@ -598,6 +715,16 @@ exports[`norinori frame > draws the board 1`] = `
     "y": 92,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 10,
+    "y": 130,
+  },
+  {
     "color": 1,
     "h": 40,
     "op": "rect",
@@ -643,6 +770,16 @@ exports[`norinori frame > draws the board 1`] = `
     "y": 130,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 50,
+    "y": 130,
+  },
+  {
     "color": 1,
     "h": 40,
     "op": "rect",
@@ -677,6 +814,16 @@ exports[`norinori frame > draws the board 1`] = `
     "w": 39,
     "x": 51,
     "y": 132,
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 90,
+    "y": 130,
   },
   {
     "color": 1,
@@ -724,6 +871,16 @@ exports[`norinori frame > draws the board 1`] = `
     "y": 130,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 40,
+    "op": "clip",
+    "w": 40,
+    "x": 130,
+    "y": 130,
+  },
+  {
     "color": 1,
     "h": 40,
     "op": "rect",
@@ -767,6 +924,9 @@ exports[`norinori frame > draws the board 1`] = `
     "w": 37,
     "x": 132,
     "y": 131,
+  },
+  {
+    "op": "unclip",
   },
 ]
 `;
