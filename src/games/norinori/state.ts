@@ -95,23 +95,20 @@ export const paramConfig: ParamConfigItem<NorinoriParams>[] = [
 const BOARDS: NorinoriParams[] = [
   { w: 6, h: 6, diff: DIFF_EASY },
   { w: 6, h: 8, diff: DIFF_EASY },
-  { w: 8, h: 8, diff: DIFF_EASY },
+  { w: 8, h: 10, diff: DIFF_EASY },
+  { w: 10, h: 10, diff: DIFF_EASY },
 ];
 
 export function defaultParams(): NorinoriParams {
   return { ...BOARDS[0] };
 }
 
-export const menu: PresetBoards<NorinoriParams> = {
-  boards: BOARDS,
-  // Measured 2026-11-16 with the deal walk, eight deals a cell on a loaded
-  // machine: 6x6 deals in a median of 0.4 s at Easy, 2 at Normal and 4 at
-  // Tricky (8 at worst), 8x6 Easy (as 6x8, its transpose) in 4 (8 at worst), and 8x8 Easy in 6 (14
-  // at worst). An 8x8 board at
-  // Normal took 9 to 13 seconds under vitest, at Tricky up to 43, and a 10x10
-  // Easy one 3 to 37. Those are a Custom size's wait.
-  tiers: (board) => (board.w * board.h > 36 ? [DIFF_EASY, DIFF_EASY] : null),
-};
+// Every board at every tier; four sizes, half of them rectangles, fill a
+// section's twelve lines. Measured 2026-11-16 with the deal walk, twenty
+// deals a cell under vitest on a loaded machine: a 10x10 board deals in a
+// median of 0.5 s at worst and 2 s at its slowest, and a 12x12 one, left as
+// a Custom size, in 1 to 2 s and 9 at its slowest.
+export const menu: PresetBoards<NorinoriParams> = { boards: BOARDS };
 
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),

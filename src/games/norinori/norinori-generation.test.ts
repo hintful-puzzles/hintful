@@ -9,7 +9,6 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import { dealOnce } from "../../engine/testing/dealt.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
-import { deepBudget } from "../../engine/testing/slow.ts";
 import { newNorinoriDesc } from "./generator.ts";
 import { norinoriGame } from "./index.ts";
 import { answerOf, areasOf, NORINORI_RUNGS, solveNorinori } from "./solver.ts";
@@ -23,29 +22,28 @@ import {
   SHADED,
 } from "./state.ts";
 
-/** The smallest board at each tier, and one that is not square. */
+/** The smallest board at each tier, one that is not square, and the largest
+ * preset at the harder tiers, where `claimed` and `fullRegion` fire most (a
+ * few times in ten boards, 2026-11-16). */
 const SHAPES: NorinoriParams[] = [
   { w: 4, h: 4, diff: DIFF_EASY },
   { w: 6, h: 6, diff: DIFF_EASY },
   { w: 6, h: 6, diff: DIFF_NORMAL },
   { w: 6, h: 6, diff: DIFF_TRICKY },
   { w: 7, h: 5, diff: DIFF_NORMAL },
+  { w: 10, h: 10, diff: DIFF_NORMAL },
+  { w: 10, h: 10, diff: DIFF_TRICKY },
 ];
-
-/** The shapes this run deals: in CI the first alone, as a Normal or Tricky
- * board takes seconds to deal; the hint pins hold those tiers' rungs there. */
-const DEALT_SHAPES = SHAPES.slice(0, deepBudget(1, SHAPES.length));
 
 describeDealtTiers(
   norinoriGame,
-  DEALT_SHAPES.map((p) => encodeParams(p, true)),
+  SHAPES.map((p) => encodeParams(p, true)),
 );
 
-// `blocked` fired on none of three seeds a shape (2026-11-16). CI deals one;
-// the hint pins hold each rung to a written-down board there.
-const SEEDS = ["a", "b", "c", "d", "e", "f"].slice(0, deepBudget(1, 6));
+// `blocked` fired on none of three seeds a shape (2026-11-16).
+const SEEDS = ["a", "b", "c", "d", "e", "f"];
 
-const DEALT = DEALT_SHAPES.flatMap((p) =>
+const DEALT = SHAPES.flatMap((p) =>
   SEEDS.map((seed) => {
     const label = `${encodeParams(p, true)} ${seed}`;
     const board = dealOnce(() => ({

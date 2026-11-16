@@ -39,6 +39,7 @@ const puzzlesWebLink = "https://github.com/medmunds/puzzles-web";
 const androidAppLink =
   "https://play.google.com/store/apps/details?id=name.boyle.chris.sgtpuzzles";
 const iOSAppLink = "https://apps.apple.com/in/app/puzzles-reloaded/id6504365885";
+const norinoriLink = "https://github.com/sen-ltd/norinori";
 
 // Form of dependencies-app.json
 interface DependencyInfo {
@@ -292,6 +293,8 @@ export function credits() {
         several of whose clever ideas
         <span translate="no">puzzles-web</span> borrowed and this app
         keeps</li>
+      <li>${offsiteLink(norinoriLink, html`<span translate="no">sen-ltd/norinori</span>`)},
+        whose way of packing dominoes deals this app's Norinori boards</li>
       <li>${offsiteLink("https://lucide.dev/", html`<span translate="no">Lucide</span>`)}
         icons and ${offsiteLink(
           "https://webawesome.com",

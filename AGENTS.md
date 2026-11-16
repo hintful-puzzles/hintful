@@ -33,8 +33,7 @@ incident only what a later session acts on: the rule, and the shape to look for.
   be seen to be moving and how far it has to go; one that cannot is
   instrumented first, or cut into runs that can.
 - **Never bypass the gate**, in whole or in part, however small the change and
-  however sure you are that it is not needed. No `--no-verify`, no disabled
-  step.
+  however sure you are that it is not needed. No `--no-verify`, no disabled step.
 - **Push at the session's end, or when the owner asks to see the work
   sooner.** A commit tests only the games it stages; the push runs the fast
   checks and no test, and CI the rest (`docs/testing.md` § "What runs when").
@@ -75,14 +74,15 @@ incident only what a later session acts on: the rule, and the shape to look for.
   stops new work items, never a fix (`docs/work-management.md` § "What a
   session files").
 - **Bring a question with everything you could find out.** Run the app,
-  measure, read the code first. Never report to the owner that you did not
+  measure, read the code first. Where others may have solved the problem, send
+  a subagent for prior art, and credit what you take in the code that uses it,
+  `CREDITS.md` and About's credits. Never report to the owner that you did not
   look at something you could have.
 - **Update the guide in the change that taught you something**, and the help
   page in the change that alters what it describes. The guides under `docs/`
   are a live wiki. Cite a section by file and heading name; only
   `docs/test-strength.md` has numbered sections.
-- **Write nothing outside this repository.** The sibling clones are for
-  reading.
+- **Write nothing outside this repository.** The sibling clones are for reading.
 
 ## What the project is for
 

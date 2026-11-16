@@ -1208,6 +1208,18 @@ states what it wants:
   capped at the tier asked for. Exemplar: `judgeOf` in
   [`starbattle/generator.ts`](../src/games/starbattle/generator.ts).
   `redivide.ts` mends only regions of one size.
+- **The draw gives a mend its places to start and its small regions; no
+  mend does.** On a blank board the deductions start only from a region that
+  all but names its answer (in Norinori, a region of two squares), and a mend
+  that keeps every region larger never makes one: spread those across the
+  board rather than placing them at random. Pack what the regions hold
+  densely, so that the regions come small, since a region's room for a
+  second answer grows with its size; check the density the draw reaches, as
+  a greedy placement stops short of a target set above it. Exemplar:
+  `placeDominoes` and `regionsRound` in
+  [`norinori/generator.ts`](../src/games/norinori/generator.ts), which
+  together took a 10x10 deal from over a minute to under a second
+  (2026-11-16).
 - **Moving a division onto a walk here keeps its boards only if the draws
   and their order are kept**, and a move that changes them is a divergence
   like any other (§ "Divergence and what it costs").

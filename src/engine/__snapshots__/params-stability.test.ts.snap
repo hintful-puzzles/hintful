@@ -434,7 +434,14 @@ exports[`encoded params are byte-stable > norinori 1`] = `
 preset:6x6 Normal  full=6x6dn  brief=6x6
 preset:6x6 Tricky  full=6x6dt  brief=6x6
 preset:6x8 Easy  full=6x8de  brief=6x8
-preset:8x8 Easy  full=8x8de  brief=8x8
+preset:6x8 Normal  full=6x8dn  brief=6x8
+preset:6x8 Tricky  full=6x8dt  brief=6x8
+preset:8x10 Easy  full=8x10de  brief=8x10
+preset:8x10 Normal  full=8x10dn  brief=8x10
+preset:8x10 Tricky  full=8x10dt  brief=8x10
+preset:10x10 Easy  full=10x10de  brief=10x10
+preset:10x10 Normal  full=10x10dn  brief=10x10
+preset:10x10 Tricky  full=10x10dt  brief=10x10
 bump:w  full=7x6de  brief=7x6
 bump:h  full=6x7de  brief=6x7"
 `;
