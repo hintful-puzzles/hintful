@@ -16,18 +16,11 @@
 - [x] 1.11 Run the app: pointer, keyboard, touch; hint at every stage; a
       subagent reads the hint's words against the board
 
-- [ ] 1.12 The owner's playtest (asked 2026-11-16), and their call on the
-      question below, before the archive
-
-**Open for the owner: do the region steps say why there is no room?** A
-reader of 69 steps (2026-11-16) found every sentence true, but
-`neededRegion`, `blocked` and `crowded` say "has no room for 2 purple
-squares" where two open squares side by side sit in the region. The room is
-lost to a purple square outside it, which no mark shows, or to a partner the
-square would need inside the region. Recommended: outline the purple squares
-that close the room, and say "as dominoes" in the sentence; the engine's
-`fits` would report which squares failed it, so every game that reads a
-region's room gains it.
+- [x] 1.12 The owner's playtest (2026-11-16: "I love the game so far, as
+      well as its hints"), and their calls, each now a change of its own:
+      outline what closes a region's room (`say-why-a-region-has-no-room`),
+      a domino drawn as one, by the engine (`draw-dominoes-in-the-engine`),
+      and no color word for a state (`name-states-by-rule-not-color`)
 
 ## 2. What the session records (the change's deliverable)
 
