@@ -122,6 +122,19 @@ the squares it passes that held what that square held.
 - **THEN** it is shaded after the first click and crossed out after the
   second
 
+### Requirement: Preferences: A shaded square brings the crosses it rules out
+
+Norinori SHALL declare what a placement rules out: the open squares beside a
+domino the move completes, and the rest of a region the move gives its second
+shaded square.
+
+#### Scenario: Completing a domino with the preference on
+
+- **WHEN** the auto-cross preference is on and the player shades the second
+  square of a domino
+- **THEN** every open square beside the domino is crossed out, in the same
+  step of Undo
+
 ### Requirement: Hint: The hint reads only regions, shaded squares and crosses
 
 The hint SHALL treat a square as open until it is shaded or crossed out, and
@@ -165,3 +178,21 @@ inside the square's surface, never on the border.
 
 - **WHEN** three squares in a row are shaded
 - **THEN** the middle one is drawn in the error color
+
+### Requirement: Look: Two shaded squares that touch only each other are one domino
+
+`redraw` SHALL draw two shaded squares that are beside each other and beside
+no other shaded square as one domino, the engine's piece over two cells, with
+a divider in the board's color. The domino SHALL cover the line or region wall
+between its halves. A shaded square beside two or more others SHALL be drawn
+as a piece of its own.
+
+#### Scenario: A domino across a region wall
+
+- **WHEN** two shaded squares in different regions touch only each other
+- **THEN** they are drawn as one tile over the wall between them
+
+#### Scenario: A run of three is no domino
+
+- **WHEN** three shaded squares are in a row
+- **THEN** each is drawn as a piece of its own
