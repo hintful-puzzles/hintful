@@ -49,7 +49,11 @@ Magnets 517.
 - [ ] 4.1 `{ supplied: … }` in `says` terms and marks; `SuppliedById` in the
   module.
 - [ ] 4.2 The eight games' `# supplied` placeholders become declarations, and
-  their supplying hooks are typed by it.
+  their supplying hooks are typed by it. Boats' `TrialSupplied`
+  (`boats/solver.ts`) is a hand-kept copy of its trials' supplied terms and
+  marks, which `SuppliedById` replaces. Population, 2026-11-16: `git grep -c
+  "# supplied" -- 'src/games/*.yaml'` (Boats, Dominosa, Mathrax, Palisade,
+  Path, Pearl, Spokes, Tracks).
 
 ## 5. The hooks
 
