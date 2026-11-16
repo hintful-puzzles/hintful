@@ -10,7 +10,8 @@ answers it proposes to the questions below, before writing a design.
 with no reason was weighed and not wanted first. The explanation is the
 engine's answer to "what does this fact rest on?", which
 `explain-a-firing-by-its-witness-and-parents` builds, spoken in the words
-`state-hint-sentences-in-the-description` gives a technique. This is the
+its description gives a technique (`move-each-remaining-game-once` finishes
+the catalog). This is the
 last of the plan in
 [`derive-hint-steps-from-the-description/report.md`](../archive/2026-11-10-derive-hint-steps-from-the-description/report.md).
 

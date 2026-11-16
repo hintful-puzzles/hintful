@@ -3,9 +3,17 @@
 **Status: draft, filed on the owner's word (2026-11-10), for later.** Fifth
 in the plan of
 [`derive-hint-steps-from-the-description/report.md`](../archive/2026-11-10-derive-hint-steps-from-the-description/report.md).
-It waits for `state-hint-sentences-in-the-description`, since a technique
-the engine supplies brings its words with it. The session that takes it up
-writes its tasks, after the measurement under § "Before it starts".
+The session that takes it up writes its tasks, after the measurement under
+§ "Before it starts".
+
+**Its place since the 2026-11-16 debrief**
+(`archive/2026-11-16-state-hint-sentences-in-the-description/tasks.md` § 3):
+only the clustering of § "Before it starts" runs now, after `add-norinori`,
+whose record of its one-rule techniques is its first data. Wording is free to
+change (the owner, 2026-11-16), so a game no longer has its sentences moved
+word for word before it is restated here: if the clustering finds a small
+number of kinds, this change and `move-each-remaining-game-once` are one, and
+a game moves once, onto the library and its words.
 
 ## Why
 
