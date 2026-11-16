@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`norinori: pinned hint positions > says, at each pin 1`] = `
+{
+  "alone": "This square has no neighbor that could pair with it, so it must be clear.",
+  "between": "This square would touch 2 purple squares if it were purple, so it must be clear.",
+  "blocked": "With this square purple, the rest of this region has no room for its second purple square, so this square must be clear.",
+  "claimed": "This purple square must pair inside this region, which needs one more purple square, so these squares must be clear.",
+  "crowded": "With this square purple, this region has no room for 2 purple squares, so this square must be clear.",
+  "domino": "These two purple squares make a domino, and no other purple square may touch it, so these squares must be clear.",
+  "exactRegion": "This region needs 2 purple squares and has only 2 open squares, so each ringed square must be purple.",
+  "fullRegion": "This region has its two purple squares, so this square must be clear.",
+  "neededRegion": "Without this square, the rest of this region has no room for 2 purple squares, so this square must be purple.",
+  "partner": "This purple square has no purple neighbor and only one open one, so the ringed square must be purple.",
+}
+`;

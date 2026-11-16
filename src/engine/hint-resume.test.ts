@@ -545,8 +545,11 @@ describe("the resume walk", () => {
   });
 
   itOverWholeSweep("judged enough frames to mean something", () => {
-    // The floor sits far above one small board a game and far below what the
-    // hook's slice judges.
-    expect(framesJudged).toBeGreaterThan(shareFloor(5000));
+    // A floor per game walked, as the games are what the shares deal evenly:
+    // the frames are not, one game's boards holding most of them (shares of
+    // 951 to 8,404 frames, 2026-11-16). Twenty a game sits far above one
+    // small board's steps and far below the 60 a game the lightest share
+    // judges.
+    expect(framesJudged).toBeGreaterThan(SHARE_GAMES.length * 20);
   });
 });

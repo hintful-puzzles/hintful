@@ -49,6 +49,7 @@ import { minesGame } from "./mines/index.ts";
 import { mosaicGame } from "./mosaic/index.ts";
 import { netGame } from "./net/index.ts";
 import { netslideGame } from "./netslide/index.ts";
+import { norinoriGame } from "./norinori/index.ts";
 import { numgameGame } from "./numgame/index.ts";
 import { palisadeGame } from "./palisade/index.ts";
 import { pathGame } from "./path/index.ts";
@@ -120,6 +121,7 @@ export function registerAllGames(): void {
   registerGame(mosaicGame);
   registerGame(netGame);
   registerGame(netslideGame);
+  registerGame(norinoriGame);
   registerGame(numgameGame);
   registerGame(palisadeGame);
   registerGame(pathGame);

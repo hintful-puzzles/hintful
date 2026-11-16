@@ -60,6 +60,17 @@ const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
     "mark:2:4":
       "a tile's lit bevel edge on its lifted face; the shadow edge carries the bevel",
   },
+  // The region palette's first four, as Star Battle's.
+  norinori: {
+    "area:0:11":
+      "a region's fill beside the board's margin; the board's ink frame is between them",
+    "area:0:12":
+      "a region's fill beside the board's margin; the board's ink frame is between them",
+    "area:0:13":
+      "a region's fill beside the board's margin; the board's ink frame is between them",
+    "area:0:14":
+      "a region's fill beside the board's margin; the board's ink frame is between them",
+  },
   slide: {
     "area:0:20": "a block's lowlight edge beside the floor; its face clears it",
   },

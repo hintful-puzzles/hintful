@@ -266,6 +266,17 @@ const LONG_NARRATIONS: {
       rect: "12x14du:a2a2e8d6g8b4c10n10e2a6g8j6c21o16h2b3d3d3c9m3d4a6a8e12p4c2",
     },
   },
+  {
+    games: ["norinori"],
+    rungs: ["crowded"],
+    why:
+      "A tried square that clears others names three things: the square, the " +
+      "squares it would clear, and the region left short. The conclusion says " +
+      '"this square" and not "it", as "it" would follow the region.',
+    spokenOn: {
+      norinori: "6x6dt:ad1ba3a1aa1bedbb2ad3ab",
+    },
+  },
 ];
 
 /** The shared necessity vocabulary a deductive conclusion draws from.

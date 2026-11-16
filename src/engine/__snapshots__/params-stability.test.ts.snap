@@ -429,6 +429,16 @@ bump:barrierProbability  full=3x3b2  brief=3x3
 bump:movetarget  full=3x3b1m1  brief=3x3m1"
 `;
 
+exports[`encoded params are byte-stable > norinori 1`] = `
+"default  full=6x6de  brief=6x6
+preset:6x6 Normal  full=6x6dn  brief=6x6
+preset:6x6 Tricky  full=6x6dt  brief=6x6
+preset:6x8 Easy  full=6x8de  brief=6x8
+preset:8x8 Easy  full=8x8de  brief=8x8
+bump:w  full=7x6de  brief=7x6
+bump:h  full=6x7de  brief=6x7"
+`;
+
 exports[`encoded params are byte-stable > numgame 1`] = `
 "default  full=l1dn  brief=l1
 preset:1 large Easy  full=l1de  brief=l1

@@ -269,6 +269,41 @@ const PLANTS: Record<string, Plant> = {
   "skeleton.pairBreaks": {
     for: "c in cells where lines(c) = 0, U = ways(c) where |U| = 3, k in U, I = U - {k}, i = nth(I, 0), j = nth(I, 1) where not known(edge(c, k)) and not known(edge(c, i)) and not known(edge(c, j))",
   },
+  // Norinori: a lone shaded square read as a domino.
+  "norinori.domino": {
+    for: "c in cells where value(c) = 1, D = {c} + {d in adj4(c) where value(d) = 1}, O = {e in cells where not known(e) and (exists d in D: e in adj4(d))} where |O| > 0",
+    conclude: "forall e in O: place(e, 2)",
+  },
+  // A lone shaded square with two open neighbors paired with both.
+  "norinori.partner": {
+    for: "c in cells where value(c) = 1 and lit(c) = 0, O = free(c) where |O| = 2",
+    conclude: "forall d in O: place(d, 1)",
+  },
+  // An open square beside one shaded square read as beside two.
+  "norinori.between": {
+    for: "x in cells where not known(x) and lit(x) >= 1, k = lit(x)",
+  },
+  // An open square with one neighbor not clear read as alone.
+  "norinori.alone": {
+    for: "x in cells where not known(x) and count(d in adj4(x) where value(d) != 2) <= 1",
+  },
+  // A region needing two read as needing one.
+  "norinori.claimed": {
+    for: "s in cells where value(s) = 1 and lit(s) = 0, P = free(s) where |P| > 0, g in region where (forall d in P: region(d) = g), n = need(cells(g)), O = {c in open(cells(g)) where c not in P} where n <= 2 and |O| > 0",
+    conclude: "forall c in O: place(c, 2)",
+  },
+  // A region read as needing one more than it does.
+  "norinori.neededRegion": {
+    for: "r in region, n = need(cells(r)), O = open(cells(r)) where n > 0, x in O, E = O - {x} where not fits(E, n + 1)",
+  },
+  // The second read as wanting a domino of its own inside the region.
+  "norinori.blocked": {
+    for: "r in region, O = open(cells(r)) where need(cells(r)) = 2, x in O, E = O - {x} where (with place(x, 1): not fits(E, 2))",
+  },
+  // The trial read with no supposition, and one more shaded asked of it.
+  "norinori.crowded": {
+    for: "x in cells where not known(x), R = ruled(x), g in region where g = region(x) or (exists p in R + adj4(x): region(p) = g), S = cells(g), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R} where n > 0 and not fits(E, n + 1), Q = {c in open(S) where c in R}",
+  },
   // Star Battle: a star's neighbors two squares away emptied too.
   around: {
     conclude: "forall p in within(c, 2) where p != c and not known(p): place(p, 2)",

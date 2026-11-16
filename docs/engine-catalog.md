@@ -98,6 +98,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `position-store.ts` — the positions a breadth-first search reached |
 | – `piece.ts` — a piece on its cell |
 | – `region-fill.ts` — a fill for each region of a division |
+| – `region-walls.ts` — the heavy walls round dealt regions |
 | – `ring.ts` — the round ring |
 | – `hint-mark.ts` — the ring and the outline |
 | – `edge-hint.ts` — a hint on an edge between squares |
@@ -1108,6 +1109,15 @@ board wears the same colors each time it is opened. Exemplar:
 `FREE_RAMP` (`color/colors.ts`): `FREE`'s members in order of hue, one a
 hue, by index into it. Exemplar: the Path ruleset's line in
 `path/render.ts`.
+
+### `region-walls.ts` — the heavy walls round dealt regions
+
+Reach for it where a board's regions are dealt and drawn as heavy walls
+inside a tile-cached grid. `regionWalls(w, h, regions)` in `newDrawState`
+keeps each square's walls; `drawWalledSquare` paints a square's box, its
+halves of the walls and its corners round the surface the game lays, and
+`walledBoxes` gives that surface, for a hint's band. Exemplars:
+`starbattle/render.ts`, `norinori/render.ts`.
 
 ### `ring.ts` — the round ring
 

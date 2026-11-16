@@ -3,10 +3,8 @@
  * ones whose packed key changed (docs/rendering.md § "The tile cache and the
  * diff key").
  *
- * A square is a `COL_GRID` box under a surface one pixel smaller, in its
- * region's fill, so the thin grid lines are what shows between surfaces. Where a side of it faces
- * another region, or the edge of the board, the square paints its half of a
- * heavy wall inside its own box, and the two halves make the region's border.
+ * A square is drawn inside its region's walls (`engine/region-walls.ts`), on
+ * its region's fill.
  */
 
 import { REGION_FILLS } from "../../engine/color/colors.ts";
@@ -29,6 +27,12 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import { regionFills } from "../../engine/region-fill.ts";
+import {
+  drawWalledSquare,
+  regionWalls,
+  walledBoxes,
+  wallHalf,
+} from "../../engine/region-walls.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
@@ -98,60 +102,10 @@ export function computeSize(p: StarbattleParams, ts: number): Size {
   return { w: side, h: side };
 }
 
-/** Half the width of a region's border, less the grid line it is laid over:
- * what a square paints of it beyond that line. */
-const wallHalf = (ts: number): number => Math.max(1, Math.round(ts / 28));
-
-// The sides of a square that face another region or the edge of the board,
-// and the corners where two other squares' walls meet at a square that has
-// neither.
-const TOP = 1;
-const LEFT = 2;
-const BOTTOM = 4;
-const RIGHT = 8;
-const CORNER_SHIFT = 4;
-
-/** The walls of every square of a board: its side bits and, from bit
- * {@link CORNER_SHIFT} up, its top left, top right, bottom left and bottom
- * right corners. */
-function wallsOf(size: number, regions: Int32Array): Uint8Array {
-  const at = (x: number, y: number): number =>
-    x < 0 || y < 0 || x >= size || y >= size ? -1 : regions[y * size + x];
-  return Uint8Array.from(regions, (r, i) => {
-    const x = i % size;
-    const y = (i - x) / size;
-    let sides = 0;
-    if (at(x, y - 1) !== r) sides |= TOP;
-    if (at(x - 1, y) !== r) sides |= LEFT;
-    if (at(x, y + 1) !== r) sides |= BOTTOM;
-    if (at(x + 1, y) !== r) sides |= RIGHT;
-    let walls = sides;
-    [
-      [-1, -1, TOP | LEFT],
-      [1, -1, TOP | RIGHT],
-      [-1, 1, BOTTOM | LEFT],
-      [1, 1, BOTTOM | RIGHT],
-    ].forEach(([dx, dy, pair], k) => {
-      if (!(sides & pair) && at(x + dx, y + dy) !== r) walls |= 1 << (CORNER_SHIFT + k);
-    });
-    return walls;
-  });
-}
-
 /** A square's box, and the surface left of it inside its walls. */
 function boxes(ts: number, x: number, y: number, walls: number): [Rect, Rect] {
   const b = border(ts);
-  const g = wallHalf(ts);
-  const px = x * ts + b;
-  const py = y * ts + b;
-  const x0 = px + 1 + (walls & LEFT ? g : 0);
-  const y0 = py + 1 + (walls & TOP ? g : 0);
-  const x1 = px + ts - (walls & RIGHT ? g : 0);
-  const y1 = py + ts - (walls & BOTTOM ? g : 0);
-  return [
-    { x: px, y: py, w: ts, h: ts },
-    { x: x0, y: y0, w: x1 - x0, h: y1 - y0 },
-  ];
+  return walledBoxes(ts, x * ts + b, y * ts + b, walls);
 }
 
 // --- draw state -------------------------------------------------------------
@@ -190,7 +144,7 @@ export function newDrawState(
   return {
     started: false,
     tileSize,
-    walls: wallsOf(state.size, state.regions),
+    walls: regionWalls(state.size, state.size, state.regions),
     surfaces: Uint8Array.from(state.regions, (r) => COL_REGION + fills[r]),
     cache: new Int32Array(squares).fill(-1),
     hint: new OverlaySidecar(squares),
@@ -246,40 +200,26 @@ function drawTile(
 ): void {
   const ts = ds.tileSize;
   const g = wallHalf(ts);
-  const walls = ds.walls[i];
-  const [box, surface] = boxes(ts, x, y, walls);
+  const [box] = boxes(ts, x, y, ds.walls[i]);
   const { x: px, y: py } = box;
-
-  // The square's own thin lines are its top and left; the frame closes the
-  // rest. A wall on the top or left covers the line, and one on the bottom
-  // or right stops short of the neighbor's.
-  const far = ts - g;
-  dr.drawRect(box, COL_GRID);
-  if (walls & TOP) dr.drawRect({ x: px, y: py, w: ts, h: 1 + g }, COL_WALL);
-  if (walls & LEFT) dr.drawRect({ x: px, y: py, w: 1 + g, h: ts }, COL_WALL);
-  if (walls & BOTTOM) dr.drawRect({ x: px, y: py + far, w: ts, h: g }, COL_WALL);
-  if (walls & RIGHT) dr.drawRect({ x: px + far, y: py, w: g, h: ts }, COL_WALL);
-  dr.drawRect(
-    surface,
-    t.wrong
-      ? COL_WRONG
-      : t.tone
-        ? winSlot(t.tone, COL_FLASH, COL_FLASH_LEAD)
-        : ds.surfaces[i],
+  drawWalledSquare(
+    dr,
+    ts,
+    box,
+    ds.walls[i],
+    { grid: COL_GRID, wall: COL_WALL },
+    (surface) => {
+      dr.drawRect(
+        surface,
+        t.wrong
+          ? COL_WRONG
+          : t.tone
+            ? winSlot(t.tone, COL_FLASH, COL_FLASH_LEAD)
+            : ds.surfaces[i],
+      );
+      ds.hint.drawHatch(dr, i, surface, ts);
+    },
   );
-  ds.hint.drawHatch(dr, i, surface, ts);
-
-  // A corner where the walls of two other squares meet, in the order
-  // `wallsOf` numbers them.
-  const corners = [
-    { x: px, y: py, w: 1 + g, h: 1 + g },
-    { x: px + far, y: py, w: g, h: 1 + g },
-    { x: px, y: py + far, w: 1 + g, h: g },
-    { x: px + far, y: py + far, w: g, h: g },
-  ];
-  corners.forEach((corner, k) => {
-    if (walls & (1 << (CORNER_SHIFT + k))) dr.drawRect(corner, COL_WALL);
-  });
 
   const middle = { x: px + (ts + 1) / 2, y: py + (ts + 1) / 2 };
   if (t.mark === STAR) {

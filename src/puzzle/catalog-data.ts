@@ -299,6 +299,15 @@ export const puzzleCatalog = {
     collection: "original",
     family: "rearranging",
   },
+  norinori: {
+    name: "Norinori",
+    aliases: [],
+    description: "Domino shading puzzle",
+    objective:
+      "Shade two squares in every region so that the shaded squares form dominoes that never touch along a side.",
+    collection: "own",
+    family: "shading",
+  },
   numgame: {
     name: "Target",
     aliases: ["Countdown", "Numbers game", "Digits"],

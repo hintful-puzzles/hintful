@@ -245,6 +245,19 @@ describe("growFromSeeds", () => {
     expect(division.equivalent(0, 15)).toBe(false);
   });
 
+  it("leaves the cells set aside a region each, and none where they wall a cell off", () => {
+    const p = { w: 4, h: 4 };
+    // The middle column's top three set aside: the left grows round them.
+    const aside = new Set([1, 5, 9]);
+    const division = growFromSeeds(p, [0, 3], randomNew("aside"), aside);
+    expect(division).not.toBeNull();
+    for (const i of aside) expect((division as Dsf).size(i)).toBe(1);
+    const grown = (division as Dsf).size(0) + (division as Dsf).size(3);
+    expect(grown).toBe(16 - aside.size);
+    // A corner cut off by the cells set aside beside it.
+    expect(growFromSeeds(p, [15], randomNew("walled"), new Set([1, 4]))).toBeNull();
+  });
+
   it("refuses two seeds on one cell, and more seeds than cells", () => {
     const p = { w: 3, h: 3 };
     expect(() => growFromSeeds(p, [4, 4], randomNew("twice"))).toThrow();

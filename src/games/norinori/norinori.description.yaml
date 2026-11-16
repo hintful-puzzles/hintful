@@ -1,0 +1,211 @@
+# yaml-language-server: $schema=../../describe/description.schema.json
+
+game: norinori
+help:
+  rules: |-
+    You have a grid of squares divided into regions by heavy lines. Shade squares so that every region holds exactly two {{pair:0}} squares, and every {{pair:0}} square touches exactly one other along a side. The {{pair:0}} squares therefore come in dominoes, pairs side by side, and no two dominoes touch along a side, though they may touch at a corner. A domino may cross from one region into another.
+
+    Every puzzle has exactly one solution, and none needs a guess.
+  controls: |-
+    {{controls}}
+
+    You need not mark anything clear to finish: the puzzle is solved as soon as the {{pair:0}} squares are all in place. A {{pair:0}} square turns red when it touches two others, and a region turns red when it holds more than two.
+  origins: |-
+    Norinori is a Nikoli puzzle.
+  hints: |-
+    **Hint** explains the next step rather than simply making it. Each step decides one or more squares from the regions and from the squares you have already marked, so it carries on from wherever you are.
+
+    {{hint-marks}}
+
+    A hint calls a square *open* while you have marked it neither {{pair:0}} nor clear. Its steps, easiest first:
+
+    - Two {{pair:0}} squares side by side are a domino, so every open square beside it is clear. A {{pair:0}} square with only one open square beside it, and no {{pair:0}} one, is paired with that square. An open square beside two {{pair:0}} squares, or with no square beside it that could pair with it, is clear.
+    - A region with its two {{pair:0}} squares has the rest clear, and a region with exactly as many open squares as it still needs {{pair:0}} has them all {{pair:0}}. A {{pair:0}} square whose open neighbors all lie in one region that needs only one more {{pair:0}} square takes that one, so the region's other open squares are clear.
+    - On Normal boards, a region is read for where its {{pair:0}} squares can go as parts of dominoes: each needs a partner, and none may touch a third. A square without which the rest of the region could not hold them is {{pair:0}}, and one with which it could not is clear.
+    - On Tricky boards, a square is tried {{pair:0}}: where it would complete a domino or its region, the squares beside it, or the rest of its region, would be clear. If that would leave a region without room for the {{pair:0}} squares it needs, the square is clear.
+
+    If a square you marked is wrong, the hint asks you to fix the highlighted mistakes first.
+name: Norinori
+family: shading
+sizes:
+  w: { min: 4, max: 20 }
+  h: { min: 4, max: 20 }
+space:
+  grid: { w: "w", h: "h" }
+  # The regions are a dealt partition rather than units: a region holds two
+  # shaded squares, not every value once.
+  regions: { region: dealt }
+  units: []
+answer:
+  # 1 is a shaded square, 2 a clear one.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # The shaded squares the squares S still need, as a region of them.
+  need(S): "2 - count(c in S where value(c) = 1)"
+  # The squares of S that are not decided yet.
+  open(S): "{c in S where not known(c)}"
+  # 1 where x is one of the squares S, 0 where it is not.
+  own(x, S): "count(c in {x} where c in S)"
+  # The shaded squares beside c.
+  lit(c): "count(d in adj4(c) where value(d) = 1)"
+  # The open squares beside c.
+  free(c): "{d in adj4(c) where not known(d)}"
+  # Whether n of the open squares S, the rest of S clear, can be shaded so
+  # that no shaded square, of S or beside it, is beside two others, and each
+  # of S's has a square left to pair with: one of S's shaded beside it, a
+  # shaded one, or an open one outside S. A shaded square is 1 and a clear
+  # one 2, so n shaded squares sum to 2|S| - n.
+  fits(S, n): >-
+    exists fill f of S where sum(x in S of f(x)) = 2 * |S| - n
+    and (forall x in S where f(x) = 1:
+    count(y in adj4(x) where (y in S and f(y) = 1) or (y not in S and value(y) = 1)) <= 1
+    and (exists y in adj4(x): (y in S and f(y) = 1) or (y not in S and value(y) != 2))
+    and (forall z in adj4(x) where z not in S and value(z) = 1:
+    lit(z) + count(y in adj4(z) where y in S and f(y) = 1) <= 1)): true
+  # The most shaded squares, up to n, that fit in the open squares S.
+  most(S, n): "max(j in range(0, n) where fits(S, j))"
+  # The open squares a shaded square tried at x leaves clear at once: those
+  # beside x and its partner where x would complete a domino, and the rest of
+  # x's region where x would complete it.
+  ruled(x): >-
+    {p in adj4(x) + set(q over d in adj4(x), q in adj4(d)) + cells(region(x))
+    where not known(p) and p != x and (
+    (lit(x) = 1 and (p in adj4(x) or (exists d in adj4(x): value(d) = 1 and p in adj4(d))))
+    or (region(p) = region(x) and need(cells(region(x))) = 1))}
+shape:
+  - "forall r in region: count(c in cells(r) where value(c) = 1) = 2"
+  - "forall c in cells where value(c) = 1: lit(c) = 1"
+freedom: { kind: fill }
+deal:
+  region: the partition, grown round dominoes placed at random, two shaded squares to a region
+  tier: one of the tiers
+tiers: [Easy, Normal, Tricky]
+techniques:
+  # Two shaded squares side by side are a domino, and nothing else beside
+  # either is shaded. A shaded square beside two others makes the marks
+  # inconsistent.
+  - id: domino
+    tier: Easy
+    for: >-
+      c in cells where value(c) = 1 and lit(c) >= 1,
+      D = {c} + {d in adj4(c) where value(d) = 1},
+      O = {e in set(q over d in D, q in adj4(d)) where not known(e)}
+      where |O| > 0 or (exists d in D: lit(d) > 1)
+    conclude: "(forall d in D: lit(d) = 1) and forall e in O: place(e, 2)"
+    says:
+      marks: { outline: D, reads: "D + O" }
+      look: "{outline: these two {shaded} squares} make a domino, and no other {shaded} square may touch it"
+      move: "{ring} must be {unshaded}"
+  # A shaded square with no shaded neighbor and one open one is paired with
+  # it. With none open, the marks are inconsistent.
+  - id: partner
+    tier: Easy
+    for: "c in cells where value(c) = 1 and lit(c) = 0, O = free(c) where |O| <= 1"
+    conclude: "|O| = 1 and forall d in O: place(d, 1)"
+    says:
+      marks: { outline: "{c}", reads: "{c} + adj4(c)" }
+      look: "{outline: this {shaded} square} has no {shaded} neighbor and only one open one"
+      move: "{ring: the ringed square} must be {shaded}"
+  # An open square beside two shaded squares would touch both.
+  - id: between
+    tier: Easy
+    for: "x in cells where not known(x) and lit(x) >= 2, k = lit(x)"
+    conclude: "place(x, 2)"
+    says:
+      terms: { k: k }
+      marks: { outline: "{d in adj4(x) where value(d) = 1}", reads: "{x} + adj4(x)" }
+      look: "{ring} would touch {outline: {k} {shaded} squares} if it were {shaded}"
+      move: "it must be {unshaded}"
+  # An open square with no square beside it that is not clear has nothing to
+  # pair with.
+  - id: alone
+    tier: Easy
+    for: "x in cells where not known(x) and (forall d in adj4(x): value(d) = 2)"
+    conclude: "place(x, 2)"
+    says:
+      marks: { reads: "{x} + adj4(x)" }
+      look: "{ring} has no neighbor that could pair with it"
+      move: "it must be {unshaded}"
+  # A shaded square with no partner yet pairs with one of its open
+  # neighbors. Where they all lie in one region that needs one more shaded
+  # square, that one is there, and the region's other open squares are
+  # clear. Where that region needs none, the marks are inconsistent.
+  - id: claimed
+    tier: Easy
+    for: >-
+      s in cells where value(s) = 1 and lit(s) = 0, P = free(s) where |P| > 0,
+      g in region where (forall d in P: region(d) = g),
+      n = need(cells(g)), O = {c in open(cells(g)) where c not in P}
+      where n <= 0 or (n = 1 and |O| > 0)
+    conclude: "n = 1 and forall c in O: place(c, 2)"
+    says:
+      marks: { outline: "{s}", stripes: "cells(g)", reads: "{s} + P + cells(g)" }
+      look: "{outline: this {shaded} square} must pair inside {stripes: this region}, which needs one more {shaded} square"
+      move: "{ring} must be {unshaded}"
+  # A region that has its two shaded squares holds no more. One with more
+  # makes the marks inconsistent.
+  - id: fullRegion
+    tier: Easy
+    for: "r in region, n = need(cells(r)) where n <= 0"
+    conclude: "n = 0 and forall c in open(cells(r)): place(c, 2)"
+    says:
+      marks: { stripes: "cells(r)", reads: "cells(r)" }
+      look: "{stripes: this region} has its two {shaded} squares"
+      move: "{ring} must be {unshaded}"
+  # A region with exactly as many open squares as it still needs shaded has
+  # them all shaded. One with fewer makes the marks inconsistent.
+  - id: exactRegion
+    tier: Easy
+    for: "r in region, n = need(cells(r)), O = open(cells(r)) where n > 0 and n >= |O|"
+    conclude: "n = |O| and forall c in O: place(c, 1)"
+    says:
+      terms: { n: n, placed: "n < 2" }
+      marks: { stripes: "cells(r)", reads: "cells(r)" }
+      look: "{stripes: this region} needs {if placed: {n} more | {n}} {shaded} {n: square | squares} and has only {n} open {n: square | squares}"
+      move: "{ring: the ringed square | each ringed square} must be {shaded}"
+  # A region whose other open squares cannot take the shaded squares it needs
+  # without one touching two others: the square left out is shaded.
+  - id: neededRegion
+    tier: Normal
+    for: >-
+      r in region, n = need(cells(r)), O = open(cells(r)) where n > 0,
+      x in O, E = O - {x} where not fits(E, n)
+    conclude: "place(x, 1)"
+    says:
+      terms: { n: n, placed: "n < 2" }
+      marks: { stripes: "cells(r)", reads: "cells(r) + set(d over c in E, d in adj4(c))" }
+      look: "without {ring}, the rest of {stripes: this region} has no room for {if placed: {n} more | {n}} {shaded} {n: square | squares}"
+      move: "{ring: this square} must be {shaded}"
+  # A region that needs both its shaded squares, whose other open squares
+  # could not take the second were one of them shaded: that one is clear.
+  # (With one left to place, the rest are clear whatever it is, so this reads
+  # nothing there.)
+  - id: blocked
+    tier: Normal
+    for: >-
+      r in region, O = open(cells(r)) where need(cells(r)) = 2,
+      x in O, E = O - {x} where (with place(x, 1): not fits(E, 1))
+    conclude: "place(x, 2)"
+    says:
+      marks: { stripes: "cells(r)", reads: "cells(r) + set(d over c in O, d in adj4(c))" }
+      look: "with {ring} {shaded}, the rest of {stripes: this region} has no room for its second {shaded} square"
+      move: "{ring: this square} must be {unshaded}"
+  # A shaded square tried at x would leave clear the squares `ruled` names,
+  # leaving a region it reaches without room for the shaded squares it
+  # needs: x is clear.
+  - id: crowded
+    tier: Tricky
+    for: >-
+      x in cells where not known(x), R = ruled(x),
+      g in region where g = region(x) or (exists p in R + adj4(x): region(p) = g),
+      S = cells(g), n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R}
+      where n > 0 and (with place(x, 1): not fits(E, n)), Q = {c in open(S) where c in R}
+    conclude: "place(x, 2)"
+    says:
+      terms: { n: n, mine: "x in S", domino: "lit(x) = 1", region: "need(cells(region(x))) = 1" }
+      marks: { stripes: S, outline: Q, reads: "Q + S + R + {x} + adj4(x)" }
+      move: "{ring: this square} must be {unshaded}"
+      wordings:
+        - when: "|outline| > 0"
+          look: "with {ring} {shaded}, {stripes: this region} loses {outline} and lacks room for {if mine: {n} more | {n}} {shaded} {n: square | squares}"
+        - look: "with {ring} {shaded}, {stripes: this region} has no room for {if mine: {n} more | {n}} {shaded} {n: square | squares}"

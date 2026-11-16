@@ -36,6 +36,7 @@ instructions. The last column names puzzles you may know it as elsewhere.
 | [Mosaic](../mosaic)      | [help](mosaic)   | ArtMosaico, Cuenta y Sombera, Komsu Karala, Majipiku, Voisimage, etc.           |
 | [Net](../net)            | [help](net)      | FreeNet, NetWalk                                                                |
 | [Netslide](../netslide)  | [help](netslide) |                                                                                 |
+| [Norinori](../norinori)  | [help](norinori) |                                                                                 |
 | [Palisade](../palisade)  | [help](palisade) | Five Cells                                                                      |
 | [Path](../path)          | [help](path)     | Zip, Numberlink, Arukone, Flow Free®                                            |
 | [Pattern](../pattern)    | [help](pattern)  | Nonograms, Picross®                                                             |

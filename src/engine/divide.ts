@@ -267,6 +267,11 @@ const WEIGHT_ONE_SIDE = 2;
 const WEIGHT_TWO_SIDES = 3;
 const WEIGHT_MORE_SIDES = 4;
 
+/** An owner of a cell no region has taken yet. */
+const FREE = -1;
+/** An owner of a cell set aside from the growth. */
+const ASIDE = -2;
+
 /**
  * Which regions can take the free cell `(x, y)`, and at what weight (upstream
  * `extend_options`). With `index < 0`, the total weight; otherwise the region
@@ -285,7 +290,7 @@ function extendOptions(
   index: number,
 ): number {
   const { w, h } = p;
-  if (owner[y * w + x] >= 0) return 0;
+  if (owner[y * w + x] !== FREE) return 0;
 
   // The eight cells around this one, in order round it.
   for (let dy = -1; dy <= 1; dy++)
@@ -328,20 +333,38 @@ function extendOptions(
  * weight, and the region takes the cell. There are as many regions as seeds,
  * each holds its seed, and none encloses another.
  *
+ * The cells `aside` are no region's and take no part: each is left a region
+ * of its own, for the game to join as it says (Norinori's dominoes dealt as
+ * regions of their own two cells). They can wall a free cell off from every
+ * seed, and the division is then `null`.
+ *
  * What a draw costs grows with the number of seeds.
  */
 export function growFromSeeds(
   p: DividedGrid,
   seeds: readonly number[],
   rng: RandomState,
-): Dsf {
+): Dsf;
+export function growFromSeeds(
+  p: DividedGrid,
+  seeds: readonly number[],
+  rng: RandomState,
+  aside: ReadonlySet<number>,
+): Dsf | null;
+export function growFromSeeds(
+  p: DividedGrid,
+  seeds: readonly number[],
+  rng: RandomState,
+  aside: ReadonlySet<number> = new Set(),
+): Dsf | null {
   const { w, h } = p;
   const wh = w * h;
   const n = seeds.length;
-  const owner = new Int32Array(wh).fill(-1);
+  const owner = new Int32Array(wh).fill(FREE);
   const around = new Int32Array(8);
+  for (const cell of aside) owner[cell] = ASIDE;
   seeds.forEach((seed, i) => {
-    if (owner[seed] >= 0) throw new Error("growFromSeeds: two seeds on one cell");
+    if (owner[seed] !== FREE) throw new Error("growFromSeeds: two seeds on one cell");
     owner[seed] = i;
   });
 
@@ -376,10 +399,13 @@ export function growFromSeeds(
         );
   }
 
+  if (owner.includes(FREE)) {
+    if (aside.size > 0) return null;
+    throw new Error("growFromSeeds: a cell no region could take");
+  }
   const regions = new Dsf(wh);
   owner.forEach((region, i) => {
-    if (region < 0) throw new Error("growFromSeeds: a cell no region could take");
-    regions.merge(i, seeds[region]);
+    if (region !== ASIDE) regions.merge(i, seeds[region]);
   });
   return regions;
 }
