@@ -10,7 +10,6 @@
  * terms when the description is compiled, so a clause cannot name what its
  * technique does not state.
  */
-import type { ColorWord } from "./color/color-word.ts";
 import {
   derived,
   indefinite,
@@ -29,7 +28,7 @@ import {
   sentence,
   whole,
 } from "./hint-words.ts";
-import { SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
+import { PAIR_NAMES, type PairIndex, SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
 import { DEFAULT_FORMS, type Piece, parseClause, ringNames } from "./stated-clauses.ts";
 
 /** A step's parts as a description states them. */
@@ -102,8 +101,8 @@ export interface StatedContext<E, R = E> {
   readonly terms: Readonly<Record<string, unknown>>;
   /** A value as the board draws it. */
   value(n: number): string;
-  /** The color word a number term names, for `{color term}`. */
-  color?(n: number): ColorWord;
+  /** The member of the two-state pair a number term names, for `{piece term}`. */
+  piece?(n: number): PairIndex;
   /** Whether the step is a later leg of its firing, which says its `again`
    * clause after the move in place of `look` and `follows`. */
   readonly later?: boolean;
@@ -177,16 +176,14 @@ function expand<E>(pieces: readonly Piece[], cx: StatedContext<E>): Piece[] {
 
 function render<E>(src: string, cx: StatedContext<E>): Narration {
   const lits: string[] = [""];
-  const vals: (Narration | ColorWord)[] = [];
+  const vals: Narration[] = [];
   for (const p of expand(parseClause(src), cx)) {
     if ("text" in p) lits[lits.length - 1] += p.text;
     else if (p.role === null) lits[lits.length - 1] += word(p.name, cx, null);
     else if (p.role === "numeral") lits[lits.length - 1] += numeral(p.name, cx);
     else if (p.role === "a") lits[lits.length - 1] += article(p.name, cx);
-    else if (p.role === "color") {
-      vals.push(colorOf(p.name, cx));
-      lits.push("");
-    } else if (p.role === "spelled") lits[lits.length - 1] += spelled(p.name, cx);
+    else if (p.role === "piece") lits[lits.length - 1] += pieceOf(p.name, cx);
+    else if (p.role === "spelled") lits[lits.length - 1] += spelled(p.name, cx);
     else {
       vals.push(reference(p, cx));
       lits.push("");
@@ -230,13 +227,13 @@ function spelled<E>(term: string, cx: StatedContext<E>): string {
   return SPELLED[n] ?? String(n);
 }
 
-function colorOf<E>(term: string, cx: StatedContext<E>): ColorWord {
+function pieceOf<E>(term: string, cx: StatedContext<E>): string {
   const n = cx.terms[term];
-  if (typeof n !== "number" || !cx.color)
+  if (typeof n !== "number" || !cx.piece)
     throw new Error(
-      `stated clause: {color ${term}} needs a number term and the game's colors`,
+      `stated clause: {piece ${term}} needs a number term and the game's pieces`,
     );
-  return cx.color(n);
+  return PAIR_NAMES[cx.piece(n)];
 }
 
 /** A word or a number term, said outside a reference, or inside one's words
@@ -344,8 +341,8 @@ function reference<E>(
       .map((q) =>
         "text" in q
           ? q.text
-          : q.role === "color"
-            ? colorOf(q.name, cx).only
+          : q.role === "piece"
+            ? pieceOf(q.name, cx)
             : q.role === "spelled"
               ? spelled(q.name, cx)
               : q.role === "numeral"

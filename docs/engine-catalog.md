@@ -1080,8 +1080,8 @@ pieces on a quiet surface"). `drawPiece` draws what a cell holds, with
 part of a piece over several cells, a domino or a boat, joined on the
 `JOIN_*` sides (`joinToward` names the side a neighbor is on). Exemplar:
 `src/games/dominosa/render.ts`. `TWO_SHAPES` goes with `TWO`
-and `TWO_NAMES` (`colors.ts`), and `expandPair` is what a help page's
-`{{pair:0}}` becomes. `SHADED_SHAPE`, `SHADED_NAME` and `UNSHADED_NAME` are
+(`colors.ts`) and `PAIR_NAMES`, each piece's word by its shape, and
+`expandPair` is what a help page's `{{pair:0}}` becomes. `SHADED_SHAPE`, `SHADED_NAME` and `UNSHADED_NAME` are
 the same for a game whose cells are shaded or not. **`drawRuledOutCross` is
 every game's mark for a cell ruled out**, a game with no pieces included.
 Exemplar: `src/skeleton/grid/render.ts`.

@@ -39,6 +39,7 @@
  * board — flattening a good hint to satisfy a guard is a failure, not a fix.
  */
 import { describe, expect, it } from "vitest";
+import { FOUR_FILLS, FREE, TWO, wordOf } from "./color/colors.ts";
 import type { HintStep } from "./game.ts";
 import { NARRATION_LIMIT, Sentence } from "./hint-words.ts";
 import { paramsError } from "./params.ts";
@@ -53,8 +54,10 @@ import {
   SEARCH_REACH_GAMES,
 } from "./testing/hint-games.ts";
 import { referenceDefects } from "./testing/hint-reference.ts";
+import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { itOverWholeSweep, SLOW_TESTS_ENABLED } from "./testing/slow.ts";
 import { FIRST_SHARE, ofThisShare } from "./testing/sweep-share.ts";
+import type { Color } from "./types.ts";
 
 /**
  * Which of a params set's shared boards (`dealt`) a walk takes: the first.
@@ -372,6 +375,40 @@ const EM_DASH = /—/;
 /** "row 3", "Columns 2" — a line by a number. */
 const NUMBERED_LINE = /\b(rows?|columns?)\s+\d/i;
 
+/** A color's words in both schemes. */
+const bothWords = (c: Color): string[] => [wordOf(c).light, wordOf(c).dark];
+
+/**
+ * The two-state pair's color words that `game`'s hint may not say, as one
+ * pattern, or `null` where it may say them all. A piece or a state is named by
+ * the rules or by its shape, since a theme changes the color and no word
+ * (`name-states-by-rule-not-color`). A color is the content only where the
+ * game draws it from a set whose colors are named for the player (`FREE`,
+ * `FOUR_FILLS`): Flood's yellow, Map's yellow region.
+ */
+function pairColorWords(game: AnyGame): RegExp | null {
+  const content = contentWords(game);
+  const words = TWO.flatMap(bothWords).filter((w) => !content.has(w));
+  return words.length === 0 ? null : new RegExp(`\\b(?:${words.join("|")})\\b`, "i");
+}
+
+/** The color words `game` draws as content. */
+function contentWords(game: AnyGame): ReadonlySet<string> {
+  const palette = game.colors(DEFAULT_BACKGROUND);
+  return new Set(
+    [...FREE, ...FOUR_FILLS].filter((c) => palette.includes(c)).flatMap(bothWords),
+  );
+}
+
+if (FIRST_SHARE)
+  it("finds the games whose colors are their content, and only by the palette", () => {
+    const found = HINT_GAMES.filter(([, g]) => contentWords(g).size > 0).map(
+      ([id]) => id,
+    );
+    expect(found).toEqual(expect.arrayContaining(["flood", "map"]));
+    expect(found.length).toBeLessThan(HINT_GAMES.length / 4);
+  });
+
 if (FIRST_SHARE)
   describe("the necessity rule reaches every hinting game it should", () => {
     it("drew from a populated registry, and exempts a minority of it", () => {
@@ -416,6 +453,7 @@ if (FIRST_SHARE)
 describe("hint narration form, cross-game", () => {
   for (const [name, game] of SHARE_GAMES) {
     it(`${name}: every step is visible, terse${DEDUCTIVE.has(name) ? ", and necessity-voiced" : ""}`, () => {
+      const pairColor = pairColorWords(game);
       for (const { title, params } of gatePresets(game))
         for (const seed of SEEDS) {
           const { desc, aux } = dealt(game, params, seed);
@@ -462,6 +500,10 @@ describe("hint narration form, cross-game", () => {
             expect(
               NUMBERED_LINE.test(step.explanation),
               `${at} — narration names a row or column by a number the board does not draw`,
+            ).toBe(false);
+            expect(
+              pairColor?.test(step.explanation) ?? false,
+              `${at} — narration names a piece by its color; say the rules' word or the shape's (PAIR_NAMES, SHADED_NAME)`,
             ).toBe(false);
           });
         }

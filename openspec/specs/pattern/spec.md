@@ -327,7 +327,7 @@ no clues SHALL be clear.
   is read
 - **THEN** its seventh step shades the top four cells of the third column,
   saying "This column's run of 4 has nowhere to slide, so these cells must be
-  purple."
+  shaded."
 - **AND** its nineteenth clears the top three cells of the sixth column,
   saying "No run of this column's outlined clue can reach the ringed cells,
   so those cells must be clear."
@@ -344,7 +344,7 @@ and on a line its shaded stretches before its clear ones.
 - **WHEN** the hint's plan is read on the 10×10 board
   `8/6.1/4.1.1.1/4.1/4.3/2/2/2.2/2.1.2/1.2/3.2/3.2/5/5/2.2/5/1.2/3.1/6/8`
 - **THEN** its first step is the ninth row's, "This row's run of 6 can slide
-  only 4 cells, so these cells must be purple.", the first row any run's
+  only 4 cells, so these cells must be shaded.", the first row any run's
   overlap reaches
 - **AND** its second is the fifth column's, which holds one of the cells the
   first step shaded

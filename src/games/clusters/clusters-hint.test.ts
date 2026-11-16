@@ -17,10 +17,10 @@
  */
 import { describe, expect, it } from "vitest";
 import { resolvePalette } from "../../engine/color/color-mkhighlight.ts";
-import { TWO_NAMES } from "../../engine/color/colors.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
+import { PAIR_NAMES } from "../../engine/piece.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -40,13 +40,13 @@ import {
   type ClustersMove,
   type ClustersState,
   COLMASK,
-  colorName,
   DIFF_TRICKY,
   F_COLOR_0,
   F_COLOR_1,
   F_SINGLE,
   newState,
   opposite,
+  pairIndex,
 } from "./state.ts";
 
 const P = { w: 7, h: 7, diff: DIFF_TRICKY };
@@ -246,14 +246,14 @@ describe("hint", () => {
         expect(outlined).toHaveLength(2);
       } else if (step.rung === "refute.dotOvercount") {
         expect(step.explanation).toMatch(
-          new RegExp(
-            `already touches its one (?:${TWO_NAMES.map((w) => w.light).join("|")}) tile`,
-          ),
+          new RegExp(`already touches its one (?:${PAIR_NAMES.join("|")})`),
         );
         expect(outlined).toHaveLength(1);
       } else if (step.rung === "refute.nearSurrounded") {
         expect(step.explanation).toContain("seal");
-      } else if (step.rung === "refute.selfReach" || step.rung === "refute.nearReach") {
+      } else if (step.rung === "refute.selfReach") {
+        expect(step.explanation).toContain("needs two");
+      } else if (step.rung === "refute.nearReach") {
         expect(step.explanation).toContain("touch two");
       }
       // "outlined" is uttered iff a ring is on display.
@@ -273,10 +273,10 @@ describe("hint", () => {
           `${step.explanation} — a second mark is shown but "this cell" is not tied to it`,
         ).toBe(true);
       }
-      // The conclusion names the forced color in the necessity voice, in the
-      // palette's word for the piece the cell is drawn as.
+      // The conclusion names the forced piece in the necessity voice, by the
+      // word for its shape.
       expect(step.explanation).toContain(
-        `must be ${TWO_NAMES[fill === F_COLOR_0 ? 1 : 0].light}`,
+        `must hold a ${PAIR_NAMES[fill === F_COLOR_0 ? 1 : 0]}`,
       );
     }
   });
@@ -340,26 +340,25 @@ describe("countShort, the wordings no walk reaches", () => {
         ...terms,
       },
       value: String,
-      color: (n) => colorName(n as ClustersFill),
+      piece: pairIndex,
     }).text;
-  const first = TWO_NAMES[0].light;
-  const second = TWO_NAMES[1].light;
+  const [first, second] = PAIR_NAMES;
 
-  it("says a tile that allows none of the color beside the other, of one kind", () => {
+  it("says a tile that allows none of its piece beside the other, of one kind", () => {
     expect(words(0, {})).toBe(
-      `One outlined ${first} dot allows no ${first} beside the other outlined dot, so this square must be ${first}.`,
+      `One outlined dotted ${first} allows no ${first} beside the other outlined dotted ${first}, so this square must hold a ${first}.`,
     );
   });
 
-  it("says a tile that allows none by the other's color and kind", () => {
+  it("says a tile that allows none by the other's piece and dot", () => {
     expect(words(1, { bValue: F_COLOR_0, bDot: 0 })).toBe(
-      `The outlined ${second} tile allows no ${first} beside the outlined ${first} dot, so this square must be ${first}.`,
+      `The outlined ${second} allows no ${first} beside the outlined dotted ${first}, so this square must hold a ${first}.`,
     );
   });
 
   it("says how many it allows in words, of one kind", () => {
     expect(words(2, { most: 3 })).toBe(
-      `One outlined ${first} dot allows at most three ${first} beside the other outlined dot, so this square must be ${first}.`,
+      `One outlined dotted ${first} allows at most three ${first}s beside the other outlined dotted ${first}, so this square must hold a ${first}.`,
     );
   });
 });

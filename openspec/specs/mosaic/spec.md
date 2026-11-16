@@ -362,9 +362,9 @@ same.
 #### Scenario: Two 7s side by side
 
 - **WHEN** a step compares two 7s in one row
-- **THEN** it says "The left 7 still needs 2 more purple squares than the
+- **THEN** it says "The left 7 still needs 2 more shaded squares than the
   right 7, and only 2 of its empty squares are outside the right 7's block, so
-  these squares must be purple.", or the same with left and right exchanged
+  these squares must be shaded.", or the same with left and right exchanged
 
 ### Requirement: Hint: One Mosaic number alone settles its block
 
@@ -377,10 +377,10 @@ squares and of a number equal to its block's size that it needs all of them.
 #### Scenario: The three sentences of a small board
 
 - **WHEN** the hint's plan is read on the 3×3 board `d7a2a4`
-- **THEN** it says "This 4 needs all 4 of its squares purple, so these squares
-  must be purple.", then "This 2 already has its 2 purple squares, so these
-  squares must be clear.", then "This 7 needs 7 purple squares, and only 7 of
-  its squares are not clear, so these squares must be purple."
+- **THEN** it says "This 4 needs all 4 of its squares shaded, so these squares
+  must be shaded.", then "This 2 already has its 2 shaded squares, so these
+  squares must be clear.", then "This 7 needs 7 shaded squares, and only 7 of
+  its squares are not clear, so these squares must be shaded."
 
 #### Scenario: A number on a shaded square
 

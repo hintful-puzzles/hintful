@@ -8,13 +8,12 @@
  * right-click cycles the other way; number keys place directly.
  */
 
-import type { ColorWord } from "../../engine/color/color-word.ts";
-import { TWO_NAMES } from "../../engine/color/colors.ts";
 import { type CellHint, describedHint } from "../../engine/described-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
+import { PAIR_NAMES } from "../../engine/piece.ts";
 import { digitOf, newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
@@ -57,8 +56,8 @@ import {
   validateParams,
 } from "./state.ts";
 
-/** The word for a piece: the palette's, so it is the color the piece is. */
-const colorName = (c: number): ColorWord => TWO_NAMES[pairIndex(c)];
+/** The word for a piece, by its shape. */
+const pieceName = (c: number): string => PAIR_NAMES[pairIndex(c)];
 
 function newUi(_state: UnrulyState): UnrulyUi {
   return { cursor: newCursor() };
@@ -88,12 +87,12 @@ const targetVerbs: TargetVerbs<
   geometry: squareGrid({ size: (s) => ({ w: s.w2, h: s.h2 }), border }),
   // empty → one → zero → empty
   primary: {
-    does: `turn it ${colorName(ONE).only}`,
+    does: `put a ${pieceName(ONE)} in it`,
     apply: place((c) => (c === EMPTY ? ONE : c === ONE ? ZERO : EMPTY)),
   },
   // empty → zero → one → empty
   secondary: {
-    does: `turn it ${colorName(ZERO).only}`,
+    does: `put a ${pieceName(ZERO)} in it`,
     apply: place((c) => (c === EMPTY ? ZERO : c === ZERO ? ONE : EMPTY)),
   },
   keyOnly: [
@@ -134,7 +133,7 @@ const described = describedHint<UnrulyState, UnrulyMove, SaysById>({
   width: ({ w2 }) => w2,
   move: ({ x, y }, value) => ({ type: "place", x, y, value: value as Cell }),
   stated: STATED,
-  color: colorName,
+  piece: pairIndex,
   say: {},
 });
 
@@ -213,9 +212,9 @@ export const unrulyGame: Game<
   hintRungs: described.hintRungs,
   hintMarks: {
     roles: {
-      ring: `the square to color. It is drawn empty: the sentence says whether it must be ${colorName(ONE).only} or ${colorName(ZERO).only}.`,
+      ring: `the square to fill. It is drawn empty: the sentence says whether it must hold a ${pieceName(ONE)} or a ${pieceName(ZERO)}.`,
       outline:
-        "the squares whose colors the step reasons from: the pair that would make three, the full quota, the only places the last one can go, or the row a match would copy.",
+        "the squares whose pieces the step reasons from: the pair that would make three, the full quota, the only places the last one can go, or the row a match would copy.",
       stripes: 'the row or column the sentence calls "this row" or "this column".',
     },
   },

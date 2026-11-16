@@ -3,28 +3,28 @@
 game: clusters
 help:
   rules: |-
-    You're given a grid, with several dotted pieces on lighter squares. Your objective is to fill every empty space with one of two pieces, a {{pair:0}} square or a {{pair:1}} disc, while following these rules:
+    You're given a grid, with several dotted pieces on lighter squares. Your objective is to fill every empty space with one of two pieces, a {{pair:0}} or a {{pair:1}}, while following these rules:
 
-    1. Tiles which are adjacent to 1 other tile of the same color are denoted with a dot. All of these tiles are given.
-    2. All other tiles must be adjacent to 2 or more tiles of the same color.
+    1. Tiles which are adjacent to 1 other tile of the same kind are denoted with a dot. All of these tiles are given.
+    2. All other tiles must be adjacent to 2 or more tiles of the same kind.
   controls: |-
     {{controls}}
 
-    Drag from a square to paint every square you pass over the color the press gave the first one. Hold Shift while moving the cursor to paint the squares it passes over {{pair:1}}, Ctrl to paint them {{pair:0}}, or both to clear them.
+    Drag from a square to fill every square you pass over with the piece the press gave the first one. Hold Shift while moving the cursor to put a {{pair:1}} in the squares it passes over, Ctrl to put a {{pair:0}} in them, or both to clear them.
   origins: |-
     This puzzle type was invented by Inaba Naoki under the name *クラスター*, or literally *Kurasuta*, which Google Translate names 'Cluster'. The original puzzles are available here: http://www.inabapuzzle.com/honkaku/kura.html
   hints: |-
-    **Hint** explains the next step rather than simply making it. Each step decides the color of one square, by showing that the other color would break a rule. It reasons from the dots and the squares you have colored, so it carries on from wherever you are.
+    **Hint** explains the next step rather than simply making it. Each step decides the piece in one square, by showing that the other piece would break a rule. It reasons from the dots and the squares you have filled, so it carries on from wherever you are.
 
     {{hint-marks}}
 
-    On Normal boards a step reads two tiles' counts together, over the squares both touch. A dot that needs one more of its color, where the other tile's count leaves at least one of the shared squares that color, has its last one there, so its other empty neighbors take the other color. A tile that needs more of its color than the other tile's count allows among the shared squares takes its color on its other neighbors. The hint outlines both tiles.
+    On Normal boards a step reads two tiles' counts together, over the squares both touch. A dot that needs one more of its kind, where the other tile's count leaves at least one of the shared squares that kind, has its last one there, so its other empty neighbors take the other kind. A tile that needs more of its kind than the other tile's count allows among the shared squares takes its kind on its other neighbors. The hint outlines both tiles.
 
-    On Unreasonable boards there may come a point where no deduction is left and the only way on is to try a color and see whether it works. The hint says so rather than guessing for you: save your position, try it, and undo if it breaks.
+    On Unreasonable boards there may come a point where no deduction is left and the only way on is to try a piece and see whether it works. The hint says so rather than guessing for you: save your position, try it, and undo if it breaks.
 
-    The rules a step shows breaking are the ones the puzzle states: a dot touches exactly one square of its own color, and every other square touches at least two. A square whose neighbors are all the other color, or that can only ever match one of them, can't be that color.
+    The rules a step shows breaking are the ones the puzzle states: a dot touches exactly one square of its own kind, and every other square touches at least two. A square whose neighbors all hold the other piece, or that can only ever match one of them, can't hold that piece.
 
-    If a square you colored is the wrong color, the hint asks you to fix the highlighted mistakes first, and the square's background turns red, as it does for **Check & save**, whether or not it breaks a rule yet. The red frame is a different mark: it is drawn as you play, round a square or dot whose rule is broken, and that one may itself be right.
+    If a square you filled holds the wrong piece, the hint asks you to fix the highlighted mistakes first, and the square's background turns red, as it does for **Check & save**, whether or not it breaks a rule yet. The red frame is a different mark: it is drawn as you play, round a square or dot whose rule is broken, and that one may itself be right.
   parameters:
     after: |-
       Normal needs a board with room for the deeper reasoning, so it is not offered on very small grids.
@@ -104,29 +104,29 @@ techniques:
       arms:
         selfSurrounded:
           when: "n = x and r < 1"
-          look: "Every neighbor of {ring} is {color fill}. As {color refuted}, it could never touch another {color refuted} tile"
-          move: "it must be {color fill}"
+          look: "Every neighbor of {ring} holds a {piece fill}. Holding a {piece refuted}, it could never touch another {piece refuted}"
+          move: "it must hold a {piece fill}"
         selfReach:
           when: "n = x"
           # An empty square is never a dot. Count- and edge-neutral: at a
           # corner the board edge does part of the hemming, and "at most one"
           # stays honest when one open neighbor remains.
-          look: "If {ring} were {color refuted}, at most one neighbor could ever match it, but it needs to touch two"
-          move: "it must be {color fill}"
+          look: "If {ring} held a {piece refuted}, at most one neighbor could ever match it, but it needs two"
+          move: "it must hold a {piece fill}"
         nearSurrounded:
           when: "e != d and r < 1"
-          look: "Painting {ring} {color refuted} would seal {outline: its outlined {color fill} neighbor} off from its color"
-          move: "{ring} must be {color fill}"
+          look: "A {piece refuted} in {ring} would seal {outline: its outlined {piece fill} neighbor} off from other {piece fill}s"
+          move: "{ring} must hold a {piece fill}"
         nearReach:
           when: "e != d"
-          look: "If {ring} were {color refuted}, {outline: its outlined {color fill} neighbor} couldn't touch two {color fill} tiles"
-          move: "{ring} must be {color fill}"
+          look: "If {ring} held a {piece refuted}, {outline: its outlined {piece fill} neighbor} couldn't touch two {piece fill}s"
+          move: "{ring} must hold a {piece fill}"
         dotOvercount:
           when: "true"
-          # "its one" carries the rule (a dot touches exactly one tile of its
-          # color), and the rule itself is the help's to state.
-          look: "{outline: the outlined {color refuted} dot} beside {ring} already touches its one {color refuted} tile"
-          move: "{ring} must be {color fill}"
+          # "its one" carries the rule (a dot touches exactly one piece of its
+          # kind), and the rule itself is the help's to state.
+          look: "{outline: the outlined dotted {piece refuted}} beside {ring} already touches its one {piece refuted}"
+          move: "{ring} must hold a {piece fill}"
   # Two tiles over the empty squares both touch, S: b's count says at least
   # so many of them take a's color, and that is all a may take, so a's other
   # empty neighbors take the other color.
@@ -149,13 +149,13 @@ techniques:
       terms: { fill: flip(value(a)), a: a, aValue: value(a), aDot: dot(a), b: b, bValue: value(b), bDot: dot(b) }
       marks: { outline: "{a} + {b}", reads: "{a} + adj4(a) + {b} + adj4(b) + set(m over u in R, m in {u} + adj4(u))" }
       # The squares the two tiles share are "also touch"; the tiles are told
-      # apart by color and kind, or, where those agree, by order ("the other").
+      # apart by piece and dot, or, where those agree, by order ("the other").
       wordings:
         - when: "aValue = bValue and aDot = bDot"
-          look: "{outline a: the outlined {color aValue} {aDot: dot | tile}}'s last {color aValue} must also touch {outline b: the other outlined {aDot: dot | tile}}"
-          move: "{ring} must be {color fill}"
-        - look: "{outline a: the outlined {color aValue} {aDot: dot | tile}}'s last {color aValue} must also touch {outline b: the outlined {color bValue} {bDot: dot | tile}}"
-          move: "{ring} must be {color fill}"
+          look: "{outline a: the outlined {aDot: dotted {piece aValue} | {piece aValue}}}'s last {piece aValue} must also touch {outline b: the other outlined {aDot: dotted {piece aValue} | {piece aValue}}}"
+          move: "{ring} must hold a {piece fill}"
+        - look: "{outline a: the outlined {aDot: dotted {piece aValue} | {piece aValue}}}'s last {piece aValue} must also touch {outline b: the outlined {bDot: dotted {piece bValue} | {piece bValue}}}"
+          move: "{ring} must hold a {piece fill}"
   # Two tiles over the empty squares both touch, S: b's count says at most
   # `most` of them take a's color, fewer than all, and a needs every other
   # empty neighbor of its color too.
@@ -178,13 +178,13 @@ techniques:
       marks: { outline: "{a} + {b}", reads: "{a} + adj4(a) + {b} + adj4(b) + set(m over u in R, m in {u} + adj4(u))" }
       wordings:
         - when: "most = 0 and aValue = bValue and aDot = bDot"
-          look: "{outline b: one outlined {color bValue} {bDot: dot | tile}} allows no {color aValue} beside {outline a: the other outlined {aDot: dot | tile}}"
-          move: "{ring} must be {color fill}"
+          look: "{outline b: one outlined {bDot: dotted {piece bValue} | {piece bValue}}} allows no {piece aValue} beside {outline a: the other outlined {aDot: dotted {piece aValue} | {piece aValue}}}"
+          move: "{ring} must hold a {piece fill}"
         - when: "most = 0"
-          look: "{outline b: the outlined {color bValue} {bDot: dot | tile}} allows no {color aValue} beside {outline a: the outlined {color aValue} {aDot: dot | tile}}"
-          move: "{ring} must be {color fill}"
+          look: "{outline b: the outlined {bDot: dotted {piece bValue} | {piece bValue}}} allows no {piece aValue} beside {outline a: the outlined {aDot: dotted {piece aValue} | {piece aValue}}}"
+          move: "{ring} must hold a {piece fill}"
         - when: "aValue = bValue and aDot = bDot"
-          look: "{outline b: one outlined {color bValue} {bDot: dot | tile}} allows at most {spelled most} {color aValue} beside {outline a: the other outlined {aDot: dot | tile}}"
-          move: "{ring} must be {color fill}"
-        - look: "{outline b: the outlined {color bValue} {bDot: dot | tile}} allows at most {spelled most} {color aValue} beside {outline a: the outlined {color aValue} {aDot: dot | tile}}"
-          move: "{ring} must be {color fill}"
+          look: "{outline b: one outlined {bDot: dotted {piece bValue} | {piece bValue}}} allows at most {spelled most} {most: {piece aValue} | {piece aValue}s} beside {outline a: the other outlined {aDot: dotted {piece aValue} | {piece aValue}}}"
+          move: "{ring} must hold a {piece fill}"
+        - look: "{outline b: the outlined {bDot: dotted {piece bValue} | {piece bValue}}} allows at most {spelled most} {most: {piece aValue} | {piece aValue}s} beside {outline a: the outlined {aDot: dotted {piece aValue} | {piece aValue}}}"
+          move: "{ring} must hold a {piece fill}"

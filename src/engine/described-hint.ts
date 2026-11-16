@@ -10,7 +10,6 @@
  *
  * Cell games only: a fact is a placement of a value on a cell.
  */
-import type { ColorWord } from "./color/color-word.ts";
 import { PLACE } from "./describe-runtime.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
@@ -23,6 +22,7 @@ import {
   type Taken,
   TIERS,
 } from "./ladder-runtime.ts";
+import type { PairIndex } from "./piece.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
 import type { Point } from "./types.ts";
@@ -85,8 +85,9 @@ export interface DescribedHintSpec<
   /** Each technique's words as the description states them: the compiled
    * module's `STATED`. A technique it does not state is said by `say`. */
   stated?: Readonly<Record<string, { readonly step?: readonly Clauses[] }>>;
-  /** The color word a number term names, for a stated clause's `{color term}`. */
-  color?(n: number): ColorWord;
+  /** The member of the two-state pair a number term names, for a stated
+   * clause's `{piece term}`. */
+  piece?(n: number): PairIndex;
   /** The sentences the description cannot state, one per technique that
    * `stated` has none of. */
   say: { [K in keyof Says & string]?: (spoken: Spoken<Says[K]["terms"]>) => Sentence };
@@ -180,7 +181,7 @@ export function describedHint<
                 marks: { outline: outline.map(pointOf), stripes },
                 terms: terms as Record<string, unknown>,
                 value: String,
-                ...(spec.color === undefined ? {} : { color: spec.color }),
+                ...(spec.piece === undefined ? {} : { piece: spec.piece }),
                 unit: (els) => (els[0]?.y === els[1]?.y ? "row" : "column"),
               })
             : (override as NonNullable<typeof override>)({

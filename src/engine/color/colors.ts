@@ -233,7 +233,9 @@ const named = (c: Color, word: string, darkWord?: string): Color => {
   return c;
 };
 
-const wordOf = (c: Color): ColorWord => {
+/** The word a player would call `c`. Exported for the guards that hold a
+ * piece's name apart from its color (`piece.test.ts`, `hint-quality.test.ts`). */
+export const wordOf = (c: Color): ColorWord => {
   const w = WORDS.get(c);
   if (!w) throw new Error("a set the player hears named has a color with no word");
   return w;
@@ -346,8 +348,9 @@ export const WHITE: Color = token([1, 1, 1], [1, 1, 1]);
 /**
  * **The two states of a two-state game**, where neither is the important one:
  * Unruly's two kinds of square. A game takes the pair from here and names no
- * hue of its own, so a different pair is this line, {@link TWO_NAMES} and
- * {@link TWO_WASH}.
+ * hue of its own, so a different pair is this line and {@link TWO_WASH}. No
+ * sentence says these colors: a piece is named by its shape (`PAIR_NAMES`,
+ * `engine/piece.ts`), so the pair can change and no word with it.
  *
  * Purple and yellow because a board of pieces still has marks drawn on it:
  * red is an error, blue the hint's ring, teal its evidence, green and pink
@@ -359,13 +362,6 @@ export const WHITE: Color = token([1, 1, 1], [1, 1, 1]);
  * the pair is not the only carrier.
  */
 export const TWO: readonly [Color, Color] = [PURPLE, YELLOW];
-
-/** {@link TWO}, as a player would say them: the words a hint puts in a
- * sentence, exported beside the colors as {@link FREE_NAMES} is. */
-export const TWO_NAMES: readonly [ColorWord, ColorWord] = [
-  wordOf(TWO[0]),
-  wordOf(TWO[1]),
-];
 
 /** The wash of each member of {@link TWO}, indexed alike: a fill in the
  * member's hue that content stays readable on. The roles built on the pair

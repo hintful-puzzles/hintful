@@ -421,14 +421,14 @@ describe("the shared color vocabulary", () => {
       colors.TWO.forEach((member, i) => {
         expect(
           apart(hue(member), hue(mark)),
-          `${colors.TWO_NAMES[i].light} against ${name}`,
+          `the pair's member ${i} against ${name}`,
         ).toBeGreaterThan(30);
       });
   });
 
   it("keeps the clear square in the pair's second hue, and its mark faint but seen", () => {
-    // A help page says a clear square turns `{{pair:1}}`, so the surface owes
-    // that member its hue. The mark on it is the cross and a used-up number:
+    // A part-solved board reads as the pair's two colors on the undecided
+    // gray (`CLEAR`), so the surface owes the second member its hue. The mark on it is the cross and a used-up number:
     // far enough from the surface to be read (the gray first drawn there sat
     // 0.04 from it in the dark scheme and was lost), and on the surface's side
     // of the scheme's ink, which is what makes it the faint one.

@@ -851,8 +851,9 @@ names the one it applies.
 - **Two states where neither is the important one are `TWO`, and the game
   names no hue** ("A game that uses the pair names no hue or shape of its
   own"). It takes `TWO[i]`, `TWO_SHAPES[i]` and, for its hint words and
-  verbs, `TWO_NAMES[i]`, and its help page writes `{{pair:0}}` and
-  `{{pair:1}}` ([`help-pages.md`](./help-pages.md)). Exemplars:
+  verbs, `PAIR_NAMES[i]` (a description says `{piece term}`), and its help
+  page writes `{{pair:0}}` and `{{pair:1}}`
+  ([`help-pages.md`](./help-pages.md)). Exemplars:
   [`unruly/render.ts`](../src/games/unruly/render.ts),
   [`unruly/hint-text.ts`](../src/games/unruly/hint-text.ts).
 - **Shaded or not is the `SHADED` piece alone** ("Shaded or not is the

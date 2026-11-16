@@ -3,7 +3,7 @@
 game: sokoban
 help:
   rules: |-
-    Push each barrel ({{pair:0}} square) into a target ({{pair:1}} ring). Barrels can
+    Push each barrel (a {{pair:0}}) into a target (a ring). Barrels can
     be pushed up, down, left or right, but not into another barrel or the wall.
   controls: |-
     Tap or click any square you can reach to walk there, the shortest

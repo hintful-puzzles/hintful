@@ -289,9 +289,8 @@ Each hint step SHALL decide one cell, a single self-contained journey: a firing 
 
 ### Requirement: Hint: Bricks calls its piece shaded and never by its color
 
-Bricks' hint sentences and control words SHALL say "shaded" for the shaded
-state and SHALL NOT say the piece's color, and its help page SHALL say the
-piece's shape beside the placeholder for its color.
+Bricks' hint sentences, control words and help page SHALL say "shaded" for
+the shaded state and SHALL NOT say the piece's color.
 
 #### Scenario: A hint rests on a shaded cell
 

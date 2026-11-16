@@ -11,14 +11,13 @@
 
 import { searchTiers } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
-import type { ColorWord } from "../../engine/color/color-word.ts";
-import { TWO_NAMES } from "../../engine/color/colors.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
+import { PAIR_NAMES, type PairIndex } from "../../engine/piece.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import * as clusters from "../../generated/games/clusters/clusters.compiled.ts";
 
@@ -47,12 +46,12 @@ const DIFF_CHARS = "etu";
 
 export const F_COLOR_0 = 0x01; // upstream's red
 export const F_COLOR_1 = 0x02; // upstream's blue
-/** Which member of the collection's two-state pair (`TWO`, `TWO_NAMES`,
- * `TWO_SHAPES`) a colored cell is. `F_COLOR_1` is the first, as the color the
+/** Which member of the collection's two-state pair (`TWO`, `TWO_SHAPES`,
+ * `PAIR_NAMES`) a colored cell is. `F_COLOR_1` is the first, as the piece the
  * primary button gives. */
-export const pairIndex = (cell: number): 0 | 1 => (cell & F_COLOR_1 ? 0 : 1);
-/** The word for a color: the palette's, so it is the color the piece is. */
-export const colorName = (fill: ClustersFill): ColorWord => TWO_NAMES[pairIndex(fill)];
+export const pairIndex = (cell: number): PairIndex => (cell & F_COLOR_1 ? 0 : 1);
+/** The word for a piece, by its shape. */
+export const pieceName = (fill: ClustersFill): string => PAIR_NAMES[pairIndex(fill)];
 export const F_SINGLE = 0x04; // a "dot": touches exactly one same-color cell
 export const COLMASK = F_COLOR_0 | F_COLOR_1;
 

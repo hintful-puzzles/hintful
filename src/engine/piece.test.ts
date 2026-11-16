@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { TWO_NAMES } from "./color/colors.ts";
-import { drawPiece, expandPair, TWO_SHAPES } from "./piece.ts";
+import { FOUR_NAMES, FREE_NAMES, TWO, wordOf } from "./color/colors.ts";
+import {
+  drawPiece,
+  expandPair,
+  PAIR_NAMES,
+  SHADED_NAME,
+  TWO_SHAPES,
+  UNSHADED_NAME,
+} from "./piece.ts";
 import { opsOfKind, RecordingDrawing } from "./testing/recording-drawing.ts";
 
 // Even sides, so every coordinate the recorder rounds is already whole.
@@ -59,10 +66,22 @@ describe("a piece", () => {
   });
 });
 
+describe("the words for a state", () => {
+  it("are no color's, so a theme that changes a color changes no word", () => {
+    const colorWords = [...TWO.map(wordOf), ...FREE_NAMES, ...FOUR_NAMES].flatMap(
+      (w) => [w.light, w.dark],
+    );
+    expect(colorWords).toContain("purple");
+    for (const word of [...PAIR_NAMES, SHADED_NAME, UNSHADED_NAME])
+      expect(colorWords).not.toContain(word);
+    expect(new Set(PAIR_NAMES).size).toBe(2);
+  });
+});
+
 describe("a help page's pair placeholder", () => {
   it("is replaced by the member's name", () => {
     expect(expandPair("a {{pair:0}} one and a {{pair:1}} one")).toBe(
-      `a ${TWO_NAMES[0].only} one and a ${TWO_NAMES[1].only} one`,
+      `a ${PAIR_NAMES[0]} one and a ${PAIR_NAMES[1]} one`,
     );
     expect(expandPair("no placeholder")).toBe("no placeholder");
   });

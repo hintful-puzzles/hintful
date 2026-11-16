@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ColorWord } from "./color/color-word.ts";
 import { CELL, type MarkKind, stepMarks } from "./hint-words.ts";
-import { SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
+import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
 import { type StatedContext, statedParts, statedSentence } from "./stated.ts";
 import { parseClause } from "./stated-clauses.ts";
 import type { Point } from "./types.ts";
@@ -87,31 +86,22 @@ describe("a stated clause", () => {
     expect(say("with {struckOr}")).toBe("With v1, v2 or v3, so go.");
   });
 
-  it("names a color term in the game's color word, and a count in words", () => {
-    const colors = [
-      new ColorWord("gray"),
-      new ColorWord("gray"),
-      new ColorWord("purple"),
-      new ColorWord("yellow", "brown"),
-    ];
+  it("names a piece term by the pair's word for its shape, and a count in words", () => {
     const s = statedSentence(
       {
-        look: "{outline: the outlined {color one} {n: dot | tile}} allows at most {spelled n} {color n}",
+        look: "{outline: the outlined {n: dotted {piece one} | {piece one}}} allows at most {spelled n} {piece n}s",
         move: "go",
       },
-      cx({ color: (k) => colors[k] }),
+      cx({ piece: (k) => (k === 2 ? 0 : 1) }),
     );
-    // A color at the top of a clause follows the scheme; inside a reference's
-    // words it is the one word it has.
+    // One word in every scheme, at the top of a clause and inside a reference.
     expect(s.textIn("light")).toBe(
-      "The outlined purple tile allows at most three yellow, so go.",
+      `The outlined ${PAIR_NAMES[0]} allows at most three ${PAIR_NAMES[1]}s, so go.`,
     );
-    expect(s.textIn("dark")).toBe(
-      "The outlined purple tile allows at most three brown, so go.",
-    );
+    expect(s.textIn("dark")).toBe(s.textIn("light"));
   });
 
-  it("says a count past ten as its numeral, and refuses a color the game gives none", () => {
+  it("says a count past ten as its numeral, and refuses a piece the game gives none", () => {
     expect(
       statedSentence(
         { look: "{spelled n} bulbs", move: "go" },
@@ -119,8 +109,8 @@ describe("a stated clause", () => {
       ).text,
     ).toBe("12 bulbs, so go.");
     expect(() =>
-      statedSentence({ look: "the {color n} bulb", move: "go" }, cx()),
-    ).toThrow(/game's colors/);
+      statedSentence({ look: "the {piece n} bulb", move: "go" }, cx()),
+    ).toThrow(/game's pieces/);
   });
 
   it("says a value with its article, and a count as a numeral where the board draws a value another way", () => {

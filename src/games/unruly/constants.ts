@@ -6,6 +6,7 @@
  * vocabulary. `solver.ts`'s remaining import from `state.ts` is types only,
  * which `verbatimModuleSyntax` erases.
  */
+import type { PairIndex } from "../../engine/piece.ts";
 import * as unruly from "../../generated/games/unruly/unruly.compiled.ts";
 
 // --- cell values (upstream `enum { EMPTY, N_ONE, N_ZERO, BOGUS }`) -------
@@ -16,9 +17,9 @@ export const ONE = 1;
 export const ZERO = 2;
 export type Cell = typeof EMPTY | typeof ONE | typeof ZERO;
 
-/** Which member of the collection's two-state pair (`TWO`, `TWO_NAMES`,
- * `TWO_SHAPES`) a filled cell is. */
-export const pairIndex = (filled: number): 0 | 1 => (filled === ONE ? 0 : 1);
+/** Which member of the collection's two-state pair (`TWO`, `TWO_SHAPES`,
+ * `PAIR_NAMES`) a filled cell is. */
+export const pairIndex = (filled: number): PairIndex => (filled === ONE ? 0 : 1);
 
 // --- difficulty (upstream DIFFLIST: Trivial, Easy, Normal) ---------------
 // The `DIFF_*` identifiers are upstream's rung labels, which the solver and the

@@ -695,8 +695,11 @@ two ways (owner, 2026-11-13, `standardize-hint-vocabulary`).
 - **A state is named by the rules, never by its color** (owner, 2026-11-16,
   `name-states-by-rule-not-color`): the color is the theme's, and a theme
   changes no word. A shaded cell is "shaded" (`SHADED_NAME`, `{shaded}` in a
-  description), one known not to be is "clear", and a help page types the
-  same words.
+  description), one known not to be is "clear", and a piece of the two-state
+  pair is its shape's word, "block" or "disc" (`PAIR_NAMES`, `{piece term}`;
+  the game's `piece` hook says which member a term is). A game whose colors
+  are its content (Flood, Map) still names them. `hint-quality.test.ts`
+  fails a step that says the pair's color.
 - **A mark ends "must be {the game's off-mark}"**: grass, water, blocked,
   empty, unused, "a line", "crossed out". One word per game, the one its help
   teaches. **A struck value or note ends "must go"** (§ "Conclude with the

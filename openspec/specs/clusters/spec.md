@@ -244,12 +244,12 @@ Unreasonable board, the hint SHALL give the steps it has, and refuse with
 
 ### Requirement: Hint: A count step names both tiles it reads
 
-A count step SHALL ring the cell it colors and outline the two tiles it reads, named by color and kind, or by order where those agree, and SHALL say where the first tile's color must or may only be among the squares both touch.
+A count step SHALL ring the cell it fills and outline the two tiles it reads, named by piece and dot, or by order where those agree, and SHALL say where the first tile's piece must or may only be among the squares both touch.
 
 #### Scenario: A dot's last color is among the shared squares
 
-- **WHEN** a yellow dot that needs one more yellow shares squares with a purple dot that leaves at least one of them yellow
-- **THEN** the step says "The outlined yellow dot's last yellow must also touch the outlined purple dot, so this cell must be purple." of the dot's other empty neighbor
+- **WHEN** a dotted disc that needs one more disc shares squares with a dotted block that leaves at least one of them a disc
+- **THEN** the step says "The outlined dotted disc's last disc must also touch the outlined dotted block, so this square must hold a block." of the dot's other empty neighbor
 
 ### Requirement: Look: Clusters draws its two colors as the collection's two-state pair
 

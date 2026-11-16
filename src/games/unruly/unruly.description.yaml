@@ -3,7 +3,7 @@
 game: unruly
 help:
   rules: |-
-    Fill every square with a {{pair:0}} square or a {{pair:1}} disc so that:
+    Fill every square with a {{pair:0}} or a {{pair:1}} so that:
 
     - no three consecutive squares, horizontally or vertically, hold
       the same piece
@@ -20,7 +20,7 @@ help:
 
     Clicking a filled square again moves it on round {{pair:0}}, {{pair:1}} and
     empty, and a right-click goes round the other way. You can also press 1 for
-    {{pair:0}}, and 0 or 2 for {{pair:1}}.
+    a {{pair:0}}, and 0 or 2 for a {{pair:1}}.
   hints: |-
     **Hint** explains the next step rather than simply making it. It reasons
     only from the squares already filled, so it carries on from wherever you
@@ -33,18 +33,18 @@ help:
 
     * **No three in a row.** Where two of three squares in a line already hold
       the same piece, the third must hold the other one.
-    * **A full quota.** A row or column that already holds all its {{pair:0}}
-      pieces must be {{pair:1}} everywhere else, and the other way round.
+    * **A full quota.** A row or column that already holds all its {{pair:0}}s
+      must hold {{pair:1}}s everywhere else, and the other way round.
     * **The last one has few places to go.** When a row or column needs just
-      one more of a color, and every place but the outlined squares would force
-      three of the other color together, the rest of the line is the other
-      color.
+      one more of a piece, and every place but the outlined squares would force
+      three of the other piece together, the rest of the line holds the other
+      piece.
     * **No two lines alike**, when *Unique rows and columns* is switched on
-      in ‘Custom type…’. When the outlined row already holds all its {{pair:0}}
-      pieces, and the striped row holds all but one of its own in the same places,
+      in ‘Custom type…’. When the outlined row already holds all its {{pair:0}}s,
+      and the striped row holds all but one of its own in the same places,
       putting the last one where the outlined row has its remaining {{pair:0}}
-      would make the two rows identical, so that square must be {{pair:1}} (and
-      the same with the colors swapped, or with columns).
+      would make the two rows identical, so that square must hold a {{pair:1}}
+      (and the same with the pieces swapped, or with columns).
 
     When one idea settles several squares at once, the hint walks through
     them one at a time as a single step.
@@ -102,9 +102,9 @@ variations:
           says:
             terms: { horizontal: "A in rows", fill: flip(d), kept: d }
             marks: { stripes: "cells(B)", reads: "cells(B)", outline: "cells(A)" }
-            look: "{stripes}'s {color kept}s all sit where {outline: the outlined {if horizontal: row | column}}'s do"
-            follows: "a {color kept} in {ring: this cell} would copy it"
-            move: "it must be {color fill}"
+            look: "{stripes}'s {piece kept}s all sit where {outline: the outlined {if horizontal: row | column}}'s do"
+            follows: "a {piece kept} in {ring: this cell} would copy it"
+            move: "it must hold a {piece fill}"
 tiers: [Easy, Normal, Tricky]
 techniques:
   # Two of three squares in a row of a line hold one piece, so the third holds
@@ -117,11 +117,11 @@ techniques:
       d in domain where (forall c in W where c != x: value(c) = d)
     conclude: "place(x, flip(d))"
     says:
-      terms: { color: d, fill: flip(d) }
+      terms: { held: d, fill: flip(d) }
       marks: { outline: "{c in W where c != x}" }
-      look: "{outline: the outlined cell | the outlined cells} are already {color color}"
+      look: "{outline: the outlined cell | the outlined cells} already hold {piece held}s"
       follows: "{ring: this cell} would make three in a row"
-      move: "it must be {color fill}"
+      move: "it must hold a {piece fill}"
   # A line holding all its d and all but one of the other piece: its one empty
   # square holds the other piece.
   - id: lastGap
@@ -137,8 +137,8 @@ techniques:
         stripes: "cells(L)"
         reads: "cells(L)"
         outline: "{c in cells(L) where value(c) = d}"
-      look: "{stripes} has {outline: all its {color full} cells (outlined)}"
-      move: "{ring: this cell} and the {if horizontal: row | column}'s other empty cells must be {color fill}"
+      look: "{stripes} has {outline: all its {piece full}s (outlined)}"
+      move: "{ring: this cell} and the {if horizontal: row | column}'s other empty cells must hold {piece fill}s"
   # A line holding all its d: every empty square holds the other piece.
   - id: quota
     tier: Normal
@@ -153,8 +153,8 @@ techniques:
         stripes: "cells(L)"
         reads: "cells(L)"
         outline: "{c in cells(L) where value(c) = d}"
-      look: "{stripes} has {outline: all its {color full} cells (outlined)}"
-      move: "{ring: this cell} and the {if horizontal: row | column}'s other empty cells must be {color fill}"
+      look: "{stripes} has {outline: all its {piece full}s (outlined)}"
+      move: "{ring: this cell} and the {if horizontal: row | column}'s other empty cells must hold {piece fill}s"
   # A line with one d left to place and at least two of the other piece: three
   # squares in a row holding no d, two of them empty, would be three of the
   # other piece unless the last d goes among them, so it does, and every
@@ -171,5 +171,5 @@ techniques:
     says:
       terms: { horizontal: "L in rows", fill: flip(d), kept: d }
       marks: { stripes: "cells(L)", reads: "cells(L)", outline: "W" }
-      look: "The last {color kept} in {stripes} fits only in {outline: an outlined cell} without making three {color fill}s"
-      move: "{ring: this cell} must be {color fill}"
+      look: "The last {piece kept} in {stripes} fits only in {outline: an outlined cell} without making three {piece fill}s"
+      move: "{ring: this cell} must hold a {piece fill}"

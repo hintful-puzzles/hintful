@@ -63,11 +63,11 @@ game has a `hint()`.
   `{{choice:<kw>:<index>}}` where it names one
   ([`mechanics.md`](./mechanics.md) § "Params are declared once,
   on `paramConfig`").
-- **A piece's color is typed nowhere.** A page about pieces of the two-state
-  pair writes `{{pair:0}}` and `{{pair:1}}`, and the build says the palette's
-  word (`TWO_NAMES` in `src/engine/color/colors.ts`).
-- **Say the shape with the color** ("a {{pair:0}} square"). A shape is what a
-  player who cannot tell the hues goes by.
+- **A piece or a state is named by the rules or its shape, never its color**,
+  which is the theme's. A page about pieces of the two-state pair writes
+  `{{pair:0}}` and `{{pair:1}}`, and the build says each piece's shape word
+  (`PAIR_NAMES` in `src/engine/piece.ts`): "a {{pair:0}} or a {{pair:1}}". A
+  shading game's page says "shaded" and "clear".
 - **A sentence several pages would each write is the engine's.** The Mark-all
   press is `{{mark-all}}`, sticky pencil mode is `{{sticky-pencil}}` and a
   clue marked done is `{{done-clues}}`, from the game's `doneClues`

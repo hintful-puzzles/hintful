@@ -3,8 +3,8 @@
 game: flip
 help:
   rules: |-
-    Light up every square: an unlit square holds a {{pair:0}} square and a
-    lit one a {{pair:1}} disc. Pressing a square flips a group of squares,
+    Light up every square: an unlit square holds a {{pair:0}} and a lit one
+    a {{pair:1}}. Pressing a square flips a group of squares,
     each from one piece to the other. Which group depends on the game mode,
     and the Type menu has a section for each:
 

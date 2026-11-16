@@ -17,8 +17,8 @@
  *   techniques follow with (`then`), or both (`+`). {@link ringNames}
  * - `{has 2+then: , with {ring 2+then: its water}}`: words, references among
  *   them, said only where those squares are there.
- * - `{color term}`: the color word the number term names, in the scheme the
- *   player reads it in (inside a reference's words, the one word it has).
+ * - `{piece term}`: the word for the piece of the two-state pair the number
+ *   term names, by its shape ("block", "disc"; `PAIR_NAMES`, `piece.ts`).
  * - `{spelled term}`: the number term in words, "zero" to "ten" (a count that
  *   would read as a coordinate in digits), the numeral past ten.
  * - `{numeral term}`: the number term as a plain count, in digits, where `{term}`
@@ -81,7 +81,7 @@ const SLOT_ROLES: ReadonlySet<string> = new Set([
   "stripes",
   "strand",
   "if",
-  "color",
+  "piece",
   "spelled",
   "numeral",
   "a",
@@ -171,13 +171,13 @@ function slot(body: string, src: string): Piece {
           head[0] === "fit" || head[0] === "or" ? Infinity : 2,
         ).map((f) => parseClause(f.trim()));
   if (
-    (head[0] === "color" ||
+    (head[0] === "piece" ||
       head[0] === "spelled" ||
       head[0] === "numeral" ||
       head[0] === "a") &&
     (head.length !== 2 || words !== null)
   )
-    throw new Error(`"{${body}}" is no color of a term, in "${src}"`);
+    throw new Error(`"{${body}}" is no word of a term, in "${src}"`);
   if (head[0] === "or") {
     if (
       head.length !== 2 ||
@@ -249,14 +249,14 @@ export interface Slot {
   readonly inner: readonly string[];
   /** The flags of every `if` inside the slot's forms, nested ones too. */
   readonly flags: readonly string[];
-  /** The terms it says as numbers (`numeral`, `spelled`, `a`, `color`, `or`,
+  /** The terms it says as numbers (`numeral`, `spelled`, `a`, `piece`, `or`,
    * a count), which a word may not stand for. */
   readonly numbers?: readonly string[];
 }
 
 /** The roles that say their term as a number. */
 const NUMBER_ROLES: ReadonlySet<string> = new Set([
-  "color",
+  "piece",
   "spelled",
   "numeral",
   "a",
@@ -322,7 +322,7 @@ export function slotsOf(src: string): Slot[] {
             }),
           ),
         ];
-      // A color is said where its term is, which must be a number.
+      // A number role is said where its term is, which must be a number.
       if (p.role !== null && NUMBER_ROLES.has(p.role))
         return [{ name: p.name, role: null, inner: [], flags: [], numbers: [p.name] }];
       if (p.role === "count")

@@ -301,10 +301,6 @@ describe("the named colors", () => {
       const [a, b] = colors.TWO.map(scheme);
       expect(Math.abs(a[0] - b[0])).toBeGreaterThan(0.18);
     }
-    for (const scheme of ["light", "dark"] as const)
-      expect(new Set(colors.TWO_NAMES.map((w) => w.in(scheme))).size).toBe(
-        colors.TWO.length,
-      );
   });
 
   it("gives each member of the pair a wash of its own hue", () => {
@@ -390,7 +386,6 @@ describe("the named colors", () => {
       of: readonly (readonly Color[])[],
     ][] = [
       ["FREE", colors.FREE_NAMES, [colors.FREE]],
-      ["TWO", colors.TWO_NAMES, [colors.TWO]],
       ["FOUR", colors.FOUR_NAMES, [colors.FOUR_FILLS, colors.FOUR_FILL_MARKS]],
     ];
     it.each(NAMED)("%s", (_, words, sets) => {

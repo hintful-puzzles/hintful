@@ -13,7 +13,7 @@
  * one role tell their marks apart.
  */
 
-import { SHADED_NAME, UNSHADED_NAME } from "../engine/piece.ts";
+import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "../engine/piece.ts";
 import { DEFAULT_FORMS, type Piece, parseClause } from "../engine/stated-clauses.ts";
 import { judge } from "../engine/testing/hint-reference.ts";
 import {
@@ -62,6 +62,10 @@ interface Prints {
   readonly closing: string;
 }
 
+/** The pair's words, shortest first. */
+const byLength = (names: readonly string[]): string[] =>
+  [...names].sort((a, b) => a.length - b.length);
+
 const SHORTEST: Prints = {
   words: {
     noun: "dot",
@@ -80,7 +84,7 @@ const SHORTEST: Prints = {
     unit: "row",
   },
   number: "1",
-  roles: { numeral: "1", spelled: "one", a: "a 1", color: "red" },
+  roles: { numeral: "1", spelled: "one", a: "a 1", piece: byLength(PAIR_NAMES)[0] },
   closing: "",
 };
 
@@ -102,7 +106,7 @@ const LONGEST: Prints = {
     unit: "column",
   },
   number: "10",
-  roles: { numeral: "10", spelled: "seven", a: "an 8", color: "purple" },
+  roles: { numeral: "10", spelled: "seven", a: "an 8", piece: byLength(PAIR_NAMES)[1] },
   closing: "this square must be clear",
 };
 
@@ -146,7 +150,7 @@ function pieceForms(p: Piece, turn: number, prints: Prints): Item[][] {
     case "numeral":
     case "spelled":
     case "a":
-    case "color":
+    case "piece":
       return [text(prints.roles[p.role])];
     case "count":
     case "if":

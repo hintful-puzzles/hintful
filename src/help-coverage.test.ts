@@ -29,7 +29,7 @@ import {
 import { loadDescriptionFile } from "./describe/load.ts";
 import { descriptionPath } from "./describe/paths.ts";
 import { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "./engine/candidate-hint.ts";
-import { TWO_NAMES } from "./engine/color/colors.ts";
+import { TWO, wordOf } from "./engine/color/colors.ts";
 import { difficultyChoiceItem, difficultyTiers } from "./engine/difficulty.ts";
 import { HINT_MARKS_PLACEHOLDER } from "./engine/hint-words.ts";
 import {
@@ -42,7 +42,7 @@ import {
   offersStickyPencil,
   STICKY_PENCIL_PLACEHOLDER,
 } from "./engine/pencil-prefs.ts";
-import { expandPair } from "./engine/piece.ts";
+import { expandPair, PAIR_NAMES } from "./engine/piece.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
 import { RULES_OUT_PLACEHOLDER } from "./engine/rules-out.ts";
 import {
@@ -194,18 +194,24 @@ describe("every game's page has the one skeleton", () => {
     expect(wingPages).toBeGreaterThanOrEqual(2);
   });
 
-  // A page about pieces of the two-state pair says their colors with
-  // `{{pair:0}}` and `{{pair:1}}` (`vite-plugins/pair.ts`). One that also types
-  // a name holds a second copy of the palette's word, which a new pair would
-  // leave behind.
+  // A page about pieces of the two-state pair names them with `{{pair:0}}` and
+  // `{{pair:1}}` (`vite-plugins/pair.ts`). One that also types a name holds a
+  // second copy of `PAIR_NAMES`, and one that says a member's color names a
+  // piece by what a theme changes (`name-states-by-rule-not-color`).
   let pairPages = 0;
-  it.each(puzzleIds)("%s: a page naming the pair types neither name", (id) => {
+  it.each(
+    puzzleIds,
+  )("%s: a page naming the pair types neither name nor color", (id) => {
     const page = helpPage(id);
     expect(() => expandPair(page), `${descriptionPath(id)}`).not.toThrow();
     if (expandPair(page) === page) return;
     pairPages++;
-    for (const name of TWO_NAMES)
-      expect(page.toLowerCase(), `${descriptionPath(id)}`).not.toContain(name.only);
+    const words = [
+      ...PAIR_NAMES,
+      ...TWO.flatMap((c) => [wordOf(c).light, wordOf(c).dark]),
+    ];
+    for (const word of words)
+      expect(page, `${descriptionPath(id)}`).not.toMatch(new RegExp(`\\b${word}`, "i"));
   });
 
   itOverWholeSweep("is not vacuous — some page names the pair", () => {

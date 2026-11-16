@@ -21,7 +21,6 @@
  *
  * Cell games only: a fact is a placement of a value on a cell.
  */
-import type { ColorWord } from "./color/color-word.ts";
 import { PLACE } from "./describe-runtime.ts";
 import { filledBy, spokenOf } from "./described-hint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
@@ -34,6 +33,7 @@ import {
   ladderWalk,
   TIERS,
 } from "./ladder-runtime.ts";
+import type { PairIndex } from "./piece.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
 import type { Point } from "./types.ts";
@@ -190,8 +190,9 @@ interface FiringShape<
   termKinds?: Readonly<Record<string, MarkKind<Point>>>;
   /** The number a square shows, for a stated clause's `{each}`. */
   shows?(state: State, at: Point): number;
-  /** The color word a number term names, for a stated clause's `{color term}`. */
-  color?(n: number): ColorWord;
+  /** The member of the two-state pair a number term names, for a stated
+   * clause's `{piece term}`. */
+  piece?(n: number): PairIndex;
   /** A number term as the board draws it; its numeral where absent. */
   value?(n: number, state: State): string;
   /** The sentences the description cannot state, each technique's an override
@@ -385,7 +386,7 @@ export function describedFiringHint<
                   ...(ownFact?.terms as Record<string, unknown> | undefined),
                 },
                 value: (n) => spec.value?.(n, state) ?? String(n),
-                ...(spec.color === undefined ? {} : { color: spec.color }),
+                ...(spec.piece === undefined ? {} : { piece: spec.piece }),
                 ...(shows === undefined
                   ? {}
                   : { shows: (p: Point) => shows(state, p) }),

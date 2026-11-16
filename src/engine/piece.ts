@@ -8,14 +8,25 @@
  * color-blind player, and a shape is still there in a grayscale screenshot.
  */
 
-import { TWO_NAMES } from "./color/colors.ts";
 import type { GameDrawing } from "./game.ts";
 import type { Point, Rect } from "./types.ts";
 
 export type PieceShape = "square" | "disc";
 
+/** A member of the two-state pair: an index into `TWO` (`colors.ts`),
+ * {@link TWO_SHAPES} and {@link PAIR_NAMES}. */
+export type PairIndex = 0 | 1;
+
 /** The shapes of the two-state pair, in the order of `TWO` (`colors.ts`). */
 export const TWO_SHAPES: readonly [PieceShape, PieceShape] = ["square", "disc"];
+
+/**
+ * **The words for the pair's pieces**, in the order of {@link TWO_SHAPES}: a
+ * piece is named by its shape, which no theme changes, and never by its color,
+ * which a theme does (owner, 2026-11-16). The square piece is a "block"
+ * because "square" is already the board's word for a place on it.
+ */
+export const PAIR_NAMES: readonly [string, string] = ["block", "disc"];
 
 /**
  * **Shaded**, in a game where a cell is shaded or is not (Pattern, Range,
@@ -86,14 +97,14 @@ export function drawClearSquare(
 
 /**
  * `source`, a help page, with each `{{pair:0}}` and `{{pair:1}}` replaced by
- * that member's name. A page names a piece's color this way and never types
- * it, so the page follows the pair as a hint's sentence does.
+ * that member's name. A page names a piece this way and never types it, so
+ * the page says the word a hint's sentence does.
  */
 export function expandPair(source: string): string {
   return source.replace(/\{\{pair:([^}]*)\}\}/g, (whole, index: string) => {
-    const name = index === "0" ? TWO_NAMES[0] : index === "1" ? TWO_NAMES[1] : null;
+    const name = index === "0" ? PAIR_NAMES[0] : index === "1" ? PAIR_NAMES[1] : null;
     if (name === null) throw new Error(`${whole}: the pair has members 0 and 1`);
-    return name.only;
+    return name;
   });
 }
 

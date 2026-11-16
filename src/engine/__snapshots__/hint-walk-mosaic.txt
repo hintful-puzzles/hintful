@@ -1,4 +1,4 @@
-3x3 Easy #0: 2 steps, solved, 0117e664078c392c [alone.met:1 alone.needsAll:1]
-8x10 Normal #0: 33 steps, solved, ceaf3f5cf4d59782 [alone.met:13 alone.needsAll:12 compared.needsMore:4 compared.sameNeed:4]
-8x10 Unreasonable #0: 23 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., ac614bbceeadb6f2 [alone.met:9 alone.needsAll:9 compared.needsMore:3 compared.sameNeed:2]
-50x50 Easy #0: 1568 steps, solved, d8bedc22f20c927e [alone.met:779 alone.needsAll:789]
+3x3 Easy #0: 2 steps, solved, 5a5ad197b7461489 [alone.met:1 alone.needsAll:1]
+8x10 Normal #0: 33 steps, solved, e63a525352e9e33f [alone.met:13 alone.needsAll:12 compared.needsMore:4 compared.sameNeed:4]
+8x10 Unreasonable #0: 23 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 4dd42d2941949783 [alone.met:9 alone.needsAll:9 compared.needsMore:3 compared.sameNeed:2]
+50x50 Easy #0: 1568 steps, solved, 3f889daff58a9cff [alone.met:779 alone.needsAll:789]

@@ -28,8 +28,8 @@ import {
   type ClustersMove,
   type ClustersState,
   COLMASK,
-  colorName,
   executeMove,
+  pairIndex,
 } from "./state.ts";
 
 /** A square a step colors and the color it asks. */
@@ -63,7 +63,7 @@ const described = describedFiringHint<
   }),
   each: ["countFull", "countShort"],
   stated: STATED,
-  color: (n) => colorName(n as ClustersFill),
+  piece: pairIndex,
   say: {},
 });
 

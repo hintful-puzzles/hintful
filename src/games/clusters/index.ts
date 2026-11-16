@@ -81,7 +81,6 @@ import {
   type ClustersState,
   type ClustersUi,
   COLMASK,
-  colorName,
   decodeParams,
   defaultParams,
   encodeParams,
@@ -93,6 +92,7 @@ import {
   newState,
   opposite,
   paramConfig,
+  pieceName,
   TIERS,
   textFormat,
   validateParams,
@@ -129,14 +129,14 @@ const paintWith =
   };
 
 type ClustersVerb = TargetVerb<ClustersState, ClustersUi, Point, ClustersMove>;
-const FIRST = colorName(F_COLOR_1).only;
-const SECOND = colorName(F_COLOR_0).only;
+const FIRST = pieceName(F_COLOR_1);
+const SECOND = pieceName(F_COLOR_0);
 const firstVerb: ClustersVerb = {
-  does: `color it ${FIRST} (click again for ${SECOND}, and again to clear it)`,
+  does: `put a ${FIRST} in it (click again for a ${SECOND}, and again to clear it)`,
   apply: paintWith((old) => cycleFill(old, F_COLOR_1)),
 };
 const secondVerb: ClustersVerb = {
-  does: `color it ${SECOND} (again for ${FIRST}, and again to clear it)`,
+  does: `put a ${SECOND} in it (again for a ${FIRST}, and again to clear it)`,
   apply: paintWith((old) => cycleFill(old, F_COLOR_0)),
 };
 
@@ -152,13 +152,13 @@ const targetVerbs: TargetVerbs<
   secondary: secondVerb,
   keyOnly: [
     {
-      does: `color it ${FIRST}`,
+      does: `put a ${FIRST} in it`,
       keys: [digitKey(1)],
       apply: paintWith(() => F_COLOR_1),
       pointer: { kind: "cycle", button: "primary" },
     },
     {
-      does: `color it ${SECOND}`,
+      does: `put a ${SECOND} in it`,
       keys: [digitKey(0), digitKey(2)],
       apply: paintWith(() => F_COLOR_0),
       pointer: { kind: "cycle", button: "secondary" },
