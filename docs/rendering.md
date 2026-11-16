@@ -659,6 +659,17 @@ drawn wider while lit, so the body shows on it. A line mostly hidden under
 what the cells hold, as Ascent's dashes between its number discs, is not
 that route: its cells are.
 
+**A path whose steps jump across the board draws its route while it
+lights.** Signpost's consecutive numbers are seldom neighbors, so its lit
+squares alone read as squares popping at random. It asks about the
+positions between two numbers as well and draws the lit stretch of a line
+from one square to the next, stopping short of their numbers. The line
+crosses tiles: the frame after one drew it repaints every tile.
+
+**A piece over several cells lights whole** (Dominosa's domino, a Boats
+boat): each of its cells asks about the piece's middle, and the piece is
+filled in the tone over its cells' own surface.
+
 **A game writes nothing for when the flash plays** (`ts-engine` § "The win
 flash plays on a forward move that solves the board"). The midend starts it
 when the winning move's own animation ends, so a game that slides or spins a

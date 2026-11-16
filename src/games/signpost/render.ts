@@ -423,6 +423,56 @@ function drawDragIndicator(
   drawArrow(dr, ui.dx, ui.dy, asz, ang, COL_ARROW);
 }
 
+/**
+ * The win flash's route: a line from each square to the next number's, lit
+ * where the highlight is along it, so the eye follows the sequence across
+ * the board as it follows Tracks' track. A line stops short of its two
+ * squares' number and arrow. Whether any of it was drawn.
+ */
+function drawWinRoute(
+  dr: GameDrawing,
+  ts: number,
+  state: SignpostState,
+  flash: Flash,
+): boolean {
+  const at = new Map<number, number>();
+  state.nums.forEach((num, i) => {
+    if (num > 0) at.set(num, i);
+  });
+  const center = (i: number): Point => ({
+    x: BORDER + (i % state.w) * ts + ts / 2,
+    y: BORDER + Math.floor(i / state.w) * ts + ts / 2,
+  });
+  const thickness = Math.max(2, Math.round(ts / 10));
+  const pieces = 8;
+  let drawn = false;
+  for (let k = 1; k < state.n; k++) {
+    const a = at.get(k);
+    const b = at.get(k + 1);
+    if (a === undefined || b === undefined) continue;
+    const from = center(a);
+    const to = center(b);
+    // The share of the line inside each end square, nearly to its edge: a
+    // diagonal leaving by the top left would otherwise cross the number.
+    const span = Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y));
+    const margin = Math.min(0.45, (0.9 * ts) / 2 / span);
+    const along = (t: number): Point => ({
+      x: from.x + (to.x - from.x) * t,
+      y: from.y + (to.y - from.y) * t,
+    });
+    for (let p = 0; p < pieces; p++) {
+      const t0 = margin + ((1 - 2 * margin) * p) / pieces;
+      const t1 = margin + ((1 - 2 * margin) * (p + 1)) / pieces;
+      const tone = flash.win(k + (t0 + t1) / 2);
+      if (!tone) continue;
+      const color = tone === WIN_LEAD ? COL_FLASH_LEAD : COL_FLASH;
+      dr.drawLine(along(t0), along(t1), color, thickness);
+      drawn = true;
+    }
+  }
+  return drawn;
+}
+
 // --- main redraw ------------------------------------------------------
 
 export function redrawSignpost(
@@ -481,6 +531,10 @@ export function redrawSignpost(
   marks.of("outline", CELL).forEach(add(F_HINT_OUTLINE));
   marks.of("ring", ARROW).forEach(add(F_HINT_ARROW));
   marks.of("ring", CELL).forEach(add(F_HINT_RING));
+
+  // The route drawn last frame crosses tiles, so every tile repaints to take
+  // it off; the next frame's route, if any, goes on after the tiles.
+  if (ds.route) ds.cache.fill(-1);
 
   for (let x = 0; x < state.w; x++) {
     for (let y = 0; y < state.h; y++) {
@@ -547,6 +601,8 @@ export function redrawSignpost(
       }
     }
   }
+
+  ds.route = flash.winning && drawWinRoute(dr, ts, renderState, flash);
 
   // Draw the dragging sprite.
   if (ui.dragging) {

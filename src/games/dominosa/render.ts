@@ -10,7 +10,7 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { GREEN, RED, WHITE } from "../../engine/color/colors.ts";
+import { BLACK, GREEN, RED, WHITE } from "../../engine/color/colors.ts";
 import {
   ERROR,
   FLASH,
@@ -78,6 +78,9 @@ export const COL_HINT_CELL = 9; // the evidence squares' outline
 export const COL_REFERENCE = 10;
 export const COL_FLASH = 11; // the ground of a domino the win flash's body is on
 export const COL_FLASH_LEAD = 12; // and of one its leading edge is on
+/** The number on a lit domino: the domino's own white would vanish on the
+ * flash's white leading edge. */
+const COL_FLASH_TEXT = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background } = mkhighlight(defaultBackground);
@@ -102,6 +105,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_REFERENCE] = GOAL;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
+  out[COL_FLASH_TEXT] = BLACK;
   return out;
 }
 
@@ -322,7 +326,10 @@ function drawTile(
   if (type !== TYPE_BLANK) {
     let bg = flags & DF_CLASH ? COL_DOMINOCLASH : COL_DOMINO;
     nc = COL_DOMINOTEXT;
-    if (flags & DF_FLASH) bg = flags & DF_FLASH_LEAD ? COL_FLASH_LEAD : COL_FLASH;
+    if (flags & DF_FLASH) {
+      bg = flags & DF_FLASH_LEAD ? COL_FLASH_LEAD : COL_FLASH;
+      nc = COL_FLASH_TEXT;
+    }
 
     drawPiecePart(dr, { x: cx, y: cy, w: ts, h: ts }, JOINS[type], bg, {
       ends: "square",

@@ -375,11 +375,11 @@ disabled and not drawn.
 
 An element the completion flash lights SHALL take one of two roles, the same
 in every game and none of a game's own: `FLASH_LEAD` under the highlight's
-leading edge and `FLASH` under its body. The ground of a cell, a tile, a
-region or a hub SHALL be filled with the role's color and SHALL keep what it
-holds, and a line SHALL be drawn in it. No game SHALL light an element any
-other way: by lifting or swapping a surface, hiding or recoloring what it
-holds, or moving it.
+leading edge and `FLASH` under its body. A lit ground SHALL be filled with
+the role's color and keep what it holds, and a line SHALL be drawn in it. No
+game SHALL light an element any other way: by lifting or swapping a surface,
+hiding or recoloring what it holds, or moving it, save a glyph the color
+would hide, which is drawn black.
 
 #### Scenario: Two white-flashing games flash the same color
 
@@ -406,6 +406,11 @@ holds, or moving it.
 - **WHEN** a game's flash runs along ink lines over a bed in a hue of the pair
 - **THEN** the lit lines are the flash colors, which read against the ink and
   the bed in both schemes
+
+#### Scenario: A white number on a piece under the white leading edge
+
+- **WHEN** a piece whose number rests white is lit by the leading edge
+- **THEN** its number is drawn black
 
 ### Requirement: A lit beveled tile is lit on its face and keeps its bevel
 

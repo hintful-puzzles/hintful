@@ -892,7 +892,7 @@ describe("boats rendering", () => {
     );
   });
 
-  it("lifts the squares in a sweep from the bottom left during the win flash", () => {
+  it("lights the water in a sweep from the bottom left, and each boat whole, during the win flash", () => {
     const p = presetParams(0);
     const { desc } = newBoatsDesc(p, randomNew("boats-flash-1"));
     const state = newState(p, desc);
@@ -919,9 +919,8 @@ describe("boats rendering", () => {
     const won = moves.reduce((s, m) => boatsGame.executeMove(s, m), state);
     expect(boatsGame.status(won)).toBe("solved");
 
-    // The squares filled in the flash's color, as their origins, and the
-    // boats drawn. A given segment's square lights like any other. Lit is
-    // either tone of the flash.
+    // The water squares filled in the flash's color, as their origins, and
+    // the boats drawn. Lit is either tone of the flash.
     const tones = new Set<number>();
     const isLit = (color: number): boolean => {
       if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
@@ -935,24 +934,68 @@ describe("boats rendering", () => {
       boatsGame.redraw(rec, ds, null, won, 1, boatsGame.newUi(won), 0, flash);
       return rec.ops;
     };
-    const lit = (ops: ReturnType<typeof paint>): string[] =>
-      ops.flatMap((o) => (o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : []));
-    const boats = (ops: ReturnType<typeof paint>): number =>
-      ops.filter((o) => o.op === "polygon" && o.fill === COL_SHIP).length;
+    // A lit element by its square's origin: a water square's lit surface, or
+    // a board hull's lit part, which is drawn under its square's clip.
+    const lit = (ops: ReturnType<typeof paint>): string[] => {
+      const out: string[] = [];
+      let square: { x: number; y: number } | null = null;
+      for (const o of ops) {
+        if (o.op === "clip") square = o;
+        else if (o.op === "unclip") square = null;
+        else if (o.op === "rect" && isLit(o.color)) out.push(`${o.x},${o.y}`);
+        else if (o.op === "polygon" && square !== null && isLit(o.fill))
+          out.push(`${square.x},${square.y}`);
+      }
+      return out;
+    };
+    const hulls = (ops: ReturnType<typeof paint>): number =>
+      ops.filter((o) => o.op === "polygon").length;
     const settled = paint(NO_FLASH);
     expect(lit(settled)).toEqual([]);
-    expect(boats(settled)).toBeGreaterThan(0);
     const run = winFlashRun(paint, (ops) => {
-      // The pieces are drawn on a lit square as on any other frame.
-      expect(boats(ops)).toBe(boats(settled));
+      // Every boat is drawn on every frame.
+      expect(hulls(ops)).toBe(hulls(settled));
       return lit(ops);
     });
-    // A square's place in the sweep is its x less its y.
-    expectWinFlashTravels(
-      run,
-      p.w * p.h,
-      (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
-    );
+    // A water square's place in the sweep is its x less its y, and a boat
+    // square's is its boat's middle's: the boat lights whole.
+    const ts = preferredDrawState(boatsGame, won).tileSize;
+    const keys = [...new Set(run.frames.flat())].map((c) => c.split(",").map(Number));
+    const left = Math.min(...keys.map(([x]) => x));
+    const top = Math.min(...keys.map(([, y]) => y));
+    const squareOf = (c: string): number => {
+      const [px, py] = c.split(",").map(Number);
+      return Math.round((py - top) / ts) * p.w + Math.round((px - left) / ts);
+    };
+    const boatOf = new Map<number, number[]>();
+    solved.grid.forEach((c, i) => {
+      if (!isShip(c) || boatOf.has(i)) return;
+      const boat = [i];
+      for (let k = 0; k < boat.length; k++) {
+        const j = boat[k];
+        const x = j % p.w;
+        for (const n of [
+          x > 0 ? j - 1 : -1,
+          x < p.w - 1 ? j + 1 : -1,
+          j - p.w,
+          j + p.w,
+        ])
+          if (n >= 0 && n < p.w * p.h && isShip(solved.grid[n]) && !boat.includes(n))
+            boat.push(n);
+      }
+      for (const j of boat) boatOf.set(j, boat);
+    });
+    const step = (i: number): number => (i % p.w) - Math.floor(i / p.w);
+    expectWinFlashTravels(run, p.w * p.h, (c) => {
+      const boat = boatOf.get(squareOf(c));
+      return boat
+        ? boat.reduce((s, i) => s + step(i), 0) / boat.length
+        : step(squareOf(c));
+    });
+    for (const frame of run.frames)
+      for (const c of frame)
+        for (const j of boatOf.get(squareOf(c)) ?? [])
+          expect(frame.map(squareOf), "a boat lights whole").toContain(j);
     expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
   it("highlights a mistake on a board that was already drawn", () => {

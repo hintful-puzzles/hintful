@@ -29,7 +29,13 @@ import { dominosaGame } from "./index.ts";
 // A set up to 1 above Easy and a set up to 2 above Normal.
 describeAbsentTiers(dominosaGame, ["1db", "1dh", "1de", "2dh", "2de"]);
 
-import { COL_DOMINOCLASH, COL_FLASH, COL_FLASH_LEAD, COL_REFERENCE } from "./render.ts";
+import {
+  COL_DOMINOCLASH,
+  COL_DOMINOTEXT,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_REFERENCE,
+} from "./render.ts";
 import { solveNumbers } from "./solver.ts";
 import {
   DCOUNT,
@@ -492,6 +498,9 @@ describe("dominosa render", () => {
       for (const op of dr.ops) {
         if (op.op === "clip") tile++;
         else if (op.op === "polygon" && isLit(op.fill)) lit.add(tile);
+        // The number on a lit domino reads on the flash's white edge.
+        else if (op.op === "text" && lit.has(tile))
+          expect(op.color, "a lit domino's number").not.toBe(COL_DOMINOTEXT);
       }
       expect(tile).toBe(w * h - 1);
       return [...lit];

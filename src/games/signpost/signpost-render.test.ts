@@ -16,7 +16,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
+import { type Flash, NO_FLASH, WIN_BODY, WIN_NONE } from "../../engine/win-wave.ts";
 import { newSignpostDesc } from "./generator.ts";
 import { signpostGame } from "./index.ts";
 import { BORDER, COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
@@ -148,6 +148,60 @@ describe("Signpost win flash", () => {
     const run = winFlashRun(surfaces, lit, 60);
     expectWinFlashTravels(run, state.n, (i) => state.nums[i]);
     expect(slotsSeen).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
+  });
+
+  it("draws the route between the lit numbers, and takes it off the next frame", () => {
+    // A highlight on the stretch from 3 to 5.
+    const flash: Flash = {
+      time: 0,
+      winning: true,
+      win: (position) => (position >= 3 && position <= 5 ? WIN_BODY : WIN_NONE),
+    };
+    const ds = preferredDrawState(signpostGame, state);
+    const ts = ds.tileSize;
+    const center = (num: number) => {
+      const i = state.nums.indexOf(num);
+      return {
+        x: BORDER + (i % state.w) * ts + ts / 2,
+        y: BORDER + Math.floor(i / state.w) * ts + ts / 2,
+      };
+    };
+    // Whether a point lies on the line from number k's square to k + 1's.
+    const onLink = (k: number, x: number, y: number): boolean => {
+      const a = center(k);
+      const b = center(k + 1);
+      const cross = (b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x);
+      const within =
+        Math.min(a.x, b.x) - 0.5 <= x &&
+        x <= Math.max(a.x, b.x) + 0.5 &&
+        Math.min(a.y, b.y) - 0.5 <= y &&
+        y <= Math.max(a.y, b.y) + 0.5;
+      return within && Math.abs(cross) < ts;
+    };
+    const ui = signpostGame.newUi(state);
+    const lit = new RecordingDrawing(signpostGame.colors(DEFAULT_BACKGROUND));
+    signpostGame.redraw(lit, ds, null, state, 1, ui, 0, flash);
+    const route = opsOfKind(lit.ops, "line").filter((o) => o.color === COL_FLASH);
+    expect(route.length).toBeGreaterThan(0);
+    for (const o of route)
+      expect(
+        [3, 4].some((k) => onLink(k, o.x1, o.y1) && onLink(k, o.x2, o.y2)),
+        "a piece of the route lies on a lit link",
+      ).toBe(true);
+    for (const k of [3, 4])
+      expect(route.some((o) => onLink(k, o.x1, o.y1) && onLink(k, o.x2, o.y2))).toBe(
+        true,
+      );
+
+    const after = new RecordingDrawing(signpostGame.colors(DEFAULT_BACKGROUND));
+    signpostGame.redraw(after, ds, null, state, 1, ui, 0, NO_FLASH);
+    const squares = opsOfKind(after.ops, "rect").filter(
+      (o) => o.w === ts && o.h === ts,
+    );
+    expect(new Set(squares.map((o) => `${o.x},${o.y}`)).size).toBe(state.n);
+    expect(opsOfKind(after.ops, "line").filter((o) => o.color === COL_FLASH)).toEqual(
+      [],
+    );
   });
 });
 

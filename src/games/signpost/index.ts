@@ -407,6 +407,7 @@ function newDrawState(s: SignpostState, tileSize: number): SignpostDrawState {
     cache: new Int32Array(s.n).fill(-1),
     nums: new Int32Array(s.n).fill(-1),
     dirp: new Int32Array(s.n).fill(-2),
+    route: false,
     dragging: false,
     dragBackground: null,
     dragX: 0,

@@ -335,6 +335,41 @@ function shipJoins(at: (i: number) => number, w: number, x: number, y: number): 
   return across ? JOIN_LEFT | JOIN_RIGHT : JOIN_UP | JOIN_DOWN;
 }
 
+/** Each square of a boat, by index, to the sweep step of its boat's middle. */
+function boatSteps(
+  at: (i: number) => number,
+  w: number,
+  h: number,
+): Map<number, number> {
+  const out = new Map<number, number>();
+  for (let start = 0; start < w * h; start++) {
+    if (!isShip(at(start)) || out.has(start)) continue;
+    const boat: number[] = [];
+    const seen = new Set([start]);
+    const queue = [start];
+    while (queue.length > 0) {
+      const i = queue.pop() as number;
+      boat.push(i);
+      const joins = shipJoins(at, w, i % w, (i - (i % w)) / w);
+      const next = [
+        joins & JOIN_LEFT ? i - 1 : -1,
+        joins & JOIN_RIGHT ? i + 1 : -1,
+        joins & JOIN_UP ? i - w : -1,
+        joins & JOIN_DOWN ? i + w : -1,
+      ];
+      for (const j of next)
+        if (j >= 0 && j < w * h && isShip(at(j)) && !seen.has(j)) {
+          seen.add(j);
+          queue.push(j);
+        }
+    }
+    const mx = boat.reduce((s, i) => s + (i % w), 0) / boat.length;
+    const my = boat.reduce((s, i) => s + Math.floor(i / w), 0) / boat.length;
+    for (const i of boat) out.set(i, sweepStep(mx, my));
+  }
+  return out;
+}
+
 /**
  * One boat segment, upstream `boats_draw_ship`: the engine's spanning piece
  * (`drawPiecePart`) with round ends, so a boat is one hull whose bow and stern
@@ -647,6 +682,10 @@ export function redraw(
     return ship;
   };
 
+  // The win flash lights a boat whole, as Dominosa a domino: each of its
+  // squares asks about the boat's middle, the mean of its squares.
+  const boatStep = flash.winning ? boatSteps(shown, w, h) : null;
+
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       const i = y * w + x;
@@ -661,21 +700,24 @@ export function redraw(
       const joins = isShip(ship) ? shipJoins(shown, w, x, y) : 0;
 
       const hintBit = hints ? hints[i] : 0;
-      const tone = flash.win(sweepStep(x, y));
+      const tone = flash.win(boatStep?.get(i) ?? sweepStep(x, y));
       const key = tileKey(ship, cellFlags[i], tone, hintBit, joins);
       if (ds.tiles[i] === key && !ds.wrong.stale(i)) continue;
       ds.tiles[i] = key;
 
       dr.drawUpdate({ x: tx, y: ty, w: ts + 1, h: ts + 1 });
       // A segment the puzzle gave is told by the lifted cell under it; given
-      // water keeps its blue and is told by its waves.
-      const surface = tone
-        ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-        : ship === EMPTY
-          ? COL_CELL
-          : isShip(state.gridClues[i])
-            ? COL_GIVEN
-            : COL_WATER;
+      // water keeps its blue and is told by its waves. A lit boat is its hull
+      // in the flash's color, on its own surface.
+      const lit = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : null;
+      const surface =
+        lit !== null && !isShip(ship)
+          ? lit
+          : ship === EMPTY
+            ? COL_CELL
+            : isShip(state.gridClues[i])
+              ? COL_GIVEN
+              : COL_WATER;
       dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, surface);
       if (hintBit & HINT_LINE)
         dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, hatchPeriod(ts));
@@ -690,7 +732,8 @@ export function redraw(
 
       if (isShip(ship)) {
         const color =
-          cellFlags[i] & FE_MISMATCH || ds.wrong.at(i) ? COL_SHIP_ERROR : COL_SHIP;
+          lit ??
+          (cellFlags[i] & FE_MISMATCH || ds.wrong.at(i) ? COL_SHIP_ERROR : COL_SHIP);
         // Clipped to the square, as a polygon's edge spills half a pixel.
         const square = { x: tx, y: ty, w: ts, h: ts };
         dr.clip(square);

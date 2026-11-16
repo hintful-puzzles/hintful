@@ -100,6 +100,9 @@ export interface SignpostDrawState {
   nums: Int32Array;
   /** Last-drawn inbound-arrow direction per cell (-1 = none). */
   dirp: Int32Array;
+  /** Whether the last frame drew the win flash's route, which crosses tiles,
+   * so the next repaints every tile to take it off. */
+  route: boolean;
   dragging: boolean;
   dragBackground: unknown;
   dragX: number;

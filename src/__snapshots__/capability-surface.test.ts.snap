@@ -1756,6 +1756,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "h",
       "n",
       "nums",
+      "route",
       "started",
       "tileSize",
       "w",
