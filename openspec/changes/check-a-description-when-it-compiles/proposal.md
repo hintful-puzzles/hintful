@@ -48,6 +48,12 @@ Two more, from the same session:
   the design.
 - The soundness report line says `held` and how many queries were
   exhaustive.
+- `npm run describe` names the techniques an edit left unchecked. Adding
+  one `define` to Norinori's description changed all ten fingerprints
+  (`say-why-a-region-has-no-room`, 2026-11-16). The commit and push hooks
+  passed, and CI failed `compiles only techniques checked sound as they
+  read now`. A writer should hear it at the edit, with the command that
+  checks them again.
 
 ## Before it starts
 

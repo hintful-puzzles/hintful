@@ -1,23 +1,21 @@
-ok  norinori   domino                         3  sound    (want sound   )     9 queries    0.3s
-ok  norinori   domino (planted)               3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  norinori   domino                         3  sound    (want sound   )     9 queries    0.5s
+ok  norinori   domino (planted)               3  unsound  (want unsound )     1 queries    0.3s   at cell 0
 ok  norinori   partner                        3  sound    (want sound   )     9 queries    0.6s
 ok  norinori   partner (planted)              3  unsound  (want unsound )     1 queries    0.2s   at cell 0
-ok  norinori   between                        3  sound    (want sound   )     9 queries    0.6s
-ok  norinori   between (planted)              3  unsound  (want unsound )     1 queries    0.1s   at cell 0
-ok  norinori   alone                          3  sound    (want sound   )     9 queries    0.3s
+ok  norinori   between                        3  sound    (want sound   )     9 queries    0.7s
+ok  norinori   between (planted)              3  unsound  (want unsound )     1 queries    0.2s   at cell 0
+ok  norinori   alone                          3  sound    (want sound   )     9 queries    0.4s
 ok  norinori   alone (planted)                3  unsound  (want unsound )     1 queries    0.2s   at cell 0
-ok  norinori   claimed                        3  sound    (want sound   )     9 queries    2.2s
+ok  norinori   claimed                        3  sound    (want sound   )     9 queries    2.3s
 ok  norinori   claimed (planted)              3  unsound  (want unsound )     1 queries    0.3s   at cell 0
-ok  norinori   fullRegion                     3  sound    (want sound   )   128 queries    4.3s
-ok  norinori   fullRegion (planted)           3  unsound  (want unsound )    44 queries    1.9s   at region region 43
-ok  norinori   exactRegion                    3  sound    (want sound   )   128 queries    5.3s
-ok  norinori   exactRegion (planted)          3  unsound  (want unsound )    44 queries    2.1s   at region region 43
-ok  norinori   neededRegion                   3  sound    (want sound   )   128 queries   28.9s
-ok  norinori   neededRegion (planted)         3  unsound  (want unsound )    44 queries    1.9s   at region region 43
-ok  norinori   blocked                        3  sound    (want sound   )   128 queries   23.8s
-ok  norinori   blocked (planted)              3  unsound  (want unsound )    44 queries    2.2s   at region region 43
+ok  norinori   fullRegion                     3  sound    (want sound   )   128 queries    4.1s
+ok  norinori   fullRegion (planted)           3  unsound  (want unsound )    44 queries    1.8s   at region region 43
+ok  norinori   exactRegion                    3  sound    (want sound   )   128 queries    5.0s
+ok  norinori   exactRegion (planted)          3  unsound  (want unsound )    44 queries    1.7s   at region region 43
+ok  norinori   neededRegion                   3  sound    (want sound   )   128 queries   26.6s
+ok  norinori   neededRegion (planted)         3  unsound  (want unsound )    44 queries    1.8s   at region region 43
+ok  norinori   blocked                        3  sound    (want sound   )   128 queries   23.7s
+ok  norinori   blocked (planted)              3  unsound  (want unsound )    44 queries    2.1s   at region region 43
 ..  norinori   crowded: not proved whole in time, asked on 0 boards: no defect
 ok  norinori   crowded                        3  sound    (want sound   )     0 queries  120.0s
-ok  norinori   crowded (planted)              3  unsound  (want unsound )     1 queries    9.3s   at cell 0
-ok  norinori   orphan                         3  sound    (want sound   )     9 queries    1.7s
-ok  norinori   orphan (planted)               3  unsound  (want unsound )     1 queries    0.2s   at cell 0
+ok  norinori   crowded (planted)              3  unsound  (want unsound )     1 queries    7.1s   at cell 0
