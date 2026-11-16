@@ -1214,7 +1214,10 @@ long.
 
 - **Optimize first, then bound.** A bound drawn from the slow number forbids
   boards the fixed code deals quickly. Profile a deal before choosing what to
-  speed up (`--cpu-prof` on a vitest fork). The first suspect is a port that
+  speed up: [`deal-profile`](../scripts/checks/deal-profile.test.ts) with
+  `DEAL_PROFILE_GAMES=<game>` lists where a deal's samples fall. Node's
+  `--cpu-prof` writes nothing from a vitest worker, and vitest takes no
+  option that passes it one. The first suspect is a port that
   rescans the whole board where upstream kept incremental state: a pure
   function of the board can be made incremental without moving a verdict, so
   no seed's board moves and the frozen differential guards the speed-up.
