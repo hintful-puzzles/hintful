@@ -1,0 +1,32 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A support still open read as clear.
+  strandSupport:
+    conclude: >-
+      forall c in below(a) where not known(c) and (forall p in below(a) where p
+      != c: value(p) != 1): place(c, 1)
+  # A number with one square to spare read as having none.
+  undercount:
+    conclude: >-
+      open(k) > n + 1 or (forall c in around(k) where not known(c): place(c, 1))
+  # A square beside a shaded brick read as making three. Unsound
+  # only where the checker reads the supposition: without it, an open
+  # square's run is empty.
+  three:
+    conclude: >-
+      forall c in cells(L) where not known(c) and (with place(c, 1): |run(c)| >
+      1): place(c, 2)
+  # A square beneath still open read as clear.
+  unsupported:
+    for: >-
+      c in cells where not known(c) and y(c) < h - 1 and count(p in below(c)
+      where value(p) = 1) = 0
+  # A number one brick short read as full.
+  overcount:
+    conclude: >-
+      shaded(k) < n - 1 or (forall c in around(k) where not known(c): place(c,
+      2))

@@ -1,0 +1,8 @@
+# A defect planted in each of the dead-end claims the description states,
+# keyed by its id: the statement with a condition loosened, or a quantity read
+# too finely, which the soundness checks under research/technique-check must
+# find unsound.
+
+deadEnds:
+  # A gem is collected in passing, not only where the ball stops.
+  stranded: "not dead and exists g in cells where kind(g) = 1: not rests(g)"

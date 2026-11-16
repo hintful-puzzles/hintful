@@ -1,0 +1,24 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A number one short of its shaded squares read as met.
+  alone:
+    for: >-
+      k in clues(count), c = at(k), n = need(c), r = count(d in block(c) where
+      value(d) != 2) where n <= 1 or r <= v(k)
+    conclude: >-
+      n >= 0 and r >= v(k) and (n <= 1 implies (forall d in block(c) where not
+      known(d): place(d, 2))) and (n <= 1 or (forall d in block(c) where not
+      known(d): place(d, 1)))
+  # One square more outside the other's block than the difference.
+  compared:
+    for: >-
+      k in clues(count), c = at(k), b in within(c, 2) where b != c and
+      clue(count, b) != none, n = need(c), by = n - need(b), O = only(c, b)
+      where by >= |O| - 1 and (by > 0 or |only(b, c)| > 0)
+    conclude: >-
+      (forall d in O: place(d, 1)) and (by > 0 or (forall d in only(b, c):
+      place(d, 2)))

@@ -1,0 +1,10 @@
+# A defect planted in each of the dead-end claims the description states,
+# keyed by its id: the statement with a condition loosened, or a quantity read
+# too finely, which the soundness checks under research/technique-check must
+# find unsound.
+
+deadEnds:
+  # A board that can be one color in exactly the fills left finishes.
+  short: >-
+    moves + count(k in range(0, colors - 1) where exists c in cells where not
+    flooded(c): color(c) = k) >= limit

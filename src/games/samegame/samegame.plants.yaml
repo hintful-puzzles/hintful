@@ -1,0 +1,11 @@
+# A defect planted in each of the dead-end claims the description states,
+# keyed by its id: the statement with a condition loosened, or a quantity read
+# too finely, which the soundness checks under research/technique-check must
+# find unsound.
+
+deadEnds:
+  # An empty board has no two squares side by side either.
+  stuck: >-
+    forall c in cells where tile(c) != 0: forall n in adj4(c): tile(n) != tile(c)
+  # An empty square is no color, and many may be left.
+  last: "exists c in cells: forall d in cells where d != c: tile(d) != tile(c)"

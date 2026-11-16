@@ -1,0 +1,21 @@
+# A defect planted in each of the dead-end claims the description states,
+# keyed by its id: the statement with a condition loosened, or a quantity read
+# too finely, which the soundness checks under research/technique-check must
+# find unsound.
+
+deadEnds:
+  # A block of even side moves a tile between colors.
+  colorOdd: >-
+    exists c in cells, v = value(c), lo = below(v), hi = upTo(v), k in {0, 1}:
+    count(d in cells where value(d) = v and shade(d) = k) != homes(lo, hi, k)
+  # A block of side 2 turns an odd permutation.
+  parity: >-
+    distinct(value(c) over c in cells) and count(a in cells, b in cells where
+    index(a, cells) < index(b, cells) and value(a) > value(b)) mod 2 = 1
+  # The tile's turns go with its color.
+  colorTurned: >-
+    n mod 2 = 0 and exists c in cells, v = value(c), lo = below(v), hi =
+    upTo(v), k in {0, 1}: count(d in cells where value(d) = v and shade(d) = k)
+    != homes(lo, hi, k)
+  # Four turns of one block add four to the sum.
+  turnSum: n mod 2 = 0 and sum(c in cells of turn(c)) mod 8 != 0

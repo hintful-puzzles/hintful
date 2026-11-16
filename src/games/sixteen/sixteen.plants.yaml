@@ -1,0 +1,10 @@
+# A defect planted in each of the dead-end claims the description states,
+# keyed by its id: the statement with a condition loosened, or a quantity read
+# too finely, which the soundness checks under research/technique-check must
+# find unsound.
+
+deadEnds:
+  # A slide along an even side is an odd permutation.
+  parity: >-
+    count(a in cells, b in cells where index(a, cells) < index(b, cells) and
+    value(a) > value(b)) mod 2 = 1

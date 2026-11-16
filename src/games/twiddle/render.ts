@@ -639,14 +639,6 @@ export function redraw(
 
 // --- palette ----------------------------------------------------------
 
-function clampColor(c: Color): Color {
-  return [
-    Math.max(0, Math.min(1, c[0])),
-    Math.max(0, Math.min(1, c[1])),
-    Math.max(0, Math.min(1, c[2])),
-  ];
-}
-
 /** Build the Twiddle palette from a base background + highlight/lowlight
  * (the gentle bevels and the cursor). */
 export function buildColors(bg: Color, hi: Color, lo: Color): Color[] {
@@ -654,9 +646,9 @@ export function buildColors(bg: Color, hi: Color, lo: Color): Color[] {
   out[COL_BACKGROUND] = bg;
   out[COL_TEXT] = INK;
   out[COL_HIGHLIGHT] = hi;
-  out[COL_HIGHLIGHT_GENTLE] = clampColor(twiddleGentleHighlight(bg));
+  out[COL_HIGHLIGHT_GENTLE] = twiddleGentleHighlight(bg);
   out[COL_LOWLIGHT] = lo;
-  out[COL_LOWLIGHT_GENTLE] = clampColor(twiddleGentleLowlight(bg));
+  out[COL_LOWLIGHT_GENTLE] = twiddleGentleLowlight(bg);
   // The cursor is the *outline* of the bevel triangles along the block's
   // edges, over their ordinary fill — a line, so one authored color serves
   // both the lit and the shaded sides. Two slots survive because the dark-mode

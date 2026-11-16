@@ -1,0 +1,68 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A domino read as ruling out every spot showing either of its numbers.
+  placed:
+    conclude: >-
+      (forall x in {end1(e), end2(e)}, y in adj4(x) where edge(x, y) != e:
+      place(edge(x, y), 2)) and (forall f in edges where f != e and not touch(e,
+      f) and (num(end1(f)) = num(end1(e)) or num(end2(f)) = num(end1(e))):
+      place(f, 2))
+  # A domino with two spots left read as going in the first.
+  onlySpot:
+    for: >-
+      a in range(0, n), b in range(a, n), P = spotsOf(a, b) where |P| = 1 or |P|
+      = 2, e = nth(P, 0) where not known(e)
+  # A square with two spots left read as covered by the first.
+  squareOnly:
+    for: >-
+      c in cells, S = spots(c) where |S| <= 2 and not (exists f in S: known(f))
+    conclude: "|S| >= 1 and place(nth(S, 0), 1)"
+  # A square read as taking its first spot's domino, whatever its others.
+  squareSingleDomino:
+    for: c in cells, S = spots(c) where |S| >= 2, s = nth(S, 0)
+  # A spot touching the first spot left for a domino read as touching them all.
+  mustOverlap:
+    conclude: >-
+      forall x in {end1(e), end2(e)}, y in adj4(x) where edge(x, y) not in P and
+      value(edge(x, y)) != 2 and touch(nth(P, 0), edge(x, y)): place(edge(x, y),
+      2)
+  # One of the far square's spots left read as all of them.
+  localDuplicate:
+    for: >-
+      p in edges where not known(p), x in {end1(p), end2(p)}, y in adj4(x), q =
+      edge(x, y) where q != p and value(q) != 2 and (exists r in spots(y) where
+      r != q: same(r, p))
+  # Two far squares read as needing one domino whatever their spots show.
+  localDuplicate2:
+    for: >-
+      p in edges where not known(p), x in {end1(p), end2(p)}, y in adj4(x), q =
+      edge(x, y) where q != p and value(q) != 2, R = {r in spots(y) where r !=
+      q} where |R| >= 1, d = nth(R, 0) where forall r in R: same(r, d), x2 in
+      {end1(p), end2(p)}, z in adj4(x2), q2 = edge(x2, z) where q2 != p and q2
+      != q and value(q2) != 2, S = {r in spots(z) where r != q2} where |S| >= 1
+      and (forall r in S: not touch(r, q))
+  # A spot read as cutting its group where its squares stay joined without
+  # it. Dropping the second part's count instead plants nothing: a group of
+  # spots left is the answer's dominoes, so even, and one part even makes the
+  # other even.
+  parity:
+    for: >-
+      P = {e in edges where value(e) != 2}, p in edges where not known(p) and
+      not inSquare(p), Q = P - {p}, A = through(end1(p), Q) where |A| mod 2 = 0
+      and |through(end2(p), Q)| mod 2 = 0
+  # Squares read as taking a set of one number more than there are squares.
+  set:
+    for: >-
+      a in range(0, n), S = showing(a) where |S| <= 16, U = {c in S where not
+      covered(c)}, T in subsets(U) where |T| >= 2 and |T| <= |S| - 2, O =
+      partners(T) where |O| <= |T| + 1 and not joinsTwo(T)
+  # Squares with a double read as taking a set of one number more.
+  setDoubles:
+    for: >-
+      a in range(0, n), S = showing(a) where |S| <= 16, U = {c in S where not
+      covered(c)}, T in subsets(U) where |T| >= 3, O = partners(T) where 2 <=
+      |O| and |O| <= |S| - 2 and |O| <= |T| + 1 and joinsTwo(T)

@@ -1,0 +1,29 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A color struck from a neighbor's neighbor.
+  placed:
+    for: >-
+      c in cells where known(c), j in borders(c), k in borders(j) where k != c
+      and not known(k)
+  lone:
+    for: c in cells where not known(c) and |cand(c)| < 3
+    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))"
+  # Two regions down to one pair read as a pair where they do not border.
+  pair:
+    for: >-
+      a in cells where not known(a) and |cand(a)| = 2, b in cells where index(b,
+      cells) > index(a, cells) and not known(b) and cand(b) = cand(a)
+  # A middle region that could be x struck from where it does not reach.
+  weigh:
+    for: >-
+      m in cells where not known(m), x in domain, R = cand(m) - {x} where |R| >=
+      1 and (forall a in R: exists k in borders(m): not known(k) and cand(k) =
+      {a, x}), t in cells where t != m and not known(t) and x in cand(t) and
+      (forall a in R: exists k in borders(m): not known(k) and cand(k) = {a, x}
+      and k != t and k in borders(t)), E = set(first({k in borders(m) where not
+      known(k) and cand(k) = {a, x} and k != t and k in borders(t)}) over a in
+      R)

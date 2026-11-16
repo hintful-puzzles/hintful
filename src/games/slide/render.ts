@@ -49,6 +49,7 @@ import { FLASH, FLASH_LEAD, HINT_OUTLINE } from "../../engine/color/palette.ts";
 import {
   slideBlockBase,
   slideMainBlockBase,
+  slideRaised,
   slideTargetBase,
   slideWallBase,
 } from "../../engine/color/palette-games.ts";
@@ -125,15 +126,6 @@ export const COL_FLASH_LEAD = 23;
 export const COL_HINT_EVIDENCE = 24;
 const NCOLORS = 25;
 
-/** Upstream `raise_colour`: two parts `src` to one part `limit`. */
-function raise(src: Color, limit: Color): Color {
-  return [
-    (2 * src[0] + limit[0]) / 3,
-    (2 * src[1] + limit[1]) / 3,
-    (2 * src[2] + limit[2]) / 3,
-  ];
-}
-
 export function colors(defaultBackground: Color): Color[] {
   const out = new Array<Color>(NCOLORS);
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -151,9 +143,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BLOCK_LOWLIGHT] = block.lowlight;
 
   // ...and lit up a bit while it is held — by a pointer or by the keyboard.
-  out[COL_GRABBED] = raise(block.base, block.highlight);
-  out[COL_GRABBED_HIGHLIGHT] = raise(block.highlight, block.highlight);
-  out[COL_GRABBED_LOWLIGHT] = raise(block.lowlight, block.highlight);
+  out[COL_GRABBED] = slideRaised(block.base, block.highlight);
+  out[COL_GRABBED_HIGHLIGHT] = slideRaised(block.highlight, block.highlight);
+  out[COL_GRABBED_LOWLIGHT] = slideRaised(block.lowlight, block.highlight);
 
   // The wall: the heaviest thing on the board, because it is the one thing that
   // never moves.
@@ -167,9 +159,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_MAIN] = main.base;
   out[COL_MAIN_HIGHLIGHT] = main.highlight;
   out[COL_MAIN_LOWLIGHT] = main.lowlight;
-  out[COL_MAIN_GRABBED] = raise(main.base, main.highlight);
-  out[COL_MAIN_GRABBED_HIGHLIGHT] = raise(main.highlight, main.highlight);
-  out[COL_MAIN_GRABBED_LOWLIGHT] = raise(main.lowlight, main.highlight);
+  out[COL_MAIN_GRABBED] = slideRaised(main.base, main.highlight);
+  out[COL_MAIN_GRABBED_HIGHLIGHT] = slideRaised(main.highlight, main.highlight);
+  out[COL_MAIN_GRABBED_LOWLIGHT] = slideRaised(main.lowlight, main.highlight);
 
   // The exit area on the floor is tinted green — likewise named to the player,
   // and left pale on purpose: it stays the most prominent thing on the board.

@@ -15,6 +15,7 @@ import {
   planningWith,
 } from "../../src/describe/description.ts";
 import { loadDescriptionFile } from "../../src/describe/load.ts";
+import { parsePlants, plantsPath } from "../../src/describe/plants.ts";
 import {
   deadEndFingerprint,
   deadEndKey,
@@ -23,67 +24,6 @@ import {
 import { checkWorld, compiled, worldName, worlds } from "./dead-end-check.ts";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
-
-/**
- * A defect planted in each claim, which the search must find unsound: a
- * condition dropped that the claim needs, or a quantity it keeps read too
- * finely.
- */
-const PLANTED: Record<string, Record<string, string>> = {
-  cube: {
-    // The game's own test before it was described: anything but exactly a
-    // solid's worth of paint, which a board with paint to spare can finish.
-    short: `count(c in cells where blue(c) = 1) + count(f in faces where paint(f) = 1) != |faces|`,
-  },
-  flood: {
-    // A board that can be one color in exactly the fills left finishes.
-    short: `moves + count(k in range(0, colors - 1) where exists c in cells where not flooded(c): color(c) = k) >= limit`,
-  },
-  netslide: {
-    // A tile with one arm, a leaf of the network, is no dead end.
-    bare: `|cells| > 1 and exists c in cells: arms(c) <= 1`,
-    // A tree of n tiles has exactly 2(n - 1) arm ends.
-    short: `sum(c in cells of arms(c)) <= 2 * (|cells| - 1)`,
-  },
-  samegame: {
-    // An empty board has no two squares side by side either.
-    stuck: `forall c in cells where tile(c) != 0: forall n in adj4(c): tile(n) != tile(c)`,
-    // An empty square is no color, and many may be left.
-    last: `exists c in cells: forall d in cells where d != c: tile(d) != tile(c)`,
-  },
-  sixteen: {
-    // A slide along an even side is an odd permutation.
-    parity: `count(a in cells, b in cells where index(a, cells) < index(b, cells) and value(a) > value(b)) mod 2 = 1`,
-  },
-  fifteen: {
-    // The gap's distance from its corner moves with the parity.
-    parity: `exists g in cells where value(g) = 0: count(a in cells, b in cells where index(a, cells) < index(b, cells) and value(a) > value(b)) mod 2 != (|cells| - 1) mod 2`,
-  },
-  inertia: {
-    // A gem is collected in passing, not only where the ball stops.
-    stranded: `not dead and exists g in cells where kind(g) = 1: not rests(g)`,
-  },
-  pegs: {
-    // The last peg on a finished board stands alone.
-    frozen: `exists p in cells where grid(p) = 1: forall q in adj4(p): not arrive(q)`,
-  },
-  sokoban: {
-    // A barrel spare to the targets may be left where it can go nowhere.
-    dead: `exists c in cells where barrel(c) = 1 and target(c) = 0: not homeward(c)`,
-    // A barrel that can never move again may already be on a target.
-    jammed: `tight and exists c in cells where barrel(c) = 1: not loose(c)`,
-  },
-  twiddle: {
-    // A block of even side moves a tile between colors.
-    colorOdd: `exists c in cells, v = value(c), lo = below(v), hi = upTo(v), k in {0, 1}: count(d in cells where value(d) = v and shade(d) = k) != homes(lo, hi, k)`,
-    // A block of side 2 turns an odd permutation.
-    parity: `distinct(value(c) over c in cells) and count(a in cells, b in cells where index(a, cells) < index(b, cells) and value(a) > value(b)) mod 2 = 1`,
-    // The tile's turns go with its color.
-    colorTurned: `n mod 2 = 0 and exists c in cells, v = value(c), lo = below(v), hi = upTo(v), k in {0, 1}: count(d in cells where value(d) = v and shade(d) = k) != homes(lo, hi, k)`,
-    // Four turns of one block add four to the sum.
-    turnSum: `n mod 2 = 0 and sum(c in cells of turn(c)) mod 8 != 0`,
-  },
-};
 
 /** The description with claim `id` replaced by `src`, wherever it is stated. */
 function planting(d: PlanningJson, id: string, src: string): PlanningJson {
@@ -130,6 +70,8 @@ it("checks every dead-end claim sound, and finds every planted one unsound", asy
       lines.push(`${d.game}: states no dead-end claim`);
       continue;
     }
+    const plantsAt = plantsPath(source);
+    const plants = parsePlants(readFileSync(`${ROOT}${plantsAt}`, "utf8"), plantsAt);
     const ws = await worlds(d);
     const run = async (desc: PlanningJson, label: string) => {
       const mod = await compiled(desc, label);
@@ -174,7 +116,7 @@ it("checks every dead-end claim sound, and finds every planted one unsound", asy
       if (verdict === "sound")
         verdicts[deadEndKey(source, id)] = deadEndFingerprint(d, src);
       else bad.push(`${d.game} ${id}: ${verdict}`);
-      const plant = PLANTED[d.game]?.[id];
+      const plant = plants.deadEnds[id];
       if (plant === undefined) {
         bad.push(`${d.game} ${id}: no planted defect`);
         continue;

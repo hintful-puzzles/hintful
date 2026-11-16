@@ -1,0 +1,22 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # Mathrax's clues read against the cell's own candidates, not those across
+  # the corner.
+  clueEasy:
+    conclude: >-
+      |M| > 0 and (forall d in cand(c) where not (matches(k, d) and (not
+      arithmetic(k) or (exists e in cand(c): makes(k, d, e)))): strike(c, d))
+  clue:
+    conclude: >-
+      |M| > 0 and (forall d in cand(c) where not (matches(k, d) and (not
+      arithmetic(k) or (exists e in cand(c): makes(k, d, e)))): strike(c, d))
+  # A diagonal pair read as never equal, though its cells share no line.
+  clueTricky:
+    conclude: >-
+      |M| > 0 and (forall d in cand(c) where not (matches(k, d) and (not
+      arithmetic(k) or (exists e in cand(across(k, c)) where e != d: makes(k, d,
+      e)))): strike(c, d))

@@ -1,0 +1,58 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A lone shaded square read as a domino.
+  domino:
+    for: >-
+      c in cells where value(c) = 1, D = {c} + {d in adj4(c) where value(d) =
+      1}, O = {e in cells where not known(e) and (exists d in D: e in adj4(d))}
+      where |O| > 0
+    conclude: "forall e in O: place(e, 2)"
+  # A lone shaded square with two open neighbors paired with both.
+  partner:
+    for: >-
+      c in cells where value(c) = 1 and lit(c) = 0, O = free(c) where |O| = 2
+    conclude: "forall d in O: place(d, 1)"
+  # An open square beside one shaded square read as beside two.
+  between:
+    for: x in cells where not known(x) and lit(x) >= 1, k = lit(x)
+  # An open square with one neighbor not clear read as alone.
+  alone:
+    for: >-
+      x in cells where not known(x) and count(d in adj4(x) where value(d) != 2)
+      <= 1
+  # A region needing two read as needing one.
+  claimed:
+    for: >-
+      s in cells where value(s) = 1 and lit(s) = 0, P = free(s) where |P| > 0, g
+      in region where (forall d in P: region(d) = g), n = need(cells(g)), O = {c
+      in open(cells(g)) where c not in P} where n <= 2 and |O| > 0
+    conclude: "forall c in O: place(c, 2)"
+  fullRegion:
+    for: r in region, n = need(cells(r)) where n <= 1
+    conclude: "forall c in open(cells(r)): place(c, 2)"
+  exactRegion:
+    for: >-
+      r in region, n = need(cells(r)), O = open(cells(r)) where n > 0 and n >=
+      |O| - 1
+    conclude: "forall c in O: place(c, 1)"
+  # A region read as needing one more than it does.
+  neededRegion:
+    for: >-
+      r in region, n = need(cells(r)), O = open(cells(r)) where n > 0, x in O, E
+      = O - {x} where not fits(E, n + 1)
+  # The second read as wanting a domino of its own inside the region.
+  blocked:
+    for: >-
+      r in region, O = open(cells(r)) where need(cells(r)) = 2, x in O, E = O -
+      {x} where (with place(x, 1): not fits(E, 2))
+  # The trial read with no supposition, and one more shaded asked of it.
+  crowded:
+    for: >-
+      x in cells where not known(x), R = ruled(x), g in region where g =
+      region(x) or (exists p in R + adj4(x): region(p) = g), S = cells(g), n =
+      need(S) - own(x, S), E = {c in open(S) where c != x and c not in R} where
+      n > 0 and not fits(E, n + 1), Q = {c in open(S) where c in R}

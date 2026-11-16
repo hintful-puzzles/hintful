@@ -14,7 +14,8 @@
  * Three rules, each aimed at one way a color decision leaks back into a game:
  *
  * 1. **no color literal** — `[0.2, 1, 0.2]` in a game is a value nobody can
- *    restyle;
+ *    restyle, and `[(2 * a[0] + b[0]) / 3, …]` is the same decision computed;
+ *    an array literal is one where TypeScript reads it as a `Color`;
  * 2. **no channel-indexing the background** — `bg[0] * 0.9` is the same decision
  *    written as arithmetic, and the commonest way a ported game spells a
  *    derived color;
@@ -23,9 +24,7 @@
  *    them is a game deciding a color.
  *
  * A fourth rule holds the table to the games: a token in `palette-games.ts`
- * is imported only by the game its prefix names, and by some game. An array
- * of three numbers that is not a color is declared in `NOT_COLORS` with its
- * reason.
+ * is imported only by the game its prefix names, and by some game.
  *
  * What it deliberately does not attempt: a game could still compute a color from
  * variables the rules do not name. That is a review matter; the rules above
@@ -34,6 +33,7 @@
  * the shared bevel trio (`mkhighlightSpecific(GRID_DARK)`) — those are the
  * intended shape, not an exception to it.
  */
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import * as colors from "./colors.ts";
 import * as roles from "./palette.ts";
@@ -76,27 +76,55 @@ const sourceModules = import.meta.glob<string>("../../games/**/*.ts", {
 });
 
 /**
- * Array literals of three numbers that are genuinely **not colors**.
- *
- * Matched on the source snippet rather than a line number so it survives edits,
- * and kept per file so a snippet allowed in one game is not allowed everywhere.
- * It should stay about this size: nearly every three-number literal in a game
- * is a color, which is what makes this rule worth having at all.
+ * The array literals each game source writes as a `Color`, by line: those
+ * TypeScript reads as one (`engine/types.ts`'s alias), wherever it stands. A
+ * color reaches a board only through `colors`, typed `Color[]`, so a literal
+ * that gets there is typed a `Color`, by where it is written or by a
+ * declaration or assertion on the way; a triple of numbers that is a tally or
+ * a menu's sizes is not, whatever its shape. The rule is keyed on the type's
+ * symbol, not its name.
  */
-const NOT_COLORS: Record<string, { snippet: string; why: string }[]> = {
-  "cube/render.ts": [
-    { snippet: "const t = [0, 0, 0];", why: "a 3-vector in the solid's transform" },
-  ],
-  "fifteen/state.ts": [
-    { snippet: "[3, 4, 5].map((n) =>", why: "the three sizes of its preset menu" },
-  ],
-  "towers/index.ts": [
-    { snippet: "[4, 5, 6].map((w)", why: "the three sizes of its preset menu" },
-  ],
-  "undead/render.ts": [
-    { snippet: "const placed = [0, 0, 0];", why: "a per-monster-type tally" },
-  ],
-};
+function colorLiterals(): Map<string, { line: number; text: string }[]> {
+  // `src` is typed without Node, so a path is the URL's own.
+  const path = (p: string): string =>
+    decodeURIComponent(new URL(p, import.meta.url).pathname);
+  const files = Object.keys(sourceModules)
+    .filter((p) => !p.endsWith(".test.ts"))
+    .map(path);
+  const typesFile = path("../types.ts");
+  const root = path("../../../");
+  const config = ts.readConfigFile(`${root}tsconfig.json`, (p) => ts.sys.readFile(p));
+  const { options } = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
+  const program = ts.createProgram([...files, typesFile], { ...options, noEmit: true });
+  const checker = program.getTypeChecker();
+  const typesSource = program.getSourceFile(typesFile);
+  const module = typesSource && checker.getSymbolAtLocation(typesSource);
+  const color =
+    module && checker.getExportsOfModule(module).find((s) => s.name === "Color");
+  if (!color) throw new Error("engine/types.ts exports no Color");
+  const isColor = (t: ts.Type): boolean =>
+    t.aliasSymbol === color || (t.isUnion() && t.types.some(isColor));
+  const out = new Map<string, { line: number; text: string }[]>();
+  for (const file of files) {
+    const source = program.getSourceFile(file);
+    if (!source) throw new Error(`${file} is not in the program`);
+    const rel = /(?:^|\/)games\/(.+)$/.exec(file)?.[1] ?? file;
+    const found: { line: number; text: string }[] = [];
+    const visit = (n: ts.Node): void => {
+      if (ts.isArrayLiteralExpression(n)) {
+        const t = checker.getContextualType(n);
+        if (t && isColor(t)) {
+          const line = source.getLineAndCharacterOfPosition(n.getStart()).line + 1;
+          found.push({ line, text: source.text.split("\n")[line - 1].trim() });
+        }
+      }
+      ts.forEachChild(n, visit);
+    };
+    visit(source);
+    out.set(rel, found);
+  }
+  return out;
+}
 
 /**
  * Every non-test game source, keyed `<game>/<file>`.
@@ -129,7 +157,6 @@ function code(src: string): string {
   );
 }
 
-const COLOR_LITERAL = /\[\s*-?[\d.]+\s*,\s*-?[\d.]+\s*,\s*-?[\d.]+\s*\]/g;
 const BACKGROUND_CHANNEL =
   /\b(?:default[Bb]ackground|background|bg)\s*\[\s*\d|\bbg\[i\]/;
 /** Matched against **raw** source, not the comment-stripped copy: an import
@@ -140,29 +167,22 @@ const COMBINATOR_IMPORT = /^import[^;]*from\s+"[^"]*color-token\.ts"/m;
 
 describe("a game contains no color value", () => {
   const sources = gameSources();
+  const literals = colorLiterals();
 
   it("finds the game sources at all", () => {
     // A broken glob would make every rule below vacuously pass.
     expect(sources.length).toBeGreaterThan(100);
+    expect([...literals.keys()].sort()).toEqual(sources.map((s) => s.rel).sort());
   });
 
   for (const { rel, src } of sources) {
     const stripped = code(src);
-    const allowed = NOT_COLORS[rel] ?? [];
 
     it(`${rel} writes no color literal`, () => {
-      const found = [...stripped.matchAll(COLOR_LITERAL)].map((m) => {
-        const line = stripped.slice(0, m.index).split("\n").length;
-        return { text: src.split("\n")[line - 1].trim(), line };
-      });
-      const offending = found.filter(
-        (f) => !allowed.some((a) => f.text.includes(a.snippet)),
-      );
       expect(
-        offending.map((f) => `${rel}:${f.line}  ${f.text}`),
+        (literals.get(rel) ?? []).map((f) => `${rel}:${f.line}  ${f.text}`),
         "a color belongs in the token table (palette.ts / palette-games.ts) " +
-          "under a name that says what it means; add it there and reference it. " +
-          "If this really is not a color, declare it in NOT_COLORS with a reason",
+          "under a name that says what it means; add it there and reference it",
       ).toEqual([]);
     });
 

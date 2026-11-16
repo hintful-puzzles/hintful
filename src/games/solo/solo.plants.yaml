@@ -1,0 +1,55 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A box's value placed with two places left.
+  boxSingle:
+    for: >-
+      u in box, placed = set(value(c) over c in cells(u) where known(c)), d in
+      domain - placed, n = count(c in cells(u) where d in cand(c)) where n < 3
+    conclude: n >= 1 and place(first({c in cells(u) where d in cand(c)}), d)
+  # A cage's last cell given one less than its total leaves.
+  cageSingle:
+    for: >-
+      r in cage, K = {c in cells(r) where not known(c)} where |K| = 1, c =
+      first(K), t = owed(r) - 1
+  # A unit's sum left with its whole cages' totals not taken out.
+  regionRule:
+    for: >-
+      u in rows + cols + box, W = {r in cage where inside(r, u)}, L = set(c over
+      r in cage where r not in W, c in cells(r) where not known(c) and c in
+      cells(u)) where |L| > 0 and |L| < w, s = sum(d in domain of d) - sum(c in
+      cells(u) where known(c) of value(c)), R = {c in cells(cage(first(L)))
+      where not known(c) and c not in L}, t = owed(cage(first(L))) - s
+  # A value struck that the others' extreme only just reaches.
+  cageMinMax:
+    conclude: >-
+      forall c in K, d in cand(c) where d + sum(x in K where x != c of max(e in
+      cand(x))) <= t: strike(c, d)
+  partMinMax:
+    conclude: "forall c in K, d in cand(c) where beyond(K, v + 1, c, d): strike(c, d)"
+  cageSums:
+    conclude: >-
+      |K| > 0 and (|K| < 2 or |K| > 4 or (forall P = sums(K, t - 1): |P| > 0 and
+      (forall c in K, d in cand(c) where d not in P: strike(c, d))))
+  partSums:
+    conclude: >-
+      forall P = sums(K, v - 1): |P| > 0 and (forall c in K, d in cand(c) where
+      d not in P: strike(c, d))
+  # A line's value struck from the rest of a box it merely meets.
+  intersect:
+    conclude: >-
+      forall c in cells(b) where c not in cells(L) and d in cand(c): strike(c, d)
+  digitSet:
+    for: >-
+      d in domain, Y0 = {L in rows where not (exists c in cells(L): value(c) =
+      d)}, X0 = range(0, w - 1) - set(x(c) over c in cells where value(c) = d),
+      T in subsets(X0) where |T| = 0 or (2 <= |T| and |T| <= |Y0| - 2), Y = {L
+      in Y0 where not (exists c in cells(L): x(c) in T and d in cand(c))} where
+      |Y| >= |Y0| - |T| - 1
+    conclude: >-
+      (|T| > 0 or (forall L in rows: exists c in cells(L): d in cand(c))) and
+      (forall L in Y0 - Y, c in cells(L) where x(c) in X0 - T and d in cand(c):
+      strike(c, d))

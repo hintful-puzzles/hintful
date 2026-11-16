@@ -1,0 +1,25 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A square with two monsters left read as down to one.
+  single:
+    for: c in cells where |cand(c)| < 3
+    conclude: "|cand(c)| >= 1 and (known(c) or place(c, first(cand(c))))"
+  # A monster one short of its count read as all placed.
+  total:
+    conclude: >-
+      |P| <= n and |O| >= n and (|P| < n - 1 or (forall c in O - P: strike(c,
+      d)))
+  # A ghost read as showing before the first mirror, as a vampire does.
+  sightline:
+    conclude: >-
+      forall c in L, d in cand(c) where not (exists fill f of L from cand where
+      f(c) = d: (a < 0 or count(x in sight_direct(s, mirror) where f(x) != 2) +
+      count(x in sight_bent(s, mirror) where f(x) != 2) + count(x in
+      sight_twice(s, mirror) where f(x) != 2) = a) and (b < 0 or shows(f, t) =
+      b) and count(x in L where f(x) = 1 and |cand(x)| > 1) <= g and count(x in
+      L where f(x) = 2 and |cand(x)| > 1) <= v and count(x in L where f(x) = 3
+      and |cand(x)| > 1) <= z): strike(c, d)

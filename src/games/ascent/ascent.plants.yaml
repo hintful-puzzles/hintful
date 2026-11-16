@@ -1,0 +1,52 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A placed number read as the next one too.
+  once:
+    conclude: strike(p, value(c) + 1)
+  # A number with two squares left read as going in the first.
+  onlySquare:
+    for: >-
+      n in range(1, top) where not held(n), S = {c in cells where not known(c)
+      and n in cand(c)} where |S| < 3
+    conclude: "|S| >= 1 and place(first(S), n)"
+  # The numbers next to a placed one read as not beside it.
+  nextTo:
+    conclude: >-
+      forall p in cells where m in cand(p) and not near(p, c, 0): strike(p, m)
+  # A missing number read as a step nearer a placed one than it must be.
+  reach:
+    conclude: >-
+      forall p in cells where m in cand(p) and not near(p, c, abs(m - n) - 1):
+      strike(p, m)
+  # A square with two neighbors open to the path read as a dead end.
+  deadEnd:
+    for: >-
+      c in cells where not known(c) and open(c) and count(p in nbr(c) where
+      open(p) and (not known(p) or (value(p) > 1 and not held(value(p) - 1)) or
+      (value(p) < top and not held(value(p) + 1)))) <= 2, n in {1, top} where
+      not held(n) and n in cand(c) and not (exists e in {1, top} where e != n
+      and not held(e): e in cand(c))
+  # A missing number read as needing the one two before it beside it.
+  overlap:
+    conclude: >-
+      forall c in cells where n in cand(c) and n > 2 and not (exists p in
+      nbr(c): n - 2 in cand(p)): strike(c, n)
+  # A square with two numbers left read as holding its first.
+  onlyNumberNear:
+    for: >-
+      c in cells where not known(c) and open(c) and |cand(c)| = 2, n =
+      first(cand(c)) where (n > 1 and held(n - 1)) or (n < top and held(n + 1))
+  onlyNumber:
+    for: c in cells where not known(c) and open(c) and |cand(c)| < 3
+    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))"
+  # An arrow's number read as off its line.
+  onLine:
+    conclude: "forall p in cells where n in cand(p) and online(a, p): strike(p, n)"
+  overlapEdges:
+    conclude: >-
+      forall c in cells where n in cand(c) and n > 2 and not (exists p in
+      nbr(c): n - 2 in cand(p)): strike(c, n)

@@ -1,0 +1,11 @@
+# A defect planted in each of the dead-end claims the description states,
+# keyed by its id: the statement with a condition loosened, or a quantity read
+# too finely, which the soundness checks under research/technique-check must
+# find unsound.
+
+deadEnds:
+  # A barrel spare to the targets may be left where it can go nowhere.
+  dead: >-
+    exists c in cells where barrel(c) = 1 and target(c) = 0: not homeward(c)
+  # A barrel that can never move again may already be on a target.
+  jammed: "tight and exists c in cells where barrel(c) = 1: not loose(c)"

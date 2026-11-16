@@ -1,0 +1,11 @@
+# A defect planted in each of the dead-end claims the description states,
+# keyed by its id: the statement with a condition loosened, or a quantity read
+# too finely, which the soundness checks under research/technique-check must
+# find unsound.
+
+deadEnds:
+  # The gap's distance from its corner moves with the parity.
+  parity: >-
+    exists g in cells where value(g) = 0: count(a in cells, b in cells where
+    index(a, cells) < index(b, cells) and value(a) > value(b)) mod 2 != (|cells|
+    - 1) mod 2

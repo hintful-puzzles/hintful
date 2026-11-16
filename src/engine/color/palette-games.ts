@@ -229,6 +229,14 @@ export const slideTargetBase = (background: Color, highlight: Color): Color => [
   background[2],
 ];
 
+/** @see slideWallBase — a grabbed block's color, raised as upstream raises
+ * it: two parts `src` to one part `limit`, its own highlight. */
+export const slideRaised = (src: Color, limit: Color): Color => [
+  (2 * src[0] + limit[0]) / 3,
+  (2 * src[1] + limit[1]) / 3,
+  (2 * src[2] + limit[2]) / 3,
+];
+
 // --- sokoban ------------------------------------------------------------
 
 /** **A pit** — half the floor's own lowlight, so it reads as a hole in the floor
@@ -266,10 +274,20 @@ export const TRACKS_BED: Color = (() => {
  * for the block outline the cursor is not on, so two levels of emphasis are
  * available on a board made entirely of beveled tiles. */
 export const twiddleGentleHighlight = (background: Color): Color =>
-  scale(background, 1.1);
+  inGamut(scale(background, 1.1));
 /** @see twiddleGentleHighlight */
 export const twiddleGentleLowlight = (background: Color): Color =>
-  scale(background, 0.9);
+  inGamut(scale(background, 0.9));
+
+/** A color with each channel held to [0, 1]: a board a tenth lighter than a
+ * near-white background would leave the gamut. */
+function inGamut(c: Color): Color {
+  return [
+    Math.max(0, Math.min(1, c[0])),
+    Math.max(0, Math.min(1, c[1])),
+    Math.max(0, Math.min(1, c[2])),
+  ];
+}
 
 // --- undead -------------------------------------------------------------
 

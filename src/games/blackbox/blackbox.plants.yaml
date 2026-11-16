@@ -1,0 +1,11 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A laser another square still decides read as going astray.
+  ray:
+    for: >-
+      k in clues(laser), s = at(k), u = ahead(s) where u != none, d in {1, 2}, r
+      = beam(s, u, d) where r != clue(laser, s)

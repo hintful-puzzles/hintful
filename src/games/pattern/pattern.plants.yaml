@@ -1,0 +1,12 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A square no fitting of its line can make d read as one every fitting does.
+  line:
+    for: >-
+      L in lines, R = clue(runs, L), d in domain, O = {x in cells(L) where not
+      known(x) and not (exists fill f of cells(L) from cand where f(x) = d:
+      fits(f, L, R))}, c in O where index(c, stretch(L, c, O)) = 0

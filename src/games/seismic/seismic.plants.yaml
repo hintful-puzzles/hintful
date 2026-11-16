@@ -1,0 +1,24 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A placed number struck one square past its reach.
+  cull:
+    for: >-
+      c in cells where known(c), n = value(c), p in cells where p != c and
+      (area(p) = area(c) or near(c, p, n + 1))
+  lone:
+    for: c in cells where not known(c) and |cand(c)| < 3
+    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))"
+  areaSingle:
+    for: >-
+      r in area, n in range(1, |cells(r)|) where not (exists c in cells(r):
+      value(c) = n), k = count(c in cells(r) where n in cand(c)) where k < 3
+    conclude: k >= 1 and place(first({c in cells(r) where n in cand(c)}), n)
+  # A square near only one of the area's homes struck.
+  starve:
+    conclude: >-
+      forall c in cells where area(c) != r and not known(c) and n in cand(c) and
+      (exists h in H: near(c, h, n)): strike(c, n)

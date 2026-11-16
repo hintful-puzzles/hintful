@@ -1012,13 +1012,16 @@ Each guard reads every game without being told about it.
 - [`palette-source.test.ts`](../src/engine/color/palette-source.test.ts)
   fails on a color literal, on indexing the background's channels, on
   importing the color combinators and on importing another game's token. A
-  three-number array that is not a color goes in its `NOT_COLORS` with a
-  reason.
+  color literal is an array TypeScript reads as a `Color`, computed channels
+  included, so a triple of numbers that is no color passes as it is; a color a
+  game must compute is a named function in `palette-games.ts`.
 - [`neighbor-contrast.test.ts`](../src/puzzle/neighbor-contrast.test.ts)
   fails when two things painted side by side stand too close in the dark
   scheme. Look at the game in the dark scheme before deciding: a pair close
   on purpose goes in its ledger with what it is, and any other gets an
-  authored dark value on the shared role. It reads the deal and one frame
+  authored dark value on the shared role. A region fill (`REGION_FILLS`)
+  beside the board's margin is close by the fills' design and passes in every
+  game, known by its token, so paint the token itself and not a copy. It reads the deal and one frame
   some hint steps in, so a color only input brings out is not covered.
 - [`mark-collisions.test.ts`](../src/puzzle/mark-collisions.test.ts) fails
   when two slots a player cannot tell apart by color in one scheme are drawn

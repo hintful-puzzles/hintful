@@ -1,0 +1,21 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  facing:
+    conclude: >-
+      forall s in P, c = nth(sight(s), clue(sees, s)): w in cand(c) and place(c,
+      w)
+  bounds:
+    conclude: >-
+      (near implies (forall h in short(L, far(L, R)): strike(c0, h))) and (near
+      or (forall K = (domain - P) + set(value(c) over c in L where known(c) and
+      not (exists c2 in before(c, L): value(c2) > value(c) + 1)), i in domain, h
+      = w + 1 - i where h in K, j in range(0, v - |K - range(1, h)| - 1):
+      strike(nth(L, j), h)))
+  arrangement:
+    conclude: >-
+      forall d in cand(c) where not (exists fill f of L from cand where
+      distinct(f(x) over x in L) and f(c) = d: seen(f, L) = v + 1): strike(c, d)

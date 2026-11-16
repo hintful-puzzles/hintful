@@ -1,0 +1,11 @@
+# A defect planted in each of the dead-end claims the description states,
+# keyed by its id: the statement with a condition loosened, or a quantity read
+# too finely, which the soundness checks under research/technique-check must
+# find unsound.
+
+deadEnds:
+  # The game's own test before it was described: anything but exactly a
+  # solid's worth of paint, which a board with paint to spare can finish.
+  short: >-
+    count(c in cells where blue(c) = 1) + count(f in faces where paint(f) = 1)
+    != |faces|

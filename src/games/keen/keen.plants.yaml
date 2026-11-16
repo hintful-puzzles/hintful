@@ -1,0 +1,21 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  cageEasy:
+    for: >-
+      r in cage, K = cells(r), D = set(f(x) over fill f of K from cand where
+      apart(f, K) and makes(f, r), x in K where x != first(K))
+  # Keen lets a value repeat in a cage where its cells share no line.
+  cage:
+    conclude: >-
+      forall c in K, d in cand(c) where not (exists fill f of K from cand where
+      distinct(f(x) over x in K) and makes(f, r) and f(c) = d: true): strike(c,
+      d)
+  cageLine:
+    conclude: >-
+      forall d in domain where (forall fill f of K from cand where apart(f, K)
+      and makes(f, r): exists x in cells(L): x in K and f(x) = d), c in
+      cells(L): strike(c, d)

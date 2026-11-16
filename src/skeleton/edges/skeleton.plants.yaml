@@ -1,0 +1,19 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # The skeleton of an edge game: a square with one edge more than it
+  # needs read as forced.
+  forced:
+    for: >-
+      c in cells, n = 2 - lines(c), U = ways(c) where n < 0 or (n > 0 and |U| <=
+      n + 1)
+    conclude: "n >= 0 and (forall y in U: place(edge(c, y), 1))"
+  # A square's third edge taken whatever the other two would do.
+  pairBreaks:
+    for: >-
+      c in cells where lines(c) = 0, U = ways(c) where |U| = 3, k in U, I = U -
+      {k}, i = nth(I, 0), j = nth(I, 1) where not known(edge(c, k)) and not
+      known(edge(c, i)) and not known(edge(c, j))

@@ -1,0 +1,11 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  sign:
+    conclude: >-
+      forall d in domain: ((forall d2 in cand(small): d <= d2 + 1) implies
+      strike(big, d)) and ((forall d2 in cand(big): d >= d2) implies
+      strike(small, d))

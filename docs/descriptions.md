@@ -1448,11 +1448,14 @@ the modifier is on.
 Library techniques are checked on a plain Latin square, the weakest rule set
 any Latin game adds to, and on one with a repeated value.
 
-**Each technique has a planted defect beside it in
-`describe-check.test.ts` that must come out unsound**, and each library
-technique that reads a multiplicity a second, the technique reading it as
-one, which must come out unsound where a value repeats. A plant is keyed by
-technique id, or `<game>.<id>` where two games state one id. A plant that only
+**Each technique has a planted defect beside it, in the
+`<name>.plants.yaml` next to its description, that must come out
+unsound** (`src/describe/plants.ts`), and each library technique that reads a
+multiplicity a second, under `once`, the technique reading it as one, which
+must come out unsound where a value repeats. A plant is keyed by the id the
+description states, and `plants.test.ts` holds the file to the description in
+the gate: a technique or claim with no plant fails there, in milliseconds,
+rather than going unplanted in a check run by hand. A plant that only
 makes a technique strike less, or drops a condition consistent marks already
 give, is not a defect, and the checker rightly calls it sound.
 
@@ -1650,8 +1653,8 @@ whose positions number at most `CHECKED_POSITIONS`
   and Fifteen's parity miss none, which their generators rely on.
 - **A board where nothing moves checks nothing** (a block wider than the
   board) and is listed apart.
-- **Each claim has a planted defect beside it** in `dead-end-check.test.ts`
-  that must come out unsound.
+- **Each claim has a planted defect beside it**, under `deadEnds` in the
+  description's `<name>.plants.yaml`, that must come out unsound.
 
 The verdict is recorded in `src/describe/soundness.json` under a fingerprint
 of the claim and every part of the rules the search reads, and the gate

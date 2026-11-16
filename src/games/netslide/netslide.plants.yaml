@@ -1,0 +1,10 @@
+# A defect planted in each of the dead-end claims the description states,
+# keyed by its id: the statement with a condition loosened, or a quantity read
+# too finely, which the soundness checks under research/technique-check must
+# find unsound.
+
+deadEnds:
+  # A tile with one arm, a leaf of the network, is no dead end.
+  bare: "|cells| > 1 and exists c in cells: arms(c) <= 1"
+  # A tree of n tiles has exactly 2(n - 1) arm ends.
+  short: sum(c in cells of arms(c)) <= 2 * (|cells| - 1)

@@ -1,0 +1,14 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # The clue's letter given one square less reach than the empties
+  # allow.
+  border:
+    for: >-
+      k in clues(border), L = sight(at(k)), H = order - nums, f = index(first({c
+      in L where not (known(c) and value(c) = nums + 1)}), L), reach = H - 1 -
+      count(c in L where index(c, L) >= H and known(c) and value(c) = nums + 1),
+      stop = index(first({c in L where nums + 1 not in cand(c)}), L)

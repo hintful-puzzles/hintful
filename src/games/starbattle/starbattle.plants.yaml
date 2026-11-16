@@ -1,0 +1,76 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A star's neighbors two squares away emptied too.
+  around:
+    conclude: "forall p in within(c, 2) where p != c and not known(p): place(p, 2)"
+  # A row or column one star short read as full.
+  fullLine:
+    for: L in lines, n = need(cells(L)) where n <= 1
+    conclude: "forall c in open(cells(L)): place(c, 2)"
+  fullRegion:
+    for: r in region, n = need(cells(r)) where n <= 1
+    conclude: "forall c in open(cells(r)): place(c, 2)"
+  # One open square more than the stars needed, all starred.
+  exactLine:
+    for: >-
+      L in lines, n = need(cells(L)), O = open(cells(L)) where n > 0 and n >=
+      |O| - 1
+    conclude: "forall c in O: place(c, 1)"
+  exactRegion:
+    for: >-
+      r in region, n = need(cells(r)), O = open(cells(r)) where n > 0 and n >=
+      |O| - 1
+    conclude: "forall c in O: place(c, 1)"
+  # Regions inside one star short of the line's need read as enough.
+  confined:
+    for: >-
+      dir in range(0, 1), a in range(0, w - 1), B = band(1, dir, a), n = need(B)
+      where n > 0, I = inside(B), mi = sum(r in I of need(cells(r))), R =
+      reaching(B), mr = sum(r in R of need(cells(r))), lines = (mi + 1 >= n and
+      (exists c in open(B): region(c) not in I)) where mi + 1 >= n or mr <= n
+  # Room for one star fewer than needed plus one read as too little.
+  neededLine:
+    for: >-
+      L in lines, n = need(cells(L)), O = open(cells(L)) where n > 0, x in O, E
+      = O - {x} where not fits(E, n + 1), room = most(E, n)
+  neededRegion:
+    for: >-
+      r in region, n = need(cells(r)), O = open(cells(r)) where n > 0, x in O, E
+      = O - {x} where not fits(E, n + 1), room = most(E, n)
+  crowdedLine:
+    for: >-
+      x in cells where not known(x), R = touched(x), L in lines where L = row(x)
+      or L = col(x) or (exists p in R: L = row(p) or L = col(p)), S = cells(L),
+      n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R}
+      where n > 0 and not fits(E, n + 1), room = most(E, n), Q = {c in open(S)
+      where c in R}
+  crowdedRegion:
+    for: >-
+      x in cells where not known(x), R = touched(x), g in region where g =
+      region(x) or (exists p in R: region(p) = g), S = cells(g), n = need(S) -
+      own(x, S), E = {c in open(S) where c != x and c not in R} where n > 0 and
+      not fits(E, n + 1), room = most(E, n), Q = {c in open(S) where c in R}
+  banded:
+    for: >-
+      k in range(2, w - 2), dir in range(0, 1), a in range(0, w - k), B =
+      band(k, dir, a), n = need(B) + (k - 1) * stars where n > 0, I = inside(B),
+      mi = sum(r in I of need(cells(r))), R = reaching(B), mr = sum(r in R of
+      need(cells(r))), lines = (mi + 1 >= n and (exists c in open(B): region(c)
+      not in I)) where mi + 1 >= n or mr <= n
+  starvedLine:
+    for: >-
+      x in cells where not known(x), R = ruled(x), L in lines where L = row(x)
+      or L = col(x) or (exists p in R: L = row(p) or L = col(p)), S = cells(L),
+      n = need(S) - own(x, S), E = {c in open(S) where c != x and c not in R}
+      where n > 0 and not fits(E, n + 1), room = most(E, n), Q = {c in open(S)
+      where c in R}
+  starvedRegion:
+    for: >-
+      x in cells where not known(x), R = ruled(x), g in region where g =
+      region(x) or (exists p in R: region(p) = g), S = cells(g), n = need(S) -
+      own(x, S), E = {c in open(S) where c != x and c not in R} where n > 0 and
+      not fits(E, n + 1), room = most(E, n), Q = {c in open(S) where c in R}
