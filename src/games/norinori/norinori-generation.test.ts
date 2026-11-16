@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import { deepBudget } from "../../engine/testing/slow.ts";
 import { newNorinoriDesc } from "./generator.ts";
 import { norinoriGame } from "./index.ts";
 import { answerOf, areasOf, NORINORI_RUNGS, solveNorinori } from "./solver.ts";
@@ -30,19 +31,29 @@ const SHAPES: NorinoriParams[] = [
   { w: 7, h: 5, diff: DIFF_NORMAL },
 ];
 
+/** The shapes this run deals: in CI the first alone, as a Normal or Tricky
+ * board takes seconds to deal; the hint pins hold those tiers' rungs there. */
+const DEALT_SHAPES = SHAPES.slice(0, deepBudget(1, SHAPES.length));
+
 describeDealtTiers(
   norinoriGame,
-  SHAPES.map((p) => encodeParams(p, true)),
+  DEALT_SHAPES.map((p) => encodeParams(p, true)),
 );
 
-// `blocked` fired on none of three seeds a shape (2026-11-16).
-const SEEDS = ["a", "b", "c", "d", "e", "f"];
+// `blocked` fired on none of three seeds a shape (2026-11-16). CI deals one;
+// the hint pins hold each rung to a written-down board there.
+const SEEDS = ["a", "b", "c", "d", "e", "f"].slice(0, deepBudget(1, 6));
 
-const DEALT = SHAPES.flatMap((p) =>
+// Dealt when a test asks, so a run that skips the census deals nothing.
+const DEALT = DEALT_SHAPES.flatMap((p) =>
   SEEDS.map((seed) => {
     const label = `${encodeParams(p, true)} ${seed}`;
-    const { desc } = newNorinoriDesc(p, randomNew(`ladder ${label}`));
-    return { label, board: () => ({ ...p, desc }) };
+    let desc: string | null = null;
+    const board = () => {
+      desc ??= newNorinoriDesc(p, randomNew(`ladder ${label}`)).desc;
+      return { ...p, desc };
+    };
+    return { label, board };
   }),
 );
 

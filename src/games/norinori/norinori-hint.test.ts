@@ -12,6 +12,7 @@ import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
+import { itDeep } from "../../engine/testing/slow.ts";
 import { norinoriGame } from "./index.ts";
 import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf } from "./solver.ts";
@@ -19,6 +20,7 @@ import {
   DIFF_EASY,
   DIFF_NORMAL,
   DIFF_TRICKY,
+  decodeParams,
   executeMove,
   type NorinoriParams,
   type NorinoriState,
@@ -31,8 +33,7 @@ const pinned = describeHintPins({
     { w: 6, h: 6, diff: DIFF_NORMAL },
     { w: 6, h: 6, diff: DIFF_TRICKY },
   ],
-  // `orphan` fires on about one Tricky board in forty (none of 24 at twelve
-  // seeds, measured 2026-11-16).
+  // `blocked` held on 180 of 1746 positions at this many (2026-11-16).
   seeds: 48,
   pins: {
     /** Held on 1619 of 1746 positions walked. */
@@ -107,30 +108,47 @@ function deal(p: NorinoriParams, seed: string): NorinoriState {
   return newState(p, norinoriGame.newDesc(p, randomNew(seed)).desc);
 }
 
-describe("norinori hint plans", () => {
-  it.each(BOARDS)("lead a $w x $h board at tier $diff to its answer", (p) => {
-    for (const seed of ["plan a", "plan b"]) {
-      let state = deal(p, seed);
-      const answer = answerOf(state.w, state.h, state.regions);
-      // The plan is capped, so it is asked again until the board is done.
-      for (let asked = 0; norinoriGame.status(state) !== "solved"; asked++) {
-        expect(asked).toBeLessThan(state.grid.length);
-        const result = norinoriGame.hint?.(state);
-        if (!result?.ok) throw new Error(`refused on ${seed}`);
-        for (const step of result.steps) {
-          if (step.move.kind !== "mark") throw new Error("a step marks squares");
-          // The line `hint-quality.test.ts` draws for every game's sentences.
-          expect(step.explanation.length, step.explanation).toBeLessThanOrEqual(120);
-          for (const { index, mark } of step.move.cells)
-            expect(mark).toBe(answer?.[index]);
-          state = executeMove(state, step.move);
-        }
-      }
+/** A board written down as its game ID. */
+function board(id: string): NorinoriState {
+  const colon = id.indexOf(":");
+  return newState(decodeParams(id.slice(0, colon)), id.slice(colon + 1));
+}
+
+/** Boards the pins name, at Normal and Tricky: what CI walks, where dealing
+ * would cost seconds a board. */
+const WRITTEN = ["6x6dn:a1c4b1a1aaa1ib1b3adb1b1", "6x6dt:f2aa3a4a2ada1aaadb1e1a"];
+
+/** Hint plans, asked again whenever one runs out, finish `state` with the
+ * answer's marks and every sentence within the line. */
+function expectPlansFinish(start: NorinoriState, label: string): void {
+  let state = start;
+  const answer = answerOf(state.w, state.h, state.regions);
+  // The plan is capped, so it is asked again until the board is done.
+  for (let asked = 0; norinoriGame.status(state) !== "solved"; asked++) {
+    expect(asked).toBeLessThan(state.grid.length);
+    const result = norinoriGame.hint?.(state);
+    if (!result?.ok) throw new Error(`refused on ${label}`);
+    for (const step of result.steps) {
+      if (step.move.kind !== "mark") throw new Error("a step marks squares");
+      // The line `hint-quality.test.ts` draws for every game's sentences.
+      expect(step.explanation.length, step.explanation).toBeLessThanOrEqual(120);
+      for (const { index, mark } of step.move.cells) expect(mark).toBe(answer?.[index]);
+      state = executeMove(state, step.move);
     }
+  }
+}
+
+describe("norinori hint plans", () => {
+  it.each(WRITTEN)("lead %s to its answer", (id) => {
+    expectPlansFinish(board(id), id);
+  });
+
+  itDeep.each(BOARDS)("lead a dealt $w x $h board at tier $diff to its answer", (p) => {
+    for (const seed of ["plan a", "plan b"]) expectPlansFinish(deal(p, seed), seed);
   });
 
   it("a step rings exactly the squares its move marks", () => {
-    const state = deal(BOARDS[1], "rings");
+    const state = board(WRITTEN[1]);
     const result = norinoriGame.hint?.(state);
     if (!result?.ok) throw new Error("refused");
     for (const step of result.steps) {

@@ -138,7 +138,10 @@ export function deepBudget(ci: number, deep: number): number {
 
 /** `it`, skipped outside the game's deep tier ({@link inDeepTier}). Name the
  * shallow case that still holds the rule in CI where it is not obvious. */
-export const itDeep: typeof it = new Proxy(it, {
+// The proxy's target is a bare function and not `it`: a proxy must answer
+// for the target's read-only properties with the target's own values, and
+// `it.each` reads one of them, which `it.skipIf(…)` holds a value of its own.
+export const itDeep: typeof it = new Proxy((() => {}) as unknown as typeof it, {
   apply: (_target, self, args) => Reflect.apply(it.skipIf(!inDeepTier()), self, args),
   get: (_target, key) => Reflect.get(it.skipIf(!inDeepTier()), key),
 });
