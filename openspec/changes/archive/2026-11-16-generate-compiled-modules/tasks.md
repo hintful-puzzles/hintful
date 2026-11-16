@@ -25,4 +25,5 @@
 ## 4. Docs, and the end
 
 - [x] 4.1 `docs/descriptions.md` § "What every game does" says where a module is and what generates it; the build-pipeline requirement is replaced by three (this change's spec delta)
-- [ ] 4.2 `npm run gate`, `npm run test:hint-sweeps`, a production build run in Chrome (a game deals, a hint speaks), a fresh clone's `npm ci && npm run typecheck`, then push and watch that CI and the deploy generate before they build
+- [x] 4.2 `npm run gate`, `npm run test:hint-sweeps`, a production build run in Chrome (a game deals, a hint speaks), a fresh clone's `npm ci && npm run typecheck`, then push and watch that CI and the deploy generate before they build
+  - The gated commit and the sweeps passed. `npm run build` from no `src/generated/` built, and in `vite preview` Keen dealt and its hint spoke a compiled cage step. A fresh clone had no `src/generated/` until `npm ci` wrote it, and `npm run typecheck` passed with nothing between. CI and the deploy run `npm ci` and the gate, which both generate; their first run is the next session's to check

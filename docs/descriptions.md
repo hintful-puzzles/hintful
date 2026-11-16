@@ -9,8 +9,10 @@ is compiled from its description", "A compiled firing is recorded with a
 reason built from its binding", "A game's answer check is compiled from its
 rules"),
 [`described-position`](../openspec/specs/described-position/spec.md) and
-[`build-pipeline`](../openspec/specs/build-pipeline/spec.md) ("Nothing is
-generated into the source tree"). The parser and the compilers are
+[`build-pipeline`](../openspec/specs/build-pipeline/spec.md) ("Only the
+compiled descriptions are generated into the source tree", "Every command
+generates the compiled descriptions it reads", "A compiler change shows in a
+diff"). The parser and the compilers are
 [`src/describe/`](../src/describe/). The runtime the compiled code calls is
 [`engine/describe-runtime.ts`](../src/engine/describe-runtime.ts), and a
 planning game's rules are the engine's
