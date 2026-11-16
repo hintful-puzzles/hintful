@@ -94,7 +94,7 @@ describe("the hint's steps", () => {
     });
     const step = plan.find((s) => s.rung === "capped.satisfied");
     expect(step?.explanation).toBe(
-      "This 1 already sees its one clear square (outlined), so the ringed square just past it must be purple.",
+      "This 1 already sees its one clear square (outlined), so the ringed square just past it must be shaded.",
     );
   });
 

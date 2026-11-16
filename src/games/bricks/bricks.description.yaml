@@ -18,7 +18,7 @@ help:
   sections:
     - heading: What the cells show
       body: |-
-        A shaded cell holds a {{pair:0}} square. A cell you have decided is not shaded is *clear*: it turns {{pair:1}}, with a faint cross. The numbers sit on lighter cells.
+        A cell you have decided is not shaded is *clear*: it takes a color of its own, with a faint cross. The numbers sit on lighter cells.
   origins: |-
     This genre was invented by [Nikoli](https://www.nikoli.co.jp/) under the name *Tawamurenga*.
   hints: |-
@@ -26,7 +26,7 @@ help:
 
     {{hint-marks}}
 
-    A *shaded brick*, in the hint's words, is a cell holding a {{pair:0}} square. Where a sentence says "this cell", it means the ringed one; the thinner rings in another color are the "outlined" cells it names.
+    A *shaded brick*, in the hint's words, is a cell you have shaded. Where a sentence says "this cell", it means the ringed one; the thinner rings in another color are the "outlined" cells it names.
 
     Each step is one of the rules at work on a single cell: shading it would make three in a row, leave it with nothing shaded beneath it to rest on, or give a number too many shaded neighbors; or clearing it would leave a shaded brick above with nothing to rest on, or leave a number unable to reach its count.
 

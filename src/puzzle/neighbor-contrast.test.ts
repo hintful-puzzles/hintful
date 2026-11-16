@@ -21,6 +21,7 @@ import "../games/index.ts";
 import { resolvePalette } from "../engine/color/color-mkhighlight.ts";
 import { REGION_FILLS } from "../engine/color/colors.ts";
 import { getTsGame } from "../engine/registry.ts";
+import { inSweep } from "../engine/testing/slow.ts";
 import type { Color } from "../engine/types.ts";
 import * as inertia from "../games/inertia/render.ts";
 import * as sokoban from "../games/sokoban/render.ts";
@@ -113,7 +114,7 @@ describe("neighbors stand apart in the dark scheme", () => {
   // a margin the scheme misplaced, would leave it exempting nothing.
   it("exempts a region fill at the margin where one is painted", () => {
     expect([...exemptedIn]).toEqual(
-      expect.arrayContaining(["map", "norinori", "starbattle"]),
+      expect.arrayContaining(["map", "norinori", "starbattle"].filter(inSweep)),
     );
   });
 

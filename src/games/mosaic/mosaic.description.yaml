@@ -3,8 +3,8 @@
 game: mosaic
 help:
   rules: |-
-    Decide every square: it either holds a {{pair:0}} square or is clear.
-    Each number indicates how many {{pair:0}} squares are in the 3×3 square
+    Decide every square: it is either shaded or clear.
+    Each number indicates how many shaded squares are in the 3×3 square
     surrounding the number – *including* the clue square
     itself.
   controls: |-
@@ -16,7 +16,7 @@ help:
   sections:
     - heading: What the squares show
       body: |-
-        A square you have made clear turns {{pair:1}}, which tells it from a
+        A square you have made clear takes a color of its own, which tells it from a
         square you have not decided yet. It carries a faint cross too, unless it
         has a number, which then has the square to itself. A number is drawn on top
         of whatever its square holds, and fades once its 3×3 square is fully
@@ -24,7 +24,7 @@ help:
   hints: |-
     **Hint** explains the next step rather than simply making it. It
     reasons only from the numbers and the squares you have already made
-    {{pair:0}} or clear, so it carries on from wherever you are, as long as
+    shaded or clear, so it carries on from wherever you are, as long as
     none of them is wrong; if one is, it asks you to fix the highlighted
     mistakes first. A number's *squares*, in its words, are its block: the
     number's own square and the eight around it, fewer at the edge of the
@@ -34,20 +34,20 @@ help:
 
     Most steps come from one number alone:
 
-    * **A number that has all its {{pair:0}} squares** makes the rest of its
+    * **A number that has all its shaded squares** makes the rest of its
       block clear.
     * **A number with only as many squares left that are not clear as it
-      needs** makes all of those {{pair:0}}.
+      needs** makes all of those shaded.
 
     Where no number settles a square alone, the hint compares two numbers
     whose blocks overlap. Both count the squares the blocks share, so the two
     differ only by the squares one of them counts and the other does not:
 
-    * **A number that needs more {{pair:0}} squares than another, by as many
+    * **A number that needs more shaded squares than another, by as many
       as it has empty squares outside the other's block**, makes all of
-      those {{pair:0}}. A 6 beside a 3, with three of its empty squares
+      those shaded. A 6 beside a 3, with three of its empty squares
       outside the 3's block, is the plainest case.
-    * **Two numbers that need the same number of {{pair:0}} squares, where
+    * **Two numbers that need the same number of shaded squares, where
       every empty square of the first is in the second's block too**, make
       the second's other squares clear: the second gets all it needs from
       the squares they share.

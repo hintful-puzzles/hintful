@@ -2,10 +2,10 @@
 
 exports[`range: pinned hint positions > says, at each pin 1`] = `
 {
-  "besideShaded": "This square touches the outlined purple square, so it must be clear.",
-  "capped.overrun": "If this square, just past the outlined squares, were clear, this 4 would see more than 4, so it must be purple.",
-  "capped.satisfied": "This 2 already sees both of its clear squares (outlined), so the ringed square just past them must be purple.",
-  "cut": "Making this square purple would cut some of the outlined squares around it off from the rest, so it must stay clear.",
+  "besideShaded": "This square touches the outlined shaded square, so it must be clear.",
+  "capped.overrun": "If this square, just past the outlined squares, were clear, this 4 would see more than 4, so it must be shaded.",
+  "capped.satisfied": "This 2 already sees both of its clear squares (outlined), so the ringed square just past them must be shaded.",
+  "cut": "Making this square shaded would cut some of the outlined squares around it off from the rest, so it must stay clear.",
   "reach": "This 4 needs more than the outlined square, so it must see along the striped run: the ringed square must be clear.",
 }
 `;

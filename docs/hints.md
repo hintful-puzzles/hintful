@@ -692,6 +692,11 @@ two ways (owner, 2026-11-13, `standardize-hint-vocabulary`).
   about twice as often as "square"), and Bricks (the board is hexagons). The
   help page uses the same noun; one that says "cell" where the hint says
   "square" is fixed with the hint (`{{wing:cell}}` in a keeping game's help).
+- **A state is named by the rules, never by its color** (owner, 2026-11-16,
+  `name-states-by-rule-not-color`): the color is the theme's, and a theme
+  changes no word. A shaded cell is "shaded" (`SHADED_NAME`, `{shaded}` in a
+  description), one known not to be is "clear", and a help page types the
+  same words.
 - **A mark ends "must be {the game's off-mark}"**: grass, water, blocked,
   empty, unused, "a line", "crossed out". One word per game, the one its help
   teaches. **A struck value or note ends "must go"** (§ "Conclude with the

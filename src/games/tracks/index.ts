@@ -209,7 +209,7 @@ type TracksVerb = TargetVerb<TracksState, TracksUi, Point, TracksMove>;
 const trackVerb: TracksVerb = {
   does:
     "lay track there: on an edge, a segment joining the two squares; in a square, " +
-    "the purple bed that says it holds track, even before you know " +
+    "the colored bed that says it holds track, even before you know " +
     "which edges it crosses. " +
     "Click it again to take the track away",
   apply: flipAt(false),

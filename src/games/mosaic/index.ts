@@ -91,11 +91,11 @@ const targetVerbs: TargetVerbs<
     border: (ts) => Math.floor(ts / 2),
   }),
   primary: {
-    does: `turn it ${SHADED_NAME}, then ${UNSHADED_NAME}, then empty again`,
+    does: `shade it, then make it ${UNSHADED_NAME}, then empty again`,
     apply: toggle(false),
   },
   secondary: rulingOut({
-    does: `turn it ${UNSHADED_NAME}, then ${SHADED_NAME}, then empty again`,
+    does: `make it ${UNSHADED_NAME}, then shade it, then empty again`,
     apply: toggle(true),
   }),
   sweep: {

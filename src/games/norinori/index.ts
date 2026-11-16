@@ -14,7 +14,6 @@ import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import type { Game, HintStep, SolveResult } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { transposeDimensions } from "../../engine/params.ts";
-import { SHADED_NAME } from "../../engine/piece.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
@@ -133,11 +132,11 @@ const cycle =
     old === BLANK ? first : old === first ? second : BLANK;
 
 const shade: NorinoriVerb = {
-  does: `make it ${SHADED_NAME} (click again to cross it out, and again to clear it)`,
+  does: "shade it (click again to cross it out, and again to clear it)",
   apply: markWith(cycle(SHADED, CROSSED)),
 };
 const cross: NorinoriVerb = {
-  does: `cross it out (click again to make it ${SHADED_NAME}, and again to clear it)`,
+  does: "cross it out (click again to shade it, and again to clear it)",
   apply: markWith(cycle(CROSSED, SHADED)),
 };
 

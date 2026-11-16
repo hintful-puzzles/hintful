@@ -21,13 +21,15 @@ export const TWO_SHAPES: readonly [PieceShape, PieceShape] = ["square", "disc"];
  * **Shaded**, in a game where a cell is shaded or is not (Pattern, Range,
  * Singles): the pair's first member, alone, so the only piece on the board is
  * the shaded one and a finished picture still reads as one. The color is
- * `SHADED` (`palette.ts`); these are its shape and the word a hint says for
- * it. What a cell known not to be shaded shows is {@link drawRuledOutCross}
- * or {@link drawClearSquare}, by how much of the board the state covers.
+ * `SHADED` (`palette.ts`); this is its shape. What a cell known not to be
+ * shaded shows is {@link drawRuledOutCross} or {@link drawClearSquare}, by how
+ * much of the board the state covers.
  */
 export const SHADED_SHAPE: PieceShape = TWO_SHAPES[0];
-/** @see SHADED_SHAPE */
-export const SHADED_NAME: string = TWO_NAMES[0].only;
+/** The word for a shaded cell: the rules' word, which no theme changes, where
+ * the color is the theme's (owner, 2026-11-16: "distinguish between rules of
+ * the game and our choice of colors"). */
+export const SHADED_NAME = "shaded";
 /** The word for a cell known not to be shaded, which holds no piece. One word
  * for every such game, so "clear" means one thing across them. */
 export const UNSHADED_NAME = "clear";

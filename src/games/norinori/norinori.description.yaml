@@ -3,15 +3,15 @@
 game: norinori
 help:
   rules: |-
-    You have a grid of squares divided into regions by heavy lines. Shade squares so that every region holds exactly two {{pair:0}} squares, and every {{pair:0}} square touches exactly one other along a side. The {{pair:0}} squares therefore come in dominoes, pairs side by side, and no two dominoes touch along a side, though they may touch at a corner. A domino may cross from one region into another.
+    You have a grid of squares divided into regions by heavy lines. Shade squares so that every region holds exactly two shaded squares, and every shaded square touches exactly one other along a side. The shaded squares therefore come in dominoes, pairs side by side, and no two dominoes touch along a side, though they may touch at a corner. A domino may cross from one region into another.
 
     Every puzzle has exactly one solution, and none needs a guess.
   controls: |-
     {{controls}}
 
-    You need not mark anything clear to finish: the puzzle is solved as soon as the {{pair:0}} squares are all in place. A {{pair:0}} square turns red when it touches two others, and a region turns red when it holds more than two.
+    You need not mark anything clear to finish: the puzzle is solved as soon as the shaded squares are all in place. A shaded square turns red when it touches two others, and a region turns red when it holds more than two.
 
-    A domino rules out the open squares beside it, and a region's second {{pair:0}} square rules out the rest of the region. {{rules-out}}
+    A domino rules out the open squares beside it, and a region's second shaded square rules out the rest of the region. {{rules-out}}
   origins: |-
     Norinori is a Nikoli puzzle.
   hints: |-
@@ -19,12 +19,12 @@ help:
 
     {{hint-marks}}
 
-    A hint calls a square *open* while you have marked it neither {{pair:0}} nor clear. Its steps, easiest first:
+    A hint calls a square *open* while you have marked it neither shaded nor clear. Its steps, easiest first:
 
-    - Two {{pair:0}} squares side by side are a domino, so every open square beside it is clear. A {{pair:0}} square with only one open square beside it, and no {{pair:0}} one, is paired with that square. An open square beside two {{pair:0}} squares, or with no square beside it that could pair with it, is clear.
-    - A region with its two {{pair:0}} squares has the rest clear, and a region with exactly as many open squares as it still needs {{pair:0}} has them all {{pair:0}}. A {{pair:0}} square whose open neighbors all lie in one region that needs only one more {{pair:0}} square takes that one, so the region's other open squares are clear.
-    - On Normal boards, a region is read for where its {{pair:0}} squares can go as parts of dominoes: each needs a partner, and none may touch a third. A square without which the rest of the region could not hold them is {{pair:0}}, and one with which it could not is clear.
-    - On Tricky boards, a square is tried {{pair:0}}: where it would complete a domino or its region, the squares beside it, or the rest of its region, would be clear. If that would leave a region without room for the {{pair:0}} squares it needs, the square is clear.
+    - Two shaded squares side by side are a domino, so every open square beside it is clear. A shaded square with only one open square beside it, and no shaded one, is paired with that square. An open square beside two shaded squares, or with no square beside it that could pair with it, is clear.
+    - A region with its two shaded squares has the rest clear, and a region with exactly as many open squares as it still needs shaded has them all shaded. A shaded square whose open neighbors all lie in one region that needs only one more shaded square takes that one, so the region's other open squares are clear.
+    - On Normal boards, a region is read for where its shaded squares can go as parts of dominoes: each needs a partner, and none may touch a third. A square without which the rest of the region could not hold them is shaded, and one with which it could not is clear.
+    - On Tricky boards, a square is tried shaded: where it would complete a domino or its region, the squares beside it, or the rest of its region, would be clear. If that would leave a region without room for the shaded squares it needs, the square is clear.
 
     If a square you marked is wrong, the hint asks you to fix the highlighted mistakes first.
 name: Norinori

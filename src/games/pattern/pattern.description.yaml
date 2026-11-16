@@ -5,12 +5,11 @@ help:
   rules: |-
     Shade some of the squares in the grid, so that the numbers in each row
     and column match the lengths of its consecutive runs of shaded squares.
-    A shaded square holds a {{pair:0}} square.
   controls: |-
     {{controls}}
 
-    A square you know is not shaded can be marked clear: it turns
-    {{pair:1}}, with a faint cross. A gray square with nothing in it is one
+    A square you know is not shaded can be marked clear: it takes a color
+    of its own, with a faint cross. A gray square with nothing in it is one
     you have not decided yet.
 
     Drag along a row or column to give every undecided square on it what
@@ -23,7 +22,7 @@ help:
   hints: |-
     **Hint** explains the next step rather than simply making it. Each step
     works along one row or column at a time, from its numbers and the
-    squares you have already marked {{pair:0}} or clear, so it carries on
+    squares you have already marked shaded or clear, so it carries on
     from wherever you are, as long as none of those is wrong; if one is, it
     asks you to fix the highlighted mistakes first.
 
@@ -33,7 +32,7 @@ help:
 
     * **Overlap.** A run that can slide only a few squares along its line
       always covers the squares in the middle of its range, so they must be
-      {{pair:0}}. A run with nowhere to slide covers all of them.
+      shaded. A run with nowhere to slide covers all of them.
     * **Out of reach.** A square no run can reach in its line must be clear.
       A line with no clues has no runs, so all of it is clear.
     * **Every fit agrees.** Try every way a line's runs can fit around what

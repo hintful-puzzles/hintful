@@ -29,7 +29,7 @@ import type { SaysById } from "../../generated/skeleton/grid/skeleton.compiled.t
 
 const squares = (n: number): string => (n === 1 ? "square" : "squares");
 
-/** "3 purple squares", or "2 more purple squares" once some are placed. */
+/** "3 shaded squares", or "2 more shaded squares" once some are placed. */
 const needs = (need: number, placed: number): string =>
   `${need}${placed > 0 ? " more" : ""} ${SHADED_NAME} ${squares(need)}`;
 

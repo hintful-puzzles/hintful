@@ -132,7 +132,7 @@ const targetVerbs: TargetVerbs<
   SinglesMove
 > = {
   geometry,
-  primary: { does: `turn it ${SHADED_NAME}`, apply: mark("black") },
+  primary: { does: "shade it", apply: mark("black") },
   secondary: rulingOut({
     does: `circle it, marking a square you are sure should stay ${UNSHADED_NAME}`,
     apply: mark("circle"),

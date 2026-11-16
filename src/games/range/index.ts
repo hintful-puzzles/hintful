@@ -112,7 +112,7 @@ function cycleAt(forwards: boolean) {
 const targetVerbs: TargetVerbs<RangeState, RangeUi, RangeDrawState, Point, RangeMove> =
   {
     geometry: squareGrid({ size: (s) => s, border }),
-    primary: { does: `color it ${SHADED_NAME}`, apply: cycleAt(false) },
+    primary: { does: "shade it", apply: cycleAt(false) },
     secondary: rulingOut({
       does: `mark it with a cross, if you know it should not be ${SHADED_NAME}`,
       apply: cycleAt(true),

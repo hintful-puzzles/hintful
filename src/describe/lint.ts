@@ -13,6 +13,7 @@
  * one role tell their marks apart.
  */
 
+import { SHADED_NAME, UNSHADED_NAME } from "../engine/piece.ts";
 import { DEFAULT_FORMS, type Piece, parseClause } from "../engine/stated-clauses.ts";
 import { judge } from "../engine/testing/hint-reference.ts";
 import {
@@ -72,8 +73,8 @@ const SHORTEST: Prints = {
     struckA: "a 1",
     tally: "2",
     regions: "row",
-    shaded: "purple",
-    unshaded: "clear",
+    shaded: SHADED_NAME,
+    unshaded: UNSHADED_NAME,
     each: "1",
     live: "1",
     unit: "row",
@@ -94,8 +95,8 @@ const LONGEST: Prints = {
     struckA: "a 1, a 2 and a 3",
     tally: "2",
     regions: "row and column",
-    shaded: "purple",
-    unshaded: "clear",
+    shaded: SHADED_NAME,
+    unshaded: UNSHADED_NAME,
     each: "1, 2 and 3",
     live: "2",
     unit: "column",

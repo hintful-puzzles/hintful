@@ -23,7 +23,7 @@ help:
     along that edge; anywhere else in a square it marks the square, which is the
     mark you will want far more often.
 
-    A square that holds track is purple, whether or not its rails are in yet, and
+    A square that holds track is filled with color, whether or not its rails are in yet, and
     so is a square a rail leads into. A square you have said holds no track shows
     a cross, the same "ruled out" mark the other puzzles use, and an edge the
     track can't cross shows a smaller one.

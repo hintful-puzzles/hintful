@@ -14,7 +14,7 @@ help:
     The cursor moves by half a square, so it rests on the edges between
     squares as well as on the squares themselves.
 
-    A region turns {{pair:0}} once it is complete and correct. Lines that close off
+    A region is filled with color once it is complete and correct. Lines that close off
     a region of the wrong size are shown in red, as is a letter that appears
     twice within one region.
 

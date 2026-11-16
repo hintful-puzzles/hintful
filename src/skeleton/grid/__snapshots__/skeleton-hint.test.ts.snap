@@ -2,7 +2,7 @@
 
 exports[`skeleton: pinned hint positions > says, at each pin 1`] = `
 {
-  "count": "The outlined 1 needs 1 purple square and has only 1 open square beside it, so this square must be purple.",
+  "count": "The outlined 1 needs 1 shaded square and has only 1 open square beside it, so this square must be shaded.",
   "shared": "The 1 beside this square needs 1; the other outlined 1 puts it in the striped squares, so this square must be clear.",
 }
 `;

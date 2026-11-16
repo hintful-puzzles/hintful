@@ -3,8 +3,8 @@
 game: range
 help:
   rules: |-
-    Shade some squares, so as to meet the following conditions. A shaded
-    square holds a {{pair:0}} square; every other square is clear.
+    Shade some squares, so as to meet the following conditions. Every
+    square not shaded is clear.
 
     - No two shaded squares are orthogonally adjacent.
     - No group of clear squares is separated from the rest of the grid by
@@ -16,9 +16,9 @@ help:
     {{controls}}
 
     A cross is your own note that a square is clear. Clicking again moves on
-    round the same three states: a left-click turns a {{pair:0}} square into
+    round the same three states: a left-click turns a shaded square into
     a cross and a cross back into an empty square, and a right-click turns a
-    cross {{pair:0}} and a {{pair:0}} square empty.
+    cross shaded and a shaded square empty.
 
     Hold Shift while moving the cursor to put a cross in every empty square
     it passes over.
@@ -34,7 +34,7 @@ help:
         cannot be changed.
   hints: |-
     **Hint** explains the next step rather than simply making it. It reasons
-    only from the numbers, your {{pair:0}} squares and your crosses, so it
+    only from the numbers, your shaded squares and your crosses, so it
     carries on from wherever you are, as long as none of those is wrong; if
     one is, it asks you to fix the highlighted mistakes first. When a sentence
     says a square "must be clear" it means you can mark it with a cross.
@@ -43,11 +43,11 @@ help:
 
     The ideas it teaches:
 
-    * **Shaded squares never touch**, so every square beside a {{pair:0}}
+    * **Shaded squares never touch**, so every square beside a shaded
       square is clear.
     * **A clue that sees enough** stops at the first square past what it sees,
-      so that square must be {{pair:0}}. Likewise, a square that would let a clue
-      see too far must be {{pair:0}}.
+      so that square must be shaded. Likewise, a square that would let a clue
+      see too far must be shaded.
     * **A clue that needs to see further** than its other directions allow
       must see along the rest of the way, so those squares are clear.
     * **Clear stays connected.** A square that would cut some of the clear
@@ -56,7 +56,7 @@ help:
     On an Unreasonable board there comes a point where none of these settles
     a square. The hint then says that nothing further follows by deduction
     instead of choosing for you. Save your position and try a square beside a
-    number that is close to its count, {{pair:0}} or with a cross: if it is
+    number that is close to its count, shaded or with a cross: if it is
     wrong, a few forced squares later some number can no longer see enough, or
     sees too much, and shows in red. The hint carries on from whatever you
     decide.
