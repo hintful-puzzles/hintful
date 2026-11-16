@@ -268,11 +268,12 @@ const LONG_NARRATIONS: {
   },
   {
     games: ["norinori"],
-    rungs: ["crowded"],
+    rungs: ["neededRegion", "blocked", "crowded"],
     why:
-      "A tried square that clears others names three things: the square, the " +
-      "squares it would clear, and the region left short. The conclusion says " +
-      '"this square" and not "it", as "it" would follow the region.',
+      "A region left without room names three things: the square left out or " +
+      "tried, the region, and the outlined shaded squares that close its room, " +
+      'with the rule ("as dominoes") that says why. The conclusion says "this ' +
+      'square" and not "it", as "it" would follow the region.',
     spokenOn: {
       norinori: "6x6dt:ad1ba3a1aa1bedbb2ad3ab",
     },

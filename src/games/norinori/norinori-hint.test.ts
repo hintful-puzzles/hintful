@@ -119,7 +119,7 @@ function board(id: string): NorinoriState {
 const WRITTEN = ["6x6dn:a1c4b1a1aaa1ib1b3adb1b1", "6x6dt:f2aa3a4a2ada1aaadb1e1a"];
 
 /** Hint plans, asked again whenever one runs out, finish `state` with the
- * answer's marks and every sentence within the line. */
+ * answer's marks. */
 function expectPlansFinish(start: NorinoriState, label: string): void {
   let state = start;
   const answer = answerOf(state.w, state.h, state.regions);
@@ -130,8 +130,6 @@ function expectPlansFinish(start: NorinoriState, label: string): void {
     if (!result?.ok) throw new Error(`refused on ${label}`);
     for (const step of result.steps) {
       if (step.move.kind !== "mark") throw new Error("a step marks squares");
-      // The line `hint-quality.test.ts` draws for every game's sentences.
-      expect(step.explanation.length, step.explanation).toBeLessThanOrEqual(120);
       for (const { index, mark } of step.move.cells) expect(mark).toBe(answer?.[index]);
       state = executeMove(state, step.move);
     }

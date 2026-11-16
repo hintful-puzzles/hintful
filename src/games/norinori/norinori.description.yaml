@@ -64,6 +64,9 @@ define:
     and (exists y in adj4(x): (y in S and f(y) = 1) or (y not in S and value(y) != 2))
     and (forall z in adj4(x) where z not in S and value(z) = 1:
     lit(z) + count(y in adj4(z) where y in S and f(y) = 1) <= 1)): true
+  # The shaded squares beside the open squares S and not of them: what a
+  # filling of S must keep each shaded square of it beside at most one of.
+  walls(S): "{z in set(q over d in S, q in adj4(d)) where z not in S and value(z) = 1}"
   # The most shaded squares, up to n, that fit in the open squares S.
   most(S, n): "max(j in range(0, n) where fits(S, j))"
   # The open squares a shaded square tried at x leaves clear at once: those
@@ -175,9 +178,12 @@ techniques:
     conclude: "place(x, 1)"
     says:
       terms: { n: n, placed: "n < 2" }
-      marks: { stripes: "cells(r)", reads: "cells(r) + set(d over c in E, d in adj4(c))" }
-      look: "without {ring}, the rest of {stripes: this region} has no room for {if placed: {n} more | {n}} {shaded} {n: square | squares}"
+      marks: { stripes: "cells(r)", outline: "walls(E)", reads: "cells(r) + set(d over c in E, d in adj4(c))" }
       move: "{ring: this square} must be {shaded}"
+      wordings:
+        - when: "|outline| > 0"
+          look: "without {ring}, {stripes: this region} has no room for {if placed: {n} more | {n}} {shaded} {n: square in a domino | squares as dominoes}, given {outline}"
+        - look: "without {ring}, {stripes: this region} has no room for {if placed: {n} more | {n}} {shaded} {n: square in a domino | squares as dominoes}"
   # A region that needs both its shaded squares, whose other open squares
   # could not take the second were one of them shaded: that one is clear.
   # (With one left to place, the rest are clear whatever it is, so this reads
@@ -189,9 +195,12 @@ techniques:
       x in O, E = O - {x} where (with place(x, 1): not fits(E, 1))
     conclude: "place(x, 2)"
     says:
-      marks: { stripes: "cells(r)", reads: "cells(r) + set(d over c in O, d in adj4(c))" }
-      look: "with {ring} {shaded}, the rest of {stripes: this region} has no room for its second {shaded} square"
+      marks: { stripes: "cells(r)", outline: "walls(E)", reads: "cells(r) + set(d over c in O, d in adj4(c))" }
       move: "{ring: this square} must be {unshaded}"
+      wordings:
+        - when: "|outline| > 0"
+          look: "with {ring} {shaded}, {stripes: this region} has no room for its second {shaded} square in a domino, given {outline}"
+        - look: "with {ring} {shaded}, {stripes: this region} has no room for its second {shaded} square in a domino"
   # A shaded square tried at x would leave clear the squares `ruled` names,
   # leaving a region it reaches without room for the shaded squares it
   # needs: x is clear.
@@ -204,10 +213,16 @@ techniques:
       where n > 0 and (with place(x, 1): not fits(E, n)), Q = {c in open(S) where c in R}
     conclude: "place(x, 2)"
     says:
-      terms: { n: n, mine: "x in S", domino: "lit(x) = 1", region: "need(cells(region(x))) = 1" }
-      marks: { stripes: S, outline: Q, reads: "Q + S + R + {x} + adj4(x)" }
+      terms: { n: n, mine: "x in S" }
+      # The outline is what the room is short beside: the tried square's
+      # partner, whose domino clears the squares round it, and the shaded
+      # squares beside what is left.
+      marks:
+        stripes: S
+        outline: "walls(E) + {d in adj4(x) where value(d) = 1}"
+        reads: "Q + S + R + {x} + adj4(x)"
       move: "{ring: this square} must be {unshaded}"
       wordings:
         - when: "|outline| > 0"
-          look: "with {ring} {shaded}, {stripes: this region} loses {outline} and lacks room for {if mine: {n} more | {n}} {shaded} {n: square | squares}"
-        - look: "with {ring} {shaded}, {stripes: this region} has no room for {if mine: {n} more | {n}} {shaded} {n: square | squares}"
+          look: "with {ring} {shaded}, {stripes: this region} has no room for {if mine: {n} more | {n}} {shaded} {n: square in a domino | squares as dominoes}, given {outline}"
+        - look: "with {ring} {shaded}, {stripes: this region} has no room for {if mine: {n} more | {n}} {shaded} {n: square in a domino | squares as dominoes}"
