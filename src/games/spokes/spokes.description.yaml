@@ -162,8 +162,8 @@ techniques:
         c: c
         # The spokes it takes, which is how many it decides.
         n: n
-        # The spokes a later leg still has to decide, which the engine says.
-        rest: "n" # supplied
+        # The spokes a leg still has to decide.
+        rest: { supplied: number }
       marks: { outline: "{c}", reads: "{c} + U" }
       wordings:
         - when: "n = 1"
@@ -219,12 +219,12 @@ techniques:
         # What the trial breaks is the game's to find: the hubs it breaks, how
         # many, the number on the first, and whether a hub is left too few
         # spokes (else the hubs are sealed off from the rest).
-        broken: "{a}" # supplied
-        many: "false" # supplied
-        bn: "takes(a)" # supplied
-        starved: "false" # supplied
-      # The edge's hubs; the hubs its trial breaks are the game's to find.
-      marks: { outline: "{a, b}", reads: "{a, b}" } # outline supplied
+        broken: { supplied: elements }
+        many: { supplied: flag }
+        bn: { supplied: number }
+        starved: { supplied: flag }
+      # The edge's hubs are read; the hubs its trial breaks are outlined.
+      marks: { outline: { supplied: elements }, reads: "{a, b}" }
       look: >-
         Drawing {ring: this line} would
         {if starved: leave {outline broken: {if many: the outlined hubs |
@@ -251,15 +251,17 @@ techniques:
         # the hub the rule-out leaves no spare spoke, with its number, whether
         # the hub broken has the same number (so the two are told apart by
         # order), and whether there is one.
-        broken: "{c}" # supplied
-        many: "false" # supplied
-        bn: "takes(c)" # supplied
-        starved: "false" # supplied
-        hasFilled: "false" # supplied
-        filled: c # supplied
-        fn: "takes(c)" # supplied
-        same: "false" # supplied
-      marks: { outline: "{c, y}", reads: "{c, y}" } # outline supplied
+        broken: { supplied: elements }
+        many: { supplied: flag }
+        bn: { supplied: number }
+        starved: { supplied: flag }
+        hasFilled: { supplied: flag }
+        filled: { supplied: element }
+        fn: { supplied: number }
+        same: { supplied: flag }
+      # The hub and the spoke's other end are read; the hubs the trial fills
+      # and breaks are outlined.
+      marks: { outline: { supplied: elements }, reads: "{c, y}" }
       look: >-
         Ruling {ring: this spoke | these spokes} out would
         {if hasFilled: leave {outline filled: {if same: one outlined {fn} |

@@ -230,10 +230,10 @@ techniques:
         # The lines the square takes.
         t: "takes(c)"
         # Whether the square has a number, and which: the game reads them.
-        hasNum: "false" # supplied
-        num: "0" # supplied
+        hasNum: { supplied: flag }
+        num: { supplied: number }
         # Whether the step sets several edges.
-        multi: "false" # supplied
+        multi: { supplied: several }
       marks: {}
       wordings:
         - when: "t = 1"
@@ -260,18 +260,18 @@ techniques:
         # loop of the squares in `circuit`, or else the numbers `n1` and `n2`
         # that `twoNums` joins; `sq` is the square, `hasNum` and `num` its
         # number.
-        crowd: "false" # supplied
-        short: "false" # supplied
-        loops: "false" # supplied
-        dead: "false" # supplied
-        sq: "a" # supplied
-        hasNum: "false" # supplied
-        num: "0" # supplied
-        held: "0" # supplied
-        circuit: "{a}" # supplied
-        twoNums: "{a}" # supplied
-        n1: "0" # supplied
-        n2: "0" # supplied
+        crowd: { supplied: flag }
+        short: { supplied: flag }
+        loops: { supplied: flag }
+        dead: { supplied: flag }
+        sq: { supplied: element }
+        hasNum: { supplied: flag }
+        num: { supplied: number }
+        held: { supplied: number }
+        circuit: { supplied: elements }
+        twoNums: { supplied: elements }
+        n1: { supplied: number }
+        n2: { supplied: number }
       marks: {}
       look: >-
         a line on {ring: this edge | these edges} would {if crowd: give
@@ -298,19 +298,19 @@ techniques:
         i: i
         j: j
         # The two edges tried, and what they break, as in `lineBreaks`.
-        tried: "{c}" # supplied
-        crowd: "false" # supplied
-        short: "false" # supplied
-        loops: "false" # supplied
-        dead: "false" # supplied
-        sq: "c" # supplied
-        hasNum: "false" # supplied
-        num: "0" # supplied
-        held: "0" # supplied
-        circuit: "{c}" # supplied
-        twoNums: "{c}" # supplied
-        n1: "0" # supplied
-        n2: "0" # supplied
+        tried: { supplied: elements }
+        crowd: { supplied: flag }
+        short: { supplied: flag }
+        loops: { supplied: flag }
+        dead: { supplied: flag }
+        sq: { supplied: element }
+        hasNum: { supplied: flag }
+        num: { supplied: number }
+        held: { supplied: number }
+        circuit: { supplied: elements }
+        twoNums: { supplied: elements }
+        n1: { supplied: number }
+        n2: { supplied: number }
       marks: {}
       look: >-
         lines on both {outline tried: outlined edges} would {if crowd: give
@@ -358,15 +358,15 @@ techniques:
         # a cross.
         single: "|P| = 1"
         twin: "|P| = 2"
-        hasNum: "false" # supplied
-        num: "0" # supplied
+        hasNum: { supplied: flag }
+        num: { supplied: number }
         # The edges of the pairs ruled out, for a line on one edge, and the
         # kinds of break those pairs make: a bit for each of closing a loop,
         # crowding a square, cutting one off, leaving a dead end and joining
         # numbers wrongly.
-        tried: "U" # supplied
-        why: "0" # supplied
-        multi: "false" # supplied
+        tried: { supplied: elements }
+        why: { supplied: number }
+        multi: { supplied: several }
       marks: {}
       wordings:
         - when: single

@@ -9,15 +9,41 @@
   "$defs": {
     "formula": { "type": "string", "minLength": 1, "description": "A formula." },
     "saidMark": {
-      "description": "A set of elements, or where the step marks elements of several sorts in one role, a set of each by its sort's name (`{ face: \"{f}\", cell: \"{c}\" }`).",
+      "description": "A set of elements, or where the step marks elements of several sorts in one role, a set of each by its sort's name (`{ face: \"{f}\", cell: \"{c}\" }`), or `{ supplied: elements }` where only the game's code can find them.",
       "oneOf": [
         { "$ref": "#/$defs/formula" },
         {
           "type": "object",
           "minProperties": 1,
+          "not": { "required": ["supplied"] },
           "additionalProperties": { "$ref": "#/$defs/formula" }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["supplied"],
+          "properties": { "supplied": { "const": "elements" } }
         }
       ]
+    },
+    "saidTerm": {
+      "description": "A formula over the binding, or a term only the game's code can know, by its kind: the game's hook for the technique returns it (`SuppliedById` in the compiled module), and a wording's `when` cannot read it. `several` is the engine's: whether the step decides more than one element, over all its legs.",
+      "oneOf": [
+        { "$ref": "#/$defs/formula" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["supplied"],
+          "properties": {
+            "supplied": { "enum": ["flag", "number", "element", "elements", "several"] }
+          }
+        }
+      ]
+    },
+    "saidTerms": {
+      "type": "object",
+      "description": "Named values the step's sentence reads, by name.",
+      "additionalProperties": { "$ref": "#/$defs/saidTerm" }
     },
     "saidMarks": {
       "type": "object",
@@ -119,11 +145,7 @@
               "$ref": "#/$defs/clause",
               "description": "What a later leg says as its move, in place of `move`, where it differs; said with the `again` relation."
             },
-            "terms": {
-              "type": "object",
-              "description": "Named values the step's sentence reads, by name.",
-              "additionalProperties": { "$ref": "#/$defs/formula" }
-            },
+            "terms": { "$ref": "#/$defs/saidTerms" },
             "marks": { "$ref": "#/$defs/saidMarks" },
             "fact": {
               "type": "object",
@@ -170,10 +192,7 @@
                   "follows": { "$ref": "#/$defs/clause" },
                   "move": { "$ref": "#/$defs/clause" },
                   "wordings": { "$ref": "#/$defs/wordings" },
-                  "terms": {
-                    "type": "object",
-                    "additionalProperties": { "$ref": "#/$defs/formula" }
-                  },
+                  "terms": { "$ref": "#/$defs/saidTerms" },
                   "marks": { "$ref": "#/$defs/saidMarks" }
                 }
               }

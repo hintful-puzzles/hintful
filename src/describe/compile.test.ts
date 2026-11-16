@@ -509,6 +509,41 @@ describe("a stated clause names only what its technique states", () => {
         expect(() => unitStep(look)).toThrow(error);
       });
     });
+
+    describe("a supplied term", () => {
+      const supplying = (says: Record<string, unknown>): string =>
+        stated({
+          terms: {
+            n: "n",
+            many: { supplied: "flag" },
+            count: { supplied: "number" },
+            at: { supplied: "element" },
+            hubs: { supplied: "elements" },
+            multi: { supplied: "several" },
+          },
+          marks: { outline: "{c}", stripes: { supplied: "elements" } },
+          look: "{if many: {outline hubs: the outlined hubs} | {outline at: this one}} take {count}",
+          move: "{ring} must be {if multi: lines | a line}",
+          ...says,
+        });
+
+      it("is typed for the game's hook, the engine's several apart", () => {
+        const code = supplying({});
+        const supplied = code.slice(code.indexOf("export interface XSupplied {"));
+        expect(supplied.slice(0, supplied.indexOf("}\n"))).toContain(
+          "terms: { many: boolean; count: number; at: number; hubs: readonly number[]; };",
+        );
+        expect(supplied).toContain("marks: { stripes: readonly number[]; };");
+        expect(supplied.slice(0, supplied.indexOf("}\n"))).not.toContain("multi");
+        expect(code).toContain('"several":["multi"]');
+      });
+
+      it("is not read by a wording's when, which is chosen before the game supplies it", () => {
+        expect(() =>
+          supplying({ wordings: [{ when: "many", look: "{n}" }, { look: "{count}" }] }),
+        ).toThrow(/a wording's when reads many, which is supplied/);
+      });
+    });
   });
 
   it("a wording takes the parts it leaves out from the clauses beside it", () => {

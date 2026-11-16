@@ -142,8 +142,8 @@ techniques:
         product: "clue(product, k)"
         quotient: "clue(quotient, k)"
         parity: "clue(parity, k)"
-        placed: "false" # supplied
-        v: "0" # supplied
+        placed: { supplied: flag }
+        v: { supplied: number }
       marks:
         outline: "{x in cells(k) where clue(parity, k) != none or x = c or x = across(k, c)}"
       wordings:

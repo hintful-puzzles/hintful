@@ -135,8 +135,8 @@ techniques:
       # holds it for every leg of a firing that rules out spots of several
       # dominoes (`set`), so the leg supplies it (every kind below reads it).
       terms:
-        lo: "0" # supplied
-        hi: "0" # supplied
+        lo: { supplied: number }
+        hi: { supplied: number }
       marks: {}
       look: "The {lo}–{hi} domino has only one spot left where it fits"
       move: "it must go on {ring: the ringed spot}"
@@ -150,8 +150,8 @@ techniques:
     conclude: "|S| = 1 and place(nth(S, 0), 1)"
     says:
       terms:
-        lo: "0" # supplied
-        hi: "0" # supplied
+        lo: { supplied: number }
+        hi: { supplied: number }
       marks: { outline: "{c}" }
       look: "{outline} has only one neighbor left to pair with"
       move: "the {lo}–{hi} domino must go on {ring: the ringed spot}"
@@ -167,8 +167,8 @@ techniques:
       place(f, 2)
     says:
       terms:
-        lo: "0" # supplied
-        hi: "0" # supplied
+        lo: { supplied: number }
+        hi: { supplied: number }
       marks: { outline: "{c}" }
       look: "{outline} can only be part of the {lo}–{hi} domino"
       move: "{lo}–{hi} can't sit on {ring: the ringed spot} instead"
@@ -189,8 +189,8 @@ techniques:
       place(edge(x, y), 2)
     says:
       terms:
-        lo: "0" # supplied
-        hi: "0" # supplied
+        lo: { supplied: number }
+        hi: { supplied: number }
       marks: { outline: "set(z over f in P, z in {end1(f), end2(f)})" }
       look: >-
         {outline: Every remaining spot for the outlined domino} overlaps
@@ -210,8 +210,8 @@ techniques:
     conclude: "place(p, 2)"
     says:
       terms:
-        lo: "0" # supplied
-        hi: "0" # supplied
+        lo: { supplied: number }
+        hi: { supplied: number }
       marks: { outline: "{y}" }
       look: >-
         {a lo}–{hi} domino on {ring: the ringed spot} would force another at
@@ -236,8 +236,8 @@ techniques:
     conclude: "place(p, 2)"
     says:
       terms:
-        lo: "0" # supplied
-        hi: "0" # supplied
+        lo: { supplied: number }
+        hi: { supplied: number }
       marks: { outline: "{y, z}" }
       look: >-
         A domino on {ring: the ringed spot} would leave
@@ -260,8 +260,8 @@ techniques:
     conclude: "place(p, 2)"
     says:
       terms:
-        lo: "0" # supplied
-        hi: "0" # supplied
+        lo: { supplied: number }
+        hi: { supplied: number }
       marks: {}
       look: >-
         A domino on {ring: the ringed spot} would split the empty squares into
@@ -287,8 +287,8 @@ techniques:
       where value(f) != 2 and away(f, T) and num(y) in O: place(f, 2)
     says: &setSays
       terms:
-        lo: "0" # supplied
-        hi: "0" # supplied
+        lo: { supplied: number }
+        hi: { supplied: number }
       marks: { outline: T }
       look: >-
         {outline} can only hold one set of dominoes, which uses the {lo}–{hi}

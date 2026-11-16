@@ -251,7 +251,7 @@ export interface StatedSays extends Worded {
   /** Report the elements whose marks the `where`s and `premise` read
    * (`Reads`). */
   reads?: boolean;
-  terms?: Record<string, string>;
+  terms?: Record<string, SaidTermJson>;
   marks?: SaidMarksJson;
   /** What each square the firing decides has of its own, read where the
    * conclusion's `place` or `strike` makes it. Its wordings are tried there,
@@ -264,7 +264,7 @@ export interface StatedSays extends Worded {
     string,
     Worded & {
       when: string;
-      terms?: Record<string, string>;
+      terms?: Record<string, SaidTermJson>;
       marks?: SaidMarksJson;
     }
   >;
@@ -303,15 +303,35 @@ export type SaidRole = "outline" | "stripes" | "strike" | "strand" | "reads";
 
 /** A firing's marks as a description states them: a set by role, or where a
  * step marks elements of several sorts in one role (Loopy's clue and dot), a
- * set of each by its sort's name. */
-type SaidMarksJson = Partial<Record<SaidRole, string | Record<string, string>>>;
+ * set of each by its sort's name, or a set only the game's code can find. */
+type SaidMarksJson = Partial<
+  Record<SaidRole, string | Record<string, string> | { supplied: "elements" }>
+>;
+
+/** What a term only the game's code can know is, which the module types for
+ * the game's hook to return; `several` is the engine's, whether the step
+ * decides more than one element over all its legs. */
+export type SuppliedKind = "flag" | "number" | "element" | "elements" | "several";
+
+/** A term as a description states it: a formula over the binding, or the
+ * kind of value the game supplies. */
+type SaidTermJson = string | { supplied: SuppliedKind };
+
+/** A term a firing says: its formula, or where the game supplies it, its kind
+ * (`expr` is then `null`). */
+export interface SaidTerm {
+  name: string;
+  expr: Expr | null;
+  supplied: SuppliedKind | null;
+}
 
 /** One set a firing marks: its role, and where the role holds several sorts,
- * the sort it is of (checked against the formula's when compiled). */
+ * the sort it is of (checked against the formula's when compiled). `expr` is
+ * `null` where the game supplies the set. */
 export interface SaidMark {
   role: SaidRole;
   sort: string | null;
-  expr: Expr;
+  expr: Expr | null;
 }
 
 /** Techniques stated once, for every game that places them. */
@@ -628,7 +648,7 @@ export interface Says {
   variants: {
     name: string | null;
     when: Expr | null;
-    terms: { name: string; expr: Expr }[];
+    terms: SaidTerm[];
     marks: SaidMark[];
     /** The step's stated words, by wording. */
     words: Wording[];
@@ -838,10 +858,12 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
     return {
       name,
       when,
-      terms: Object.entries({ ...stated.terms, ...terms }).map(([n, src]) => ({
-        name: n,
-        expr: at(`${label} ${n}`, src),
-      })),
+      terms: Object.entries({ ...stated.terms, ...terms }).map(
+        ([n, src]): SaidTerm =>
+          typeof src === "string"
+            ? { name: n, expr: at(`${label} ${n}`, src), supplied: null }
+            : { name: n, expr: null, supplied: src.supplied },
+      ),
       marks: (
         Object.entries({ ...stated.marks, ...marks }) as [
           SaidRole,
@@ -850,11 +872,13 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
       ).flatMap(([role, src]): SaidMark[] =>
         typeof src === "string"
           ? [{ role, sort: null, expr: at(`${label} ${role}`, src) }]
-          : Object.entries(src).map(([sort, s]) => ({
-              role,
-              sort,
-              expr: at(`${label} ${role} ${sort}`, s),
-            })),
+          : "supplied" in src
+            ? [{ role, sort: null, expr: null }]
+            : Object.entries(src).map(([sort, s]) => ({
+                role,
+                sort,
+                expr: at(`${label} ${role} ${sort}`, s),
+              })),
       ),
       words:
         name === null

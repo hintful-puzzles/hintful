@@ -22,7 +22,10 @@ import type { MarkKind } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
 import { D, dirX, dirY, L, opposite, R, U } from "../../engine/square-edges.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
-import { STATED } from "../../generated/games/tracks/tracks.compiled.ts";
+import {
+  STATED,
+  type SuppliedById,
+} from "../../generated/games/tracks/tracks.compiled.ts";
 import { LINE, PIECE, type Piece, pieceCode, pieceOfCode } from "./kinds.ts";
 import { executeMove } from "./moves.ts";
 import {
@@ -83,13 +86,18 @@ function rimShut(b: Board, i: number, dirs = 15): Side[] {
 /** A firing as its technique said it. */
 type Said = { [K in TracksRung]: { id: K; says: TracksSays[K] } }[TracksRung];
 
+/** What a firing's technique is supplied, with the technique. */
+type Supplying = {
+  [K in keyof SuppliedById]: { id: K; supplied: SuppliedById[K] };
+}[keyof SuppliedById];
+
 /**
  * The terms a firing's description cannot know, as numbers of pieces
  * (`pieceCode`), read on the board `b` before the firing: the sides it reasons
  * from, which the description's edges lack at the board's rim, and the squares
- * and clue a sentence outlines together.
+ * and clue a sentence outlines together. `null` for a technique supplied none.
  */
-function suppliedOf(b: Board, said: Said): Record<string, readonly number[]> {
+function suppliedOf(b: Board, said: Said): Supplying | null {
   const { w, h } = b;
   const { sp } = ladderOf(b);
   const code = (p: Piece): number => pieceCode(w, h, p);
@@ -100,48 +108,66 @@ function suppliedOf(b: Board, said: Said): Record<string, readonly number[]> {
   const codes = (pieces: readonly Piece[]): number[] => pieces.map(code);
   switch (said.id) {
     case "oneWayIn":
-    case "bothSidesLeft":
+    case "bothSidesLeft": {
+      const { sides: shut, c } = said.says.terms;
       return {
-        shut: codes([...sides(said.says.terms.shut), ...rimShut(b, said.says.terms.c)]),
+        id: said.id,
+        supplied: { terms: { shut: codes([...sides(shut), ...rimShut(b, c)]) } },
       };
+    }
     case "finishEarly": {
       const [short] = said.says.terms.short;
       if (short === undefined)
         throw new Error("tracks hint: finishEarly with every clue met");
       return {
-        unmet: codes([
-          { clue: clueLine(w, h, short) },
-          ...squares(said.says.marks.outline),
-        ]),
+        id: said.id,
+        supplied: {
+          terms: {
+            unmet: codes([
+              { clue: clueLine(w, h, short) },
+              ...squares(said.says.marks.outline),
+            ]),
+          },
+        },
       };
     }
     case "looseEnd": {
-      const { L: line, unable } = said.says.terms;
+      const { L: line, sides: unable } = said.says.terms;
       const across = clueLine(w, h, line) < w ? R | L : U | D;
       const { outline } = said.says.marks;
       return {
-        unable: codes([
-          ...squares(outline),
-          ...sides(unable),
-          ...outline.flatMap((i) => rimShut(b, i, across)),
-        ]),
+        id: said.id,
+        supplied: {
+          terms: {
+            unable: codes([
+              ...squares(outline),
+              ...sides(unable),
+              ...outline.flatMap((i) => rimShut(b, i, across)),
+            ]),
+          },
+        },
       };
     }
     case "sharedFate":
     case "sharedFateEmpties": {
-      const { L: line, p, shut } = said.says.terms;
+      const { L: line, p, sides: shut } = said.says.terms;
       return {
-        shut: codes([...sides(shut), ...rimShut(b, p)]),
-        lineClue: codes([
-          { clue: clueLine(w, h, line) },
-          ...squares(said.says.marks.outline),
-        ]),
+        id: said.id,
+        supplied: {
+          terms: {
+            shut: codes([...sides(shut), ...rimShut(b, p)]),
+            lineClue: codes([
+              { clue: clueLine(w, h, line) },
+              ...squares(said.says.marks.outline),
+            ]),
+          },
+        },
       };
     }
     case "parity": {
       // The rails across the block's border are the crossings the sentence
       // counts, and an end in it leaves the board across it too.
-      const { crossing } = said.says.terms;
+      const { rails } = said.says.terms;
       const exits = said.says.marks.stripes.flatMap((i) =>
         SIDES.filter((d) => d & exitOf(b, i)).map((dir) => ({
           x: i % w,
@@ -149,12 +175,23 @@ function suppliedOf(b: Board, said: Said): Record<string, readonly number[]> {
           dir,
         })),
       );
-      return { crossing: codes([...sides(crossing), ...exits]) };
+      return {
+        id: said.id,
+        supplied: { terms: { crossing: codes([...sides(rails), ...exits]) } },
+      };
     }
     default:
-      return {};
+      return null;
   }
 }
+
+/** A technique's hook: what its step was supplied as it was taken. */
+const suppliedTo =
+  <K extends keyof SuppliedById>(id: K) =>
+  ({ supplied }: TracksMarked): SuppliedById[K] => {
+    if (supplied?.id !== id) throw new Error(`tracks hint: nothing supplied to ${id}`);
+    return supplied.supplied as SuppliedById[K];
+  };
 
 /** The flag changes a firing's facts make. */
 function opsOf(b: Board, facts: readonly number[]): TracksOp[] {
@@ -212,7 +249,7 @@ interface TracksWalkContext {
  * the terms the board's reading adds. */
 interface TracksMarked {
   ring: readonly Piece[];
-  supplied: Record<string, readonly number[]>;
+  supplied: Supplying | null;
 }
 
 /** A firing's step: the changes it makes, made on the hint's copy of the board
@@ -280,7 +317,8 @@ export const tracksHint = describedEdgeHint<
   TracksSays,
   TracksRung,
   Piece,
-  Element
+  Element,
+  SuppliedById
 >({
   name: "tracks hint",
   walk: tracksWalk,
@@ -297,7 +335,15 @@ export const tracksHint = describedEdgeHint<
   },
   ringKind: PIECE,
   ring: ({ ring }) => ring,
-  terms: ({ supplied }) => supplied,
+  supplied: {
+    oneWayIn: suppliedTo("oneWayIn"),
+    bothSidesLeft: suppliedTo("bothSidesLeft"),
+    finishEarly: suppliedTo("finishEarly"),
+    looseEnd: suppliedTo("looseEnd"),
+    sharedFate: suppliedTo("sharedFate"),
+    sharedFateEmpties: suppliedTo("sharedFateEmpties"),
+    parity: suppliedTo("parity"),
+  },
   termKinds: {
     L: LINE as unknown as MarkKind<Element>,
     short: LINE as unknown as MarkKind<Element>,

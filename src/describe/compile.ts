@@ -36,6 +36,7 @@ import {
   type Says,
   type StatedClauses,
   type Step,
+  type SuppliedKind,
   stepsOf,
   type Technique,
   UNPLACED,
@@ -192,6 +193,31 @@ function show(s: Sort): string {
 const isMask = (s: Sort): boolean => s.k === "set" && s.of.k === "num";
 const isArray = (s: Sort): boolean => s.k === "set" && s.of.k !== "num";
 const scalar = (s: Sort): boolean => s.k === "num" || s.k === "elem" || s.k === "none";
+
+/** The sort a supplied term of a kind is checked as: an element or a set of
+ * them is a cell's to the checker, which asks only that it be elements. */
+function suppliedSort(kind: SuppliedKind): Sort {
+  const cell: Sort = { k: "elem", e: "cell" };
+  switch (kind) {
+    case "flag":
+    case "several":
+      return { k: "bool" };
+    case "number":
+      return { k: "num" };
+    case "element":
+      return cell;
+    case "elements":
+      return { k: "set", of: cell };
+  }
+}
+
+/** Whether the game supplies a term or mark a technique says. */
+const supplies = (t: Technique): boolean =>
+  t.says?.variants.some(
+    (v) =>
+      v.terms.some((x) => x.supplied !== null && x.supplied !== "several") ||
+      v.marks.some((m) => m.expr === null),
+  ) ?? false;
 
 function tsType(s: Sort): string {
   if (s.k === "bool") return "boolean";
@@ -4614,9 +4640,13 @@ function statedTable(own: readonly Technique[]): string[] {
     for (const v of t.says.variants) {
       if (v.words.length === 0 && fact === null) continue;
       const kind = v.name === null ? t.id : `${t.id}.${v.name}`;
+      const several = v.terms
+        .filter((x) => x.supplied === "several")
+        .map((x) => x.name);
       const entry = {
         ...(v.words.length === 0 ? {} : { step: v.words.map((w) => w.clauses) }),
         ...(fact === null ? {} : { fact }),
+        ...(several.length === 0 ? {} : { several }),
       };
       rows.push(`  ${JSON.stringify(kind)}: ${JSON.stringify(entry)},`);
     }
@@ -4624,7 +4654,8 @@ function statedTable(own: readonly Technique[]): string[] {
   if (rows.length === 0) return [];
   return [
     "/** Each kind of step's words as the description states them, and each",
-    " * fact's, by wording (`engine/stated.ts`). */",
+    " * fact's, by wording (`engine/stated.ts`); and the flag terms the engine",
+    " * sets to whether the step decides several elements (`several`). */",
     "export const STATED = {",
     ...rows,
     "} as const;",
@@ -4850,7 +4881,7 @@ function factWithSays(
     return `${name}: ${isArray(r.sort) ? `${r.code}.slice()` : r.code}`;
   };
   const terms = site.says.terms.map((x) => read(x.expr, "terms", x.name));
-  const marks = site.says.marks.map((x) => read(x.expr, "marks", x.role));
+  const marks = site.says.marks.map((x) => read(x.expr as Expr, "marks", x.role));
   site.fields.terms = fields.terms;
   site.fields.marks = fields.marks;
   // The wording that holds for this square, read where the fact is made.
@@ -6635,6 +6666,8 @@ function techniqueFunction(
       sorts: Map<string, Sort>;
       /** Whether a firing carries the `wording` that held. */
       worded: boolean;
+      /** The fields of the terms and marks the game supplies. */
+      supplied: { terms: string[]; marks: string[] };
     }[],
   };
   const fire = (sc: Scope): void => {
@@ -6769,6 +6802,7 @@ function techniqueFunction(
       if (arms) body.emit(`let _says: ${saysType} | null = null;`);
       for (const [i, v] of variants.entries()) {
         const fields = { terms: [] as string[], marks: [] as string[] };
+        const supplied = { terms: [] as string[], marks: [] as string[] };
         const sorts = new Map<string, Sort>();
         // A term read inside an arm is not in scope in another.
         const inArm: Shared = { made: new Map(shared.made) };
@@ -6793,18 +6827,41 @@ function techniqueFunction(
           named.set(name, { code: bound, sort: r.sort });
           return `${name}: ${bound}`;
         };
-        const terms = v.terms.map((x) => read(x.expr, "terms", x.name));
+        // What the game supplies is a placeholder here, which its hook for
+        // the technique replaces; a wording's `when` cannot read it, for the
+        // wording is chosen before the game supplies it.
+        const placeholder = (
+          kind: SuppliedKind,
+          group: "terms" | "marks",
+          name: string,
+        ): string => {
+          const sort = suppliedSort(kind);
+          fields[group].push(`${name}: ${tsType(sort)};`);
+          if (kind !== "several") supplied[group].push(`${name}: ${tsType(sort)};`);
+          if (group === "terms") sorts.set(name, sort);
+          return `${name}: ${isArray(sort) ? "[]" : sort.k === "bool" ? "false" : sort.k === "elem" ? "-1" : "0"}`;
+        };
+        const terms = v.terms.map((x) =>
+          x.supplied === null
+            ? read(x.expr as Expr, "terms", x.name)
+            : placeholder(x.supplied, "terms", x.name),
+        );
         const marks: string[] = [];
         for (const role of new Set(v.marks.map((m) => m.role))) {
           const ofRole = v.marks.filter((m) => m.role === role);
           if (ofRole[0].sort === null) {
-            marks.push(read(ofRole[0].expr, "marks", role));
+            const { expr } = ofRole[0];
+            marks.push(
+              expr === null
+                ? placeholder("elements", "marks", role)
+                : read(expr, "marks", role),
+            );
             continue;
           }
           // A role holding several sorts is an object of a set by sort. A
           // wording's `when` reads each by the role and the sort, `outlineFace`.
           const parts = ofRole.map((m) => {
-            const r = compileExpr(m.expr, sc, { ...tenv, shared: inArm }, body);
+            const r = compileExpr(m.expr as Expr, sc, { ...tenv, shared: inArm }, body);
             if (r.sort.k !== "set" || r.sort.of.k !== "elem" || r.sort.of.e !== m.sort)
               throw new CompileError(
                 `${t.id}: says marks ${role} ${m.sort} is not a set of ${m.sort}s, but ${show(r.sort)}`,
@@ -6825,14 +6882,32 @@ function techniqueFunction(
         }
         const own =
           tenv.factSays === undefined ? "" : `, facts: ${tenv.factSays.buffer}.slice()`;
+        const readsSupplied = (e: Expr): void => {
+          const free = new Set<string>();
+          freeNames(e, free, new Set());
+          const name = v.terms.find(
+            (x) => x.supplied !== null && free.has(x.name),
+          )?.name;
+          if (name !== undefined)
+            throw new CompileError(
+              `${t.id}: a wording's when reads ${name}, which is supplied after the wording is chosen: choose by {if ${name}: …} in the clause`,
+            );
+        };
         const wording = worded
-          ? `, wording: ${wordingIndex(v.words, `${t.id}: says${v.name === null ? "" : ` ${v.name}`}`, (e) => compileExpr(e, named, { ...tenv, shared: inArm }, body))}`
+          ? `, wording: ${wordingIndex(
+              v.words,
+              `${t.id}: says${v.name === null ? "" : ` ${v.name}`}`,
+              (e) => {
+                readsSupplied(e);
+                return compileExpr(e, named, { ...tenv, shared: inArm }, body);
+              },
+            )}`
           : "";
         body.emit(
           `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} }${wording}${own}${t.says.witness ? ", witness: _w" : ""}${t.says.reads ? ", reads: _r" : ""} };`,
         );
         if (arms) body.close();
-        saysFields.variants.push({ name: v.name, ...fields, sorts, worded });
+        saysFields.variants.push({ name: v.name, ...fields, sorts, worded, supplied });
       }
       if (arms)
         body.emit(
@@ -6962,6 +7037,20 @@ function techniqueFunction(
     );
   if (t.says !== null)
     checkStated(t.id, t.says, saysFields.variants, tenv.factSays?.sorts ?? null);
+  // The game's hook supplies a technique's terms whichever arm held, so every
+  // arm supplies the same.
+  const suppliedFields = ((): { terms: string[]; marks: string[] } | null => {
+    const [first] = saysFields.variants;
+    if (first === undefined) return null;
+    const key = JSON.stringify(first.supplied);
+    if (saysFields.variants.some((v) => JSON.stringify(v.supplied) !== key))
+      throw new CompileError(
+        `${t.id}: its arms supply different terms or marks: declare what the game supplies on its says, for every arm`,
+      );
+    return first.supplied.terms.length + first.supplied.marks.length === 0
+      ? null
+      : first.supplied;
+  })();
   const lines = [
     `export interface ${bindingType} {`,
     ...fields,
@@ -7012,6 +7101,20 @@ function techniqueFunction(
                 ";",
               ]),
           "",
+          ...(suppliedFields === null
+            ? []
+            : [
+                "/** What the game's hook for it supplies: the terms and marks it declares `supplied`. */",
+                `export interface ${capitalized(fnName)}Supplied {`,
+                ...(suppliedFields.terms.length === 0
+                  ? []
+                  : [`  terms: { ${suppliedFields.terms.join(" ")} };`]),
+                ...(suppliedFields.marks.length === 0
+                  ? []
+                  : [`  marks: { ${suppliedFields.marks.join(" ")} };`]),
+                "}",
+                "",
+              ]),
         ]),
     `const ${fnName}Facts: number[] = [];`,
     ...(tenv.factSays === undefined
@@ -7452,6 +7555,18 @@ export function compileGame(
           )} as const;`,
           "",
           ...statedTable(own),
+          ...(own.some(supplies)
+            ? [
+                "/** What the game supplies to each technique that declares a term or mark",
+                " * `supplied`, by id: its hook for the technique returns it. */",
+                "export interface SuppliedById {",
+                ...own
+                  .filter(supplies)
+                  .map((t) => `  ${t.id}: ${capitalized(t.id)}Supplied;`),
+                "}",
+                "",
+              ]
+            : []),
           ...(own.some((t) => t.says?.each)
             ? [
                 "/** The techniques whose step is made for each square the firing decides. */",

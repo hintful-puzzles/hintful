@@ -9,9 +9,11 @@
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import type { Point } from "../../engine/types.ts";
 import {
   SAYS_KINDS,
   STATED,
+  type SuppliedById,
 } from "../../generated/games/dominosa/dominosa.compiled.ts";
 import { SPOT, type Spot } from "./kinds.ts";
 import {
@@ -51,6 +53,12 @@ interface Leg {
 }
 
 const edgeKey = (a: number, b: number): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
+
+/** The domino a leg decides, lower number first, which every technique but a
+ * placement's names. */
+const domino = ({ numbers: [a, b] }: Leg): { terms: { lo: number; hi: number } } => ({
+  terms: { lo: Math.min(a, b), hi: Math.max(a, b) },
+});
 
 /** A firing's steps: the domino it places, or a barrier for each spot it rules
  * out that the player has not drawn and no earlier step of the plan has. */
@@ -92,7 +100,9 @@ const dominosaPlan = describedEdgeHint<
   DominosaWalkContext,
   DominosaSays,
   DominosaRung,
-  Spot
+  Spot,
+  Point,
+  SuppliedById
 >({
   name: "dominosa hint",
   walk: (state) => {
@@ -118,8 +128,17 @@ const dominosaPlan = describedEdgeHint<
   stated: STATED,
   ringKind: SPOT,
   ring: ({ spot }) => [spot],
-  // The domino a leg decides, lower number first.
-  terms: ({ numbers: [a, b] }) => ({ lo: Math.min(a, b), hi: Math.max(a, b) }),
+  supplied: {
+    onlySpot: domino,
+    squareOnly: domino,
+    squareSingleDomino: domino,
+    mustOverlap: domino,
+    localDuplicate: domino,
+    localDuplicate2: domino,
+    parity: domino,
+    set: domino,
+    setDoubles: domino,
+  },
   width: (state) => state.w,
 });
 

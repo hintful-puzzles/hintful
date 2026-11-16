@@ -374,14 +374,18 @@ function premise(
       // without the board having any way to mark the intersection itself.
       const across = reason.cells.find((c) => c.x !== target.x && c.y !== target.y);
       const v = across === undefined ? 0 : grid[across.y * o + across.x];
+      // What a player can check is a number written across the clue, so
+      // the board says it, not the marks the firing read.
+      const supplied: mathrax.SuppliedById["clueEasy"]["terms"] = {
+        placed: v !== 0,
+        v,
+      };
       const { look } = statedParts(reason.clause, {
         kind: CELL,
         at: (i: number): Point => ({ x: i % o, y: (i / o) | 0 }),
         ring: [],
         marks: { outline: reason.cells },
-        // What a player can check is a number written across the clue, so
-        // the board says it, not the marks the firing read.
-        terms: { ...reason.terms, placed: v !== 0, v },
+        terms: { ...reason.terms, ...supplied },
         value: MATHRAX_VOCAB.value,
         noun: WORDS.cell,
         struck: valuesOf(marks),

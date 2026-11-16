@@ -53,6 +53,19 @@ interface SaysOf {
   };
 }
 
+/** A game's hooks for what its techniques declare `supplied`, one a technique
+ * (`Supplied` is the compiled module's `SuppliedById`): each returns every
+ * term and mark its technique declares, so one left out does not compile. */
+export type SuppliedHooks<Supplied, Marked, State> = {
+  readonly [K in keyof Supplied]: (marked: Marked, state: State) => Supplied[K];
+};
+
+/** What a hook returns, as the engine reads it whatever the technique. */
+export interface SuppliedOf {
+  terms?: object;
+  marks?: { outline?: readonly number[]; stripes?: readonly number[] };
+}
+
 /** What a game supplies for its hint. */
 export interface DescribedHintSpec<
   State,

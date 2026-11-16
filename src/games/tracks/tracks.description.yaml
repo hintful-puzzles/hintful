@@ -141,8 +141,10 @@ techniques:
   # counted again.
   #
   # What a step reasons from is said: the squares are its `outline`, and the
-  # sides are a `shut` or `crossing` term. Those are edges, which stop at the
-  # board's rim, so the hint adds a square's sides on the rim from the ends.
+  # sides a term of edges (`sides`, `rails`). Edges stop at the board's rim, so
+  # the game supplies what a sentence outlines (`shut`, `crossing`) as pieces:
+  # those edges' sides, a square's sides on the rim from the ends, and a
+  # line's clue with the squares it counts.
   #
   # A square left fewer than two sides the track could cross holds none. A
   # track square so is inconsistent.
@@ -154,8 +156,9 @@ techniques:
       terms:
         c: c
         open: "|open(c)| + drawn(c)"
-        # The game adds the sides on the board's rim to these.
-        shut: "set(edge(c, y) over y in adj4(c) where shut(c, y))" # supplied
+        sides: "set(edge(c, y) over y in adj4(c) where shut(c, y))"
+        # `sides` and the square's sides on the board's rim.
+        shut: { supplied: elements }
       marks: { reads: "{c}" }
       wordings:
         - when: "open = 0"
@@ -177,8 +180,11 @@ techniques:
       F = open(c) where |F| > 0 and |F| + drawn(c) <= 2
     conclude: "|F| + drawn(c) = 2 and (forall y in F: place(edge(c, y), 1))"
     says:
-      # The game adds the sides on the board's rim to `shut`.
-      terms: { c: c, shut: "set(edge(c, y) over y in adj4(c) where shut(c, y))" } # supplied
+      # `shut` is `sides` and the square's sides on the board's rim.
+      terms:
+        c: c
+        sides: "set(edge(c, y) over y in adj4(c) where shut(c, y))"
+        shut: { supplied: elements }
       marks: { reads: "{c}" }
       look: "The track can't cross {outline shut: the outlined side | the outlined sides}"
       move: "it must run through {ring: the ringed one | the ringed ones}"
@@ -301,9 +307,8 @@ techniques:
           L in lines where (|C| > 0 and L = first(C)) or (|C| = 0 and L = first(R)))
         col: >-
           exists L in cols where count(c in cells(L) where c in G or c in H) < clue(count, L): true
-        # The short line's clue and the squares the track already has in it,
-        # which the game reads.
-        unmet: "G" # supplied
+        # The short line's clue and the squares the track already has in it.
+        unmet: { supplied: elements }
       marks:
         reads: >-
           {end1(e)} + set(c over
@@ -343,13 +348,14 @@ techniques:
     says:
       # Every unfinished square has a side shut across the line, which is
       # why none can be crossed straight through.
-      # `unable` is those squares and the sides that shut them, the board's
-      # rim included, which the game reads.
+      # `unable` is those squares and the sides that shut them, `sides` and
+      # the board's rim.
       terms:
         L: L
         clueAt: L
         col: "L in cols"
-        unable: "set(edge(c, y) over c in cells(L) where drawn(c) != 2, y in adj4(c) where y not in cells(L) and shut(c, y))" # supplied
+        sides: "set(edge(c, y) over c in cells(L) where drawn(c) != 2, y in adj4(c) where y not in cells(L) and shut(c, y))"
+        unable: { supplied: elements }
       marks: { reads: "cells(L)", outline: "{c in cells(L) where drawn(c) != 2}" }
       look: >-
         {stripes L: This {if col: column | row}} has {outline clueAt: 2 track
@@ -367,8 +373,8 @@ techniques:
       and count(y in adj4(p) where y != q and not shut(p, y)) < 2
     conclude: "strike(p, 1)"
     says:
-      # The game adds the sides on the board's rim to `shut`, and reads `lineClue`:
-      # the line's clue and the squares it counts.
+      # `shut` is `sides` and the square's sides on the board's rim, and
+      # `lineClue` the line's clue and the squares it counts.
       terms:
         L: L
         p: p
@@ -378,8 +384,9 @@ techniques:
         up: "step(p, 1) = q"
         down: "step(p, 2) = q"
         left: "step(p, 3) = q"
-        shut: "set(edge(p, y) over y in adj4(p) where shut(p, y))" # supplied
-        lineClue: "{p}" # supplied
+        sides: "set(edge(p, y) over y in adj4(p) where shut(p, y))"
+        shut: { supplied: elements }
+        lineClue: { supplied: elements }
       marks: { reads: "cells(L)", outline: "{c in cells(L) where on(c)}" }
       look: >-
         {outline shut: the outlined side | the outlined sides} send track in {ring:
@@ -405,8 +412,9 @@ techniques:
         q: q
         col: "L in cols"
         target: "clue(count, L)"
-        shut: "set(edge(p, y) over y in adj4(p) where shut(p, y))" # supplied
-        lineClue: "{p}" # supplied
+        sides: "set(edge(p, y) over y in adj4(p) where shut(p, y))"
+        shut: { supplied: elements }
+        lineClue: { supplied: elements }
       marks: { reads: "cells(L)", outline: "{c in cells(L) where off(c)}" }
       look: >-
         Emptying {ring: this square | these squares} empties {outline shut: the
@@ -433,13 +441,14 @@ techniques:
       # The block is the argument, striped, and the rails across its border
       # are the crossings counted.
       # `crossing` is those rails and the places an end in the block leaves the
-      # board by, which the game reads.
+      # board by.
       terms:
         e: e
         k: k
         none: "k = 0"
         carries: "k mod 2 = 1"
-        crossing: "set(edge(c, y) over c in G, y in adj4(c) where y not in G and value(edge(c, y)) = 1)" # supplied
+        rails: "set(edge(c, y) over c in G, y in adj4(c) where y not in G and value(edge(c, y)) = 1)"
+        crossing: { supplied: elements }
       marks: { reads: "{end1(e)} + G", stripes: "G" }
       look: >-
         Every entry to {stripes: the striped block} needs an exit, and {if none: no

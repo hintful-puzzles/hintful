@@ -208,13 +208,13 @@ techniques:
         # A white pearl with a side ruled out: whether that side is the
         # board's edge, and whether its line must run across (else up and
         # down). The game reads the sides.
-        board: "false" # supplied
-        across: "false" # supplied
+        board: { supplied: flag }
+        across: { supplied: flag }
         # Whether the step sets several edges, and the edges a white pearl's
         # line carries on through (the game draws them with the step).
-        multi: "false" # supplied
-        runs: "false" # supplied
-        through: "edges(c)" # supplied
+        multi: { supplied: several }
+        runs: { supplied: flag }
+        through: { supplied: elements }
       marks: { outline: "{c}" }
       wordings:
         - when: "isWhite and lines > 0"
@@ -267,11 +267,11 @@ techniques:
         # (`runsOn`), the edges it takes in all (`all`), and the white pearls
         # it runs on through (`runs`, `several`, `through`); the game reads
         # them.
-        runsOn: "false" # supplied
-        all: "edges(c)" # supplied
-        runs: "false" # supplied
-        several: "false" # supplied
-        through: "edges(c)" # supplied
+        runsOn: { supplied: flag }
+        all: { supplied: elements }
+        runs: { supplied: flag }
+        several: { supplied: flag }
+        through: { supplied: elements }
       marks: { outline: "{c}" }
       wordings:
         - when: line
@@ -310,8 +310,8 @@ techniques:
       terms:
         c: c
         e: e
-        runs: "false" # supplied
-        through: "edges(c)" # supplied
+        runs: { supplied: flag }
+        through: { supplied: elements }
       # The pearl, the square past it and the square past that, straight on.
       marks:
         reads: "{c, j} + set(other(x, j) over x in edges(j) where x != e and not bent(x, e))"
@@ -373,9 +373,9 @@ techniques:
         e: e
         # Whether the pearl runs across (else up and down), and the white
         # pearls its line carries on through.
-        across: "false" # supplied
-        runs: "false" # supplied
-        through: "edges(c)" # supplied
+        across: { supplied: flag }
+        runs: { supplied: flag }
+        through: { supplied: elements }
       marks:
         reads: "{c, other(e, c), other(f, c)}"
         outline: "{other(e, c), other(f, c)}"
@@ -408,10 +408,10 @@ techniques:
         # Whether the square that turns takes lines (else crosses), whether
         # the step sets several edges, and the white pearls its lines carry
         # on through.
-        line: "false" # supplied
-        multi: "false" # supplied
-        runs: "false" # supplied
-        through: "edges(c)" # supplied
+        line: { supplied: flag }
+        multi: { supplied: several }
+        runs: { supplied: flag }
+        through: { supplied: elements }
       marks:
         reads: "{c, other(e, c), k}"
         outline: "{other(e, c)}"
@@ -485,10 +485,10 @@ techniques:
         # (the game reads the piece), and for a white pearl, whether the
         # blocked way runs across; and the white pearls its lines carry on
         # through.
-        pearlOff: "false" # supplied
-        blocked: "false" # supplied
-        runs: "false" # supplied
-        through: "edges(c)" # supplied
+        pearlOff: { supplied: flag }
+        blocked: { supplied: flag }
+        runs: { supplied: flag }
+        through: { supplied: elements }
       # The square and the pieces of line its ways through would close; the
       # piece shown is the one the first way that has one leads into.
       marks:

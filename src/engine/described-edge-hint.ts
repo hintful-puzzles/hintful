@@ -12,7 +12,12 @@
  * player makes along an edge (a bridge a drag at a time) are not the facts.
  */
 
-import { spokenOf, techniqueOf } from "./described-hint.ts";
+import {
+  type SuppliedHooks,
+  type SuppliedOf,
+  spokenOf,
+  techniqueOf,
+} from "./described-hint.ts";
 import type { HintResult, HintStep } from "./game.ts";
 import { CONTRADICTION_UNLOCALIZED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { CELL, type MarkKind, type Narration, type Sentence } from "./hint-words.ts";
@@ -81,6 +86,7 @@ export interface EdgeHintSpec<
   Says extends { [K in keyof Says]: SaysOf },
   Ring = never,
   Elem = Point,
+  Supplied = Record<never, never>,
 > {
   /** A name for the walk's step budget. */
   name: string;
@@ -130,10 +136,16 @@ export interface EdgeHintSpec<
     fired: Fired<Says[keyof Says & string], Ctx>,
     state: State,
   ): { move: Move; highlights: H; marked: Marked }[];
-  /** Each kind of step's words as the description states them: the compiled
-   * module's `STATED`. A technique none of whose kinds it states is said by
-   * `say`. Stating a kind needs the rest of this block. */
-  stated?: Readonly<Record<string, { readonly step?: readonly Clauses[] }>>;
+  /** Each kind of step's words as the description states them, and the flag
+   * terms it declares `several`: the compiled module's `STATED`. A technique
+   * none of whose kinds it states is said by `say`. Stating a kind needs the
+   * rest of this block. */
+  stated?: Readonly<
+    Record<
+      string,
+      { readonly step?: readonly Clauses[]; readonly several?: readonly string[] }
+    >
+  >;
   /** What a stated clause's `ring` is drawn on: the edges (or whatever) a leg
    * decides, which are not the cells its terms and marks name. */
   ringKind?: MarkKind<Ring>;
@@ -141,23 +153,29 @@ export interface EdgeHintSpec<
   ring?(marked: Marked): readonly Ring[];
   /** A later leg's sentence (a leg after the firing's first): its move is the
    * game's, from the ring it still has to make, and `basis` is what the kind's
-   * `again` clause says of the reasoning. Needed where a kind states `again`. */
+   * `again` clause says of the reasoning. Left out, a kind's `later` clause
+   * says the move. Palisade and Separate keep it (`edgeContinuation`): their
+   * move says "a wall" or "walls" by the count of the leg's ring, which no
+   * clause slot says without marking the words. */
   later?(ring: readonly Ring[], basis: Narration): Sentence;
-  /** The terms a leg supplies itself, which a technique declares with a
-   * placeholder formula and a `# supplied` comment: the domino of the spot a
-   * leg decides, which differs by leg and which no firing's binding holds. */
-  terms?(marked: Marked, state: State): Readonly<Record<string, unknown>>;
+  /** What a leg supplies to each technique that declares a term or mark
+   * `supplied` (the module's `SuppliedById`), by technique: the domino of the
+   * spot a leg decides, which differs by leg and which no firing's binding
+   * holds, or the hubs a trial breaks. */
+  supplied?: SuppliedHooks<Supplied, Marked, State>;
   /** The width of the board, to name a cell's point in a stated clause. */
   width?(state: State): number;
   /** What a stated clause's outlines and terms are drawn on, where it is not
-   * the board's squares (Spokes' hubs), and the element each index names. */
+   * the board's squares by their points, and the element each index names:
+   * Spokes' hubs, Pearl's squares by index, Tracks' pieces by their numbers.
+   * How a game draws its elements is its own; the description names only
+   * their sort. */
   elements?: { kind: MarkKind<Elem>; at(index: number, state: State): Elem };
-  /** The squares a leg outlines, where they are the game's to find and not the
-   * technique's (the hubs a trial breaks): the technique declares its
-   * `outline` with a placeholder and a `# supplied` comment. */
-  outline?(marked: Marked): readonly number[];
   /** The terms a stated clause draws on a mark kind of their own, apart from
-   * the squares (Path's tried edges), and the element each index of one names. */
+   * the elements, by name (Path's tried edges, Pearl's lines carried on,
+   * Tracks' lines and pieces), and the element each index of one names where
+   * that is not `elements.at` (Path, Tracks). By name, not by sort: Tracks
+   * draws a line term as a line and a piece term as a piece, both numbers. */
   termKinds?: Readonly<Record<string, MarkKind<Elem>>>;
   termAt?: Readonly<Record<string, (index: number, state: State) => Elem>>;
   /** A number term as the board draws it; its numeral where absent. */
@@ -201,8 +219,9 @@ export function describedEdgeHint<
   Kind extends string = string,
   Ring = never,
   Elem = Point,
+  Supplied = Record<never, never>,
 >(
-  spec: EdgeHintSpec<State, Move, H, Marked, Ctx, Says, Ring, Elem>,
+  spec: EdgeHintSpec<State, Move, H, Marked, Ctx, Says, Ring, Elem, Supplied>,
 ): (state: State) => HintResult<Move, H, Kind> {
   type Step = HintStep<Move, H, Kind>;
   type Say = (spoken: unknown, marked: Marked, state: State) => Sentence;
@@ -262,10 +281,19 @@ export function describedEdgeHint<
         says.arm === undefined ? technique : `${technique}.${says.arm}`
       ) as Kind;
       const clauses = stated[rung]?.step?.[says.wording ?? 0];
+      const hooks = spec.supplied as
+        | Readonly<Record<string, (marked: Marked, state: State) => SuppliedOf>>
+        | undefined;
       legs.forEach(({ move, highlights, marked }, leg) => {
         let words: Sentence;
         if (clauses !== undefined) {
           const ring = (spec.ring as NonNullable<typeof spec.ring>)(marked);
+          const own = hooks?.[technique]?.(marked, state) ?? {};
+          // Whether the firing decides more than one element: it has several
+          // legs, or its one leg rings several.
+          const several =
+            legs.length > 1 ||
+            (spec.ring as NonNullable<typeof spec.ring>)(legs[0].marked).length > 1;
           const { kind, at: pointOf } =
             spec.elements ??
             (() => {
@@ -292,17 +320,19 @@ export function describedEdgeHint<
                 }),
             ring,
             marks: {
-              outline: (spec.outline?.(marked) ?? says.marks.outline ?? []).map((i) =>
+              outline: (own.marks?.outline ?? says.marks.outline ?? []).map((i) =>
                 pointOf(i, state),
               ),
-              stripes: (says.marks.stripes ?? []).map((i) => pointOf(i, state)),
+              stripes: (own.marks?.stripes ?? says.marks.stripes ?? []).map((i) =>
+                pointOf(i, state),
+              ),
             },
             terms: {
               ...(says.terms as Record<string, unknown>),
-              // A technique that declares `multi` is told whether its firing
-              // sets several edges, which a leg's words differ by.
-              ...("multi" in says.terms ? { multi: legs.length > 1 } : {}),
-              ...spec.terms?.(marked, state),
+              ...Object.fromEntries(
+                (stated[rung]?.several ?? []).map((n) => [n, several]),
+              ),
+              ...own.terms,
             },
             value: (n) => spec.value?.(n, state) ?? String(n),
             later: leg > 0,

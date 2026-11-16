@@ -21,6 +21,7 @@ import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
+import type { SuppliedHooks } from "../../engine/described-hint.ts";
 import { EDGE, type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { MarkKind } from "../../engine/hint-words.ts";
@@ -32,10 +33,11 @@ import {
   squareEdges,
 } from "../../engine/square-edges.ts";
 import type { Point } from "../../engine/types.ts";
-import { STATED } from "../../generated/games/path/path.compiled.ts";
+import { STATED, type SuppliedById } from "../../generated/games/path/path.compiled.ts";
 import {
   type Broke,
   type PathFiring,
+  type PathReason,
   type PathRung,
   type PathSays,
   type PathWalkContext,
@@ -248,12 +250,30 @@ function numberOf(state: PathState, cell: number): { hasNum: boolean; num: numbe
   return { hasNum: n !== NO_END, num: n === NO_END ? 0 : n };
 }
 
-/** The terms a clash fills in: the placeholders of the description's
- * `lineBreaks` and `pairBreaks`. */
-function clashTerms(state: PathState, clash: Clash): Record<string, unknown> {
+/** What a Check's clash says: the terms `lineBreaks` and `pairBreaks` declare
+ * supplied, those of the other kinds of clash left unread. */
+type ClashTerms = SuppliedById["lineBreaks"]["terms"];
+
+/** The terms a clash fills in. */
+function clashTerms(state: PathState, clash: Clash): ClashTerms {
+  const none: ClashTerms = {
+    crowd: false,
+    short: false,
+    loops: false,
+    dead: false,
+    sq: -1,
+    hasNum: false,
+    num: 0,
+    held: 0,
+    circuit: [],
+    twoNums: [],
+    n1: 0,
+    n2: 0,
+  };
   switch (clash.kind) {
     case "crowded":
       return {
+        ...none,
         crowd: true,
         sq: clash.cell,
         held: clash.lines,
@@ -261,15 +281,17 @@ function clashTerms(state: PathState, clash: Clash): Record<string, unknown> {
       };
     case "stuck":
       return {
+        ...none,
         short: true,
         dead: clash.ways > 0,
         sq: clash.cell,
         ...numberOf(state, clash.cell),
       };
     case "closed":
-      return { loops: true, circuit: clash.cells };
+      return { ...none, loops: true, circuit: clash.cells };
     case "joined":
       return {
+        ...none,
         twoNums: [clash.a, clash.b],
         n1: state.ends[clash.a],
         n2: state.ends[clash.b],
@@ -277,50 +299,68 @@ function clashTerms(state: PathState, clash: Clash): Record<string, unknown> {
   }
 }
 
-/** The terms one firing supplies on `state`, with `edges` as the ladder had
- * them when it fired: whether it sets several edges, and what its reason holds
- * that the technique's binding does not. */
-function termsOf({ firing, before }: Fired, state: PathState): Record<string, unknown> {
+/** The reason of a firing of the technique `kind`. */
+function reasonFor<K extends PathReason["kind"]>(
+  { firing }: Fired,
+  kind: K,
+): Extract<PathReason, { kind: K }> {
   const { reason } = firing;
-  const multi = firing.edges.length > 1;
-  // What broke is the technique's witness; the board says only how it looks.
-  // The last line tried is the one that closes a loop or joins two numbers.
-  const witnessed = (tried: readonly number[], broke: Broke): Clash =>
-    clashRead(
-      state,
-      before,
-      tried,
-      typeof broke === "object"
-        ? { kind: "stuck", cell: broke.stuck }
-        : { kind: broke, edge: tried[tried.length - 1] },
-    );
-  switch (reason.kind) {
-    case "forced":
-      return { multi, ...numberOf(state, reason.cell) };
-    case "lineBreaks":
-      return clashTerms(state, witnessed(reason.tried, reason.broke));
-    case "pairBreaks":
-      return {
-        tried: reason.tried,
-        ...clashTerms(state, witnessed(reason.tried, reason.broke)),
-      };
-    case "weighed": {
-      let why = 0;
-      for (const tried of reason.ruledOut) {
-        const found = clashOf(state, before, tried);
-        if (found === null) throw new Error(`path: lines on ${tried} break nothing`);
-        why |= 1 << WHYS.indexOf(whyOf(clashRead(state, before, tried, found)));
-      }
-      return {
-        multi,
+  if (reason.kind !== kind)
+    throw new Error(`path: a ${reason.kind} firing said as ${kind}`);
+  return reason as Extract<PathReason, { kind: K }>;
+}
+
+/** What lines tried on the board as a firing found it break: the technique's
+ * witness says what, and the board only how it looks. The last line tried is
+ * the one that closes a loop or joins two numbers. */
+const witnessed = (
+  state: PathState,
+  { before }: Fired,
+  tried: readonly number[],
+  broke: Broke,
+): Clash =>
+  clashRead(
+    state,
+    before,
+    tried,
+    typeof broke === "object"
+      ? { kind: "stuck", cell: broke.stuck }
+      : { kind: broke, edge: tried[tried.length - 1] },
+  );
+
+/** What each technique's reason holds that its binding does not, read on
+ * `state` with the edges as the ladder had them when it fired. */
+const SUPPLIED: SuppliedHooks<SuppliedById, Fired, PathState> = {
+  forced: (f, state) => ({ terms: numberOf(state, reasonFor(f, "forced").cell) }),
+  lineBreaks: (f, state) => {
+    const { tried, broke } = reasonFor(f, "lineBreaks");
+    return { terms: clashTerms(state, witnessed(state, f, tried, broke)) };
+  },
+  pairBreaks: (f, state) => {
+    const { tried, broke } = reasonFor(f, "pairBreaks");
+    return {
+      terms: { tried, ...clashTerms(state, witnessed(state, f, tried, broke)) },
+    };
+  },
+  weighed: (f, state) => {
+    const { before } = f;
+    const reason = reasonFor(f, "weighed");
+    let why = 0;
+    for (const tried of reason.ruledOut) {
+      const found = clashOf(state, before, tried);
+      if (found === null) throw new Error(`path: lines on ${tried} break nothing`);
+      why |= 1 << WHYS.indexOf(whyOf(clashRead(state, before, tried, found)));
+    }
+    return {
+      terms: {
         why,
         // The pairs ruled out are every pair of the square's other three edges.
         tried: [...new Set(reason.ruledOut.flat())],
         ...numberOf(state, reason.cell),
-      };
-    }
-  }
-}
+      },
+    };
+  },
+};
 
 /** The edges a firing tries lines on, which its step draws thin as lines
  * where its words outline them. */
@@ -380,7 +420,8 @@ export const pathHint = describedEdgeHint<
   PathSays,
   PathRung,
   number,
-  Element
+  Element,
+  SuppliedById
 >({
   name: "path hint",
   walk: (state) => pathWalk(state),
@@ -396,7 +437,7 @@ export const pathHint = describedEdgeHint<
   width: (state) => state.w,
   termKinds: { tried: TRIED },
   termAt: { tried: (edge) => edge },
-  terms: termsOf,
+  supplied: SUPPLIED,
 });
 
 /** Judge a move against the step on show by what it did to the edges, which

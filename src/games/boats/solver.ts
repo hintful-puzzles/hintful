@@ -233,25 +233,10 @@ type BoatsBreach =
    */
   | { kind: "unfinishable" };
 
-/** What a trial's description leaves for its reason to supply (the terms and
- * marks it marks "supplied"): the rule its supposition breaks as flags, and
- * the squares that rule flags. */
-interface TrialSupplied {
-  terms: {
-    collision: boolean;
-    count: boolean;
-    fleet: boolean;
-    many: boolean;
-    few: boolean;
-    segment: boolean;
-    reach: number;
-  };
-  marks: {
-    outline: readonly number[];
-    stripes: readonly number[];
-    reads: readonly number[];
-  };
-}
+/** What a trial's reason supplies: the rule its supposition breaks as flags,
+ * and the squares that rule flags. The three trials declare the same, but
+ * `centerTrial` outlines its own segment, which the squares are added to. */
+type TrialSupplied = boats.SuppliedById["lastWater"];
 
 /** A breach as the description's flags read it. A rule that flagged nothing
  * has no square for its words to point at, so it reads as the catch-all. */
@@ -417,7 +402,7 @@ function classifyBreach(
  * A line that could no longer reach its number is the one line the sentence
  * names, so it is hatched and not outlined.
  */
-function trialReason<Binding, Y extends TrialSupplied>(
+function trialReason<Binding, Y extends boats.SaysById[keyof boats.SuppliedById]>(
   B: Board,
   m: CellMarks,
   binding: Binding,
@@ -440,16 +425,20 @@ function trialReason<Binding, Y extends TrialSupplied>(
         breach.line.horizontal ? breach.line.index : B.b.h + breach.line.index
       ]
     : [];
+  const supplied: TrialSupplied = {
+    terms: breachTerms(breach, found.cells.length > 0),
+    marks: {
+      outline: counted ? outline : [...outline, ...found.cells],
+      stripes: [...stripes],
+      reads: [...stripes],
+    },
+  };
   return {
     binding,
     says: {
       ...says,
-      terms: { ...says.terms, ...breachTerms(breach, found.cells.length > 0) },
-      marks: {
-        outline: counted ? outline : [...outline, ...found.cells],
-        stripes: [...stripes],
-        reads: [...stripes],
-      },
+      terms: { ...says.terms, ...supplied.terms },
+      marks: supplied.marks,
     },
   };
 }

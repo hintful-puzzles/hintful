@@ -184,7 +184,9 @@ interface FiringShape<
     >
   >;
   /** The terms whose squares a stated clause draws on a mark kind of their
-   * own, apart from the step's squares. */
+   * own, apart from the step's squares, by name: Mosaic's clue drawn as its
+   * block, Range's as its clue. A term is a cell to the description, so how
+   * one is drawn is the game's. */
   termKinds?: Readonly<Record<string, MarkKind<Point>>>;
   /** The number a square shows, for a stated clause's `{each}`. */
   shows?(state: State, at: Point): number;

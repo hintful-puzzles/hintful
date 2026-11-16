@@ -7,9 +7,13 @@
  */
 
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
+import type { SuppliedHooks } from "../../engine/described-hint.ts";
 import type { HintResult } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
-import { STATED } from "../../generated/games/spokes/spokes.compiled.ts";
+import {
+  STATED,
+  type SuppliedById,
+} from "../../generated/games/spokes/spokes.compiled.ts";
 import { HUB, SPOKE, type Spoke } from "./kinds.ts";
 import {
   type SpokesFiring,
@@ -55,32 +59,43 @@ interface Leg {
   highlights: SpokesHint;
 }
 
-/** The terms a leg supplies, which the description declares with a placeholder:
- * the spokes a later leg still decides, and what a Check's trial breaks. A hub
- * the rule-out leaves no spare spoke is told apart from a broken one of the
- * same number by order. */
-function termsOf(
+/** What a Check's trial breaks: the hubs it fills and breaks, outlined, and
+ * the terms that name them. A hub the rule-out leaves no spare spoke is told
+ * apart from a broken one of the same number by order. */
+function trialBreaks(
   { firing: f, highlights }: Leg,
   state: SpokesState,
-): Readonly<Record<string, unknown>> {
-  const rest = { rest: highlights.spokes.length };
-  if (f.breakKind === undefined) return rest;
+): SuppliedById["spareBreaks"] {
   const filled = f.filled ?? null;
   const broken = f.evidenceHubs.filter((h) => h !== filled);
   const number = (h: number): number => state.numbers[h];
   return {
-    ...rest,
-    broken,
-    many: broken.length > 1,
-    bn: number(broken[0]),
-    starved: f.breakKind === "starved",
-    hasFilled: filled !== null,
-    filled: filled ?? broken[0],
-    fn: number(filled ?? broken[0]),
-    same:
-      filled !== null && broken.length === 1 && number(broken[0]) === number(filled),
+    terms: {
+      broken,
+      many: broken.length > 1,
+      bn: number(broken[0]),
+      starved: f.breakKind === "starved",
+      hasFilled: filled !== null,
+      filled: filled ?? broken[0],
+      fn: number(filled ?? broken[0]),
+      same:
+        filled !== null && broken.length === 1 && number(broken[0]) === number(filled),
+    },
+    marks: { outline: highlights.evidence },
   };
 }
+
+/** What a leg supplies that no firing's binding holds: the spokes a later leg
+ * still decides, and what a Check's trial breaks. */
+const SUPPLIED: SuppliedHooks<SuppliedById, Leg, SpokesState> = {
+  saturation: ({ highlights }) => ({ terms: { rest: highlights.spokes.length } }),
+  lineBreaks: (leg, state) => {
+    const { terms, marks } = trialBreaks(leg, state);
+    const { broken, many, bn, starved } = terms;
+    return { terms: { broken, many, bn, starved }, marks };
+  },
+  spareBreaks: trialBreaks,
+};
 
 /** A firing's journey: a leg for each spoke it decides, each showing the
  * spokes still to settle, so whichever leg is asked for shows what is left of
@@ -113,7 +128,8 @@ const spokesPlan = describedEdgeHint<
   SpokesSays,
   SpokesRung,
   Spoke,
-  number
+  number,
+  SuppliedById
 >({
   name: "spokes hint",
   walk: (state) => spokesWalk(state),
@@ -128,9 +144,7 @@ const spokesPlan = describedEdgeHint<
   elements: { kind: HUB, at: (index) => index },
   ringKind: SPOKE,
   ring: ({ highlights: hl }) => hl.spokes.map((sp) => spokeOf(sp, hl.w)),
-  // The hubs the step outlines, a Check's trial finding the ones it breaks.
-  outline: ({ highlights }) => highlights.evidence,
-  terms: termsOf,
+  supplied: SUPPLIED,
 });
 
 /** The deduction from the player's lines to the end. A board with several

@@ -1146,10 +1146,22 @@ holds literal words. **A term whose elements are drawn on a kind of their own**
 squares) is a reference `{outline tried: …}` like any term of elements; `termAt`
 and `elements.at` are given the state, so a game whose pieces are squares, sides
 and clues in one kind (Tracks') can number them by the board's width, and a
-supplied term then holds those numbers. **A term or mark only the game's own code can supply** (Boats'
-trials name the rule the validator says they break) is declared in the technique's
-`says` with a placeholder formula and a `# supplied` comment, and the game's reason
-callback replaces it, so a clause can read it as any term.
+supplied term then holds those numbers. **A term or mark only the game's own
+code can supply** (Boats' trials name the rule the validator says they break)
+is declared by its kind: `{ supplied: flag }`, `number`, `element` or
+`elements` in `terms`, `{ supplied: elements }` in `marks`. The compiled module
+writes a placeholder for it and types what each technique is supplied
+(`SuppliedById`), and the game's hook returns exactly that, so a term left
+out, or a technique, does not compile: `describedEdgeHint`'s `supplied`, one
+function a technique (`SuppliedHooks`), or a reason callback that spreads it
+over what the technique says (Boats' `trialReason`). A wording's `when` cannot
+read one, for the wording is chosen before the game supplies it; choose by
+`{if term: …}` in the clause. Where the game re-reads a term the description
+can state (Tracks adds the rim's sides to the sides a square is shut by), the
+description states it under its own name (`sides`) and the game supplies the
+one the sentence names (`shut`). **`{ supplied: several }`** is the engine's:
+whether the firing decides more than one element, over its legs (Palisade's,
+Path's and Pearl's `multi`), which `STATED` lists by kind.
 **`{n: one | several}`** takes the first form where the number term `n` is 1
 ("1 move" | "{n} moves"). **A move no rule forces** (a search game's slide)
 states its `move` and an `effect`, said after it ("that makes room for the
@@ -1169,7 +1181,7 @@ them and left them. Its `says` marks are cells (the islands outlined and the
 island read, `reads`), and what is an edge or a line (a group's bridges) is a
 term, which the game reads off its geometry. **What a step shows is said
 too**: the squares it reasons from are its `outline` (the walk reads them),
-the sides a set-of-edges term (Tracks' `shut`, `set(edge(c, y) over y in
+the sides a set-of-edges term (Tracks' `sides`, `set(edge(c, y) over y in
 adj4(c) where shut(c, y))`), and the game only places them. A side on the
 board's rim is no edge, so that is the game's geometry. Magnets is the
 exception: a count step's sentence reads each square's reason (`whyNot`)
@@ -1190,24 +1202,22 @@ states its words as a cell game does** (Separate): its `STATED` goes to
 `describedEdgeHint` with `ringKind` (what a `{ring}` reference is drawn on, the
 edges), `ring` (what a leg decides), `width` and `value`; a kind that states
 `again` has a later leg say it as the basis of the game's own `later` sentence
-(`edgeContinuation`), so a kind states its first leg's `move` only. `{a term}`
-says a value with its article ("an A") and `{numeral term}` a plain count where
-`{term}` is a value the board draws another way (a letter). A technique that
-declares a flag term `multi` (`multi: "false" # supplied`) has it set to whether
-the firing sets several edges, which `{if multi: …}` says (Palisade); a
-wording's `when` cannot read it, for the compiled module picks the wording
-before the engine knows. `{derived outline: words}` is a reference whose words
-claim what the board does not show, which `Narration.depth` counts. A kind
-that states `again` and no game `later` hook says a later leg's move as its
-`later` clause where it has one, else its `move` (Dominosa: "this spot can't
-hold a domino either"). **A term a leg supplies** is declared as a placeholder
-with `# supplied` and given by the game's `terms(marked, state)`: Dominosa's
-domino (`lo`, `hi`) differs by the spot a leg decides, which no firing's
-binding holds. Spokes' Checks supply the hubs their trial breaks the same way
-(`broken`, `starved`), and the outline they are drawn on through the game's
-`outline(marked)`, with `elements` for a game whose marks are not squares (its
-hubs); a `later` clause may read a supplied count (`rest`, the spokes a later
-leg still decides).
+(`edgeContinuation`), so a kind states its first leg's `move` only. That hook
+stays (Palisade, Separate) because the move says "a wall" or "walls" by the
+count of the leg's own ring, which no slot says without marking the words.
+`{a term}` says a value with its article ("an A") and `{numeral term}` a plain
+count where `{term}` is a value the board draws another way (a letter).
+`{derived outline: words}` is a reference whose words claim what the board
+does not show, which `Narration.depth` counts. A kind that states `again` and
+no game `later` hook says a later leg's move as its `later` clause where it
+has one, else its `move` (Dominosa: "this spot can't hold a domino either").
+**A term a leg supplies** is given by the game's `supplied` hook for its
+technique, on the leg's own `marked`: Dominosa's domino (`lo`, `hi`) differs
+by the spot a leg decides, which no firing's binding holds. Spokes' Checks
+supply the hubs their trial breaks the same way (`broken`, `starved`) and the
+outline they are drawn on, with `elements` for a game whose marks are not
+squares (its hubs); a `later` clause may read a supplied count (`rest`, the
+spokes a later leg still decides).
 
 **A technique whose words need what held says `witness: true`**: the
 compiler then reads, on the same marks as the terms and only on a hint's

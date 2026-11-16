@@ -159,7 +159,7 @@ techniques:
         # Whether the edges left are all walls, which is how the number is met.
         wall: "n < v(q)"
         # Whether the firing sets several edges, which the engine says.
-        multi: "false" # supplied
+        multi: { supplied: several }
       marks: { outline: "{c}" }
       wordings:
         - when: "clue = 0"
@@ -213,7 +213,7 @@ techniques:
         have: "|A|"
         size: k
         # Whether the firing sets several edges, which the engine says.
-        multi: "false" # supplied
+        multi: { supplied: several }
       marks: { stripes: A, reads: A }
       look: >-
         {stripes: this region} has {have} of its {size} squares and
@@ -263,7 +263,7 @@ techniques:
         # or are open (both walls would pass it).
         wall: "walls(c) + 2 <= v(q)"
         # Whether the firing sets both edges, which the engine says.
-        multi: "false" # supplied
+        multi: { supplied: several }
       marks: { stripes: R, reads: "{c} + R" }
       # Both edges border one region, so the number's square is inside all of
       # it or walled from all of it, and that is what makes the count force

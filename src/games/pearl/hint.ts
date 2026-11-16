@@ -13,6 +13,7 @@ import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
+import type { SuppliedHooks } from "../../engine/described-hint.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
 import { keepTrackBy } from "../../engine/hint-track.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
@@ -289,65 +290,91 @@ function markedOf(v: View, f: ShownFiring): Marked {
   };
 }
 
-/** The terms a firing's description cannot know: what its step carries on
- * through white pearls, and what the board's edges show of the step's reason
- * (the sides a white pearl is shut in by, the squares a closed loop would
- * leave out). */
-function termsOf({ view: v, firing: f, reason }: PearlMarked): Record<string, unknown> {
-  // Only a black pearl's own square firing draws a line whose run-on is still
-  // open, and its sentence names it; the other techniques that draw a line
-  // beside one draw its run-on too.
-  if (
-    f.carried.some((c) => c.rule === "black") &&
-    !(reason.kind === "square" && v.clues[reason.sq] === CORNER)
-  )
-    throw new Error(`pearl hint: a ${reason.kind} step drew a black pearl's run-on`);
-  const m = markedOf(v, f);
-  const common = {
-    multi: m.own.length > 1,
-    runs: m.white.length > 0,
-    several: m.white.length > 1,
-    through: m.white,
-    runsOn: m.black.length > 0,
-    all: [...m.own, ...m.black, ...m.white],
-  };
-  switch (reason.kind) {
-    case "square": {
-      const { sq } = reason;
-      if (v.clues[sq] !== STRAIGHT || linesAt(v, f.before, sq) > 0) return common;
-      for (const d of DIRECTIONS)
-        if (edgeState(v, f.before, sq, d) === 2)
-          return {
-            ...common,
-            board: !onBoard(v, sq, d),
-            across: otherAxis(axisOf(d)) === "across",
-          };
-      throw new Error("pearl hint: a white pearl settled with nothing beside it");
-    }
-    case "whiteCannotTurn":
-      return { ...common, across: otherAxis(axisOf(reason.axis)) === "across" };
-    case "whiteTurnsOpposite": {
-      // The square that turns may settle its straight-on cross and a line to
-      // one side at once. It then has its two lines, so the cross is not
-      // shown, and the words go by the edges the step shows: all lines, or all
-      // crosses.
-      const lines = f.shown
-        .filter((op) => m.own.includes(edgeOf(v, op)))
-        .map((op) => op.line);
-      if (lines.includes(true) && lines.includes(false))
-        throw new Error("pearl hint: a white pearl's turn showed a line and a cross");
-      return { ...common, line: lines[0] };
-    }
-    case "closesEarlyThrough":
-      return {
-        ...common,
-        pearlOff: pearlOutside(v, reason.piece, reason.sq),
-        blocked: axisOf(reason.shape & -reason.shape) === "across",
-      };
-    default:
-      return common;
-  }
+/** The reason of a step, as the kind its technique gives. */
+function reasonAs<K extends PearlReason["kind"]>(
+  { reason }: PearlMarked,
+  kind: K,
+): Extract<PearlReason, { kind: K }> {
+  if (reason.kind !== kind)
+    throw new Error(`pearl hint: a ${reason.kind} step said as ${kind}`);
+  return reason as Extract<PearlReason, { kind: K }>;
 }
+
+/** What a step carries on through white pearls, which every technique that
+ * may draw a line beside one says. */
+function carriedOn({ view, firing }: PearlMarked): {
+  runs: boolean;
+  through: number[];
+} {
+  const { white } = markedOf(view, firing);
+  return { runs: white.length > 0, through: [...white] };
+}
+
+/** What the board's edges show of a square's step: the side a white pearl
+ * with no line yet is shut in by, and whether that side is the board's rim. */
+function shutBeside(
+  { view: v, firing: f }: PearlMarked,
+  sq: number,
+): { board: boolean; across: boolean } {
+  if (v.clues[sq] !== STRAIGHT || linesAt(v, f.before, sq) > 0)
+    return { board: false, across: false };
+  for (const d of DIRECTIONS)
+    if (edgeState(v, f.before, sq, d) === 2)
+      return { board: !onBoard(v, sq, d), across: otherAxis(axisOf(d)) === "across" };
+  throw new Error("pearl hint: a white pearl settled with nothing beside it");
+}
+
+/** The terms a firing's description cannot know, by technique: what its step
+ * carries on through pearls, and what the board's edges show of the step's
+ * reason (the sides a white pearl is shut in by, the squares a closed loop
+ * would leave out). */
+const SUPPLIED: SuppliedHooks<pearl.SuppliedById, PearlMarked, PearlState> = {
+  square: (p) => ({
+    terms: { ...carriedOn(p), ...shutBeside(p, reasonAs(p, "square").sq) },
+  }),
+  blackPearl: (p) => {
+    const m = markedOf(p.view, p.firing);
+    return {
+      terms: {
+        ...carriedOn(p),
+        several: m.white.length > 1,
+        runsOn: m.black.length > 0,
+        all: [...m.own, ...m.black, ...m.white],
+      },
+    };
+  },
+  blackRunsOn: (p) => ({ terms: carriedOn(p) }),
+  whiteCannotTurn: (p) => ({
+    terms: {
+      ...carriedOn(p),
+      across: otherAxis(axisOf(reasonAs(p, "whiteCannotTurn").axis)) === "across",
+    },
+  }),
+  whiteTurnsOpposite: (p) => {
+    // The square that turns may settle its straight-on cross and a line to
+    // one side at once. It then has its two lines, so the cross is not
+    // shown, and the words go by the edges the step shows: all lines, or all
+    // crosses.
+    const { view: v, firing: f } = p;
+    const { own } = markedOf(v, f);
+    const lines = f.shown
+      .filter((op) => own.includes(edgeOf(v, op)))
+      .map((op) => op.line);
+    if (lines.includes(true) && lines.includes(false))
+      throw new Error("pearl hint: a white pearl's turn showed a line and a cross");
+    return { terms: { ...carriedOn(p), line: lines[0] } };
+  },
+  earlyThrough: (p) => {
+    const { piece, sq, shape } = reasonAs(p, "closesEarlyThrough");
+    return {
+      terms: {
+        ...carriedOn(p),
+        pearlOff: pearlOutside(p.view, piece, sq),
+        blocked: axisOf(shape & -shape) === "across",
+      },
+    };
+  },
+};
 
 // --- the plan -------------------------------------------------------------
 
@@ -424,6 +451,14 @@ function stepOf(fired: FiredOf<PearlSays[keyof PearlSays], PearlWalkContext>): {
   // The closed loop only confirms, and a firing whose edges the board already
   // shows has nothing to ask of the player.
   if (reason === null || shown.length === 0) return [];
+  // Only a black pearl's own square firing draws a line whose run-on is still
+  // open, and its sentence names it; the other techniques that draw a line
+  // beside one draw its run-on too.
+  if (
+    carried.some((c) => c.rule === "black") &&
+    !(reason.kind === "square" && view.clues[reason.sq] === CORNER)
+  )
+    throw new Error(`pearl hint: a ${reason.kind} step drew a black pearl's run-on`);
   return [
     {
       move: moveOf(view, shown),
@@ -470,7 +505,8 @@ export const pearlHint = describedEdgeHint<
   PearlSays,
   PearlRung,
   number,
-  number
+  number,
+  pearl.SuppliedById
 >({
   name: "pearl hint",
   walk: pearlWalk,
@@ -483,7 +519,7 @@ export const pearlHint = describedEdgeHint<
   ringKind: EDGE,
   ring: ({ view, firing }) => markedOf(view, firing).own,
   termKinds: { through: EDGE, all: EDGE },
-  terms: termsOf,
+  supplied: SUPPLIED,
 });
 
 /** The move that makes these edges: each a line or a cross, set on the squares

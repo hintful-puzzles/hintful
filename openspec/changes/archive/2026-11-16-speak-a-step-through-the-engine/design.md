@@ -58,11 +58,22 @@ refused, and so is a phrase that names itself.
 
 ## Supplied terms
 
-`# supplied` becomes `{ supplied: flag | number | elements }` in a `says`'s
-`terms` or `marks`. The compiler writes the placeholder itself and lists the
-supplied names in `SuppliedById`; the hook that supplies them (Boats'
-reason callback, `describedEdgeHint`'s `terms`) is typed to return them, so
-leaving one out does not compile.
+`# supplied` becomes `{ supplied: flag | number | element | elements }` in a
+`says`'s `terms`, `{ supplied: elements }` in its `marks`. The compiler writes
+the placeholder itself and types what each technique is supplied in
+`SuppliedById`; the hook that supplies them (Boats' reason callback,
+`describedEdgeHint`'s `supplied`, one function a technique) is typed to
+return them, so leaving one out does not compile.
+
+`multi` was a supplied flag the engine set by its name. It is declared
+`{ supplied: several }`, the engine's kind: `STATED` lists such terms by
+kind, and the engine sets each to whether the firing decides more than one
+element (several legs, or one leg ringing several), which is what Palisade's
+legs and Path's and Pearl's own `multi` had each said.
+
+A term the game re-reads from a formula (Tracks adds the rim's sides to the
+sides a formula finds) is two terms: the description's, under its own name,
+and the supplied one the sentence names.
 
 ## Wording
 
