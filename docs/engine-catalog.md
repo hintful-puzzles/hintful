@@ -1000,9 +1000,10 @@ Write every step's words through it. Exemplar:
 Read it when a technique states `look`, `follows` or `move` in its
 description. `stated-clauses.ts` is the clause grammar, which the compiler
 checks a description's clauses with, and `stated.ts` renders a clause over
-what a firing says into `hint-words.ts` references. See
-[`descriptions.md`](./descriptions.md) § "A firing's reason is built from its
-binding".
+what a firing says into `hint-words.ts` references. A step a description
+declares under `steps` is spoken through `step-voice.ts`, which the compiled
+module binds as `voice`. See [`descriptions.md`](./descriptions.md) § "A
+firing's reason is built from its binding".
 
 ### `hint-text.ts` — the sentences several games share
 

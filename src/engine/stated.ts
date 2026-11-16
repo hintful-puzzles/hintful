@@ -296,7 +296,9 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
   }
   const t = cx.terms[name];
   if (typeof t === "number") return cx.value(t);
-  throw new Error(`stated clause: {${name}} is no word and no number term`);
+  // A unit term holds the unit's name.
+  if (typeof t === "string") return t;
+  throw new Error(`stated clause: {${name}} is no word, no number and no unit term`);
 }
 
 /** The squares a `ring` reference or a `has` slot names (`ringNames`). */
@@ -320,13 +322,12 @@ function reference<E>(
   if (ofRole !== undefined && !Array.isArray(ofRole)) {
     // A role of several sorts: the reference names the one it is over.
     const bySort = ofRole as Readonly<Record<string, readonly E[]>>;
-    const k = cx.kinds?.[p.name];
-    if (p.name === "" || !(p.name in bySort) || k === undefined)
+    if (p.name === "" || !(p.name in bySort))
       throw new Error(
         `stated clause: {${role} ${p.name}} names no sort the step marks`,
       );
     els = bySort[p.name];
-    kind = k;
+    kind = cx.kinds?.[p.name] ?? cx.kind;
   } else if (role === "ring" && ringNames(p.name) !== null)
     els = squaresNamed(p.name, cx);
   else if (p.name !== "") {
@@ -440,52 +441,4 @@ function statedOnce<E>(
     move,
     relation: effect === undefined ? relation : { kind: "effect", effect },
   });
-}
-
-/** What a game's planner supplies for a step of a kind its description
- * declares (`steps`): number and flag terms, and the elements it marks by role
- * and sort. */
-export interface PlannedSaid<E> {
-  readonly terms: Readonly<Record<string, number | boolean>>;
-  readonly marks: Readonly<
-    Partial<Record<string, Readonly<Record<string, readonly E[]>>>>
-  >;
-}
-
-/** A planner's kind of step as the module's `STEPS` holds it: its clauses by
- * wording, and the condition each is said under. */
-export interface PlannedKind<T, M> {
-  readonly clauses: readonly Clauses[];
-  readonly when: readonly (null | ((t: T, m: M) => boolean))[];
-}
-
-/**
- * The words of a step a planner emits: the first wording whose condition holds,
- * rendered against the terms and marks the planner supplies. `ring` is what
- * the step decides, and the context's `kind` the sort it is of.
- */
-export function plannedSentence<
-  E,
-  T extends PlannedSaid<E>["terms"],
-  M extends PlannedSaid<E>["marks"],
->(
-  step: PlannedKind<T, M>,
-  said: { readonly terms: T; readonly marks: M },
-  cx: Omit<StatedContext<E>, "terms" | "marks" | "at">,
-  closing: Narration | null = null,
-): Sentence {
-  const i = step.when.findIndex((w) => w === null || w(said.terms, said.marks));
-  if (i < 0) throw new Error("stated clause: no wording of the step holds");
-  return statedSentence(
-    step.clauses[i],
-    {
-      ...cx,
-      at: () => {
-        throw new Error("stated clause: a planned step has no element terms");
-      },
-      terms: said.terms,
-      marks: said.marks as StatedContext<E>["marks"],
-    },
-    closing,
-  );
 }

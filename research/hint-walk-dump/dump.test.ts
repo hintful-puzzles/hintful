@@ -13,7 +13,7 @@
  * `DUMP_GAME` the game's id, `DUMP_OUT` the file, `DUMP_DEALS` the boards a
  * preset (8).
  */
-import { writeFileSync } from "node:fs";
+import { closeSync, openSync, writeFileSync, writeSync } from "node:fs";
 import { it } from "vitest";
 import { markKeys } from "../../src/engine/hint-words.ts";
 import { dealt } from "../../src/engine/testing/dealt.ts";
@@ -31,10 +31,14 @@ it(`dumps every hint plan of ${id}`, () => {
   const game = HINT_GAMES.find(([g]) => g === id)?.[1];
   if (!game || out === "")
     throw new Error("set DUMP_GAME to a game with a hint, and DUMP_OUT");
-  const lines: string[] = [];
+  // Written a line at a time: Loopy's dump is past the longest string a
+  // runtime holds.
+  const fd = openSync(out, "w");
+  const lines = { push: (line: string) => writeSync(fd, `${line}\n`) };
   const rungs = new Map<string, number>();
   for (const { title, params } of gatePresets(game))
     for (let n = 0; n < deals; n++) {
+      process.stderr.write(`dump ${id}: ${title} board ${n + 1} of ${deals}\n`);
       const { desc, aux } = dealt(game, params, n);
       const start = game.newState(params, desc);
       const solved = game.solve?.(start, start, aux);
@@ -84,7 +88,7 @@ it(`dumps every hint plan of ${id}`, () => {
         lines.push(end);
       }
     }
-  writeFileSync(out, `${lines.join("\n")}\n`);
+  closeSync(fd);
   writeFileSync(
     `${out}.rungs`,
     `${[...rungs].map(([r, c]) => `${r} ${c}`).join("\n")}\n`,

@@ -651,6 +651,8 @@ export function compilePlanning(
     ...stepsBlock(
       stepsOf(d.steps ?? {}, (part, src) => parsed(json.game, part, src)),
       [],
+      null,
+      runtime,
     ),
     "/** The description's dead-end claims, by id. */",
     `export type DeadEndId = ${ids.length === 0 ? "never" : ids.join(" | ")};`,

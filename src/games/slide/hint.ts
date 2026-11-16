@@ -23,13 +23,8 @@
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { CELL, type Sentence, whole } from "../../engine/hint-words.ts";
 import { searchRefusal, type Unfinished } from "../../engine/search-outcome.ts";
-import {
-  type PlannedKind,
-  type PlannedSaid,
-  plannedSentence,
-} from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
-import { STEPS } from "../../generated/games/slide/slide.compiled.ts";
+import { voice } from "../../generated/games/slide/slide.compiled.ts";
 import { computeReachable, executeMove } from "./moves.ts";
 import { findExit } from "./solver.ts";
 import {
@@ -64,16 +59,7 @@ const BLOCK = whole(CELL);
  * slide is stays this file's to decide, from what the line shows it is for.
  * `ring` is the squares the block covers now.
  */
-function speak<
-  T extends PlannedSaid<Point>["terms"],
-  M extends PlannedSaid<Point>["marks"],
->(step: PlannedKind<T, M>, terms: T, marks: M, ring: readonly Point[]): Sentence {
-  return plannedSentence(
-    step,
-    { terms, marks },
-    { kind: BLOCK, kinds: { block: BLOCK }, ring, value: String, noun: "block" },
-  );
-}
+const speak = voice<Point>({ kind: BLOCK, value: String, noun: "block" });
 
 /** The squares of the block anchored at `anchor`, anchor first. */
 export function blockCells(s: SlideState, anchor: number): number[] {
@@ -185,26 +171,38 @@ export function hint(state: SlideState): HintResult<SlideMove, unknown, SlideRun
       const left = line.length - i - 1;
       said =
         left === 0
-          ? { rung: "keyOut", words: speak(STEPS.keyOut, {}, { stripes }, cells) }
+          ? {
+              rung: "keyOut",
+              words: speak.sentence("keyOut", { ring: cells, marks: { stripes } }),
+            }
           : {
               rung: "keyBlock",
-              words: speak(STEPS.keyBlock, { left }, { stripes }, cells),
+              words: speak.sentence("keyBlock", {
+                ring: cells,
+                terms: { left },
+                marks: { stripes },
+              }),
             };
     } else {
       const room = roomFor(boards, line, i);
       said = room.self
-        ? { rung: "movesOn", words: speak(STEPS.movesOn, {}, { stripes }, cells) }
+        ? {
+            rung: "movesOn",
+            words: speak.sentence("movesOn", { ring: cells, marks: { stripes } }),
+          }
         : boards[room.at].board[line[room.at].from] === MAINANCHOR
           ? {
               rung: "makesRoomForKey",
-              words: speak(STEPS.makesRoomForKey, {}, { stripes }, cells),
+              words: speak.sentence("makesRoomForKey", {
+                ring: cells,
+                marks: { stripes },
+              }),
             }
           : {
               rung: "makesRoom",
-              words: speak(
-                STEPS.makesRoom,
-                {},
-                {
+              words: speak.sentence("makesRoom", {
+                ring: cells,
+                marks: {
                   stripes,
                   outline: {
                     block: blockCells(s, anchorBefore(line, room.at, i)).map((c) =>
@@ -212,8 +210,7 @@ export function hint(state: SlideState): HintResult<SlideMove, unknown, SlideRun
                     ),
                   },
                 },
-                cells,
-              ),
+              }),
             };
     }
     steps.push({

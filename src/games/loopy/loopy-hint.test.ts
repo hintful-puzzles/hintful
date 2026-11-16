@@ -26,7 +26,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { itDeep } from "../../engine/testing/slow.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
-import { STATED, STEPS } from "../../generated/games/loopy/loopy.compiled.ts";
+import { STATED } from "../../generated/games/loopy/loopy.compiled.ts";
 import { dlineEnds } from "./dlines.ts";
 import {
   deduceLoopyPlan,
@@ -906,12 +906,11 @@ describe("Loopy hint: the premises the corpus reaches", () => {
 
   it("says each way a pair can settle an edge in the necessity voice", () => {
     const related = (opposite: boolean, fromLine: boolean): string =>
-      speak(
-        STEPS.related,
-        { opposite, fromLine, line: true },
-        { outline: { pair: [{ a: 0, b: 2, opposite }], edge: [1] } },
-        [0],
-      ).text;
+      speak.sentence("related", {
+        ring: [0],
+        terms: { opposite, fromLine, line: true },
+        marks: { outline: { pair: [{ a: 0, b: 2, opposite }], edge: [1] } },
+      }).text;
     expect(related(false, true)).toBe(
       "The marked pair makes this edge match the marked line, so it must be a line.",
     );

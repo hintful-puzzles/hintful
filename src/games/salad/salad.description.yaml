@@ -105,6 +105,11 @@ techniques:
   - { use: latin.set, tier: Normal, rung: set }
   - { use: latin.fish, tier: Normal, rung: set }
   - { use: latin.wing, tier: Normal, rung: wing }
+# A line's empty squares, `k` of them, told apart by count.
+phrases:
+  empties: >-
+    {if one: the one empty {noun} | {if two: both empty {nouns} | all {numeral k}
+    empty {nouns}}}
 # What the hint says where no technique's firing states it. The planner supplies
 # each step's terms and marks. A line is "this row" or "this column", striped
 # whole, and a border clue is outlined by lighting its letter. The value noun
@@ -118,36 +123,36 @@ steps:
   # `one` and `two` say its count in words, `k` otherwise.
   countHolesDone:
     ring: cell
-    terms: { col: flag, one: flag, two: flag, k: number }
+    terms: { axis: unit, one: flag, two: flag, k: number }
     marks: { stripes: [line] }
     move: "{ring} and the rest of it must hold a {valueNoun}"
     wordings:
-      - again: "{stripes line: the same {if col: column | row}}"
+      - again: "{stripes line: the same {axis}}"
         later: "{ring} must hold a {valueNoun} too"
         look: >-
-          {stripes line: this {if col: column | row}} already has {if one: its
+          {stripes line: this {axis}} already has {if one: its
           one empty {noun} | {if two: both of its empty {nouns} | all {numeral k}
           of its empty {nouns}}}
   # A line has all its symbols, written in (`allPlaced`) or only known by their
   # squares, so the rest of it is empty.
   countLettersDone:
     ring: cell
-    terms: { col: flag, allPlaced: flag, one: flag, two: flag, nums: number }
+    terms: { axis: unit, allPlaced: flag, one: flag, two: flag, nums: number }
     marks: { stripes: [line] }
     move: "{ring} and the rest of it must be empty"
     wordings:
       - when: "allPlaced"
-        again: "{stripes line: the same {if col: column | row}}"
+        again: "{stripes line: the same {axis}}"
         later: "{ring} must be empty too"
         look: >-
           {if one: The one {valueNoun} | {if two: Both {valueNoun}s | All
-          {numeral nums} {valueNoun}s}} of {stripes line: this {if col: column |
-          row}} {if one: is | are} already placed
-      - again: "{stripes line: the same {if col: column | row}}"
+          {numeral nums} {valueNoun}s}} of {stripes line: this {axis}} {if one:
+          is | are} already placed
+      - again: "{stripes line: the same {axis}}"
         later: "{ring} must be empty too"
         look: >-
           We already know which {if one: {noun} | {numeral nums} {nouns}} of
-          {stripes line: this {if col: column | row}} {if one: holds its
+          {stripes line: this {axis}} {if one: holds its
           {valueNoun} | hold its {valueNoun}s}
   # A square whose notes are down to the empty-square mark alone.
   crossNaked:
@@ -184,7 +189,7 @@ steps:
     terms:
       clueV: number
       blocked: flag
-      col: flag
+      axis: unit
       near: flag
       n: number
       roomNone: flag
@@ -199,8 +204,8 @@ steps:
           furthest from it holds a {valueNoun}
       - when: "roomNone"
         look: >-
-          {outline clue: This clue} sees {clueV} first, and the {if col: column
-          | row}'s {if holesOne: empty {noun} is | empty {nouns} are} marked
+          {outline clue: This clue} sees {clueV} first, and the {axis}'s {if
+          holesOne: empty {noun} is | empty {nouns} are} marked
           later, keeping it {outline run: {if near: in the {noun} nearest it |
           in the first {numeral n}}}
       - look: >-
@@ -218,13 +223,11 @@ steps:
   # squares of their line, and `any` says the symbols struck with the mark.
   setHoles:
     ring: cell
-    terms: { any: flag, one: flag, two: flag, k: number, col: flag }
+    terms: { any: flag, one: flag, two: flag, k: number, axis: unit }
     marks: { outline: [set] }
     look: >-
-      {outline set} account for {if any: {struck} and {if one: the one empty
-      {noun} | {if two: both empty {nouns} | all {numeral k} empty {nouns}}} |
-      {if one: the one empty {noun} | {if two: both empty {nouns} | all
-      {numeral k} empty {nouns}}}} of their {if col: column | row}
+      {outline set} account for {if any: {struck} and {empties} | {empties}}
+      of their {axis}
   # What that strike calls the notes it crosses out of a square.
   setHolesStruck:
     ring: cell

@@ -483,6 +483,32 @@ describe("a stated clause names only what its technique states", () => {
         compileStep(step({ move: "{ring} must be a line", ...over })),
       ).toThrow(error);
     });
+
+    describe("a unit term", () => {
+      const unitStep = (look: string): string =>
+        compileStep(
+          step({
+            terms: { n: "number", side: "unit" },
+            look,
+            move: "{ring} must be a line",
+          }),
+        );
+
+      it("is said as its name, and typed as one", () => {
+        const code = unitStep("this {side}");
+        expect(code).toContain("side: Unit");
+        expect(code).toMatch(
+          /import \{ stepVoice, type StepVoice, type Unit, type Voice \}/,
+        );
+      });
+
+      it.each([
+        ["read by an if", "{if side: a | b}", /\{if side\}, which is no flag/],
+        ["said as a numeral", "{numeral side}", /side/],
+      ])("is refused %s", (_, look, error) => {
+        expect(() => unitStep(look)).toThrow(error);
+      });
+    });
   });
 
   it("a wording takes the parts it leaves out from the clauses beside it", () => {

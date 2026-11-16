@@ -51,6 +51,37 @@ describe("a description's YAML", () => {
     expect((d as DescriptionJson).given).toEqual(["no"]);
   });
 
+  describe("a phrase", () => {
+    const withSteps = (phrases: string, terms = "{ col: flag }") =>
+      `${rules(' "strike(c, 1)"')}phrases:\n${phrases}\nsteps:\n  s:\n    ring: cell\n    terms: ${terms}\n    look: "this {line} is {line}"\n    move: "{ring} must be 1"\n`;
+
+    it("is put in place of its name in a clause, a phrase inside it too", () => {
+      const d = loadDescriptionFile(
+        withSteps('  line: "{if col: {colWord} | row}"\n  colWord: "column"'),
+        "p.yaml",
+      ) as DescriptionJson;
+      expect(d.steps?.["s"]?.look).toBe(
+        "this {if col: column | row} is {if col: column | row}",
+      );
+      expect(d.steps?.["s"]?.move).toBe("{ring} must be 1");
+    });
+
+    it("is refused where it says itself", () => {
+      expect(() =>
+        loadDescriptionFile(
+          withSteps('  line: "a {other}"\n  other: "{line}"'),
+          "p.yaml",
+        ),
+      ).toThrow("p.yaml: phrase line says itself (line > other > line)");
+    });
+
+    it("is refused where a term has its name", () => {
+      expect(() =>
+        loadDescriptionFile(withSteps('  line: "row"', "{ line: flag }"), "p.yaml"),
+      ).toThrow("p.yaml: a term named line is shadowed by the phrase of that name");
+    });
+  });
+
   it("refuses a field the schema does not name", () => {
     expect(() =>
       loadDescriptionFile(

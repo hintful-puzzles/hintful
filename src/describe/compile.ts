@@ -27,6 +27,7 @@ import {
   type Description,
   type DescriptionJson,
   edgeMarkOf,
+  type GameWords,
   type LibraryJson,
   loadDescription,
   type MarkSort,
@@ -4491,6 +4492,7 @@ function checkStated(
   says: Says,
   variants: readonly { sorts: ReadonlyMap<string, Sort> }[],
   factSorts: ReadonlyMap<string, Sort> | null,
+  units: ReadonlySet<string> = new Set(),
 ): void {
   // A clause reads a lexicon word before a term, so a term of that name would
   // silently never be said.
@@ -4520,13 +4522,18 @@ function checkStated(
         throw new CompileError(`${id}: says ${where}${part}: ${(e as Error).message}`);
       }
       const plain = (name: string, inner: boolean): void => {
-        if (STATED_WORDS.has(name) || isNum(sorts.get(name))) return;
+        if (STATED_WORDS.has(name) || isNum(sorts.get(name)) || units.has(name)) return;
         if (inner && STATED_INNER_WORDS.has(name)) return;
         throw new CompileError(
-          `${id}: says ${where}${part} says {${name}}, which is no number term and no word of the lexicon`,
+          `${id}: says ${where}${part} says {${name}}, which is no number or unit term and no word of the lexicon`,
         );
       };
       for (const s of slots) {
+        for (const n of s.numbers ?? [])
+          if (units.has(n))
+            throw new CompileError(
+              `${id}: says ${where}${part} says {${n}} as a number, which is a unit term`,
+            );
         for (const flag of s.flags)
           if (sorts.get(flag)?.k !== "bool")
             throw new CompileError(
@@ -4629,8 +4636,17 @@ function statedTable(own: readonly Technique[]): string[] {
  * terms and marks it declares: a number term is a number, a flag a truth. */
 function checkStep(step: Step): void {
   const sorts = new Map<string, Sort>(
-    step.terms.map((t) => [t.name, t.kind === "flag" ? BOOL : NUM]),
+    step.terms.flatMap((t): [string, Sort][] =>
+      t.kind === "unit" ? [] : [[t.name, t.kind === "flag" ? BOOL : NUM]],
+    ),
   );
+  // A unit term is a word, said plainly and read by nothing else.
+  const units = new Set(step.terms.filter((t) => t.kind === "unit").map((t) => t.name));
+  for (const u of units)
+    if (STATED_WORDS.has(u))
+      throw new CompileError(
+        `${step.id}: a term named ${u} is shadowed by the lexicon's word of that name: rename the term`,
+      );
   const says: Says = {
     each: false,
     legs: false,
@@ -4647,7 +4663,7 @@ function checkStep(step: Step): void {
       },
     ],
   };
-  checkStated(step.id, says, [{ sorts }], null);
+  checkStated(step.id, says, [{ sorts }], null, units);
   for (const [i, w] of step.words.entries())
     if (w.when !== null) stepWhen(step, w.when, `wording ${i} when`);
 }
@@ -4701,6 +4717,8 @@ function stepWhen(step: Step, e: Expr, where: string): string {
 export function stepsBlock(
   steps: readonly Step[],
   own: readonly Technique[],
+  words: GameWords | null,
+  runtime: string,
 ): string[] {
   if (steps.length === 0) return [];
   for (const s of steps) {
@@ -4734,7 +4752,10 @@ export function stepsBlock(
         s.terms.length === 0
           ? "Record<string, never>"
           : `{ ${s.terms
-              .map((t) => `${t.name}: ${t.kind === "flag" ? "boolean" : "number"}`)
+              .map(
+                (t) =>
+                  `${t.name}: ${t.kind === "flag" ? "boolean" : t.kind === "unit" ? "Unit" : "number"}`,
+              )
               .join("; ")} }`;
       return `  ${s.id}: { ring: ${JSON.stringify(s.ring)}; terms: ${terms}; marks: { ${marks} } };`;
     }),
@@ -4763,6 +4784,18 @@ export function stepsBlock(
       "  },",
     ]),
     "};",
+    "",
+    `import { stepVoice, type StepVoice, ${steps.some((s) => s.terms.some((t) => t.kind === "unit")) ? "type Unit, " : ""}type Voice } from "${runtime.replace(/describe-runtime\.ts$/, "step-voice.ts")}";`,
+    "",
+    "/** The steps, spoken: a game declares once what its marks are drawn on and",
+    " * how its values print, the description's nouns filled in. */",
+    "export const voice = <E>(v: Voice<E>): StepVoice<StepsById<E>, E> =>",
+    `  stepVoice<StepsById<E>, E>(STEPS, { ${[
+      ...(words?.cell === undefined ? [] : [`noun: ${JSON.stringify(words.cell)}, `]),
+      ...(words?.alongside === undefined
+        ? []
+        : [`alongside: ${JSON.stringify(words.alongside)}, `]),
+    ].join("")}...v });`,
     "",
   ];
 }
@@ -7136,6 +7169,8 @@ export function compileLibrary(
       }
     }),
     techniques,
+    null,
+    runtime,
   )
     .join("\n")
     .trimEnd();
@@ -7394,7 +7429,7 @@ export function compileGame(
           `export const WORDS = ${JSON.stringify(json.words)} as const;`,
           "",
         ]),
-    ...stepsBlock(d.steps, own),
+    ...stepsBlock(d.steps, own, json.words ?? null, runtime),
     ...(own.some((t) => t.says !== null)
       ? [
           "/** What a firing of each technique that says anything says, by id. */",

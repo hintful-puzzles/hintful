@@ -1109,8 +1109,26 @@ supplies the terms and the marks by sort** and names the kind, so which step is
 taken stays its code; the compiler checks every slot against the declaration
 and writes `STEPS` (the clauses, and each wording's `when` as code over the
 terms and `|outlineAngle|`-style sizes) and `StepsById<E>` (what the planner
-supplies). The game's `speak` hands them to `engine/stated.ts`'s
-`plannedSentence`. A kind may share a technique's name where the technique
+supplies), and **`voice`, the one call a game speaks a step through**
+(`engine/step-voice.ts`): the game declares once what its marks are drawn on
+(`kind`, and `kinds` for the sorts drawn on another), how a value prints and,
+where a step decides something other than its cell, the `nouns` of its ring
+sorts; then `speak.sentence(id, { ring, terms, marks })` says a step,
+`speak.premise(id, …)` the look a strike's conclusion joins, and
+`speak.part(id, "move", …)` a fragment another sentence joins. `later`,
+`struck` and `closing` (the move's words where the step states none) go in the
+same object. Terms and marks are required where the step declares any, so a
+term left out is a type error; a game whose words vary by the board (Salad's
+mode) makes a voice for them. **A term of kind `unit`** is a row, column, block
+or diagonal, said as its name (`{axis}`, `{axis}s`); `StepsById` types it as
+`Unit`, and `lineUnit` turns a Latin reason's `"row" | "col"` into one. Write
+one where a clause would choose a unit's name by flags, and a second (Magnets'
+`across`) where a sentence names the other way too. **A description's
+`phrases`** name clause source a clause says as `{name}`: the loader
+(`describe/load.ts`) puts each in place before anything reads the clause, so a
+phrase holds what a clause may, reads the terms of the step that says it, and is
+checked there. Write one for words two clauses repeat (Magnets' poles, and the
+reason a line's other squares are ruled out). A kind may share a technique's name where the technique
 states no words. **`{if flag: yes | no}`** says the form a flag term holds, in a
 clause or inside a reference's words; in a clause its forms hold whatever a
 clause does, references included, and inside a reference's words words and

@@ -14,24 +14,10 @@
  */
 
 import { cleanObviousText, type LatinVocab } from "../../engine/hint-text.ts";
-import {
-  CELL,
-  type MarkKind,
-  type Narration,
-  type Sentence,
-} from "../../engine/hint-words.ts";
-import {
-  type PlannedKind,
-  plannedSentence,
-  type StatedContext,
-  statedParts,
-} from "../../engine/stated.ts";
+import { CELL, type Narration, type Sentence } from "../../engine/hint-words.ts";
+import { lineUnit } from "../../engine/step-voice.ts";
 import type { Point } from "../../engine/types.ts";
-import {
-  STEPS,
-  type StepsById,
-  WORDS,
-} from "../../generated/games/salad/salad.compiled.ts";
+import { voice, WORDS } from "../../generated/games/salad/salad.compiled.ts";
 import { CLUE } from "./kinds.ts";
 import { GAMEMODE_LETTERS, symbolChar } from "./state.ts";
 
@@ -40,18 +26,6 @@ type Squares = readonly Point[];
 
 /** What a mark is drawn on: a square or a border clue. */
 type Elem = Point | number;
-type Steps = StepsById<Elem>;
-
-/** What a reference to each sort the description's steps name is drawn on. */
-const SORT_KINDS: Readonly<Record<string, MarkKind<Elem>>> = {
-  ...Object.fromEntries(
-    ["line", "between", "at", "blockedAt", "run", "set"].map((sort) => [
-      sort,
-      CELL as MarkKind<Elem>,
-    ]),
-  ),
-  clue: CLUE as MarkKind<Elem>,
-};
 
 /** What a mode calls a symbol. */
 const nounOf = (mode: number): string =>
@@ -68,104 +42,21 @@ export function saladVocab(mode: number, nums: number): LatinVocab {
   };
 }
 
-/** What a step is spoken in: the mode's words, the squares it decides, and the
- * values its strike names. */
-interface Voice {
-  mode: number;
-  ring?: Squares;
-  later?: boolean;
-  struck?: readonly number[];
-}
-
-function contextOf(v: Voice, said: Pick<StatedContext<Elem>, "terms" | "marks">) {
-  return {
-    kind: CELL as MarkKind<Elem>,
-    kinds: SORT_KINDS,
-    ring: v.ring ?? [],
-    value: (n: number) => symbolChar(v.mode, n),
-    valueNoun: nounOf(v.mode),
-    noun: WORDS.cell,
-    ...(v.later === undefined ? {} : { later: v.later }),
-    ...(v.struck === undefined ? {} : { struck: v.struck }),
-    ...said,
-  };
-}
-
-/** The words of step `id`, over what the board's reading supplies. */
-function speak<K extends keyof Steps & string>(
-  id: K,
-  v: Voice,
-  terms: Steps[K]["terms"],
-  marks: Steps[K]["marks"],
-): Sentence {
-  return plannedSentence(
-    STEPS[id] as unknown as PlannedKind<Steps[K]["terms"], Steps[K]["marks"]>,
-    { terms, marks },
-    contextOf(v, { terms, marks: {} }),
-  );
-}
-
-/** What a step reads off the board, for a strike's premise: the `look` of the
- * wording that holds. */
-function looks<K extends keyof Steps & string>(
-  id: K,
-  v: Voice,
-  terms: Steps[K]["terms"],
-  marks: Steps[K]["marks"],
-): Narration {
-  const kind = STEPS[id] as unknown as PlannedKind<
-    Steps[K]["terms"],
-    Steps[K]["marks"]
-  >;
-  const i = kind.when.findIndex((w) => w === null || w(terms, marks));
-  const { look } = statedParts(kind.clauses[i], {
-    ...contextOf(v, {
-      terms: terms as Readonly<Record<string, unknown>>,
-      marks: marks as StatedContext<Elem>["marks"],
-    }),
-    at: () => {
-      throw new Error("a planned step has no element terms");
-    },
-  });
-  if (look === undefined) throw new Error(`Salad's ${id} states no look`);
-  return look;
-}
-
-/** A fragment a strike's sentence joins to its own words: the `move` of the
- * wording that holds, as plain text. */
-function fragment<K extends keyof Steps & string>(
-  id: K,
-  v: Voice,
-  terms: Steps[K]["terms"],
-): string {
-  const kind = STEPS[id] as unknown as PlannedKind<
-    Steps[K]["terms"],
-    Steps[K]["marks"]
-  >;
-  const i = kind.when.findIndex((w) => w === null || w(terms, {} as Steps[K]["marks"]));
-  const { move } = statedParts(kind.clauses[i], {
-    ...contextOf(v, { terms: terms as Readonly<Record<string, unknown>>, marks: {} }),
-    at: () => {
-      throw new Error("a planned step has no element terms");
-    },
-  });
-  if (move === undefined) throw new Error(`Salad's ${id} states no fragment`);
-  return move.text;
-}
-
 /** A count of `k` empty squares or symbols, as the words tell it apart. */
 const countOf = (k: number) => ({ one: k === 1, two: k === 2, k });
 
 /** Salad's sentences, in the vocabulary of the mode being played. */
 export function say(mode: number) {
   const noun = nounOf(mode);
-  const v = (ring?: Squares): Voice => ({
-    mode,
-    ...(ring === undefined ? {} : { ring }),
+  const speak = voice<Elem>({
+    kind: CELL,
+    kinds: { clue: CLUE },
+    value: (n) => symbolChar(mode, n),
+    valueNoun: noun,
   });
 
   return {
-    populate: looks("populate", v(), {}, {}).text,
+    populate: speak.premise("populate", {}).text,
 
     cleanObvious: cleanObviousText(noun, "placed", "row or column", WORDS.cell),
 
@@ -184,18 +75,16 @@ export function say(mode: number) {
       // sees across, so it is outlined as the premise as well as ringed, and
       // named once, by its outline: the ring is its conclusion's.
       const skipped = between.length > 0;
-      return looks(
-        "borderNear",
-        v([at]),
-        { clueV: clueVal, skipped, k: between.length, one: between.length === 1 },
-        {
-          outline: {
-            clue: [clue],
-            between,
-            at: skipped ? [] : [at],
-          },
+      return speak.premise("borderNear", {
+        ring: [at],
+        terms: {
+          clueV: clueVal,
+          skipped,
+          k: between.length,
+          one: between.length === 1,
         },
-      );
+        marks: { outline: { clue: [clue], between, at: skipped ? [] : [at] } },
+      });
     },
 
     /** The clue's own symbol cannot sit this far in: cut off at the square
@@ -217,13 +106,11 @@ export function say(mode: number) {
       // Every square before the symbol a clue sees is empty (the help's rule),
       // so it comes after no more empty squares than the line has left.
       const room = p.holes - p.tightenedBy;
-      return looks(
-        "borderFar",
-        v(),
-        {
+      return speak.premise("borderFar", {
+        terms: {
           clueV: p.clueVal,
           blocked: p.blockedAt !== null,
-          col: p.axis === "column",
+          axis: p.axis,
           near: p.reach === 0,
           n: p.reach + 1,
           roomNone: room === 0,
@@ -231,30 +118,29 @@ export function say(mode: number) {
           room,
           roomOne: room === 1,
         },
-        {
+        marks: {
           outline: {
             clue: [clue],
             blockedAt: p.blockedAt ? [p.blockedAt] : [],
             run: p.blockedAt ? [] : p.run,
           },
         },
-      );
+      });
     },
 
     /** Where a far border strike crosses the clue's symbol out: past the
      * blocking square (`blocked`), or beyond the reach. */
     borderFarWhere: (blocked: boolean): string =>
-      fragment("borderFarWhere", v(), { blocked }),
+      speak.part("borderFarWhere", "move", { terms: { blocked } }).text,
 
     /** The line `cells` already has all `k` of its empty squares; `at` is the
      * square the leg settles. */
     countHolesDone: (line: Line, cells: Squares, k: number, at: Point): Sentence =>
-      speak(
-        "countHolesDone",
-        v([at]),
-        { col: line === "col", ...countOf(k) },
-        { stripes: { line: cells } },
-      ),
+      speak.sentence("countHolesDone", {
+        ring: [at],
+        terms: { axis: lineUnit(line), ...countOf(k) },
+        marks: { stripes: { line: cells } },
+      }),
 
     /** The line `cells`' `nums` symbols are all placed (`allPlaced`), or at
      * least their squares are known; `at` is the square the leg settles. */
@@ -265,12 +151,17 @@ export function say(mode: number) {
       nums: number,
       at: Point,
     ): Sentence =>
-      speak(
-        "countLettersDone",
-        v([at]),
-        { col: line === "col", allPlaced, nums, one: nums === 1, two: nums === 2 },
-        { stripes: { line: cells } },
-      ),
+      speak.sentence("countLettersDone", {
+        ring: [at],
+        terms: {
+          axis: lineUnit(line),
+          allPlaced,
+          nums,
+          one: nums === 1,
+          two: nums === 2,
+        },
+        marks: { stripes: { line: cells } },
+      }),
 
     /** A count firing's later leg: the square `at`, settled by the same line
      * `cells` its first leg named, as `empty` or as holding a symbol. */
@@ -282,24 +173,24 @@ export function say(mode: number) {
       allPlaced: boolean,
     ): Sentence =>
       empty
-        ? speak(
-            "countLettersDone",
-            { ...v([at]), later: true },
-            { col: line === "col", allPlaced, nums: 0, one: false, two: false },
-            { stripes: { line: cells } },
-          )
-        : speak(
-            "countHolesDone",
-            { ...v([at]), later: true },
-            { col: line === "col", ...countOf(0) },
-            { stripes: { line: cells } },
-          ),
+        ? speak.sentence("countLettersDone", {
+            ring: [at],
+            later: true,
+            terms: { axis: lineUnit(line), allPlaced, nums: 0, one: false, two: false },
+            marks: { stripes: { line: cells } },
+          })
+        : speak.sentence("countHolesDone", {
+            ring: [at],
+            later: true,
+            terms: { axis: lineUnit(line), ...countOf(0) },
+            marks: { stripes: { line: cells } },
+          }),
 
-    crossNaked: (at: Point): Sentence => speak("crossNaked", v([at]), {}, {}),
+    crossNaked: (at: Point): Sentence => speak.sentence("crossNaked", { ring: [at] }),
 
     /** The square at `at` has notes, and the empty-square mark is not among
      * them. */
-    xNoteGone: (at: Point): Sentence => speak("xNoteGone", v([at]), {}, {}),
+    xNoteGone: (at: Point): Sentence => speak.sentence("xNoteGone", { ring: [at] }),
 
     /** A set that rules a square out as empty: the outlined `cells` hold all
      * `k` empty squares of their `line`, and the symbols `also` struck from
@@ -311,26 +202,28 @@ export function say(mode: number) {
       line: Line,
       k: number,
     ): Narration =>
-      looks(
-        "setHoles",
-        { ...v(), struck: also },
-        { any: also.length > 0, col: line === "col", ...countOf(k) },
-        { outline: { set: cells } },
-      ),
+      speak.premise("setHoles", {
+        struck: also,
+        terms: { any: also.length > 0, axis: lineUnit(line), ...countOf(k) },
+        marks: { outline: { set: cells } },
+      }),
 
     /** What a set's strike calls the notes it crosses out of one square when
      * the empty-square mark is among them: the X it is penciled as, which is
      * how the shared sentences print it among a square's candidates. */
     setHolesStruck: (also: readonly number[]): string =>
-      fragment("setHolesStruck", { ...v(), struck: also }, { any: also.length > 0 }),
+      speak.part("setHolesStruck", "move", {
+        struck: also,
+        terms: { any: also.length > 0 },
+      }).text,
 
     /** The squares `cells`, just settled as holding a symbol, keep no
      * empty-square mark. */
     circleXNote: (cells: Squares): Narration =>
-      looks("circleXNote", v(cells), { one: cells.length === 1 }, {}),
+      speak.premise("circleXNote", { ring: cells, terms: { one: cells.length === 1 } }),
 
     /** What a strike of the "might be empty" note calls it, on `count` squares. */
     emptyMarks: (count: number): string =>
-      fragment("emptyMarks", v(), { one: count === 1 }),
+      speak.part("emptyMarks", "move", { terms: { one: count === 1 } }).text,
   };
 }

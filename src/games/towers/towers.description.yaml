@@ -247,9 +247,9 @@ steps:
   # narration limit there.
   hiddenSingle:
     ring: cell
-    terms: { col: flag, n: number }
+    terms: { axis: unit, n: number }
     marks: { stripes: [line] }
-    look: "No other cell in {stripes line: this {if col: column | row}} can be height {n}"
+    look: "No other cell in {stripes line: this {axis}} can be height {n}"
     move: "{ring} must be {n}"
   set:
     ring: cell

@@ -16,7 +16,7 @@
 
 import {
   STATED as LATIN_STATED,
-  STEPS as LATIN_STEPS,
+  voice as latinVoice,
 } from "../generated/engine/latin.compiled.ts";
 import { EDGE, type ForcedBorderEdge } from "./border-grid-hint.ts";
 import {
@@ -38,7 +38,8 @@ import {
 } from "./hint-words.ts";
 import type { LatinWingReason } from "./latin.ts";
 import { type GenericLatinReason, hiddenSingleLine } from "./latin-hint.ts";
-import { plannedSentence, statedParts } from "./stated.ts";
+import { statedParts } from "./stated.ts";
+import { lineUnit } from "./step-voice.ts";
 import type { Point } from "./types.ts";
 
 // --- lists and articles ------------------------------------------------------
@@ -299,39 +300,39 @@ export function narrateLatinReason(
   w: number,
   vocab: LatinVocab = NUMBER_VOCAB,
 ): Sentence {
-  const said = {
+  const words = {
     kind: CELL,
-    ring: [at],
     value: vocab.value,
     valueNoun: vocab.noun,
     noun: vocab.cell,
   };
+  const ring = [at];
   const terms = { d: at.n };
   switch (reason.kind) {
     case "single":
-      return plannedSentence(LATIN_STEPS.single, { terms, marks: {} }, said);
+      return latinVoice<Point>(words).sentence("single", { ring, terms });
     case "regionsFull":
-      return plannedSentence(
-        LATIN_STEPS.regionsFull,
-        { terms, marks: {} },
-        {
-          ...said,
-          regions: "regions" in reason ? joinWith([...reason.regions]) : undefined,
-        },
-      );
+      return latinVoice<Point>({
+        ...words,
+        ...("regions" in reason ? { regions: joinWith([...reason.regions]) } : {}),
+      }).sentence("regionsFull", { ring, terms });
     case "hiddenSingle": {
       const unit =
         "unit" in reason
           ? reason.unit
           : {
-              name: reason.line === "row" ? "row" : "column",
+              name: lineUnit(reason.line),
               cells: hiddenSingleLine(reason.line, reason.index, w),
             };
-      return plannedSentence(
-        LATIN_STEPS.hiddenSingle,
-        { terms: { d: reason.n }, marks: { stripes: { cell: unit.cells } } },
-        { ...said, kinds: { cell: whole(CELL) }, unit: () => unit.name },
-      );
+      return latinVoice<Point>({
+        ...words,
+        kinds: { cell: whole(CELL) },
+        unit: () => unit.name,
+      }).sentence("hiddenSingle", {
+        ring,
+        terms: { d: reason.n },
+        marks: { stripes: { cell: unit.cells } },
+      });
     }
     default:
       throw new Error(`a ${reason.kind} strikes, and is narrated by latinPremise`);

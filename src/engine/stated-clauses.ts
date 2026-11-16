@@ -241,7 +241,19 @@ export interface Slot {
   readonly inner: readonly string[];
   /** The flags of every `if` inside the slot's forms, nested ones too. */
   readonly flags: readonly string[];
+  /** The terms it says as numbers (`numeral`, `spelled`, `a`, `color`, `or`,
+   * a count), which a word may not stand for. */
+  readonly numbers?: readonly string[];
 }
+
+/** The roles that say their term as a number. */
+const NUMBER_ROLES: ReadonlySet<string> = new Set([
+  "color",
+  "spelled",
+  "numeral",
+  "a",
+  "or",
+]);
 
 /** Every slot of a clause, for the compiler to check: a slot of an `if`'s
  * forms is a slot of the clause, as a word said plainly. Throws on a malformed
@@ -249,7 +261,7 @@ export interface Slot {
 export function slotsOf(src: string): Slot[] {
   const within = (
     forms: readonly (readonly Piece[])[] | null,
-    into: { inner: string[]; flags: string[] },
+    into: { inner: string[]; flags: string[]; numbers: string[] },
   ): void => {
     for (const p of (forms ?? []).flat()) {
       if (!("name" in p)) continue;
@@ -258,17 +270,13 @@ export function slotsOf(src: string): Slot[] {
         within(p.words, into);
       } else if (p.role === "count") {
         into.inner.push(p.name);
+        into.numbers.push(p.name);
         within(p.words, into);
-      } else if (
-        p.role === null ||
-        p.role === "color" ||
-        p.role === "spelled" ||
-        p.role === "numeral" ||
-        p.role === "a" ||
-        p.role === "or"
-      )
+      } else if (p.role === null) into.inner.push(p.name);
+      else if (NUMBER_ROLES.has(p.role)) {
         into.inner.push(p.name);
-      else throw new Error(`a reference inside the words of "${src}"`);
+        into.numbers.push(p.name);
+      } else throw new Error(`a reference inside the words of "${src}"`);
     }
   };
   const walk = (pieces: readonly Piece[]): Slot[] =>
@@ -286,32 +294,39 @@ export function slotsOf(src: string): Slot[] {
           { name: p.name, role: "if", inner: [], flags: [p.name] },
           ...(p.words as readonly (readonly Piece[])[]).flatMap(walk),
         ];
+      const into = {
+        inner: [] as string[],
+        flags: [] as string[],
+        numbers: [] as string[],
+      };
+      within(p.words, into);
       // A `fit`'s forms are said plainly.
-      if (p.role === "fit") {
-        const into = { inner: [] as string[], flags: [] as string[] };
-        within(p.words, into);
+      if (p.role === "fit")
         return [
           { name: "", role: "fit", inner: [], flags: into.flags },
           ...into.inner.map(
-            (n): Slot => ({ name: n, role: null, inner: [], flags: [] }),
+            (n): Slot => ({
+              name: n,
+              role: null,
+              inner: [],
+              flags: [],
+              numbers: into.numbers.filter((m) => m === n),
+            }),
           ),
         ];
-      }
-      const into = { inner: [] as string[], flags: [] as string[] };
-      within(p.words, into);
       // A color is said where its term is, which must be a number.
-      if (
-        p.role === "color" ||
-        p.role === "spelled" ||
-        p.role === "numeral" ||
-        p.role === "a" ||
-        p.role === "or"
-      )
-        return [{ name: p.name, role: null, inner: [], flags: [] }];
+      if (p.role !== null && NUMBER_ROLES.has(p.role))
+        return [{ name: p.name, role: null, inner: [], flags: [], numbers: [p.name] }];
       if (p.role === "count")
         // The term it counts and its forms' words are said plainly.
         return [p.name, ...into.inner].map(
-          (n): Slot => ({ name: n, role: null, inner: [], flags: into.flags }),
+          (n): Slot => ({
+            name: n,
+            role: null,
+            inner: [],
+            flags: into.flags,
+            numbers: n === p.name ? [n] : into.numbers.filter((m) => m === n),
+          }),
         );
       return [
         {
@@ -319,6 +334,7 @@ export function slotsOf(src: string): Slot[] {
           role: p.role,
           inner: into.inner,
           flags: into.flags,
+          numbers: into.numbers,
         },
       ];
     });

@@ -229,63 +229,80 @@ techniques:
 # it, a line whose count is met, the other end of the tile) off the squares and
 # numbers the player sees (`reading.ts`), and supplies each reason as flags and
 # the squares and clue digits it names. A line is "this row" or "this column"
-# and never a number, since the board draws none.
+# (`axis`, and `across` for the other way) and never a number, since the board
+# draws none.
+phrases:
+  # The pole a step is about (`plus`), and the other one.
+  pole: "{if plus: + | −}"
+  other: "{if plus: − | +}"
+  # A line, striped where it is the one the sentence hatches.
+  lineName: "{if hatched: {stripes line: {axis}} | {axis}}"
+  # Why the pole cannot go at an end: a like pole beside it (`touch`), or its
+  # line's count met (`marked`: only by counting the marked magnets along it).
+  because: >-
+    {if touch: beside {outline touched: another {pole}} | as its {lineName}
+    {if marked: has | already has} {outline clue: all its {pole}s}}
+  # The count of the pole a line still needs, `n` of them (`one`: one).
+  needs: "{outline clue: {if one: one more {pole} | {n} more {pole}s}}"
+  # What the pole would do at the line's other open squares, each ruled out by
+  # name: `tiles0`, `tiles1` (the squares are not tiles; one tile), a touch
+  # (`touchOwn`: the square's own, `touchPartner`: its other end's, both said
+  # as one) and a count met (`fullOwn`, `fullPartner`, `fullMany`: of several
+  # squares).
+  touches: >-
+    {if touchOwn: {if touchPartner: make {outline touchAt: like poles} touch |
+    touch {outline touchAt: a {pole}}} | put a {other} beside {outline touchAt:
+    a {other}}}
+  exceeds: >-
+    {if fullOwn: {if fullPartner: exceed {outline fullClues: a clue} | exceed
+    {outline fullClues: {if fullMany: a clue | its clue}}} | exceed {outline
+    fullClues: a clue}}
+  wouldBreak: >-
+    a {pole} {outline ruled: {if tiles0: in an outlined square | {if tiles1: in
+    the outlined tile | in an outlined tile}}} would {if touchAny: {if fullAny:
+    {touches} or {exceeds} | {touches}} | {exceeds}}
 steps:
   # A marked magnet whose pole `plus` cannot go at this end, so the end takes
-  # the other pole. `touch`: a like pole beside it; else its line's count is
-  # met (`marked`: only by counting the marked magnets along it), and `hatched`
-  # says the sentence's own line is that one.
+  # the other pole; `hatched` says the sentence's own line is the one met.
   magnetHere:
     ring: square
-    terms: { plus: flag, touch: flag, hatched: flag, col: flag, marked: flag }
+    terms: { plus: flag, touch: flag, hatched: flag, axis: unit, marked: flag }
     marks: { outline: [magnet, touched, clue], stripes: [line] }
-    look: >-
-      {outline magnet: This magnet}'s {ring: ringed end} can't be {if plus: + | −},
-      {if touch: beside {outline touched: another {if plus: + | −}} | as its
-      {if hatched: {stripes line: {if col: column | row}} | {if col: column | row}}
-      {if marked: has | already has} {outline clue: all its {if plus: + | −}s}}
-    move: "it must be {if plus: − | +}"
+    look: "{outline magnet: This magnet}'s {ring: ringed end} can't be {pole}, {because}"
+    move: "it must be {other}"
   # The same, the pole ruled out at the other end of the tile.
   magnetThere:
     ring: square
-    terms: { plus: flag, touch: flag, hatched: flag, col: flag, marked: flag }
+    terms: { plus: flag, touch: flag, hatched: flag, axis: unit, marked: flag }
     marks: { outline: [magnet, touched, clue], stripes: [line] }
-    look: >-
-      {outline magnet: This magnet's other end} can't be {if plus: + | −},
-      {if touch: beside {outline touched: another {if plus: + | −}} | as its
-      {if hatched: {stripes line: {if col: column | row}} | {if col: column | row}}
-      {if marked: has | already has} {outline clue: all its {if plus: + | −}s}}
-    move: "{ring: the ringed end} must be {if plus: + | −}"
+    look: "{outline magnet: This magnet's other end} can't be {pole}, {because}"
+    move: "{ring: the ringed end} must be {pole}"
   # Both ends touch the same pole. A tile is a magnet or neutral, so "it can't
   # be a magnet" would only restate that it is neutral.
   bothEndsTouch:
     ring: square
     terms: { plus: flag }
     marks: { outline: [touched] }
-    look: "Both ends of {ring: this tile} touch {outline touched: a {if plus: + | −}}"
+    look: "Both ends of {ring: this tile} touch {outline touched: a {pole}}"
     move: "it must be neutral"
   # The tile lies along a line whose count of the pole is met.
   alongFull:
     ring: square
-    terms: { plus: flag, hatched: flag, col: flag }
+    terms: { plus: flag, hatched: flag, axis: unit }
     marks: { outline: [clue], stripes: [line] }
-    look: >-
-      {ring: This tile} lies along a {if hatched: {stripes line: {if col: column |
-      row}} | {if col: column | row}} with {outline clue: all its {if plus: + | −}s}
+    look: "{ring: This tile} lies along a {lineName} with {outline clue: all its {pole}s}"
     move: "it must be neutral"
   # Each end is in its own line of one axis, both counts met.
   bothInFull:
     ring: square
-    terms: { plus: flag, col: flag }
+    terms: { plus: flag, axis: unit }
     marks: { outline: [clue] }
-    look: >-
-      Both ends of {ring: this tile} are in {if col: columns | rows} with {outline
-      clue: all their {if plus: + | −}s}
+    look: "Both ends of {ring: this tile} are in {axis}s with {outline clue: all their {pole}s}"
     move: "it must be neutral"
   # Neither end can take the pole, for a different reason at each: `fullBoth`,
   # a count met at each end (in lines of one axis, or of two); else a pole
   # touched at one end and, at the other, another pole (`bTouch`) or a count
-  # met (`hatched`: the sentence's own line).
+  # met.
   neitherEnd:
     ring: square
     terms:
@@ -294,25 +311,24 @@ steps:
       sameAxis: flag
       bTouch: flag
       hatched: flag
-      col: flag
+      axis: unit
+      across: unit
     marks: { outline: [touched, otherTouched, clue, otherClue], stripes: [line] }
     move: "it must be neutral"
     wordings:
       - when: "fullBoth and sameAxis"
         look: >-
-          No {if plus: + | −} fits in {ring: this tile}: it would exceed {outline clue:
-          its {if col: column | row}'s clue} at both ends
+          No {pole} fits in {ring: this tile}: it would exceed {outline clue: its
+          {axis}'s clue} at both ends
       - when: "fullBoth"
         look: >-
-          No {if plus: + | −} fits in {ring: this tile}: it would exceed {outline clue:
-          its {if col: column | row}'s clue} at one end and {outline otherClue: its
-          {if col: row | column}'s} at the other
+          No {pole} fits in {ring: this tile}: it would exceed {outline clue: its
+          {axis}'s clue} at one end and {outline otherClue: its {across}'s} at the
+          other
       - look: >-
-          No {if plus: + | −} fits in {ring: this tile}: it would touch {outline
-          touched: a {if plus: + | −}} at one end and {if bTouch: touch {outline
-          otherTouched: a {if plus: + | −}} | exceed its {if hatched: {stripes line:
-          {if col: column | row}} | {if col: column | row}}'s {outline clue: clue}} at
-          the other
+          No {pole} fits in {ring: this tile}: it would touch {outline touched: a
+          {pole}} at one end and {if bTouch: touch {outline otherTouched: a {pole}}
+          | exceed its {lineName}'s {outline clue: clue}} at the other
   # One end can take neither pole: `kindTouch`, a pole touched of each kind;
   # `kindFull`, both counts met (`sameAxis`: in lines of one axis); else one
   # pole touched and the other pole's count met (`plus`: the pole the count
@@ -325,7 +341,8 @@ steps:
       kindFull: flag
       sameAxis: flag
       hatched: flag
-      col: flag
+      axis: unit
+      across: unit
     marks: { outline: [plusAt, minusAt, touched, clue, otherClue], stripes: [line] }
     move: "it must be neutral"
     wordings:
@@ -335,68 +352,61 @@ steps:
           a +} and {outline minusAt: a −}
       - when: "kindFull and sameAxis"
         look: >-
-          One end of {ring: this tile} can't be + or −: a + or − would exceed its {if
-          hatched: {stripes line: {if col: column | row}} | {if col: column | row}}'s
-          {outline clue: clues}
+          One end of {ring: this tile} can't be + or −: a + or − would exceed its
+          {lineName}'s {outline clue: clues}
       - when: "kindFull"
         look: >-
-          One end of {ring: this tile} can't be + or −: a + would exceed its {if
-          hatched: {stripes line: {if col: column | row}} | {if col: column | row}}'s
-          {outline clue: clue}, and a − {outline otherClue: its {if col: row |
-          column}'s}
+          One end of {ring: this tile} can't be + or −: a + would exceed its
+          {lineName}'s {outline clue: clue}, and a − {outline otherClue: its
+          {across}'s}
       - look: >-
           One end of {ring: this tile} can't be + or −: it touches {outline touched: a
-          {if plus: − | +}}, and a {if plus: + | −} would exceed its {if hatched:
-          {stripes line: {if col: column | row}} | {if col: column | row}}'s {outline
-          clue: clue}
+          {other}}, and a {pole} would exceed its {lineName}'s {outline clue: clue}
   # Every empty square of the line needs a pole. `k` is how many of the line's
   # clue digits are outlined.
   polesEverywhere:
     ring: square
-    terms: { col: flag, k: number }
+    terms: { axis: unit, k: number }
     marks: { outline: [clue], stripes: [line] }
     look: >-
-      {stripes line: this {if col: column | row}}'s {outline clue: clue | clues} {k:
-      needs | need} a + or − in every one of its empty squares
+      {stripes line: this {axis}}'s {outline clue: clue | clues} {k: needs | need}
+      a + or − in every one of its empty squares
     move: "{ring: each ringed tile} must be a magnet"
   # The line has room for one more neutral square, so none of its tiles lying
   # along it can be neutral. `one`: there is one such tile.
   oneNeutralLeft:
     ring: square
-    terms: { col: flag, k: number, one: flag }
+    terms: { axis: unit, k: number, one: flag }
     marks: { outline: [clue], stripes: [line] }
     look: >-
-      {stripes line: this {if col: column | row}}'s {outline clue: clue | clues} {k:
-      leaves | leave} room for just one more neutral square
+      {stripes line: this {axis}}'s {outline clue: clue | clues} {k: leaves |
+      leave} room for just one more neutral square
     move: >-
       {ring: {if one: the ringed tile | each ringed tile}} lying along it must be a
       magnet
   # The line needs as many more of a pole as it has undecided tiles.
   tilesNeeded:
     ring: square
-    terms: { plus: flag, col: flag, n: number }
+    terms: { plus: flag, axis: unit, n: number }
     marks: { outline: [clue], stripes: [line] }
     wordings:
       - when: "n = 1"
         look: >-
-          {stripes line: this {if col: column | row}} needs {outline clue: one more {if
-          plus: + | −}} and has only {ring: this undecided tile}
+          {stripes line: this {axis}} needs {outline clue: one more {pole}} and has
+          only {ring: this undecided tile}
         move: "it must be a magnet"
       - look: >-
-          {stripes line: this {if col: column | row}} needs {outline clue: {n} more {if
-          plus: + | −}s} and has only {n} undecided tiles
+          {stripes line: this {axis}} needs {outline clue: {n} more {pole}s} and has
+          only {n} undecided tiles
         move: "{ring: each ringed tile} must be a magnet"
   # The line needs `n` more of a pole and has exactly `n` squares that can
   # still take one. Where `rest`, each of its other open squares is ruled out by
-  # name: `tiles0`, `tiles1` (the squares are not tiles; one tile), and what the
-  # pole there would do, a touch (`touchOwn`: the square's own, `touchPartner`:
-  # its other end's, both said as one) and a count met (`fullOwn`, `fullPartner`,
-  # `fullMany`: of several squares).
+  # name (`wouldBreak`).
   lineExact:
     ring: square
     terms:
       plus: flag
-      col: flag
+      axis: unit
       n: number
       one: flag
       several: flag
@@ -413,78 +423,64 @@ steps:
     marks: { outline: [clue, ruled, touchAt, fullClues], stripes: [line] }
     wordings:
       - when: "rest"
-        look: >-
-          {stripes line: this {if col: column | row}} needs {outline clue: {if one: one
-          more {if plus: + | −} | {n} more {if plus: + | −}s}}; a {if plus: + | −}
-          {outline ruled: {if tiles0: in an outlined square | {if tiles1: in the
-          outlined tile | in an outlined tile}}} would {if touchAny: {if fullAny: {if
-          touchOwn: {if touchPartner: make {outline touchAt: like poles} touch |
-          touch {outline touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside
-          {outline touchAt: a {if plus: − | +}}} or {if fullOwn: {if fullPartner:
-          exceed {outline fullClues: a clue} | exceed {outline fullClues: {if
-          fullMany: a clue | its clue}}} | exceed {outline fullClues: a clue}} | {if
-          touchOwn: {if touchPartner: make {outline touchAt: like poles} touch |
-          touch {outline touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside
-          {outline touchAt: a {if plus: − | +}}}} | {if fullOwn: {if fullPartner:
-          exceed {outline fullClues: a clue} | exceed {outline fullClues: {if
-          fullMany: a clue | its clue}}} | exceed {outline fullClues: a clue}}}
+        look: "{stripes line: this {axis}} needs {needs}; {wouldBreak}"
         move: >-
-          {ring: this square | these {live} squares} must be {if plus: + | −}{if
-          several: s | }
+          {ring: this square | these {live} squares} must be {pole}{if several: s
+          | }
       - when: "one"
         look: >-
-          {stripes line: this {if col: column | row}} needs {outline clue: one more {if
-          plus: + | −}} and only {ring: this square} can take one
-        move: "it must be {if plus: + | −}"
+          {stripes line: this {axis}} needs {outline clue: one more {pole}} and only
+          {ring: this square} can take one
+        move: "it must be {pole}"
       - look: >-
-          {stripes line: this {if col: column | row}} needs {outline clue: {n} more {if
-          plus: + | −}s} and only {ring: these {n} squares} can take one
-        move: "they must be {if plus: + | −}s"
+          {stripes line: this {axis}} needs {outline clue: {n} more {pole}s} and only
+          {ring: these {n} squares} can take one
+        move: "they must be {pole}s"
   # Every empty square of the line is neutral: its counts leave no room for
   # another pole.
   noPolesLeft:
     ring: square
-    terms: { col: flag, k: number }
+    terms: { axis: unit, k: number }
     marks: { outline: [clue], stripes: [line] }
     look: >-
-      {stripes line: this {if col: column | row}}'s {outline clue: clue | clues} {k:
-      leaves | leave} no room for another + or −
+      {stripes line: this {axis}}'s {outline clue: clue | clues} {k: leaves |
+      leave} no room for another + or −
     move: "{ring: all its empty squares} must be neutral"
   # The line needs `n` more neutral squares and exactly `n` are not in
   # marked magnets.
   neutralExact:
     ring: square
-    terms: { col: flag, n: number }
+    terms: { axis: unit, n: number }
     marks: { outline: [clue, marked], stripes: [line] }
     wordings:
       - when: "n = 1"
         look: >-
-          {stripes line: this {if col: column | row}} needs {outline clue: 1 more
-          neutral square}; only {ring: the ringed one} isn't in {outline marked: a
-          marked magnet (outlined)}
+          {stripes line: this {axis}} needs {outline clue: 1 more neutral square};
+          only {ring: the ringed one} isn't in {outline marked: a marked magnet
+          (outlined)}
         move: "it must be neutral"
       - look: >-
-          {stripes line: this {if col: column | row}} needs {outline clue: {n} more
-          neutral squares}; only {ring: these {n}} aren't in {outline marked: marked
+          {stripes line: this {axis}} needs {outline clue: {n} more neutral
+          squares}; only {ring: these {n}} aren't in {outline marked: marked
           magnets (outlined)}
         move: "they must be neutral"
   # Every empty square of the line holds a pole, alternating, with one more
   # of a pole than of the other: only the one odd-length gap can supply it.
   oddGap:
     ring: square
-    terms: { plus: flag, col: flag }
+    terms: { plus: flag, axis: unit }
     marks: { outline: [clue], stripes: [line] }
     look: >-
-      {stripes line: this {if col: column | row}}'s empty squares take alternating
-      poles, {outline clue: one more {if plus: + | −} than {if plus: − | +}}
-    move: "{ring: this odd-length gap} must start with {if plus: + | −}"
+      {stripes line: this {axis}}'s empty squares take alternating poles,
+      {outline clue: one more {pole} than {other}}
+    move: "{ring: this odd-length gap} must start with {pole}"
   # The line needs a pole from each tile that can still give one, so each
   # tile crossing it gives it at its one square there.
   onlyEndCrosses:
     ring: square
     terms:
       plus: flag
-      col: flag
+      axis: unit
       n: number
       one: flag
       several: flag
@@ -500,24 +496,10 @@ steps:
       fullMany: flag
     marks: { outline: [clue, ruled, touchAt, fullClues], stripes: [line] }
     look: >-
-      {stripes line: this {if col: column | row}} needs {outline clue: {if one: one
-      more {if plus: + | −} | {n} more {if plus: + | −}s}} from {if one: only {ring:
-      this tile} | just {n} tiles}{if rest: ; a {if plus: + | −} {outline ruled: {if
-      tiles0: in an outlined square | {if tiles1: in the outlined tile | in an
-      outlined tile}}} would {if touchAny: {if fullAny: {if touchOwn: {if
-      touchPartner: make {outline touchAt: like poles} touch | touch {outline
-      touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside {outline touchAt:
-      a {if plus: − | +}}} or {if fullOwn: {if fullPartner: exceed {outline
-      fullClues: a clue} | exceed {outline fullClues: {if fullMany: a clue | its
-      clue}}} | exceed {outline fullClues: a clue}} | {if touchOwn: {if
-      touchPartner: make {outline touchAt: like poles} touch | touch {outline
-      touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside {outline
-      touchAt: a {if plus: − | +}}}} | {if fullOwn: {if fullPartner: exceed
-      {outline fullClues: a clue} | exceed {outline fullClues: {if fullMany: a clue
-      | its clue}}} | exceed {outline fullClues: a clue}}} | }
+      {stripes line: this {axis}} needs {needs} from {if one: only {ring: this
+      tile} | just {n} tiles}{if rest: ; {wouldBreak} | }
     move: >-
-      {ring: this square | these {live} squares} must be {if plus: + | −}{if
-      several: s | }
+      {ring: this square | these {live} squares} must be {pole}{if several: s | }
   # The same where the tile lies along the line: the count picks the tile, then
   # its far end is ruled out (`endTouch`: a like pole beside it; `endPartnerTouch`:
   # the opposite pole beside its other end; else a count met, of one clue
@@ -526,7 +508,7 @@ steps:
     ring: square
     terms:
       plus: flag
-      col: flag
+      axis: unit
       n: number
       one: flag
       rest: flag
@@ -546,23 +528,9 @@ steps:
       outline: [clue, ruled, touchAt, fullClues, far, endAt, endClue]
       stripes: [line]
     look: >-
-      {stripes line: this {if col: column | row}} needs {outline clue: {if one: one
-      more {if plus: + | −} | {n} more {if plus: + | −}s}} from {if one: only {ring:
-      this tile} | just {n} tiles}{if rest: ; a {if plus: + | −} {outline ruled: {if
-      tiles0: in an outlined square | {if tiles1: in the outlined tile | in an
-      outlined tile}}} would {if touchAny: {if fullAny: {if touchOwn: {if
-      touchPartner: make {outline touchAt: like poles} touch | touch {outline
-      touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside {outline touchAt:
-      a {if plus: − | +}}} or {if fullOwn: {if fullPartner: exceed {outline
-      fullClues: a clue} | exceed {outline fullClues: {if fullMany: a clue | its
-      clue}}} | exceed {outline fullClues: a clue}} | {if touchOwn: {if
-      touchPartner: make {outline touchAt: like poles} touch | touch {outline
-      touchAt: a {if plus: + | −}}} | put a {if plus: − | +} beside {outline
-      touchAt: a {if plus: − | +}}}} | {if fullOwn: {if fullPartner: exceed
-      {outline fullClues: a clue} | exceed {outline fullClues: {if fullMany: a clue
-      | its clue}}} | exceed {outline fullClues: a clue}}} | }. A {if plus: + | −} at
-      {outline far: its far end} would {if endTouch: touch {outline endAt: a {if
-      plus: + | −}} | {if endPartnerTouch: put a {if plus: − | +} beside {outline
-      endAt: a {if plus: − | +}} | exceed {outline endClue: {if endOne: its clue | a
-      clue}}}}
+      {stripes line: this {axis}} needs {needs} from {if one: only {ring: this
+      tile} | just {n} tiles}{if rest: ; {wouldBreak} | }. A {pole} at {outline
+      far: its far end} would {if endTouch: touch {outline endAt: a {pole}} | {if
+      endPartnerTouch: put a {other} beside {outline endAt: a {other}} | exceed
+      {outline endClue: {if endOne: its clue | a clue}}}}
     move: "it must go in {ring: the ringed square}"

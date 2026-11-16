@@ -668,6 +668,11 @@
             }
           }
         },
+        "phrases": {
+          "type": "object",
+          "description": "Clause source a step's or a technique's clause says by name, `{name}`, written once: the loader puts it in place before the clause is checked, so a phrase holds what a clause may and names the terms of the clause that says it. A phrase may say another; a term named like a phrase is refused.",
+          "additionalProperties": { "type": "string" }
+        },
         "tiers": {
           "type": "array",
           "items": { "type": "string" },
@@ -693,8 +698,8 @@
               },
               "terms": {
                 "type": "object",
-                "description": "Named values the planner supplies: `number`, said by the game's value words, or `flag`, which an `{if flag: yes | no}` and a wording's `when` read.",
-                "additionalProperties": { "enum": ["number", "flag"] }
+                "description": "Named values the planner supplies: `number`, said by the game's value words; `flag`, which an `{if flag: yes | no}` and a wording's `when` read; or `unit`, a row, column, block or diagonal, said as its name by `{term}`.",
+                "additionalProperties": { "enum": ["number", "flag", "unit"] }
               },
               "marks": {
                 "type": "object",

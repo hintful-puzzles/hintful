@@ -94,6 +94,9 @@ export interface DescriptionJson {
   steps?: Record<string, StatedStep>;
   /** What the game says that is not the lexicon's. */
   words?: GameWords;
+  /** Clause source a clause says by name, `{name}`, written once
+   * (`load.ts` expands them). */
+  phrases?: Record<string, string>;
   variations?: Record<string, VariationJson>;
 }
 
@@ -106,12 +109,17 @@ export interface GameWords {
   alongside?: string;
 }
 
+/** What a step's term is: a `number`, said by the game's value words; a
+ * `flag`, which an `if` and a `when` read; or a `unit`, said as its name
+ * ("row", "column", "block", "diagonal"). */
+export type StepTermKind = "number" | "flag" | "unit";
+
 /** A kind of hint step a planner emits: what its sentence reads, which the
  * planner supplies, and its clauses. */
 export interface StatedStep extends Worded {
   /** The sort of the elements the step decides. */
   ring: string;
-  terms?: Record<string, "number" | "flag">;
+  terms?: Record<string, StepTermKind>;
   /** The sorts marked in each role. */
   marks?: Partial<Record<"outline" | "stripes" | "strand", string[]>>;
 }
@@ -691,7 +699,7 @@ export interface Description {
 export interface Step {
   id: string;
   ring: string;
-  terms: { name: string; kind: "number" | "flag" }[];
+  terms: { name: string; kind: StepTermKind }[];
   marks: { role: "outline" | "stripes" | "strand"; sort: string }[];
   /** The step's stated words, by wording. */
   words: Wording[];

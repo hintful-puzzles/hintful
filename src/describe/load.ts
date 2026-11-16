@@ -48,5 +48,54 @@ export function loadDescriptionFile(text: string, path: string): DescriptionFile
       `${path}: ${e.instancePath || "/"} ${e.message}${extra}`,
     );
   }
-  return data as DescriptionFile;
+  return withPhrases(data as DescriptionFile, path);
+}
+
+/** The keys whose strings are clauses. */
+const CLAUSE_KEYS: ReadonlySet<string> = new Set([
+  "look",
+  "follows",
+  "move",
+  "effect",
+  "again",
+  "later",
+]);
+
+/**
+ * `data` with every `{name}` of a phrase it declares (`phrases`) replaced by
+ * the phrase, in every clause of its `steps` and `techniques`, so a clause is
+ * checked and emitted with its phrases in it. A phrase may say another; one
+ * that says itself, and a term named like a phrase (which `{name}` would never
+ * say), are refused.
+ */
+function withPhrases(data: DescriptionFile, path: string): DescriptionFile {
+  const phrases = "phrases" in data ? data.phrases : undefined;
+  const names = Object.keys(phrases ?? {});
+  if (phrases === undefined || names.length === 0) return data;
+  const slot = new RegExp(`\\{(${names.join("|")})\\}`, "g");
+  const expand = (src: string, seen: readonly string[]): string =>
+    src.replace(slot, (_, name: string) => {
+      if (seen.includes(name))
+        throw new DescriptionError(
+          `${path}: phrase ${name} says itself (${[...seen, name].join(" > ")})`,
+        );
+      return expand(phrases[name], [...seen, name]);
+    });
+  const walk = (v: unknown, key: string | null): unknown => {
+    if (typeof v === "string")
+      return key !== null && CLAUSE_KEYS.has(key) ? expand(v, []) : v;
+    if (Array.isArray(v)) return v.map((x) => walk(x, null));
+    if (v === null || typeof v !== "object") return v;
+    if (key === "terms")
+      for (const t of Object.keys(v))
+        if (names.includes(t))
+          throw new DescriptionError(
+            `${path}: a term named ${t} is shadowed by the phrase of that name: rename one`,
+          );
+    return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x, k)]));
+  };
+  const out: Record<string, unknown> = { ...data };
+  for (const part of ["steps", "techniques"])
+    if (part in out) out[part] = walk(out[part], part);
+  return out as unknown as DescriptionFile;
 }

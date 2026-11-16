@@ -15,24 +15,10 @@
  */
 
 import type { LatinVocab } from "../../engine/hint-text.ts";
-import {
-  CELL,
-  type MarkKind,
-  type Narration,
-  type Sentence,
-} from "../../engine/hint-words.ts";
-import {
-  type PlannedKind,
-  plannedSentence,
-  type StatedContext,
-  statedParts,
-} from "../../engine/stated.ts";
+import { CELL, type Narration, type Sentence } from "../../engine/hint-words.ts";
+import { lineUnit } from "../../engine/step-voice.ts";
 import type { Point } from "../../engine/types.ts";
-import {
-  STEPS,
-  type StepsById,
-  WORDS,
-} from "../../generated/games/towers/towers.compiled.ts";
+import { voice, WORDS } from "../../generated/games/towers/towers.compiled.ts";
 
 /** A clue and the line it sees along, as the sentence names them: the clue's
  * slot (`at`, outlined) and its line of sight through both clue slots
@@ -43,69 +29,10 @@ export interface ClueSight {
   line: readonly Point[];
 }
 
-type Steps = StepsById<Point>;
 type Squares = readonly Point[];
 
-/** What a reference to each sort the description's steps name is drawn on: all
- * of them cells (a clue's slot is one, beside the grid). */
-const KINDS: Readonly<Record<string, MarkKind<Point>>> = Object.fromEntries(
-  ["clue", "clues", "line", "set"].map((sort) => [sort, CELL as MarkKind<Point>]),
-);
-
-const contextOf = (
-  ring: Squares,
-  said: Pick<StatedContext<Point>, "terms" | "marks">,
-  later = false,
-) => ({
-  kind: CELL as MarkKind<Point>,
-  kinds: KINDS,
-  ring,
-  value: String,
-  noun: WORDS.cell,
-  later,
-  ...said,
-});
-
-/** The words of step `id`, for the cell(s) `ring` it decides. */
-function speak<K extends keyof Steps & string>(
-  id: K,
-  ring: Squares,
-  terms: Steps[K]["terms"],
-  marks: Steps[K]["marks"],
-  later = false,
-): Sentence {
-  return plannedSentence(
-    STEPS[id] as unknown as PlannedKind<Steps[K]["terms"], Steps[K]["marks"]>,
-    { terms, marks },
-    contextOf(ring, { terms, marks: {} }, later),
-  );
-}
-
-/** What a step reads off the board, as a strike's premise: the `look` of the
- * wording that holds. */
-function looks<K extends keyof Steps & string>(
-  id: K,
-  ring: Squares,
-  terms: Steps[K]["terms"],
-  marks: Steps[K]["marks"],
-): Narration {
-  const kind = STEPS[id] as unknown as PlannedKind<
-    Steps[K]["terms"],
-    Steps[K]["marks"]
-  >;
-  const i = kind.when.findIndex((w) => w === null || w(terms, marks));
-  const { look } = statedParts(kind.clauses[i], {
-    ...contextOf(ring, {
-      terms: terms as Readonly<Record<string, unknown>>,
-      marks: marks as StatedContext<Point>["marks"],
-    }),
-    at: () => {
-      throw new Error("a planned step has no element terms");
-    },
-  });
-  if (look === undefined) throw new Error(`Towers' ${id} states no look`);
-  return look;
-}
+/** Every mark is a cell: a clue's slot is one, beside the grid. */
+const speak = voice<Point>({ kind: CELL, value: String });
 
 const clueMarks = (c: ClueSight) => ({
   outline: { clue: [c.at] },
@@ -117,38 +44,57 @@ export const say = {
    * journey's later leg (`continues`) does not restate the premise its first
    * leg gave, only which clue and line it is still working along. */
   fullLine: (c: ClueSight, n: number, at: Point, continues: boolean): Sentence =>
-    speak("fullLine", [at], { v: c.value, n }, clueMarks(c), continues),
+    speak.sentence("fullLine", {
+      ring: [at],
+      terms: { v: c.value, n },
+      marks: clueMarks(c),
+      later: continues,
+    }),
 
   tallestNearest: (c: ClueSight, n: number, at: Point): Sentence =>
-    speak("tallestNearest", [at], { v: c.value, n }, clueMarks(c)),
+    speak.sentence("tallestNearest", {
+      ring: [at],
+      terms: { v: c.value, n },
+      marks: clueMarks(c),
+    }),
 
   /** Two clues at the two ends of one line. */
   facing: (clues: Squares, sight: Squares, n: number, at: Point): Sentence =>
-    speak("facing", [at], { n }, { outline: { clues }, stripes: { line: sight } }),
+    speak.sentence("facing", {
+      ring: [at],
+      terms: { n },
+      marks: { outline: { clues }, stripes: { line: sight } },
+    }),
 
   // The strike arms below are premises, which the walk concludes with the move
   // it makes (`engine/hint-text.ts`'s `Premise`). The struck cells are named
   // there, by the notes the step rings.
 
   lineFull: (c: ClueSight, n: number): Narration =>
-    looks("lineFull", [], { v: c.value, seen: c.value - 1, n }, clueMarks(c)),
+    speak.premise("lineFull", {
+      terms: { v: c.value, seen: c.value - 1, n },
+      marks: clueMarks(c),
+    }),
 
   lowerBound: (c: ClueSight, n: number): Narration =>
-    looks("lowerBound", [], { v: c.value, n }, clueMarks(c)),
+    speak.premise("lowerBound", { terms: { v: c.value, n }, marks: clueMarks(c) }),
 
   arrangement: (c: ClueSight, n: number, at: Point): Narration =>
-    looks("arrangement", [at], { v: c.value, n }, clueMarks(c)),
+    speak.premise("arrangement", {
+      ring: [at],
+      terms: { v: c.value, n },
+      marks: clueMarks(c),
+    }),
 
   hiddenSingle: (kind: "row" | "col", cells: Squares, at: Point, n: number): Sentence =>
-    speak(
-      "hiddenSingle",
-      [at],
-      { col: kind === "col", n },
-      { stripes: { line: cells } },
-    ),
+    speak.sentence("hiddenSingle", {
+      ring: [at],
+      terms: { axis: lineUnit(kind), n },
+      marks: { stripes: { line: cells } },
+    }),
 
   set: (cells: Squares, n: number): Narration =>
-    looks("set", [], { n }, { outline: { set: cells } }),
+    speak.premise("set", { terms: { n }, marks: { outline: { set: cells } } }),
 };
 
 /** Towers' values in the engine's sentences: heights, bare where a confined
