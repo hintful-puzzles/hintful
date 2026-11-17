@@ -887,16 +887,54 @@ boundaries are judgment, and the counts carry that.
     room for more and is no one value (`docs/descriptions.md` § "The formula
     syntax"). Step 4 (a trial kind) waits for a second game whose breaks
     read the same way.
-  - [ ] Boats' trials on nested `with`s (`with place(H, 1): with place(W,
-    2)`), so `sh(x, H)` and the `x not in W` copies go; `H` and `W` stay
-    binders, for `breaks` reads `H + W` for where to look. Re-check Boats
-    sound and deal-compare. Traps read beforehand: H must be the inner
-    `with` (a corner water square that is also in H is a collision, which
-    the outer W would hide); `done(m)` and `ships` read the marks and would
-    see the supposed boats, so the fleet count `|C| > boatsOf(m) - done(m)`
-    is restated, not swapped. Then its supplied `collision`/`count`/…
-    flags, which `solver.ts` finds again, are Boats' `breaks:` (step 2's
-    third game), which is step 4's evidence.
+  - [x] (2026-11-17) Boats' trials on nested `with`s and `breaks:` (step 2's
+    third game). `broken(H, W, T)` supposes W (with H's open corners) water
+    and H boat segments inside it (`tried`), and its breaks are the rules'
+    own reads under that: `touching(a)`, `lineCount(L)`, `fleetCount(S)`,
+    `overlong(a, T)`, `extra(m)`. `sh`, `closers`, `closes` and the `x not
+    in W` copies went; the fleet count is `done(m) > boatsOf(m)` under the
+    supposition, which fires where `|C| > boatsOf(m) - done(m)` did. **Found
+    on the way:** a first restatement dropped the corner water from the
+    lines `breaks` reads (a 9x9 Hard frozen board stuck); the corners now
+    pass into `tried` as part of W. The three trials say `{broke}`, and
+    `solver.ts` lost `classifyBreach`, `trialReason`, `breachTerms` and
+    every supplied term and mark (the validator re-run, with its "segment"
+    and catch-all words that no formula break matched). **Engine, in
+    passing:** (1) a break's set the words draw in a role is in that
+    role's mark (`drawBrokeSets`, `compile.ts`), so the step draws what
+    broke and the walk's premise holds it; Path's and Spokes' modules gain
+    an `outline` of their break sets, their tests unchanged. (2) **A compiler
+    defect:** the witness inlined a definition by substituting its argument
+    expressions, so `tried(H, W + corners, T)` re-read `not known(d)` inside
+    the `with` and saw other lines than the solve; it now binds parameters
+    by value, as `definitionCall` does (only Boats' module moved). (3) A
+    firing whose witness holds no break throws on the hint's path, where it
+    said the last break's words with empty terms ("more 0-boats"); planting
+    the substitution back failed seven Boats tests on it. **Measured:** HEAD's
+    and the new trials fire identically on 2,231 walk positions (0
+    differences); deal-compare at 3 and 5 seeds a preset gives the same
+    boards and verdicts, deals 1.3× to 1.5× (Hard presets 1.4× to 1.8×, all
+    under 54 ms: the fleet count reads the whole board under the
+    supposition; left, by the owner's 100 ms rule). Re-checked sound whole
+    (a define changed), all 20, every plant caught at order 3. **Moved:**
+    words, "If this square held a boat segment, there would be more 2-boats
+    (outlined) than the fleet has" (was "it would make one boat (outlined)
+    too many"), a line over its number "would have more than its 3 boat
+    squares" (was "couldn't reach"), a boat "longer than any in the fleet";
+    the middle segment's move says "the squares either side of it" where it
+    rings both (was "the square to its right", wrong at HEAD too). The walk
+    fingerprint: same steps and rungs, words hash moved; the wide file
+    (stale at HEAD since the count words of 2.12) one Hard board 17 steps
+    to 16 (one `lastWater` more, a `lineShips` and a `tooLong` fewer): a
+    trial's premise is now the break's squares, not the validator's
+    flagged ones, and the walk continues by it. `centerTrial` is now the hint's
+    step on 1 of 8,554 positions (160 Hard boards), so its pin is kept by
+    hand (a 7x9 Hard board five steps in), seen in the app: the striped row
+    0 and both ringed neighbors where the words say. `test:hint-sweeps`
+    green but for Boats' fingerprint, re-recorded. Step 4 (a trial kind):
+    Path, Spokes and Boats read their breaks three ways (an edge tried, a
+    set of spokes, boats and water by nested `with`s), so no shared trial
+    shape yet.
   - [ ] Then REL (10 left) and PEER (6).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by

@@ -443,6 +443,49 @@ function techniqueGrowth(lines: readonly string[]): number {
  * games measured slower than their hand-written ladders. */
 const MAX_GROWTH = 6;
 
+/** The roles of `says.marks` a step draws its evidence in. */
+const MARK_ROLES: ReadonlySet<string> = new Set(["outline", "stripes", "strand"]);
+
+/**
+ * A break's set the words of `v` draw in a role, put in that role's mark
+ * (`marks`, each `role: code`, typed in `fields`), so the step draws it and
+ * what the firing rests on holds it. `sets` holds each break term's code.
+ */
+function drawBrokeSets(
+  id: string,
+  v: Says["variants"][number],
+  sets: ReadonlyMap<string, string>,
+  marks: string[],
+  fields: string[],
+): void {
+  const drawn = new Map<string, Set<string>>();
+  for (const w of v.words)
+    for (const src of Object.values(w.clauses))
+      for (const s of slotsOf(src as string))
+        if (
+          s.role !== null &&
+          MARK_ROLES.has(s.role) &&
+          s.name !== null &&
+          sets.has(s.name)
+        )
+          drawn.set(s.role, (drawn.get(s.role) ?? new Set()).add(s.name));
+  for (const [role, names] of drawn) {
+    const i = marks.findIndex((m) => m.startsWith(`${role}: `));
+    if (i >= 0 && v.marks.find((m) => m.role === role)?.sort !== null)
+      throw new CompileError(
+        `${id}: a break's set is drawn as ${role}, which holds several sorts`,
+      );
+    const own = i < 0 ? [] : [`...${marks[i].slice(role.length + 2)}`];
+    const codes = [...names].map((n) => `...${sets.get(n)}`);
+    const merged = `${role}: [...new Set([${[...own, ...codes].join(", ")}])]`;
+    if (i >= 0) marks[i] = merged;
+    else {
+      marks.push(merged);
+      fields.push(`${role}: number[];`);
+    }
+  }
+}
+
 /** The length below which a set a comprehension makes is scanned for a
  * member, not stamped (`addOnce`). */
 const SCANNED_SET = 16;
@@ -1260,13 +1303,9 @@ function witnessOf(e: Expr, scope: Scope, env: Env, out: Out): string | null {
   const of = (w: string | null): string => w ?? "null";
   // A break clause's node carries the terms its words read, read here, where
   // it held, under the suppositions in force, its parameters the arguments.
-  const said = (name: string, args: readonly Expr[]): string => {
+  const said = (name: string, inner: Scope): string => {
     const brk = env.breaks.of.get(name);
     if (brk === undefined) return "";
-    const inner = new Map(scope);
-    brk.params.forEach((p, i) => {
-      inner.set(p, once(compileExpr(args[i], scope, env, out), out));
-    });
     const fields = brk.terms.map(({ name: term, expr }) => {
       const v = compileExpr(expr, inner, env, out);
       const key = `${name}.${term}`;
@@ -1281,11 +1320,20 @@ function witnessOf(e: Expr, scope: Scope, env: Env, out: Out): string | null {
   if (e.k === "name" && !scope.has(e.name)) {
     const def = env.defs.get(e.name);
     if (def === undefined || def.params.length > 0) return null;
-    return `{ held: "def", name: ${JSON.stringify(e.name)}, of: ${of(witnessOf(def.body, scope, env, out))}${said(e.name, [])} }`;
+    return `{ held: "def", name: ${JSON.stringify(e.name)}, of: ${of(witnessOf(def.body, scope, env, out))}${said(e.name, new Map())} }`;
   }
-  const body = inlined(e, scope, env);
-  if (body !== e && e.k === "call")
-    return `{ held: "def", name: ${JSON.stringify(e.fn)}, of: ${of(witnessOf(body, scope, env, out))}${said(e.fn, e.args)} }`;
+  // A definition's parameters are its arguments' values where it is called,
+  // as `definitionCall` binds them: an argument that reads the marks is read
+  // outside a `with` its body supposes. One that reads itself has no witness.
+  const def = e.k === "call" && !scope.has(e.fn) ? env.defs.get(e.fn) : undefined;
+  if (e.k === "call" && def !== undefined && def.params.length === e.args.length) {
+    if (mentions(def.body, e.fn, env.defs, new Set())) return null;
+    const inner = new Map<string, Val>();
+    def.params.forEach((p, i) => {
+      inner.set(p, once(compileExpr(e.args[i], scope, env, out), out));
+    });
+    return `{ held: "def", name: ${JSON.stringify(e.fn)}, of: ${of(witnessOf(def.body, inner, env, out))}${said(e.fn, inner)} }`;
+  }
   if (e.k === "bin" && e.op === "and") {
     const parts = [e.a, e.b]
       .map((x) => witnessOf(x, scope, env, out))
@@ -6916,6 +6964,10 @@ function techniqueFunction(
             body.emit(
               `const ${at} = brokeAt(_w, ${JSON.stringify([...env.breaks.of.keys()])});`,
             );
+            // Its words would say the last break's, with none of its terms.
+            body.emit(
+              `if (${at} === null) throw new Error(${JSON.stringify(`${t.id}: its witness holds no break`)});`,
+            );
           }
           const sort =
             b.term === null ? BOOL : env.breaks.sorts.get(`${b.name}.${b.term}`);
@@ -6937,11 +6989,14 @@ function techniqueFunction(
             b.term === null
               ? held
               : `(${held} ? (${at}.says[${JSON.stringify(b.term)}] as ${tsType(sort)}) : ${none})`;
-          if (!worded) return `${name}: ${code}`;
+          if (isArray(sort) && b.term !== null) brokeSets.set(name, `_sw_${name}`);
+          if (!worded && !isArray(sort)) return `${name}: ${code}`;
           body.emit(`const _sw_${name} = ${code};`);
           named.set(name, { code: `_sw_${name}`, sort });
           return `${name}: _sw_${name}`;
         };
+        // A break's set of elements, by term, which its words may draw.
+        const brokeSets = new Map<string, string>();
         const terms = v.terms.map((x) =>
           x.broke !== null
             ? broken(x.broke, x.name)
@@ -6983,6 +7038,7 @@ function techniqueFunction(
             `${role}: { ${parts.map((p) => `${JSON.stringify(p.sort)}: ${p.code}`).join(", ")} }`,
           );
         }
+        drawBrokeSets(t.id, v, brokeSets, marks, fields.marks);
         const own =
           tenv.factSays === undefined ? "" : `, facts: ${tenv.factSays.buffer}.slice()`;
         const readsSupplied = (e: Expr): void => {

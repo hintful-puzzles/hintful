@@ -1421,14 +1421,14 @@ squares) is a reference `{outline tried: …}` like any term of elements; `termA
 and `elements.at` are given the state, so a game whose pieces are squares, sides
 and clues in one kind (Tracks') can number them by the board's width, and a
 supplied term then holds those numbers. **A term or mark only the game's own
-code can supply** (Boats' trials name the rule the validator says they break)
-is declared by its kind: `{ supplied: flag }`, `number`, `element` or
+code can supply** (Dominosa's leg names the domino it decides, which no
+binding holds for every leg) is declared by its kind: `{ supplied: flag }`, `number`, `element` or
 `elements` in `terms`, `{ supplied: elements }` in `marks`. The compiled module
 writes a placeholder for it and types what each technique is supplied
 (`SuppliedById`), and the game's hook returns exactly that, so a term left
 out, or a technique, does not compile: `describedEdgeHint`'s `supplied`, one
 function a technique (`SuppliedHooks`), or a reason callback that spreads it
-over what the technique says (Boats' `trialReason`). A wording's `when` cannot
+over what the technique says. A wording's `when` cannot
 read one, for the wording is chosen before the game supplies it; choose by
 `{if term: …}` in the clause. Where the game re-reads a term the description
 can state (Tracks adds the rim's sides to the sides a square is shut by), the
@@ -1555,13 +1555,25 @@ reads them where the witness holds the break (its node carries them,
 square's ways are counted with the tried lines drawn. Path's `lineBreaks` and
 `pairBreaks` say a loop closed, two numbers joined or a square left short
 this way (`closes`, `joins`, `stuck`), and Spokes' a hub left short or a
-group sealed off, under lines supposed on a set (`short(c)`); a break under
-a `not`, a `forall` or an aggregate is not witnessed, and the compiler refuses
-a technique whose `{broke}` it never holds. A break's terms are the
-technique's, so a wording's `when` reads them where the break's words would
-say the wrong thing beside the technique's own: Spokes' `spareBreaks` says
-"one outlined 3 … the other 3" where the hub left short has the filled hub's
-number (`brokeShort and bn = fn`). Exemplar: `path-witness.test.ts`.
+group sealed off, under lines supposed on a set (`short(c)`), and Boats'
+three trials two boats touching, a line or the fleet miscounted, a boat too
+long or too many of a length, under boats and water supposed by nested
+`with`s; a break under a `not`, a `forall` or an aggregate is not witnessed,
+the compiler refuses a technique whose `{broke}` it never holds, and a
+firing whose witness holds no break throws on the hint's path rather than
+say the last break's words with none of its terms. A definition is
+witnessed as the solve reads it, its parameters bound to the arguments'
+values where it is called: an argument that reads the marks (Boats' corner
+water, `not known(d)`) is read outside the `with` the body supposes, not
+again inside it. A break's terms are the technique's, so a wording's `when`
+reads them where the break's words would say the wrong thing beside the
+technique's own: Spokes' `spareBreaks` says "one outlined 3 … the other 3"
+where the hub left short has the filled hub's number (`brokeShort and bn =
+fn`). **A break's set the words draw in a role is in that role's mark**
+(`{outline corner: …}` puts the corner in `marks.outline`), so the step
+draws what broke and the walk's premise (`premiseOf`) holds it; the game
+names no mark for it. Exemplar:
+`path-witness.test.ts`.
 
 **The witness is read where the sentence is built, by the name of what it
 holds**, not written into a term: `witnessOfDef(w, "shortNear")` finds the
@@ -1570,11 +1582,6 @@ absence says which arm held), `witnessNodes(w)` lists every node, outermost
 first, and a `member` node's record is keyed by the binders' own names. A
 game's reason callback that re-reads the board to find what broke reads this
 instead, or states the break (above).
-
-A rule that only a run of the validator can name
-(Boats' three trials) stays a reason callback, which receives what the
-technique says and returns it with the rule added: the description cannot
-state it.
 
 `compiledRung(run, clues, reason)` pairs a compiled technique with the
 function that turns its binding and one fact into the reason the record

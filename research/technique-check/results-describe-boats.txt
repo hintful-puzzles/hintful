@@ -1,20 +1,60 @@
-ok  boats      given                          current: recorded src/games/boats/boats.description.yaml#given a3cf86c709bc7ea1
-ok  boats      near                           current: recorded src/games/boats/boats.description.yaml#near 1470f2511ceaad31
-ok  boats      touch                          current: recorded src/games/boats/boats.description.yaml#touch d7816c1e83050516
-ok  boats      lineShips                      current: recorded src/games/boats/boats.description.yaml#lineShips 352defb035ae737a
-ok  boats      total                          current: recorded src/games/boats/boats.description.yaml#total ca8dfad539bf64db
-ok  boats      center                         current: recorded src/games/boats/boats.description.yaml#center 693414342b84811e
-ok  boats      extend                         current: recorded src/games/boats/boats.description.yaml#extend 3a19cdcbd48b32ff
-ok  boats      lineWater                      current: recorded src/games/boats/boats.description.yaml#lineWater 214ea00b428cefd7
-ok  boats      isolated                       current: recorded src/games/boats/boats.description.yaml#isolated 817506d2cd16614c
-ok  boats      grow                           current: recorded src/games/boats/boats.description.yaml#grow b0042b7aede060a4
-ok  boats      onlyFit                        current: recorded src/games/boats/boats.description.yaml#onlyFit 646342cf12e3c107
-ok  boats      centerRoom                     current: recorded src/games/boats/boats.description.yaml#centerRoom 1dd29a0902188f01
-ok  boats      tooLong                        current: recorded src/games/boats/boats.description.yaml#tooLong 586c1db1aaaf4cff
-ok  boats      shortRun                       current: recorded src/games/boats/boats.description.yaml#shortRun 529516ed3c752cbb
-ok  boats      hidden                         current: recorded src/games/boats/boats.description.yaml#hidden 3f5f3dd6584f63a2
-ok  boats      onlyRuns                       current: recorded src/games/boats/boats.description.yaml#onlyRuns 24065a8861b7644c
-ok  boats      shared                         current: recorded src/games/boats/boats.description.yaml#shared 1002611d0b34efc7
-ok  boats      lastWater                      current: recorded src/games/boats/boats.description.yaml#lastWater b94f7da4b6645adc
-ok  boats      lastShip                       current: recorded src/games/boats/boats.description.yaml#lastShip 6cd6388f969fbcdf
-ok  boats      centerTrial                    current: recorded src/games/boats/boats.description.yaml#centerTrial ef675dadcfea0869
+ok  boats      given                          3  sound    (want sound   )     9 queries    0.1s
+ok  boats      given (planted)                3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/boats/boats.description.yaml#given: recorded sound, proved whole on all 1 boards
+ok  boats      near                           3  sound    (want sound   )     9 queries    0.0s
+ok  boats      near (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/boats/boats.description.yaml#near: recorded sound, proved whole on all 1 boards
+ok  boats      touch                          3  sound    (want sound   )     9 queries    0.0s
+ok  boats      touch (planted)                3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/boats/boats.description.yaml#touch: recorded sound, proved whole on all 1 boards
+ok  boats      lineShips                      3  sound    (want sound   )     6 queries    0.1s
+ok  boats      lineShips (planted)            3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/boats/boats.description.yaml#lineShips: recorded sound, proved whole on all 1 boards
+ok  boats      total                          3  sound    (want sound   )     1 queries    0.4s
+ok  boats      total (planted)                3  unsound  (want unsound )     1 queries    0.0s   at eset
+ok  src/games/boats/boats.description.yaml#total: recorded sound, proved whole on all 1 boards
+ok  boats      center                         3  sound    (want sound   )     9 queries    0.0s
+ok  boats      center (planted)               3  unsound  (want unsound )     2 queries    0.0s   at cell 1
+ok  src/games/boats/boats.description.yaml#center: recorded sound, proved whole on all 1 boards
+ok  boats      extend                         3  sound    (want sound   )     1 queries    0.2s
+ok  boats      extend (planted)               3  unsound  (want unsound )     1 queries    0.0s   at bool
+ok  src/games/boats/boats.description.yaml#extend: recorded sound, proved whole on all 1 boards
+ok  boats      lineWater                      3  sound    (want sound   )     6 queries    0.0s
+ok  boats      lineWater (planted)            3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/boats/boats.description.yaml#lineWater: recorded sound, proved whole on all 1 boards
+ok  boats      isolated                       3  sound    (want sound   )     1 queries    0.1s
+ok  boats      isolated (planted)             3  unsound  (want unsound )     1 queries    0.0s   at bool
+ok  src/games/boats/boats.description.yaml#isolated: recorded sound, proved whole on all 1 boards
+ok  boats      grow                           3  sound    (want sound   )     9 queries    0.3s
+ok  boats      grow (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/boats/boats.description.yaml#grow: recorded sound, proved whole on all 1 boards
+ok  boats      onlyFit                        3  sound    (want sound   )     1 queries   13.7s
+ok  boats      onlyFit (planted)              3  unsound  (want unsound )     1 queries    0.1s   at ?
+ok  src/games/boats/boats.description.yaml#onlyFit: recorded sound, proved whole on all 1 boards
+ok  boats      centerRoom                     3  sound    (want sound   )     5 queries    0.0s
+ok  boats      centerRoom (planted)           3  unsound  (want unsound )     1 queries    0.0s   at cell 1
+ok  src/games/boats/boats.description.yaml#centerRoom: recorded sound, proved whole on all 1 boards
+ok  boats      tooLong                        3  sound    (want sound   )     1 queries    0.4s
+ok  boats      tooLong (planted)              3  unsound  (want unsound )     1 queries    0.1s   at ?
+ok  src/games/boats/boats.description.yaml#tooLong: recorded sound, proved whole on all 1 boards
+ok  boats      shortRun                       3  sound    (want sound   )     6 queries    0.3s
+ok  boats      shortRun (planted)             3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/boats/boats.description.yaml#shortRun: recorded sound, proved whole on all 1 boards
+ok  boats      hidden                         3  sound    (want sound   )     6 queries    0.6s
+ok  boats      hidden (planted)               3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/boats/boats.description.yaml#hidden: recorded sound, proved whole on all 1 boards
+ok  boats      onlyRuns                       3  sound    (want sound   )     1 queries    2.9s
+ok  boats      onlyRuns (planted)             3  unsound  (want unsound )     1 queries    0.2s   at ?
+ok  src/games/boats/boats.description.yaml#onlyRuns: recorded sound, proved whole on all 1 boards
+ok  boats      shared                         3  sound    (want sound   )     6 queries    0.4s
+ok  boats      shared (planted)               3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/boats/boats.description.yaml#shared: recorded sound, proved whole on all 1 boards
+ok  boats      lastWater                      3  sound    (want sound   )     1 queries  161.8s
+ok  boats      lastWater (planted)            3  unsound  (want unsound )     1 queries    1.3s   at ?
+ok  src/games/boats/boats.description.yaml#lastWater: recorded sound, proved whole on all 1 boards
+ok  boats      lastShip                       3  sound    (want sound   )     1 queries   38.8s
+ok  boats      lastShip (planted)             3  unsound  (want unsound )     1 queries    1.3s   at ?
+ok  src/games/boats/boats.description.yaml#lastShip: recorded sound, proved whole on all 1 boards
+ok  boats      centerTrial                    3  sound    (want sound   )     1 queries    1.4s
+ok  boats      centerTrial (planted)          3  unsound  (want unsound )     1 queries    0.0s   at ?
+ok  src/games/boats/boats.description.yaml#centerTrial: recorded sound, proved whole on all 1 boards

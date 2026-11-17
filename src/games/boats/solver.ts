@@ -23,12 +23,10 @@ import {
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   CellMarks,
-  compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
   runLadder,
-  type Said,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
@@ -39,28 +37,15 @@ import {
   type BoatsState,
   boardOf,
   CORRUPT,
-  cloneBoard,
   DIFF_EASY,
   DIFF_HARD,
   EMPTY,
   isShip,
   NO_CLUE,
   SHIP_VAGUE,
-  STATUS_INVALID,
   WATER,
 } from "./state.ts";
-import {
-  adjustShips,
-  checkCollision,
-  checkFleet,
-  countShips,
-  FE_COLLISION,
-  FE_FLEET,
-  FE_MISMATCH,
-  fleetShipCount,
-  validateFullState,
-  validateGridClues,
-} from "./validate.ts";
+import { adjustShips } from "./validate.ts";
 
 /**
  * What a solve concluded: solved, with the highest tier a firing needed;
@@ -149,11 +134,8 @@ export const SEA = 2;
 const describedOf = (cell: number): number =>
   isShip(cell) ? SHIP : cell === WATER ? SEA : 0;
 
-/** The description's line for a border number's slot: its lines are the
+/** A border number's slot for the description's line: its lines are the
  * rows and then the columns, where a slot is a column and then a row. */
-function lineOfSlot(b: BoatsBoard, slot: number): number {
-  return slot < b.w ? b.h + slot : slot - b.w;
-}
 function slotOfLine(b: BoatsBoard, L: number): number {
   return L < b.h ? b.w + L : L - b.h;
 }
@@ -196,265 +178,11 @@ export interface BoatsSquare {
   ship: boolean;
 }
 
-/** A row or column, named the way the player reads it: 1-based, counting from
- * the top / the left, alongside the occupancy number drawn beside it. */
-interface BoatsLine {
-  horizontal: boolean;
-  /** 0-based row (`horizontal`) or column index. */
-  index: number;
-  /** The occupancy number, which may be one the deduction read from the
-   * fleet — see {@link BoatsLine.deduced}. */
-  clue: number;
-  /** True when the puzzle hides this number and the deduction read it, so
-   * the narration must say where it came from rather than cite a number the
-   * player cannot see. */
-  deduced: boolean;
-}
-
-/** Why the board rejects a Hard tier's trial — read off the validators' own
- * error arrays (docs/hints-marks.md § "Read the reason off the validator"). */
-type BoatsBreach =
-  /** Two boats would touch, if only at a corner. */
-  | { kind: "collision" }
-  /** A row or column's occupancy number could no longer be met. */
-  | { kind: "count"; line: BoatsLine }
-  /** The fleet has no boat of the size that would be formed. */
-  | { kind: "fleet" }
-  /** More (or fewer) ship squares than the whole fleet accounts for. */
-  | { kind: "fleetTotal"; tooMany: boolean }
-  /** A given segment's own shape would be contradicted. */
-  | { kind: "clue" }
-  /**
-   * The board is left with no legal way to finish, without one rule naming
-   * itself the culprit. Honest catch-all rather than a fabricated cause
-   * (docs/hints-marks.md § "Honest non-local evidence").
-   */
-  | { kind: "unfinishable" };
-
-/** What a trial's reason supplies: the rule its supposition breaks as flags,
- * and the squares that rule flags. The three trials declare the same, but
- * `centerTrial` outlines its own segment, which the squares are added to. */
-type TrialSupplied = boats.SuppliedById["lastWater"];
-
-/** A breach as the description's flags read it. A rule that flagged nothing
- * has no square for its words to point at, so it reads as the catch-all. */
-function breachTerms(breach: BoatsBreach, flagged: boolean): TrialSupplied["terms"] {
-  const none = {
-    collision: false,
-    count: false,
-    fleet: false,
-    many: false,
-    few: false,
-    segment: false,
-    reach: 0,
-  };
-  switch (breach.kind) {
-    case "count":
-      return { ...none, count: true, reach: breach.line.clue };
-    case "unfinishable":
-      return none;
-  }
-  if (!flagged) return none;
-  switch (breach.kind) {
-    case "collision":
-      return { ...none, collision: true };
-    case "fleet":
-      return { ...none, fleet: true };
-    case "fleetTotal":
-      return breach.tooMany ? { ...none, many: true } : { ...none, few: true };
-    case "clue":
-      return { ...none, segment: true };
-  }
-}
-
-// --- the reasons, read off each firing's binding -----------------------------
-
-/** What the reasons read beside the marks: the board's size and clues. */
-interface Board {
-  b: BoatsBoard;
-  sp: GridSpace;
-}
-
-/** The number beside line `L`: shown, or read from the fleet where every
- * other line the same way shows one or is decided; -1 where neither. */
-function numOf(B: Board, m: CellMarks, L: number): number {
-  const { b, sp } = B;
-  const shown = b.borderClues[slotOfLine(b, L)];
-  if (shown !== NO_CLUE) return shown;
-  const rows = L < b.h;
-  let sum = 0;
-  for (let M = rows ? 0 : b.h; M < (rows ? b.h : b.h + b.w); M++) {
-    if (M === L) continue;
-    const v = b.borderClues[slotOfLine(b, M)];
-    if (v !== NO_CLUE) {
-      sum += v;
-      continue;
-    }
-    const cells = sp.lineCells[M];
-    if (cells.some((c) => !m.known(c))) return -1;
-    sum += cells.filter((c) => m.grid[c] === SHIP).length;
-  }
-  const v = fleetShipCount(b) - sum;
-  return v >= 0 && v <= sp.lineCells[L].length ? v : -1;
-}
-
-function lineOf(B: Board, m: CellMarks, L: number): BoatsLine {
-  const { b } = B;
-  const horizontal = L < b.h;
-  return {
-    horizontal,
-    index: horizontal ? L : L - b.h,
-    clue: numOf(B, m, L),
-    deduced: b.borderClues[slotOfLine(b, L)] === NO_CLUE,
-  };
-}
-
 /** The marks as the game's grid: a ship segment and water, the rest empty. */
 function gameGrid(m: CellMarks): Int8Array {
   return Int8Array.from(m.grid, (v) =>
     v === SHIP ? SHIP_VAGUE : v === SEA ? WATER : EMPTY,
   );
-}
-
-/**
- * Classify *why* a trial board is contradictory by running the validation
- * family with its own error arrays and reading the flags back (Bricks'
- * pattern, docs/hints-marks.md § "Read the reason off the validator"). A
- * fixed priority picks the clearest reason when several fire at once, and
- * every branch ends in a reason, `unfinishable` the honest catch-all, since
- * `validateFullState` says INVALID through paths that flag nothing.
- */
-function classifyBreach(
-  B: Board,
-  m: CellMarks,
-  trial: BoatsBoard,
-): { breach: BoatsBreach; cells: number[] } {
-  const { w, h } = trial;
-  const cellErrs = new Int32Array(w * h);
-  const lineErrs = new Int32Array(w + h);
-
-  const countStatus = countShips(trial, undefined, undefined, lineErrs);
-  const collided = checkCollision(trial, cellErrs);
-  const fleetStatus = checkFleet(trial, undefined, cellErrs);
-  validateGridClues(trial, cellErrs);
-
-  const cellsAt = (pred: (i: number) => boolean): number[] => {
-    const out: number[] = [];
-    for (let i = 0; i < w * h; i++) if (pred(i)) out.push(i);
-    return out;
-  };
-  const flagged = (mask: number) => cellsAt((i) => (cellErrs[i] & mask) !== 0);
-
-  // A `CORRUPT` square is a placement over its opposite, which in a trial
-  // only the never-touch water round a segment makes: two boats touching.
-  const corrupt = cellsAt((i) => trial.grid[i] === CORRUPT);
-  if (collided || corrupt.length > 0) {
-    // The collision flag sits on the top-left cell of the offending 2×2; show
-    // all four, so the player sees the corner rather than one lone square.
-    const cells = [...corrupt];
-    for (const c of flagged(FE_COLLISION)) cells.push(c, c + 1, c + w, c + w + 1);
-    return { breach: { kind: "collision" }, cells };
-  }
-
-  if (countStatus === STATUS_INVALID)
-    for (let slot = 0; slot < w + h; slot++) {
-      if (lineErrs[slot] !== STATUS_INVALID) continue;
-      const L = lineOfSlot(trial, slot);
-      return {
-        breach: { kind: "count", line: lineOf(B, m, L) },
-        cells: [...B.sp.lineCells[L]],
-      };
-    }
-
-  const fleetCells = flagged(FE_FLEET);
-  if (fleetCells.length > 0) return { breach: { kind: "fleet" }, cells: fleetCells };
-
-  const clueCells = flagged(FE_MISMATCH);
-  if (clueCells.length > 0) return { breach: { kind: "clue" }, cells: clueCells };
-
-  // `adjustShips`' own verdict: too many ship squares for the fleet, or too
-  // few squares left undecided to fit it.
-  const maxShips = fleetShipCount(trial);
-  let ships = 0;
-  let water = 0;
-  for (let i = 0; i < w * h; i++) {
-    if (isShip(trial.grid[i])) ships++;
-    else if (trial.grid[i] === WATER) water++;
-  }
-  if (ships > maxShips || w * h - water < maxShips)
-    return {
-      breach: { kind: "fleetTotal", tooMany: ships > maxShips },
-      cells: cellsAt((i) => isShip(trial.grid[i])),
-    };
-
-  // …and `checkFleet` reporting one size over-placed without flagging it.
-  if (fleetStatus === STATUS_INVALID)
-    return { breach: { kind: "fleet" }, cells: cellsAt((i) => isShip(trial.grid[i])) };
-
-  return { breach: { kind: "unfinishable" }, cells: [] };
-}
-
-/**
- * A Hard trial's reason: what its description says of it, and the rule that
- * breaks on the board with `ships` and `waters` placed as the trial supposes.
- * A line that could no longer reach its number is the one line the sentence
- * names, so it is hatched and not outlined.
- */
-function trialReason<Binding, Y extends boats.SaysById[keyof boats.SuppliedById]>(
-  B: Board,
-  m: CellMarks,
-  binding: Binding,
-  says: Y,
-  ships: readonly number[],
-  waters: readonly number[],
-): Said<Binding, Y> {
-  const trial = cloneBoard(B.b);
-  trial.grid.set(gameGrid(m));
-  const { w } = B.sp;
-  for (const c of ships) placeShip(trial, c % w, (c / w) | 0);
-  for (const c of waters) placeWater(trial, c % w, (c / w) | 0);
-  validateFullState(trial);
-  const found = classifyBreach(B, m, trial);
-  const { outline } = says.marks;
-  const { breach } = found;
-  const counted = breach.kind === "count";
-  const stripes = counted
-    ? B.sp.lineCells[
-        breach.line.horizontal ? breach.line.index : B.b.h + breach.line.index
-      ]
-    : [];
-  const supplied: TrialSupplied = {
-    terms: breachTerms(breach, found.cells.length > 0),
-    marks: {
-      outline: counted ? outline : [...outline, ...found.cells],
-      stripes: [...stripes],
-      reads: [...stripes],
-    },
-  };
-  return {
-    binding,
-    says: {
-      ...says,
-      terms: { ...says.terms, ...supplied.terms },
-      marks: supplied.marks,
-    },
-  };
-}
-
-/** The ladder over the dealt board: each technique records what it says
- * for the hint, the three trials adding the rule they break. */
-function boatsLadder(B: Board, dl: boats.Dealt): Ladder {
-  return describedLadder(boats, dl, {
-    lastWater: compiledRung(boats.lastWater, dl, (binding, _c, _n, m, says) =>
-      trialReason(B, m, binding, says, binding.H, [binding.c]),
-    ),
-    lastShip: compiledRung(boats.lastShip, dl, (binding, _c, _n, m, says) =>
-      trialReason(B, m, binding, says, [binding.c], binding.W),
-    ),
-    centerTrial: compiledRung(boats.centerTrial, dl, (binding, _c, _n, m, says) =>
-      trialReason(B, m, binding, says, binding.S, []),
-    ),
-  });
 }
 
 /** The marks over `grid`, a value a square and 0 for none. False where two
@@ -478,7 +206,7 @@ function marksOf(sp: GridSpace, grid: Uint8Array, ladder: Ladder): CellMarks | n
 export function solveBoats(b: BoatsBoard, cap: number): BoatsSolveResult {
   const sp = describedSpace(boats.units, b.w, b.h);
   const dl = dealtOf(b);
-  const ladder = boatsLadder({ b, sp }, dl);
+  const ladder = describedLadder(boats, dl);
   const grid = new Uint8Array(b.w * b.h);
   const m = marksOf(sp, grid, ladder);
   if (m === null) return { kind: "invalid" };
@@ -574,7 +302,7 @@ export function hintWalk(
 ): { marks: CellMarks; entries: Ladder["entries"] } | null {
   const b = boardOf(state);
   const sp = describedSpace(boats.units, b.w, b.h);
-  const ladder = boatsLadder({ b, sp }, dealtOf(b));
+  const ladder = describedLadder(boats, dealtOf(b));
   const m = marksOf(sp, Uint8Array.from(b.grid, describedOf), ladder);
   return m === null ? null : { marks: m, entries: ladder.entries };
 }

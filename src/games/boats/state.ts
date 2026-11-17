@@ -260,15 +260,6 @@ export function boardOf(s: BoatsState): BoatsBoard {
   };
 }
 
-/** A copy of `b` whose `grid` and `borderClues` can be written freely. */
-export function cloneBoard(b: BoatsBoard): BoatsBoard {
-  return {
-    ...b,
-    grid: Int8Array.from(b.grid),
-    borderClues: Int32Array.from(b.borderClues),
-  };
-}
-
 // --- moves and UI ----------------------------------------------------------
 
 /**

@@ -125,110 +125,113 @@ const pinnedFiring = describeHintPins({
       step.rung === "lineWater" && (step.highlights as BoatsHint).targets.length > 1,
   },
   pins: {
-    /** Kept by hand: a middle segment's trial is met once in some 4,000 steps
-     * (216 boards walked, 2026-11-12), so the scan's boards do not reach it. The
-     * opening position of a 10x12 Hard board, whose plan holds it. */
-    centerTrial:
-      "10x12f5dh,5,4,3,2,1:1,6,1,3,5,4,1,6,2,6,7,0,8,0,3,1,4,2,1,4,3,2,bWfWnCvTsWzeSdC",
-    /** Held on 945 of 7033 positions walked. */
+    /** Kept by hand: a middle segment's trial is the hint's step on 1 of
+     * 8,554 positions walked on 160 Hard boards (2026-11-17), so the scan's
+     * boards do not reach it. A 7x9 Hard board five steps in. */
+    centerTrial: {
+      id: "7x9f4dh,4,3,2,1:5,3,1,3,3,1,4,3,3,2,2,0,2,2,4,2,jCzyW",
+      moves:
+        '[{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":2,"x1":4,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":2,"x1":2,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":4,"x1":6,"y1":4,"from":"-","to":"W"}]',
+    },
+    /** Held on 944 of 7038 positions walked. */
     lineWaterOfSeveral: "6x6f3deS,3,2,1:0,4,0,3,1,2,-,1,0,3,-,3,uW",
-    /** Held on 884 of 7033 positions walked. */
+    /** Held on 885 of 7038 positions walked. */
     given: "6x6f3deS,3,2,1:2,2,1,1,0,4,1,-,3,1,-,1,WaWWgTLqWaW",
-    /** Held on 3869 of 7033 positions walked. */
+    /** Held on 3870 of 7038 positions walked. */
     near: "6x6f3dnS,3,2,1:-,0,-,-,0,2,1,-,3,-,1,-,nCiW",
-    /** Held on 6936 of 7033 positions walked. */
+    /** Held on 6941 of 7038 positions walked. */
     lineShips: {
       id: "6x6f3dnS,3,2,1:0,4,0,3,1,2,-,1,-,3,1,3,uW",
       moves:
         '[{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":5,"from":"-","to":"W"}]',
     },
-    /** Held on 634 of 7033 positions walked. */
+    /** Held on 634 of 7038 positions walked. */
     total: {
       id: "6x6f3deS,3,2,1:-,2,1,-,-,-,2,-,1,0,-,0,aWiR",
       moves:
         '[{"kind":"fill","x0":4,"y0":1,"x1":4,"y1":1,"from":"-","to":"B"},{"kind":"fill","x0":5,"y0":0,"x1":5,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":2,"x1":5,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":2,"x1":3,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":0,"x1":3,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":2,"y1":0,"from":"-","to":"B"},{"kind":"fill","x0":1,"y0":1,"x1":1,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":1,"x1":3,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":3,"x1":5,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":5,"x1":5,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":2,"x1":1,"y1":4,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":1,"x1":2,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":2,"x1":2,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":4,"x1":2,"y1":4,"from":"-","to":"W"}]',
     },
-    /** Held on 1413 of 7033 positions walked. */
+    /** Held on 1392 of 7038 positions walked. */
     center: {
       id: "10x10f4dtS,4,3,2,1:0,-,3,2,0,-,5,-,5,-,2,2,1,1,3,3,0,1,4,3,fWzoWzuC",
       moves:
         '[{"kind":"fill","x0":7,"y0":8,"x1":7,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":8,"x1":5,"y1":8,"from":"-","to":"W"}]',
     },
-    /** Held on 773 of 7033 positions walked. */
+    /** Held on 763 of 7038 positions walked. */
     extend: {
       id: "6x6f3deS,3,2,1:4,-,-,2,0,3,3,-,-,1,2,0,eSWz",
       moves:
         '[{"kind":"fill","x0":5,"y0":1,"x1":5,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":1,"x1":4,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":5,"x1":5,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":4,"from":"-","to":"B"},{"kind":"fill","x0":1,"y0":1,"x1":1,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":3,"x1":1,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":2,"x1":1,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":3,"x1":5,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":2,"x1":5,"y1":4,"from":"-","to":"B"},{"kind":"fill","x0":2,"y0":4,"x1":4,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":2,"x1":4,"y1":2,"from":"-","to":"W"}]',
     },
-    /** Held on 6902 of 7033 positions walked. */
+    /** Held on 6913 of 7038 positions walked. */
     lineWater: "6x6f3deS,3,2,1:0,4,0,3,1,2,-,1,0,3,-,3,uW",
-    /** Held on 549 of 7033 positions walked. */
+    /** Held on 503 of 7038 positions walked. */
     isolated: {
       id: "6x6f3dnS,3,2,1:-,0,-,-,0,2,1,-,3,-,1,-,nCiW",
       moves:
         '[{"kind":"fill","x0":3,"y0":1,"x1":3,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":3,"x1":3,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":3,"x1":1,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":1,"x1":1,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":0,"x1":1,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":1,"x1":2,"y1":3,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":0,"x1":3,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":4,"x1":3,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":2,"x1":5,"y1":2,"from":"-","to":"B"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":4,"x1":2,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":4,"x1":5,"y1":4,"from":"-","to":"B"},{"kind":"fill","x0":5,"y0":0,"x1":5,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":0,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":1,"x1":0,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":3,"x1":0,"y1":3,"from":"-","to":"B"}]',
     },
-    /** Held on 1970 of 7033 positions walked. */
+    /** Held on 1928 of 7038 positions walked. */
     grow: {
       id: "6x6f3dnS,3,2,1:0,-,-,2,-,-,-,2,1,2,-,-,aSzeB",
       moves:
         '[{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":1,"x1":1,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":4,"x1":3,"y1":4,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":1,"x1":2,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":3,"x1":4,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":5,"x1":4,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":5,"x1":2,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":3,"x1":2,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":4,"x1":4,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":2,"x1":0,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":0,"x1":3,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":1,"x1":5,"y1":1,"from":"-","to":"B"},{"kind":"fill","x0":5,"y0":0,"x1":5,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":3,"x1":5,"y1":3,"from":"-","to":"B"},{"kind":"fill","x0":2,"y0":2,"x1":2,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":2,"x1":1,"y1":2,"from":"-","to":"B"}]',
     },
-    /** Held on 2235 of 7033 positions walked. */
+    /** Held on 2309 of 7038 positions walked. */
     onlyFit: {
       id: "6x6f3dn,3,2,1:3,1,1,0,3,2,1,2,0,2,2,3,dTzaW",
       moves:
         '[{"kind":"fill","x0":4,"y0":1,"x1":4,"y1":1,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":1,"x1":5,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":0,"x1":5,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":2,"x1":5,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":0,"x1":3,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":2,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":2,"x1":4,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":3,"x1":3,"y1":5,"from":"-","to":"W"}]',
     },
-    /** Held on 122 of 7033 positions walked. */
+    /** Held on 122 of 7038 positions walked. */
     centerRoom: {
       id: "8x8f4dnS,4,3,2,1:4,2,0,4,2,3,3,2,-,-,4,-,0,-,2,3,sTzhCeW",
       moves:
         '[{"kind":"fill","x0":3,"y0":3,"x1":3,"y1":3,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":1,"x1":3,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":1,"x1":4,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":3,"x1":4,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":3,"x1":2,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":1,"x1":2,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":2,"x1":4,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":4,"x1":4,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":2,"x1":2,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":5,"x1":7,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":7,"x1":7,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":7,"x1":5,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":5,"x1":5,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":4,"x1":7,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":7,"from":"-","to":"W"}]',
     },
-    /** Held on 2810 of 7033 positions walked. */
+    /** Held on 2681 of 7038 positions walked. */
     tooLong: {
       id: "6x6f3dnS,3,2,1:-,0,-,-,0,2,1,-,3,-,1,-,nCiW",
       moves:
         '[{"kind":"fill","x0":3,"y0":1,"x1":3,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":3,"x1":3,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":3,"x1":1,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":1,"x1":1,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":0,"x1":1,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":1,"x1":2,"y1":3,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":0,"x1":3,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":4,"x1":3,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":2,"x1":5,"y1":2,"from":"-","to":"B"}]',
     },
-    /** Held on 675 of 7033 positions walked. */
+    /** Held on 609 of 7038 positions walked. */
     shortRun: {
       id: "8x8f4dn,4,3,2,1:2,4,3,3,2,0,2,4,4,2,3,0,4,2,2,3,jWfWbWaWzbT",
       moves:
         '[{"kind":"fill","x0":3,"y0":7,"x1":3,"y1":7,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":5,"x1":3,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":5,"x1":4,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":7,"x1":4,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":7,"x1":2,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":5,"x1":2,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":6,"x1":4,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":3,"x1":7,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":4,"from":"-","to":"B"},{"kind":"fill","x0":1,"y0":1,"x1":3,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":5,"x1":1,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":0,"x1":1,"y1":7,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":1,"x1":0,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":5,"x1":0,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":7,"x1":0,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":6,"x1":0,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":6,"x1":7,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":0,"x1":5,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":5,"x1":7,"y1":5,"from":"-","to":"B"},{"kind":"fill","x0":7,"y0":4,"x1":7,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":4,"x1":6,"y1":4,"from":"-","to":"W"}]',
     },
-    /** Held on 693 of 7033 positions walked. */
+    /** Held on 650 of 7038 positions walked. */
     "hidden.satisfied": {
       id: "10x10f4dtS,4,3,2,1:1,0,1,2,1,4,1,3,4,3,2,0,1,0,3,1,-,3,2,-,zzzgTdShR",
       moves:
         '[{"kind":"fill","x0":5,"y0":9,"x1":5,"y1":9,"from":"-","to":"B"},{"kind":"fill","x0":5,"y0":7,"x1":5,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":8,"x1":0,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":9,"x1":1,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":9,"x1":8,"y1":9,"from":"-","to":"B"},{"kind":"fill","x0":6,"y0":7,"x1":6,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":9,"x1":6,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":9,"x1":4,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":7,"x1":4,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":8,"x1":1,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":8,"x1":6,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":9,"y0":8,"x1":9,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":8,"x1":7,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":8,"x1":8,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":1,"x1":9,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":3,"x1":9,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":0,"x1":1,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":7,"x1":2,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":6,"x1":8,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":6,"x1":5,"y1":6,"from":"-","to":"B"},{"kind":"fill","x0":5,"y0":5,"x1":5,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":7,"x1":3,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":5,"x1":3,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":5,"x1":6,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":7,"x1":9,"y1":7,"from":"-","to":"B"},{"kind":"fill","x0":6,"y0":6,"x1":6,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":6,"x1":9,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":6,"x1":3,"y1":6,"from":"-","to":"B"},{"kind":"fill","x0":2,"y0":5,"x1":2,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":8,"x1":3,"y1":8,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":0,"x1":3,"y1":9,"from":"-","to":"W"}]',
     },
-    /** Held on 405 of 7033 positions walked. */
+    /** Held on 525 of 7038 positions walked. */
     "hidden.forced": {
       id: "10x10f4dtS,4,3,2,1:1,1,5,-,2,4,2,2,-,1,1,1,3,1,0,5,0,5,1,3,bWeWpTcRyCvW",
       moves:
         '[{"kind":"fill","x0":5,"y0":3,"x1":5,"y1":3,"from":"-","to":"B"},{"kind":"fill","x0":5,"y0":1,"x1":5,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":2,"x1":8,"y1":2,"from":"-","to":"B"},{"kind":"fill","x0":6,"y0":1,"x1":6,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":3,"x1":6,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":3,"x1":4,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":1,"x1":4,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":9,"y0":1,"x1":9,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":9,"y0":3,"x1":9,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":3,"x1":7,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":1,"x1":7,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":1,"x1":8,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":2,"x1":6,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":4,"x1":6,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":2,"x1":4,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":6,"x1":6,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":6,"x1":4,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":2,"x1":7,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":3,"x1":3,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":4,"x1":9,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":5,"x1":6,"y1":5,"from":"-","to":"B"},{"kind":"fill","x0":3,"y0":6,"x1":5,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":7,"y0":6,"x1":7,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":6,"x1":9,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":1,"x1":2,"y1":9,"from":"-","to":"B"},{"kind":"fill","x0":1,"y0":0,"x1":3,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":8,"x1":3,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":7,"x1":3,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":9,"x1":3,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":7,"x1":1,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":1,"x1":3,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":5,"x1":1,"y1":5,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":5,"x1":9,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":8,"x1":9,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":9,"y0":0,"x1":9,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":7,"x1":7,"y1":7,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":7,"x1":0,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":4,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":0,"x1":5,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":6,"y0":0,"x1":6,"y1":9,"from":"-","to":"W"}]',
     },
-    /** Held on 1723 of 7033 positions walked. */
+    /** Held on 1756 of 7038 positions walked. */
     onlyRuns: {
       id: "10x10f4dh,4,3,2,1:3,1,3,1,2,0,2,4,0,4,0,3,5,0,2,2,4,1,1,2,zzqBTz",
       moves:
         '[{"kind":"fill","x0":9,"y0":5,"x1":9,"y1":5,"from":"-","to":"B"},{"kind":"fill","x0":9,"y0":7,"x1":9,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":8,"x1":0,"y1":8,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":6,"x1":0,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":6,"x1":8,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":4,"x1":8,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":5,"x1":8,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":6,"x1":1,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":8,"x1":1,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":7,"x1":1,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":9,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":3,"x1":9,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":7,"x1":7,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":8,"x1":9,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":5,"y0":1,"x1":5,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":1,"x1":8,"y1":9,"from":"-","to":"W"}]',
     },
-    /** Held on 2582 of 7033 positions walked. */
+    /** Held on 2560 of 7038 positions walked. */
     shared: {
       id: "10x10f4dh,4,3,2,1:3,5,2,2,2,2,1,1,1,1,2,2,1,4,1,1,2,1,3,3,jTzzfSwS",
       moves:
         '[{"kind":"fill","x0":0,"y0":2,"x1":0,"y1":2,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":9,"y0":5,"x1":9,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":9,"y0":7,"x1":9,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":6,"x1":8,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":8,"x1":3,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":9,"x1":4,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":0,"x1":1,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":2,"x1":1,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":1,"x1":1,"y1":3,"from":"-","to":"W"},{"kind":"fill","x0":8,"y0":5,"x1":8,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":8,"x1":4,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":2,"x1":9,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":9,"y0":0,"x1":9,"y1":9,"from":"-","to":"W"}]',
     },
-    /** Held on 2382 of 7033 positions walked. */
+    /** Held on 2413 of 7038 positions walked. */
     lastWater: {
       id: "10x10f4dh,4,3,2,1:3,2,2,5,3,0,2,2,1,0,0,5,0,4,3,1,1,2,0,4,kLeWzfSzmWeW",
       moves:
         '[{"kind":"fill","x0":2,"y0":1,"x1":2,"y1":1,"from":"-","to":"B"},{"kind":"fill","x0":0,"y0":1,"x1":0,"y1":1,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":4,"x1":0,"y1":4,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":5,"x1":1,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":6,"x1":0,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":0,"x1":2,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":2,"x1":2,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":0,"x1":0,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":0,"x1":3,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":3,"y0":2,"x1":3,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":0,"x1":1,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":1,"y0":4,"x1":1,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":0,"x1":9,"y1":0,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":2,"x1":9,"y1":2,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":5,"x1":9,"y1":5,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":8,"x1":9,"y1":8,"from":"-","to":"W"},{"kind":"fill","x0":0,"y0":3,"x1":0,"y1":7,"from":"-","to":"B"},{"kind":"fill","x0":5,"y0":1,"x1":5,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":9,"y0":1,"x1":9,"y1":9,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":6,"x1":4,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":6,"x1":2,"y1":6,"from":"-","to":"W"},{"kind":"fill","x0":4,"y0":7,"x1":4,"y1":7,"from":"-","to":"W"},{"kind":"fill","x0":2,"y0":7,"x1":2,"y1":7,"from":"-","to":"W"}]',
     },
-    /** Held on 778 of 7033 positions walked. */
+    /** Held on 1092 of 7038 positions walked. */
     lastShip: {
       id: "10x10f4dhS,4,3,2,1:2,4,3,0,2,1,0,3,2,3,1,3,1,5,0,-,3,-,-,0,nWtRcRzaBuR",
       moves:
@@ -405,7 +408,7 @@ describe("boats hint — narration", () => {
       // A "so it is forced" with no named rule is exactly the un-narrated step
       // the spec forbids.
       expect(step.explanation).toMatch(
-        /(touching corner to corner|couldn't reach its \d+|make one boat \(outlined\) too many|more boat squares than the whole fleet|rest of the fleet would no longer fit|given segment's own shape|could no longer be placed legally)/,
+        /(touching corner to corner|couldn't reach its \d+|more than its \d+ boat squares|more boat squares \(outlined\) than the whole fleet|rest of the fleet would no longer fit|longer than any in the fleet|more \d+-boats \(outlined\) than the fleet has)/,
       );
     }
   });
@@ -826,19 +829,26 @@ describe("boats hint — the wordings no walk reaches", () => {
   });
 });
 
-// The trials' reasons come from the validator, and a walk's boards rarely meet
-// a long one with both lines filled, a middle segment's trial, or a rule that
-// flags no square.
+// A walk's boards rarely meet a long trial with both lines filled, a middle
+// segment's trial, or every rule a trial may break.
 describe("boats hint — the trials' wordings no walk reaches", () => {
   const at = (c: number): Point => ({ x: c % 4, y: (c / 4) | 0 });
+  // Each break's flag (the last, `extra`, has none) and its terms.
   const none = {
-    collision: false,
-    count: false,
-    fleet: false,
-    many: false,
-    few: false,
-    segment: false,
+    brokeTouching: false,
+    brokeLineCount: false,
+    brokeFleetCount: false,
+    brokeOverlong: false,
+    corner: [1, 6],
+    line: [4, 5, 6, 7],
+    across: true,
+    over: false,
     reach: 0,
+    many: false,
+    afloat: [1, 2],
+    long: [1, 2],
+    size: 2,
+    sized: [1, 2],
   };
   const trial = (
     id: "lastWater" | "lastShip" | "centerTrial",
@@ -851,18 +861,18 @@ describe("boats hint — the trials' wordings no walk reaches", () => {
       ring: ring.map(at),
       placing: () => ring.map(at),
       consequences: [],
-      marks: { outline: [at(1), at(2)], stripes: [at(4), at(5), at(6), at(7)] },
+      marks: { outline: [at(1), at(2)], stripes: [] },
       terms: { ...none, ...terms },
       value: String,
       unit: () => "row",
     }).text;
   const line = { horizontal: true, crossing: true };
+  const count = { brokeLineCount: true, reach: 3 };
 
   // Both lines' words ("its row's and column's last") are the longest wording:
   // a boat's short move leaves room for them with a count, a water's does not,
   // and a sentence takes the line's, or neither, as its length allows.
   it("names the line's last water or boat where the sentence stays short", () => {
-    const count = { count: true, reach: 3 };
     expect(trial("lastWater", { ...line, ship: false, ...count }, [5])).toBe(
       "If this square were its row's last water, the striped row couldn't reach its 3, so it must hold a boat segment.",
     );
@@ -875,27 +885,52 @@ describe("boats hint — the trials' wordings no walk reaches", () => {
   });
 
   it("says the last wording, whatever its length, when none fits", () => {
-    const said = trial("lastWater", { ...line, ship: false, few: true }, [5]);
+    const said = trial(
+      "lastWater",
+      { ...line, ship: false, brokeFleetCount: true, many: false },
+      [5],
+    );
     expect(said).toBe(
       "If this square were water, the rest of the fleet would no longer fit beside these boats (outlined), so it must hold a boat segment.",
     );
     expect(said.length).toBeGreaterThan(NARRATION_LIMIT);
   });
 
-  it("says a rule that flagged no square in the catch-all's words", () => {
-    expect(trial("lastShip", { ...line, ship: true }, [5])).toBe(
-      "If this square held a boat segment, the rest of the fleet could no longer be placed legally, so it must be water.",
+  it("says each rule a trial may break", () => {
+    const said = (terms: Record<string, number | boolean>): string =>
+      trial("lastShip", { ...line, ship: true, ...terms }, [5]);
+    expect(said({ brokeTouching: true })).toContain(
+      ", two boats would end up touching corner to corner (outlined), so",
+    );
+    expect(said({ ...count, over: true, across: false })).toContain(
+      ", the striped column would have more than its 3 boat squares, so",
+    );
+    expect(said({ brokeFleetCount: true, many: true })).toContain(
+      ", there would be more boat squares (outlined) than the whole fleet has, so",
+    );
+    expect(said({ brokeOverlong: true })).toContain(
+      ", the outlined boat would be longer than any in the fleet, so",
+    );
+    expect(said({})).toContain(
+      ", there would be more 2-boats (outlined) than the fleet has, so",
     );
   });
 
   it("says a middle segment's trial, up and down or across", () => {
-    expect(
-      trial("centerTrial", { center: 1, vertical: true, count: true, reach: 3 }, [5]),
-    ).toBe(
-      "If the boat through this middle segment ran up and down, the striped row couldn't reach its 3, so the square below it must be water.",
+    expect(trial("centerTrial", { center: 1, vertical: true, ...count }, [5])).toBe(
+      "If the boat through this middle segment ran up and down, the striped row couldn't reach its 3, so the ringed square must be water.",
     );
-    expect(trial("centerTrial", { center: 1, vertical: false, many: true }, [5])).toBe(
-      "If the boat through this middle segment ran across, there would be more boat squares (outlined) than the whole fleet has, so the square to its right must be water.",
+    expect(
+      trial("centerTrial", { center: 1, vertical: true, ...count }, [5, 9]),
+    ).toContain(", so the squares above and below it must be water.");
+    expect(
+      trial(
+        "centerTrial",
+        { center: 1, vertical: false, brokeFleetCount: true, many: true },
+        [5, 7],
+      ),
+    ).toBe(
+      "If the boat through this middle segment ran across, there would be more boat squares (outlined) than the whole fleet has, so the squares either side of it must be water.",
     );
   });
 });
