@@ -183,25 +183,16 @@ techniques:
       terms: { placed: "n < 2" }
   # A region whose other open squares cannot take the shaded squares it needs
   # without one touching two others: the square left out is shaded.
-  - id: neededRegion
+  - kind: room.needed
+    as: neededRegion
     tier: Normal
-    for: >-
-      r in region, n = need(cells(r)), O = open(cells(r)) where n > 0,
-      x in O, E = O - {x} where not fits(E, n)
-    conclude: "place(x, 1)"
-    says:
-      terms: { n: n, placed: "n < 2" }
-      marks: { stripes: "cells(r)", outline: "walls(E)", reads: "cells(r) + set(d over c in E, d in adj4(c))" }
-      move: "{ring: this square} must be {shaded}"
-      wordings:
-        - when: "|outline| > 0"
-          long: &noRoom >-
-            A region left without room names three things: the square left out
-            or tried, the region, and the outlined shaded squares that close its
-            room, with the rule ("as dominoes") that says why. The conclusion
-            says "this square" and not "it", as "it" would follow the region.
-          look: "without {ring}, {stripes: this region} has no room for {if placed: {n} more | {n}} {shaded} {n: square in a domino | squares as dominoes}, given {outline}"
-        - look: "without {ring}, {stripes: this region} has no room for {if placed: {n} more | {n}} {shaded} {n: square in a domino | squares as dominoes}"
+    with:
+      group: "r in region"
+      set: "cells(r)"
+      items: "{shaded} {n: square in a domino | squares as dominoes}"
+      given: "|outline| > 0"
+      marks: { stripes: "cells(r)", outline: "walls(E)", reads: "cells(r) + set(d over q in E, d in adj4(q))" }
+      terms: { placed: "n < 2" }
   # A region that needs both its shaded squares, whose other open squares
   # could not take the second were one of them shaded: that one is clear.
   # (With one left to place, the rest are clear whatever it is, so this reads
@@ -217,7 +208,11 @@ techniques:
       move: "{ring: this square} must be {unshaded}"
       wordings:
         - when: "|outline| > 0"
-          long: *noRoom
+          long: &noRoom >-
+            A region left without room names three things: the square left out
+            or tried, the region, and the outlined shaded squares that close its
+            room, with the rule ("as dominoes") that says why. The conclusion
+            says "this square" and not "it", as "it" would follow the region.
           look: "with {ring} {shaded}, {stripes: this region} has no room for its second {shaded} square in a domino, given {outline}"
         - look: "with {ring} {shaded}, {stripes: this region} has no room for its second {shaded} square in a domino"
   # A shaded square tried at x would leave clear the squares `ruled` names,

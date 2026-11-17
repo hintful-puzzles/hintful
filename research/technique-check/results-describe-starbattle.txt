@@ -3,29 +3,42 @@
 --  starbattle stars=3: no board of order 3 has an answer, so nothing is checked there
 --  starbattle stars=2: no board of order 4 has an answer, so nothing is checked there
 --  starbattle stars=3: no board of order 4 has an answer, so nothing is checked there
-ok  starbattle stars=1 around                         4  sound    (want sound   )    16 queries    0.2s
-ok  starbattle stars=1 around (planted)               4  unsound  (want unsound )     2 queries    0.2s   at cell 1
+ok  starbattle stars=1 around                         4  sound    (want sound   )    16 queries    0.3s
+ok  starbattle stars=1 around (planted)               4  unsound  (want unsound )     2 queries    0.3s   at cell 1
+ok  src/games/starbattle/starbattle.description.yaml#around: recorded sound, proved whole on all 1 boards
 ok  starbattle stars=1 fullLine                       4  sound    (want sound   )     8 queries    0.7s
-ok  starbattle stars=1 fullLine (planted)             4  unsound  (want unsound )     1 queries    0.2s   at line 0
-ok  starbattle stars=1 fullRegion                     4  sound    (want sound   )   205 queries    9.9s
-ok  starbattle stars=1 fullRegion (planted)           4  unsound  (want unsound )    93 queries    7.3s   at region region 92
-ok  starbattle stars=1 exactLine                      4  sound    (want sound   )     8 queries    0.6s
-ok  starbattle stars=1 exactLine (planted)            4  unsound  (want unsound )     1 queries    0.2s   at line 0
-ok  starbattle stars=1 exactRegion                    4  sound    (want sound   )   205 queries   10.1s
-ok  starbattle stars=1 exactRegion (planted)          4  unsound  (want unsound )    93 queries    7.5s   at region region 92
-ok  starbattle stars=1 confined                       4  sound    (want sound   )     2 queries   23.6s
-ok  starbattle stars=1 confined (planted)             4  unsound  (want unsound )     1 queries    0.6s   at 0
-ok  starbattle stars=1 neededLine                     4  sound    (want sound   )     8 queries    1.6s
-ok  starbattle stars=1 neededLine (planted)           4  unsound  (want unsound )     1 queries    0.3s   at line 0
-ok  starbattle stars=1 neededRegion                   4  sound    (want sound   )   205 queries   23.5s
-ok  starbattle stars=1 neededRegion (planted)         4  unsound  (want unsound )    93 queries    7.9s   at region region 92
-ok  starbattle stars=1 crowdedLine                    4  sound    (want sound   )    16 queries    4.7s
-ok  starbattle stars=1 crowdedLine (planted)          4  unsound  (want unsound )     2 queries    0.6s   at cell 1
-ok  starbattle stars=1 crowdedRegion                  4  sound    (want sound   )    16 queries   93.5s
-ok  starbattle stars=1 crowdedRegion (planted)        4  unsound  (want unsound )     2 queries   11.2s   at cell 1
-ok  starbattle stars=1 banded                         4  sound    (want sound   )     1 queries   31.7s
-ok  starbattle stars=1 banded (planted)               4  unsound  (want unsound )     1 queries    0.9s   at 2
-ok  starbattle stars=1 starvedLine                    4  sound    (want sound   )    16 queries    9.5s
-ok  starbattle stars=1 starvedLine (planted)          4  unsound  (want unsound )     2 queries    1.4s   at cell 1
-ok  starbattle stars=1 starvedRegion                  4  sound    (want sound   )    16 queries  151.0s
-ok  starbattle stars=1 starvedRegion (planted)        4  unsound  (want unsound )     2 queries   18.6s   at cell 1
+ok  starbattle stars=1 fullLine (planted)             4  unsound  (want unsound )     1 queries    0.3s   at line 0
+ok  src/games/starbattle/starbattle.description.yaml#fullLine: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 fullRegion                     4  sound    (want sound   )   205 queries   12.1s
+ok  starbattle stars=1 fullRegion (planted)           4  unsound  (want unsound )    93 queries    8.6s   at region region 92
+ok  src/games/starbattle/starbattle.description.yaml#fullRegion: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 exactLine                      4  sound    (want sound   )     8 queries    0.7s
+ok  starbattle stars=1 exactLine (planted)            4  unsound  (want unsound )     1 queries    0.3s   at line 0
+ok  src/games/starbattle/starbattle.description.yaml#exactLine: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 exactRegion                    4  sound    (want sound   )   205 queries   18.7s
+ok  starbattle stars=1 exactRegion (planted)          4  unsound  (want unsound )    93 queries    9.2s   at region region 92
+ok  src/games/starbattle/starbattle.description.yaml#exactRegion: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 confined                       4  sound    (want sound   )     2 queries   41.2s
+ok  starbattle stars=1 confined (planted)             4  unsound  (want unsound )     1 queries    1.1s   at 0
+ok  src/games/starbattle/starbattle.description.yaml#confined: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 neededLine                     4  sound    (want sound   )     8 queries    2.1s
+ok  starbattle stars=1 neededLine (planted)           4  unsound  (want unsound )     1 queries    0.4s   at line 0
+ok  src/games/starbattle/starbattle.description.yaml#neededLine: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 neededRegion                   4  sound    (want sound   )   205 queries   31.7s
+ok  starbattle stars=1 neededRegion (planted)         4  unsound  (want unsound )    93 queries    9.6s   at region region 92
+ok  src/games/starbattle/starbattle.description.yaml#neededRegion: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 crowdedLine                    4  sound    (want sound   )    16 queries    6.4s
+ok  starbattle stars=1 crowdedLine (planted)          4  unsound  (want unsound )     2 queries    0.8s   at cell 1
+ok  src/games/starbattle/starbattle.description.yaml#crowdedLine: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 crowdedRegion                  4  sound    (want sound   )    16 queries  136.6s
+ok  starbattle stars=1 crowdedRegion (planted)        4  unsound  (want unsound )     2 queries   15.2s   at cell 1
+ok  src/games/starbattle/starbattle.description.yaml#crowdedRegion: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 banded                         4  sound    (want sound   )     1 queries   47.9s
+ok  starbattle stars=1 banded (planted)               4  unsound  (want unsound )     1 queries    1.7s   at 2
+ok  src/games/starbattle/starbattle.description.yaml#banded: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 starvedLine                    4  sound    (want sound   )    16 queries   16.4s
+ok  starbattle stars=1 starvedLine (planted)          4  unsound  (want unsound )     2 queries    1.8s   at cell 1
+ok  src/games/starbattle/starbattle.description.yaml#starvedLine: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 starvedRegion                  4  sound    (want sound   )    16 queries  196.6s
+ok  starbattle stars=1 starvedRegion (planted)        4  unsound  (want unsound )     2 queries   24.7s   at cell 1
+ok  src/games/starbattle/starbattle.description.yaml#starvedRegion: recorded sound, proved whole on all 1 boards

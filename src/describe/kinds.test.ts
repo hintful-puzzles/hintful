@@ -31,13 +31,19 @@ describe("a kind of rule expands to the technique it stands for", () => {
         terms: { n: "n", s: "stars" },
         marks: { stripes: "cells(r)", reads: "cells(r)" },
         move: "{ring: the ringed {noun} | each ringed {noun}} must be empty",
-        wordings: [
-          { when: "false", look: "{stripes: this region} takes no stars" },
-          { look: "{stripes: this region} already has its two" },
-        ],
+        // The `zero` wording, left `false`, is never said, so it is left out.
+        wordings: [{ look: "{stripes: this region} already has its two" }],
       },
       plant: { for: "r in region, n = need(cells(r)) where n <= 1" },
     });
+  });
+
+  it("keeps a wording whose condition the game gives", () => {
+    const t = expandKind({ ...met, with: { ...met.with, zero: "n0" } }, "x");
+    expect((t["says"] as { wordings: { when?: string }[] }).wordings).toMatchObject([
+      { when: "n0", look: "{stripes: this region} takes no stars" },
+      { look: "{stripes: this region} already has its two" },
+    ]);
   });
 
   it("reads a parameter the game said once, a placement's own winning", () => {
@@ -46,7 +52,7 @@ describe("a kind of rule expands to the technique it stands for", () => {
     const t = expandKind({ ...met, with: own }, "x", words);
     expect(t).toMatchObject({ conclude: expect.stringContaining("place(c, 2)") });
     const look = (t: Record<string, unknown>) =>
-      (t["says"] as { wordings: { look: string }[] }).wordings[1].look;
+      (t["says"] as { wordings: { look: string }[] }).wordings[0].look;
     expect(look(t)).toBe("{stripes: this region} already has its two");
     const over = expandKind({ ...met, with: { ...own, has: "its pair" } }, "x", words);
     expect(look(over)).toBe("{stripes: this region} already has its pair");

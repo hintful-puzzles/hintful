@@ -1126,6 +1126,23 @@ game's `group` binds the pair and its look names both (only it can tell two
 `says`, so a game whose hint narrates the firing itself (Mines') gives none
 and takes no words. A placement is checked against the schema again once
 expanded, so a game's words over a frame are checked whole.
+The room kinds read a game's `fits(S, n)`, whether `n` pieces fit in the open
+squares `S` with the game's rule kept, and `most(S, n)`, the most up to `n` that
+do, as the count kinds read `need` and `open` (Star Battle, Norinori).
+`room.needed` fills a square without which its group has room for too few,
+"{unit} needs 2 stars and without {ring} has room for only 1"; a game whose
+room is short beside squares it outlines says so in `given` (Norinori's
+shaded squares beside the region, ", given {outline}"). `room.crowded` empties
+a square where a piece tried there (`tried`: "a star on") rules out the squares
+`ruled` names and leaves a group near it too little room; `act` is what the
+piece does to them ("touch", "block"), and `cause` and `causeWords` name a
+group the piece would complete, where that is the reason (Star Battle's
+starved trials). Room is read with the piece in place, so a game's `fits` may
+read the squares beside the tried one. Not placed: Norinori's `crowded` and
+`blocked`, whose room runs out beside the tried square's domino rather than over
+what it rules out, which the kind's look would name wrongly. A wording a game's
+parameters leave `when: "false"` is dropped as the kind expands, so it may name
+marks or words that game lacks.
 `fill.support` strikes a value no filling of a set that keeps the rule puts
 in a square (Keen's cage, Towers' line from a clue, Undead's sightline): the
 game binds the set in `group`, names it in `set`, and gives the rule a

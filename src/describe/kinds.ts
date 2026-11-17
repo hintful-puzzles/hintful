@@ -42,7 +42,7 @@ export interface Kind {
       again?: string;
       /** What a later leg says as its move, where it differs from `move`. */
       later?: string;
-      wordings?: readonly { when?: string; look: string }[];
+      wordings?: readonly { when?: string; long?: string; look: string }[];
       arms?: Record<
         string,
         {
@@ -194,6 +194,100 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       for: "$group, n = $need, m = |open($set)| where (n <= 1 or n >= m) and (n != 0 or m > 0)",
       conclude:
         "(n <= 1 implies (forall c in open($set): $restMove)) and (n <= 1 or (forall c in open($set): $fillMove))",
+    },
+  },
+  // A group that, without one of its open squares, would have room for too
+  // few of what it still needs has that square hold the value. Room is the
+  // game's: `fits(S, n)`, whether n fit in the open squares S, and `most(S,
+  // n)`, the most up to n that do, read only where the room is too little.
+  // With too little room whatever is left out, the marks are inconsistent.
+  // `need`, `mark`, `marks`, `items` and `fillWord` as the count kinds'; a
+  // game whose room is short beside squares it outlines says so (`given`,
+  // which reads the marks), as the look ends ", given {outline}".
+  "room.needed": {
+    params: ["group", "set", "unit", "items", "fillWord"],
+    defaults: {
+      fill: null,
+      need: "need($set)",
+      fillMove: "place(c, $fill)",
+      given: "false",
+      mark: "stripes",
+      marks: { stripes: "$set", reads: "$set" },
+    },
+    technique: {
+      for: "$group, n = $need, O = open($set) where n > 0, c in O, E = O - {c} where not fits(E, n), room = most(E, n)",
+      conclude: "$fillMove",
+      says: {
+        terms: { n: "n", room: "room", none: "room = 0" },
+        marks: "$marks",
+        move: "{ring: that {noun}} $fillWord",
+        wordings: [
+          {
+            when: "$given",
+            long: "a group short of room beside squares it outlines names three things: the square left out, the group, and the squares that close its room",
+            look: "{$mark: $unit} needs {if placed: {n} more | {n}} $items and without {ring} has room for {if none: none | only {room}}, given {outline}",
+          },
+          {
+            look: "{$mark: $unit} needs {if placed: {n} more | {n}} $items and without {ring} has room for {if none: none | only {room}}",
+          },
+        ],
+      },
+    },
+    // Room for one more than is needed read as too little.
+    plant: {
+      for: "$group, n = $need, O = open($set) where n > 0, c in O, E = O - {c} where not fits(E, n + 1), room = most(E, n)",
+    },
+  },
+  // A piece tried in an open square `x` rules out the open squares `ruled`
+  // names (R, read of `x`); where that leaves a group near it (`near`: one
+  // holding `x` or a square of R) room for too few of what it still needs,
+  // `x` is the rest. Room is the game's `fits` and `most`, read with `x`
+  // holding the piece, as the count kinds' `need` is the game's. The look
+  // says what the piece on {ring} (`tried`) would do to the squares it rules
+  // out (`act`: "touch"), which are outlined, and what that leaves; or, where
+  // `cause` holds, that it would complete a group of its own (`causeWords`).
+  // A group with nothing left to hold its piece (`a`) is said so.
+  "room.crowded": {
+    params: ["group", "set", "unit", "items", "ruled", "tried", "act", "a", "restWord"],
+    defaults: {
+      fill: null,
+      rest: null,
+      need: "need($set)",
+      near: "x in $set or (exists p in R: p in $set)",
+      cause: "false",
+      causeWords: null,
+      mark: "stripes",
+      marks: { stripes: "$set", outline: "Q", reads: "Q + $set" },
+    },
+    technique: {
+      for: "x in cells where not known(x), R = $ruled, $group where $near, S = $set, n = $need - count(c in {x} where c in S), E = {c in open(S) where c != x and c not in R} where n > 0 and (with place(x, $fill): not fits(E, n)), room = (with place(x, $fill): most(E, n)), Q = {c in open(S) where c in R}",
+      conclude: "place(x, $rest)",
+      says: {
+        terms: { n: "n", room: "room", mine: "x in S", exhausted: "|E| = 0" },
+        marks: "$marks",
+        move: "it $restWord",
+        wordings: [
+          {
+            when: "$cause",
+            look: "$tried {ring} would complete its $causeWords, leaving {$mark: $unit} {if exhausted: {if mine: nowhere for {n} more $items | no open {noun}} | room for {if mine: {room} more | {room}}, not {n}}",
+          },
+          {
+            when: "exhausted and mine",
+            look: "$tried {ring} would $act the rest of {$mark: $unit}, which would still need {n} $items",
+          },
+          {
+            when: "exhausted",
+            look: "$tried {ring} would $act every open {noun} of {$mark: $unit}, leaving it no room for $a",
+          },
+          {
+            look: "$tried {ring} would $act {outline}, leaving {$mark: $unit} room for {if mine: {room} more | {room}}, not {n}",
+          },
+        ],
+      },
+    },
+    // Room for one more than is needed read as too little.
+    plant: {
+      for: "x in cells where not known(x), R = $ruled, $group where $near, S = $set, n = $need - count(c in {x} where c in S), E = {c in open(S) where c != x and c not in R} where n > 0 and (with place(x, $fill): not fits(E, n + 1)), room = (with place(x, $fill): most(E, n)), Q = {c in open(S) where c in R}",
     },
   },
   // Two counts over sets that overlap: A holds at least `least` of the value
@@ -544,6 +638,16 @@ function laidOver(under: unknown, top: unknown): unknown {
   return out;
 }
 
+/** `says` and its arms with each wording whose `when` is `false` left out. */
+function dropNever(says: unknown): void {
+  if (!isRecord(says)) return;
+  const w = says["wordings"];
+  if (Array.isArray(w))
+    says["wordings"] = w.filter((x) => !(isRecord(x) && x["when"] === "false"));
+  if (isRecord(says["arms"]))
+    for (const arm of Object.values(says["arms"])) dropNever(arm);
+}
+
 /** The technique a placed kind stands for: `id`, its placing, the statement
  * with the game's nouns, and the plant that stays with it. */
 export function expandKind(
@@ -599,6 +703,10 @@ export function expandKind(
         ? undefined
         : fill(kind.saysBeneath, args);
   const says = beneath === undefined ? gameSays : laidOver(beneath, gameSays ?? {});
+  // A wording whose condition a game's parameters left `false` is never said,
+  // and may name marks or words that game does not have (Star Battle's
+  // `given`, a cause only its starved trial names).
+  if (says !== undefined) dropNever(says);
   const left = new Set(
     [...JSON.stringify(says ?? {}).matchAll(/\$(\w+)/g)]
       .map((m) => m[1])

@@ -284,26 +284,31 @@ describe("the wordings no walk reaches", () => {
   const starved = STATED.starvedLine.step;
 
   it("says a completing star that leaves its line nowhere for more", () => {
-    expect(words(starved, 0, {})).toBe(
+    expect(words(starved, 0, { exhausted: true })).toBe(
       "A star on this square would complete its row, leaving this row nowhere for 2 more stars, so it must be empty.",
     );
   });
 
   it("says a star that blocks without completing anything", () => {
-    expect(words(starved, 2, {})).toBe(
+    expect(words(starved, 1, {})).toBe(
       "A star on this square would block the rest of this row, which would still need 2 stars, so it must be empty.",
     );
-    expect(words(starved, 3, {})).toBe(
+    expect(words(starved, 2, {})).toBe(
       "A star on this square would block every open square of this row, leaving it no room for a star, so it must be empty.",
     );
-    expect(words(starved, 4, { mine: false, one: false, room: 3 })).toBe(
+    expect(words(starved, 3, { mine: false, room: 3 })).toBe(
       "A star on this square would block the outlined squares, leaving this row room for 3, not 2, so it must be empty.",
     );
   });
 
   it("names the kinds a star completes in pairs", () => {
     const say = (r: boolean, c: boolean, g: boolean): string =>
-      words(starved, 1, { closesRow: r, closesCol: c, closesRegion: g });
+      words(starved, 0, {
+        closesRow: r,
+        closesCol: c,
+        closesRegion: g,
+        exhausted: false,
+      });
     expect(say(true, true, false)).toContain("complete its row and column,");
     expect(say(true, false, true)).toContain("complete its row and region,");
     expect(say(false, true, true)).toContain("complete its column and region,");

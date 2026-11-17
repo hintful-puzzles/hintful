@@ -26,11 +26,6 @@ techniques:
       in region where (forall d in P: region(d) = g), n = need(cells(g)), O = {c
       in open(cells(g)) where c not in P} where n <= 2 and |O| > 0
     conclude: "forall c in O: place(c, 2)"
-  # A region read as needing one more than it does.
-  neededRegion:
-    for: >-
-      r in region, n = need(cells(r)), O = open(cells(r)) where n > 0, x in O, E
-      = O - {x} where not fits(E, n + 1)
   # The second read as wanting a domino of its own inside the region.
   blocked:
     for: >-

@@ -498,6 +498,32 @@ boundaries are judgment, and the counts carry that.
     seeds a preset (Solo, Towers, Undead): same boards and verdicts, totals
     0.95× to 0.98×. Not placed: Light Up `shine` (its `lights(c)` holds the
     bulb itself, and it runs on a placement; `peer.touch` reads neither).
+  - [x] (2026-11-17) The room kinds, a FIT family over the game's
+    `fits(S, n)` and `most(S, n)`: `room.needed` (a square without which a
+    group has room for too few is filled) on Star Battle `neededLine`/
+    `neededRegion` and Norinori `neededRegion`; `room.crowded` (a piece tried
+    in a square rules out what `ruled` names and leaves a group near it too
+    little room) on Star Battle `crowdedLine`/`crowdedRegion` (`act: touch`)
+    and `starvedLine`/`starvedRegion` (`act: block`, with the group the star
+    would complete as `cause`). Room is read with the tried piece placed.
+    The kinds carry Star Battle's sentences; Norinori's `neededRegion` now
+    says "This region needs 2 shaded squares as dominoes and without this
+    square has room for only 1, given the outlined square" (was "Without
+    this square, this region has no room for …"), seen in the app on its
+    pin, and Star Battle's "room for 1 star, not 2" is "room for 1, not 2".
+    All six plants were the kinds' and went. **In passing:** a wording a
+    kind's parameters leave `when: "false"` is dropped as it expands (the
+    `zero` wordings of Spokes, Unruly and Loopy left their modules; nothing
+    else moved), and Star Battle's unused `own` define went. Deal-compare
+    at 3 seeds a preset: same boards and verdicts in both games; Norinori
+    0.99×, Star Battle deals 1.02× and solves 1.16× (4.1 to 4.8 ms mean,
+    twice measured: the room is read under the tried star). Star Battle
+    re-checked sound whole, every plant caught; Norinori's `neededRegion`
+    sound. Walk fingerprints: the same steps and rung counts, Star Battle's
+    words hash moved. **Not placed, and why:** Norinori `crowded` and
+    `blocked`, whose room runs out beside the tried square's domino, not
+    over what it rules out, so the kind's "would rule out {outline}" would
+    name the wrong squares.
   - [ ] Next: Clusters on `count.compare` (above), PEER's other forms
     (Dominosa's `placed` reads two rules, a spot's neighbors and its
     domino's other spots), REL's bounds form (Unequal `sign`), GRP over

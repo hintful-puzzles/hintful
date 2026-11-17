@@ -351,17 +351,20 @@ function heldName(prefix: string, env: Env): string {
 /**
  * `lines` without each loop's binding of its element that nothing in the
  * loop reads: a read the loop's counter answers (`edge(x, y)` over
- * `adj4(x)`) can leave the element itself unread. A line's scope is the
- * lines after it indented as deep or deeper.
+ * `adj4(x)`) can leave the element itself unread. So can a supposition's
+ * square and value (`suppose`), where its body reads no marks (Star Battle's
+ * `fits`, which reads only its filling). A line's scope is the lines after
+ * it indented as deep or deeper.
  */
 function unreadBindingsDropped(lines: string[]): string[] {
   const indent = (l: string): number => l.length - l.trimStart().length;
   return lines.filter((line, i) => {
-    // An array's element, or a stated set's member (`bindingLoops`).
+    // An array's element, or a stated set's member (`bindingLoops`), or a
+    // supposition's square or value, each a read with no effect.
     const m =
       /^\s*const (v_\w+) = (?:_a\d+\[_i\d+\]|(?:_i\d+ === \d+ \? [\w.[\]]+ : )*[\w.[\]]+);$/.exec(
         line,
-      );
+      ) ?? /^\s*const (_w[cd]\d+) = [\w.[\]]+;$/.exec(line);
     if (m === null) return true;
     const read = new RegExp(`\\b${m[1]}\\b`);
     const depth = indent(line);

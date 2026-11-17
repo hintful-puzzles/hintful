@@ -1,5 +1,5 @@
 One star: 5x5 Easy #0: 17 steps, solved, 955763e34aca2d67 [around:2 confined.lines:3 confined.regions:1 crowdedLine:3 crowdedRegion:1 exactLine:5 fullLine:2]
 One star: 5x5 Normal #0: 17 steps, solved, d88f619f4afacb33 [around:3 banded.lines:1 banded.regions:1 confined.lines:1 crowdedLine:2 crowdedRegion:2 exactLine:5 fullLine:2]
 One star: 5x5 Tricky #0: 20 steps, solved, 014be2f2cb3dda1e [around:3 confined.lines:3 confined.regions:1 crowdedLine:6 exactLine:5 fullLine:1 starvedLine:1]
-Two stars: 8x8 Easy #0: 48 steps, solved, 813c333fcd1c8759 [around:12 confined.lines:3 crowdedLine:16 crowdedRegion:5 exactLine:9 fullRegion:1 neededRegion:2]
-Three stars: 12x12 Easy #0: 85 steps, solved, 5e859ec3a112b595 [around:26 confined.regions:3 crowdedLine:8 crowdedRegion:10 exactLine:16 exactRegion:3 fullLine:5 neededLine:8 neededRegion:6]
+Two stars: 8x8 Easy #0: 48 steps, solved, 326aa31b4a684a3d [around:12 confined.lines:3 crowdedLine:16 crowdedRegion:5 exactLine:9 fullRegion:1 neededRegion:2]
+Three stars: 12x12 Easy #0: 85 steps, solved, f1ece401d338aacd [around:26 confined.regions:3 crowdedLine:8 crowdedRegion:10 exactLine:16 exactRegion:3 fullLine:5 neededLine:8 neededRegion:6]
