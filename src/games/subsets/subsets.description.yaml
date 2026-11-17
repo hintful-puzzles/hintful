@@ -188,3 +188,70 @@ techniques:
       fits: holding
       marks: { stripes: "{b}" }
       terms: { open: { supplied: elements } }
+# Subsets' own sentences, spoken through the hint's voice (`index.ts`): a
+# firing decides one cell's letters, a letter a step. Its first leg says why;
+# each later leg says its own letter, pointing back at the same reason. A
+# step rings the letter it decides (`ring`), stripes the cell it fills
+# (`here`: a hidden single's one home, else the letter's cell) and outlines
+# what it reasons from: the neighbor across a horseshoe, or the sets in the
+# tally that still fit. A value is a set, said as the tally draws it.
+phrases:
+  # The move on the step's letter: mark it present, or clear it.
+  act: "{if known: mark {ring: {letter}} present | clear {ring: {letter}}}"
+  thisCell: "{stripes here: this cell}"
+steps:
+  # The neighbor at the closed end of a horseshoe has the letter marked, and
+  # this cell, at its open end, holds every letter it has.
+  arrowKnown:
+    ring: slot
+    terms: { letter: [A, B, C, D], known: flag }
+    marks: { outline: [neighbor], stripes: [here] }
+    look: "{outline neighbor: the outlined cell}'s set lies inside {thisCell}'s and has {letter} marked"
+    follows: "{letter} must be in both"
+    move: "{act}"
+    again: "{outline neighbor: the outlined cell}'s {letter} is marked"
+    later: "{act} in {thisCell} too"
+  # The neighbor at the open end of a horseshoe has the letter cleared, and
+  # this cell, at its closed end, has no letter it lacks.
+  arrowMask:
+    ring: slot
+    terms: { letter: [A, B, C, D], known: flag }
+    marks: { outline: [neighbor], stripes: [here] }
+    look: "{thisCell}'s set lies inside {outline neighbor: the outlined cell}'s, which has no {letter}"
+    follows: "{letter} can't be in either"
+    move: "{act}"
+    again: "{outline neighbor: the outlined cell} has no {letter}"
+    later: "{act} in {thisCell} too"
+  # The outlined set can go in this cell alone.
+  hiddenSingle:
+    ring: slot
+    terms: { letter: [A, B, C, D], known: flag }
+    marks: { outline: [sets], stripes: [here] }
+    look: >-
+      {outline sets: the outlined set} can go nowhere but {thisCell}, and
+      {if known: it contains {letter} | it has no {letter}}
+    move: "{act}"
+    again: "{outline sets: the outlined set} {if known: contains {letter} | has no {letter}}"
+    later: "{act} in {thisCell} too"
+  # Only the outlined sets fit this cell (`plural` where there are several),
+  # and they agree on the letter. A set that would also fit but is already
+  # placed elsewhere (`set`, in the outlined cell) is the example given, where
+  # there is one.
+  collapse:
+    ring: slot
+    terms: { letter: [A, B, C, D], known: flag, plural: flag, set: number }
+    marks: { outline: [sets, blocker], stripes: [here] }
+    move: "{act}"
+    again: >-
+      {if known: {if plural: {outline sets: the outlined sets} all contain | {outline sets: the outlined set} contains} {letter}
+      | {if plural: none of {outline sets: the outlined sets} has | {outline sets: the outlined set} has no} {letter}}
+    later: "{act} in {thisCell} too"
+    wordings:
+      - when: "|outlineBlocker| = 1"
+        look: >-
+          only {outline sets: the outlined set | the outlined sets} {if plural: fit | fits} {thisCell}
+          ({set}, say, is {outline blocker: already placed}), and
+          {if known: {if plural: all contain | it contains} {letter} | {if plural: none has | it has no} {letter}}
+      - look: >-
+          only {outline sets: the outlined set | the outlined sets} {if plural: fit | fits} {thisCell}, and
+          {if known: {if plural: they all contain | it contains} {letter} | {if plural: none of them has | it has no} {letter}}

@@ -38,7 +38,14 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import { NARRATION_LIMIT } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  type MarkKind,
+  mark,
+  phrase,
+  type Sentence,
+  so,
+} from "../../engine/hint-words.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -50,6 +57,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
+import { statedParts } from "../../engine/stated.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
@@ -59,8 +67,9 @@ import {
   verbGesture,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
+import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 import { newSubsetsDesc } from "./generator.ts";
-import { type LegMarks, say } from "./hint-text.ts";
+import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import {
   colors,
   computeSize,
@@ -70,6 +79,7 @@ import {
   type SubsetsDrawState,
 } from "./render.ts";
 import {
+  bitList,
   type CollapseExclusion,
   candidateCells,
   candidateSets,
@@ -531,95 +541,151 @@ const SUBSETS_RUNGS = [
 type SubsetsRung = (typeof SUBSETS_RUNGS)[number];
 type Step = HintStep<SubsetsMove, unknown, SubsetsRung>;
 
-/** A rule-out step, read against `board`, the plan's board just before it. */
-function ruleOutStep(board: SubsetsState, mark: RuleOutMark): Step {
-  const target = pointOf(mark.pos, board.w);
+/** A set as the tally draws it, "{A,C}", or "the empty set". */
+const setLabel = (value: number, n: number): string => {
+  const letters = bitList(value, n).map((b) => LETTERS[b]);
+  return letters.length ? `{${letters.join(",")}}` : "the empty set";
+};
+
+const LETTERS = ["A", "B", "C", "D"] as const;
+
+/** What a step marks: a cell, a letter's slot in one (a point with its
+ * letter), or a set in the tally. */
+type Marked = Point | number;
+
+/** The steps of `subsets.description.yaml`, spoken: a mark is drawn on a cell
+ * unless its sort says otherwise, and a value is a set. */
+const speak = (n: number) =>
+  subsets.voice<Marked>({
+    kind: CELL as MarkKind<Marked>,
+    kinds: {
+      slot: SLOT as MarkKind<Marked>,
+      sets: TALLY_SET as MarkKind<Marked>,
+    },
+    value: (v) => setLabel(v, n),
+  });
+
+/** The tally's sets, as the stated sentence draws a term: its elements are
+ * the sets' values, which a context over cells holds only as its own type. */
+const OPEN_SET = TALLY_SET as unknown as MarkKind<Point>;
+
+/** A rule-out step, read against `board`, the plan's board just before it, in
+ * the `rel.support` kind's words. The horseshoe needs a strictly smaller set
+ * at its subset end and a strictly bigger one at its superset end (the help
+ * teaches why), so a set with no such partner among the outlined sets, which
+ * are what the neighbor can still hold, cannot go here. */
+function ruleOutStep(board: SubsetsState, rule: RuleOutMark): Step {
+  const { n, w } = board;
+  const target = pointOf(rule.pos, w);
   // The set ruled out is the action, boxed as such even where the neighbor
   // could hold it too.
-  const sets = candidateSets(board, mark.why.via).filter((v) => v !== mark.value);
-  const words = say.ruleOut(mark, board.n, target, mark.why.via, board.w, sets);
+  const sets = candidateSets(board, rule.why.via).filter((v) => v !== rule.value);
+  const { look } = statedParts(
+    subsets.STATED[rule.why.head ? "bigger" : "smaller"].step[0],
+    {
+      kind: CELL,
+      at: (i): Point => pointOf(i, w),
+      termKinds: { open: OPEN_SET },
+      termAt: { open: (v) => v as unknown as Point },
+      ring: [],
+      marks: { stripes: [target] },
+      terms: { partner: rule.why.via, open: sets },
+      value: (v) => setLabel(v, n),
+      struck: [rule.value],
+    },
+  );
+  if (look === undefined) throw new Error("rel.support states no look");
+  const words = so({
+    look,
+    move: phrase`${mark.as("ring", TALLY_SET, [rule.value], setLabel(rule.value, n))} must go`,
+  });
   return {
-    move: { kind: "rule", pos: mark.pos, value: mark.value, on: true },
+    move: { kind: "rule", pos: rule.pos, value: rule.value, on: true },
     rung: "ruleOut",
     explanation: words.text,
     words,
   };
 }
 
-/** What leg `k` of a firing marks, every narration being *attention →
- * deduction → action*: the slot it decides (the action), a neighbor cell it
- * reasons from, the sets it counts in the tally (a collapse's surviving
- * candidates, or the placed set), and a hidden single's one home, spotlit as
- * the player-facing reference aid spotlights it. */
-function legMarks(
-  state: SubsetsState,
+/** Leg `k` of firing `d`, every narration being *attention → deduction →
+ * action*: it rings the slot it decides and stripes the cell it fills, a
+ * hidden single's one home as the reference aid spotlights it; an arrow
+ * outlines the neighbor it reasons from, a placement the sets in the tally
+ * that fit, and a collapse's lead the cell where its example set is placed. */
+function legSentence(
+  board: SubsetsState,
   d: SubsetsDeduction,
-  exclusion: CollapseExclusion | null,
   k: number,
-): LegMarks {
-  const w = state.w;
-  const pt = (i: number): Point => pointOf(i, w);
+  exclusion: CollapseExclusion | null,
+): Sentence {
+  const pt = (i: number): Point => pointOf(i, board.w);
   const r = d.reason;
-  // Arrows point at a neighbor *cell*; a placement points at the *set* in the
-  // tally; a hidden single also *spotlights* where the set can go (its one
-  // home). A collapse's lead outlines the excluded competitor's blocker cell,
-  // so "the outlined cell" in the "why not …" clause has a referent; the legs
-  // after it do not say that clause, so they do not draw its cell.
-  const cells: number[] =
-    r.kind === "arrowKnown"
-      ? [r.to]
-      : r.kind === "arrowMask"
-        ? [r.from]
-        : exclusion && k === 0
-          ? [blockerCell(exclusion)]
-          : [];
-  const sets =
-    r.kind === "hiddenSingle" ? [r.value] : r.kind === "collapse" ? r.survivors : [];
-  const spotlight =
-    r.kind === "hiddenSingle" ? candidateCells(state, r.value).map(pt) : [];
-  return {
-    slot: { ...pt(d.pos), bit: d.sets[k].bit },
-    cells: cells.map(pt),
-    sets,
-    spotlight,
+  const set = d.sets[k];
+  const said = {
+    ring: [{ ...pt(d.pos), bit: set.bit }],
+    later: k > 0,
   };
+  const terms = { letter: LETTERS[set.bit], known: set.type === "known" };
+  const here = (cells: readonly number[]) => ({ here: cells.map(pt) });
+  const voice = speak(board.n);
+  switch (r.kind) {
+    case "arrowKnown":
+    case "arrowMask":
+      return voice.sentence(r.kind, {
+        ...said,
+        terms,
+        marks: {
+          outline: { neighbor: [pt(r.kind === "arrowKnown" ? r.to : r.from)] },
+          stripes: here([d.pos]),
+        },
+      });
+    case "hiddenSingle": {
+      const homes = candidateCells(board, r.value);
+      return voice.sentence(r.kind, {
+        ...said,
+        terms,
+        marks: {
+          outline: { sets: [r.value] },
+          stripes: here(homes.length ? homes : [d.pos]),
+        },
+      });
+    }
+    case "collapse": {
+      // The example is said on the lead leg only, so only it outlines the
+      // example's cell.
+      const example = k === 0 ? exclusion : null;
+      return voice.sentence(r.kind, {
+        ...said,
+        terms: { ...terms, plural: r.survivors.length > 1, set: example?.value ?? 0 },
+        marks: {
+          outline: { sets: r.survivors, blocker: example ? [pt(example.cell)] : [] },
+          stripes: here([d.pos]),
+        },
+      });
+    }
+  }
 }
-
-/** The cell whose rule keeps a collapse's excluded competitor out. */
-const blockerCell = (ex: CollapseExclusion): number =>
-  ex.block.kind === "placed" ? ex.block.cell : ex.block.neighbor;
 
 /**
  * A firing (one deduction deciding a cell's letters) becomes one sub-goal
  * journey: first the rule-outs it rests on that the board does not show, one
  * step each, then its letters, leg 0 leading with the why and the rest as
- * per-slot legs. A collapse's lead also gets a "why not X" clause. Every step
- * is read against `board`, the plan's board as that step is shown, which this
- * advances past the firing.
+ * per-slot legs. A collapse's lead also gives an example of a set that cannot
+ * go there. Every step is read against `board`, the plan's board as that step
+ * is shown, which this advances past the firing.
  */
 function stepsForFiring(board: SubsetsState, d: SubsetsDeduction): Step[] {
   const steps: Step[] = [];
-  for (const mark of d.marks) {
-    steps.push(ruleOutStep(board, mark));
-    board.ruledOut[mark.pos] |= 1 << mark.value;
+  for (const rule of d.marks) {
+    steps.push(ruleOutStep(board, rule));
+    board.ruledOut[rule.pos] |= 1 << rule.value;
   }
   const exclusion =
     d.reason.kind === "collapse"
       ? pickExclusion(board, d.pos, d.reason.survivors)
       : null;
   d.sets.forEach((set, k) => {
-    const example =
-      k === 0 && exclusion
-        ? say.exclusion(exclusion, board.n, pointOf(blockerCell(exclusion), board.w))
-        : null;
-    // The example of a set that cannot go is an aside: where it would run the
-    // sentence past the limit, the sentence goes without it, and so does the
-    // outline on its blocking cell, which only the example names.
-    const withExample = say.leg(d, k, legMarks(board, d, exclusion, k), example);
-    const words =
-      example && withExample.text.length > NARRATION_LIMIT
-        ? say.leg(d, k, legMarks(board, d, null, k), null)
-        : withExample;
+    const words = legSentence(board, d, k, exclusion);
     steps.push({
       move: { kind: "set", type: set.type, pos: d.pos, bit: set.bit },
       rung: d.reason.kind,

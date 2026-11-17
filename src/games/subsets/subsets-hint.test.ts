@@ -33,7 +33,6 @@ import {
   type SubsetsDeduction,
   solveCopy,
   subsetsValidate,
-  whyCantPlace,
 } from "./solver.ts";
 import {
   ALL_BITS,
@@ -369,7 +368,7 @@ describe("candidateCells (reference aid + hidden single)", () => {
     }
   });
 
-  it("pickExclusion returns a competitor a visible rule really blocks", () => {
+  it("pickExclusion returns a competitor already placed elsewhere", () => {
     let checked = 0;
     for (let s = 0; s < 40 && checked < 5; s++) {
       let state = gen(`px-${s}`);
@@ -381,14 +380,11 @@ describe("candidateCells (reference aid + hidden single)", () => {
           const ex = pickExclusion(state, d.pos, d.reason.survivors);
           if (ex) {
             checked++;
-            // The competitor is not a survivor, and its block is real.
+            // The competitor is not a survivor, and it is placed elsewhere.
             expect(d.reason.survivors).not.toContain(ex.value);
-            if (ex.block.kind === "placed") {
-              expect(state.known[ex.block.cell]).toBe(state.mask[ex.block.cell]);
-              expect(state.known[ex.block.cell]).toBe(ex.value);
-            } else {
-              expect(whyCantPlace(state, d.pos, ex.value)).not.toBeNull();
-            }
+            expect(ex.cell).not.toBe(d.pos);
+            expect(state.known[ex.cell]).toBe(state.mask[ex.cell]);
+            expect(state.known[ex.cell]).toBe(ex.value);
           }
         }
         state = applyFiring(state, d);

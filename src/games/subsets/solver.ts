@@ -478,73 +478,41 @@ function markRuleOuts(
   return out;
 }
 
-/** Why placing a set in an undecided cell breaks a *visible* rule — the
- * shallow reason a player can see, for the reference aid and the "why not X"
- * hint clause. `null` from {@link whyCantPlace} means it fits. */
-export type PlacementBlock =
-  /** The cell's own marks forbid it (it lacks a marked letter, or holds a
-   * cleared one). */
-  | { kind: "marks" }
-  /** The player (or a hint step) ruled this set out of the cell. */
-  | { kind: "ruledOut" }
-  /** The empty set lies inside every set and the full set holds every set, so
-   * either one needs every edge of its cell to say so: the empty set a
-   * horseshoe pointing into the cell from each neighbor, the full set one
-   * pointing out to each. `neighbor` is one whose edge does not. */
-  | { kind: "extreme"; neighbor: number }
-  /** A horseshoe to decided `neighbor` requires `value` to contain / be
-   * contained in the neighbor's set, and it isn't: `mustContain` says which
-   * direction, `letters` are the offending letters. */
-  | { kind: "arrow"; neighbor: number; mustContain: boolean; letters: number }
-  /** A missing horseshoe to decided `neighbor` forbids one set containing the
-   * other, but `value` and the neighbor's set are comparable. */
-  | { kind: "adjacent"; neighbor: number };
-
-/** The visible rule (if any) that stops `value` sitting in undecided cell `i`,
- * judged shallowly from the board: the cell's letters and rule-outs, the
- * horseshoes around it, and its decided neighbors. */
-export function whyCantPlace(
-  state: SubsetsState,
-  i: number,
-  value: number,
-): PlacementBlock | null {
+/** Whether `value` can sit in undecided cell `i` as the board shows it, judged
+ * shallowly: by the cell's own letters and rule-outs, and by the horseshoes
+ * round it to its decided neighbors. */
+function fitsVisibly(state: SubsetsState, i: number, value: number): boolean {
   const { w } = state;
   const x = i % w;
   const y = Math.floor(i / w);
   if ((state.known[i] & value) !== state.known[i] || (value & state.mask[i]) !== value)
-    return { kind: "marks" };
-  if (state.ruledOut[i] & (1 << value)) return { kind: "ruledOut" };
+    return false;
+  if (state.ruledOut[i] & (1 << value)) return false;
   const full = ALL_BITS(state.n);
   for (let d = 0; d < 4; d++) {
     const x2 = x + ADJTHAN[d].dx;
     const y2 = y + ADJTHAN[d].dy;
     if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= state.h) continue;
     const j = y2 * w + x2;
-    if (value === 0 && !(state.clues[j] & ADJTHAN[d].fo))
-      return { kind: "extreme", neighbor: j };
-    if (value === full && !(state.clues[i] & ADJTHAN[d].f))
-      return { kind: "extreme", neighbor: j };
+    // The empty set lies inside every set and the full set holds every set,
+    // so either needs every edge of its cell to say so: the empty set a
+    // horseshoe pointing in from each neighbor, the full set one pointing out.
+    if (value === 0 && !(state.clues[j] & ADJTHAN[d].fo)) return false;
+    if (value === full && !(state.clues[i] & ADJTHAN[d].f)) return false;
     if (state.known[j] !== state.mask[j]) continue; // only decided neighbors constrain
     const kj = state.known[j];
     if (state.clues[i] & ADJTHAN[d].f) {
       // Arrow i -> j: set(j) ⊆ value — value must contain kj.
-      if ((kj & value) !== kj)
-        return { kind: "arrow", neighbor: j, mustContain: true, letters: kj & ~value };
+      if ((kj & value) !== kj) return false;
     } else if (state.clues[j] & ADJTHAN[d].fo) {
       // Arrow j -> i: value ⊆ set(j) — value must fit inside kj.
-      if ((value & kj) !== value)
-        return {
-          kind: "arrow",
-          neighbor: j,
-          mustContain: false,
-          letters: value & ~kj,
-        };
+      if ((value & kj) !== value) return false;
     } else if ((value & kj) === value || (value & kj) === kj) {
       // No arrow: neither may contain the other, but they are comparable.
-      return { kind: "adjacent", neighbor: j };
+      return false;
     }
   }
-  return null;
+  return true;
 }
 
 /**
@@ -566,7 +534,7 @@ export function candidateCells(state: SubsetsState, value: number): number[] {
   const out: number[] = [];
   for (let i = 0; i < s; i++) {
     if (state.known[i] === state.mask[i]) continue; // decided as something else
-    if (whyCantPlace(state, i, value) === null) out.push(i);
+    if (fitsVisibly(state, i, value)) out.push(i);
   }
   return out;
 }
@@ -590,23 +558,18 @@ export function canHold(state: SubsetsState, i: number, value: number): boolean 
   for (let k = 0; k < s; k++)
     if (k !== i && state.known[k] === state.mask[k] && state.known[k] === value)
       return false;
-  return whyCantPlace(state, i, value) === null;
+  return fitsVisibly(state, i, value);
 }
 
-/** A representative excluded competitor of a collapse. `block` is why it can't
- * sit in the cell — a visible on-board rule, or `placed` (it is already on the
- * board, at `cell`). */
-export type CollapseExclusion = {
-  value: number;
-  block:
-    | Extract<PlacementBlock, { kind: "arrow" | "adjacent" }>
-    | { kind: "placed"; cell: number };
-};
+/** A representative excluded competitor of a collapse: a set the cell's own
+ * marks allow, already placed at `cell`. */
+export type CollapseExclusion = { value: number; cell: number };
 
-/** For a collapse at `cell` (only `survivors` fit), a representative *excluded*
- * competitor and why — a set the player might expect but that a visible rule
- * blocks. Prefers an on-board reason (horseshoe/adjacency) over placement, and
- * a nearest-miss competitor. `null` when nothing illustrative is found. */
+/** For a collapse at `cell` (only `survivors` fit), a set the player might
+ * expect there that is already placed elsewhere, the nearest miss of the
+ * survivors; `null` when there is none. A set a horseshoe blocks would teach
+ * more, but its clause cannot fit the hint's sentence: the shortest runs to
+ * 131 characters, past `NARRATION_LIMIT`. */
 export function pickExclusion(
   state: SubsetsState,
   cell: number,
@@ -621,12 +584,7 @@ export function pickExclusion(
         return k;
     return -1;
   };
-  // Rank the exclusion reason by how clearly it teaches: an arrow (shows the
-  // horseshoe logic) over a placement (concrete counting) over adjacency (the
-  // subtle missing-horseshoe rule); ties broken by nearest miss.
-  const rankOf = (block: CollapseExclusion["block"]): number =>
-    block.kind === "arrow" ? 0 : block.kind === "placed" ? 1 : 2;
-  let best: (CollapseExclusion & { rank: number; dist: number }) | null = null;
+  let best: (CollapseExclusion & { dist: number }) | null = null;
   for (let value = 0; value < n2; value++) {
     if (surv.has(value)) continue;
     // Only competitors consistent with the cell's own marks are illustrative
@@ -636,26 +594,13 @@ export function pickExclusion(
       (value & state.mask[cell]) !== value
     )
       continue;
-    let block: CollapseExclusion["block"];
     const home = placedAt(value);
-    if (home >= 0) {
-      block = { kind: "placed", cell: home };
-    } else {
-      // A competitor the cell's own marks or rule-outs exclude says nothing
-      // the player cannot already see in the cell, and the empty and full
-      // sets' rule is the help's to teach, not a clause's.
-      const b = whyCantPlace(state, cell, value);
-      if (!b || b.kind === "marks" || b.kind === "ruledOut" || b.kind === "extreme")
-        continue;
-      block = b;
-    }
-    const rank = rankOf(block);
+    if (home < 0) continue;
     let dist = state.n + 1;
     for (const sv of survivors) dist = Math.min(dist, popcount(sv ^ value));
-    if (!best || rank < best.rank || (rank === best.rank && dist < best.dist))
-      best = { value, block, rank, dist };
+    if (!best || dist < best.dist) best = { value, cell: home, dist };
   }
-  return best ? { value: best.value, block: best.block } : null;
+  return best ? { value: best.value, cell: best.cell } : null;
 }
 
 function popcount(x: number): number {

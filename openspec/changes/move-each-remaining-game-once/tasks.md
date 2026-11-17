@@ -198,7 +198,22 @@ Logic games:
   alternatives. Its two setup sentences stay in `hint.ts`, Map's notation
   being dots where the shared opening says "penciling". Read in the app
   (15x20 Tricky): premise dots, then a pair (region ringed, pair outlined).
-- [ ] Subsets
+- [x] Subsets (2026-11-17): its letter legs (an arrow either way, a hidden
+  single, a collapse) are `steps` spoken through the voice in `index.ts`,
+  each later leg its `again` and `later`; the move is a phrase (`act`), the
+  letter a word term and a value a set as the tally draws it. A rule-out
+  stays the `rel.support` kind's words. **Fixed in passing:** a collapse's
+  example ("({A,B,C}, say, is already placed)") had two more forms, a
+  horseshoe's and a missing horseshoe's, that `pickExclusion` ranked first
+  but that never fit the sentence (the shortest is 131 characters), so where
+  one existed the lead went without any example. It now picks only a set
+  placed elsewhere. **112 dump lines changed**, each a collapse lead that
+  gains that example and outlines its cell, e.g. "Only the outlined set
+  fits this cell, and it contains A, so mark A present." is now "Only the
+  outlined set fits this cell ({A,B,C}, say, is already placed), and it
+  contains A, so mark A present."; every other line is byte-identical,
+  marks included. Read in the app (Easy): that step, the set outlined in
+  the tally, the cell striped, B ringed, the placed cell outlined.
 - [ ] Solo (after 0.3)
 - [ ] Tents
 - [ ] Crossing
