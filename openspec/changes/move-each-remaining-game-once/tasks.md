@@ -152,7 +152,12 @@ Logic games:
   `{or}` holds literal words and the outline is a reference. Marks
   unchanged. Read in the app (12x14 Unreasonable): a fit, a reach, a
   line's miss and a line's take, striped squares and both clues outlined.
-- [ ] Galaxies
+- [x] Galaxies (2026-11-17): dump byte-identical, every rung reached. Its
+  sentences are `steps` spoken through the voice in `hint.ts`, from what a
+  step still paints (`painted`), so a step the player has partly made
+  re-reads as before; a claim's ring is by sort (`focus`, `partner`,
+  `dot`), and a dot's color and where it sits are word terms. Read in the
+  app: a sole owner, a separation, a dot's own squares.
 - [ ] Guess
 - [ ] Blackbox
 - [ ] Bridges

@@ -242,3 +242,90 @@ techniques:
     says:
       terms: { e: e, a: a, q: q, a2: a2 }
       marks: {}
+# A step's sentence is spoken from the marks it still draws (`painted`,
+# `hint-marks.ts`), so a step the player has partly made re-reads from what
+# is left; the techniques above say only which firing it is. A step decides
+# a square (`focus`) and the square the game brings with it about the dot
+# (`partner`), or a dot's own squares (`cells`), and rings the dot they go
+# to; a dot that sits on squares being filled is not ringed, so it is named
+# by its color and where it sits.
+phrases:
+  # The square a step is about, and the partner the same move decides.
+  itAnd: "{if pair: it and {ring partner: its partner} | it}"
+  ringedDot: "{ring dot: the ringed {color} dot}"
+steps:
+  # The squares under a dot are its galaxy's.
+  dotTile:
+    ring: [cells, dot]
+    terms: { color: &color [black, white], where: [between them, at their shared corner, they touch] }
+    wordings:
+      - when: "|ringCells| = 2"
+        move: "{ring cells: both ringed squares} must belong to {ring dot: the {color} dot} {where}"
+      - move: "{ring cells: the ringed square | the {live} ringed squares} must belong to {ring dot: the {color} dot} {where}"
+  # A square that holds its own dot draws no arrow, there being nothing to
+  # point at from inside it, so the two squares "go with" their dots there:
+  # one shows an arrow, the other the dot.
+  separate:
+    ring: wall
+    terms: { points: flag }
+    marks: { outline: [cells, dots] }
+    look: >-
+      {outline cells: these two squares} {if points: point at | go with}
+      {outline dots: different outlined dots}
+    follows: "they're in different galaxies"
+    move: "{ring: the ringed edge | the ringed edges} must be a wall"
+  # A square the dot sits in the middle of is its own partner, and its walls
+  # mirror to its own other side. The mirrored wall is often the board's own
+  # rim, and calling that "the outlined wall" would have the player hunting
+  # for a wall they are looking at the edge of.
+  mirrorWall:
+    ring: wall
+    terms: { color: *color, edge: flag }
+    marks: { outline: [cells, dot, walls] }
+    move: >-
+      {ring: this wall | these walls} must match
+      {if edge: {outline walls: the outlined board edge} | {outline walls: the outlined wall | the outlined walls}}
+    wordings:
+      - when: "|outlineCells| = 1"
+        look: "{outline cells: the outlined square} is its own partner across {outline dot: the outlined {color} dot}"
+      - look: "{outline cells: the outlined squares} are partners across {outline dot: the outlined {color} dot}"
+  # Its walled sides are drawn on the board, and "its ways out" already
+  # excludes them; that a galaxy is connected is the rule, and the help
+  # teaches it (docs/hints.md § "Rules belong in the help").
+  enclosed:
+    ring: [focus, partner, dot]
+    terms: { color: *color, pair: flag }
+    marks: { outline: [ways], stripes: [galaxy] }
+    move: "{itAnd} must join {ringedDot}"
+    wordings:
+      - when: "|outlineWays| = 1"
+        look: "{ring focus: this square}'s only {outline ways: way out (outlined)} leads into {stripes galaxy: the striped galaxy}"
+      - look: "{ring focus: this square}'s {outline ways: ways out (outlined)} all lead into {stripes galaxy: the striped galaxy}"
+  # The claim is the rung's own condition, which the player checks with the
+  # gesture they have: drag from the square and count the rings. It names
+  # no one way a dot fails: a dot is dropped when the square's mirror is off
+  # the board or on a dot, when the square is past its reach, or when either
+  # lies in a finished galaxy.
+  soleOwner:
+    ring: [focus, partner, dot]
+    terms: { color: *color, pair: flag }
+    look: "no galaxy around another dot can stretch to {ring focus: this square}"
+    move: "{itAnd} must belong to {ringedDot}"
+  # "join its reach", not "lie in it": the square acted on carries the
+  # action's mark rather than the stripes, so the striped set is the reach
+  # less one square, and an absolute claim would be a shade off true.
+  onlyReach:
+    ring: [focus, partner, dot]
+    terms: { color: *color, pair: flag }
+    marks: { stripes: [reach] }
+    look: "no other galaxy reaches {ring focus: this square}"
+    move: "{itAnd} must join {ringedDot} and {stripes reach: its striped reach}"
+  exclave:
+    ring: [focus, partner, dot]
+    terms: { pair: flag }
+    marks: { stripes: [piece] }
+    move: "{itAnd} must be that dot's too"
+    wordings:
+      - when: "|stripesPiece| = 1"
+        look: "{stripes piece: the striped square} can reach {ring dot: its ringed dot} only through {ring focus: this square}"
+      - look: "{stripes piece: the striped squares} can reach {ring dot: their ringed dot} only through {ring focus: this square}"

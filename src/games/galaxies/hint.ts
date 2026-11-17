@@ -16,11 +16,12 @@
 
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
+import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import type { HintStep } from "../../engine/index.ts";
 import type { CellMarks } from "../../engine/ladder-runtime.ts";
 import type { Point } from "../../engine/types.ts";
-import type * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
-import { type GalaxiesSaid, say } from "./hint-text.ts";
+import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
+import { DOT, painted, WALL } from "./hint-marks.ts";
 import type { GalaxiesMove } from "./index.ts";
 import { okToAddAssocWithOpposite } from "./moves.ts";
 import {
@@ -48,6 +49,19 @@ import {
 } from "./state.ts";
 
 export { GALAXIES_RUNGS, type GalaxiesRung } from "./solver.ts";
+
+/** What a sentence says beyond its marks: the values it reads off the board. */
+export type GalaxiesSaid =
+  /** `n` is how many cells the dot sits on, which says where it is. */
+  | { kind: "dotTile"; black: boolean; n: number }
+  /** `points` when both cells show arrows. */
+  | { kind: "separate"; points: boolean }
+  /** `edge` when the wall to match is the board's rim. */
+  | { kind: "mirrorWall"; black: boolean; edge: boolean }
+  | { kind: "enclosed"; black: boolean; openings: number }
+  | { kind: "soleOwner"; black: boolean }
+  | { kind: "onlyReach"; black: boolean }
+  | { kind: "exclave" };
 
 /**
  * What a step paints, in two roles (docs/hints-marks.md § "The engine colors
@@ -265,8 +279,8 @@ function isBlack(s: GalaxiesState, dot: Point): boolean {
   return (s.flags[idx(s, dot.x, dot.y)] & F_DOT_BLACK) !== 0;
 }
 
-/** Which sentence a firing speaks, and with what values. The words are
- * [`hint-text.ts`](./hint-text.ts)'s. */
+/** Which sentence a firing speaks, and with what values. The words are the
+ * steps `galaxies.description.yaml` declares. */
 function saidOf(s: GalaxiesState, firing: GalaxiesFiring): GalaxiesSaid {
   switch (firing.kind) {
     case "dotTile":
@@ -296,6 +310,76 @@ function saidOf(s: GalaxiesState, firing: GalaxiesFiring): GalaxiesSaid {
       return { kind: firing.kind, black: isBlack(s, firing.dot) };
     case "exclave":
       return { kind: "exclave" };
+  }
+}
+
+const speak = galaxies.voice<Point>({
+  kind: CELL,
+  kinds: { wall: WALL, walls: WALL, dot: DOT, dots: DOT },
+  value: String,
+});
+
+const color = (black: boolean) => (black ? "black" : "white");
+const els = (p: Point | null): Point[] => (p ? [p] : []);
+
+/** A step's sentence, from what its highlights still paint. */
+export function say(hl: GalaxiesHint): Sentence {
+  const p = painted(hl);
+  const said = hl.said;
+  // The square a step is about, its partner and the dot they go to.
+  const claim = { focus: els(p.focus), partner: p.others, dot: els(p.targetDot) };
+  const pair = p.others.length > 0;
+  switch (said.kind) {
+    case "dotTile":
+      return speak.sentence("dotTile", {
+        ring: { cells: p.others, dot: els(p.targetDot) },
+        terms: {
+          color: color(said.black),
+          // Named by where it is: the dot is on the squares being filled, so
+          // it is ringed only where a square around it is not.
+          where:
+            said.n === 2
+              ? "between them"
+              : said.n === 4
+                ? "at their shared corner"
+                : "they touch",
+        },
+      });
+    case "separate":
+      return speak.sentence("separate", {
+        ring: p.targetWalls,
+        terms: { points: said.points },
+        marks: { outline: { cells: p.area, dots: p.refDots } },
+      });
+    case "mirrorWall":
+      return speak.sentence("mirrorWall", {
+        ring: p.targetWalls,
+        terms: { color: color(said.black), edge: said.edge },
+        marks: { outline: { cells: p.area, dot: p.refDots, walls: p.walls } },
+      });
+    case "enclosed":
+      return speak.sentence("enclosed", {
+        ring: claim,
+        terms: { color: color(said.black), pair },
+        marks: { outline: { ways: p.area }, stripes: { galaxy: p.hatch } },
+      });
+    case "soleOwner":
+      return speak.sentence("soleOwner", {
+        ring: claim,
+        terms: { color: color(said.black), pair },
+      });
+    case "onlyReach":
+      return speak.sentence("onlyReach", {
+        ring: claim,
+        terms: { color: color(said.black), pair },
+        marks: { stripes: { reach: p.hatch } },
+      });
+    case "exclave":
+      return speak.sentence("exclave", {
+        ring: claim,
+        terms: { pair },
+        marks: { stripes: { piece: p.hatch } },
+      });
   }
 }
 

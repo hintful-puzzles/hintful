@@ -76,9 +76,9 @@ import {
   type GalaxiesRung,
   galaxiesHint,
   outstanding,
+  say,
   stepSatisfied,
 } from "./hint.ts";
-import { say } from "./hint-text.ts";
 import {
   addAssocWithOpposite,
   legalDotsFor,
