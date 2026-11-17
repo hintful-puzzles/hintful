@@ -136,7 +136,22 @@ Logic games:
   point left or right" (1,708 dump lines). With that rewrite undone the
   dump is byte-identical, marks included. Read in the app: an opposite, a
   loop striking a mark, a reach and a hidden single.
-- [ ] Rect
+- [x] Rect (2026-11-17): its sentences are `steps` spoken through the
+  voice in `hint.ts`, its techniques saying only which firing it is: why
+  each other rectangle fails is the game's reading (`reasonOf`). A step's
+  number terms are clues by square, which the voice's `value` prints as
+  the board draws them ("the tall 4", "the ? clue"), and a `values` term
+  names several ("the 3 and 8"). The engine gained `{derived each …}`, a
+  reference that counts a fact for each element (starve's clues and
+  squares, a crossing's missed squares), which the depth test pins. The
+  line rung's ledger entry in `hint-quality.test.ts` is now the step's
+  `long:`. **One sentence changed**, a fit that would also take in other
+  clues names them first (2,048 dump lines): "Elsewhere the 6 would run
+  off the board, take in the outlined clues or cross a line" is "…would
+  take in the outlined clues, run off the board or cross a line", since an
+  `{or}` holds literal words and the outline is a reference. Marks
+  unchanged. Read in the app (12x14 Unreasonable): a fit, a reach, a
+  line's miss and a line's take, striped squares and both clues outlined.
 - [ ] Galaxies
 - [ ] Guess
 - [ ] Blackbox

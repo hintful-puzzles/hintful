@@ -195,18 +195,6 @@ const LONG_NARRATIONS: {
       net: "7x7de:c83a8913a78ec845de71a421beb9677e4ec8bd78544c43cc4",
     },
   },
-  {
-    games: ["rect"],
-    rungs: ["line"],
-    why:
-      "Over the limit only where both reasons stand beside several clues, on " +
-      "Unreasonable boards: a crossing that would take a square another clue " +
-      "needs, and one that would leave a square uncovered. Each rules out a " +
-      "different clue's rectangle, so neither can go.",
-    spokenOn: {
-      rect: "12x14du:a2a2e8d6g8b4c10n10e2a6g8j6c21o16h2b3d3d3c9m3d4a6a8e12p4c2",
-    },
-  },
 ];
 
 /** The shared necessity vocabulary a deductive conclusion draws from.

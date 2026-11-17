@@ -13,10 +13,11 @@ import { assertNever } from "../../engine/assert-never.ts";
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder, Taken } from "../../engine/ladder-runtime.ts";
-import type { Rect } from "../../engine/types.ts";
-import type * as rect from "../../generated/games/rect/rect.compiled.ts";
-import { say } from "./hint-text.ts";
+import type { Point, Rect } from "../../engine/types.ts";
+import * as rect from "../../generated/games/rect/rect.compiled.ts";
+import { LINE, RECTANGLE, type RectEdge } from "./hint-marks.ts";
 import { executeMove, isSolved, readClaims } from "./moves.ts";
 import {
   deduction,
@@ -29,7 +30,7 @@ import {
   spaceOf,
   WALL,
 } from "./solver.ts";
-import type { RectMove, RectState } from "./state.ts";
+import { HIDDEN, type RectMove, type RectState } from "./state.ts";
 
 export type { RectRung } from "./solver.ts";
 
@@ -90,6 +91,106 @@ function drawsSomething(s: RectState, f: RectReason): boolean {
 function moveOf(f: RectReason): RectMove {
   if (f.kind === "line") return { type: "edge", ...f.edge };
   return { type: "rect", erasing: false, ...f.rect };
+}
+
+const SHAPE_WORDS = ["", "square", "tall", "wide"];
+
+/** The clue at square `clue` as it reads on the board, for "the …": its
+ * number ("6"), after its shape where it names one ("square 4"); without a
+ * number, its shape and "clue" ("tall clue"), or the question mark a plain one
+ * shows ("? clue"), since a bare "?" reads in a sentence as a stray symbol. */
+function clueName(s: RectState, clue: number): string {
+  const n = s.grid[clue];
+  const shape = SHAPE_WORDS[s.shapes[clue]];
+  if (n === HIDDEN) return `${shape || "?"} clue`;
+  return shape ? `${shape} ${n}` : String(n);
+}
+
+/** What a step's marks are drawn on: squares, and the rectangle or edge it
+ * draws. */
+type Element = Point | Rect | RectEdge;
+const KINDS = {
+  rectangle: RECTANGLE as MarkKind<Element>,
+  line: LINE as MarkKind<Element>,
+};
+
+/** The sentence of a firing's reason: the steps `rect.description.yaml`
+ * declares, whose number terms are clues by square, printed by name. */
+function sayReason(s: RectState, f: RectReason): Sentence {
+  const speak = rect.voice<Element>({
+    kind: CELL as MarkKind<Element>,
+    kinds: KINDS,
+    value: (clue) => clueName(s, clue),
+  });
+  const at = (i: number): Point => ({ x: i % s.w, y: Math.floor(i / s.w) });
+  if (f.kind === "line") {
+    const several = f.clues.length > 1;
+    const owner = f.owners.length === 1 ? f.owners[0] : null;
+    return speak.sentence("line", {
+      ring: [f.edge],
+      terms: {
+        crossers: f.clues,
+        owners: f.owners,
+        several,
+        many: f.takes.length > 1,
+        // Two clues that read alike are the crossing one and its "other".
+        same:
+          !several && owner !== null && clueName(s, owner) === clueName(s, f.clues[0]),
+        hidden: f.owners.some((c) => s.grid[c] === HIDDEN),
+      },
+      marks: {
+        outline: {
+          crossers: f.clues.map(at),
+          owners: f.owners.map(at),
+          missed: f.misses.map(at),
+        },
+        stripes: { taken: f.takes.map(at) },
+      },
+    });
+  }
+  const ring = [f.rect];
+  const q = f.clue;
+  const one = f.rect.w * f.rect.h === 1;
+  switch (f.kind) {
+    case "fit": {
+      if (s.grid[q] === 1) return speak.sentence("fitOne", { ring });
+      const why =
+        (f.offBoard ? 1 : 0) | (f.crossesLine ? 2 : 0) | (f.leavesOut ? 4 : 0);
+      return speak.sentence("fit", {
+        ring,
+        terms: { q, one, why, more: why !== 0 && (why & (why - 1)) !== 0 },
+        marks: { outline: { blockers: f.blockers.map(at) } },
+      });
+    }
+    case "boxed":
+      return speak.sentence("boxed", { ring, terms: { q, one } });
+    case "reach":
+      return speak.sentence("reach", {
+        ring,
+        terms: { q, one },
+        marks: { outline: { square: [at(f.square)] } },
+      });
+    case "overlap":
+      return speak.sentence("overlap", {
+        ring,
+        terms: {
+          q,
+          p: f.other,
+          same: clueName(s, q) === clueName(s, f.other),
+          one,
+          several: f.core.length > 1,
+        },
+        marks: { outline: { other: [at(f.other)] }, stripes: { core: f.core.map(at) } },
+      });
+    case "starve":
+      return speak.sentence("starve", {
+        ring,
+        terms: { q, one },
+        marks: {
+          outline: { clues: f.starved.map(at), squares: f.stranded.map(at) },
+        },
+      });
+  }
 }
 
 /** What each technique says, as the hint's sentences read it. */
@@ -172,8 +273,10 @@ export const rectHint = describedEdgeHint<
   reads: (taken, ctx) =>
     readsOf(ctx.marks.sp, reasonBefore(taken, ctx, ctx.marks.grid)),
   step: stepOf,
-  // Every technique's sentence is `say.firing` of its reason.
-  say: (_spoken, { reason }, state) => say.firing(state, reason),
+  // Every technique's sentence is a declared step: why each other rectangle
+  // fails is the game's reading of the board (`reasonOf`), and a clue is
+  // named as the board draws it, which no binding's term says.
+  say: (_spoken, { reason }, state) => sayReason(state, reason),
 });
 
 /**

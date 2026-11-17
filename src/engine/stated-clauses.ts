@@ -12,6 +12,8 @@
  *   elements a term holds.
  * - `{derived outline: words}`: a reference whose words claim something the board
  *   does not show (`derived` in `hint-words.ts`); any reference may be one.
+ *   `{derived each outline: words}` claims it of each element apart, so each
+ *   counts as a fact of its own (`derived`'s `"each"`).
  * - `{ring 1}`, `{ring then}`, `{ring 2+then: words}`: a reference to the squares
  *   the step places that value on (`1`, `2`, ...), or to those its placing
  *   techniques follow with (`then`), or both (`+`). {@link ringNames}
@@ -119,8 +121,9 @@ export type Piece =
       readonly role: string | null;
       /** A reference's forms: one, or one and several. */
       readonly words: readonly (readonly Piece[])[] | null;
-      /** Set on a reference whose words claim what the board does not show. */
-      readonly derived?: true;
+      /** Set on a reference whose words claim what the board does not show:
+       * one fact, or one of each element (`hint-words.ts`'s `Derived`). */
+      readonly derived?: "fact" | "each";
     };
 
 /** A clause, parsed. Throws on a malformed slot. */
@@ -154,14 +157,15 @@ export function parseClause(src: string): Piece[] {
 
 function slot(body: string, src: string): Piece {
   if (/^\s*derived\s/.test(body)) {
-    const ref = slot(body.replace(/^\s*derived\s+/, ""), src);
+    const each = /^\s*derived\s+each\s/.test(body);
+    const ref = slot(body.replace(/^\s*derived\s+(each\s+)?/, ""), src);
     if (
       !("name" in ref) ||
       ref.role === null ||
       !["ring", "outline", "stripes", "strand"].includes(ref.role)
     )
       throw new Error(`"{${body}}" is no derived reference, in "${src}"`);
-    return { ...ref, derived: true };
+    return { ...ref, derived: each ? "each" : "fact" };
   }
   const colon = body.indexOf(":");
   const head = (colon < 0 ? body : body.slice(0, colon)).trim().split(/ +/);

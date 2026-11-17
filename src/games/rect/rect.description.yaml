@@ -307,3 +307,120 @@ techniques:
     says:
       terms: { e: e, C: C, O: O, T: T, M: M }
       marks: {}
+# A step names a clue as the board draws it ("the 6", "the tall 4", "the ?
+# clue"): its number terms are clues by square, which the hint's voice prints
+# (`hint.ts`), and a `values` term several of them ("the 3 and 8"). Why each
+# other rectangle of a clue fails, and which clues own the squares a crossing
+# would take, are the game's reading of the board (`reasonOf`, `solver.ts`),
+# which it supplies; the techniques above say only which firing it is.
+phrases:
+  # The rectangle a step draws, "square" where it is one square.
+  thisRect: "{ring: this {if one: square | rectangle}}"
+  # The clues that own the squares a crossing would take: "other" where one
+  # reads as the crossing clue does, "outlined" where one shows no number,
+  # since "the wide clue" could be any wide clue.
+  owner: "{if same: other {owners} | {if hidden: outlined {owners} | {owners}}}"
+  # What a crossing would take, and what it would miss.
+  takes: >-
+    take {if several: {outline owners: another outlined clue}'s {derived stripes taken: striped square}
+    | {if many: {derived stripes taken: the striped squares} | {derived stripes taken: the striped square}}
+    {outline owners: the {owner}} always {owners: covers | cover}}
+  misses: >-
+    miss {if several: {derived each outline missed: an outlined square}
+    | {derived each outline missed: the outlined square | the outlined squares}} only it reaches
+steps:
+  # A 1 is its own square.
+  fitOne:
+    ring: rectangle
+    look: "A 1 needs no other square"
+    move: "{ring: this square} is its whole rectangle"
+  # Every other rectangle of the clue fails, `why` the reasons other than
+  # taking in another clue, by bit: off the board, across a line, leaving
+  # out part of the clue's own drawn rectangle. `more` where two or more.
+  fit:
+    ring: rectangle
+    terms: { q: number, one: flag, why: number, more: flag }
+    marks: { outline: [blockers] }
+    move: "only {thisRect} fits"
+    wordings:
+      - when: "why = 0"
+        look: "Elsewhere the {q} would take in {outline blockers: the outlined clue | the outlined clues}"
+      - when: "|outlineBlockers| = 0"
+        look: >-
+          Elsewhere the {q} would {or why: run off the board | cross a line |
+          leave out part of the rectangle drawn round it}
+      - when: more
+        look: >-
+          Elsewhere the {q} would take in {outline blockers: the outlined clue | the outlined clues},
+          {or why: run off the board | cross a line | leave out part of the rectangle drawn round it}
+      - look: >-
+          Elsewhere the {q} would take in {outline blockers: the outlined clue | the outlined clues}
+          or {or why: run off the board | cross a line | leave out part of the rectangle drawn round it}
+  boxed:
+    ring: rectangle
+    terms: { q: number, one: flag }
+    look: "Lines close {thisRect} round the {q} alone"
+    move: "it is the {q}'s whole rectangle"
+  reach:
+    ring: rectangle
+    terms: { q: number, one: flag }
+    marks: { outline: [square] }
+    look: "No other clue can reach {derived outline square: the outlined square}"
+    follows: "the {q} must cover it"
+    move: "{thisRect} is the only way it can"
+  # Clue `p` covers the striped squares wherever it goes; `same` where it
+  # reads as `q` does.
+  overlap:
+    ring: rectangle
+    terms: { q: number, p: number, same: flag, one: flag, several: flag }
+    marks: { outline: [other], stripes: [core] }
+    look: >-
+      Wherever {outline other: the outlined {p}} goes, it covers
+      {if several: {derived stripes core: the striped squares} | {derived stripes core: the striped square}}
+    follows: "the {if same: other {q} | {q}} can't use {if several: them | it}"
+    move: "{thisRect} is all it has left"
+  # Each other rectangle of the clue would leave another clue no room, or a
+  # square no clue could still cover. A reason each is a few words: both in
+  # one sentence have to fit the length a step is held to.
+  starve:
+    ring: rectangle
+    terms: { q: number, one: flag }
+    marks: { outline: [clues, squares] }
+    move: "it must take {thisRect}"
+    wordings:
+      - when: "|outlineSquares| = 0"
+        look: "Elsewhere the {q} would leave {derived each outline clues: the outlined clue | the outlined clues} no room"
+      - when: "|outlineClues| = 0"
+        look: "Elsewhere the {q} would leave {derived each outline squares: the outlined square | the outlined squares} no cover"
+      - look: >-
+          Elsewhere the {q} would leave {derived each outline clues: the outlined clue | the outlined clues}
+          no room or {derived each outline squares: the outlined square | the outlined squares} no cover
+  # Only the clues `crossers` have a rectangle across the edge, and each would
+  # take a square the clues `owners` cover wherever they go, or leave out one
+  # only it reaches. Several crossers share one clause, since a clause each
+  # runs to a paragraph; `same` and `hidden` name a lone crosser's owners.
+  # A stripes reference takes its first form whatever it covers, so `many`
+  # says whether it would take several squares, as `several` does in
+  # `overlap`.
+  line:
+    ring: line
+    terms: { crossers: values, owners: values, several: flag, many: flag, same: flag, hidden: flag }
+    marks: { outline: [crossers, owners, missed], stripes: [taken] }
+    move: "the edge is a line"
+    long: >-
+      it names the clues that can cross the edge and the clues whose squares a
+      crossing would take, each by its shape and number, so the player can
+      find them; where both reasons stand, each rules out a different
+      rectangle across the edge, so neither can go
+    wordings:
+      - when: "|outlineMissed| = 0"
+        look: >-
+          Only {derived outline crossers: the outlined {crossers}} can cross {ring: this edge},
+          and {crossers: it | each} would {takes}
+      - when: "|stripesTaken| = 0"
+        look: >-
+          Only {derived outline crossers: the outlined {crossers}} can cross {ring: this edge},
+          and {crossers: it | each} would {misses}
+      - look: >-
+          Only {derived outline crossers: the outlined {crossers}} can cross {ring: this edge},
+          and {crossers: it | each} would {takes} or {misses}

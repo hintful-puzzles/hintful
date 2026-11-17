@@ -1520,7 +1520,9 @@ count of the leg's own ring, which no slot says without marking the words.
 `{a term}` says a value with its article ("an A") and `{numeral term}` a plain
 count where `{term}` is a value the board draws another way (a letter).
 `{derived outline: words}` is a reference whose words claim what the board
-does not show, which `Narration.depth` counts. A kind that states `again` and
+does not show, which `Narration.depth` counts; `{derived each outline: …}`
+claims it of each element apart, a fact apiece (Rect's clues a rectangle
+would leave no room). A kind that states `again` and
 no game `later` hook says a later leg's move as its `later` clause where it
 has one, else its `move` (Dominosa: "this spot can't hold a domino either").
 **A term a leg supplies** is given by the game's `supplied` hook for its

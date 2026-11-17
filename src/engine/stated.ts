@@ -439,7 +439,7 @@ function reference<E>(
       .join("");
   };
   const ref = mark.as(DRAWN[role], role === "stripes" ? whole(kind) : kind, els, say);
-  return p.derived === true ? derived(ref) : ref;
+  return p.derived === undefined ? ref : derived(ref, p.derived);
 }
 
 /** A step's parts, rendered; `move` only where the clauses state one. */

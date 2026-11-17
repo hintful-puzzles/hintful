@@ -450,6 +450,13 @@ describe("a stated clause", () => {
     );
   });
 
+  it("counts a derived reference of each element as a fact apiece", () => {
+    const two = cx({ marks: { outline: [at(1), at(2)] } });
+    const said = (look: string): number => statedParts({ look }, two).look?.depth ?? -1;
+    expect(said("{derived outline: the outlined squares} have no room")).toBe(1);
+    expect(said("{derived each outline: the outlined squares} have no room")).toBe(2);
+  });
+
   it("refuses literal words that only a reference may say", () => {
     expect(() => statedParts({ look: "this square is full" }, cx())).toThrow();
   });
