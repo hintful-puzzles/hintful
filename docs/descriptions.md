@@ -1115,6 +1115,17 @@ to grow", or a lone square "walled in on every side but one", named by `lone`).
 Both name their edges from the term `anchor`, the first group. `kindWords`'
 `terms` are added to every placement, so a term reading one kind's binding
 (Palisade's clue, `v(q)`) goes in that placement's `with.terms`.
+`count.compare` reads two counts whose open squares overlap (Mines' `pair`
+and `regions`, Mosaic's `compared`): where A needs at least `least` and B
+holds at most `most`, A's own squares hold the difference, and where that is
+all of them they are filled and B's own squares cleared, in one step. The
+game's `group` binds the pair and its look names both (only it can tell two
+3s apart); the kind says the move, where each set lies (`outsideA`,
+`outsideB`), with `{ring 1}` and `{ring 2}`, so a step gives two marks (Mosaic's
+`fill` takes a mark per square). A kind's frame is laid only under a game's
+`says`, so a game whose hint narrates the firing itself (Mines') gives none
+and takes no words. A placement is checked against the schema again once
+expanded, so a game's words over a frame are checked whole.
 `fit.flip` is the Check of a
 two-valued square (`holds`, `scope`). How the tried value breaks the rule is
 the game's to say, so the game's `says:` holds the look; the kind lays it over

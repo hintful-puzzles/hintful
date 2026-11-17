@@ -1,6 +1,4 @@
-ok  mosaic     alone                          3  sound    (want sound   )     9 queries    4.0s
-ok  mosaic     alone (planted)                3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
-ok  src/games/mosaic/mosaic.description.yaml#alone: recorded sound, proved whole on all 1 boards
-ok  mosaic     compared                       3  sound    (want sound   )     9 queries    1.8s
+ok  mosaic     alone                          current: recorded src/games/mosaic/mosaic.description.yaml#alone b4028a7e5a9da40e
+ok  mosaic     compared                       3  sound    (want sound   )     9 queries    2.8s
 ok  mosaic     compared (planted)             3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
 ok  src/games/mosaic/mosaic.description.yaml#compared: recorded sound, proved whole on all 1 boards

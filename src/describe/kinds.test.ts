@@ -171,6 +171,42 @@ describe("a kind of rule expands to the technique it stands for", () => {
     });
   });
 
+  /** Two counts compared, as Mines places them, with no words. */
+  const compare = {
+    kind: "count.compare",
+    as: "pair",
+    tier: "Easy",
+    with: {
+      group: "a in cells, b in adj4(a)",
+      openA: "open(a)",
+      openB: "open(b)",
+      least: "need(a)",
+      most: "need(b)",
+      fill: 1,
+      rest: 2,
+    },
+  };
+
+  it("lays no frame where the game gives no words, its hint narrating", () => {
+    expect(expandKind(compare, "x")).not.toHaveProperty("says");
+  });
+
+  it("refuses a frame's word the game left unfilled", () => {
+    const says = { arms: { more: { look: "a" }, same: { look: "b" } } };
+    expect(() => expandKind({ ...compare, says }, "x")).toThrow(/missing .*outsideB/);
+    const words = { fillWord: "f", restWord: "r", outsideA: "oa", outsideB: "ob" };
+    const t = expandKind(
+      { ...compare, with: { ...compare.with, ...words }, says },
+      "x",
+    );
+    expect(t["says"]).toMatchObject({
+      terms: { by: "by" },
+      arms: {
+        more: { when: "|RA| > 0", look: "a", move: expect.stringContaining(" ob f") },
+      },
+    });
+  });
+
   it("is read by the loader where a description places one", () => {
     const text = `
 game: probe

@@ -165,7 +165,7 @@ function minesLadder(dealt: mines.Dealt): Ladder {
         ? { rung: "satisfied", group, safes: [...U] }
         : { rung: "full", group, mines: [...U] };
     }),
-    pair: compiledRung(mines.pair, dealt, ({ a, b, O, S }, _c, _n, m): Firing => {
+    pair: compiledRung(mines.pair, dealt, ({ a, b, RA }, _c, _n, m): Firing => {
       const heavy = groupOf(m, dealt, a);
       const light = groupOf(m, dealt, b);
       return {
@@ -173,8 +173,8 @@ function minesLadder(dealt: mines.Dealt): Ladder {
         heavy: { group: heavy },
         light: { group: light },
         shared: meet(heavy.cells, light.cells),
-        mines: [...O],
-        safes: [...S],
+        mines: [...RA],
+        safes: minus(light.cells, heavy.cells),
       };
     }),
     region: compiledRung(

@@ -199,6 +199,7 @@
                   "look": { "$ref": "#/$defs/clause" },
                   "follows": { "$ref": "#/$defs/clause" },
                   "move": { "$ref": "#/$defs/clause" },
+                  "later": { "$ref": "#/$defs/clause" },
                   "wordings": { "$ref": "#/$defs/wordings" },
                   "long": { "$ref": "#/$defs/long" },
                   "terms": { "$ref": "#/$defs/saidTerms" },
@@ -259,8 +260,8 @@
             },
             "with": { "type": "object" },
             "says": {
-              "$ref": "#/$defs/statement/properties/says",
-              "description": "The game's own words, for a kind that brings none."
+              "type": "object",
+              "description": "The game's own words, laid over what the kind brings; the technique it expands into is checked against the statement's `says`."
             },
             "tier": { "type": "string" },
             "from": { "$ref": "#/$defs/from" },

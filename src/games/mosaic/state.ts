@@ -98,9 +98,10 @@ export type MosaicMove =
       paintState: number;
     }
   | { type: "solve"; solution: string }
-  /** A hint step's squares, all given `mark` (shaded or clear). The pointer
-   * makes it one square at a time, with toggles. */
-  | { type: "fill"; cells: number[]; mark: number };
+  /** A hint step's squares, given `mark` (shaded or clear), one for all or
+   * one for each square in turn. The pointer makes it one square at a time,
+   * with toggles. */
+  | { type: "fill"; cells: number[]; mark: number | readonly number[] };
 
 export interface MosaicUi {
   cursor: GridCursor;
@@ -392,9 +393,11 @@ export function executeMove(state: MosaicState, move: MosaicMove): MosaicState {
       }
     }
   } else if (move.type === "fill") {
-    for (const pos of move.cells) {
+    for (const [i, pos] of move.cells.entries()) {
       if (pos < 0 || pos >= size) throw new Error("Fill out of bounds");
-      cells[pos] = move.mark;
+      const mark = typeof move.mark === "number" ? move.mark : move.mark[i];
+      if (mark === undefined) throw new Error("Fill without a mark");
+      cells[pos] = mark;
       updateBoardStateAround(state, cells, pos % width, Math.floor(pos / width));
     }
   } else {

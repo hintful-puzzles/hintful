@@ -437,10 +437,47 @@ boundaries are judgment, and the counts carry that.
     `tooFar`/`onlyWay` are the same ideas over numbered squares, not walls,
     each its own formula; Galaxies' `separate` reads its arrows; Range's
     `cut` is connection, not size.
-  - [ ] Next: PEER's other forms (Dominosa's `placed` reads two rules, a
-    spot's neighbors and its domino's other spots), REL's bounds form
-    (Unequal `sign`), GRP over numbered squares (Filling), CMP, SUM, and the
-    CNT techniques not placed yet (the item above says why each waits).
+  - [x] (2026-11-17) CMP, `count.compare`: A needs at least `least` in its
+    open squares, B holds at most `most` in its; A's own squares hold the
+    difference, and where that is all of them they are filled and B's own
+    cleared, in one firing (Mines' form). Placed on Mines `pair` and
+    `regions` (the same formula with a region on each side) and Mosaic
+    `compared`. Mines compiles to the same conclusions and keeps its own
+    narration: **a kind's frame is now laid only under a game's `says`**, so
+    a game whose hint narrates the firing takes no words. Mosaic's `more`
+    arm now clears the other number's own squares in the same step (its
+    `sameNeed` did it on the next pass, so the closure is the same): **the
+    deal-compare at 3 seeds a preset gives the same boards and verdicts in
+    both games**, totals 0.99× (Mosaic) after the kind reads `by` before
+    making either set (making both for every pair doubled Unreasonable deals,
+    1.8×). Mosaic's `fill` move takes a mark per square (a save written
+    before reads as it did). **Moved, Mosaic:** rungs `compared.more`/`.same`
+    (were `needsMore`/`sameNeed`); a step with both marks says "This 4 needs
+    2 more shaded squares than this 2, so each ringed square outside the 2's
+    block must be shaded, and each ringed square outside the 4's block must
+    be clear" (`long:` on the arm: two moves, each placed), the rings in two
+    colors as the sentence's chips; "same" says "…so each ringed square must
+    be clear". The plan is shorter (671 positions walked for the pins, was
+    738). Seen in the app: the step, applied in one move and one Undo, and
+    shrinking to "the ringed square" when one is made by hand. Re-checked
+    sound, the kind's plant caught in both; Mosaic's plants file went whole,
+    Mines keeps its `regions` boundary plant restated over the kind's names.
+    **Found on the way:** a placement's `says` was schema-checked before the
+    kind's frame was laid under it, so an arm without `when` was refused;
+    the expanded file is now checked again, which found the count kinds'
+    arm `later` missing from the schema. **Not placed, and why:** Mines
+    `region` states both orientations in one technique (`heavy`), which the
+    kind would split in two and reorder; **Clusters** `countFull`/
+    `countShort` are this kind with bounds (lo/hi) and a value per pair (`v
+    in domain`, B's bounds counted in A's value), but its steps are `shown:
+    each` with "{ring} must hold a {piece fill}", which the B side's cleared
+    squares (the other piece) would contradict; it needs a fact-level
+    wording first.
+  - [ ] Next: Clusters on `count.compare` (above), PEER's other forms
+    (Dominosa's `placed` reads two rules, a spot's neighbors and its
+    domino's other spots), REL's bounds form (Unequal `sign`), GRP over
+    numbered squares (Filling), SUM, and the CNT techniques not placed yet
+    (the item above says why each waits).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

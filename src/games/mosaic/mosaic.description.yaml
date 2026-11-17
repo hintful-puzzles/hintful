@@ -46,7 +46,9 @@ help:
     * **A number that needs more shaded squares than another, by as many
       as it has empty squares outside the other's block**, makes all of
       those shaded. A 6 beside a 3, with three of its empty squares
-      outside the 3's block, is the plainest case.
+      outside the 3's block, is the plainest case. The squares the two
+      share then hold all the other number needs, so its own empty squares
+      outside the first's block are clear, in the same step.
     * **Two numbers that need the same number of shaded squares, where
       every empty square of the first is in the second's block too**, make
       the second's other squares clear: the second gets all it needs from
@@ -79,10 +81,6 @@ define:
   block(c): "within(c, 1)"
   # The shaded squares the number at c still needs.
   need(c): "clue(count, c) - count(d in block(c) where value(d) = 1)"
-  # Whether square d is in the block of b.
-  near(d, b): "abs(x(d) - x(b)) <= 1 and abs(y(d) - y(b)) <= 1"
-  # The empty squares of c's block outside b's.
-  only(c, b): "{d in block(c) where not known(d) and not near(d, b)}"
   # The empty squares of a set.
   open(S): "{d in S where not known(d)}"
   # Whether the block of c has an empty square.
@@ -123,22 +121,22 @@ techniques:
     with:
       terms: { placed: "n < v(k)" }
   # Two numbers whose blocks overlap both count the squares they share, so
-  # they differ by the squares only one counts. One that needs more than the
-  # other, by as many as it has empty squares outside the other's block, O,
-  # needs them all; by more, the marks are inconsistent. Two that need the
-  # same, the first with none outside the second's block: the second gets
-  # all it needs from the squares they share, so its own are clear. A pair
-  # with a block that has no empty square decides nothing `alone` has not.
-  - id: compared
+  # they differ by the squares only one counts: compared. A pair with a block
+  # that has no empty square decides nothing `alone` has not.
+  - kind: count.compare
+    as: compared
     tier: Normal
-    for: >-
-      k in clues(count), c = at(k) where blockOpen(c),
-      b in within(c, 2) where b != c and clue(count, b) != none and blockOpen(b),
-      n = need(c), by = n - need(b), O = only(c, b)
-      where by >= |O| and (by > 0 or |only(b, c)| > 0)
-    conclude: >-
-      by = |O| and (forall d in O: place(d, 1))
-      and (by > 0 or (forall d in only(b, c): place(d, 2)))
+    with:
+      group: >-
+        k in clues(count), c = at(k) where blockOpen(c),
+        b in within(c, 2) where b != c and clue(count, b) != none and blockOpen(b)
+      openA: open(block(c))
+      openB: open(block(b))
+      least: need(c)
+      most: need(b)
+      # Two numbers of one value are named by where they sit, as the look does.
+      outsideA: "outside the {if same: {if vertical: {if first: upper | lower} | {if first: left | right}} {value} | {value}}'s block"
+      outsideB: "outside the {if same: {if vertical: {if first: lower | upper} | {if first: right | left}} {value} | {otherValue}}'s block"
     # The hint names both numbers, what each says, and how many shaded squares
     # the first still needs and by how many that is more than the second; it
     # reads both blocks.
@@ -151,25 +149,20 @@ techniques:
         other: b
         value: v(k)
         otherValue: "clue(count, b)"
-        need: n
-        by: by
+        need: need(c)
         pair: "{c, b}"
+        same: "v(k) = clue(count, b)"
         vertical: "y(c) != y(b)"
         first: "y(c) < y(b) or (y(c) = y(b) and x(c) < x(b))"
       marks: { reads: "block(c) + block(b)" }
       arms:
-        needsMore:
-          when: "by > 0"
+        more:
           wordings:
-            - when: "v(k) = clue(count, b)"
+            - when: "same"
               look: "{outline clue: the {if vertical: {if first: upper | lower} | {if first: left | right}} {value}} needs {by} more {shaded} {by: square | squares} than {outline other: the {if vertical: {if first: lower | upper} | {if first: right | left}} {value}}"
-              move: "{ring} outside the {if vertical: {if first: lower | upper} | {if first: right | left}} {value}'s block must be {shaded}"
             - look: "{outline clue: this {value}} needs {by} more {shaded} {by: square | squares} than {outline other: this {otherValue}}"
-              move: "{ring} outside the {otherValue}'s block must be {shaded}"
-        sameNeed:
-          when: "by = 0"
-          move: "{ring} must be {unshaded}"
+        same:
           wordings:
-            - when: "v(k) = clue(count, b)"
+            - when: "same"
               look: "{outline pair: Both {value}s} need {need} {shaded} {need: square | squares}, and the {if vertical: {if first: upper | lower} | {if first: left | right}} {value}'s all lie in the {if vertical: {if first: lower | upper} | {if first: right | left}} {value}'s block"
             - look: "{outline clue: this {value}} and {outline other: this {otherValue}} both need {need} {shaded} {need: square | squares}, and the {value}'s all lie in the {otherValue}'s block"

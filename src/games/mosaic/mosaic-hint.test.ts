@@ -39,20 +39,20 @@ const pinned = describeHintPins({
   game: mosaicGame,
   params: [P, U],
   pins: {
-    /** Held on 699 of 738 positions walked. */
+    /** Held on 644 of 671 positions walked. */
     "alone.met":
       "10x10:0c4a5c2a3456b5a25a655b3b55a5a20a22a44b11c4a232c14a3c5f5c8d44d4b3d5c",
-    /** Held on 698 of 738 positions walked. */
+    /** Held on 644 of 671 positions walked. */
     "alone.exact":
       "10x10:c3c4442a4a5a44b3a4a4d53b3a133b23a3b4a7a1a2a5b3c323g212a5b5a0b32a2e02e2",
-    /** Held on 193 of 738 positions walked. */
-    "compared.needsMore":
-      "10x10du:3a21j44b5b8a4a6a5c87c45a3477a4a45d86412b4a36a4f4c554a43a5k23a44a",
-    /** Held on 193 of 738 positions walked. */
-    "compared.sameNeed": {
-      id: "10x10du:3a21j44b5b8a4a6a5c87c45a3477a4a45d86412b4a36a4f4c554a43a5k23a44a",
+    /** Held on 128 of 671 positions walked. */
+    "compared.more":
+      "10x10du:a42b35d5a4c6a4b335b4743f67b5543b5b5b6a4f4a443b3a44a4b55e2345a4a433a1d",
+    /** Held on 83 of 671 positions walked. */
+    "compared.same": {
+      id: "10x10du:a6b2c2c5c1g3c2a33a5a32d435c55c44a43d23a2a455a1d4a5b2f34d64e",
       moves:
-        '[{"type":"fill","cells":[32,42,52],"mark":1},{"type":"fill","cells":[41,43,53,63],"mark":1}]',
+        '[{"type":"fill","cells":[0,1,2,10,11,12],"mark":1},{"type":"fill","cells":[82,83,84,92,93,94],"mark":1},{"type":"fill","cells":[85,95],"mark":2}]',
     },
   },
 });
@@ -69,11 +69,17 @@ function followed(state: MosaicState): HintStep<MosaicMove, unknown, string>[] {
   return steps;
 }
 
-/** A step's squares as indices into the grid, and the mark each is given. */
-function decides(step: { highlights?: unknown }): { cells: number[]; mark: number } {
+/** A step's squares as indices into the grid, the mark each is given, and
+ * the first square's. */
+function decides(step: { highlights?: unknown }): {
+  cells: number[];
+  marks: number[];
+  mark: number;
+} {
   const { targets } = step.highlights as MosaicHint;
   return {
     cells: targets.map((t) => t.y * P.width + t.x),
+    marks: targets.map((t) => t.value),
     mark: targets[0]?.value ?? 0,
   };
 }
@@ -97,9 +103,9 @@ describe("Mosaic's hint", () => {
     if (!solution) throw new Error("no solution");
     const decided = new Set<number>();
     for (const step of followed(state)) {
-      const { cells, mark } = decides(step);
-      for (const c of cells) {
-        expect(solution[c], `square ${c}`).toBe(mark);
+      const { cells, marks } = decides(step);
+      for (const [i, c] of cells.entries()) {
+        expect(solution[c], `square ${c}`).toBe(marks[i]);
         decided.add(c);
       }
     }
@@ -136,15 +142,15 @@ describe("Mosaic's hint", () => {
   it.each([
     [
       "needs more than",
-      "compared.needsMore",
+      "compared.more",
       STATE_MARKED,
-      /needs \d more .+ than .+, so these squares outside .+ block must be/,
+      /needs \d more .+ than .+, so (the|each) ringed square outside .+ block must be shaded(, and (the|each) ringed square outside .+ block must be clear)?\.$/,
     ],
     [
       "needs as many as",
-      "compared.sameNeed",
+      "compared.same",
       STATE_BLANK,
-      /both need .+, and the .+ all lie in .+ block/i,
+      /both (\d+s )?need .+, and the .+ all lie in .+ block, so (the|each) ringed square must be clear\.$/i,
     ],
   ] as const)("a step where one number %s another is drawn and said", (_, rung, mark, words) => {
     const { recording, hint } = renderPinnedHint(mosaicGame, pinned(rung));
@@ -156,20 +162,23 @@ describe("Mosaic's hint", () => {
     expect(rings).toHaveLength(hl.cells.length);
 
     // Both numbers are named, the first the one the sentence opens on, and
-    // the ringed squares are ones only one of the two counts: the first's
-    // where they are shaded, the other's where they are clear.
+    // each ringed square is one only one of the two counts: the first's where
+    // it is shaded, the other's where it is clear.
     const blocks = stepMarks(hint)
       .of("outline", BLOCK)
       .map((clue) => blockOf(clue, P.width, P.height));
     expect(blocks).toHaveLength(2);
-    const [first, other] = mark === STATE_MARKED ? blocks : blocks.toReversed();
     const within = (
       block: readonly { x: number; y: number }[],
       p: { x: number; y: number },
     ) => block.some((q) => q.x === p.x && q.y === p.y);
-    for (const p of rings) {
-      expect(within(first ?? [], p)).toBe(true);
-      expect(within(other ?? [], p)).toBe(false);
+    const first = blocks.find((b) => within(b, rings[0]) === (mark === STATE_MARKED));
+    const other = blocks.find((b) => b !== first);
+    for (const [i, c] of hl.cells.entries()) {
+      const p = { x: c % P.width, y: Math.floor(c / P.width) };
+      const [own, not] = hl.marks[i] === STATE_MARKED ? [first, other] : [other, first];
+      expect(within(own ?? [], p)).toBe(true);
+      expect(within(not ?? [], p)).toBe(false);
     }
 
     // Each block is outlined whole, so the two read as two squares: a side
@@ -254,10 +263,10 @@ describe("Mosaic's hint", () => {
       const decided = new Set<number>();
       let comparing = 0;
       for (const step of followed(state)) {
-        const { cells, mark } = decides(step);
+        const { cells, marks } = decides(step);
         if (step.rung.startsWith("compared.")) comparing++;
-        for (const c of cells) {
-          expect(solution[c], `seed ${seed}, square ${c}`).toBe(mark);
+        for (const [i, c] of cells.entries()) {
+          expect(solution[c], `seed ${seed}, square ${c}`).toBe(marks[i]);
           decided.add(c);
         }
       }
@@ -274,10 +283,10 @@ describe("Mosaic's hint", () => {
       if (answer.kind !== "one") throw new Error("no answer");
       const decided = new Set<number>();
       for (const step of followed(state)) {
-        const { cells, mark } = decides(step);
+        const { cells, marks } = decides(step);
         if (step.rung.startsWith("compared.")) comparing++;
-        for (const c of cells) {
-          expect(answer.solution[c], `seed ${seed}, square ${c}`).toBe(mark);
+        for (const [i, c] of cells.entries()) {
+          expect(answer.solution[c], `seed ${seed}, square ${c}`).toBe(marks[i]);
           decided.add(c);
         }
       }

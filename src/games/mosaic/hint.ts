@@ -51,12 +51,16 @@ const described = describedFiringHint<
   foreign: (m) => m.type === "solve",
   target: (at, n) => ({ ...at, value: n }),
   want: (t) => t.value,
-  // Every fact of a firing places the one mark its technique concludes.
-  move: (targets, state) => ({
-    type: "fill",
-    cells: targets.map((t) => t.y * state.width + t.x),
-    mark: targets[0].value,
-  }),
+  // A step's squares and their marks: one for all, but where a comparison
+  // shades one number's squares and clears the other's.
+  move: (targets, state) => {
+    const marks = targets.map((t) => t.value);
+    return {
+      type: "fill",
+      cells: targets.map((t) => t.y * state.width + t.x),
+      mark: marks.every((n) => n === marks[0]) ? marks[0] : marks,
+    };
+  },
   stated: STATED,
   // A number is named apart from the squares of its block, which include its
   // own square; two named together are one reference.

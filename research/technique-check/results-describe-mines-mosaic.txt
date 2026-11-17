@@ -1,0 +1,13 @@
+ok  mines      alone                          current: recorded src/games/mines/mines.description.yaml#alone 4e1eed453f1d14f9
+ok  mines      pair                           3  sound    (want sound   )     9 queries    1.7s
+ok  mines      pair (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
+ok  src/games/mines/mines.description.yaml#pair: recorded sound, proved whole on all 1 boards
+ok  mines      region                         current: recorded src/games/mines/mines.description.yaml#region 1b52b1298acabc7d
+ok  mines      regions                        3  sound    (want sound   )     9 queries   49.8s
+ok  mines      regions (planted)              3  unsound  (want unsound )     1 queries    0.3s   at clue count 0
+ok  src/games/mines/mines.description.yaml#regions: recorded sound, proved whole on all 1 boards
+ok  mines      count                          current: recorded src/games/mines/mines.description.yaml#count d495157a57a52b10
+ok  mosaic     alone                          current: recorded src/games/mosaic/mosaic.description.yaml#alone b4028a7e5a9da40e
+ok  mosaic     compared                       3  sound    (want sound   )     9 queries    3.4s
+ok  mosaic     compared (planted)             3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
+ok  src/games/mosaic/mosaic.description.yaml#compared: recorded sound, proved whole on all 1 boards

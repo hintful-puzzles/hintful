@@ -113,7 +113,16 @@ describe("the comparison of two numbers", () => {
     // has six squares and the 1 four.
     expect(walked(3, "13g")).toEqual({
       verdict: "stuck",
-      fired: [{ rung: "needsMore", clue: 1, other: 0, need: 3, by: 2, cells: [2, 5] }],
+      fired: [{ rung: "more", clue: 1, other: 0, need: 3, by: 2, cells: [2, 5] }],
+    });
+  });
+
+  it("clears the other's own squares in the same step, its shared ones holding all it needs", () => {
+    // A 3 and a 1 side by side on the top row, each with a column the other
+    // does not count: the 3's is shaded, the 1's clear.
+    expect(walked(4, "a31m")).toEqual({
+      verdict: "stuck",
+      fired: [{ rung: "more", clue: 1, other: 2, need: 3, by: 2, cells: [0, 4, 3, 7] }],
     });
   });
 
@@ -121,7 +130,7 @@ describe("the comparison of two numbers", () => {
     // A corner 2 and the 2 beside it, whose block holds the corner's.
     expect(walked(3, "22g")).toEqual({
       verdict: "stuck",
-      fired: [{ rung: "sameNeed", clue: 0, other: 1, need: 2, by: 0, cells: [2, 5] }],
+      fired: [{ rung: "same", clue: 0, other: 1, need: 2, by: 0, cells: [2, 5] }],
     });
   });
 
@@ -129,8 +138,7 @@ describe("the comparison of two numbers", () => {
     const desc = "0b4c4b4a6a3d3a2c";
     expect(deductionTier(boardOf(5, desc))).toBe(DIFF_NORMAL);
     const rungs = walked(5, desc).fired.map((f) => f.rung);
-    expect(rungs).toContain("needsMore");
-    expect(rungs).toContain("sameNeed");
+    expect(rungs).toContain("more");
   });
 
   it("is asked only where no number decides anything alone", () => {

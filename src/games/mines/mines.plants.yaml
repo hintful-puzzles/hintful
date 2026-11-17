@@ -12,14 +12,6 @@ techniques:
     conclude: >-
       n >= 0 and n <= |U| and (n <= 1 implies (forall d in U: place(d, 2))) and
       (n <= 1 or (forall d in U: place(d, 1)))
-  # One square more of its own than the difference, all read as mines.
-  pair:
-    for: >-
-      k in clues(count), a = at(k) where |open(a)| > 0, b in within(a, 2) where
-      b != a and clue(count, b) != none and meet(a, b), by = need(a) - need(b),
-      O = open(a) - open(b), S = open(b) - open(a) where by + 1 >= |O| and |O| +
-      |S| > 0
-    conclude: "(forall d in O: place(d, 1)) and (forall d in S: place(d, 2))"
   # A region read off a number whose squares do not all touch the outer one.
   region:
     for: >-
@@ -38,8 +30,8 @@ techniques:
       need(i), p in within(o, 2) where p != o and clue(count, p) != none and
       |open(p)| > 0, q in within(p, 2) where q != p and clue(count, q) != none
       and |open(q)| > 0 and |open(q)| < |open(p)|, S = open(p) - open(q) where
-      (exists d in R: d in S), by = r - (need(p) - need(q)) where by >= |R - S|
-      and |R - S| + |S - R| > 0
+      (exists d in R: d in S), RA = R - S, RB = S - R, by = r - (need(p) -
+      need(q)) where by >= |RA| and |RA| + |RB| > 0
   # Numbers whose squares meet counted as though they did not.
   count:
     for: >-

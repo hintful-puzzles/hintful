@@ -196,6 +196,58 @@ export const KINDS: Readonly<Record<string, Kind>> = {
         "(n <= 1 implies (forall c in open($set): $restMove)) and (n <= 1 or (forall c in open($set): $fillMove))",
     },
   },
+  // Two counts over sets that overlap: A holds at least `least` of the value
+  // in its open squares `openA`, B at most `most` in `openB`. The squares
+  // they share hold at most `most`, so A's own squares, RA, hold at least the
+  // difference, `by`. Where that is all of them, they hold the value, the
+  // shared squares hold all of B's, and B's own squares, RB, hold the rest.
+  // More than all of them makes the marks inconsistent. The game's `group`
+  // binds the two. Its look says what each needs, which only the game can
+  // name; the kind says the move, where RA lies (`outsideB`: "outside the
+  // 3's block") and RB (`outsideA`), as the count kinds say theirs. Where A
+  // has no squares of its own (`same`), its look says they all lie in B's.
+  "count.compare": {
+    params: ["group", "openA", "openB", "least", "most"],
+    defaults: {
+      fill: null,
+      rest: null,
+      fillMove: "place(c, $fill)",
+      restMove: "place(c, $rest)",
+      // The words, needed only where the game gives its look.
+      fillWord: null,
+      restWord: null,
+      outsideA: null,
+      outsideB: null,
+    },
+    // `by` is read before either set is made, and B's own squares only where
+    // A has none: made for every pair on every pass, they doubled the time
+    // of Mosaic's Unreasonable deals.
+    technique: {
+      for: "$group, by = $least - ($most) where by >= 0, RA = $openA - $openB where by >= |RA| and (|RA| > 0 or |$openB - $openA| > 0)",
+      conclude:
+        "by = |RA| and (forall c in RA: $fillMove) and (forall c in $openB - $openA: $restMove)",
+    },
+    saysBeneath: {
+      terms: { by: "by" },
+      arms: {
+        more: {
+          when: "|RA| > 0",
+          move: "{ring 1: the ringed {noun} | each ringed {noun}} $outsideB $fillWord{has 2: , and {ring 2: the ringed {noun} | each ringed {noun}} $outsideA $restWord}",
+          long: "a step that fills one count's squares and clears the other's says where each of the two lies, so the player can tell which ringed square takes which",
+        },
+        // The look has said that A's squares all lie in B's.
+        same: {
+          when: "|RA| = 0",
+          move: "{ring 2: the ringed {noun} | each ringed {noun}} $restWord",
+        },
+      },
+    },
+    // One square of A's own more than the difference, all read as the value.
+    plant: {
+      for: "$group, RA = $openA - $openB, RB = $openB - $openA, by = $least - ($most) where by >= |RA| - 1 and |RA| + |RB| > 0",
+      conclude: "(forall c in RA: $fillMove) and (forall c in RB: $restMove)",
+    },
+  },
   // A thing down to one option takes it. One with none left makes the marks
   // inconsistent. By default the thing is a square `c` and its options its
   // values; a game names another (`group`: Crossing's run, with the numbers
@@ -516,13 +568,21 @@ export function expandKind(
   const t = fill(kind.technique, args) as Kind["technique"];
   // The game's `says` beside the placement is laid over the kind's own (Range
   // shows its touch a square at a time), or over its frame.
+  // A frame is laid only under a game's words: a game whose hint narrates
+  // the firing itself (Mines') gives none, and so takes no words.
   const beneath =
     t.says !== undefined
       ? { ...t.says, terms: { ...t.says.terms, ...(terms as Record<string, unknown>) } }
-      : kind.saysBeneath === undefined
+      : kind.saysBeneath === undefined || gameSays === undefined
         ? undefined
         : fill(kind.saysBeneath, args);
   const says = beneath === undefined ? gameSays : laidOver(beneath, gameSays ?? {});
+  const left = new Set(
+    [...JSON.stringify(says ?? {}).matchAll(/\$(\w+)/g)]
+      .map((m) => m[1])
+      .filter((p) => takes.includes(p)),
+  );
+  if (left.size > 0) throw refuse([...left]);
   const { says: _s, ...statement } = t;
   return {
     id: as,

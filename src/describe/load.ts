@@ -39,17 +39,27 @@ export function loadDescriptionFile(text: string, path: string): DescriptionFile
   } catch (e) {
     throw new DescriptionError(`${path}: ${e instanceof Error ? e.message : e}`);
   }
-  if (!validate(data)) {
-    const e = deepest(validate.errors ?? []);
-    const extra =
-      e.keyword === "additionalProperties" || e.keyword === "unevaluatedProperties"
-        ? ` (${Object.values(e.params).join(", ")})`
-        : "";
-    throw new DescriptionError(
-      `${path}: ${e.instancePath || "/"} ${e.message}${extra}`,
-    );
-  }
-  return withPhrases(withKinds(data as DescriptionFile, path), path);
+  valid(data, path);
+  // A placement's words are whole only once laid over its kind's, so the
+  // expanded file is checked again.
+  const placed = withKinds(data as DescriptionFile, path);
+  if (placed !== data) valid(JSON.parse(JSON.stringify(placed), unplanted), path);
+  return withPhrases(placed, path);
+}
+
+/** A JSON reviver dropping the plant a kind's technique carries, which the
+ * statement it expands into has no field for. */
+const unplanted = (key: string, v: unknown): unknown =>
+  key === "plant" ? undefined : v;
+
+function valid(data: unknown, path: string): void {
+  if (validate(data)) return;
+  const e = deepest(validate.errors ?? []);
+  const extra =
+    e.keyword === "additionalProperties" || e.keyword === "unevaluatedProperties"
+      ? ` (${Object.values(e.params).join(", ")})`
+      : "";
+  throw new DescriptionError(`${path}: ${e.instancePath || "/"} ${e.message}${extra}`);
 }
 
 /** `data` with each technique placed as a kind of rule (`kinds.ts`) replaced

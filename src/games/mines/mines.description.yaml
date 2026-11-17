@@ -99,18 +99,22 @@ techniques:
       n >= 0 and n <= |U|
       and (n = 0 implies (forall d in U: place(d, 2)))
       and (n = 0 or (forall d in U: place(d, 1)))
-  # Two numbers whose undecided squares meet: the squares they share hold at
-  # most what the second needs, so the first's own squares, O, hold at least
-  # the difference, by. With by as many as O, O are mines, the shared squares
-  # hold all the second needs, and its own squares, S, are safe.
-  - id: pair
+  # Two numbers whose undecided squares meet, compared: the first's own
+  # squares are mines where it needs as many more as it has, and the second's
+  # own squares are then safe. Its words are the hint's (`hint-text.ts`).
+  - kind: count.compare
+    as: pair
     tier: Normal
-    for: >-
-      k in clues(count), a = at(k) where |open(a)| > 0,
-      b in within(a, 2) where b != a and clue(count, b) != none and meet(a, b),
-      by = need(a) - need(b), O = open(a) - open(b), S = open(b) - open(a)
-      where by >= |O| and |O| + |S| > 0
-    conclude: "by = |O| and (forall d in O: place(d, 1)) and (forall d in S: place(d, 2))"
+    with:
+      group: >-
+        k in clues(count), a = at(k) where |open(a)| > 0,
+        b in within(a, 2) where b != a and clue(count, b) != none and meet(a, b)
+      openA: open(a)
+      openB: open(b)
+      least: need(a)
+      most: need(b)
+      fill: 1
+      rest: 2
   # A number, i, whose undecided squares all touch another, o: o's squares
   # beyond i's, R, hold exactly the difference, r, and read as a number of
   # their own beside a third, b, as two numbers are paired. Either may need
@@ -135,21 +139,25 @@ techniques:
   # needs at least as many more as it has squares beyond S, those are mines
   # and S's beyond R are safe. Their squares meet only where o and p are
   # within two squares.
-  - id: regions
+  - kind: count.compare
+    as: regions
     tier: Normal
-    for: >-
-      k in clues(count), o = at(k) where |open(o)| > 0,
-      i in within(o, 2) where i != o and clue(count, i) != none and |open(i)| > 0
-      and open(i) subset open(o) and |open(i)| < |open(o)|,
-      R = open(o) - open(i), r = need(o) - need(i),
-      p in within(o, 2) where p != o and clue(count, p) != none and |open(p)| > 0,
-      q in within(p, 2) where q != p and clue(count, q) != none and |open(q)| > 0
-      and open(q) subset open(p) and |open(q)| < |open(p)|,
-      S = open(p) - open(q) where (exists d in R: d in S),
-      by = r - (need(p) - need(q)) where by >= |R - S| and |R - S| + |S - R| > 0
-    conclude: >-
-      by = |R - S| and (forall d in R - S: place(d, 1))
-      and (forall d in S - R: place(d, 2))
+    with:
+      group: >-
+        k in clues(count), o = at(k) where |open(o)| > 0,
+        i in within(o, 2) where i != o and clue(count, i) != none and |open(i)| > 0
+        and open(i) subset open(o) and |open(i)| < |open(o)|,
+        R = open(o) - open(i), r = need(o) - need(i),
+        p in within(o, 2) where p != o and clue(count, p) != none and |open(p)| > 0,
+        q in within(p, 2) where q != p and clue(count, q) != none and |open(q)| > 0
+        and open(q) subset open(p) and |open(q)| < |open(p)|,
+        S = open(p) - open(q) where (exists d in R: d in S)
+      openA: R
+      openB: S
+      least: r
+      most: need(p) - need(q)
+      fill: 1
+      rest: 2
   # Counting the mines left: numbers whose undecided squares, X, do not
   # meet hold n mines between them, of the L the board still hides. Where n
   # is all of them, the undecided squares outside X are safe; where those
