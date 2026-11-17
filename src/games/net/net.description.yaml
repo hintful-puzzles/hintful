@@ -302,3 +302,231 @@ techniques:
     as: strandNote
     tier: Easy
     with: { group: *sealGroup, fits: "strandFits(c, e, @, L, G, P, U, K)" }
+# The hint's words. Each firing is a step the planner reads (`hint.ts`): why
+# each way of turning the tile is ruled out, said as the fit (the known sides
+# a way must agree with), how the one turning that fails lies, and what it
+# would do (the trap). The fit, the way it lies and the trap are clause steps
+# a step's sentence says in place.
+phrases:
+  # How a tile that keeps its turning stays.
+  stay: "{if across: across | {if upright: upright | as it is}}"
+  theWalls: "{walls: the wall | the walls}"
+  notes: "{outline note: the outlined note | the outlined notes}"
+  locks: "{outline lock: the outlined lock | the outlined locks}"
+  notesLocks: "{outline note: the outlined note | the outlined notes} and {outline lock: lock | locks}"
+  striped: "{stripes cell: {n: the striped square | the striped squares}}"
+  someStriped: "{stripes cell: {n: the striped square | some striped squares}}"
+  # A striped square across the edge of a wrapping grid, which nothing on
+  # screen shows.
+  someStripedWrap: >-
+    {if wrap: {someStriped} {n: (across the wrapped edge) | (one across the wrapped edge)} | {someStriped}}
+  stripedWrap: >-
+    {if wrap: {striped} {n: (across the wrapped edge) | (one across the wrapped edge)} | {striped}}
+  leftSquares: "{outline left: {left: the outlined square | one of the outlined squares}}"
+  square: "{outline square: {if other: the other outlined {stranded} | the outlined {stranded}}}"
+  tile: "{outline tile: the outlined {shape}}"
+steps:
+  # A tile left one way to turn: turned to it, or locked where it already
+  # shows it (`lock`). Its fit is the known sides every other way breaks.
+  tileFits:
+    ring: cell
+    terms:
+      shape: &shape [dead end, straight, corner, T, cross]
+      lock: flag
+      across: flag
+      upright: flag
+      known: &known { clause: [fitWalls, fitMarks, fitBoth] }
+    look: "{ring: this {shape}} must fit {known}"
+    follows: &tileFollows "{if lock: it must stay {stay} | only one way fits}"
+    move: &tileMove "{if lock: lock it | turn it}"
+  # The one turning that fails lies as `way` says and is trapped; or, with no
+  # fit, every other turning is.
+  tileTrapped:
+    ring: cell
+    terms:
+      shape: *shape
+      lock: flag
+      across: flag
+      upright: flag
+      way: &way { clause: [lyingAcross, standingUpright, pointing, pointingOther, pointingBut] }
+      trap: &trap { clause: [trapThrough, trapSome, trapOrLeave, trapLeave, trapStrands, trapFace, trapJoin] }
+    look: &tileTrappedLook "{way}, {ring: this {shape}} {trap}"
+    follows: *tileFollows
+    move: *tileMove
+    long: &long >-
+      a turning ruled out because it would close a loop or seal a group off is
+      a second premise beside the known sides the others clash with, named by
+      its wires, or a way of turning the tile goes unaccounted for; where dead
+      ends seal the group it says they have no other wire and counts what is
+      cut off, since the bare "seal off" read as opaque in playtest
+      (2026-09-30); a wrapped grid's edge is named, as nothing on screen shows
+      it
+  # The same, the fit ruling out the other ways: said where the conclusion
+  # does its work.
+  tileTrappedFit:
+    ring: cell
+    terms: { shape: *shape, lock: flag, across: flag, upright: flag, way: *way, trap: *trap, known: *known }
+    look: *tileTrappedLook
+    follows: "{if lock: it can fit {known} only {stay} | only one way fits {known}}"
+    move: *tileMove
+    long: *long
+  # Several turnings trapped, among the ways that fit: the rest fall to the
+  # fit and need not be trapped at all.
+  tileFitting:
+    ring: cell
+    terms: { shape: *shape, lock: flag, across: flag, upright: flag, trap: *trap, known: *known }
+    look: "every other way {ring: this {shape}} fits {known} {trap}"
+    follows: *tileFollows
+    move: *tileMove
+    long: *long
+  # The lock after the turn, for the turn's reason.
+  thenLock:
+    ring: cell
+    terms: { shape: *shape }
+    move: &lockIt "lock {ring: this {shape}}"
+    later: *lockIt
+    again: "no other way fits"
+  # A side every surviving turning of the outlined tile agrees on: a wire
+  # (`wire`) or none, pointing `d` from the tile.
+  noteFits:
+    ring: side
+    terms: { shape: *shape, wire: flag, d: number, known: *known }
+    marks: &tileMark { outline: [tile] }
+    look: "{tile} must fit {known}"
+    follows: &noteFollows "{if wire: it must point {d} | it can never point {d}}"
+    move: &noteMove "note {if wire: a wire | no wire} across {ring: this side}"
+  noteTrapped:
+    ring: side
+    terms: { shape: *shape, wire: flag, d: number, way: *way, trap: *trap }
+    marks: *tileMark
+    look: &noteTrappedLook "{way}, {tile} {trap}"
+    follows: *noteFollows
+    move: *noteMove
+    long: *long
+  noteTrappedFit:
+    ring: side
+    terms: { shape: *shape, wire: flag, d: number, way: *way, trap: *trap, known: *known }
+    marks: *tileMark
+    look: *noteTrappedLook
+    follows: "to fit {known}, {if wire: it must point {d} | it can never point {d}}"
+    move: *noteMove
+    long: *long
+  noteFitting:
+    ring: side
+    terms: { shape: *shape, wire: flag, d: number, trap: *trap, known: *known }
+    marks: *tileMark
+    look: "every way {tile} fits {known} {if wire: but {d} | pointing {d}} {trap}"
+    follows: *noteFollows
+    move: *noteMove
+    long: *long
+  # The known sides a turning must agree with: walls, notes and locks, and
+  # first `it`, the step's tile, where a square beside it must fit it.
+  fitWalls:
+    ring: cell
+    terms: { walls: number, it: flag }
+    move: "{if it: it and {theWalls} | {theWalls}}"
+  fitMarks:
+    ring: cell
+    terms: { it: flag }
+    marks: &fitMarks { outline: [note, lock] }
+    wordings:
+      - when: "|outlineLock| = 0"
+        move: "{if it: it and {notes} | {notes}}"
+      - when: "|outlineNote| = 0"
+        move: "{if it: it and {locks} | {locks}}"
+      - move: "{if it: it and {notesLocks} | {notesLocks}}"
+  fitBoth:
+    ring: cell
+    terms: { walls: number, it: flag }
+    marks: *fitMarks
+    wordings:
+      - when: "|outlineLock| = 0"
+        move: "{if it: it, {theWalls} and {notes} | {theWalls} and {notes}}"
+      - when: "|outlineNote| = 0"
+        move: "{if it: it, {theWalls} and {locks} | {theWalls} and {locks}}"
+      - move: "{if it: it, {theWalls} and {notesLocks} | {theWalls} and {notesLocks}}"
+  fitIt:
+    ring: cell
+    move: "it"
+  # How the turning that fails lies, or which turnings fail where several do.
+  lyingAcross:
+    ring: cell
+    move: "lying across"
+  standingUpright:
+    ring: cell
+    move: "standing upright"
+  pointing:
+    ring: cell
+    terms: { dirs: values }
+    move: "pointing {dirs}"
+  pointingOther:
+    ring: cell
+    move: "pointing any other way"
+  pointingBut:
+    ring: cell
+    terms: { d: number }
+    move: "pointing any way but {d}"
+  # What a turning that fails would do: close a loop through the striped
+  # squares or seal them off as a group (`verb`), of `n` striped squares,
+  # one of them across the wrapped edge (`wrap`).
+  trapThrough:
+    ring: cell
+    terms: &trapTerms
+      verb: &verb [close a loop through or seal off, close a loop through, seal off]
+      n: number
+      wrap: flag
+    marks: &striped { stripes: [cell] }
+    move: "would {verb} {stripedWrap}"
+  # Several turnings, each closing off a group of its own: the stripes are
+  # their union, so no one count is true of every turning.
+  trapSome:
+    ring: cell
+    terms: *trapTerms
+    marks: *striped
+    move: "would {verb} {someStripedWrap}"
+  # Or leave one of the `left` outlined squares no way to turn.
+  trapOrLeave:
+    ring: cell
+    terms: { verb: *verb, n: number, wrap: flag, left: number }
+    marks: &leftMarks { stripes: [cell], outline: [left] }
+    move: >-
+      would {verb} {someStripedWrap}, or leave {leftSquares} no way to turn without closing a loop
+  trapLeave:
+    ring: cell
+    terms: { n: number, left: number }
+    marks: *leftMarks
+    move: "would leave {leftSquares} no way to turn without closing a loop through {someStriped}"
+  # The one turning leaves the outlined square beside it (a `stranded`
+  # piece, `other` where it is the step's own piece too) no way to fit the
+  # tile and its own known sides (`known`) without closing a loop, through
+  # the striped squares (`several` loops).
+  trapStrands:
+    ring: cell
+    terms:
+      stranded: *shape
+      other: flag
+      edge: flag
+      several: flag
+      n: number
+      known: { clause: [fitIt, fitWalls, fitMarks, fitBoth] }
+    marks: { stripes: [cell], outline: [square] }
+    move: >-
+      would leave {if edge: {square} (across the wrapped edge) | {square}} no way to fit {known}
+      without closing a loop through {if several: {someStriped} | {striped}}
+  # A dead end facing the striped one: two dead ends can never face each
+  # other.
+  trapFace:
+    ring: cell
+    terms: { wrap: flag }
+    marks: *striped
+    move: >-
+      would face {if wrap: {stripes cell: the striped dead end} (across the wrapped edge) | {stripes cell: the striped dead end}}
+  # Joining the striped dead ends, which have no other wire to lead out
+  # with, closes all `all` off from the rest.
+  trapJoin:
+    ring: cell
+    terms: { wrap: flag, all: number }
+    marks: *striped
+    move: >-
+      would join {if wrap: {stripes cell: the striped dead ends} (one across the wrapped edge) | {stripes cell: the striped dead ends}},
+      which have no other wire, closing all {spelled all} off from the rest

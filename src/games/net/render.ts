@@ -54,7 +54,7 @@ import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import { offset, wireDistance } from "../../engine/wires.ts";
 import type { NetHint } from "./hint.ts";
-import { SIDE } from "./hint-text.ts";
+import { SIDE } from "./hint-marks.ts";
 import { computeLoops, ERR_SHIFT } from "./loops.ts";
 import type { NetMistake } from "./mistakes.ts";
 import {

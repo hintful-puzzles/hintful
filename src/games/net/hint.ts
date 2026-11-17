@@ -16,6 +16,7 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
 import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
 import {
   anticlockwise,
@@ -34,13 +35,7 @@ import type { TargetVerbs } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import * as net from "../../generated/games/net/net.compiled.ts";
 import { Facts, type Rung, record, type Side, type Step, survey } from "./explain.ts";
-import {
-  type Fit,
-  type Premises,
-  type SideMark,
-  type Stranded,
-  say,
-} from "./hint-text.ts";
+import { SIDE, type SideMark } from "./hint-marks.ts";
 import type { NetDrawState } from "./render.ts";
 import { type Fired, ladderOf, marksOn, NONE, recordedMarks, WIRE } from "./solver.ts";
 import {
@@ -90,6 +85,286 @@ const pointOf = (f: Facts, i: number): Point => ({
   x: i % f.w,
   y: Math.floor(i / f.w),
 });
+
+// --- the words ---------------------------------------------------------------
+
+/** What a step marks: a tile, or a side between two. */
+type Marked = Point | SideMark;
+
+const DIR_WORD: Readonly<Record<number, string>> = {
+  [R]: "right",
+  [U]: "up",
+  [L]: "left",
+  [D]: "down",
+};
+
+/** The steps of `net.description.yaml`, spoken: a mark is drawn on a tile
+ * unless its sort is a side, and a value is a direction. */
+const speak = net.voice<Marked>({
+  kind: CELL as MarkKind<Marked>,
+  kinds: { side: SIDE as MarkKind<Marked>, note: SIDE as MarkKind<Marked> },
+  value: (d) => DIR_WORD[d],
+});
+
+type Steps = net.StepsById<Marked>;
+/** The known sides a turning must agree with, said in place. */
+type Known = Steps["tileFits"]["terms"]["known"];
+/** How the turning that fails lies, said in place. */
+type Way = Steps["tileTrapped"]["terms"]["way"];
+/** What the turnings that fail would do, said in place. */
+type Trap = Steps["tileTrapped"]["terms"]["trap"];
+/** What a tile is called, by its wires: the pieces the help names. */
+type Shape = Steps["tileFits"]["terms"]["shape"];
+
+function shapeOf(wires: number): Shape {
+  const n = dirCount(wires);
+  if (n === 1) return "dead end";
+  if (n === 3) return "T";
+  if (n === 4) return "cross";
+  return wires === (R | L) || wires === (U | D) ? "straight" : "corner";
+}
+
+/** The known sides a tile's turnings are held to. */
+interface Fit {
+  /** How many wall sides are cited. */
+  readonly walls: number;
+  readonly notes: readonly SideMark[];
+  /** The locked tiles cited. */
+  readonly locks: readonly Point[];
+}
+
+/** A square beside the step's tile that one turning of the tile would leave
+ * no way to turn: what it would still have to fit besides the tile, and the
+ * loops, through the striped squares, that its ways that fit would close. */
+interface Stranded extends Fit {
+  readonly at: Point;
+  /** Its wires, which name the piece. */
+  readonly wires: number;
+  /** How many of its ways would close a loop. */
+  readonly loops: number;
+  /** Whether it is beside the tile only across the edge of a wrapping grid. */
+  readonly acrossEdge: boolean;
+}
+
+/** The reasons one step rests on, gathered for its sentence. */
+interface Premises extends Fit {
+  /** The squares some turning would leave with no way to turn. */
+  readonly stranded: readonly Stranded[];
+  /** Whether some turning would close a loop, and whether some would seal a
+   * group off, through or around the striped tiles. */
+  readonly loop: boolean;
+  readonly seal: boolean;
+  readonly striped: readonly Point[];
+  /** Whether every striped square is a dead end, which is what closes a group
+   * off: a dead end has no other wire to lead out with. */
+  readonly deadEnds: boolean;
+  /** Whether a striped square is the tile's neighbor only across the edge of
+   * a wrapping grid, which nothing on screen shows. */
+  readonly acrossEdge: boolean;
+  /** How the turnings that loop or seal point, when there is one of them:
+   * its wires, or `null` for several. */
+  readonly only: number | null;
+}
+
+/** The known sides `p` cites, or null where it cites none; `it`, the step's
+ * tile, first where a square beside it must fit it too. */
+function knownOf(p: Fit, it: boolean): Known | null {
+  const outline = { note: p.notes, lock: p.locks };
+  const marked = p.notes.length + p.locks.length > 0;
+  if (p.walls > 0 && marked)
+    return {
+      step: "fitBoth",
+      said: { terms: { walls: p.walls, it }, marks: { outline } },
+    };
+  if (p.walls > 0) return { step: "fitWalls", said: { terms: { walls: p.walls, it } } };
+  if (marked) return { step: "fitMarks", said: { terms: { it }, marks: { outline } } };
+  return null;
+}
+
+/** How a tile turned to `wires` lies: a straight lies across or stands
+ * upright, and anything else points somewhere. */
+function lying(wires: number): Way {
+  if (wires === (R | L)) return { step: "lyingAcross", said: {} };
+  if (wires === (U | D)) return { step: "standingUpright", said: {} };
+  return {
+    step: "pointing",
+    said: { terms: { dirs: [U, R, D, L].filter((d) => wires & d) } },
+  };
+}
+
+const verbOf = (p: Premises) =>
+  p.loop && p.seal
+    ? ("close a loop through or seal off" as const)
+    : p.loop
+      ? ("close a loop through" as const)
+      : ("seal off" as const);
+
+/** What the turnings `p` rules out by a loop, a seal or a stranded square
+ * would do. `shape` names the step's own tile where it is outlined too, so
+ * that a neighbor of the same piece is "the other". */
+function trapOf(p: Premises, shape: Shape | null): Trap {
+  const stripes = { cell: p.striped };
+  const n = p.striped.length;
+  const wrap = p.acrossEdge;
+  // Several turnings each close off a group of their own, so the stripes are
+  // their union and no one count or "join them" is true of every turning.
+  if (p.only === null) {
+    if (p.stranded.length === 0)
+      return {
+        step: "trapSome",
+        said: { terms: { verb: verbOf(p), n, wrap }, marks: { stripes } },
+      };
+    const left = p.stranded.map((s) => s.at);
+    const marks = { stripes, outline: { left } };
+    return p.loop || p.seal
+      ? {
+          step: "trapOrLeave",
+          said: { terms: { verb: verbOf(p), n, wrap, left: left.length }, marks },
+        }
+      : { step: "trapLeave", said: { terms: { n, left: left.length }, marks } };
+  }
+  const [s] = p.stranded;
+  if (s) {
+    const stranded = shapeOf(s.wires);
+    return {
+      step: "trapStrands",
+      said: {
+        terms: {
+          stranded,
+          other: stranded === shape,
+          edge: s.acrossEdge,
+          several: s.loops > 1,
+          n,
+          known: knownOf(s, true) ?? { step: "fitIt", said: {} },
+        },
+        marks: { stripes, outline: { square: [s.at] } },
+      },
+    };
+  }
+  if (p.seal && !p.loop && p.deadEnds)
+    return n === 1
+      ? { step: "trapFace", said: { terms: { wrap }, marks: { stripes } } }
+      : { step: "trapJoin", said: { terms: { wrap, all: n + 1 }, marks: { stripes } } };
+  return {
+    step: "trapThrough",
+    said: { terms: { verb: verbOf(p), n, wrap }, marks: { stripes } },
+  };
+}
+
+/**
+ * How a step's sentence is shaped by what rules its other ways out. With no
+ * loop, seal or stranded square, the tile must fit its known sides. Where one
+ * turning is trapped, how it lies comes first ("Lying across, this straight
+ * would …"), so it cannot be read as describing the striped squares after
+ * it, and the fit rules out the other ways where the conclusion does its
+ * work. Several trapped turnings are named by what sets them apart (`others`)
+ * or, beside a fit, only among the ways that fit, since the rest fall to the
+ * fit and need not loop or seal at all.
+ */
+type Form =
+  | { readonly kind: "fits"; readonly known: Known }
+  | {
+      readonly kind: "trapped";
+      readonly way: Way;
+      readonly trap: Trap;
+      readonly known: Known | null;
+    }
+  | { readonly kind: "fitting"; readonly trap: Trap; readonly known: Known };
+
+function formOf(p: Premises, others: Way, shape: Shape | null): Form {
+  const known = knownOf(p, false);
+  if (!p.loop && !p.seal && p.stranded.length === 0) {
+    if (known === null) throw new Error("net hint: a step that cites nothing");
+    return { kind: "fits", known };
+  }
+  const trap = trapOf(p, shape);
+  if (p.only !== null) return { kind: "trapped", way: lying(p.only), trap, known };
+  if (known === null) return { kind: "trapped", way: others, trap, known: null };
+  return { kind: "fitting", trap, known };
+}
+
+/** Every sentence Net's hint speaks, from what its planner found. */
+const say = {
+  /** A tile left one way to turn, `wires`: turned to it, or locked where it
+   * already shows it (`lock`). */
+  tile: (at: Point, wires: number, p: Premises, lock: boolean): Sentence => {
+    const ring = [at];
+    const base = {
+      shape: shapeOf(wires),
+      lock,
+      across: wires === (R | L),
+      upright: wires === (U | D),
+    };
+    const form = formOf(p, { step: "pointingOther", said: {} }, null);
+    if (form.kind === "fits")
+      return speak.sentence("tileFits", {
+        ring,
+        terms: { ...base, known: form.known },
+      });
+    if (form.kind === "fitting")
+      return speak.sentence("tileFitting", {
+        ring,
+        terms: { ...base, trap: form.trap, known: form.known },
+      });
+    const { way, trap, known } = form;
+    return known === null
+      ? speak.sentence("tileTrapped", { ring, terms: { ...base, way, trap } })
+      : speak.sentence("tileTrappedFit", {
+          ring,
+          terms: { ...base, way, trap, known },
+        });
+  },
+
+  /** The lock after the turn, for the turn's reason. */
+  thenLock: (at: Point, wires: number): Sentence =>
+    speak.sentence("thenLock", {
+      ring: [at],
+      terms: { shape: shapeOf(wires) },
+      later: true,
+    }),
+
+  /** A side every surviving turning of the outlined `tile`, showing `wires`,
+   * agrees on: `facing` is the direction from the tile to the ringed side. */
+  note: (
+    tile: Point,
+    wires: number,
+    side: SideMark,
+    facing: number,
+    p: Premises,
+  ): Sentence => {
+    const ring = [side];
+    const shape = shapeOf(wires);
+    const wire = side.note === NOTE_WIRE;
+    const base = { shape, wire, d: facing };
+    const marks = { outline: { tile: [tile] } };
+    const others: Way = wire
+      ? { step: "pointingBut", said: { terms: { d: facing } } }
+      : { step: "pointing", said: { terms: { dirs: [facing] } } };
+    const form = formOf(p, others, shape);
+    if (form.kind === "fits")
+      return speak.sentence("noteFits", {
+        ring,
+        terms: { ...base, known: form.known },
+        marks,
+      });
+    if (form.kind === "fitting")
+      return speak.sentence("noteFitting", {
+        ring,
+        terms: { ...base, trap: form.trap, known: form.known },
+        marks,
+      });
+    const { way, trap, known } = form;
+    return known === null
+      ? speak.sentence("noteTrapped", { ring, terms: { ...base, way, trap }, marks })
+      : speak.sentence("noteTrappedFit", {
+          ring,
+          terms: { ...base, way, trap, known },
+          marks,
+        });
+  },
+};
+
+// --- the reasons -------------------------------------------------------------
 
 /** The known sides some turnings contradict, by where each is known from. */
 class Cited {
@@ -314,7 +589,7 @@ export function netHint(
       const shows = s.tiles[step.at] & 0xf;
       if (shows !== step.wires) {
         const turn = verbMove(verbs, rotationOf(shows, step.wires), s, at, ui);
-        const words = say.turn(at, step.wires, p);
+        const words = say.tile(at, step.wires, p, false);
         steps.push({
           move: turn,
           rung,
@@ -330,7 +605,7 @@ export function netHint(
       const words =
         shows !== step.wires
           ? say.thenLock(at, step.wires)
-          : say.lock(at, step.wires, p);
+          : say.tile(at, step.wires, p, true);
       steps.push({
         move: lock,
         rung,

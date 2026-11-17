@@ -276,8 +276,21 @@ Logic games:
   planted dropped reference. Read in the app (8x8 Normal): a mark step
   (clue outlined, pair ringed), a dead end, and a clue that "already has 2
   lines from the outlined squares" (the clause's outline drawn).
-- [ ] Net. Its baseline at 8 deals is 38,540 lines once the harness skips
-  mistaken positions (2026-11-17).
+- [x] Net (2026-11-17): dump byte-identical, marks included
+  (`DUMP_DEALS=100`, 457,330 lines in 38 s). Its sentences are `steps`
+  spoken through the voice in `hint.ts`, by how the other ways fall: a fit
+  alone (`*Fits`), one turning trapped or several with no fit beside them
+  (`*Trapped`, `*TrappedFit` where the fit goes to the conclusion), or
+  several among the ways that fit (`*Fitting`), for a tile (turn or lock)
+  and a note. The fit, how the trapped turning lies and what it would do
+  are clause steps; a direction is a value, several a `values` term. The
+  steps carry `long:`, so the ledger entry in `hint-quality.test.ts` went.
+  `piece` and `fit` are slot words, so the terms are `shape` and `known`.
+  The forms no walk meets (a stranded neighbor, "or leave", "the other")
+  were checked against the old module, words and marks, every combination,
+  by a throwaway test seen to fail on a planted word and a dropped
+  reference. Read in the app (Wrapping 5x5 Easy): a seal, the dead end
+  ringed and the sealed squares striped.
 - [ ] Ascent
 
 ## 3. Revisited in the app as their words are touched

@@ -178,23 +178,6 @@ const LONG_NARRATIONS: {
         "5x5mEEdh:18_22_15_16_3_1_9_14e10_11e13_2e12_19e6_5a24c25_8_23_21_20_7_4_17",
     },
   },
-  {
-    games: ["net"],
-    rungs: ["loopLock", "loopNote", "sealLock", "sealNote"],
-    why:
-      "A turning ruled out because it would close a loop or seal a group off is " +
-      "a second premise beside the notes and locks the others clash with, and " +
-      "names the turning it rules out by its wires; a sentence citing only one " +
-      "of the two would leave a way of turning the tile unaccounted for. When " +
-      "dead ends are what seal the group, the sentence says so (they have no " +
-      "other wire) and counts what is cut off, because the owner found the bare " +
-      "'seal off' unreadable in playtest (2026-09-30). Over the limit where a " +
-      "wrapped grid's edge or a group of dead ends stands beside a fit to the " +
-      "notes and locks.",
-    spokenOn: {
-      net: "7x7de:c83a8913a78ec845de71a421beb9677e4ec8bd78544c43cc4",
-    },
-  },
 ];
 
 /** The shared necessity vocabulary a deductive conclusion draws from.
