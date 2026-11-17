@@ -132,15 +132,13 @@ techniques:
       marks: {}
   # Two bordering regions down to the same two colors use both, so a region
   # bordering both is neither. One pair a firing.
-  - id: pair
+  - kind: peer.pair
+    as: pair
     tier: Normal
-    for: >-
-      a in cells where not known(a) and |cand(a)| = 2,
-      b in borders(a) where index(b, cells) > index(a, cells) and not known(b)
-      and cand(b) = cand(a)
-    conclude: >-
-      forall k in borders(a) where k in borders(b) and not known(k),
-      d in cand(a): strike(k, d)
+    with:
+      pair: a in cells
+      partners: "{x in borders(a) where index(x, cells) > index(a, cells)}"
+      peers: "{k in borders(a) where k in borders(b) and not known(k)}"
     says:
       terms: { a: a, b: b, colors: cand(a) }
       marks: {}

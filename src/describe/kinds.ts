@@ -831,6 +831,22 @@ export const KINDS: Readonly<Record<string, Kind>> = {
   // `a` breaks the rule, which is the game's; the kind says the move, that
   // the square `flipCell` must be the other value (`flipped`), reading the
   // game's `flipTerms` of the leg.
+  // Two open squares down to the same two values, each among the other's
+  // peers, hold those two between them, so every square peer to both loses
+  // them. `pair` binds `a`, `partners` are the squares `b` read beside it
+  // (each pair once), and `peers` the squares that see both.
+  "peer.pair": {
+    params: ["pair", "partners", "peers"],
+    technique: {
+      for: "$pair where not known(a) and |cand(a)| = 2, b in $partners where not known(b) and cand(b) = cand(a)",
+      conclude:
+        "forall p in $peers where p != a and p != b, d in cand(a): strike(p, d)",
+    },
+    // Two squares down to two values each read as a pair.
+    plant: {
+      for: "$pair where not known(a) and |cand(a)| = 2, b in $partners where not known(b) and |cand(b)| = 2",
+    },
+  },
   // A square whose open sides (`sides`, each bound as `side`) are each a line
   // (1) or empty (2), and `fits`, whether some way of the square that keeps
   // the rule has the side so (`@` the value): a side only one value fits is
@@ -838,18 +854,20 @@ export const KINDS: Readonly<Record<string, Kind>> = {
   // `ways.lock` reads the square whole and fires where every open side is
   // decided (`every: forall`, Net's: one way left) or where some is
   // (`exists`, Pearl's), deciding all it can; `least` is the open sides a
-  // square needs more than. `ways.note` reads a side a firing.
+  // square needs more than, and `reads` binds what `fits` reads once a square
+  // has them (", G = …"), so a square with none costs no more than its
+  // sides. `ways.note` reads a side a firing.
   "ways.lock": {
     params: ["group", "fits"],
-    defaults: { side: "e", sides: "edges(c)", least: "0", every: "forall" },
+    defaults: { side: "e", sides: "edges(c)", least: "0", every: "forall", reads: "" },
     technique: {
-      for: "$group, F = {$side in $sides where not known($side)} where |F| > $least, W = {$side in F where $fits[1]}, N = {$side in F where $fits[2]} where ($every $side in F: $side not in W or $side not in N)",
+      for: "$group, F = {$side in $sides where not known($side)} where |F| > $least$reads, W = {$side in F where $fits[1]}, N = {$side in F where $fits[2]} where ($every $side in F: $side not in W or $side not in N)",
       conclude:
         "forall $side in F: ($side in W or $side in N) and ($side not in W implies place($side, 2)) and ($side not in N implies place($side, 1))",
     },
     // A side both values fit read as a line.
     plant: {
-      for: "$group, F = {$side in $sides where not known($side)} where |F| > $least, W = {$side in F where $fits[1]}, N = {$side in F where $fits[2] and not ($fits[1])} where ($every $side in F: $side not in W or $side not in N)",
+      for: "$group, F = {$side in $sides where not known($side)} where |F| > $least$reads, W = {$side in F where $fits[1]}, N = {$side in F where $fits[2] and not ($fits[1])} where ($every $side in F: $side not in W or $side not in N)",
     },
   },
   "ways.note": {

@@ -111,12 +111,10 @@ techniques:
       move: "(forall e in cand(c) where e != d: strike(c, e))"
   # Two squares of an area left the same two arrows take both between them,
   # so no other square of the area can.
-  - id: pair
+  - kind: peer.pair
+    as: pair
     tier: Normal
-    for: >-
-      r in area, a in cells(r) where not known(a) and |cand(a)| = 2,
-      b in before(a, cells(r)) where not known(b) and cand(b) = cand(a)
-    conclude: "forall p in cells(r) where p != a and p != b, d in cand(a): strike(p, d)"
+    with: { pair: "r in area, a in cells(r)", partners: "before(a, cells(r))", peers: "cells(r)" }
     says:
       terms: { r: r, a: a, b: b }
       marks: {}

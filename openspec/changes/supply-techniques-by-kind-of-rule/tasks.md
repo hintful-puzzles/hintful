@@ -751,18 +751,41 @@ boundaries are judgment, and the counts carry that.
     sharing its group by anchor) and Pearl's `square`, `blackPearl`,
     `whiteTurnsOpposite` and `earlyThrough` (`every: exists`, deciding what
     it can where Net waits for one way left; `side`/`sides` for the square
-    past a white pearl; `least: 1`). **Moved: nothing.** Pearl's module is
-    byte-identical; Net's differs only where its three locks bind `G` (and
-    `K`) before the open sides, not after, the same conclusions; those three
-    re-checked sound, Net whole with `CHECK_AGAIN`, every plant caught. Both
+    past a white pearl; `least: 1`). **Moved: nothing.** Both modules are
+    byte-identical to before. **Found:** binding Net's `G` and `K` in the
+    group, before the open sides, made every decided square walk the lines
+    too (deal-compare against the commit before: solves 1.61×, deals
+    1.27×), so the lock takes `reads`, what `fits` reads bound once a square
+    has open sides. Net re-checked whole with `CHECK_AGAIN`, every plant
+    caught. Both
     games keep their sharper plants; the kinds' own (a side both values fit
     read as a line) seen caught on Net's `fitLock` and `fitNote` with the
     game's plants taken out. Net's and Pearl's tests and snapshots pass
     unchanged. No words: both games' hints narrate these. FIT now places 27.
     Not this form: Pearl's `blackRunsOn`, `blackCannotRunOn` and
     `whiteCannotTurn` (a pearl's own geometry, read across two squares).
+  - [x] (2026-11-17) PEER's pair form, `peer.pair` (a naked pair): two open
+    squares down to the same two values, each the other's peer; a square
+    seeing both loses them. Placed on Rome `pair` (module byte-identical; its
+    plant was the kind's and went) and Map `pair` (its partners and peers as
+    sets, the same pairs in the same order; re-checked sound, its sharper
+    plant, any region read as a partner, restated over the kind and caught).
+    No words: both walks speak it. Map's and Rome's tests pass unchanged.
+    **Recount** (`git grep -hE "^[[:space:]]*- kind: " -- 'src/games/*/*.description.yaml'`
+    against `^  - id: `): 126 placed, 182 stated, 47 by `use`, so games
+    state 51% of their techniques; 22 of 48 games state under half.
+    **Read and left the game's own, with why:** Mathrax's three `clue`
+    readings (upstream's tier gates, `|M| < 2` and `constrainsEasy`, over
+    a corner clue that mixes a parity rule with an arithmetic one); Keen's
+    `cageEasy` (a value no filling puts anywhere in the cage, upstream's Easy
+    reading, weaker than `fill.support` and stated by no other game) and
+    `cageLine` (a cage meeting a line: two rules); Pearl's `blackRunsOn`,
+    `blackCannotRunOn`, `whiteCannotTurn` (a pearl's own geometry across two
+    squares); Path's and Spokes' `lineBreaks`/`pairBreaks`/`spareBreaks`,
+    each a trial read by a break predicate of the game's own (`shortNear`,
+    `brokenH`), which is where a rule's break clause would have to start.
   - [ ] Next: FIT from a rule's break clause (proposal § "A rule states how
-    it breaks"): read the 20 FIT techniques left, say which rule each
+    it breaks"): read the FIT techniques left (above), say which rule each
     supposes broken, and design the clause on the rules `shape:` and the
     count kinds already state; then REL (10 left) and PEER (6).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the

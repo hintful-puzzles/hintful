@@ -1098,7 +1098,12 @@ its {regions}"), which a walk speaks through `placedRulesOut` with the game's
 `{regions}`. A game whose placed thing is not a square's value names it in
 `group` and how it leaves a peer in `move`, and plants its own defect, for the
 kind's reads the value (Dominosa's spot holding a domino, whose peers are the
-spots sharing a square with it and those of the same domino, left empty). `peer.touch`, no two squares holding `fill` touch, carries its
+spots sharing a square with it and those of the same domino, left empty).
+`peer.pair` is two open squares down to the same two values, each a peer of
+the other: every square that sees both loses the two. The game binds `a` in
+`pair`, gives the squares `b` read beside it in `partners` (each pair once:
+Rome's earlier squares of the area, Map's later bordering regions), and the
+squares that see both in `peers`. It carries no words. `peer.touch`, no two squares holding `fill` touch, carries its
 sentence, "no {piece} may touch the outlined {piece}{how}, so each ringed
 square {restWord}"; the game gives `adj` (`adj4`, or `adj8` with `how`: ",
 even diagonally"), its nouns, and `square` where its open squares are not
@@ -1229,7 +1234,10 @@ every open side is decided (Net's lock, one way left) or, with `every:
 exists`, where some is (Pearl's), and deciding all it can. `side` and `sides`
 name the side and the square's sides where they are not `e` and `edges(c)`
 (Pearl's `whiteTurnsOpposite` reads the square past a white pearl), `least`
-the open sides a square needs more than. They carry no words.
+the open sides a square needs more than. A lock binds what `fits` reads in
+`reads` (", G = through(c, L)"), after the open sides, not in its group: a
+walk bound in the group is made for every decided square too, which cost
+Net's solves 1.6×. They carry no words.
 `fit.flip` is the Check of a
 two-valued square (`holds`, `scope`). How the tried value breaks the rule is
 the game's to say, so the game's `says:` holds the look; the kind lays it over

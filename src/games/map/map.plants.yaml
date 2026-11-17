@@ -7,8 +7,9 @@ techniques:
   # Two regions down to one pair read as a pair where they do not border.
   pair:
     for: >-
-      a in cells where not known(a) and |cand(a)| = 2, b in cells where index(b,
-      cells) > index(a, cells) and not known(b) and cand(b) = cand(a)
+      a in cells where not known(a) and |cand(a)| = 2, b in {x in cells where
+      index(x, cells) > index(a, cells)} where not known(b) and cand(b) =
+      cand(a)
   # A middle region that could be x struck from where it does not reach.
   weigh:
     for: >-

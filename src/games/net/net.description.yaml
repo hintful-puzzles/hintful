@@ -257,40 +257,48 @@ techniques:
     tier: Easy
     with: { group: c in cells, fits: "fits(c, e, @)" }
   # The same, among the ways that close no loop.
+  # A lock binds what its ways read once a square has an open side; a note
+  # reads a side of every square.
   - kind: ways.lock
     as: loopLock
     tier: Easy
-    with: &loop
-      group: "L = {e in edges where value(e) = 1}, c in cells, G = through(c, L)"
-      fits: "loopFits(c, e, @, L, G)"
+    with:
+      group: "L ={e in edges where value(e) = 1}, c in cells"
+      reads: ", G = through(c, L)"
+      fits: &loopFits "loopFits(c, e, @, L, G)"
   - kind: ways.note
     as: loopNote
     tier: Easy
-    with: *loop
+    with: { group: "L = {e in edges where value(e) = 1}, c in cells, G = through(c, L)", fits: *loopFits }
   # The same, among the ways that also seal nothing off.
   - kind: ways.lock
     as: sealLock
     tier: Easy
-    with: &seal
+    with:
+      group: &sealCell >-
+        L = {e in edges where value(e) = 1},
+        U = {e in edges where usable(end1(e), e) and usable(end2(e), e)},
+        P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1},
+        c in cells
+      reads: &sealReads ", G = through(c, L), K = open(c, P, U)"
+      fits: &sealFits "sealFits(c, e, @, L, G, P, U, K)"
+  - kind: ways.note
+    as: sealNote
+    tier: Easy
+    with:
       group: &sealGroup >-
         L = {e in edges where value(e) = 1},
         U = {e in edges where usable(end1(e), e) and usable(end2(e), e)},
         P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1},
         c in cells, G = through(c, L), K = open(c, P, U)
-      fits: "sealFits(c, e, @, L, G, P, U, K)"
-  - kind: ways.note
-    as: sealNote
-    tier: Easy
-    with: *seal
+      fits: *sealFits
   # The same, among the ways that also leave each square beside them a way
   # to turn.
   - kind: ways.lock
     as: strandLock
     tier: Easy
-    with: &strand
-      group: *sealGroup
-      fits: "strandFits(c, e, @, L, G, P, U, K)"
+    with: { group: *sealCell, reads: *sealReads, fits: "strandFits(c, e, @, L, G, P, U, K)" }
   - kind: ways.note
     as: strandNote
     tier: Easy
-    with: *strand
+    with: { group: *sealGroup, fits: "strandFits(c, e, @, L, G, P, U, K)" }

@@ -18,11 +18,6 @@ techniques:
       r in area where |cells(r)| = 3, d in range(1, 4) where not (exists c in
       cells(r): value(c) = d), k = count(c in cells(r) where not known(c) and d in
       cand(c)) where k < 2
-  # Two squares of two arrows each read as a pair whatever the arrows.
-  pair:
-    for: >-
-      r in area, a in cells(r) where not known(a) and |cand(a)| = 2, b in
-      before(a, cells(r)) where not known(b) and |cand(b)| = 2
   # The one way into the group read as one way in, whatever else leads there.
   reach:
     for: >-
