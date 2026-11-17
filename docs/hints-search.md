@@ -504,7 +504,7 @@ standard of proof. Exemplar: [`guess/hint.ts`](../src/games/guess/hint.ts).
   [`hints-candidates.md`](./hints-candidates.md) § "Deduce from the notes when
   the mistake check vouches for them").
 - **When a renderer change alters the shape of a hint mark, grep the game's
-  `hint-text.ts` for the old shape's word in the same change.** No test sees a
+  description for the old shape's word in the same change.** No test sees a
   sentence naming a shape the board no longer draws.
 
 ## A hidden answer: one tracer, and a test that the hint cannot peek

@@ -16,8 +16,8 @@ marks are in its spec.
 Each step names the file of [`src/skeleton/grid/`](../src/skeleton/grid) that
 already does it.
 
-1. Write every sentence in `hint-text.ts` with `phrase` and a `mark`
-   reference wherever it points at the board: a ring on what the step
+1. State every sentence in the description, with a slot naming its mark
+   (`{ring: …}`, `{outline at: …}`) wherever it points at the board: a ring on what the step
    decides, an outline on what it reasons from, stripes on the line or region
    whose contents it reasons from, a strike on a note it rules out (`hints.md` § "Bind the words to
    the marks").
@@ -616,11 +616,11 @@ and outlined regions"). Outlining both reads as one blob, because an outline
 draws no boundary between two areas that touch. A lone square is named by
 what it holds. Two regions that cross at the target, and are named by their
 direction, may both be striped, since the crossing tells them apart
-(`crossRuns` in [`crossing/hint-text.ts`](../src/games/crossing/hint-text.ts)).
+(`crossRuns` in [`crossing.description.yaml`](../src/games/crossing/crossing.description.yaml)).
 The border grid's hint layer
 ([`engine/border-grid-hint.ts`](../src/engine/border-grid-hint.ts)) carries
 both marks. Exemplar:
-[`separate/hint-text.ts`](../src/games/separate/hint-text.ts).
+[`separate.description.yaml`](../src/games/separate/separate.description.yaml).
 
 ## The engine colors the marks
 

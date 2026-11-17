@@ -69,13 +69,16 @@ Planning games (a `steps` block, Slide's form):
   relation serves the aim; with neither, its look forces the move.
 - [x] Samegame (2026-11-17): dump byte-identical. "One way to avoid it" is
   the new `answers` clause; the judged relations come from `judgeRivals`.
-- [ ] Untangle. Needs, read 2026-11-17: a sequence relation that carries
-  the clauses' `effect` (today `statedOnce` turns an effect into an effect
-  relation and drops a judged sequence), and count wordings for "its only
-  crossing / both of its crossings / all {n} of its crossings" and "the
-  outlined one / the outlined {n}". The ring holds a point (VERTEX) and a
-  spot (SPOT, a RationalPoint): a ring by sort `[point, spot]`, and one
-  voice over their union, as Pegs does.
+- [x] Untangle (2026-11-17): dump byte-identical, marks included
+  (`DUMP_DEALS=60`, 1,468 lines), and every form not met there (every
+  `before`, `after`, cleared and remaining count to 5, 3 and 3, each
+  relation) compared with the old module by a throwaway test, seen to fail
+  on a changed word and on a dropped ring, then deleted. What a move does
+  to its point's crossings is one clause step, `change`, chosen by a word
+  term; its legs use Sokoban's sequence-with-effect. `say` stays exported
+  from `hint.ts` for the hint's tests; the marks are `hint-marks.ts`. No
+  sentence changed. Read in the app (6 points): a two-point journey's
+  first and last legs.
 - [x] Pegs (2026-11-17): dump byte-identical. One voice serves pegs,
   holes and whole jumps (`MarkKind`'s key is a method, so a kind of
   indices is a kind of the union). A ring of sort `move` is the move
@@ -335,7 +338,13 @@ Logic games:
 
 - [ ] A trial kind, once a second game's Checks suppose as Path's, Spokes'
   or Boats' do (proposal § "What Changes").
-- [ ] When the last `hint-text.ts` goes, rewrite `docs/hints.md` § "The
-  sentences live in one file per game", which still names that file as
-  where a game's sentences live: they are its description's `steps` and
-  `says`.
+- [x] When the last `hint-text.ts` goes, rewrite the `docs/hints.md`
+  section that named that file as where a game's sentences live: they are
+  its description's `steps` and `says`. Done 2026-11-17 with Untangle: now
+  `docs/hints.md` § "The sentences live in the description", every citation of it and every guide link to a game's
+  `hint-text.ts` repointed, the engine-hints requirement replaced by a
+  delta here, and the convention guard refuses a game's `hint-text.ts`
+  (seen to fail on one planted in Untangle). One exception is left and
+  named in both: Crossing, Undead and Subsets build a strike's "… must go"
+  closing in code because a clause references no strike. That is the
+  engine's lack, filed as `close-a-step-on-its-strike`.

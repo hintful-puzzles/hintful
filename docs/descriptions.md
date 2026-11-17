@@ -1110,7 +1110,7 @@ square {restWord}"; the game gives `adj` (`adj4`, or `adj8` with `how`: ",
 even diagonally"), its nouns, and `square` where its open squares are not
 just the undecided ones (Tents' trees). A game's `says:` beside a placement is
 laid over the kind's own, so Range keeps a step a square (`shown: each`); a
-game whose hint is its own renders the compiled step (Tents' `hint-text.ts`).
+game whose hint is its own renders the compiled step (Tents' `hint.ts`).
 `loop.early` carries its own sentence ("this edge would close the
 outlined line into a loop that leaves other lines out"); a game gives its marks,
 which mark draws the line (`line`), and what else the loop may miss (`off`,

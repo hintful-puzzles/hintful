@@ -855,7 +855,7 @@ names the one it applies.
   page writes `{{pair:0}}` and `{{pair:1}}`
   ([`help-pages.md`](./help-pages.md)). Exemplars:
   [`unruly/render.ts`](../src/games/unruly/render.ts),
-  [`unruly/hint-text.ts`](../src/games/unruly/hint-text.ts).
+  [`unruly.description.yaml`](../src/games/unruly/unruly.description.yaml).
 - **Shaded or not is the `SHADED` piece alone** ("Shaded or not is the
   pair's first member alone"): a cell ruled out is quiet surface with a
   cross, and an undecided one is plain surface. The words are `SHADED_NAME`

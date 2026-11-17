@@ -30,10 +30,10 @@ Each step names the file of `src/skeleton/grid/` that already does it.
    `HintRefusal` where there is no step (§ "The shared plan loop:
    deduceHintPlan", § "The step budget", § "Refusal wording comes from one
    module").
-3. **Write every sentence in `hint-text.ts`** as a function of a technique's
-   typed terms and the squares its step marks, exported as `sentences`, each a
-   `Sentence` whose pointing words are references to marks (§
-   "Writing the narration"). The step's `rung`, `words` and `explanation` are
+3. **State every sentence in the description**, a technique's `says` over
+   its typed terms and the squares its step marks, its pointing words
+   references to marks (§ "Writing the narration", § "The sentences live in
+   the description"). The step's `rung`, `words` and `explanation` are
    the engine's.
 4. **Judge the player's move against the step** with the keep-track and
    `refreshHintStep` that `describedFiringHint` builds (`skeletonKeepTrack`,
@@ -70,7 +70,7 @@ Each step names the file of `src/skeleton/grid/` that already does it.
 | – The premise must single out the conclusion | another move would satisfy the premise a sentence states |
 | – Say the fact the board does not show, and declare it | a sentence claims something of every placement of an element, or a step's depth reads out of order with its tier |
 | – Keep the narration terse | a sentence runs past 120 characters, the length ledger fails, or a reference fails `hint-reference.ts` |
-| – The sentences live in one file per game | you add, move or reword a sentence |
+| – The sentences live in the description | you add, move or reword a sentence |
 | – No em-dashes | a sentence wants a dash |
 | – Conclude with the action the move makes | a step strikes candidates, or its words claim a placement |
 | – One noun, two closings | a sentence says "cell" or "square", or closes a move on a mark or a struck value |
@@ -414,7 +414,7 @@ Tie by something the code guarantees, cheapest first:
   second mark covers parts that play different roles, name each part by its
   place ("the middle region", "an outlined region"), each its own reference with its own
   pill, and keep "this cell" for the ringed one. Exemplar: `weigh` in
-  [`map/hint-text.ts`](../src/games/map/hint-text.ts).
+  [`map.description.yaml`](../src/games/map/map.description.yaml).
 
 Guard it in the game's test: a second mark displayed implies the explanation
 contains the tie. See the guard fail first, and give it a `checked` floor and
@@ -609,40 +609,41 @@ To shorten without losing a premise:
 - **Re-read the degenerate extremes while there** (§ "Sanity-read at the
   degenerate extremes").
 
-### The sentences live in one file per game
+### The sentences live in the description
 
-Put every sentence a game's hint speaks, and every word inside one, in
-`src/games/<id>/hint-text.ts`, exported as `say`: a string for a fixed
-sentence, a typed function for one that takes values. The deduction (the
-game's `narrate`) decides which sentence and with what values; the text file
-decides only how it reads. Sentences several games speak word for word are
-the engine's [`hint-text.ts`](../src/engine/hint-text.ts). Exemplar:
-`src/games/tracks/hint-text.ts`.
+Every sentence a game's hint speaks, and every word inside one, is its
+description's: a technique's `says`, or, for a step no firing makes (a
+search's, a planner's), a declared step in `steps`, spoken through the
+compiled module's `voice` (`docs/descriptions.md` § "A firing's reason is
+built from its binding"). The deduction decides which sentence and with what values; the
+description decides only how it reads. Sentences several games speak word
+for word are the engine's [`hint-text.ts`](../src/engine/hint-text.ts) and
+the skeletons'. No game has a `hint-text.ts`, and the hint-text convention
+guard refuses one. Exemplars: Ascent's and Sokoban's `steps`.
 
-- **A described technique may state its words in its description**
-  (`docs/descriptions.md` § "A firing's reason is built from its binding";
-  Unequal's `sign`, and all of Singles, whose `sameLine`, `corner.four` and
-  `offset` say the one deduction by what the board shows, as `wordings`),
-  and its game then has no entry for it here. Moving a
-  game's sentences there is held to the same census as a move between files.
 - **Values arrive as the board means them, never as words.** An axis, a
-  count, a direction constant: the plural, "both" at two, "a" or "an" and a
-  direction's name are the text file's choices. A conclusion the deduction
-  computes arrives as a boolean, so no rule of the game hides in the text.
-- **No entry reads the board.** An entry may take the deduction's own record
-  where every value is in it; a value that must be looked up is looked up in
-  `narrate` and passed in.
-- **A game whose voice depends on a mode takes the mode**: `say` is then a
-  function of it (Salad).
-- **A wording comment moves with the wording.** Why an arm fires stays with
-  `narrate`.
+  count, a direction: the plural, "both" at two, "a" or "an" and a
+  direction's name are the wording's choices, by a `when` over the step's
+  terms. A conclusion the deduction computes arrives as a flag or a word
+  term, so no rule of the game hides in the wording.
+- **No wording reads the board.** A value that must be looked up is looked
+  up by the deduction and passed as a term.
+- **A wording comment sits in the description** with the step it explains.
+  Why a step fires stays with the code that chooses it.
+- **Where no `when` can choose, the code chooses by name**: a form picked by
+  its length (Ascent's pointers) is two steps or two `wordings` the code
+  picks between, never a string it builds.
+- **One exception, owed by the engine:** a clause cannot yet reference
+  struck notes, so a strike's closing ("the 3 must go") is a `phrase` the
+  game builds from a reference and passes as the step's `closing`
+  (Crossing, Undead; Subsets builds its move the same way).
 - **A refusal is not hint text.** It is a `HintRefusal`, and a game's own dead
   end goes through `puzzleDeadEnd` or `markedDeadEnd`, whose test reads the
-  call; a `say` entry would hide the sentence from it.
-- **Moving a sentence is not rewording it.** Hold a bulk move to a census of
-  every step spoken across every tier, byte-identical before and after, and
-  to a diff check that every literal on a removed line reappears on an added
-  one. A reword is its own commit.
+  call.
+- **A move between places is checked by a dump.** Take
+  `research/hint-walk-dump/` before and after, read the diff, and list every
+  sentence that changed; wording is free to change where the new one is
+  simpler or more consistent.
 
 ### No em-dashes
 
@@ -777,7 +778,7 @@ ringed, outlined, striped or hatched in that game, which marks are the
 player's own notation and how to make them, and the words the sentences use
 for them. A sentence can then use a mark without defining it.
 
-Write it from the game's `hint-text.ts` and one rendered hint, never from
+Write it from the game's description's words and one rendered hint, never from
 memory. A change to what a hint draws or calls its marks updates the section
 in the same change. `src/help-coverage.test.ts` checks only that the section
 is there. Exemplar: `src/skeleton/grid/skeleton.description.yaml`.

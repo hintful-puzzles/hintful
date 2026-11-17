@@ -36,8 +36,9 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import type { MarkKind, Sentence } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+import * as untangle from "../../generated/games/untangle/untangle.compiled.ts";
 import { ENDGAME_CROSSINGS, type Endgame, planEndgame } from "./endgame.ts";
 import {
   EDGE_GAP,
@@ -48,7 +49,13 @@ import {
   toRational,
   units,
 } from "./geometry.ts";
-import { type Crossing, say, type UntangleMarks } from "./hint-text.ts";
+import {
+  CROSSING,
+  type Crossing,
+  SPOT,
+  type UntangleMarks,
+  VERTEX,
+} from "./hint-marks.ts";
 import {
   FRAME_MARGIN,
   HALF_PIXEL,
@@ -76,6 +83,126 @@ export type UntangleRung = (typeof UNTANGLE_RUNGS)[number];
 
 type Step = HintStep<UntangleMove, unknown, UntangleRung>;
 type Said = { rung: UntangleRung; words: Sentence };
+
+/** What a step's marks are drawn on: points, the spot a point goes to, and
+ * crossings. */
+type Marked = number | RationalPoint | Crossing;
+
+/** The steps of `untangle.description.yaml`, spoken. */
+const speak = untangle.voice<Marked>({
+  kind: VERTEX as MarkKind<Marked>,
+  kinds: {
+    spot: SPOT as MarkKind<Marked>,
+    cleared: CROSSING as MarkKind<Marked>,
+  },
+  value: String,
+});
+
+type Steps = untangle.StepsById<Marked>;
+
+/** What a move does to its point's crossings, as the step's clause says it. */
+const changeOf = (
+  m: UntangleMarks,
+  how: Steps["change"]["terms"]["how"],
+  before: number,
+  after: number,
+): Steps["clear"]["terms"]["change"] => ({
+  step: "change",
+  said: {
+    terms: { how, before, after, n: m.cleared.length, some: m.cleared.length > 0 },
+    marks: { outline: { cleared: m.cleared } },
+  },
+});
+
+/** Every step's sentence, by what it measured. */
+export const say = {
+  /** A move that leaves the point's lines in fewer crossings than before. */
+  clear: (m: UntangleMarks, before: number, after: number): Sentence =>
+    speak.sentence("clear", {
+      ring: { point: [m.vertex], spot: [m.to] },
+      terms: {
+        better: after < before,
+        change: changeOf(m, after > 0 ? "cuts" : "all", before, after),
+      },
+    }),
+
+  /**
+   * A move taken when the search found none that removes a crossing: what it
+   * does to the point's own crossings (never fewer — that would be `clear`),
+   * and, when the very next step removes some, how many (`opens`). Only what
+   * the player can see on the board: the solved layout the move heads for is
+   * not.
+   */
+  rearrange: (
+    m: UntangleMarks,
+    before: number,
+    after: number,
+    opens: number | null,
+  ): Sentence =>
+    speak.sentence("rearrange", {
+      ring: { point: [m.vertex], spot: [m.to] },
+      terms: {
+        better: after < before,
+        change: changeOf(
+          m,
+          after !== before ? "rises" : before === 0 ? "keepsClear" : "keeps",
+          before,
+          after,
+        ),
+        opens: opens ?? 0,
+      },
+    }),
+
+  /**
+   * A leg of a journey that moves several marked points so that none of their
+   * lines crosses anything: the first says what the whole journey does, each
+   * what its own move does to its point's crossings.
+   */
+  journey: (
+    m: UntangleMarks,
+    leg: number,
+    legs: number,
+    finishes: boolean,
+    before: number,
+    after: number,
+  ): Sentence => {
+    const change = changeOf(
+      m,
+      after === 0
+        ? before === 0
+          ? "stay"
+          : "all"
+        : after < before && m.cleared.length > 0
+          ? "some"
+          : after < before
+            ? "cuts"
+            : after === before
+              ? "keeps"
+              : "rises",
+      before,
+      after,
+    );
+    const better = after < before;
+    const ring = { point: [m.vertex], spot: [m.to] };
+    if (leg === 0)
+      return speak.sentence("journeyFirst", {
+        ring: { ...ring, all: [m.vertex, ...m.marked] },
+        terms: { better, change, legs, finishes },
+        relation: { kind: "sequence", at: "first" },
+      });
+    return m.marked.length === 0
+      ? speak.sentence("journeyLast", {
+          ring,
+          terms: { better, change },
+          relation: { kind: "sequence", at: "last" },
+        })
+      : speak.sentence("journeyNext", {
+          ring: { ...ring, rest: m.marked },
+          terms: { better, change, left: m.marked.length },
+          relation: { kind: "sequence", at: "next" },
+        });
+  },
+};
 
 /** Spots tried per axis. Offset from the grid lines so a spot is not
  * collinear with points that sit on whole or half units. */

@@ -830,7 +830,7 @@ Reach for it when a sentence names two clues of one value.
 `apartByPosition(things, at, name)` names each thing a sentence points at
 when two would get the same words ("the upper 3", "the lower 3"). Build it
 over every such thing the one sentence names. Exemplar:
-`mosaic/hint-text.ts`. See [`hints.md`](./hints.md) § "Name a square by its
+`mines/hint.ts`. See [`hints.md`](./hints.md) § "Name a square by its
 value".
 
 ### `rival-judging.ts` — what a searched move's rivals let it say
@@ -1042,8 +1042,8 @@ firing's reason is built from its binding".
 
 Read it when another game already says your sentence. It is the engine's
 half of the hint-text convention; a game's own sentences are
-its `hint-text.ts`. Nothing here decides which sentence fires. See
-[`hints.md`](./hints.md) § "The sentences live in one file per game".
+its description's. Nothing here decides which sentence fires. See
+[`hints.md`](./hints.md) § "The sentences live in the description".
 
 - `narrateLatinReason` and `latinPremise`, for the row/column games
   (normative: `engine-candidate-hints`, "A shared narrator for generic Latin

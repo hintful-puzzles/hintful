@@ -104,6 +104,96 @@ finish:
         index(a, cells) < index(p, cells) and index(p, cells) < index(q, cells) and
         q != b and p != b:
         not meets(p, q, a, b)
+# Untangle's sentences, spoken through the hint's voice (`hint.ts`). No move
+# is forced in Untangle, so every step is told by its effect on the point's
+# crossings, which is what the hint measured: the counts are the game's own
+# exact crossing test, taken on the board the step applies to, and written
+# as numerals so a sentence never mixes "12" with "three". A step rings the
+# point it moves and the spot it moves it to, and on a journey the other
+# points still to move; the crossings the move clears are outlined. The spot
+# is "a better spot": a board has many, and the step names one that clears
+# crossings, not the one the puzzle wants (owner, 2026-10-26).
+phrases:
+  # The spot the point goes to: one of many, so never "its spot", and "a
+  # better spot" only where the move cuts the point's crossings.
+  spot: "{ring spot: {if better: a better spot | a new spot}}"
+  # ", clearing the outlined ones", where the move clears some of the
+  # point's crossings without clearing them all.
+  clearing: "{if some: , clearing {outline cleared: the outlined one | the outlined ones}|}"
+steps:
+  # What a move does to its point's crossings, `before` and `after` it, in
+  # a clause: its lines stay clear, it clears them all, it clears `n` of
+  # them leaving others (a journey's leg, which counts the ones it clears to
+  # leave the first leg's two sentences room), or it cuts, keeps or raises
+  # the count.
+  change:
+    ring: point
+    terms:
+      how: [stay, all, some, cuts, keeps, keepsClear, rises]
+      before: number
+      after: number
+      n: number
+      some: flag
+    marks: { outline: [cleared] }
+    wordings:
+      - when: "how = stay"
+        move: "its lines stay clear"
+      - when: "how = all and before = 1"
+        move: "it clears {outline cleared: its only crossing}"
+      - when: "how = all and before = 2"
+        move: "it clears {outline cleared: both of its crossings}"
+      - when: "how = all"
+        move: "it clears {outline cleared: all {before} of its crossings}"
+      - when: "how = some"
+        move: "it clears {outline cleared: the outlined one | the outlined {n}}, leaving {after}"
+      - when: "how = cuts"
+        move: "it cuts its crossings from {before} to {after}{clearing}"
+      - when: "how = keeps"
+        move: "it keeps its crossings at {before}{clearing}"
+      - when: "how = keepsClear"
+        move: "it keeps its lines clear{clearing}"
+      - move: "it goes from {before} crossings to {after}{clearing}"
+  # A move that leaves the point's lines in fewer crossings than before.
+  clear:
+    ring: [point, spot]
+    terms: { better: flag, change: { clause: [change] } }
+    move: "move {ring point: this point} to {spot}"
+    effect: "{change}"
+  # A move taken where the search found none that removes a crossing: what
+  # it does to the point's own crossings and, where the very next step
+  # removes some (`opens`), how many; without that payoff, the reason is
+  # that nothing better was found.
+  rearrange:
+    ring: [point, spot]
+    terms: { better: flag, change: { clause: [change] }, opens: number }
+    move: "move {ring point: this point} to {spot}"
+    wordings:
+      - when: "opens = 0"
+        look: "No move removes a crossing"
+        effect: "{change}"
+      - effect: "{change}, but frees a move removing {opens}"
+  # A journey's legs move several points so that none of their lines
+  # crosses anything. The first says what the whole journey does
+  # (`finishes` where it solves the puzzle), in short forms that keep its
+  # two sentences to a glance; each leg says what its own move does to its
+  # point's crossings, which may rise while the other points are still to
+  # move.
+  journeyFirst:
+    ring: [point, spot, all]
+    terms: { better: flag, change: { clause: [change] }, legs: number, finishes: flag }
+    look: "Moving {ring all: these {legs} points} {if finishes: solves the puzzle | clears their lines}"
+    move: "{ring point: this point} goes to {spot}"
+    effect: "{change}"
+  journeyNext:
+    ring: [point, spot, rest]
+    terms: { better: flag, change: { clause: [change] }, left: number }
+    move: "{ring point: this point} goes to {spot}, before {ring rest: the other one | the other {left}}"
+    effect: "{change}"
+  journeyLast:
+    ring: [point, spot]
+    terms: { better: flag, change: { clause: [change] } }
+    move: "{ring point: this point} goes to {spot}"
+    effect: "{change}"
 deal:
   start: >-
     a planar graph, its points set out round a circle

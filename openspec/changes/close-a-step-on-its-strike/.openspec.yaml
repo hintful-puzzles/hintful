@@ -1,0 +1,4 @@
+# Its delta is written when the exception is removed (tasks § 3).
+schema: spec-driven
+created: 2026-11-17
+skip_specs: true

@@ -29,7 +29,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import type { Flash } from "../../engine/win-wave.ts";
 import { newUntangleDesc } from "./generator.ts";
 import { deduceUntangleHintPlan } from "./hint.ts";
-import { CROSSING, SPOT, VERTEX } from "./hint-text.ts";
+import { CROSSING, SPOT, VERTEX } from "./hint-marks.ts";
 import { untangleGame } from "./index.ts";
 import {
   COL_CROSSEDLINE,

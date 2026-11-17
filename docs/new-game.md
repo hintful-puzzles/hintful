@@ -102,7 +102,7 @@ guides is for a game that is not yours.
 - [`hints.md`](./hints.md) § "The quality bar"; `hints.md` § "Writing the
   narration", without its parts; `hints.md` § "A sentence has parts";
   `hints.md` § "Bind the words to the marks"; `hints.md` § "The sentences
-  live in one file per game"; `hints.md` § "The hooks a hinted game
+  live in the description"; `hints.md` § "The hooks a hinted game
   implements", without its parts; `hints.md` § "Name the rung a step speaks";
   `hints.md` § "Every step is a gesture"; `hints.md` § "Refusal wording comes
   from one module". The other parts of the narration are read when a
@@ -228,7 +228,6 @@ the population of any row with `ls src/games/*/<file>`.
 | `generator.ts` | A board, and the retry until it needs exactly the tier asked for. |
 | `render.ts` | The picture, its tile cache and the hint's marks. |
 | `hint.ts` | The hint's plan: the solver's firings turned into steps. Always its own file, however short. |
-| `hint-text.ts` | Every sentence the hint speaks ([`hints.md`](./hints.md) § "The sentences live in one file per game"). |
 | `<game>.test.ts` | The game's own behavior. |
 | `<game>-generation.test.ts` | Every board dealt needs its tier, and every rung fires on dealt boards. |
 | `<game>-hint.test.ts` | A pinned position and sentence for every rung. |

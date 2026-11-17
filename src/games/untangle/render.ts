@@ -25,7 +25,7 @@ import {
   type WinTone,
   winSlot,
 } from "../../engine/win-wave.ts";
-import { CROSSING, SPOT, VERTEX } from "./hint-text.ts";
+import { CROSSING, SPOT, VERTEX } from "./hint-marks.ts";
 import {
   CIRCLE_RADIUS,
   DRAG_THRESHOLD,
