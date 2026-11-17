@@ -184,11 +184,10 @@ with openspec, through its skills; one change per coherent unit of work.
   loads, so give it a known positive first, or take a symbol's population with
   `npm run refs -- <file> <Name>`. An edit's errors arrive seconds later, on a
   later tool result; `npm run agent-diagnostics` checks that they still do.
-- **Show the owner the openspec file you are working from.** Where
-  `HC_TERMINAL_ID` is set, and only there: when you start on a change's
-  proposal, design, tasks or spec delta, or move from one to another, open it
-  with the `herdr-app-open` skill so they can follow along. Once per file, not
-  per edit: each call replaces what they are reading.
+- **Open the openspec file you are working from.** When you begin work on a
+  change (apply, propose, update), run `herdr-app-open` on its `tasks.md`; when
+  writing a proposal or spec, on that file. Just run it: it refuses by itself
+  outside herdr-app. This overrides the skill's "only when asked".
 - **When you finish a change, or stop part-way through one, and nothing the
   owner asked or doubted is open, hand on to a fresh session; never ask
   which.** Part-way: the session continues the same change, its open items
