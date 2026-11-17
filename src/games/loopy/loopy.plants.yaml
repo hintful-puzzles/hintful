@@ -38,11 +38,6 @@ techniques:
     for: >-
       f in faces where clue(number, f) != none and need(f) = faceOpen(f) - 1 and
       faceOpen(f) > 2, a in angles(f) where bare(a)
-  # An edge closing the only loop, every clue met, read as closing it early.
-  earlyLoop:
-    for: >-
-      L = {e in edges where value(e) = 1}, e in edges where not known(e), G =
-      through(end1(e), L) where end2(e) in G
   # One path of lines, not yet closed, read as the loop.
   closed:
     for: >-

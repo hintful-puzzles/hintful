@@ -317,16 +317,14 @@ techniques:
       move: "{ring: the ringed edge | each ringed edge} must be a line"
   # An open edge whose dots the lines already join: a line on it would
   # close a loop, which leaves a line out of it, or a clue unmet.
-  - id: earlyLoop
+  - kind: loop.early
+    as: earlyLoop
     tier: Easy
-    for: >-
-      L = {e in edges where value(e) = 1},
-      e in edges where not known(e), G = through(end1(e), L)
-      where end2(e) in G
-      and ((exists g in L: end1(g) not in G)
-      or (exists f in faces where clue(number, f) != none:
-      need(f) != count(x in edges(f) where x = e)))
-    conclude: "place(e, 2)"
+    with:
+      elsewhere: >-
+        (exists g in L: end1(g) not in G)
+        or (exists f in faces where clue(number, f) != none:
+        need(f) != count(x in edges(f) where x = e))
     # The lines the edge would close into a loop, and where no line would
     # be left out of it, the clues it would leave unmet: so the clues are
     # none exactly where a line left out is the reason.

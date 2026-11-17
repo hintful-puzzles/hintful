@@ -116,6 +116,21 @@ export const KINDS: Readonly<Record<string, Kind>> = {
         "forall d in cand($end) where (exists u in cand($partner): $rel): strike($end, d)",
     },
   },
+  // An open edge whose ends the lines already join would close a loop, which
+  // is the answer only once nothing else needs it: `elsewhere` says what
+  // still does, reading the lines `L`, the edge `e` and the lines' group `G`
+  // through it. A line is 1 and an empty edge 2. Closing the last loop is the
+  // defect.
+  "loop.early": {
+    params: ["elsewhere"],
+    technique: {
+      for: "L = {e in edges where value(e) = 1}, e in edges where not known(e), G = through(end1(e), L) where end2(e) in G and ($elsewhere)",
+      conclude: "place(e, 2)",
+    },
+    plant: {
+      for: "L = {e in edges where value(e) = 1}, e in edges where not known(e), G = through(end1(e), L) where end2(e) in G",
+    },
+  },
   // A square of two values where one would break a rule at once holds the
   // other. `holds` is what must stay true of the group, and `scope` the
   // squares that could break it. A position that breaks it makes the marks

@@ -116,6 +116,18 @@ boundaries are judgment, and the counts carry that.
   is 2.3's evidence again: the formula is cheap to supply, the saving is in
   plants and soundness, not in lines. Next: the bounds form of REL (Unequal
   `sign`) only if a second game states it; then GRP/LOOP/CMP/SUM, and the ask.
+- [x] 2.7 (2026-11-17) LOOP, the early-close form: `loop.early` (an open
+  edge whose ends the lines join is empty while `elsewhere` holds, the
+  game's "something still needs the loop"). Placed on Loopy and Pearl
+  `earlyLoop`: the statements compile identically (no snapshot moved, the
+  recorded verdicts still match), and the kind's plant is the one both
+  games had planted, so **no plant is weakened here**. Lines: games
+  +12/-26, the kind +15, so net even at two games, and the kind repays from
+  the third. Not placed: Tracks' `closeLoop` (a track never closes, so
+  there is no `elsewhere` to drop and its plant differs), Loopy and Pearl's
+  `closed`, Slant's and Rome's `loop` (each its own formula over its own
+  notion of a loop). So LOOP as counted (12) is about four formulas, and
+  this one covers two techniques.
 - [ ] 2.3 The first restatements are the evidence for whether the family
   kinds hold (FIT above all). 2.1's finding, 2026-11-17: the formula part of
   a kind holds and is cheap (`one.cell`, `fit.flip`), and the words do not

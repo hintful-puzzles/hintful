@@ -48,11 +48,6 @@ techniques:
     for: >-
       L = {e in edges where value(e) = 1}, g = first(L) where g != none and
       (exists e in edges: not known(e)), G = through(end1(g), L)
-  # The edge that closes the whole loop read as closing it early.
-  earlyLoop:
-    for: >-
-      L = {e in edges where value(e) = 1}, e in edges where not known(e), G =
-      through(end1(e), L) where end2(e) in G
   # Every square read as left out of the loop a way through would close.
   earlyThrough:
     for: >-
