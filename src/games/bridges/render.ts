@@ -31,7 +31,7 @@ import { type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import type { BridgesHighlights } from "./hint.ts";
-import { PIECE, SPAN } from "./hint-text.ts";
+import { PIECE, SPAN } from "./hint-marks.ts";
 import { dragReleaseOps, executeMove } from "./moves.ts";
 import type { BridgesSpan } from "./solver.ts";
 import {

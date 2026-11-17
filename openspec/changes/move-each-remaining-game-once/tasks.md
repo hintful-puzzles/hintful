@@ -170,7 +170,11 @@ Logic games:
   the voice in `hint.ts`; a layout's first leg rings the whole layout by
   sort (`all`), and its mark kinds and legend are `hint-marks.ts`. Read in
   the app: a pair's ends, a reflection, a laser to fire.
-- [ ] Bridges
+- [x] Bridges (2026-11-17): dump byte-identical, every rung reached. Its
+  sentences are `steps` spoken through the voice in `hint.ts`, with the
+  terms each technique says; a count of bridges is a word term (`over`,
+  `most`), and its mark kinds are `hint-marks.ts`. Read in the app: an
+  exact fit, every neighbor (focus, neighbors and lines marked apart).
 - [ ] ABCD
 - [ ] Map
 - [ ] Subsets

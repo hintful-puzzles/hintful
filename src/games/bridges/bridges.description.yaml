@@ -338,3 +338,101 @@ variations:
           says:
             terms: { at: c, links: "links(through(c, L))" }
             marks: { reads: "{c}", outline: "isles(through(c, L))" }
+# A step's sentence is a declared step, spoken through the hint's voice
+# (`hint.ts`) with the terms its technique says. An island is named by its
+# clue, the one thing about it the player can read off the board, and the
+# island a sentence is about (`focus`) is outlined in a color of its own; a
+# bridge has no name at all, so a sentence names the line it runs along by
+# its ring, which the drawn hint bar or cross shows. Counts of bridges are
+# words: a limit is at most one less than the most bridges the Custom dialog
+# offers, and the count one past it at most that many.
+phrases:
+  # The trial a limiting step makes, one bridge past what it allows on the
+  # line it decides, and its conclusion of that line: at none the no-line the
+  # player crosses out, above it the "at most" mark they write with the same
+  # gesture.
+  tooMany: "{over} on {ring: the ringed line}"
+  limited: "{if blocked: the line must be blocked | the line can take at most {most}}"
+steps:
+  # An island `missing` bridges short of its clue with room for exactly that
+  # many; the picture draws every bridge the move adds.
+  exactSpace:
+    ring: line
+    terms: { clue: number, missing: number }
+    marks: { outline: [focus] }
+    wordings:
+      - when: "missing = 1"
+        look: "{outline focus: this {clue}} still needs one more bridge and has room for exactly one"
+        move: "it must be drawn on {ring: the ringed line}"
+      - look: "{outline focus: this {clue}} still needs {missing} more bridges and has room for exactly {missing}"
+        move: "{ring: the ringed bridges} must all be drawn"
+  # An island whose clue exceeds what all but one of its `neighbors` could
+  # carry. With one neighbor the count is vacuous, and the reason is that
+  # there is nowhere else for a bridge to go; `others` is one fewer.
+  everyNeighbor:
+    ring: line
+    terms: { clue: number, neighbors: number, others: number }
+    marks: { outline: [focus, islands] }
+    wordings:
+      - when: "neighbors = 1"
+        look: "{outline focus: this {clue}} has just {outline islands: one outlined neighbor} left to reach"
+        move: "{ring: the ringed line} must take at least one bridge"
+      - when: "neighbors = 2"
+        look: "{outline focus: this {clue}} needs more bridges than {outline islands: either outlined neighbor} could carry alone"
+        move: "{ring: each ringed line} must take at least one"
+      - look: "{outline focus: this {clue}} needs more bridges than any {others} of {outline islands: its {neighbors} neighbors} could carry"
+        move: "{ring: each ringed line} must take one"
+  loop:
+    ring: line
+    marks: { outline: [islands, spans] }
+    look: "{outline islands: this island | these islands} are linked by {outline spans: the outlined bridge | the outlined bridges}"
+    follows: "one more would close a loop"
+    move: "{ring: the ringed line} must be blocked"
+  # An island that can draw at most `elsewhere` bridges anywhere but this way.
+  needsThisWay:
+    ring: line
+    terms: { clue: number, elsewhere: number }
+    marks: { outline: [focus, islands] }
+    wordings:
+      - when: "elsewhere = 0"
+        look: "{outline focus: this {clue}'s} {outline islands: other neighbors} can take no bridges at all"
+        move: "every bridge it needs must run along {ring: the ringed line}"
+      - look: "{outline focus: this {clue}} can take at most {elsewhere: 1 bridge | {elsewhere} bridges} from {outline islands: its other neighbors}"
+        move: "one must run along {ring: the ringed line}"
+  # One bridge past the limit would complete a group of `size` islands, all
+  # satisfied and cut off from the rest; the group is its islands and the
+  # bridges already linking them, which the words name with them.
+  sealGroup:
+    ring: line
+    terms:
+      size: number
+      over: [a bridge, two bridges, three bridges, four bridges]
+      blocked: flag
+      most: [none, one, two, three]
+    marks: { outline: [group] }
+    look: "{tooMany} would shut {outline group: these {size} islands} off as a finished group"
+    move: "{limited}"
+  # One bridge past the limit leaves some island unable to reach its clue:
+  # `self` where it is the one the bridge would start from, which "the
+  # outlined island" would point away from.
+  starve:
+    ring: line
+    terms:
+      clue: number
+      self: flag
+      over: [a bridge, two bridges, three bridges, four bridges]
+      blocked: flag
+      most: [none, one, two, three]
+    marks: { outline: [focus, islands] }
+    look: >-
+      {tooMany} would leave {if self: {outline focus: this {clue} itself} | {outline islands: the outlined island}}
+      short of its count
+    move: "{limited}"
+  # Filling every other way to its limit would seal off a finished group, so
+  # this way cannot be the empty one.
+  mustReachOut:
+    ring: line
+    terms: { clue: number }
+    marks: { outline: [focus, group] }
+    look: "filling {outline focus: this {clue}'s} other links to the full would seal off {outline group: the outlined group}"
+    move: "{ring: the ringed line} must take a bridge"

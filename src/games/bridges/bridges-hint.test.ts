@@ -22,9 +22,9 @@ import {
   type BridgesHighlights,
   type BridgesRung,
   bridgesHint,
+  say,
   sentences,
 } from "./hint.ts";
-import { say } from "./hint-text.ts";
 import { bridgesGame } from "./index.ts";
 import type { BridgesSpan } from "./solver.ts";
 import {

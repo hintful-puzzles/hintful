@@ -2,8 +2,8 @@
  * Bridges' explained hint: the narration of the firings the ladder
  * [`bridges.description.yaml`](./bridges.description.yaml) states makes, one at
  * a time, which `engine/described-edge-hint.ts` walks. This file turns each
- * firing into the move and the picture, and its words are
- * [`hint-text.ts`](./hint-text.ts)'s.
+ * firing into the move and the picture, and its words are the steps the
+ * description declares.
  *
  * **An island is named by its clue, and a bridge is named by nothing.** Bridges
  * draws no coordinates, so an island's digit is the only handle a sentence can
@@ -19,9 +19,9 @@ import {
   type Fired,
 } from "../../engine/described-edge-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
-import { SAYS_KINDS } from "../../generated/games/bridges/bridges.compiled.ts";
-import { SPAN, say } from "./hint-text.ts";
+import type { MarkKind, Sentence } from "../../engine/hint-words.ts";
+import { SAYS_KINDS, voice } from "../../generated/games/bridges/bridges.compiled.ts";
+import { PIECE, type Piece, SPAN } from "./hint-marks.ts";
 import {
   type BridgesSays,
   type BridgesSpan,
@@ -74,8 +74,80 @@ export interface BridgesHighlights {
 
 // --- narration ------------------------------------------------------------
 
-/** Each technique's sentence, from what the firing says. The words are
- * [`hint-text.ts`](./hint-text.ts)'s. */
+/** What a step marks: the spans it decides, the island the sentence is about
+ * (null when it names none), and the islands and bridges it counts. */
+interface Marked {
+  targets: readonly BridgesSpan[];
+  focus: { x: number; y: number } | null;
+  islands: readonly { x: number; y: number }[];
+  spans: readonly BridgesSpan[];
+}
+
+const speak = voice<Piece>({
+  kind: PIECE,
+  kinds: { line: SPAN as MarkKind<Piece> },
+  value: String,
+});
+
+const OVER = ["a bridge", "two bridges", "three bridges", "four bridges"] as const;
+const MOST = ["none", "one", "two", "three"] as const;
+
+/** The trial one bridge past `limit` makes, and what it concludes. */
+const limitTerms = (limit: number) => ({
+  over: OVER[limit],
+  blocked: limit === 0,
+  most: MOST[limit],
+});
+
+const focusOf = (m: Marked): Piece[] => (m.focus ? [m.focus] : []);
+
+/** The sentences of `bridges.description.yaml`'s steps, from the values the
+ * board means (a clue, a count of neighbors, the size of a group). */
+export const say = {
+  exactSpace: (clue: number, missing: number, m: Marked): Sentence =>
+    speak.sentence("exactSpace", {
+      ring: m.targets,
+      terms: { clue, missing },
+      marks: { outline: { focus: focusOf(m) } },
+    }),
+  everyNeighbor: (clue: number, neighbors: number, m: Marked): Sentence =>
+    speak.sentence("everyNeighbor", {
+      ring: m.targets,
+      terms: { clue, neighbors, others: neighbors - 1 },
+      marks: { outline: { focus: focusOf(m), islands: m.islands } },
+    }),
+  wouldCloseLoop: (m: Marked): Sentence =>
+    speak.sentence("loop", {
+      ring: m.targets,
+      marks: { outline: { islands: m.islands, spans: m.spans } },
+    }),
+  needsThisWay: (clue: number, elsewhere: number, m: Marked): Sentence =>
+    speak.sentence("needsThisWay", {
+      ring: m.targets,
+      terms: { clue, elsewhere },
+      marks: { outline: { focus: focusOf(m), islands: m.islands } },
+    }),
+  wouldSealGroup: (size: number, limit: number, m: Marked): Sentence =>
+    speak.sentence("sealGroup", {
+      ring: m.targets,
+      terms: { size, ...limitTerms(limit) },
+      marks: { outline: { group: [...m.islands, ...m.spans] } },
+    }),
+  wouldStarve: (clue: number, self: boolean, limit: number, m: Marked): Sentence =>
+    speak.sentence("starve", {
+      ring: m.targets,
+      terms: { clue, self, ...limitTerms(limit) },
+      marks: { outline: { focus: focusOf(m), islands: m.islands } },
+    }),
+  mustReachOut: (clue: number, m: Marked): Sentence =>
+    speak.sentence("mustReachOut", {
+      ring: m.targets,
+      terms: { clue },
+      marks: { outline: { focus: focusOf(m), group: [...m.islands, ...m.spans] } },
+    }),
+};
+
+/** Each technique's sentence, from what the firing says. */
 export const sentences: {
   [K in keyof BridgesSays]: (
     spoken: EdgeSpoken<BridgesSays[K]>,
