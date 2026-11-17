@@ -69,14 +69,25 @@ Planning games (a `steps` block, Slide's form):
   relation serves the aim; with neither, its look forces the move.
 - [x] Samegame (2026-11-17): dump byte-identical. "One way to avoid it" is
   the new `answers` clause; the judged relations come from `judgeRivals`.
-- [ ] Untangle
+- [ ] Untangle. Needs, read 2026-11-17: a sequence relation that carries
+  the clauses' `effect` (today `statedOnce` turns an effect into an effect
+  relation and drops a judged sequence), and count wordings for "its only
+  crossing / both of its crossings / all {n} of its crossings" and "the
+  outlined one / the outlined {n}". The ring holds a point (VERTEX) and a
+  spot (SPOT, a RationalPoint): a ring by sort `[point, spot]`, and one
+  voice over their union, as Pegs does.
 - [x] Pegs (2026-11-17): dump byte-identical. One voice serves pegs,
   holes and whole jumps (`MarkKind`'s key is a method, so a kind of
   indices is a kind of the union). A ring of sort `move` is the move
   itself, the engine's MOVE kind ("go back for it"), and the lint lets its
   words be a clause. A sequence's later leg no longer capitalizes the look
   after its "Next,".
-- [ ] Sokoban
+- [ ] Sokoban. Needs, read 2026-11-17: the same sequence-with-effect
+  (`runLast`), and a `when` that compares a word term with one of its words
+  (`why = corner`; `stepWhen` in `describe/compile.ts` compares numbers
+  only) for the trap's three fates, or three trap steps. "it" or the
+  outlined barrel is an `{if own: …}`; `stuckBarrel` (a refusal's words)
+  stays in hint.ts. One voice over `Push | number`.
 
 Logic games:
 
