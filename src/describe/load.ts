@@ -61,7 +61,13 @@ function withKinds(data: DescriptionFile, path: string): DescriptionFile {
     return {
       ...data,
       techniques: data.techniques.map((t) =>
-        "kind" in t ? expandKind(t as never, path) : t,
+        "kind" in t
+          ? expandKind(
+              t as never,
+              path,
+              "kindWords" in data ? data.kindWords : undefined,
+            )
+          : t,
       ),
     } as unknown as DescriptionFile;
   } catch (e) {

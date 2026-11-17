@@ -101,6 +101,9 @@ export interface DescriptionJson {
   /** Clause source a clause says by name, `{name}`, written once
    * (`load.ts` expands them). */
   phrases?: Record<string, string>;
+  /** What a kind of rule's parameters are in this game, said once
+   * (`kinds.ts`); a placement's `with` overrides. */
+  kindWords?: Record<string, unknown>;
   variations?: Record<string, VariationJson>;
 }
 

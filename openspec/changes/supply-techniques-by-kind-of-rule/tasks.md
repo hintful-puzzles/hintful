@@ -61,6 +61,16 @@ boundaries are judgment, and the counts carry that.
   shrinks to `group` and `set`; only then is a kind worth restating a game
   on. 2.1 stays open for ONE/PEER (Seismic or Map) and FIT (Sticks), which
   need the kinds that do not exist yet.
+- [x] 2.5 (2026-11-17) The words said once: a game's `kindWords:` block
+  (`rest`, `fill`, `has`, `restWord`, `items`, `fillWord`), which every placed
+  kind reads for the parameters it takes; `with` is now `group`, `set`, `unit`
+  and `terms`, and overrides. Norinori's two placements and Starbattle's four
+  shrank from six-to-eight lines to three-to-five; the block is the words once.
+  Norinori is the same size as before (its two placements share one block, so
+  two uses do not repay it); Starbattle's four placements save 19-12 lines.
+  **The words pay from the third placement on, and the kinds that follow
+  (ONE, PEER, FIT) are where the count of placements is.** Same tests, same
+  snapshots. Next: 2.1 on Seismic/Map (ONE/PEER), which needs those kinds.
 - [ ] 2.1 Restate three games on the library (proposal § "Before it starts"
   2): one CNT-heavy (Starbattle or Norinori), one ONE/PEER-heavy (Seismic or
   Map), one FIT-heavy (Sticks). Deal-compare, walk the hints, report what

@@ -35,6 +35,16 @@ describe("a kind of rule expands to the technique it stands for", () => {
     });
   });
 
+  it("reads a parameter the game said once, a placement's own winning", () => {
+    const { rest: _r, has: _h, ...own } = met.with;
+    const words = { rest: 2, has: "its two", restWord: "ignored", extra: "not taken" };
+    const t = expandKind({ ...met, with: own }, "x", words);
+    expect(t).toMatchObject({ conclude: expect.stringContaining("place(c, 2)") });
+    expect(t["says"]).toMatchObject({ look: "{stripes: this region} has its two" });
+    const over = expandKind({ ...met, with: { ...own, has: "its pair" } }, "x", words);
+    expect(over["says"]).toMatchObject({ look: "{stripes: this region} has its pair" });
+  });
+
   it("refuses a parameter missing, or one the kind does not have", () => {
     const { rest: _r, ...short } = met.with;
     expect(() => expandKind({ ...met, with: short }, "x")).toThrow(/missing rest/);

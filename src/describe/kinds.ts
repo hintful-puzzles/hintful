@@ -99,11 +99,16 @@ export function expandKind(
     with: Readonly<Record<string, unknown>>;
   } & Record<string, unknown>,
   path: string,
+  words: Readonly<Record<string, unknown>> = {},
 ): Record<string, unknown> {
   const kind = KINDS[placed.kind];
   if (kind === undefined)
     throw new KindError(`${path}: ${placed.as}: no kind ${placed.kind}`);
-  const { terms, ...args } = placed.with;
+  const { terms, ...own } = placed.with;
+  const shared = Object.fromEntries(
+    Object.entries(words).filter(([p]) => kind.params.includes(p)),
+  );
+  const args = { ...shared, ...own };
   const missing = kind.params.filter((p) => !(p in args));
   const extra = Object.keys(args).filter((p) => !kind.params.includes(p));
   if (missing.length > 0 || extra.length > 0)

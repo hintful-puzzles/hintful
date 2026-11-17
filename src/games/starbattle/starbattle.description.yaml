@@ -105,6 +105,13 @@ rulesOut:
   name: Cross out the squares a star rules out
   placing: 1
   techniques: [around, fullLine, fullRegion]
+kindWords:
+  rest: 2
+  fill: 1
+  has: "{s: its star | its {s} stars}"
+  restWord: be empty
+  items: "{n: star | stars}"
+  fillWord: hold a star
 techniques:
   # Nothing touching a star holds another. A star touching one makes the
   # marks inconsistent.
@@ -128,10 +135,7 @@ techniques:
     with:
       group: "L in lines"
       set: "cells(L)"
-      rest: 2
       unit: "this {if row: row | column}"
-      has: "{s: its star | its {s} stars}"
-      restWord: be empty
       # Whether the line is a row: its squares share a row.
       terms: { L: L, row: "forall c in cells(L): y(c) = y(first(cells(L)))", s: stars }
   - kind: count.met
@@ -140,10 +144,7 @@ techniques:
     with:
       group: "r in region"
       set: "cells(r)"
-      rest: 2
       unit: this region
-      has: "{s: its star | its {s} stars}"
-      restWord: be empty
       terms: { r: r, s: stars }
   # A row or column with exactly as many open squares as it still needs
   # stars has a star in each. One with fewer makes the marks inconsistent.
@@ -153,10 +154,7 @@ techniques:
     with:
       group: "L in lines"
       set: "cells(L)"
-      fill: 1
       unit: "this {if row: row | column}"
-      items: "{n: star | stars}"
-      fillWord: hold a star
       # `placed`: the unit already holds some of its stars.
       terms: { L: L, row: "forall c in cells(L): y(c) = y(first(cells(L)))", placed: "n < stars" }
   - kind: count.exact
@@ -165,10 +163,7 @@ techniques:
     with:
       group: "r in region"
       set: "cells(r)"
-      fill: 1
       unit: this region
-      items: "{n: star | stars}"
-      fillWord: hold a star
       terms: { r: r, placed: "n < stars" }
   # A row or column counted against its regions, two ways, the first where
   # it decides a square (`lines`): where the regions lying wholly inside it

@@ -1024,7 +1024,11 @@ formula reads the game's own `need(S)` and `open(S)`. `with` names the
 game's nouns (`$name` in the kind); its `terms` are added to the step's.
 **A kind brings its own plant** (the defect is the same under any game's
 nouns), so a game's `plants.yaml` states none for it. A game's `define`d
-`need` and `open` are the kind's contract: a kind that reads another name
+`need` and `open` are the kind's contract. **What a game calls things is said
+once**, in `kindWords:` (the rest value, the words for what is held); a
+placement's `with` gives only what differs (`group`, `set`, `unit`) and
+overrides. A `kindWords` name a kind does not take is ignored for it, so one
+block serves every kind placed. On contract: a kind that reads another name
 says so in `params` or its text. A kind is checked sound per game, as a
 stated technique is.
 

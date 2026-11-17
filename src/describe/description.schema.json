@@ -714,6 +714,11 @@
             }
           }
         },
+        "kindWords": {
+          "type": "object",
+          "description": "What a kind of rule's parameters (`src/describe/kinds.ts`) are in this game, said once: the value a count leaves the rest, the words for what is held. Each placement's `with` adds to these or overrides them, and a name a kind does not take is ignored for it.",
+          "additionalProperties": true
+        },
         "phrases": {
           "type": "object",
           "description": "Clause source a step's or a technique's clause says by name, `{name}`, written once: the loader puts it in place before the clause is checked, so a phrase holds what a clause may and names the terms of the clause that says it. A phrase may say another; a term named like a phrase is refused.",
