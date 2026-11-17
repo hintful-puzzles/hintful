@@ -58,6 +58,13 @@ it(`dumps every hint plan of ${id}`, () => {
             continue;
           }
         }
+        // Some of a solve's ops can leave a board the answer contradicts (a
+        // Net tile locked before the turns that settle it), on which the
+        // midend refuses a hint without asking the game.
+        if ((game.findMistakes?.(state).length ?? 0) > 0) {
+          lines.push(`== ${title} ${n} ${share} mistaken`);
+          continue;
+        }
         lines.push(`== ${title} ${n} ${share}`);
         let end = "wandering";
         for (let round = 0; round < ROUND_CAP; round++) {

@@ -686,7 +686,7 @@ two ways (owner, 2026-11-13, `standardize-hint-vocabulary`).
   say "square", and a game's own sentences and its help say it too. A game
   keeps "cell" only where its theme needs it, and **declares it once**, with
   the reason beside the declaration: a `cell` in its `notes` or `LatinVocab`,
-  or a local `thisCellNamed("cell")`. The ones that do: the Latin and Sudoku
+  or its description's `words`. The ones that do: the Latin and Sudoku
   family (a "square" is also the whole grid, "Latin square": Abcd, Adjacent,
   Group, Keen, Mathrax, Seismic, Solo, Towers, Unequal), Subsets and Unruly (their help says "cell"
   about twice as often as "square"), and Bricks (the board is hexagons). The

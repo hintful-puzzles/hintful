@@ -318,3 +318,111 @@ techniques:
       terms: { d: d, Y0: Y0, X0: X0, T: T, Y: Y }
       marks: {}
   - { use: latin.wing, tier: Extreme }
+# Solo's own sentences, spoken through the hint's voice (`hint.ts`); the Latin
+# library's (a lone note, a hidden single, a set across lines, a wing, a
+# placement's cull and the opening clean) stay every candidate game's. A value
+# prints as the board draws it (1 to 9, then a, b, …), so a total or a sum,
+# which the board draws as no value, is said `{numeral …}`. The region a
+# sentence is about (`axis`: a row, column, block or diagonal) and a killer
+# cage are striped whole, the cells it reasons from are outlined, and the cell
+# it decides is ringed.
+phrases:
+  # The region a sentence names, starting a sentence and inside one.
+  UnitRef: "{stripes region: This {axis}}"
+  unitRef: "{stripes region: this {axis}}"
+  # The region rule, as far as the cage its leftover cells all lie in: the
+  # region's whole cages and digits leave `rest` for those cells.
+  outsideRest: >-
+    {UnitRef}'s whole cages and digits leave {numeral rest} for
+    {outline inside: this killer cage's cells in the {axis}}
+  # Why a sum's open cells must make `clue`, by where the sum comes from: a
+  # cage's own total, a region's, or a region's left to a cage.
+  cageSum: >-
+    {if byCage: {stripes cage: This killer cage's open cells} make {numeral clue} |
+    {if byRegion: {UnitRef}'s whole cages and digits leave
+    {outline open: the outlined cell | the outlined cells} {numeral clue} |
+    {outsideRest}, so {numeral clue} for {outline open: its other cells}}}
+steps:
+  # Every cell of the striped region that can take `n` lies in one `target`.
+  # Its move is where the walk strikes from.
+  intersect:
+    ring: cell
+    terms: { axis: unit, target: unit, n: number }
+    marks: { stripes: [region] }
+    look: "In {unitRef}, every cell that can still take {n} lies in one {target}"
+    move: "from the rest of the {target}"
+  # Other cells inside one region already account for `vs`.
+  set:
+    ring: cell
+    terms: { axis: unit, vs: values }
+    marks: { stripes: [region], outline: [set] }
+    look: "{outline set: Other cells} in {unitRef} already account for {vs}"
+  # A sum with one open cell left: it holds `n`. `fresh` where the sum is a
+  # cage's own and no cell of the cage is placed yet.
+  cageSingle:
+    ring: cell
+    terms:
+      axis: unit
+      n: number
+      total: number
+      placed: number
+      rest: number
+      byCage: flag
+      byRegion: flag
+      fresh: flag
+    marks: { stripes: [cage, region], outline: [inside] }
+    wordings:
+      - when: "byCage and fresh"
+        look: "{stripes cage: this killer cage} has only {ring: this cell}"
+        move: "it must be its total, {n}"
+      - when: byCage
+        look: >-
+          {stripes cage: this killer cage} must total {numeral total} and its
+          other cells already make {numeral placed}
+        move: "{ring: its last cell} must be {n}"
+      # The one sentence that states the region rule in full, the 45 and
+      # all: the residual is the digit, so it says the number once, as what
+      # is left over, and has the room.
+      - when: byRegion
+        look: >-
+          {unitRef} must total {numeral total}; the cages and digits inside it
+          account for all but {n}
+        move: "{ring: its one open cell} must be {n}"
+      - look: "{outsideRest}"
+        move: "{ring: its last cell} must be {n}"
+  # Even the extremes a sum's other cells can reach leave no room for `vs`.
+  cageMinMax:
+    ring: cell
+    terms:
+      axis: unit
+      vs: values
+      clue: number
+      rest: number
+      byCage: flag
+      byRegion: flag
+      fresh: flag
+    marks: { stripes: [cage, region], outline: [inside, open] }
+    wordings:
+      - when: "byCage and fresh"
+        look: >-
+          {stripes cage: This killer cage} must total {numeral clue}; its other
+          cells leave no room for {either vs}
+      - look: "{cageSum} between them"
+  # No way to make a sum uses `vs` in the struck cell.
+  cageSums:
+    ring: cell
+    terms:
+      axis: unit
+      vs: values
+      clue: number
+      rest: number
+      byCage: flag
+      byRegion: flag
+      fresh: flag
+    marks: { stripes: [cage, region], outline: [inside, open] }
+    wordings:
+      - when: "byCage and fresh"
+        look: >-
+          No way to make {stripes cage: this killer cage} total {numeral clue}
+          uses {either vs} in {ring: this cell}
+      - look: "{cageSum}; no such sum has {either vs}"

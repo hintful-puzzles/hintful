@@ -191,13 +191,6 @@ export interface Conclusions {
   keep(values: readonly number[]): string;
 }
 
-/** {@link thisCell} for a game whose board position is not the default
- * "square": `const thisCell = thisCellNamed("cell")`, once, in its hint text. */
-export const thisCellNamed =
-  (cell: string) =>
-  (at: Point): Narration =>
-    thisCell(at, cell);
-
 /** The {@link Conclusions} of a game whose values print one way everywhere, in
  * its value vocabulary. A value struck in several cells is named once. `be`
  * is the verb a cell takes a value by (Rome's arrows "point"), and `note`

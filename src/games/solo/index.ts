@@ -79,8 +79,8 @@ import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newSoloDesc } from "./generator.ts";
+import { type RegionCells, regionName, SOLO_VOCAB, say } from "./hint.ts";
 import { type SoloReason, type SoloRegion, soloRungs } from "./hint-reasons.ts";
-import { type RegionCells, regionName, SOLO_VOCAB, say } from "./hint-text.ts";
 import {
   border,
   colors,

@@ -213,7 +213,21 @@ Logic games:
   contains A, so mark A present."; every other line is byte-identical,
   marks included. Read in the app (Easy): that step, the set outlined in
   the tally, the cell striped, B ringed, the placed cell outlined.
-- [ ] Solo (after 0.3)
+- [x] Solo (2026-11-17): dump byte-identical, marks included
+  (`DUMP_DEALS=2`, 358,960 lines in 196 s). Its own sentences (an
+  intersection, a set inside one region, and a killer sum's single, bounds
+  and sums by where the sum comes from) are `steps` spoken through the
+  voice in the new `hint.ts`; the Latin library's stay the engine's. A
+  region is a `unit` term striped whole, a total or sum `{numeral …}`
+  since a value prints as the board's digit. The two forms no dumped walk
+  meets (a fresh cage of one cell, a cage's sum left by a region) were
+  checked against the old module, words and marks, by a throwaway test
+  seen to fail on a planted difference. Read in the app (3x3 Killer Easy):
+  a region's 45, a cage's last cell, a cage's bounds, each striped and
+  ringed as said. **The dump harness skips a mistaken position**: some of
+  a solve's ops lock a Net tile before its turns, a board the midend never
+  asks a hint of, and Net's baseline threw on one ("tile 5 has every side
+  known and 0 ways"), which is no fault of the hint.
 - [x] Tents (2026-11-17): dump byte-identical, marks included. Its
   sentences are `steps` spoken through the voice in `hint.ts`, a tent's
   touch staying the `peer.touch` kind's; a link step rings by sort (the
