@@ -94,6 +94,11 @@ deal:
   value: every set, then as many hidden in a shuffled order as the board stays at its tier
   tier: one of the tiers, the board finished at it and not at the tier below
 tiers: [Easy, Normal]
+# What a horseshoe's rule-out says; the walk names the sets the neighbor has
+# open in the tally (`open`).
+kindWords:
+  link: the horseshoe
+  cell: "{stripes: this cell}"
 techniques:
   # A placed set goes in no other square.
   - id: placed
@@ -159,6 +164,10 @@ techniques:
       end: a
       partner: b
       rel: "holds(d, u)"
+      none: "{outline open: no smaller outlined set}"
+      fits: inside
+      marks: { stripes: "{a}" }
+      terms: { open: { supplied: elements } }
   # The closed end of a horseshoe holds a set only where the open end can
   # hold a bigger one holding it.
   - kind: rel.support
@@ -169,3 +178,7 @@ techniques:
       end: b
       partner: a
       rel: "holds(u, d)"
+      none: "{outline open: no bigger outlined set}"
+      fits: holding
+      marks: { stripes: "{b}" }
+      terms: { open: { supplied: elements } }

@@ -30,7 +30,8 @@ export interface Kind {
       /** The marks, or `$name` where the game gives them whole. */
       marks: Record<string, string> | string;
       look?: string;
-      move: string;
+      /** Absent where the game's walk says the move (a strike's "must go"). */
+      move?: string;
       wordings?: readonly { when?: string; look: string }[];
     };
   };
@@ -105,13 +106,21 @@ export const KINDS: Readonly<Record<string, Kind>> = {
   },
   // A value of one end of a pair that no value at the other end can stand
   // beside is struck. `rel` reads the struck end's value `d` and the partner's
-  // `u`. An end left with no value makes the marks inconsistent.
+  // `u`. An end left with no value makes the marks inconsistent. The sentence
+  // names what joins the two (`link`), the struck end as the game marks it
+  // (`cell`), what the partner has open (`none`) and the relation in words
+  // (`fits`, before the struck value); the game's walk says the strike.
   "rel.support": {
-    params: ["group", "end", "partner", "rel"],
+    params: ["group", "end", "partner", "rel", "marks", "link", "cell", "none", "fits"],
     technique: {
       for: "$group",
       conclude:
         "forall d in cand($end) where not (exists u in cand($partner): $rel): strike($end, d)",
+      says: {
+        terms: { partner: "$partner" },
+        marks: "$marks",
+        look: "$link joins $cell to {outline partner: its neighbor} with $none $fits {struckOr}",
+      },
     },
     plant: {
       conclude:

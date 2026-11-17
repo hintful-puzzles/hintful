@@ -157,8 +157,9 @@ function buildSteps(
   ): CandidateRung<EdgeClueMove, EdgeClueHint, HintReason> =>
     techniqueRung<EdgeClueMove, EdgeClueHint, HintReason, LatinSolver>(on, id, (f) => {
       const strike = strikesOf(f, o);
-      const { terms, wording } = (f.reasons[0] as Said<unknown, adjacent.SaysById[K]>)
-        .says;
+      const said = (f.reasons[0] as Said<unknown, adjacent.SaysById[K]>).says;
+      const { terms } = said;
+      const wording = "wording" in said ? said.wording : 0;
       const { look } = statedParts(adjacent.STATED[id].step[wording], {
         kind: CELL,
         at: (c: number): Point => ({ x: c % o, y: (c / o) | 0 }),

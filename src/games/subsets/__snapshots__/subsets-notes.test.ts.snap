@@ -2,7 +2,7 @@
 
 exports[`subsets: pinned hint positions > says, at each pin 1`] = `
 {
-  "ruleOut": "No outlined set is a smaller set inside {A,B}, so the horseshoe to the outlined cell rules {A,B} out of this cell.",
+  "ruleOut": "The horseshoe joins this cell to its neighbor with no smaller outlined set inside {A,B}, so {A,B} must go.",
 }
 `;
 

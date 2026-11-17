@@ -1035,7 +1035,7 @@ overrides. A `kindWords` name a kind does not take is ignored for it, so one
 block serves every kind placed. On contract: a kind that reads another name
 says so in `params` or its text. A kind is checked sound per game, as a
 stated technique is. A kind with no words of its own (`one.cell`,
-`peer.placed`, `fit.flip`, `rel.support`) takes the game's `says:` beside the placement,
+`peer.placed`, `fit.flip`) takes the game's `says:` beside the placement,
 and one with no parameters takes no `with`. `one.cell`'s sentence is the
 Latin library's `single` step, which every game that places it speaks (`docs/hints-candidates.md` § "The row/column preset"), so its `says:` holds only terms.
 `peer.placed`'s is the library's `placed` ("the 2 just placed can't repeat in
@@ -1044,6 +1044,13 @@ its {regions}"), which a walk speaks through `placedRulesOut` with the game's
 outlined line into a loop that leaves other lines out"); a game gives its marks,
 which mark draws the line (`line`), and what else the loop may miss (`off`,
 `offWords`: Pearl's pearl, Loopy's unmet clues).
+`rel.support` carries its look, "{link} joins {cell} to its neighbor with
+{none} {fits} {struckOr}", and the walk says the strike: Adjacent gives its bar
+(`{if bar: …}` inside the words), Subsets its horseshoe and the tally's sets.
+A walk that speaks a kind's step itself (Subsets') renders the compiled
+`STATED` step with `statedParts`, as `placedRulesOut` does the library's; a
+`{fit: …}` there is never tried, for only `statedSentence` sees the whole
+sentence, so keep such words short.
 `fit.flip` is the Check of a
 two-valued square (`holds`, `scope`): its plant is the coarse one, a value that
 keeps `holds` struck, so a game that wants the off-by-one plant of its

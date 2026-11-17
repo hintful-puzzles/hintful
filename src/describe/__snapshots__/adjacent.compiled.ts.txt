@@ -36,7 +36,7 @@ export const SAYS_KINDS = ["adjacent","adjacentSet"] as const;
  * sets to whether the step decides several elements (`several`). */
 export const STATED = {
   "adjacent": {"step":[{"look":"{outline pair: a bar} joins {ring} to {outline a: the {v} beside it}: they differ by 1"},{"look":"{outline pair: no bar} joins {ring} to {outline a: the {v} beside it}: they can't differ by 1"}]},
-  "adjacentSet": {"step":[{"look":"{outline pair: a bar} joins {ring} to {outline a: its neighbor} with nothing open one away from {struckOr}"},{"look":"{outline pair: no bar} joins {ring} to {outline a: its neighbor}, whose numbers all clash with {struck}"}]},
+  "adjacentSet": {"step":[{"look":"{outline pair: {if bar: a bar | no bar}} joins {ring} to {outline partner: its neighbor} with nothing open {if bar: one away from | two or more from} {struckOr}"}]},
 } as const;
 
 /** Every technique run as each value is placed, by id. */
@@ -204,10 +204,8 @@ export interface AdjacentSetBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface AdjacentSetSays {
-  terms: { a: number; bar: number; pair: readonly number[]; };
+  terms: { partner: number; bar: boolean; pair: readonly number[]; };
   marks: {  };
-  /** The index of the wording that held (`STATED`). */
-  wording: number;
 }
 
 const adjacentSetFacts: number[] = [];
@@ -264,10 +262,7 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjac
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
-            const _sw_a = v_a;
-            const _sw_bar = _h19;
-            const _sw_pair = setOf(v_b, v_a).slice();
-            const _says = { terms: { a: _sw_a, bar: _sw_bar, pair: _sw_pair }, marks: {  }, wording: ((_sw_bar === 1) ? 0 : 1) };
+            const _says = { terms: { partner: v_a, bar: (_h19 === 1), pair: setOf(v_b, v_a).slice() }, marks: {  } };
             if (!fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts, _says)) return 1;
           }
           cands.fill(-1);

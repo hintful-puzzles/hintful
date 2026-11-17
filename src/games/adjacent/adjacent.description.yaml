@@ -126,14 +126,13 @@ techniques:
       end: b
       partner: a
       rel: "u != d and fits(e, u, d)"
-    # The hint names the neighbor and whether a bar joins them.
-    says:
-      terms: { a: a, bar: "clue(bar, e)", pair: "{b, a}" }
+      # The neighbor is in the same row or column, so it never holds d.
+      terms: { bar: "clue(bar, e) = 1", pair: "{b, a}" }
       marks: {}
-      wordings:
-        - when: "bar = 1"
-          look: "{outline pair: a bar} joins {ring} to {outline a: its neighbor} with nothing open one away from {struckOr}"
-        - look: "{outline pair: no bar} joins {ring} to {outline a: its neighbor}, whose numbers all clash with {struck}"
+      link: "{outline pair: {if bar: a bar | no bar}}"
+      cell: "{ring}"
+      none: nothing open
+      fits: "{if bar: one away from | two or more from}"
   - { use: latin.set, tier: Tricky, rung: set }
   - { use: latin.fish, tier: Hard, rung: set }
   - { use: latin.wing, tier: Hard, rung: wing }

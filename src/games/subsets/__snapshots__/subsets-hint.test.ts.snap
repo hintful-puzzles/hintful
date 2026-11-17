@@ -9959,9 +9959,9 @@ exports[`subsets: pinned hint positions > says, at each pin 1`] = `
   "arrowMask": "This cell's set lies inside the outlined cell's, which has no D, so D can't be in either: clear D.",
   "collapse": "Only the outlined sets fit this cell (the empty set, say, is already placed), and all contain A, so mark A present.",
   "collapseWithCompetitor": "Only the outlined sets fit this cell (the empty set, say, is already placed), and all contain A, so mark A present.",
-  "cubeLastPlace": "No outlined set is a smaller set inside {B}, so the horseshoe to the outlined cell rules {B} out of this cell.",
+  "cubeLastPlace": "The horseshoe joins this cell to its neighbor with no smaller outlined set inside {B}, so {B} must go.",
   "hiddenSingle": "The outlined set can go nowhere but this cell, and it has no A, so clear A.",
-  "ruleOut": "No outlined set is a smaller set inside {A,B}, so the horseshoe to the outlined cell rules {A,B} out of this cell.",
+  "ruleOut": "The horseshoe joins this cell to its neighbor with no smaller outlined set inside {A,B}, so {A,B} must go.",
   "severalLetters": "The outlined cell's set lies inside this cell's and has A marked, so A must be in both: mark A present.",
 }
 `;

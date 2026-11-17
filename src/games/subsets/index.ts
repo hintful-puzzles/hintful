@@ -534,11 +534,10 @@ type Step = HintStep<SubsetsMove, unknown, SubsetsRung>;
 /** A rule-out step, read against `board`, the plan's board just before it. */
 function ruleOutStep(board: SubsetsState, mark: RuleOutMark): Step {
   const target = pointOf(mark.pos, board.w);
-  const via = pointOf(mark.why.via, board.w);
   // The set ruled out is the action, boxed as such even where the neighbor
   // could hold it too.
   const sets = candidateSets(board, mark.why.via).filter((v) => v !== mark.value);
-  const words = say.ruleOut(mark, board.n, target, via, sets);
+  const words = say.ruleOut(mark, board.n, target, mark.why.via, board.w, sets);
   return {
     move: { kind: "rule", pos: mark.pos, value: mark.value, on: true },
     rung: "ruleOut",

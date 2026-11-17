@@ -13,6 +13,7 @@
 
 import {
   CELL,
+  type MarkKind,
   mark,
   type Narration,
   phrase,
@@ -20,8 +21,15 @@ import {
   sentence,
   so,
 } from "../../engine/hint-words.ts";
+import { statedParts } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
+import { STATED } from "../../generated/games/subsets/subsets.compiled.ts";
 import { SLOT, type Slot, TALLY_SET } from "./hint-marks.ts";
+
+/** The tally's sets, as the stated sentence draws a term: its elements are
+ * the sets' values, which a context over cells holds only as its own type. */
+const OPEN_SET = TALLY_SET as unknown as MarkKind<Point>;
+
 import {
   bitList,
   type CollapseExclusion,
@@ -160,25 +168,36 @@ export const say = {
   },
 
   /**
-   * A rule-out step. The horseshoe needs a strictly smaller set at its subset
-   * end and a strictly bigger one at its superset end (the help teaches why),
-   * so a set with no such partner among the outlined sets, which are what the
-   * outlined cell can still hold, cannot go here.
+   * A rule-out step, in the `rel.support` kind's words. The horseshoe needs a
+   * strictly smaller set at its subset end and a strictly bigger one at its
+   * superset end (the help teaches why), so a set with no such partner among
+   * the outlined sets, which are what the neighbor `via` can still hold,
+   * cannot go here.
    */
   ruleOut: (
     rule: RuleOutMark,
     n: number,
     target: Point,
-    via: Point,
+    via: number,
+    w: number,
     sets: readonly number[],
   ): Sentence => {
     const label = setLabel(rule.value, n);
-    const partner = rule.why.head
-      ? `a bigger set holding ${label}`
-      : `a smaller set inside ${label}`;
+    const { look } = statedParts(STATED[rule.why.head ? "bigger" : "smaller"].step[0], {
+      kind: CELL,
+      at: (i): Point => ({ x: i % w, y: Math.floor(i / w) }),
+      termKinds: { open: OPEN_SET },
+      termAt: { open: (v) => v as unknown as Point },
+      ring: [],
+      marks: { stripes: [target] },
+      terms: { partner: via, open: sets },
+      value: (v) => setLabel(v, n),
+      struck: [rule.value],
+    });
+    if (look === undefined) throw new Error("rel.support states no look");
     return so({
-      look: phrase`no ${mark.as("outline", TALLY_SET, sets, "outlined set")} is ${partner}`,
-      move: phrase`the horseshoe to ${outlinedCell([via])} rules ${mark.as("ring", TALLY_SET, [rule.value], label)} out of ${mark.this("stripes", CELL, [target], "cell")}`,
+      look,
+      move: phrase`${mark.as("ring", TALLY_SET, [rule.value], label)} must go`,
     });
   },
 

@@ -415,7 +415,7 @@ describe("hint", () => {
       // → action).
       expect(step.explanation).toMatch(
         step.move.kind === "rule"
-          ? /rules .* out of this cell/
+          ? /joins this cell to its neighbor with .* must go\.$/
           : /(mark .*present|clear)/i,
       );
       if (!step.continuesPrevious) {

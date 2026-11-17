@@ -355,7 +355,8 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
       expect(m.on).toBe(true);
       expect(solved.known[m.pos]).not.toBe(m.value);
       expect(canHold(board, m.pos, m.value)).toBe(true);
-      // "No outlined set is a bigger set holding / smaller set inside it."
+      // "…its neighbor with no bigger outlined set holding / smaller outlined
+      // set inside {A}."
       expect(cells).toHaveLength(1);
       const via = cells[0].y * board.w + cells[0].x;
       expect(sets).toEqual(candidateSets(board, via).filter((v) => v !== m.value));
@@ -365,7 +366,7 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
       );
       if (head) tally.heads++;
       expect(st.explanation).toContain(
-        head ? "bigger set holding" : "smaller set inside",
+        head ? "bigger outlined set holding" : "smaller outlined set inside",
       );
       for (const v of sets)
         expect(head ? strictSub(m.value, v) : strictSub(v, m.value)).toBe(false);

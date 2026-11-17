@@ -193,18 +193,21 @@ boundaries are judgment, and the counts carry that.
     game whose ring is drawn on edges said "this square" (the game's noun);
     the engine now refuses a bare ring of another sort with no noun of its
     own (`ringNoun`), planted and seen to fail.
-  - [ ] `rel.support` (found 2026-11-17, not started): Adjacent speaks its
-    `adjacentSet` through `says` wordings on `bar` ("A bar joins this cell
-    to its neighbor with nothing open one away from 1"); Subsets speaks
-    `smaller`/`bigger` through its own walk (`hint-text.ts` `ruleOut`, sets
-    drawn as tallies: "No outlined set is a smaller set inside {A,B}, so the
-    horseshoe to the outlined cell rules {A,B} out of this cell"). A
-    candidate shared frame: "{link} joins {ring} to {outline partner: its
-    neighbor}, and none of its {valueNoun}s {rel words} {struck}", the kind
-    carrying it as `loop.early` does and Subsets' walk speaking it through
-    a `placedRulesOut`-style helper over the compiled `STATED`. Subsets'
-    marks (ringed set, striped cell) differ from Adjacent's, so look in the
-    app before settling.
+  - [x] `rel.support` (2026-11-17): the kind carries "{link} joins {cell}
+    to {outline partner: its neighbor} with {none} {fits} {struckOr}", the
+    shape Adjacent already had; the walk says the strike. Adjacent's bar
+    case is unchanged; its no-bar case says "with nothing open two or more
+    from 3" (was ", whose numbers all clash with 3"). Subsets' walk renders
+    the compiled step with `statedParts`, keeping its marks (striped cell,
+    outlined neighbor, the tally's sets outlined, the struck set ringed):
+    "The horseshoe joins this cell to its neighbor with no smaller outlined
+    set inside {A,B}, so {A,B} must go" (was "No outlined set is a smaller
+    set inside {A,B}, so the horseshoe to the outlined cell rules {A,B} out
+    of this cell"). Seen in the app in both. **Found:** a `{fit: …}` in a
+    walk-spoken look is never tried (only `statedSentence` measures the
+    whole sentence), so the no-bar form was shortened to stay under the
+    limit; recorded in `docs/descriptions.md`. No verdict moved (the
+    formulas are the same).
   - [ ] `fit.flip` (Sticks only): its five `says` are the rule's own words.
     Find what a family sentence could share ("Suppose ...: it would break
     ...") and whether Sticks' boundary plants should come back as
