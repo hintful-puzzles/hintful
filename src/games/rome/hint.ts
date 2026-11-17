@@ -57,8 +57,14 @@ import {
 } from "../../engine/candidate-plan.ts";
 import { describedSpace, rangeMask, step } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import type { Premise } from "../../engine/hint-text.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import {
+  candidateConclusions,
+  cleanObviousText,
+  narrateLatinReason,
+  type Premise,
+  populateText,
+} from "../../engine/hint-text.ts";
+import { CELL, type Narration, type Sentence, whole } from "../../engine/hint-words.ts";
 import {
   CellMarks,
   type Firing as LadderFiring,
@@ -68,7 +74,6 @@ import {
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
 import * as rome from "../../generated/games/rome/rome.compiled.ts";
-import { say } from "./hint-text.ts";
 import { dealtOf, romeLadder } from "./solver.ts";
 import {
   DIFFCOUNT,
@@ -113,6 +118,107 @@ export const romeCandidateMoves: CandidateMoveAdapter<RomeMove> = {
 /** Rome's hint highlights are the shared candidate shape: the evidence to
  * shade, the squares acted on, and the marks struck. */
 export type RomeHint = CandidateHighlights;
+
+/** The four arrows as words, indexed by candidate value: a sentence names a
+ * way to point by its word, never by the glyph. */
+const WORD = ["", "up", "down", "left", "right"] as const;
+
+/** Where the square an arrow of value `n` points at sits, and the same
+ * relation as an adjective ("its left neighbor"). */
+const NEIGHBOR = ["", "above", "below", "to the left", "to the right"] as const;
+const SIDE = ["", "upper", "lower", "left", "right"] as const;
+
+/** The arrow of value `n`, as a word. */
+const arrow = (n: number): string => WORD[n];
+
+/** Rome's steps are spoken on squares, the area or group striped whole. */
+const speak = rome.voice<Point>({
+  kind: CELL,
+  kinds: { area: whole(CELL), group: whole(CELL) },
+  value: arrow,
+});
+
+/** Every candidate game's words in Rome's: an arrow points, Rome's help says
+ * "square", and a struck way is a mark. */
+const VOCAB = { noun: "arrow", value: arrow, cell: "square", be: "point" };
+
+/**
+ * Every sentence Rome's hint speaks: the steps `rome.description.yaml`
+ * states, and every candidate game's (the setup, a lone mark, how a step
+ * ends) in {@link VOCAB}. A strike's words are a premise.
+ */
+export const say = {
+  populate: populateText("arrow", "square"),
+  /** The area is the whole of Rome's uniqueness rule. */
+  cleanObvious: cleanObviousText("arrow", "placed", "area", "square"),
+
+  note: (at: Point, vs: number[], unruled: boolean): Sentence =>
+    speak.sentence("note", { ring: [at], terms: { unruled, vs } }),
+
+  single: (at: Point, n: number): Sentence =>
+    narrateLatinReason({ kind: "single" }, { ...at, n }, 0, VOCAB),
+
+  regionsFull: (at: Point, n: number): Sentence =>
+    speak.sentence("regionsFull", { ring: [at], terms: { n } }),
+
+  /** Synthesized by the plan rather than recorded: the solver only places a
+   * naked single, but the plan may reach the square before it has taken every
+   * strike the solver did. */
+  hiddenSingle: (area: readonly Point[], at: Point, n: number): Sentence =>
+    speak.sentence("hiddenSingle", {
+      ring: [at],
+      terms: { n },
+      marks: { stripes: { area } },
+    }),
+
+  conclude: candidateConclusions({ ...VOCAB, note: "mark" }),
+
+  dup: (area: readonly Point[], placed: Point, n: number): Narration =>
+    speak.premise("dup", {
+      terms: { n },
+      marks: { stripes: { area }, outline: { placed: [placed] } },
+    }),
+  dupWhere: speak.part("dupWhere", "move", {}).text,
+
+  /** `path` runs from the square the struck mark `n` points at back to `at`,
+   * which is named by its own mark and is not among the arrows. */
+  loop: (path: readonly Point[], n: number, at: Point): Narration =>
+    speak.premise("loop", {
+      ring: [at],
+      terms: { side: NEIGHBOR[n] as Exclude<(typeof NEIGHBOR)[number], ""> },
+      marks: {
+        outline: { arrows: path.filter((p) => p.x !== at.x || p.y !== at.y) },
+      },
+    }),
+
+  reach: (group: readonly Point[], at: Point): Narration =>
+    speak.premise("reach", { ring: [at], marks: { stripes: { group } } }),
+  reachStruck: speak.part("reachStruck", "move", {}).text,
+
+  /** `n` is the struck direction, so the neighbor is the square it points at,
+   * left only the two ways along `pair`'s axis. */
+  opposite: (
+    side: Point,
+    area: readonly Point[],
+    n: number,
+    pair: number[],
+  ): Narration =>
+    speak.premise("opposite", {
+      terms: {
+        side: SIDE[n] as Exclude<(typeof SIDE)[number], "">,
+        back: pair.find((p) => p !== n) ?? n,
+        n,
+      },
+      marks: { outline: { neighbor: [side] }, stripes: { area } },
+    }),
+
+  pair: (pair: readonly Point[], area: readonly Point[], ns: number[]): Narration =>
+    speak.premise("sharedPair", {
+      terms: { first: ns[0], second: ns[1] },
+      marks: { outline: { pair }, stripes: { area } },
+    }),
+  pairWhere: speak.part("pairWhere", "move", {}).text,
+};
 
 /** Why the plan's next step is forced. */
 type RomeHintReason =

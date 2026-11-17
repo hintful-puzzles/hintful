@@ -144,3 +144,84 @@ techniques:
     says:
       terms: { c: c }
       marks: {}
+# Rome's candidates are ways to point, so a sentence names them by their word
+# ("up") and the relation it names ("the square above"), never by the glyph:
+# an arrow drawn in prose is smaller than the board's and says nothing more.
+# The steps below are the ones that differ from every candidate game's: a
+# square at the edge can point fewer ways, and only an area of four must hold
+# every arrow. A strike's look is a premise, which the walk ends with its move.
+steps:
+  # A note step under the implicit reading: what the area leaves a square is
+  # said of the ways it can point, never of all four. `unruled` where its area
+  # rules nothing out yet.
+  note:
+    ring: cell
+    terms: { unruled: flag, vs: values }
+    wordings:
+      - when: unruled
+        look: "Nothing in {ring}'s area limits the way it can point yet"
+        move: "pencil in every one"
+      - look: "Of the ways {ring} can point, only {vs} {vs: isn't | aren't} already used in its area"
+        move: "pencil {vs: it | them} in"
+  # A single in a square with no marks. Not every candidate game's: "every
+  # other arrow" would claim an edge square's area holds one it never could.
+  regionsFull:
+    ring: cell
+    terms: { n: number }
+    look: "Every other way {ring} can point is already used in its area"
+    move: "it must point {n}"
+  # A four-square area with one home left for an arrow. Not every candidate
+  # game's: only an area of four must hold every arrow, so it says so.
+  hiddenSingle:
+    ring: cell
+    terms: { n: number }
+    marks: { stripes: [area] }
+    look: "{stripes area: Its area} must hold all four arrows, and only {ring} can still point {n}"
+    move: "it must point {n}"
+  # The cull around a placement, and the opening clean's per-firing form.
+  dup:
+    ring: cell
+    terms: { n: number }
+    marks: { stripes: [area], outline: [placed] }
+    look: "{stripes area: This area} now has {outline placed: its {n} arrow}"
+  # Where a cull's struck marks are.
+  dupWhere:
+    ring: cell
+    move: "in it"
+  # A mark that would join a chain of arrows leading back to its own square,
+  # `side` the square it points at; the square is the ring, not an arrow.
+  loop:
+    ring: cell
+    terms: { side: [above, below, to the left, to the right] }
+    marks: { outline: [arrows] }
+    wordings:
+      - when: "|outlineArrows| = 1"
+        look: "{outline arrows: The arrow in the square {side}} points back to {ring}"
+      - look: "{outline arrows: The arrows from the square {side}} lead back to {ring}"
+  # The one mark anywhere that can still grow a goal's group.
+  reach:
+    ring: cell
+    marks: { stripes: [group] }
+    look: "Every square needs a goal, and only one mark in {ring} leads to {stripes group: the striped group}"
+  # What a reach strikes.
+  reachStruck:
+    ring: cell
+    move: "its other marks"
+  # A neighbor, on the `side` the struck mark points, that could only point
+  # along one axis: back (`back`, a loop) or on (`n`, two of `n` in its area).
+  opposite:
+    ring: cell
+    terms: { side: [upper, lower, left, right], back: number, n: number }
+    marks: { outline: [neighbor], stripes: [area] }
+    look: "{outline neighbor: Its {side} neighbor} in {stripes area: this area} must point {back} (a loop) or {n} (two {n}s)"
+  # Two squares of an area left the same two marks, `first` and `second`: the `pair`
+  # technique's sentence, which the kind it places states none of.
+  sharedPair:
+    ring: cell
+    terms: { first: number, second: number }
+    marks: { outline: [pair], stripes: [area] }
+    look: "{outline pair: Two squares} of {stripes area: this area} must take {first} or {second} between them"
+  # Where a pair's struck marks are.
+  pairWhere:
+    ring: cell
+    move: "of the area"

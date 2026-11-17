@@ -130,7 +130,7 @@ export function noteText(
 }
 
 /** "this cell": the ringed cell a step decides, in the game's word for it. */
-export function thisCell(at: Point, cell = "square"): Narration {
+function thisCell(at: Point, cell = "square"): Narration {
   return mark.this("ring", CELL, [at], cell);
 }
 
@@ -199,18 +199,27 @@ export const thisCellNamed =
     thisCell(at, cell);
 
 /** The {@link Conclusions} of a game whose values print one way everywhere, in
- * its value vocabulary. A value struck in several cells is named once. */
+ * its value vocabulary. A value struck in several cells is named once. `be`
+ * is the verb a cell takes a value by (Rome's arrows "point"), and `note`
+ * what a struck value is called where its word alone would not say it is a
+ * note ("the up mark"). */
 export function candidateConclusions(vocab: {
   value(n: number): string;
   cell?: string;
+  be?: string;
+  note?: string;
 }): Conclusions {
   const v = vocab.value;
   const cell = vocab.cell ?? "square";
+  const be = vocab.be ?? "be";
+  const { note } = vocab;
   return {
     cell,
     strike: ({ where, struck }) => {
       const values = (values: readonly number[]): string => {
         const ns = distinct([...values]);
+        if (note !== undefined)
+          return `the ${joinWith(ns.map(v))} ${values.length === 1 ? note : `${note}s`}`;
         return ns.length === 1 ? `the ${v(ns[0])}` : joinWith(ns.map(v));
       };
       // "Must go" is the necessity voice in the fewest words. A where that
@@ -223,10 +232,10 @@ export function candidateConclusions(vocab: {
         after: from ? `must go ${where}` : "must go",
       };
     },
-    place: (n) => `must be ${v(n)}`,
+    place: (n) => `must ${be} ${v(n)}`,
     // Short where it can be: the list is as long as the values left, and
     // "only" says they are all the cell can be.
-    keep: (values) => `can only be ${joinOr(values.map(v))}`,
+    keep: (values) => `can only ${be} ${joinOr(values.map(v))}`,
   };
 }
 

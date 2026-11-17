@@ -26,8 +26,7 @@ import {
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { newRomeDesc } from "./generator.ts";
-import { buildSteps } from "./hint.ts";
-import { say } from "./hint-text.ts";
+import { buildSteps, say } from "./hint.ts";
 import { romeGame } from "./index.ts";
 import { COL_ARROW_PENCIL, COL_HINT_CELL } from "./render.ts";
 import { parseDesc, romeSolve } from "./solver.ts";

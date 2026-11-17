@@ -124,7 +124,18 @@ Logic games:
   cell", and the cell is the one just named. Every rung reached in both
   modes; marks unchanged. Read in the app: the starve's area striped and
   cell ringed, a note step's cell ringed.
-- [ ] Rome
+- [x] Rome (2026-11-17): its own sentences (a note, a full area, a four
+  area's one home, the cull, the loop, the reach, the opposite neighbor,
+  the shared pair) are `steps`; the setup and a lone mark stay every
+  candidate game's. Its copy of the conclusions is gone: the engine's
+  `candidateConclusions` takes a verb (`be: "point"`) and a word for a
+  struck value (`note: "mark"`). **Two endings changed**, both the
+  engine's form now: "so this square's down mark must go" is "so the down
+  mark must go" (the mark is the marked reference), and "so this square
+  must point left or right" is "so this square can only point left or
+  right". With those two rewrites undone the dump is byte-identical,
+  marks included. Read in the app: an opposite, a loop striking a mark,
+  a reach and a hidden single.
 - [ ] Rect
 - [ ] Galaxies
 - [ ] Guess
