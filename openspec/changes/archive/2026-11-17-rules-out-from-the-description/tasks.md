@@ -10,4 +10,4 @@
 
 - [x] 2.1 Norinori and Star Battle move over; their `bring` and helpers go. Tents and Light Up keep theirs, each with the reason in its comment: their rule is inside a technique that also places (`lineCount`, `square`).
 - [x] 2.2 `rules-out.test.ts` green, with a planted difference seen failing; the new bring matched the old on 749 consistent partial boards of the two games before the old went
-- [ ] 2.3 Each moved game checked in the browser
+- [x] 2.3 Each moved game checked in the browser (Norinori and Star Battle: marks made on placement, one Undo takes placement and marks together)
