@@ -193,6 +193,12 @@ function besides(s: LightupState, x: number, y: number): Point[] {
 /**
  * The free squares each new bulb rules out at a glance, by a cross: the rest
  * of those round a numbered wall beside it that has all its lights.
+ *
+ * Written by hand, not stated as the description's `rulesOut`
+ * (docs/descriptions.md § "What a placement rules out"): that rule is one arm
+ * of `square`, which also places bulbs and checks the rest of the wall's and
+ * the dark squares' rules, and `shine` would cross every lit square, which
+ * the preference's words do not offer.
  */
 function ruledOut(before: LightupState, after: LightupState): LightupMove | null {
   const { w, flags } = after;

@@ -333,15 +333,16 @@ function solve(
   return { ok: true, move: { type: "solve", tents } };
 }
 
-/** Re-solve from the clues and flag every placed square that contradicts the
- * unique solution (a tent where none belongs, a non-tent where a tent
- * belongs), and every link no pairing of that solution can hold. Blanks are
- * never mistakes; a non-uniquely-solvable board yields none. The hint takes
- * tents, grass and links as facts, so this must vouch for all three. */
 /**
  * The open squares each new tent rules out at a glance, as grass: the eight
  * round it, and the rest of its row or column where it is the last tent the
  * number asks for.
+ *
+ * Written by hand, not stated as the description's `rulesOut`
+ * (docs/descriptions.md § "What a placement rules out"): the eight round a
+ * tent are `nextToTent`, but a full row or column is only `lineCount`, which
+ * also places tents and grass from the ways a count can be met, and those are
+ * no placement's to make.
  */
 function ruledOut(before: TentsState, after: TentsState): TentsMove | null {
   const { w, h, grid, numbers } = after;
@@ -367,6 +368,11 @@ function ruledOut(before: TentsState, after: TentsState): TentsMove | null {
   return cells.length === 0 ? null : { type: "cells", cells };
 }
 
+/** Re-solve from the clues and flag every placed square that contradicts the
+ * unique solution (a tent where none belongs, a non-tent where a tent
+ * belongs), and every link no pairing of that solution can hold. Blanks are
+ * never mistakes; a non-uniquely-solvable board yields none. The hint takes
+ * tents, grass and links as facts, so this must vouch for all three. */
 function findMistakes(state: TentsState): readonly TentsMistake[] {
   const { ret, soln } = solveFromClues(state);
   if (ret !== 1) return [];

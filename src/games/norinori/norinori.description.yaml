@@ -85,6 +85,12 @@ deal:
   region: the partition, grown round dominoes placed at random, two shaded squares to a region
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky]
+# What a shaded square rules out at a glance: the squares beside a domino it
+# completes, and the rest of the region it fills.
+rulesOut:
+  name: Cross out the squares a domino rules out
+  placing: 1
+  techniques: [domino, fullRegion]
 techniques:
   # Two shaded squares side by side are a domino, and nothing else beside
   # either is shaded. A shaded square beside two others makes the marks

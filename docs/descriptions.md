@@ -104,6 +104,7 @@ and techniques, and:
 | A statement's order is behavior | you restate a technique, or a hint changes after a description edit |
 | A conclusion that is false is a contradiction | a technique must refuse a board, or a solver reports a false ambiguity |
 | The answer check | you decide whether a board is solved, or write an error overlay |
+| What a placement rules out | a placed thing rules out squares the player would cross by hand |
 | A firing's reason is built from its binding | a hint's words need a fact about a firing |
 | What the compiler checks of a wording | you write a wording, or `npm run describe` reports one |
 | Checking a technique sound | you state or edit a technique, or the gate reports one unchecked |
@@ -1009,6 +1010,36 @@ compiles; what a game acts on:
 
 Its comparison with the checks it replaced is in the `report.md` of
 `openspec/changes/archive/*-check-the-answer-from-the-rules`.
+
+## What a placement rules out
+
+**A game offers the `auto-cross` preference by stating `rulesOut`**, never by
+writing a second copy of its rule:
+
+```yaml
+rulesOut:
+  name: Cross out the squares a star rules out   # the preference's words
+  placing: 1                                      # the value a placement gives
+  techniques: [around, fullLine, fullRegion]
+```
+
+Each named technique must `say` (its `marks.reads` is what the move's
+evidence is). `describedFiringHint({ rulesOut: RULES_OUT, ... })` returns
+`rulesOut`, which the game sets as `Game.rulesOut` (`engine/described-rules-out.ts`).
+The engine runs those techniques on the board after a move and brings the
+conclusions of every firing whose premise (`premiseOf`: what it reads,
+outlines and decides) holds a square the move set to `placing`, on the
+squares the move left alone. So:
+
+- **What an older placement rules out and the player left open is not
+  brought**: its firings read no square this move placed.
+- **A technique that finds the marks inconsistent brings nothing**, so a star
+  placed beside another crosses no square.
+- **Name only techniques whose conclusions the player would cross at a
+  glance**, and that conclude marks alone: a technique that also places (Tents'
+  `lineCount`, Light Up's `square`) cannot be named, since its other
+  conclusions are not the placement's to make. A game whose rule-out is
+  inside such a technique writes `Game.rulesOut` itself and says why.
 
 ## A firing's reason is built from its binding
 

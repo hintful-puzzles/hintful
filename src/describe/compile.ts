@@ -7539,6 +7539,14 @@ export function compileGame(
           `export const WORDS = ${JSON.stringify(json.words)} as const;`,
           "",
         ]),
+    ...(d.rulesOut === null
+      ? []
+      : [
+          "/** What a placement rules out at a glance: the preference's words, and the",
+          " * techniques whose conclusions a placement brings. */",
+          `export const RULES_OUT = ${JSON.stringify(d.rulesOut)} as const;`,
+          "",
+        ]),
     ...stepsBlock(d.steps, own, json.words ?? null, runtime),
     ...(own.some((t) => t.says !== null)
       ? [

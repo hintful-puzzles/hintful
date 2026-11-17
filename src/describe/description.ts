@@ -87,6 +87,10 @@ export interface DescriptionJson {
   freedom: { kind: string };
   deal?: Record<string, string>;
   tiers?: string[];
+  /** What a placement rules out at a glance, which the engine's `auto-cross`
+   * preference makes for the player: the preference's words, and the
+   * techniques whose conclusions a placement brings (`Game.rulesOut`). */
+  rulesOut?: { name: string; placing: number; techniques: string[] };
   /** Grading scales besides `tiers`, by name, each its tiers easiest first. */
   scales?: Record<string, string[]>;
   techniques?: TechniqueJson[];
@@ -724,6 +728,7 @@ export interface Description {
   /** The kinds of step the game's planner emits. */
   steps: Step[];
   tiers: string[];
+  rulesOut: { name: string; placing: number; techniques: string[] } | null;
 }
 
 /** A kind of step a planner emits, parsed. */
@@ -1065,7 +1070,27 @@ export function loadDescription(
     techniques,
     steps: stepsOf(json.steps ?? {}, at),
     tiers,
+    rulesOut: rulesOutOf(json, techniques),
   };
+}
+
+/** The description's `rulesOut`, its techniques checked to be the game's. */
+function rulesOutOf(
+  json: DescriptionJson,
+  techniques: readonly Technique[],
+): { name: string; placing: number; techniques: string[] } | null {
+  const r = json.rulesOut;
+  if (r === undefined) return null;
+  for (const id of r.techniques) {
+    const t = techniques.find((x) => x.id === id);
+    if (t === undefined)
+      throw new SyntaxError(`${json.game} rulesOut: no technique ${id}`);
+    if (t.says === null)
+      throw new SyntaxError(
+        `${json.game} rulesOut: ${id} says nothing, so a move's evidence is not known`,
+      );
+  }
+  return r;
 }
 
 /** A game's kinds of planner step, parsed. */

@@ -15,6 +15,7 @@ import {
 } from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
 import {
+  RULES_OUT,
   type SaysById,
   STATED,
 } from "../../generated/games/norinori/norinori.compiled.ts";
@@ -44,6 +45,7 @@ const described = describedFiringHint<
 >({
   name: "norinori hint",
   walk: hintWalk,
+  rulesOut: RULES_OUT,
   // A player rarely follows more than a few steps before going their own way,
   // and the plan is asked for again then.
   plan: 24,
@@ -62,5 +64,9 @@ const described = describedFiringHint<
   say: {},
 });
 
-export const { hint: norinoriHint, hintKeepTrack: norinoriKeepTrack } = described;
+export const {
+  hint: norinoriHint,
+  hintKeepTrack: norinoriKeepTrack,
+  rulesOut: norinoriRulesOut,
+} = described;
 export const norinoriRefreshHintStep = described.refreshHintStep;

@@ -876,13 +876,19 @@ notes declares the shared ones ("Pencil marks: the full note-taking UX").
   `src/store/settings.ts` returns for the puzzle before your hook.
 - **What a placement rules out at a glance is declared, not a preference.**
   Where placing a thing rules out squares the player would otherwise cross
-  out by hand (the squares round a star or a tent), declare `rulesOut` on the
-  `Game`: its words, and a `bring(before, after)` that answers with those
-  marks as a move of the game's own. The engine offers the `auto-cross`
-  preference and makes the marks one step of Undo with the move. The hint
-  judges the move alone and ends a plan where marks are brought.
+  out by hand (the squares round a star or a tent), state `rulesOut` in the
+  game's description (`docs/descriptions.md` § "What a placement rules out")
+  and pass its `RULES_OUT` to `describedFiringHint`, whose `rulesOut` is the
+  `Game`'s: the engine brings the conclusions of the named techniques that
+  read the placed square, and writes no `bring` for the game. A game whose
+  rule-out is no technique of its ladder writes `Game.rulesOut` itself, a
+  `bring(before, after)` that answers with the marks as a move of the game's
+  own, and says why in a comment (Tents' row and column counts and Light Up's
+  numbered walls are inside techniques that also place). The engine offers the
+  `auto-cross` preference and makes the marks one step of Undo with the move.
+  The hint judges the move alone and ends a plan where marks are brought.
   `rules-out.test.ts` plays every declaring game's hint with it on. Exemplar:
-  [`starbattle/index.ts`](../src/games/starbattle/index.ts). Notes culled by a
+  [`starbattle/hint.ts`](../src/games/starbattle/hint.ts). Notes culled by a
   placed value are the candidate engine's `auto-pencil` instead, whose plan
   models the cull and runs on.
 

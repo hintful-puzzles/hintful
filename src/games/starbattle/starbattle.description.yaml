@@ -99,6 +99,12 @@ deal:
   stars: the stars to a row
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky]
+# What a star rules out at a glance: the squares touching it, and the rest of
+# a row, column or region it fills.
+rulesOut:
+  name: Cross out the squares a star rules out
+  placing: 1
+  techniques: [around, fullLine, fullRegion]
 techniques:
   # Nothing touching a star holds another. A star touching one makes the
   # marks inconsistent.

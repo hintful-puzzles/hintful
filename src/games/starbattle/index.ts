@@ -33,6 +33,7 @@ import {
   starbattleHint,
   starbattleKeepTrack,
   starbattleRefreshHintStep,
+  starbattleRulesOut,
 } from "./hint.ts";
 import {
   border,
@@ -98,34 +99,6 @@ const markWith =
     if (mark === old) return null;
     return { kind: "mark", cells: [{ index, mark }] };
   };
-
-/**
- * The blank squares each new star rules out at a glance: the ones touching
- * it, and the rest of its row, column or region where the star is the last
- * that one holds.
- *
- * The description's `around`, `fullLine` and `fullRegion` conclude the same
- * squares on every board whose marks are consistent, but stop at one that is
- * not, where a star placed beside another still has its squares crossed here.
- */
-function ruledOut(
-  before: StarbattleState,
-  after: StarbattleState,
-): StarbattleMove | null {
-  const board = boardOf(after);
-  const out = new Set<number>();
-  after.grid.forEach((mark, index) => {
-    if (mark !== STAR || before.grid[index] === STAR) return;
-    for (const i of board.touching(index)) out.add(i);
-    for (const unit of board.unitsAt(index))
-      if (board.need(unit) === 0) for (const i of board.units[unit].cells) out.add(i);
-  });
-  const cells: { index: number; mark: StarbattleMark }[] = [...out]
-    .filter((i) => after.grid[i] === BLANK)
-    .sort((a, b) => a - b)
-    .map((index) => ({ index, mark: CROSSED }));
-  return cells.length === 0 ? null : { kind: "mark", cells };
-}
 
 /** One click of a button: blank, then `first`, then the other mark, then
  * blank again. */
@@ -283,7 +256,7 @@ export const starbattleGame: Game<
   refreshHintStep: starbattleRefreshHintStep,
   hintGesture,
 
-  rulesOut: { name: "Cross out the squares a star rules out", bring: ruledOut },
+  rulesOut: starbattleRulesOut,
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

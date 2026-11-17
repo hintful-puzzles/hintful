@@ -18,6 +18,7 @@ import {
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Point } from "../../engine/types.ts";
 import {
+  RULES_OUT,
   type SaysById,
   STATED,
 } from "../../generated/games/starbattle/starbattle.compiled.ts";
@@ -48,6 +49,7 @@ const described = describedFiringHint<
 >({
   name: "starbattle hint",
   walk: hintWalk,
+  rulesOut: RULES_OUT,
   // A player rarely follows more than a few steps before going their own way,
   // and the plan is asked for again then.
   plan: 24,
@@ -67,6 +69,7 @@ const described = describedFiringHint<
 });
 
 export const starbattleHint = described.hint;
+export const starbattleRulesOut = described.rulesOut;
 export const starbattleRefreshHintStep = described.refreshHintStep;
 
 /**

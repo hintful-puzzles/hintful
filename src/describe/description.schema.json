@@ -706,6 +706,28 @@
           "items": { "type": "string" },
           "description": "The ladder, lowest first; the last is the search where the game has one."
         },
+        "rulesOut": {
+          "type": "object",
+          "description": "What a placement rules out at a glance, which the app's auto-cross preference makes for the player: the preference's words, the value a placement gives a square, and the techniques whose conclusions a placement brings. The engine runs the techniques on the board after the move, and the move brings the conclusions of the firings that read a square it placed, on the squares the move left alone. Each technique says what it reads (`marks.reads`).",
+          "required": ["name", "placing", "techniques"],
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The preference's label, an imperative."
+            },
+            "placing": {
+              "type": "integer",
+              "description": "The value a placement gives a square, as the answer's domain reads it."
+            },
+            "techniques": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" },
+              "description": "Ids of the game's own techniques."
+            }
+          }
+        },
         "scales": {
           "type": "object",
           "description": "Grading scales besides `tiers`, each graded and capped on its own, by name: each its tiers, lowest first. A technique on one names one of its tiers.",

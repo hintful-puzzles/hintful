@@ -78,6 +78,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `hint-plan.ts` — the plan-accumulation loop |
 | – `described-hint.ts` — a described game's hint, built from its firings |
 | – `described-firing-hint.ts` — the same, a step a firing |
+| – `described-rules-out.ts` — `Game.rulesOut` from the description |
 | – `described-edge-hint.ts` — the same, where the answer is on the edges |
 | – `hint-track.ts` — following a step that asks for several things |
 | – `hint-gesture.ts` — how the pointer makes a hint step |
@@ -781,6 +782,13 @@ game whose step is a firing: one step decides every cell the firing does, and
 game gives the walk, how a fact is its highlights' target and the move that
 makes some, and a sentence a technique, which an `arms` technique reads by
 `spoken.arm`. Exemplar: `singles/index.ts`.
+
+### `described-rules-out.ts` — `Game.rulesOut` from the description
+
+`describedFiringHint` returns `rulesOut` where its spec has the module's
+`RULES_OUT`: the named techniques' conclusions whose firing reads a square the
+move placed, brought as one move. The game writes no `bring`
+(`descriptions.md` § "What a placement rules out").
 
 ### `described-edge-hint.ts` — the same, where the answer is on the edges
 

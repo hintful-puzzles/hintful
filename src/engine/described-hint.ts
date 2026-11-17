@@ -122,6 +122,29 @@ export const filledBy = (taken: Taken): number[] => {
   return out;
 };
 
+/** What a firing's premise reads: the squares it outlines, those it draws
+ * apart, those it decides, and what it says it reads beyond them. A line it
+ * only hatches is not read. */
+export const premiseOf = (taken: Taken): number[] => {
+  type Marked = {
+    outline?: readonly number[];
+    strand?: readonly number[];
+    reads?: readonly number[];
+  };
+  const { marks, facts } = spokenOf<{
+    marks: Marked;
+    facts?: readonly { marks: Marked }[];
+  }>(taken).says;
+  return [
+    ...[marks, ...(facts ?? []).map((x) => x.marks)].flatMap((x) => [
+      ...(x.reads ?? []),
+      ...(x.outline ?? []),
+      ...(x.strand ?? []),
+    ]),
+    ...filledBy(taken),
+  ];
+};
+
 /** The hooks of a game whose hint is its ladder's firings. */
 export function describedHint<
   State,

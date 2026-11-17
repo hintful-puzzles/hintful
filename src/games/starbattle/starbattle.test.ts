@@ -126,10 +126,18 @@ describe("starbattle moves", () => {
     ]);
     expect(brought.cells.every((c) => c.mark === CROSSED)).toBe(true);
     // A square already marked is left as the player has it.
-    const marked = executeMove(start, mark(7, STAR));
-    const beside = bring(marked, executeMove(marked, mark(2, STAR)));
+    const crossed = executeMove(start, mark(7, CROSSED));
+    const beside = bring(crossed, executeMove(crossed, mark(2, STAR)));
     if (beside?.kind !== "mark") throw new Error("a star brings crosses");
     expect(beside.cells.map((c) => c.index)).not.toContain(7);
+    // What an earlier star rules out and the player left open is not this
+    // star's to bring: only the firings that read the new star are.
+    const earlier = executeMove(start, mark(7, STAR));
+    const near = bring(earlier, executeMove(earlier, mark(20, STAR)));
+    if (near?.kind !== "mark") throw new Error("a star brings crosses");
+    expect(near.cells.map((c) => c.index)).toEqual([0, 5, 10, 15, 16, 21, 22, 23, 24]);
+    // A star beside another is a mistake, and a mistake brings nothing.
+    expect(bring(earlier, executeMove(earlier, mark(2, STAR)))).toBeNull();
     // A cross, and a star taken away, bring nothing.
     expect(bring(start, executeMove(start, mark(2, CROSSED)))).toBeNull();
     const starred = executeMove(start, mark(2, STAR));

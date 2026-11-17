@@ -22,8 +22,9 @@
  * Cell games only: a fact is a placement of a value on a cell.
  */
 import { PLACE } from "./describe-runtime.ts";
-import { filledBy, spokenOf } from "./described-hint.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
+import { filledBy, premiseOf, spokenOf } from "./described-hint.ts";
+import { type DescribedRulesOut, describedRulesOut } from "./described-rules-out.ts";
+import type { HintResult, HintStep, HintTrackVerdict, RulesOut } from "./game.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { changedCells, trackLeg, trackTargets } from "./hint-track.ts";
 import { CELL, type MarkKind, type Sentence } from "./hint-words.ts";
@@ -160,6 +161,10 @@ interface FiringShape<
   /** What a step's highlights hold, where it is more than the targets and the
    * strand. */
   highlights?(marked: Marked<Target>, state: State): H;
+  /** The description's `rulesOut`, the compiled module's `RULES_OUT`: the
+   * game then has `Game.rulesOut` from the hooks, built from the same walk
+   * (`described-rules-out.ts`). */
+  rulesOut?: DescribedRulesOut;
   /** The width of the board, to name a cell's point. */
   width(state: State): number;
   /** How many cells the board has. */
@@ -234,6 +239,8 @@ export interface DescribedFiringHint<
   H extends { targets: Target[] } = FiringHint<Target>,
 > {
   hint(state: State): HintResult<Move, H, Kind>;
+  /** What a placement rules out, where the spec has the description's. */
+  rulesOut?: RulesOut<State, Move>;
   /** Judges a move against a step of any kind: the kind is no part of it. */
   hintKeepTrack(m: Move, step: HintStep<Move, H>, state: State): HintTrackVerdict;
   /** A step the player has already made some of (undo and redo move the board
@@ -279,21 +286,7 @@ export function describedFiringHint<
     const w = spec.width(state);
     const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
     m.budget = stepBudget(spec.name);
-    // What a firing's premise reads: the squares it outlines, those it draws
-    // apart, those it decides, and what it says it reads beyond them. A line
-    // it only hatches is not read.
-    const reads = (taken: Parameters<typeof filledBy>[0]): number[] => {
-      const { marks, facts } = spokenOf<SaysOf>(taken).says;
-      return [
-        ...[marks, ...(facts ?? []).map((x) => x.marks)].flatMap((x) => [
-          ...(x.reads ?? []),
-          ...(x.outline ?? []),
-          ...(x.strand ?? []),
-        ]),
-        ...filledBy(taken),
-      ];
-    };
-    const walk = ladderWalk(m, entries, { [TIERS]: cap }, reads);
+    const walk = ladderWalk(m, entries, { [TIERS]: cap }, premiseOf);
     const steps: Step[] = [];
     for (let fired = 0; spec.plan === undefined || fired < spec.plan; fired++) {
       const before = m.grid.slice();
@@ -459,8 +452,12 @@ export function describedFiringHint<
       : { ok: true, steps };
   };
 
+  const { rulesOut, move } = spec;
   return {
     hint,
+    ...(rulesOut && move
+      ? { rulesOut: describedRulesOut(rulesOut, { ...spec, move }) }
+      : {}),
     // The squares the move changed must be ones the step asks for, set as it
     // asks; the step then shrinks to the squares not yet set. A journey's leg
     // is judged by its own squares, and the step does not shrink.
