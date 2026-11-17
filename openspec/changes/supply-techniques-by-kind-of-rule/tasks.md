@@ -128,8 +128,22 @@ boundaries are judgment, and the counts carry that.
   `closed`, Slant's and Rome's `loop` (each its own formula over its own
   notion of a loop). So LOOP as counted (12) is about four formulas, and
   this one covers two techniques.
-- [ ] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
-  evidence; this change waits on the answer.** 22 techniques are placed by
+- [x] 2.9 The owner's answer to 2.8 (2026-11-17): **go on, for
+  consistency**: "It's very important for me that we make things
+  consistent, avoiding any per-game idiosyncracies wherever possible."
+  Lines saved are not the measure. A kind is judged by what the corpus's
+  ~100 games still to be written get from it (a kind used by one game now is
+  the first of many), and the kinds as a vocabulary are where under-explored
+  ground for new games of our own will show. The plan they agreed: (1) every
+  kind carries its sentence, the game giving only its nouns (`kindWords`);
+  (2) the count kinds' contract (`need(S)`, `open(S)` over a set) becomes
+  every counting game's, its own accessors (Loopy `need(f)`/`faceOpen`,
+  Tracks `laid`/`undecided`, Boats `ships`) restated onto it; (3) the
+  remaining forms of each kind added until its techniques are placed.
+  Wording and a step's order may move; each game moved is deal-compared and
+  walked.
+- [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
+  evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried
   splits into several formulas: REL's support form fits 3 of 14, LOOP's
   early-close form 2 of 12. CNT (35) fits only where a game defines
