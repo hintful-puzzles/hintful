@@ -743,8 +743,26 @@ boundaries are judgment, and the counts carry that.
     the stated share to about 48%. That is the proposal's § "A rule states
     how it breaks": the Check written once from each kind of rule's break
     clause.
+  - [x] (2026-11-17) FIT's ways form, `ways.lock` and `ways.note`: a square
+    whose sides are each a line or empty, and the game's `fits` (some way of
+    the square keeping its rule has the side so, `@` the value, which the
+    kind reads as 1 and 2 through a new `$fits[1]`). Placed on all eight of
+    Net's (`fit`, `loop`, `seal`, `strand`, each a lock and a note, the pair
+    sharing its group by anchor) and Pearl's `square`, `blackPearl`,
+    `whiteTurnsOpposite` and `earlyThrough` (`every: exists`, deciding what
+    it can where Net waits for one way left; `side`/`sides` for the square
+    past a white pearl; `least: 1`). **Moved: nothing.** Pearl's module is
+    byte-identical; Net's differs only where its three locks bind `G` (and
+    `K`) before the open sides, not after, the same conclusions; those three
+    re-checked sound, Net whole with `CHECK_AGAIN`, every plant caught. Both
+    games keep their sharper plants; the kinds' own (a side both values fit
+    read as a line) seen caught on Net's `fitLock` and `fitNote` with the
+    game's plants taken out. Net's and Pearl's tests and snapshots pass
+    unchanged. No words: both games' hints narrate these. FIT now places 27.
+    Not this form: Pearl's `blackRunsOn`, `blackCannotRunOn` and
+    `whiteCannotTurn` (a pearl's own geometry, read across two squares).
   - [ ] Next: FIT from a rule's break clause (proposal § "A rule states how
-    it breaks"): read the 30 FIT techniques left, say which rule each
+    it breaks"): read the 20 FIT techniques left, say which rule each
     supposes broken, and design the clause on the rules `shape:` and the
     count kinds already state; then REL (10 left) and PEER (6).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the

@@ -247,89 +247,50 @@ techniques:
   # A square with one way left that fits its piece and the sides known:
   # each of its open sides is as that way has it. One with no way left is
   # inconsistent.
-  - id: fitLock
+  - kind: ways.lock
+    as: fitLock
     tier: Easy
-    for: >-
-      c in cells, F = {e in edges(c) where not known(e)} where |F| > 0,
-      W = {e in F where fits(c, e, 1)}, N = {e in F where fits(c, e, 2)}
-      where (forall e in F: e not in W or e not in N)
-    conclude: >-
-      forall e in F: (e in W or e in N)
-      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
+    with: { group: c in cells, fits: "fits(c, e, @)" }
   # A side every way left that fits agrees about.
-  - id: fitNote
+  - kind: ways.note
+    as: fitNote
     tier: Easy
-    for: >-
-      c in cells, e in edges(c) where not known(e),
-      A = fits(c, e, 1), B = fits(c, e, 2) where not A or not B
-    conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"
+    with: { group: c in cells, fits: "fits(c, e, @)" }
   # The same, among the ways that close no loop.
-  - id: loopLock
+  - kind: ways.lock
+    as: loopLock
     tier: Easy
-    for: >-
-      L = {e in edges where value(e) = 1},
-      c in cells, F = {e in edges(c) where not known(e)} where |F| > 0,
-      G = through(c, L),
-      W = {e in F where loopFits(c, e, 1, L, G)}, N = {e in F where loopFits(c, e, 2, L, G)}
-      where (forall e in F: e not in W or e not in N)
-    conclude: >-
-      forall e in F: (e in W or e in N)
-      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
-  - id: loopNote
+    with: &loop
+      group: "L = {e in edges where value(e) = 1}, c in cells, G = through(c, L)"
+      fits: "loopFits(c, e, @, L, G)"
+  - kind: ways.note
+    as: loopNote
     tier: Easy
-    for: >-
-      L = {e in edges where value(e) = 1},
-      c in cells, G = through(c, L), e in edges(c) where not known(e),
-      A = loopFits(c, e, 1, L, G), B = loopFits(c, e, 2, L, G) where not A or not B
-    conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"
+    with: *loop
   # The same, among the ways that also seal nothing off.
-  - id: sealLock
+  - kind: ways.lock
+    as: sealLock
     tier: Easy
-    for: >-
-      L = {e in edges where value(e) = 1},
-      U = {e in edges where usable(end1(e), e) and usable(end2(e), e)},
-      P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1},
-      c in cells, F = {e in edges(c) where not known(e)} where |F| > 0,
-      G = through(c, L), K = open(c, P, U),
-      W = {e in F where sealFits(c, e, 1, L, G, P, U, K)},
-      N = {e in F where sealFits(c, e, 2, L, G, P, U, K)}
-      where (forall e in F: e not in W or e not in N)
-    conclude: >-
-      forall e in F: (e in W or e in N)
-      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
-  - id: sealNote
+    with: &seal
+      group: &sealGroup >-
+        L = {e in edges where value(e) = 1},
+        U = {e in edges where usable(end1(e), e) and usable(end2(e), e)},
+        P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1},
+        c in cells, G = through(c, L), K = open(c, P, U)
+      fits: "sealFits(c, e, @, L, G, P, U, K)"
+  - kind: ways.note
+    as: sealNote
     tier: Easy
-    for: >-
-      L = {e in edges where value(e) = 1},
-      U = {e in edges where usable(end1(e), e) and usable(end2(e), e)},
-      P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1},
-      c in cells, G = through(c, L), K = open(c, P, U), e in edges(c) where not known(e),
-      A = sealFits(c, e, 1, L, G, P, U, K), B = sealFits(c, e, 2, L, G, P, U, K)
-      where not A or not B
-    conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"
+    with: *seal
   # The same, among the ways that also leave each square beside them a way
   # to turn.
-  - id: strandLock
+  - kind: ways.lock
+    as: strandLock
     tier: Easy
-    for: >-
-      L = {e in edges where value(e) = 1},
-      U = {e in edges where usable(end1(e), e) and usable(end2(e), e)},
-      P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1},
-      c in cells, F = {e in edges(c) where not known(e)} where |F| > 0,
-      G = through(c, L), K = open(c, P, U),
-      W = {e in F where strandFits(c, e, 1, L, G, P, U, K)},
-      N = {e in F where strandFits(c, e, 2, L, G, P, U, K)}
-      where (forall e in F: e not in W or e not in N)
-    conclude: >-
-      forall e in F: (e in W or e in N)
-      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
-  - id: strandNote
+    with: &strand
+      group: *sealGroup
+      fits: "strandFits(c, e, @, L, G, P, U, K)"
+  - kind: ways.note
+    as: strandNote
     tier: Easy
-    for: >-
-      L = {e in edges where value(e) = 1},
-      U = {e in edges where usable(end1(e), e) and usable(end2(e), e)},
-      P = {e in U where arms(end1(e)) > 1 and arms(end2(e)) > 1},
-      c in cells, G = through(c, L), K = open(c, P, U), e in edges(c) where not known(e),
-      A = strandFits(c, e, 1, L, G, P, U, K), B = strandFits(c, e, 2, L, G, P, U, K)
-      where not A or not B
-    conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"
+    with: *strand

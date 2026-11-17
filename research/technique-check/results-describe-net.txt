@@ -1,48 +1,40 @@
 ok  net square 2x2 fitLock                        3  sound    (want sound   )     9 queries    0.1s
 ok  net square 2x2 fitLock (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
 ok  net triangular 2x1 fitLock                        3  sound    (want sound   )     6 queries    0.1s
-ok  net triangular 2x1 fitLock (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
 ok  net honeycomb 2x1 fitLock                        3  sound    (want sound   )    10 queries    0.1s
-ok  net honeycomb 2x1 fitLock (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/net/net.description.yaml#fitLock: recorded sound, proved whole on all 3 boards
 ok  net square 2x2 fitNote                        3  sound    (want sound   )     9 queries    0.1s
 ok  net square 2x2 fitNote (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  net triangular 2x1 fitNote                        3  sound    (want sound   )     6 queries    0.1s
-ok  net triangular 2x1 fitNote (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  net triangular 2x1 fitNote                        3  sound    (want sound   )     6 queries    0.0s
 ok  net honeycomb 2x1 fitNote                        3  sound    (want sound   )    10 queries    0.1s
-ok  net honeycomb 2x1 fitNote (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  net square 2x2 loopLock                       3  sound    (want sound   )     1 queries    0.7s
+ok  src/games/net/net.description.yaml#fitNote: recorded sound, proved whole on all 3 boards
+ok  net square 2x2 loopLock                       3  sound    (want sound   )     1 queries    0.6s
 ok  net square 2x2 loopLock (planted)             3  unsound  (want unsound )     1 queries    0.1s   at eset
 ok  net triangular 2x1 loopLock                       3  sound    (want sound   )     1 queries    0.2s
-ok  net triangular 2x1 loopLock (planted)             3  unsound  (want unsound )     1 queries    0.1s   at eset
 ok  net honeycomb 2x1 loopLock                       3  sound    (want sound   )     1 queries    0.2s
-ok  net honeycomb 2x1 loopLock (planted)             3  unsound  (want unsound )     1 queries    0.1s   at eset
-ok  net square 2x2 loopNote                       3  sound    (want sound   )     1 queries    0.6s
+ok  src/games/net/net.description.yaml#loopLock: recorded sound, proved whole on all 3 boards
+ok  net square 2x2 loopNote                       3  sound    (want sound   )     1 queries    0.7s
 ok  net square 2x2 loopNote (planted)             3  unsound  (want unsound )     1 queries    0.1s   at eset
-ok  net triangular 2x1 loopNote                       3  sound    (want sound   )     1 queries    0.2s
-ok  net triangular 2x1 loopNote (planted)             3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  net triangular 2x1 loopNote                       3  sound    (want sound   )     1 queries    0.1s
 ok  net honeycomb 2x1 loopNote                       3  sound    (want sound   )     1 queries    0.2s
-ok  net honeycomb 2x1 loopNote (planted)             3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  src/games/net/net.description.yaml#loopNote: recorded sound, proved whole on all 3 boards
 ok  net square 2x2 sealLock                       3  sound    (want sound   )     1 queries    1.9s
-ok  net square 2x2 sealLock (planted)             3  unsound  (want unsound )     1 queries    0.5s   at eset
+ok  net square 2x2 sealLock (planted)             3  unsound  (want unsound )     1 queries    0.4s   at eset
 ok  net triangular 2x1 sealLock                       3  sound    (want sound   )     1 queries    0.4s
-ok  net triangular 2x1 sealLock (planted)             3  unsound  (want unsound )     1 queries    0.2s   at eset
-ok  net honeycomb 2x1 sealLock                       3  sound    (want sound   )     1 queries    0.5s
-ok  net honeycomb 2x1 sealLock (planted)             3  unsound  (want unsound )     1 queries    0.2s   at eset
-ok  net square 2x2 sealNote                       3  sound    (want sound   )     1 queries    3.2s
-ok  net square 2x2 sealNote (planted)             3  unsound  (want unsound )     1 queries    0.7s   at eset
-ok  net triangular 2x1 sealNote                       3  sound    (want sound   )     1 queries    0.6s
-ok  net triangular 2x1 sealNote (planted)             3  unsound  (want unsound )     1 queries    0.3s   at eset
-ok  net honeycomb 2x1 sealNote                       3  sound    (want sound   )     1 queries    0.7s
-ok  net honeycomb 2x1 sealNote (planted)             3  unsound  (want unsound )     1 queries    0.2s   at eset
-ok  net square 2x2 strandLock                     3  sound    (want sound   )     1 queries   12.9s
-ok  net square 2x2 strandLock (planted)           3  unsound  (want unsound )     1 queries    1.9s   at eset
-ok  net triangular 2x1 strandLock                     3  sound    (want sound   )     1 queries    1.8s
-ok  net triangular 2x1 strandLock (planted)           3  unsound  (want unsound )     1 queries    1.1s   at eset
-ok  net honeycomb 2x1 strandLock                     3  sound    (want sound   )     1 queries    1.4s
-ok  net honeycomb 2x1 strandLock (planted)           3  unsound  (want unsound )     1 queries    0.4s   at eset
-ok  net square 2x2 strandNote                     3  sound    (want sound   )     1 queries   17.1s
-ok  net square 2x2 strandNote (planted)           3  unsound  (want unsound )     1 queries    1.5s   at eset
-ok  net triangular 2x1 strandNote                     3  sound    (want sound   )     1 queries    1.9s
-ok  net triangular 2x1 strandNote (planted)           3  unsound  (want unsound )     1 queries    1.0s   at eset
-ok  net honeycomb 2x1 strandNote                     3  sound    (want sound   )     1 queries    1.4s
-ok  net honeycomb 2x1 strandNote (planted)           3  unsound  (want unsound )     1 queries    0.4s   at eset
+ok  net honeycomb 2x1 sealLock                       3  sound    (want sound   )     1 queries    0.6s
+ok  src/games/net/net.description.yaml#sealLock: recorded sound, proved whole on all 3 boards
+ok  net square 2x2 sealNote                       3  sound    (want sound   )     1 queries    2.2s
+ok  net square 2x2 sealNote (planted)             3  unsound  (want unsound )     1 queries    0.4s   at eset
+ok  net triangular 2x1 sealNote                       3  sound    (want sound   )     1 queries    0.4s
+ok  net honeycomb 2x1 sealNote                       3  sound    (want sound   )     1 queries    0.5s
+ok  src/games/net/net.description.yaml#sealNote: recorded sound, proved whole on all 3 boards
+ok  net square 2x2 strandLock                     3  sound    (want sound   )     1 queries    9.4s
+ok  net square 2x2 strandLock (planted)           3  unsound  (want unsound )     1 queries    1.4s   at eset
+ok  net triangular 2x1 strandLock                     3  sound    (want sound   )     1 queries    1.7s
+ok  net honeycomb 2x1 strandLock                     3  sound    (want sound   )     1 queries    1.3s
+ok  src/games/net/net.description.yaml#strandLock: recorded sound, proved whole on all 3 boards
+ok  net square 2x2 strandNote                     3  sound    (want sound   )     1 queries   10.6s
+ok  net square 2x2 strandNote (planted)           3  unsound  (want unsound )     1 queries    1.4s   at eset
+ok  net triangular 2x1 strandNote                     3  sound    (want sound   )     1 queries    1.7s
+ok  net honeycomb 2x1 strandNote                     3  sound    (want sound   )     1 queries    1.5s
+ok  src/games/net/net.description.yaml#strandNote: recorded sound, proved whole on all 3 boards

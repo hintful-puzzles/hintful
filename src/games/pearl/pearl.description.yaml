@@ -189,16 +189,13 @@ techniques:
   #
   # A square with no black pearl: every edge its ways agree on, at once.
   # One with no way left is inconsistent.
-  - id: square
+  - kind: ways.lock
+    as: square
     tier: Easy
-    for: >-
-      c in cells where clue(pearl, c) != 1,
-      F = {e in edges(c) where not known(e)} where |F| > 0,
-      W = {e in F where fits(c, e, 1)}, N = {e in F where fits(c, e, 2)}
-      where (exists e in F: e not in W or e not in N)
-    conclude: >-
-      forall e in F: (e in W or e in N)
-      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
+    with:
+      group: "c in cells where clue(pearl, c) != 1"
+      fits: "fits(c, e, @)"
+      every: exists
     says:
       terms:
         c: c
@@ -250,12 +247,10 @@ techniques:
   # A black pearl's edge its ways agree on. It turns, so of each two edges
   # across from each other it takes exactly one: an edge is settled where
   # the other across from it is, or is off the board.
-  - id: blackPearl
+  - kind: ways.note
+    as: blackPearl
     tier: Easy
-    for: >-
-      c in cells where clue(pearl, c) = 1, e in edges(c) where not known(e),
-      A = turnsAt(c, e, 1), B = turnsAt(c, e, 2) where not A or not B
-    conclude: "(A or B) and (not A implies place(e, 2)) and (not B implies place(e, 1))"
+    with: { group: "c in cells where clue(pearl, c) = 1", fits: "turnsAt(c, e, @)" }
     says:
       terms:
         c: c
@@ -387,20 +382,20 @@ techniques:
   # side turns in the square on the other, where that square could still
   # run straight: every edge there its ways of turning agree on. A black
   # pearl there turns anyway, and its own technique settles it.
-  - id: whiteTurnsOpposite
+  - kind: ways.lock
+    as: whiteTurnsOpposite
     tier: Easy
-    for: >-
-      c in cells where clue(pearl, c) = 2,
-      e in edges(c) where value(e) = 1,
-      f in edges(c) where f != e and value(f) = 1 and not bent(e, f)
-      and not turns(other(e, c), e),
-      k = other(f, c) where runs(k, f),
-      F = {x in edges(k) where not known(x)} where |F| > 0,
-      W = {x in F where turnFits(k, f, x, 1)}, N = {x in F where turnFits(k, f, x, 2)}
-      where (exists x in F: x not in W or x not in N)
-    conclude: >-
-      forall x in F: (x in W or x in N)
-      and (x not in W implies place(x, 2)) and (x not in N implies place(x, 1))
+    with:
+      group: >-
+        c in cells where clue(pearl, c) = 2,
+        e in edges(c) where value(e) = 1,
+        f in edges(c) where f != e and value(f) = 1 and not bent(e, f)
+        and not turns(other(e, c), e),
+        k = other(f, c) where runs(k, f)
+      side: x
+      sides: edges(k)
+      fits: "turnFits(k, f, x, @)"
+      every: exists
     says:
       terms:
         c: c
@@ -452,18 +447,17 @@ techniques:
   # A square with no line whose ways through would join two squares the
   # lines already join, while a pearl or a line lies off them: those ways
   # would close a loop that leaves it out, and the rest agree.
-  - id: earlyThrough
+  - kind: ways.lock
+    as: earlyThrough
     tier: Normal
-    for: >-
-      L = {e in edges where value(e) = 1},
-      Q = {q in cells where clue(pearl, q) != none or drawn(q) > 0},
-      c in cells where drawn(c) = 0,
-      F = {e in edges(c) where not known(e)} where |F| > 1,
-      W = {e in F where loopFits(c, e, 1, L, Q)}, N = {e in F where loopFits(c, e, 2, L, Q)}
-      where (exists e in F: e not in W or e not in N)
-    conclude: >-
-      forall e in F: (e in W or e in N)
-      and (e not in W implies place(e, 2)) and (e not in N implies place(e, 1))
+    with:
+      group: >-
+        L = {e in edges where value(e) = 1},
+        Q = {q in cells where clue(pearl, q) != none or drawn(q) > 0},
+        c in cells where drawn(c) = 0
+      fits: "loopFits(c, e, @, L, Q)"
+      least: "1"
+      every: exists
     says:
       long: >-
         The owner's 2026-09-27 request (pearl/hint.ts, carryOn): a step also

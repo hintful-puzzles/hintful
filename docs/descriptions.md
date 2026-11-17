@@ -1218,6 +1218,18 @@ bring to the total, and `sum.sets` one in no set of different values that
 makes it and that each square can take one of (upstream's reading, weaker
 than `fill.support`). The game binds the set and total in `group` and gives
 the sizes it reads in a `where` there (Solo reads sets of two to four).
+The ways kinds read a square whose sides are each a line or empty, and the
+game's `fits`, whether some way of the square that keeps its rule has a side
+so (Net's ways of turning a piece, Pearl's of passing through a square):
+a side only one value fits is that value. `fits` is written with `@` for the
+value, which the kind reads as 1 and as 2 (`$fits[1]` in the kind):
+`fits: "loopFits(c, e, @, L, G)"`, its group binding what it reads.
+`ways.note` reads a side a firing; `ways.lock` the square whole, firing where
+every open side is decided (Net's lock, one way left) or, with `every:
+exists`, where some is (Pearl's), and deciding all it can. `side` and `sides`
+name the side and the square's sides where they are not `e` and `edges(c)`
+(Pearl's `whiteTurnsOpposite` reads the square past a white pearl), `least`
+the open sides a square needs more than. They carry no words.
 `fit.flip` is the Check of a
 two-valued square (`holds`, `scope`). How the tried value breaks the rule is
 the game's to say, so the game's `says:` holds the look; the kind lays it over

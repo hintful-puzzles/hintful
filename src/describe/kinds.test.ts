@@ -118,6 +118,21 @@ describe("a kind of rule expands to the technique it stands for", () => {
       ).toBe(true);
   });
 
+  it("asks a predicate of each value, the game's @ read as it", () => {
+    const t = expandKind(
+      {
+        kind: "ways.note",
+        as: "note",
+        tier: "Easy",
+        with: { group: "c in cells", fits: "fits(c, e, @, L)" },
+      },
+      "x",
+    );
+    expect(t["for"]).toBe(
+      "c in cells, e in edges(c) where not known(e), A = fits(c, e, 1, L), B = fits(c, e, 2, L) where not A or not B",
+    );
+  });
+
   it("takes no `with` where a kind has no parameters, and the game's own words", () => {
     const says = { terms: { c: "c" }, marks: {} };
     const t = expandKind({ kind: "one.cell", as: "lone", tier: "Easy", says }, "x");

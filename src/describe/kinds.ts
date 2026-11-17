@@ -831,6 +831,39 @@ export const KINDS: Readonly<Record<string, Kind>> = {
   // `a` breaks the rule, which is the game's; the kind says the move, that
   // the square `flipCell` must be the other value (`flipped`), reading the
   // game's `flipTerms` of the leg.
+  // A square whose open sides (`sides`, each bound as `side`) are each a line
+  // (1) or empty (2), and `fits`, whether some way of the square that keeps
+  // the rule has the side so (`@` the value): a side only one value fits is
+  // that value, and one neither fits makes the marks inconsistent.
+  // `ways.lock` reads the square whole and fires where every open side is
+  // decided (`every: forall`, Net's: one way left) or where some is
+  // (`exists`, Pearl's), deciding all it can; `least` is the open sides a
+  // square needs more than. `ways.note` reads a side a firing.
+  "ways.lock": {
+    params: ["group", "fits"],
+    defaults: { side: "e", sides: "edges(c)", least: "0", every: "forall" },
+    technique: {
+      for: "$group, F = {$side in $sides where not known($side)} where |F| > $least, W = {$side in F where $fits[1]}, N = {$side in F where $fits[2]} where ($every $side in F: $side not in W or $side not in N)",
+      conclude:
+        "forall $side in F: ($side in W or $side in N) and ($side not in W implies place($side, 2)) and ($side not in N implies place($side, 1))",
+    },
+    // A side both values fit read as a line.
+    plant: {
+      for: "$group, F = {$side in $sides where not known($side)} where |F| > $least, W = {$side in F where $fits[1]}, N = {$side in F where $fits[2] and not ($fits[1])} where ($every $side in F: $side not in W or $side not in N)",
+    },
+  },
+  "ways.note": {
+    params: ["group", "fits"],
+    defaults: { side: "e", sides: "edges(c)" },
+    technique: {
+      for: "$group, $side in $sides where not known($side), A = $fits[1], B = $fits[2] where not A or not B",
+      conclude:
+        "(A or B) and (not A implies place($side, 2)) and (not B implies place($side, 1))",
+    },
+    plant: {
+      for: "$group, $side in $sides where not known($side), A = $fits[1], B = ($fits[2] and not A) where not A or not B",
+    },
+  },
   "fit.flip": {
     params: ["group", "holds", "scope", "flipTerms", "flipCell", "flipped"],
     technique: {
@@ -851,13 +884,19 @@ export const KINDS: Readonly<Record<string, Kind>> = {
 
 export class KindError extends Error {}
 
-/** `v` with each `$name` of `with` filled in. */
+/** `v` with each `$name` of `with` filled in, and each `$name[x]` filled with
+ * the parameter's `@` read as `x`: a predicate the kind asks of more than one
+ * value (`ways.lock`'s `fits`, of a line and of an empty side). */
 function fill(v: unknown, args: Readonly<Record<string, unknown>>): unknown {
   if (typeof v === "string") {
     const whole = /^\$(\w+)$/.exec(v);
     if (whole !== null && whole[1] in args) return args[whole[1]];
-    return v.replace(/\$(\w+)/g, (m, name: string) =>
-      name in args ? String(args[name]) : m,
+    return v.replace(/\$(\w+)(?:\[(\w+)\])?/g, (m, name: string, at?: string) =>
+      !(name in args)
+        ? m
+        : at === undefined
+          ? String(args[name])
+          : String(args[name]).replaceAll("@", at),
     );
   }
   if (Array.isArray(v)) return v.map((x) => fill(x, args));
