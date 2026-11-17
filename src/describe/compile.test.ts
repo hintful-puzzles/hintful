@@ -489,6 +489,21 @@ describe("a stated clause names only what its technique states", () => {
       ).toThrow(error);
     });
 
+    describe("a ring of several sorts", () => {
+      const ringStep = (move: string): string =>
+        compileStep(step({ ring: ["tile", "sign"], move }));
+
+      it("is typed by sort, and each reference names one", () => {
+        expect(ringStep("{ring tile: this} {ring sign: that}")).toContain(
+          'ring: ["tile","sign"]',
+        );
+      });
+
+      it("and refuses a reference that names none", () => {
+        expect(() => ringStep("{ring: this}")).toThrow(/marks several sorts/);
+      });
+    });
+
     describe("a term listing its words", () => {
       const wordStep = (look: string): string =>
         compileStep(

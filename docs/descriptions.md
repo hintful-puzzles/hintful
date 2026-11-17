@@ -1408,7 +1408,12 @@ is; write one where the planner picks a word the board shows (a shape, a
 heading) rather than a number. **A step's `aim`** is what its move works
 toward, said first ("Working on tile 3: slide it into place", Fifteen's);
 with no `look` and no `effect` the move serves it, and a look after it is
-not capitalized. Write
+not capitalized. **A step that decides elements of several kinds** declares
+its `ring` as a list of sorts (Numgame's `[high, sign, low]`); the planner
+gives the ring by sort, each reference names one (`{ring sign: {op}}`), and
+the voice's `kinds` draws each. **How a searching step's move stands to its
+look** is what the search proved, so the planner passes it as `relation`
+(`judgeRivals`' claim, or `oneOf`); the description states the words. Write
 one where a clause would choose a unit's name by flags, and a second (Magnets'
 `across`) where a sentence names the other way too. **A description's
 `phrases`** name clause source a clause says as `{name}`: the loader

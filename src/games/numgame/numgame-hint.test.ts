@@ -11,8 +11,8 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
-import { SIGN, TILE } from "./hint-text.ts";
 import { numgameGame } from "./index.ts";
+import { SIGN, TILE } from "./kinds.ts";
 import { combine, OPS, reachOf } from "./solver.ts";
 import {
   executeMove,

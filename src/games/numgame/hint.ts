@@ -16,14 +16,16 @@ import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.t
 import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
 import { phrase } from "../../engine/hint-words.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
-import { type Combination, say } from "./hint-text.ts";
-import { findLine, nextStep, OPS, reachOf, type Step } from "./solver.ts";
+import { voice } from "../../generated/games/numgame/numgame.compiled.ts";
+import { SIGN, TILE } from "./kinds.ts";
+import { findLine, nextStep, OPS, type Op, reachOf, type Step } from "./solver.ts";
 import {
   combined,
   executeMove,
   type NumgameMove,
   type NumgameState,
   normalized,
+  OP_SIGN,
 } from "./state.ts";
 
 /** A combination of several ways to start, the one way to start, or the
@@ -58,7 +60,7 @@ export function numgameHint(
   const c = combination(state, step);
   const move: NumgameMove = { kind: "combine", ...step };
   if (fewest === 1) {
-    const words = say.last(c);
+    const words = speak.sentence("last", c);
     return {
       ok: true,
       steps: [{ move, rung: "last", explanation: words.text, words }],
@@ -78,18 +80,28 @@ export function numgameHint(
   });
   const [rung, words] =
     claim.kind === "none" || claim.kind === "only"
-      ? (["onlyStart", say.onlyStart(fewest, c, claim.relation)] as const)
+      ? ([
+          "onlyStart",
+          speak.sentence("onlyStart", {
+            ring: c.ring,
+            terms: { ...c.terms, fewest },
+            relation: claim.relation,
+          }),
+        ] as const)
       : claim.kind === "every" ||
           claim.kind === "onlyThese" ||
           claim.kind === "alsoThese"
         ? ([
             "starts",
-            say.starts(
-              fewest,
-              1 + (claim.kind === "every" ? rivals.length : claim.goods.length),
-              c,
-              claim.relation,
-            ),
+            speak.sentence("starts", {
+              ring: c.ring,
+              terms: {
+                ...c.terms,
+                fewest,
+                ways: 1 + (claim.kind === "every" ? rivals.length : claim.goods.length),
+              },
+              relation: claim.relation,
+            }),
           ] as const)
         : unsettledClaim();
   return { ok: true, steps: [{ move, rung, explanation: words.text, words }] };
@@ -133,13 +145,49 @@ function combination(board: NumgameState, step: Step): Combination {
   const into = board.slots[step.into];
   if (!from || !into) throw new Error("numgame: a plan step names an empty place");
   const after = executeMove(board, { kind: "combine", ...step }).slots[step.into];
+  // The larger number is said first, as a sum is written.
+  const [hi, lo] =
+    from.value >= into.value
+      ? [
+          { place: step.from, value: from.value },
+          { place: step.into, value: into.value },
+        ]
+      : [
+          { place: step.into, value: into.value },
+          { place: step.from, value: from.value },
+        ];
   return {
-    from: { place: step.from, value: from.value },
-    op: step.op,
-    into: { place: step.into, value: into.value },
-    makes: after?.value ?? 0,
+    ring: { high: [hi.place], sign: [step.op], low: [lo.place] },
+    terms: {
+      hi: hi.value,
+      op: OP_SIGN[step.op],
+      lo: lo.value,
+      makes: after?.value ?? 0,
+    },
   };
 }
+
+/** One combination as a step names it: the two numbers and the operator, each
+ * ringed, and what they make. */
+interface Combination {
+  readonly ring: {
+    readonly high: readonly number[];
+    readonly sign: readonly Op[];
+    readonly low: readonly number[];
+  };
+  readonly terms: {
+    readonly hi: number;
+    readonly op: (typeof OP_SIGN)[Op];
+    readonly lo: number;
+    readonly makes: number;
+  };
+}
+
+const speak = voice<number | Op>({
+  kind: TILE,
+  kinds: { high: TILE, sign: SIGN, low: TILE },
+  value: String,
+});
 
 /** A combination is settled by its two numbers and its operator, so the step's
  * own, picked in either order, lands exactly the board the plan expects;

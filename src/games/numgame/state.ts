@@ -255,7 +255,12 @@ export function reachesTarget(s: NumgameState): boolean {
 // --- text format ------------------------------------------------------------
 
 /** How an operator is written for a reader: the arithmetic signs. */
-export const OP_SIGN: Record<Op, string> = { "+": "+", "-": "−", "*": "×", "/": "÷" };
+export const OP_SIGN = {
+  "+": "+",
+  "-": "−",
+  "*": "×",
+  "/": "÷",
+} as const satisfies Record<Op, string>;
 
 /** A made tile's sum, as the board and the hint write it. */
 export function madeText({ a, op, b }: Made): string {

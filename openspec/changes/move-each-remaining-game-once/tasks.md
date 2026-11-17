@@ -38,7 +38,9 @@ Planning games (a `steps` block, Slide's form):
 - [ ] Flip
 - [x] Netslide (2026-11-17): dump byte-identical. The engine gained a term
   declared as a list of words (the tile's shape, the heading).
-- [ ] Numgame
+- [x] Numgame (2026-11-17): dump byte-identical. The engine gained a ring
+  of several sorts (two numbers and a sign), and a judged relation passed
+  by the planner (`relation`, the rival judging's).
 - [x] Cube (2026-11-17). **Changed, one sentence:** come-round, "Working on
   the outlined square: the roll onto it would land a painted face on it, so
   roll onto the ringed square." (was "…on it. Instead: roll onto the ringed

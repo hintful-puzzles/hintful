@@ -131,8 +131,9 @@ export type StepTermKind = "number" | "flag" | "unit" | readonly string[];
 /** A kind of hint step a planner emits: what its sentence reads, which the
  * planner supplies, and its clauses. */
 export interface StatedStep extends Worded {
-  /** The sort of the elements the step decides. */
-  ring: string;
+  /** The sort of the elements the step decides, or the sorts, each named by a
+   * reference (`{ring sign: …}`), where it decides elements of several. */
+  ring: string | string[];
   terms?: Record<string, StepTermKind>;
   /** The sorts marked in each role. */
   marks?: Partial<Record<"outline" | "stripes" | "strand", string[]>>;
@@ -767,7 +768,7 @@ export interface Description {
 /** A kind of step a planner emits, parsed. */
 export interface Step {
   id: string;
-  ring: string;
+  ring: string | string[];
   terms: { name: string; kind: StepTermKind }[];
   marks: { role: "outline" | "stripes" | "strand"; sort: string }[];
   /** The step's stated words, by wording. */

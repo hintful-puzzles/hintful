@@ -4647,6 +4647,9 @@ function checkStated(
   variants: readonly { sorts: ReadonlyMap<string, Sort> }[],
   factSorts: ReadonlyMap<string, Sort> | null,
   units: ReadonlySet<string> = new Set(),
+  /** A planner's step that decides elements of several sorts names one of
+   * them in each ring reference, as a role of several sorts does. */
+  ringSorts: readonly string[] | null = null,
 ): void {
   // A clause reads a lexicon word before a term, so a term of that name would
   // silently never be said.
@@ -4723,15 +4726,20 @@ function checkStated(
   const rolesOf = (
     marks: readonly { role: string; sort: string | null }[],
   ): Map<string, ReadonlySet<string> | null> =>
-    new Map(
-      [...new Set(marks.map((m) => m.role))].map((role) => {
-        const sortsOf = marks.filter((m) => m.role === role && m.sort !== null);
-        return [
-          role,
-          sortsOf.length === 0 ? null : new Set(sortsOf.map((m) => m.sort as string)),
-        ];
-      }),
-    );
+    new Map([
+      ...[...new Set(marks.map((m) => m.role))].map(
+        (role): [string, ReadonlySet<string> | null] => {
+          const sortsOf = marks.filter((m) => m.role === role && m.sort !== null);
+          return [
+            role,
+            sortsOf.length === 0 ? null : new Set(sortsOf.map((m) => m.sort as string)),
+          ];
+        },
+      ),
+      ...(ringSorts === null
+        ? []
+        : [["ring", new Set(ringSorts)] as [string, ReadonlySet<string>]]),
+    ]);
   const wording = (words: readonly Wording[], i: number): string =>
     words.length > 1 ? `wording ${i} ` : "";
   // A step for one square (`shown: each`) is spoken with that square's fact
@@ -4850,7 +4858,14 @@ function checkStep(step: Step): void {
       },
     ],
   };
-  checkStated(step.id, says, [{ sorts }], null, units);
+  checkStated(
+    step.id,
+    says,
+    [{ sorts }],
+    null,
+    units,
+    typeof step.ring === "string" ? null : step.ring,
+  );
   for (const [i, w] of step.words.entries())
     if (w.when !== null) stepWhen(step, w.when, `wording ${i} when`);
 }

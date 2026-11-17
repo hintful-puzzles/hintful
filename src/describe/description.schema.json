@@ -792,8 +792,11 @@
             "required": ["ring"],
             "properties": {
               "ring": {
-                "type": "string",
-                "description": "The sort of the elements the step decides, which `{ring}` marks."
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "array", "items": { "type": "string" }, "minItems": 2 }
+                ],
+                "description": "The sort of the elements the step decides, which `{ring}` marks; or the sorts, where it decides elements of several (Numgame's two numbers and sign), each named by a reference (`{ring sign: …}`)."
               },
               "terms": {
                 "type": "object",

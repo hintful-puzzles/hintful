@@ -80,6 +80,29 @@ moves:
         value: "0"
 finish:
   - "exists c in cells: value(c) = target"
+steps:
+  # A step is the first combination of a shortest line the solver found. The
+  # two numbers and the sign are what it decides, ringed, the larger number
+  # first; whether "so" may be said is the rival judging's (`hint.ts`), so
+  # "so" is said only where every other start was proved to need more.
+  # One of several ways to start a shortest line; `ways` counts boards, so
+  # two equal numbers used alike are one way.
+  starts:
+    ring: &sum [high, sign, low]
+    terms: { fewest: number, ways: number, hi: number, op: &op ["+", "−", "×", "÷"], lo: number, makes: number }
+    look: "you can finish in {fewest: 1 more operation | {fewest} more operations}, starting {ways} ways"
+    move: &combine "{ring high: {hi}} {ring sign: {op}} {ring low: {lo}} = {makes}"
+  # The one way to start a shortest line.
+  onlyStart:
+    ring: *sum
+    terms: { fewest: number, hi: number, op: *op, lo: number, makes: number }
+    look: "you can finish in {fewest: 1 more operation | {fewest} more operations}, and only one first combination does it"
+    move: *combine
+  # The target is one combination away: nothing to say but the move.
+  last:
+    ring: *sum
+    terms: { hi: number, op: *op, lo: number, makes: number }
+    move: "{ring high: {hi}} {ring sign: {op}} {ring low: {lo}} = {makes}, the target"
 deal:
   start: >-
     two small cards of each of 1 to 10 and the large ones, as Countdown

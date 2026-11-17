@@ -100,11 +100,12 @@ export interface StatedContext<E, R = E> {
   /** What the step's placing techniques follow with, which it shows and makes
    * but does not decide, for `{ring then}`. */
   readonly consequences?: readonly R[];
-  /** The elements the step marks in each other role. */
+  /** The elements the step marks in each other role, and its ring by sort
+   * where a planner's step decides elements of several. */
   readonly marks: Readonly<
     Partial<
       Record<
-        "outline" | "stripes" | "strand",
+        "outline" | "stripes" | "strand" | "ring",
         readonly E[] | Readonly<Record<string, readonly E[]>>
       >
     >
@@ -368,7 +369,8 @@ function reference<E>(
   const role = p.role as string;
   let els: readonly E[];
   let kind = role === "ring" ? (cx.ringKind ?? cx.kind) : cx.kind;
-  const ofRole = role === "ring" ? undefined : cx.marks[role as "outline"];
+  // A ring is in the marks only where a step gives it by sort.
+  const ofRole = cx.marks[role as "outline"];
   if (ofRole !== undefined && !Array.isArray(ofRole)) {
     // A role of several sorts: the reference names the one it is over.
     const bySort = ofRole as Readonly<Record<string, readonly E[]>>;

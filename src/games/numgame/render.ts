@@ -32,7 +32,7 @@ import {
   type WinTone,
   winSlot,
 } from "../../engine/win-wave.ts";
-import { SIGN, TILE } from "./hint-text.ts";
+import { SIGN, TILE } from "./kinds.ts";
 import { OPS, type Op } from "./solver.ts";
 import {
   combined,

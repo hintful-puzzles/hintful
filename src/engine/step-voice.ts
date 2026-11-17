@@ -6,7 +6,7 @@
  * `StepsById` says it is told by.
  */
 import type { ColorWord } from "./color/color-word.ts";
-import type { MarkKind, Narration, Noun, Sentence } from "./hint-words.ts";
+import type { MarkKind, Narration, Noun, Relation, Sentence } from "./hint-words.ts";
 import {
   type ClausePart,
   type Clauses,
@@ -24,7 +24,7 @@ export const lineUnit = (line: "row" | "col"): Unit =>
 
 /** A step as `StepsById` types it. */
 interface StepType {
-  readonly ring: string;
+  readonly ring: string | readonly string[];
   readonly terms: object;
   readonly marks: object;
 }
@@ -67,14 +67,19 @@ type Given<K extends string, T> =
 
 /** What a step is told by: its terms and marks as the description declares
  * them, what it decides (`ring`), whether it is a later leg of its firing,
- * the values its strike removes, and the move's words where its clauses
- * state none. */
+ * the values its strike removes, the move's words where its clauses
+ * state none, and how its move stands to its look where a search judged it
+ * (`judgeRivals`' relation, or `oneOf` where several moves are as good). */
 export type Said<S extends StepType, E> = Given<"terms", S["terms"]> &
   Given<"marks", S["marks"]> & {
-    readonly ring?: readonly E[];
+    /** What the step decides; by sort where it decides several. */
+    readonly ring?: S["ring"] extends readonly (infer T extends string)[]
+      ? { readonly [K in T]: readonly E[] }
+      : readonly E[];
     readonly later?: boolean;
     readonly struck?: readonly number[];
     readonly closing?: Narration;
+    readonly relation?: Relation;
   };
 
 export interface StepVoice<S extends { readonly [K in keyof S]: StepType }, E> {
@@ -104,24 +109,36 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
     const step = steps[id];
     const terms = (said.terms ?? {}) as S[typeof id]["terms"];
     const marks = (said.marks ?? {}) as S[typeof id]["marks"];
-    const ring = said.ring ?? [];
+    // A ring of several sorts is given by sort, and each reference names one,
+    // as a mark role of several sorts is.
+    const bySort =
+      typeof step.ring === "string"
+        ? null
+        : ((said.ring ?? {}) as Readonly<Record<string, readonly E[]>>);
+    const ring =
+      bySort === null
+        ? ((said.ring ?? []) as readonly E[])
+        : Object.values(bySort).flat();
     const i = step.when.findIndex((w) => w === null || w(terms, marks, ring));
     if (i < 0) throw new Error(`step ${id}: no wording holds`);
+    const sort = typeof step.ring === "string" ? step.ring : "";
     return {
       clauses: step.clauses[i],
       cx: {
         ...words,
         ...(kinds === undefined ? {} : { kinds }),
-        ringKind: kinds?.[step.ring] ?? voice.kind,
-        noun: nouns?.[step.ring] ?? voice.noun,
-        ...((nouns?.[step.ring] ?? voice.noun) === undefined
+        ringKind: kinds?.[sort] ?? voice.kind,
+        noun: nouns?.[sort] ?? voice.noun,
+        ...((nouns?.[sort] ?? voice.noun) === undefined
           ? {}
-          : { ringNoun: nouns?.[step.ring] ?? voice.noun }),
+          : { ringNoun: nouns?.[sort] ?? voice.noun }),
         ring,
         ...(said.later === undefined ? {} : { later: said.later }),
         ...(said.struck === undefined ? {} : { struck: said.struck }),
         terms: terms as Readonly<Record<string, unknown>>,
-        marks: marks as StatedContext<E>["marks"],
+        marks: (bySort === null
+          ? marks
+          : { ...marks, ring: bySort }) as StatedContext<E>["marks"],
         at: () => {
           throw new Error(`step ${id}: a step has no element terms`);
         },
@@ -141,7 +158,7 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
   return {
     sentence: (id, said) => {
       const { clauses, cx } = spoken(id, said as Said<StepType, E>);
-      return statedSentence(clauses, cx, said.closing ?? null);
+      return statedSentence(clauses, cx, said.closing ?? null, said.relation);
     },
     premise: (id, said) => part(id, "look", said as Said<StepType, E>),
     part: (id, which, said) => part(id, which, said as Said<StepType, E>),
