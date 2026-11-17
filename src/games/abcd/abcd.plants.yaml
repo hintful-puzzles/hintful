@@ -4,23 +4,21 @@
 # unsound.
 
 techniques:
-  # A placed letter struck from the squares diagonally beside it too.
+  # A placed letter struck from the squares diagonally beside it too: the
+  # boundary of the rule, sharper than the kind's plant.
   placed:
-    for: c in cells where known(c), p in adj8(c) where not known(p)
+    for: c in cells where known(c), n = value(c), p in adj8(c) where not known(p)
   # A line one letter short of its number read as holding them all.
   satisfied:
     for: >-
       L in lines, d in domain, v = clue(count, L, d) where v >= 0 and holds(L,
       d) + 1 >= v
     conclude: "forall c in cells(L) where not known(c): strike(c, d)"
-  single:
-    for: c in cells where not known(c) and |cand(c)| < 3
-    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))"
   # A stretch of even length read as having one shape too.
   runs:
     conclude: "forall c in O where index(c, stretch(L, c, O)) mod 2 = 0: place(c, d)"
   # A placed letter struck from the squares two steps from it.
   placedDiagonal:
     for: >-
-      c in cells where known(c), q in adj4(c), p in adj4(q) where p != c and not
-      known(p)
+      c in cells where known(c), n = value(c), q in adj4(c), p in adj4(q) where p
+      != c and not known(p)

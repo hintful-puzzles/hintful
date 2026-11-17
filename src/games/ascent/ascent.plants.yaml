@@ -4,9 +4,6 @@
 # unsound.
 
 techniques:
-  # A placed number read as the next one too.
-  once:
-    conclude: strike(p, value(c) + 1)
   # A number with two squares left read as going in the first.
   onlySquare:
     for: >-

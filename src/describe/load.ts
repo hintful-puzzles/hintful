@@ -7,7 +7,7 @@
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020.js";
 import { parse } from "yaml";
 import schema from "./description.schema.json" with { type: "json" };
-import type { DescriptionFile } from "./description.ts";
+import type { DescriptionFile, VariationJson } from "./description.ts";
 import { expandKind, KindError } from "./kinds.ts";
 
 export class DescriptionError extends Error {}
@@ -53,22 +53,30 @@ export function loadDescriptionFile(text: string, path: string): DescriptionFile
 }
 
 /** `data` with each technique placed as a kind of rule (`kinds.ts`) replaced
- * by the technique it stands for. */
+ * by the technique it stands for, a variation's added ones included. */
 function withKinds(data: DescriptionFile, path: string): DescriptionFile {
   if (!("techniques" in data) || !Array.isArray(data.techniques)) return data;
-  if (!data.techniques.some((t) => "kind" in t)) return data;
+  const words = "kindWords" in data ? data.kindWords : undefined;
+  const expanded = (ts: readonly object[]): object[] =>
+    ts.map((t) => ("kind" in t ? expandKind(t as never, path, words) : t));
+  const variations: Record<string, VariationJson> | null =
+    "variations" in data ? (data.variations ?? null) : null;
   try {
     return {
       ...data,
-      techniques: data.techniques.map((t) =>
-        "kind" in t
-          ? expandKind(
-              t as never,
-              path,
-              "kindWords" in data ? data.kindWords : undefined,
-            )
-          : t,
-      ),
+      techniques: expanded(data.techniques),
+      ...(variations === null
+        ? {}
+        : {
+            variations: Object.fromEntries(
+              Object.entries(variations).map(([name, v]) => [
+                name,
+                v.add?.techniques === undefined
+                  ? v
+                  : { ...v, add: { ...v.add, techniques: expanded(v.add.techniques) } },
+              ]),
+            ),
+          }),
     } as unknown as DescriptionFile;
   } catch (e) {
     if (e instanceof KindError) throw new DescriptionError(e.message);

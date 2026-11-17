@@ -359,8 +359,8 @@ describe("the sentences at their extremes", () => {
     expect(say.satisfied(lineOf("column"), 2, 1, [at(2)]).text).toBe(
       "This column already holds its one B",
     );
-    expect(say.cull(at(1), 1, true).text).toContain("even at a corner");
-    expect(say.cull(at(1), 1, false).text).toContain("beside, above or below");
+    expect(say.cull(at(1), 1, true).text).toContain("eight neighbors");
+    expect(say.cull(at(1), 1, false).text).toContain("four neighbors");
   });
 
   it("fits at a glance for every letter, count and line, conclusions included", () => {

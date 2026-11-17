@@ -16,6 +16,7 @@
 import {
   joinWith,
   narrateLatinReason,
+  placedRulesOut,
   populateText,
   thisCellNamed,
 } from "../../engine/hint-text.ts";
@@ -122,13 +123,15 @@ export const say = {
     }),
 
   /** A placement's own strikes, as the leg after it: the number just placed at
-   * `at`, outlined. */
-  cull: (at: Point, n: number, tectonic: boolean): Narration => {
-    const placed = mark.as("outline", CELL, [at], `The ${n} just placed`);
-    return tectonic
-      ? phrase`${placed} can't repeat in its area or in the cells touching it`
-      : phrase`${placed} can't repeat in its area or within ${cells(n)} of it in its row and column`;
-  },
+   * `at`, outlined: the `peer.placed` kind's sentence, every game's. */
+  cull: (at: Point, n: number, tectonic: boolean): Narration =>
+    placedRulesOut(
+      { px: at.x, py: at.y, n },
+      String,
+      tectonic
+        ? "area or in the cells touching it"
+        : `area or within ${cells(n)} of it in its row and column`,
+    ),
 
   /**
    * An area whose every remaining home for `n` clashes with the struck cells,

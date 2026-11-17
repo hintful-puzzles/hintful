@@ -109,11 +109,11 @@ techniques:
     for: "c in cells where known(c), p in others(c) where not known(p)"
     conclude: "place(p, 4 - value(c))"
   # A placed pole leaves the squares beside it.
-  - id: repel
-    on: place
+  - kind: peer.placed
+    as: repel
     tier: Easy
-    for: "c in cells where known(c) and value(c) != 2, p in adj4(c)"
-    conclude: "strike(p, value(c))"
+    with:
+      peer: "p in adj4(c) where n != 2"
   # A value struck from one end of a tile leaves the other end's opposite.
   - id: tile
     on: strike

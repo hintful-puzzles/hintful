@@ -1022,8 +1022,12 @@ into the technique it stands for, before anything else reads the file, so
 the compiler, the checker and the hint see a stated technique; the kind's
 formula reads the game's own `need(S)` and `open(S)`. `with` names the
 game's nouns (`$name` in the kind); its `terms` are added to the step's.
-**A kind brings its own plant** (the defect is the same under any game's
-nouns), so a game's `plants.yaml` states none for it. A game's `define`d
+A variation's added techniques may be placed the same way (ABCD's
+`placedDiagonal`). **A kind brings its own plant** (the defect is the same
+under any game's nouns), so a game's `plants.yaml` need state none for it; a
+plant it does state replaces the kind's, for a game whose rule has a boundary
+the coarse plant misses (ABCD's and Magnets' placed square, planted as
+reaching the diagonal too). A game's `define`d
 `need` and `open` are the kind's contract. **What a game calls things is said
 once**, in `kindWords:` (the rest value, the words for what is held); a
 placement's `with` gives only what differs (`group`, `set`, `unit`) and
@@ -1034,6 +1038,9 @@ stated technique is. A kind with no words of its own (`one.cell`,
 `peer.placed`, `fit.flip`, `rel.support`, `loop.early`) takes the game's `says:` beside the placement,
 and one with no parameters takes no `with`. `one.cell`'s sentence is the
 Latin library's `single` step, which every game that places it speaks (`docs/hints-candidates.md` § "The row/column preset"), so its `says:` holds only terms.
+`peer.placed`'s is the library's `placed` ("the 2 just placed can't repeat in
+its {regions}"), which a walk speaks through `placedRulesOut` with the game's
+`{regions}`.
 `fit.flip` is the Check of a
 two-valued square (`holds`, `scope`): its plant is the coarse one, a value that
 keeps `holds` struck, so a game that wants the off-by-one plant of its

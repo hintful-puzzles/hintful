@@ -168,6 +168,20 @@ boundaries are judgment, and the counts carry that.
   (`describedFiringHint` reads `says`; a walk names a step).
 - [ ] 2.11 Then `peer.placed`, `rel.support`, `loop.early`, `fit.flip` the
   same way, each kind's sentence written once from the games' best wording.
+  - [x] `peer.placed` (2026-11-17): its sentence is the library's `placed`
+    ("The 2 just placed can't repeat in its {regions}", `placedRulesOut`),
+    which Seismic and ABCD had each copied in words of their own. Seismic
+    now speaks it, same text (no snapshot moved); ABCD's cull says "in its
+    four neighbors" / "eight neighbors" (was "in any cell beside, above or
+    below it"), seen in the app with the placed letter outlined. Map speaks
+    no `placed` firing (its walk folds the strikes in). **Siblings placed
+    in passing:** ABCD's `placed`, `placedDiagonal` (a variation's added
+    technique: the loader now expands kinds there) and `single`
+    (`one.cell`), Ascent's `once`, Magnets' `repel`: compiled modules
+    unchanged, re-checked sound. **A plants file may sharpen a kind's
+    plant** (it wins over the kind's), so ABCD and Magnets keep the
+    diagonal boundary plant; 2.1's "weaker plant" cost for Sticks can now
+    be undone the same way.
 - [ ] 2.12 Plan step (2), the count contract: `need(S)`/`open(S)` over a set
   for Loopy, Tracks, Boats, then `count.met`/`count.exact` placed there.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the

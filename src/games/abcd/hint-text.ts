@@ -16,6 +16,7 @@ import {
   joinWith,
   type LatinVocab,
   narrateLatinReason,
+  placedRulesOut,
   populateText,
   thisCellNamed,
 } from "../../engine/hint-text.ts";
@@ -127,9 +128,14 @@ export const say = {
     }),
 
   /** A placement's own strikes, as the leg after it, from the letter just
-   * placed at `placed`. */
+   * placed at `placed`: the `peer.placed` kind's sentence, every game's, which
+   * names the squares by their count since its `{regions}` follows "its". */
   cull: (placed: Point, n: number, diag: boolean): Narration =>
-    phrase`${mark.as("outline", CELL, [placed], `The ${L(n)} just placed`)} can't repeat in any cell ${around(diag, "it")}`,
+    placedRulesOut(
+      { px: placed.x, py: placed.y, n },
+      L,
+      diag ? "eight neighbors" : "four neighbors",
+    ),
 
   /** What a cull strikes. */
   culled: (n: number): string => `those ${L(n)}s`,

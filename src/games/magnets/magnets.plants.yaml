@@ -4,12 +4,13 @@
 # unsound.
 
 techniques:
+  # A pole read as leaving the squares diagonally beside it too: the boundary
+  # of the rule, sharper than the kind's plant.
+  repel:
+    for: c in cells where known(c), n = value(c), p in adj8(c) where n != 2
   # A tile's other end read as holding the same value.
   pair:
     conclude: place(p, value(c))
-  # A pole read as leaving the squares diagonally beside it too.
-  repel:
-    for: c in cells where known(c) and value(c) != 2, p in adj8(c)
   # A value struck from one end read as striking the same from the other.
   tile:
     conclude: "forall d in range(1, 3) where d not in cand(c): strike(p, d)"

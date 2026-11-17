@@ -302,10 +302,11 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
           : "techniques: {}",
         plantsAt,
       );
-      // A technique a kind of rule expanded to brings its own plant.
+      // A technique a kind of rule expanded to brings its own plant, which a
+      // sharper one in the plants file replaces.
       if (!isFormal(file)) return own;
       for (const t of withEveryVariation(file).techniques ?? [])
-        if (!("use" in t) && t.plant !== undefined) own.techniques[t.id] = t.plant;
+        if (!("use" in t) && t.plant !== undefined) own.techniques[t.id] ??= t.plant;
       return own;
     };
     if (isLibrary(file)) {

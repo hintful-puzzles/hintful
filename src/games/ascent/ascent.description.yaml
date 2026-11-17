@@ -111,11 +111,11 @@ variations:
 tiers: [Easy, Normal, Tricky, Hard]
 techniques:
   # A placed number is on no other square.
-  - id: once
-    on: place
+  - kind: peer.placed
+    as: once
     tier: Easy
-    for: "c in cells where known(c) and open(c), p in cells where p != c and not known(p)"
-    conclude: "strike(p, value(c))"
+    with:
+      peer: "p in cells where open(c) and p != c and not known(p)"
   # A number with one square left goes there. One with none makes the marks
   # inconsistent.
   - id: onlySquare

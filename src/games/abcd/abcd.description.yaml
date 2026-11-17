@@ -80,19 +80,19 @@ variations:
         - "forall c in cells, p in adj8(c): value(p) != value(c)"
       techniques:
         # A placed letter leaves the squares diagonally beside it.
-        - id: placedDiagonal
-          on: place
+        - kind: peer.placed
+          as: placedDiagonal
           tier: Easy
-          for: "c in cells where known(c), p in adj8(c) where p not in adj4(c) and not known(p)"
-          conclude: "strike(p, value(c))"
+          with:
+            peer: "p in adj8(c) where p not in adj4(c) and not known(p)"
 tiers: [Easy, Unreasonable]
 techniques:
   # A placed letter leaves the squares beside it.
-  - id: placed
-    on: place
+  - kind: peer.placed
+    as: placed
     tier: Easy
-    for: "c in cells where known(c), p in adj4(c) where not known(p)"
-    conclude: "strike(p, value(c))"
+    with:
+      peer: "p in adj4(c) where not known(p)"
   # A line holding as many of a letter as its number says has no room for
   # another. One holding more makes the marks inconsistent.
   - id: satisfied
@@ -104,10 +104,9 @@ techniques:
       marks: {}
   # A square down to one letter holds it. One with none left makes the marks
   # inconsistent.
-  - id: single
+  - kind: one.cell
+    as: single
     tier: Easy
-    for: "c in cells where not known(c) and |cand(c)| < 2"
-    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
   # The open squares of a line that can take a letter fall into stretches,
   # and a stretch of k holds at most every other square's worth, (k + 1) / 2:
   # its squares at an even place. Where the stretches hold just as many as

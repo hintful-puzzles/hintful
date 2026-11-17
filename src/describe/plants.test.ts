@@ -29,17 +29,27 @@ const plantFiles = import.meta.glob<string>("../**/*.plants.yaml", {
   eager: true,
 });
 
-/** The ids a check plants a defect in, by section. */
-function planted(file: DescriptionFile): Record<keyof Plants, string[]> {
+/** The ids a check plants a defect in, by section, and the kinds' techniques,
+ * whose plant a game's file may sharpen. */
+function planted(
+  file: DescriptionFile,
+): Record<keyof Plants, string[]> & { kinds: string[] } {
   if (isLibrary(file))
-    return { techniques: Object.keys(file.techniques), once: [], deadEnds: [] };
-  const techniques =
+    return {
+      techniques: Object.keys(file.techniques),
+      once: [],
+      deadEnds: [],
+      kinds: [],
+    };
+  const stated =
     isFormal(file) && file.techniques !== undefined
       ? (withEveryVariation(file).techniques ?? []).flatMap((t) =>
-          // A kind's technique carries its plant (`kinds.ts`).
-          "use" in t || t.plant !== undefined ? [] : [t.id],
+          "use" in t ? [] : [t],
         )
       : [];
+  // A kind's technique carries its plant (`kinds.ts`).
+  const techniques = stated.flatMap((t) => (t.plant !== undefined ? [] : [t.id]));
+  const kinds = stated.flatMap((t) => (t.plant !== undefined ? [t.id] : []));
   const deadEnds = isPlanning(file)
     ? [
         ...Object.keys(file.deadEnds ?? {}),
@@ -48,7 +58,7 @@ function planted(file: DescriptionFile): Record<keyof Plants, string[]> {
         ),
       ]
     : [];
-  return { techniques, once: [], deadEnds };
+  return { techniques, once: [], deadEnds, kinds };
 }
 
 const sources = Object.keys(descriptions).sort();
@@ -65,18 +75,21 @@ describe("every statement a check proves has a planted defect", () => {
     const want = planted(file);
     const path = plantsPath(source);
     const text = plantFiles[path];
-    if (want.techniques.length === 0 && want.deadEnds.length === 0) {
-      it(`${source}: states nothing to plant in, and has no plants`, () => {
-        expect(text).toBeUndefined();
-      });
+    if (
+      want.techniques.length === 0 &&
+      want.deadEnds.length === 0 &&
+      text === undefined
+    )
       continue;
-    }
     it(`${source}: one plant a statement, each parsed`, () => {
       expect(text, `${path} is missing`).toBeDefined();
       const plants = parsePlants(text ?? "", path);
-      expect(Object.keys(plants.techniques).sort()).toEqual(
-        [...want.techniques].sort(),
-      );
+      // A kind's technique has a plant of its own, which the file may sharpen.
+      expect(
+        Object.keys(plants.techniques)
+          .filter((id) => !want.kinds.includes(id))
+          .sort(),
+      ).toEqual([...want.techniques].sort());
       expect(Object.keys(plants.deadEnds).sort()).toEqual([...want.deadEnds].sort());
       // `once` is a library's, and only where the technique is stated.
       if (!isLibrary(file)) expect(plants.once).toEqual({});
