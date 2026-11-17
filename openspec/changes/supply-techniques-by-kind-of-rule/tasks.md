@@ -47,8 +47,14 @@ boundaries are judgment, and the counts carry that.
   2): one CNT-heavy (Starbattle or Norinori), one ONE/PEER-heavy (Seismic or
   Map), one FIT-heavy (Sticks). Deal-compare, walk the hints, report what
   moved.
-- [ ] 2.2 Ask the owner (proposal § 3), with § 1 and 2.1's report. The
-  question: whether to go ahead on a 61% coverage, four tight kinds and five
-  families, merging `move-each-remaining-game-once` into it, or to keep
-  `move-each-remaining-game-once` per-game and restate only the four tight
-  kinds.
+- [x] 2.2 The owner's answer (2026-11-17): **aim strongly at all nine
+  kinds, with the option to adjust course if what the work finds changes.**
+  A game stating under 50% of its techniques itself is the bar they are happy
+  with; the 61% covered leaves 39%. This change and
+  `move-each-remaining-game-once` are one: a game moves once, onto the
+  library and its words. Adjusting course is mine to do and record; a
+  coverage that falls to about half, or a family kind that cannot be made
+  to hold, is the sign to look again.
+- [ ] 2.3 The first restatements are the evidence for whether the family
+  kinds hold (FIT above all): do 2.1 before the catalog moves, and record
+  here what moved.
