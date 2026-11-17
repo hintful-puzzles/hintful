@@ -106,3 +106,75 @@ techniques:
       k in clues(laser), s = at(k), u = ahead(s) where u != none,
       d in {1, 2}, r = beam(s, u, d) where r != none and r != clue(laser, s)
     conclude: "place(u, 3 - d)"
+# A ray step is one fired laser followed to the first square nothing has
+# settled: one of the two things that square could hold would send the laser
+# somewhere it did not go, so it holds the other. Its words name the laser by
+# the marks on its ends, say where it went, and what the refuted content would
+# make it do (`would`, which `hint.ts` reads off the box). The hint searches for
+# a layout when no single laser settles a square, so a deduction's "so" says
+# its rival was judged and lost, passed as the relation.
+phrases:
+  # The supposition the laser refutes: the square holding what it does not.
+  supposing: "{if ball: with {ring: this square} empty | with a ball on {ring: this square}}"
+steps:
+  # `ball` where the square holds a ball. A pair's two ends are one ray's,
+  # whichever end it is followed from, so the words speak of a ray between
+  # them rather than of the one fired; `n` is the number both ends show.
+  # Once the supposition has said "this square", "it" refers back to it.
+  ray:
+    ring: cell
+    terms:
+      ball: flag
+      pair: flag
+      hit: flag
+      n: number
+      would: [stop dead, come straight back, come out elsewhere, leave the box]
+    marks: { outline: [ends] }
+    move: "{if ball: it must hold a ball | it must be empty}"
+    wordings:
+      - when: pair
+        look: "{outline ends: the two {n}s} are one ray's ends, but {supposing} no ray could join them"
+      - look: >-
+          {outline ends: the ray marked {if hit: H | R}} {if hit: hit a ball | came straight back},
+          but {supposing} it would {would}
+  # Nothing settles another square: fire a laser whose way through the box
+  # still depends on squares nothing has settled.
+  fire:
+    ring: laser
+    terms: { firedAny: flag }
+    look: "{if firedAny: the lasers fired so far settle no other square | no laser is fired yet}"
+    move: "fire {ring: this laser}"
+    effect: "nothing settled yet decides where it goes"
+  # One ball of a layout that sends every fired laser where it went, found by
+  # trying once no single laser settles a square: the first leg names every
+  # square the layout puts a ball on (`all`), and each leg puts one; the
+  # planner passes where in the run the leg stands.
+  layoutOnly:
+    ring: cell
+    look: "every laser is fired, and none settles a square alone"
+    move: "put a ball on {ring: this square}"
+    effect: "then every laser goes where it went"
+  layout:
+    ring: [square, all]
+    move: "put a ball on {ring square: this square}"
+    wordings:
+      - when: "|ringAll| > 0"
+        look: >-
+          every laser is fired, and {ring all: the ringed square | the ringed squares}
+          can be set so each goes where it went
+      - move: "put a ball on {ring square: this square}"
+  # Every laser's way is settled by the balls found, but the board must hold
+  # `more`: they sit on squares no laser reaches, and the count fills every
+  # one of them.
+  hidden:
+    ring: cell
+    terms: { more: number }
+    look: >-
+      every laser's way is settled, and {more: 1 more ball hides | {more} more balls hide}
+      on squares no laser reaches
+    move: "put a ball on {ring: this square}"
+  # The balls on the board send every laser where it went.
+  done:
+    ring: button
+    move: "press {ring: the ringed button}"
+    effect: "the balls you have send every laser where it went"

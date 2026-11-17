@@ -35,7 +35,7 @@ import {
 import type { Point } from "../../engine/types.ts";
 import { answerCount, newDesc } from "./answer.ts";
 import { BLACKBOX_RUNGS, type BlackboxRung, hint, hintKeepTrack } from "./hint.ts";
-import { HINT_MARKS } from "./hint-text.ts";
+import { HINT_MARKS } from "./hint-marks.ts";
 import {
   animLength,
   type BlackboxDrawState,

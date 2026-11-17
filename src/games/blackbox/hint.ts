@@ -35,6 +35,12 @@ import {
 } from "../../engine/game.ts";
 import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import {
+  CELL,
+  type MarkKind,
+  type Relation,
+  type Sentence,
+} from "../../engine/hint-words.ts";
+import {
   CellMarks,
   compiledRung,
   describedLadder,
@@ -46,7 +52,7 @@ import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
 import * as blackbox from "../../generated/games/blackbox/blackbox.compiled.ts";
-import { type Seen, type Settled, say, type Would } from "./hint-text.ts";
+import { BUTTON, LASER } from "./hint-marks.ts";
 import {
   BALL_GUESS,
   BALL_LOCK,
@@ -63,6 +69,85 @@ import {
   slotOf,
   spaceOf,
 } from "./state.ts";
+
+/** How a fired laser came out, as the board shows it: a pair of numbers at its
+ * two ends, an `H` or an `R` at its entry. */
+type Seen =
+  | {
+      readonly kind: "exit";
+      readonly ends: readonly [number, number];
+      readonly n: number;
+    }
+  | { readonly kind: "hit"; readonly entry: number }
+  | { readonly kind: "reflect"; readonly entry: number };
+
+/** What the laser would do with the square holding the refuted content. */
+type Would = "hit" | "reflect" | "exit";
+
+/** A square the step settles, and whether it holds a ball. */
+interface Settled {
+  readonly at: Point;
+  readonly ball: boolean;
+}
+
+type Element = Point | number | "button";
+const speak = blackbox.voice<Element>({
+  kind: CELL as MarkKind<Element>,
+  kinds: {
+    laser: LASER as MarkKind<Element>,
+    ends: LASER as MarkKind<Element>,
+    button: BUTTON as MarkKind<Element>,
+  },
+  value: String,
+});
+
+/** The sentences of `blackbox.description.yaml`'s steps. */
+const say = {
+  /** A laser followed to the first square nothing settles; `relation` is the
+   * judging of the square's other content. */
+  ray: (seen: Seen, w: Would, s: Settled, relation: Relation): Sentence =>
+    speak.sentence("ray", {
+      ring: [s.at],
+      terms: {
+        ball: s.ball,
+        pair: seen.kind === "exit",
+        hit: seen.kind === "hit",
+        n: seen.kind === "exit" ? seen.n : 0,
+        would:
+          w === "hit"
+            ? "stop dead"
+            : w === "reflect"
+              ? "come straight back"
+              : seen.kind === "reflect"
+                ? "come out elsewhere"
+                : "leave the box",
+      },
+      marks: {
+        outline: { ends: seen.kind === "exit" ? [...seen.ends] : [seen.entry] },
+      },
+      relation,
+    }),
+  fire: (laser: number, firedAny: boolean): Sentence =>
+    speak.sentence("fire", { ring: [laser], terms: { firedAny } }),
+  layout: (
+    at: Point,
+    leg: "only" | "first" | "next" | "last",
+    all: readonly Point[],
+  ): Sentence =>
+    leg === "only"
+      ? speak.sentence("layoutOnly", { ring: [at] })
+      : speak.sentence("layout", {
+          ring: { square: [at], all: leg === "first" ? all : [] },
+          relation: { kind: "sequence", at: leg },
+        }),
+  hidden: (more: number, at: Point): Sentence =>
+    speak.sentence("hidden", {
+      ring: [at],
+      terms: { more },
+      relation: { kind: "oneOf" },
+    }),
+  done: (): Sentence => speak.sentence("done", { ring: ["button"] }),
+};
 
 /** What the marks hold: a ball, or an empty square. */
 const BALL = 1;

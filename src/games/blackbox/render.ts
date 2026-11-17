@@ -34,7 +34,7 @@ import { drawPiece, drawRuledOutCross, TWO_SHAPES } from "../../engine/piece.ts"
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
-import { BUTTON, LASER } from "./hint-text.ts";
+import { BUTTON, LASER } from "./hint-marks.ts";
 import {
   BALL_GUESS,
   BALL_LOCK,

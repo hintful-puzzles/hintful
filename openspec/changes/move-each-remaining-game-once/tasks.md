@@ -165,7 +165,11 @@ Logic games:
   `wording-rules.ts`, which the describe lint now reads as the
   retired-phrase test does. Read in the app: an opening, a no-black
   deduction (row striped, colors framed), two probes.
-- [ ] Blackbox
+- [x] Blackbox (2026-11-17): dump byte-identical, every rung reached. Its
+  ray, fire, layout, hidden and done sentences are `steps` spoken through
+  the voice in `hint.ts`; a layout's first leg rings the whole layout by
+  sort (`all`), and its mark kinds and legend are `hint-marks.ts`. Read in
+  the app: a pair's ends, a reflection, a laser to fire.
 - [ ] Bridges
 - [ ] ABCD
 - [ ] Map
