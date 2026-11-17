@@ -229,3 +229,253 @@ techniques:
     conclude: >-
       (3 - j not in vee(f) implies strike(e, i))
       and (j not in vee(f) implies strike(e, 3 - i))
+# The hint's words. The solver's firings and the same-slant marks a firing
+# cites are the planner's steps (`hint.ts`), each said here; what a clue
+# already has, and why a pair can't meet in a v, are clauses another step's
+# sentence says in place (a `clause` term).
+phrases:
+  # What lies beyond a 2 the pair across it bounds: the cap, or the 2s and
+  # their pairs leading to it.
+  far: >-
+    {if line: {outline twos: 2s} and {outline pairs: their pairs} beyond ending in {cap} | {cap} beyond}
+  # Along a line of 2s, the pair across the last of them; else the pair
+  # across the one 2.
+  alongPair: >-
+    {if line: along {outline twos: the 2s beyond it}, the last of {outline pairs: their pairs} | {outline pairs: the pair across it}}
+  alongOne: >-
+    {if line: along {outline twos: the 2s beyond it}, one of the last of {outline pairs: their pairs} | one of {outline pairs: the pair across it}}
+steps:
+  # What a clue already has: one line from the pair its marks join, lines
+  # from its decided squares (`touching` of them touch it), or both.
+  hasPair:
+    ring: cell
+    marks: { outline: [marks] }
+    move: "one line from {outline marks: its marked pair | its chained pair}"
+  hasSquares:
+    ring: cell
+    terms: { touching: number }
+    marks: { outline: [area] }
+    wordings:
+      - when: "touching = 0"
+        move: "no line from {outline area}"
+      - when: "touching = 1"
+        move: "one line from {outline area}"
+      - move: "{numeral touching} lines from {outline area}"
+  hasBoth:
+    ring: cell
+    terms: { touching: number }
+    marks: { outline: [marks, area] }
+    wordings:
+      - when: "touching = 0"
+        move: "one line from {outline marks: its marked pair | its chained pair} and none from {outline area}"
+      - when: "touching = 1"
+        move: "one line from {outline marks: its marked pair | its chained pair} and one from {outline area}"
+      - move: >-
+          one line from {outline marks: its marked pair | its chained pair} and {numeral touching} from {outline area}
+  # A clue still short of diagonals, needing one from each ringed square.
+  clueFill:
+    ring: cell
+    terms: { c: number }
+    marks: { outline: [clue] }
+    move: "{ring} must slant toward it"
+    wordings:
+      - when: "c = 4"
+        look: "{outline clue: this {c} clue} must be touched by all four diagonals"
+      - look: "{outline clue: this {c} clue} needs a line from every square around it"
+  # The same, with lines it has already (`got`); `both` where that names two
+  # sources, which leaves the sentence room for little else.
+  clueFillHas:
+    ring: cell
+    terms: { c: number, both: flag, more: number, got: { clause: [hasPair, hasSquares, hasBoth] } }
+    marks: { outline: [clue] }
+    move: "{ring} must slant toward it"
+    wordings:
+      - when: "both"
+        look: "{outline clue: this {c} clue} has {got}"
+      - look: "{outline clue: this {c} clue} has {got} and needs {numeral more} more"
+  # A 0, touched by no diagonal, beside squares already slanting away.
+  clueEmpty:
+    ring: cell
+    marks: { outline: [clue, area] }
+    look: "{outline clue: this 0 clue} is touched by no diagonals"
+    wordings:
+      - when: "|outlineArea| = 0"
+        move: "{ring} must slant away from it"
+      - move: "{ring} must slant away from it, like {outline area}"
+  # A clue already touched by all its diagonals.
+  clueEmptyHas:
+    ring: cell
+    terms: { c: number, both: flag, got: { clause: [hasPair, hasSquares, hasBoth] } }
+    marks: { outline: [clue] }
+    wordings:
+      - when: "both"
+        look: "{outline clue: this {c} clue} has {got}"
+        move: "{ring} must slant away"
+      - look: "{outline clue: this {c} clue} already has {got}"
+        move: "{ring} must slant away from it"
+  # A later square of a clue's firing.
+  continuation:
+    ring: cell
+    terms: { away: flag }
+    marks: { outline: [clue, area] }
+    move: "{ring} must slant {if away: away | toward it} too"
+    wordings:
+      - when: "|outlineArea| = 0"
+        again: "{outline clue: the same clue}"
+      - again: "{outline clue: the same clue} and {outline area}"
+  loop:
+    ring: cell
+    marks: { outline: [area] }
+    look: "diagonals in {outline area} join two corners of {ring}"
+    move: "it must slant the other way to avoid a loop"
+  deadend:
+    ring: cell
+    marks: { outline: [area] }
+    move: "it must slant the other way or seal a loop"
+    wordings:
+      - when: "|outlineArea| = 1"
+        look: "{outline area} leaves two corners of {ring} one way out each"
+      - look: "{outline area} leave two corners of {ring} one way out each"
+  # A square whose same-slant partner `anchor` is placed, joined to it by
+  # the outlined marks.
+  equiv:
+    ring: cell
+    terms: { v: [a backslash, a forward slash] }
+    marks: { outline: [marks, anchor] }
+    move: "it must be {v} too"
+    wordings:
+      - when: "|outlineMarks| = 1"
+        look: >-
+          {outline marks: the outlined mark | the outlined marks} links {ring} to {outline anchor: the outlined square}
+      - look: >-
+          {outline marks: the outlined mark | the outlined marks} link {ring} to {outline anchor: the outlined square}
+  # Two squares round a clue that must share its one remaining line: just
+  # one of two side-by-side squares touches a point only when they slant
+  # the same way.
+  markClue:
+    ring: alike
+    terms: { c: number }
+    marks: { outline: [clue] }
+    look: "{outline clue: this {c}} needs one line, from just {ring: the ringed pair}"
+    move: "they must slant the same way"
+  markClueHas:
+    ring: alike
+    terms: { c: number, got: { clause: [hasPair, hasSquares, hasBoth] } }
+    marks: { outline: [clue] }
+    move: "they must slant the same way"
+    wordings:
+      - when: "c > 1"
+        look: "{outline clue: this {c}} has {got} and needs one more from {ring: the ringed pair}"
+      - look: "{outline clue: this {c}} has {got} and needs one from {ring: the ringed pair}"
+  # A pair with both v-shapes ruled out, each for a reason of its own.
+  markV:
+    ring: alike
+    terms:
+      first: { clause: [vOne, vThree, vPlaced, vAcross] }
+      second: { clause: [vOne, vThree, vPlaced, vAcross] }
+    look: "{ring: the ringed pair} can't both {first}, or both {second}"
+    move: "they must slant the same way"
+  # Both ruled out by the same kind of clue, one at each end.
+  markVBoth:
+    ring: alike
+    terms: { one: flag }
+    marks: { outline: [caps] }
+    look: >-
+      {ring: the ringed pair} can't both {if one: touch {outline caps: either 1} | slant away from {outline caps: either 3}}
+    move: "they must slant the same way"
+  # Why a pair can't meet in a v at one end of its shared side (`where`):
+  # touch a 1 there, slant away from a 3, touch the corner a placed square
+  # slants away from, or do either across a 2.
+  vOne:
+    ring: cell
+    terms: { where: [above, below, on the left, on the right] }
+    marks: { outline: [clue] }
+    move: "touch {outline clue: the 1 {where}}"
+  vThree:
+    ring: cell
+    terms: { where: [above, below, on the left, on the right] }
+    marks: { outline: [clue] }
+    move: "slant away from {outline clue: the 3 {where}}"
+  vPlaced:
+    ring: cell
+    terms: { where: [above, below, on the left, on the right] }
+    marks: { outline: [placed] }
+    move: "touch the corner {where}, as {outline placed: the outlined one} already slants away from it"
+  # Across a 2: the pair across it gives it at least one line (`touch`: so
+  # these two can't both touch it) or at most one, for the reason `why`
+  # beyond it.
+  vAcross:
+    ring: cell
+    terms:
+      touch: flag
+      where: [above, below, on the left, on the right]
+      why: { clause: [beyondOne, beyondThree, beyondTouches, beyondMisses] }
+    marks: { outline: [two] }
+    move: >-
+      {if touch: touch {outline two: the 2 {where}} | slant away from {outline two: the 2 {where}}}, as {why}
+  # What holds the pair across a 2, along any line of 2s beyond it (`line`):
+  # a 1 or a 3 capping it (`capped` where a clue does), or a diagonal of
+  # the last pair already meeting or missing the last 2.
+  beyondOne:
+    ring: cell
+    terms: { line: flag, capped: flag }
+    marks: { outline: [twos, pairs, cap] }
+    move: "{alongPair} can't both touch {if capped: {outline cap: the 1} | the 1}"
+  beyondThree:
+    ring: cell
+    terms: { line: flag, capped: flag }
+    marks: { outline: [twos, pairs, cap] }
+    move: "{alongPair} can't both slant away from {if capped: {outline cap: the 3} | the 3}"
+  beyondTouches:
+    ring: cell
+    terms: { line: flag }
+    marks: { outline: [twos, pairs] }
+    move: "{alongOne} already touches {if line: the last 2 | it}"
+  beyondMisses:
+    ring: cell
+    terms: { line: flag }
+    marks: { outline: [twos, pairs] }
+    move: "{alongOne} already slants away from {if line: the last 2 | it}"
+  # A pair on a line of 2s (`single` where there is one) capped at each end
+  # by the same kind of limit (the help's "Lines of 2s"): a 1, or a
+  # diagonal meeting the 2 at that end, for `one`; a 3, or a diagonal
+  # missing it, otherwise. The caps that are clues are outlined.
+  vLine:
+    ring: alike
+    terms: { one: flag, single: flag }
+    marks: { outline: [twos, pairs, caps] }
+    move: "{ring: the ringed pair} must slant the same way"
+    wordings:
+      - when: "|outlineCaps| = 2"
+        look: >-
+          {outline twos: this 2 | these 2s} and {outline pairs: {if single: its pair | their pairs}} lie between
+          {outline caps: two {if one: 1s | 3s}}
+      - when: "|outlineCaps| = 0"
+        look: >-
+          {outline twos: this 2 | these 2s} and {outline pairs: {if single: its pair | their pairs}} lie between
+          two diagonals {if one: meeting | missing} {if single: it | the end 2s}
+      - look: >-
+          {outline twos: this 2 | these 2s} and {outline pairs: {if single: its pair | their pairs}} lie between
+          {outline caps: a {if one: 1 | 3}} and a diagonal {if one: meeting | missing} {if single: it | the end 2}
+  # Both v-shapes carried across one 2, from the pair across it (`pair`): a
+  # diagonal of that pair already meets the 2 (`touches`, one line) or
+  # misses it (at most one), and what lies beyond supplies the other bound.
+  vAcrossBoth:
+    ring: alike
+    terms: { touches: flag, line: flag, cap: { clause: [capClue, capDiagonal] } }
+    marks: { outline: [pair, two, twos, pairs] }
+    look: >-
+      {outline pair: the pair across} {outline two: this 2}
+      {if touches: gives it one line and, with {far}, no more | gives it at most one line and, with {far}, at least one}
+    move: "{ring: the ringed pair} must slant the same way"
+  # The cap a line of 2s ends in: a 1 or a 3 (`d`, outlined where `capped`),
+  # or a diagonal meeting or missing the end 2.
+  capClue:
+    ring: cell
+    terms: { d: number, capped: flag }
+    marks: { outline: [cap] }
+    move: "{if capped: {outline cap: a {d}} | a {d}}"
+  capDiagonal:
+    ring: cell
+    terms: { meets: flag }
+    move: "a diagonal {if meets: meeting | missing} the end 2"

@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { ColorWord } from "./color/color-word.ts";
-import { CELL, type MarkKind, stepMarks } from "./hint-words.ts";
+import { CELL, type MarkKind, markKeys, stepMarks } from "./hint-words.ts";
 import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
 import { type StatedContext, statedParts, statedSentence } from "./stated.ts";
 import { parseClause } from "./stated-clauses.ts";
+import { type StepClause, stepVoice } from "./step-voice.ts";
 import type { Point } from "./types.ts";
 
 const W = 4;
@@ -470,5 +471,51 @@ describe("a stated clause", () => {
 
   it("refuses literal words that only a reference may say", () => {
     expect(() => statedParts({ look: "this square is full" }, cx())).toThrow();
+  });
+});
+
+describe("a step's clause term", () => {
+  const steps = {
+    reason: {
+      ring: "cell",
+      clauses: [{ move: "touch {outline clue: the {n} {where}}" }],
+      when: [null],
+    },
+    main: {
+      ring: "cell",
+      spoken: ["why"],
+      clauses: [{ look: "{ring} can't both {why}", move: "it must go" }],
+      when: [null],
+    },
+  } as const;
+  type S = {
+    reason: {
+      ring: "cell";
+      terms: { n: number; where: "above" | "below" };
+      marks: { outline: { clue: readonly Point[] } };
+    };
+    main: {
+      ring: "cell";
+      terms: { why: StepClause<S, "reason", Point> };
+      marks: Record<string, never>;
+    };
+  };
+  const speak = stepVoice<S, Point>(steps, { kind: CELL, value: String });
+
+  it("is the named step's move, said in place with its references", () => {
+    const s = speak.sentence("main", {
+      ring: [at(5)],
+      terms: {
+        why: {
+          step: "reason",
+          said: {
+            terms: { n: 1, where: "above" },
+            marks: { outline: { clue: [at(2)] } },
+          },
+        },
+      },
+    });
+    expect(s.text).toBe("This square can't both touch the 1 above, so it must go.");
+    expect([...markKeys(s.refs)].sort()).toEqual(["outline|cell|2,0", "ring|cell|1,1"]);
   });
 });

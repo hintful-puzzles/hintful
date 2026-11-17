@@ -14,9 +14,10 @@ import { Dsf } from "../../engine/dsf.ts";
 import { placeNotes } from "../../engine/fact-graph.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import type { Narration, Sentence } from "../../engine/hint-words.ts";
+import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import { type Beyond, type ClueSources, say } from "./hint-text.ts";
+import * as slant from "../../generated/games/slant/slant.compiled.ts";
+import { ALIKE, CLUE } from "./hint-marks.ts";
 import {
   deduceHintPlan,
   type SlantFiring,
@@ -124,6 +125,298 @@ function componentSquares(
   return out;
 }
 
+// --- the words ---------------------------------------------------------------
+
+/** What a step marks: a square or a clue's point, or a same-slant mark. */
+type Marked = Point | SlantMark;
+
+/** The steps of `slant.description.yaml`, spoken: a mark is drawn on a
+ * square unless its sort is a clue or a same-slant mark. */
+const speak = slant.voice<Marked>({
+  kind: CELL as MarkKind<Marked>,
+  kinds: {
+    clue: CLUE as MarkKind<Marked>,
+    two: CLUE as MarkKind<Marked>,
+    twos: CLUE as MarkKind<Marked>,
+    cap: CLUE as MarkKind<Marked>,
+    caps: CLUE as MarkKind<Marked>,
+    marks: ALIKE as MarkKind<Marked>,
+    alike: ALIKE as MarkKind<Marked>,
+  },
+  value: String,
+});
+
+type Steps = slant.StepsById<Marked>;
+/** Where a point sits beside a pair, in the words a clause places it with. */
+type Where = Steps["vOne"]["terms"]["where"];
+/** What a clue already has, said in place. */
+type Got = Steps["clueFillHas"]["terms"]["got"];
+/** Why a pair can't meet in a v at one end, said in place. */
+type VClause = Steps["markV"]["terms"]["first"];
+
+/**
+ * What a clue already has from what the step reads: the same-slant pair it
+ * counts as one line (`pair`, the marks joining it), and the decided squares
+ * around it (`area`, of which `touching` touch it).
+ */
+interface ClueSources {
+  pair: readonly SlantMark[] | null;
+  area: readonly Point[];
+  touching: number;
+}
+
+/** The lines a clue has, by source, or null when it reads neither; `both`
+ * when it names two, which leaves the sentence room for little else. */
+function has(src: ClueSources): { got: Got; both: boolean } | null {
+  const pair = src.pair?.length ? src.pair : null;
+  const { area, touching } = src;
+  if (!area.length)
+    return (
+      pair && {
+        got: { step: "hasPair", said: { marks: { outline: { marks: pair } } } },
+        both: false,
+      }
+    );
+  if (!pair)
+    return {
+      got: {
+        step: "hasSquares",
+        said: { terms: { touching }, marks: { outline: { area } } },
+      },
+      both: false,
+    };
+  return {
+    got: {
+      step: "hasBoth",
+      said: { terms: { touching }, marks: { outline: { marks: pair, area } } },
+    },
+    both: true,
+  };
+}
+
+/** What lies beyond a 2 along a line of them: the 2s after it, the pairs
+ * across those, and the clue capping the line, when one does. */
+interface Beyond {
+  twos: readonly Point[];
+  pairs: readonly Point[];
+  cap: Point | null;
+}
+
+/** What ends the line beyond a 2. */
+type End = "one" | "three" | "touches" | "misses";
+
+/** Every sentence Slant's hint speaks, from what its planner found. */
+const say = {
+  /** A later square forced by the same clue; `away` when it slants away. */
+  continuation: (
+    clue: Point,
+    area: readonly Point[],
+    cells: readonly Point[],
+    away: boolean,
+  ): Sentence =>
+    speak.sentence("continuation", {
+      ring: cells,
+      terms: { away },
+      marks: { outline: { clue: [clue], area } },
+      later: true,
+    }),
+
+  /** A clue `c` still short of diagonals, needing one from each of `cells`. */
+  clueFill: (
+    clue: Point,
+    c: number,
+    src: ClueSources,
+    cells: readonly Point[],
+  ): Sentence => {
+    const held = has(src);
+    return held === null
+      ? speak.sentence("clueFill", {
+          ring: cells,
+          terms: { c },
+          marks: { outline: { clue: [clue] } },
+        })
+      : speak.sentence("clueFillHas", {
+          ring: cells,
+          terms: { c, both: held.both, more: cells.length, got: held.got },
+          marks: { outline: { clue: [clue] } },
+        });
+  },
+
+  /** A clue `c` already touched by all its diagonals. */
+  clueEmpty: (
+    clue: Point,
+    c: number,
+    src: ClueSources,
+    cells: readonly Point[],
+  ): Sentence => {
+    if (c === 0)
+      return speak.sentence("clueEmpty", {
+        ring: cells,
+        marks: { outline: { clue: [clue], area: src.area } },
+      });
+    const held = has(src);
+    if (held === null) throw new Error("slant hint: a full clue with no lines");
+    return speak.sentence("clueEmptyHas", {
+      ring: cells,
+      terms: { c, both: held.both, got: held.got },
+      marks: { outline: { clue: [clue] } },
+    });
+  },
+
+  loop: (cell: Point, area: readonly Point[]): Sentence =>
+    speak.sentence("loop", { ring: [cell], marks: { outline: { area } } }),
+
+  deadend: (cell: Point, area: readonly Point[]): Sentence =>
+    speak.sentence("deadend", { ring: [cell], marks: { outline: { area } } }),
+
+  /** A square whose same-slant partner `anchor`, holding `v`, is already
+   * placed, joined to it by `marks`. */
+  equiv: (
+    cell: Point,
+    anchor: Point,
+    v: number,
+    marks: readonly SlantMark[],
+  ): Sentence =>
+    speak.sentence("equiv", {
+      ring: [cell],
+      terms: { v: v < 0 ? "a backslash" : "a forward slash" },
+      marks: { outline: { marks, anchor: [anchor] } },
+    }),
+
+  /** Two squares around a clue `c` that must share its one remaining line. */
+  markClue: (clue: Point, c: number, src: ClueSources, m: SlantMark): Sentence => {
+    const held = has(src);
+    return held === null
+      ? speak.sentence("markClue", {
+          ring: [m],
+          terms: { c },
+          marks: { outline: { clue: [clue] } },
+        })
+      : speak.sentence("markClueHas", {
+          ring: [m],
+          terms: { c, got: held.got },
+          marks: { outline: { clue: [clue] } },
+        });
+  },
+
+  /** Two side-by-side squares with both v-shapes ruled out, one clause
+   * each. */
+  markV: (m: SlantMark, first: VClause, second: VClause): Sentence =>
+    speak.sentence("markV", { ring: [m], terms: { first, second } }),
+
+  /** Both v-shapes ruled out by the same kind of clue, one at each end. */
+  markVBoth: (m: SlantMark, digit: number, pts: readonly Point[]): Sentence =>
+    speak.sentence("markVBoth", {
+      ring: [m],
+      terms: { one: digit === 1 },
+      marks: { outline: { caps: pts } },
+    }),
+
+  // A v-shape clause says what the pair can't both do at one end of its
+  // shared side: touch it, or (which rules out the other v-shape) slant away
+  // from it. `where` places that end.
+  vClause: {
+    one: (pt: Point, where: Where): VClause => ({
+      step: "vOne",
+      said: { terms: { where }, marks: { outline: { clue: [pt] } } },
+    }),
+    three: (pt: Point, where: Where): VClause => ({
+      step: "vThree",
+      said: { terms: { where }, marks: { outline: { clue: [pt] } } },
+    }),
+    /** One of the pair, `sq`, is placed and misses the corner `where`. */
+    placed: (sq: Point, where: Where): VClause => ({
+      step: "vPlaced",
+      said: { terms: { where }, marks: { outline: { placed: [sq] } } },
+    }),
+    /**
+     * Across a 2 `where`: the pair across it gives it at least one line
+     * (`touch`: so these two can't both touch it) or at most one (so they
+     * can't both slant away from it), because of `end` at the far side,
+     * `beyond`: the pairs across the 2s after this one, the 2s themselves,
+     * and the 1 or 3 that caps them, if a clue does.
+     */
+    across: (
+      touch: boolean,
+      two: Point,
+      where: Where,
+      end: End,
+      beyond: Beyond,
+    ): VClause => {
+      const line = beyond.twos.length > 0;
+      const read = { twos: beyond.twos, pairs: beyond.pairs };
+      const capped = { line, capped: beyond.cap !== null };
+      const cap = beyond.cap === null ? [] : [beyond.cap];
+      const why: Steps["vAcross"]["terms"]["why"] =
+        end === "one" || end === "three"
+          ? {
+              step: end === "one" ? "beyondOne" : "beyondThree",
+              said: { terms: capped, marks: { outline: { ...read, cap } } },
+            }
+          : {
+              step: end === "touches" ? "beyondTouches" : "beyondMisses",
+              said: { terms: { line }, marks: { outline: read } },
+            };
+      return {
+        step: "vAcross",
+        said: { terms: { touch, where, why }, marks: { outline: { two: [two] } } },
+      };
+    },
+  },
+
+  /**
+   * A pair on a straight line of 2s (`twos`) capped at each end by the same
+   * kind of limit (the help's "Lines of 2s"): a 1, or a placed diagonal meeting
+   * the 2 at that end, for `one`; a 3, or a diagonal missing it, otherwise.
+   * `caps` are the clues that cap it, and `pairs` the pairs across its 2s.
+   */
+  vLine: (
+    m: SlantMark,
+    twos: readonly Point[],
+    pairs: readonly Point[],
+    one: boolean,
+    caps: readonly Point[],
+  ): Sentence =>
+    speak.sentence("vLine", {
+      ring: [m],
+      terms: { one, single: twos.length === 1 },
+      marks: { outline: { twos, pairs, caps } },
+    }),
+
+  /**
+   * Both v-shapes carried across one 2, from the pair across it (`pair`): a
+   * diagonal of that pair already `touches` the 2 (so it gives one line) or
+   * misses it (so at most one), and what lies beyond the pair supplies the
+   * other bound, either `end` directly or along more 2s.
+   */
+  vAcross: (
+    m: SlantMark,
+    two: Point,
+    pair: readonly Point[],
+    touches: boolean,
+    end: End,
+    beyond: Beyond,
+  ): Sentence =>
+    speak.sentence("vAcrossBoth", {
+      ring: [m],
+      terms: {
+        touches,
+        line: beyond.twos.length > 0,
+        cap:
+          end === "one" || end === "three"
+            ? {
+                step: "capClue",
+                said: {
+                  terms: { d: end === "one" ? 1 : 3, capped: beyond.cap !== null },
+                  marks: { outline: { cap: beyond.cap === null ? [] : [beyond.cap] } },
+                },
+              }
+            : { step: "capDiagonal", said: { terms: { meets: end === "touches" } } },
+      },
+      marks: { outline: { pair, two: [two], twos: beyond.twos, pairs: beyond.pairs } },
+    }),
+};
+
 // --- v-shapes -------------------------------------------------------------
 
 /** Bit `bit` of square `sq`: the pair it belongs to, the grid point where the
@@ -144,7 +437,7 @@ function vGeometry(sq: number, bit: number, w: number) {
 
 /** Where grid point `pt` sits beside the pair `sq` heads, in the words a
  * clause places it with. */
-function whereOf(sq: number, horizontal: boolean, pt: number, w: number): string {
+function whereOf(sq: number, horizontal: boolean, pt: number, w: number): Where {
   const W = w + 1;
   if (horizontal) return Math.floor(pt / W) === Math.floor(sq / w) ? "above" : "below";
   return pt % W === sq % w ? "on the left" : "on the right";
@@ -247,7 +540,7 @@ function vClause(
   soln: Int8Array,
   clues: Int8Array,
   ev: VEvidence,
-): Narration {
+): VClause {
   const why: VWhy | null = vWhy(key);
   const sq = key >> 2;
   const g = vGeometry(sq, key & 3, w);
@@ -279,27 +572,30 @@ function vClause(
   }
 }
 
-/** The clauses for a pair's two ruled-out v-shapes, `keys`: one each, or one
- * for both when a 1 (or a 3) sits at each end. */
+/** The sentence for a pair's two ruled-out v-shapes, `keys`: a clause each,
+ * or one for both when a 1 (or a 3) sits at each end. */
 function vClauses(
   vWhy: WhyOf,
   keys: number[],
+  mark: SlantMark,
   w: number,
   soln: Int8Array,
   clues: Int8Array,
   ev: VEvidence,
-): Narration[] {
+): Sentence {
   const whys = keys.map((k) => vWhy(k));
   const [a, b] = whys;
   if (a?.kind === "clue" && b?.kind === "clue" && a.c === b.c) {
     ev.clues.push(a.pt, b.pt);
-    return [say.vBoth(a.c, [gridPoint(a.pt, w), gridPoint(b.pt, w)])];
+    return say.markVBoth(mark, a.c, [gridPoint(a.pt, w), gridPoint(b.pt, w)]);
   }
   // A clause carried across a 2 has its own "as", so it goes last, where the
   // sentence's closing "so" cannot be read as part of the other clause.
   const across = (k: number) => (vWhy(k)?.kind === "two" ? 1 : 0);
-  const ordered = [...keys].sort((x, y) => across(x) - across(y));
-  return ordered.map((k) => vClause(vWhy, k, w, soln, clues, ev));
+  const [first, second] = [...keys]
+    .sort((x, y) => across(x) - across(y))
+    .map((k) => vClause(vWhy, k, w, soln, clues, ev));
+  return say.markV(mark, first, second);
 }
 
 /** One end of a line of 2s: how many 2s lie between the pair and the cap,
@@ -509,7 +805,7 @@ function markStep(
     const keys = bits.map((bit) => lo * 4 + bit);
     words =
       vLine(vWhy, keys, mark, [m.a, m.b], w, grid, clues, ev) ??
-      say.markV(mark, vClauses(vWhy, keys, w, grid, clues, ev));
+      vClauses(vWhy, keys, mark, w, grid, clues, ev);
     const read = [...new Set(ev.clues)].map((p) => ({
       x: p % W,
       y: Math.floor(p / W),
@@ -608,8 +904,7 @@ function firingHighlights(
   return hint;
 }
 
-/** Narrate why this leg's move is forced. The words are
- * [`hint-text.ts`](./hint-text.ts)'s. */
+/** Narrate why this leg's move is forced. */
 function narrate(firing: SlantFiring, leg: number, hl: SlantHint, w: number): Sentence {
   const target = hl.target;
   if (!target) throw new Error("slant hint: a firing leg with no target");

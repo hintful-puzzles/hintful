@@ -801,11 +801,23 @@
               },
               "terms": {
                 "type": "object",
-                "description": "Named values the planner supplies: `number`, said by the game's value words; `flag`, which an `{if flag: yes | no}` and a wording's `when` read; `unit`, a row, column, block or diagonal, said as its name by `{term}`; `values`, several numbers `{term}` says as a list by the game's value words, and whose count form `{term: one | several}` reads how many; or a list of words, one of which the planner supplies and `{term}` says as it is (Netslide's tile shapes).",
+                "description": "Named values the planner supplies: `number`, said by the game's value words; `flag`, which an `{if flag: yes | no}` and a wording's `when` read; `unit`, a row, column, block or diagonal, said as its name by `{term}`; `values`, several numbers `{term}` says as a list by the game's value words, and whose count form `{term: one | several}` reads how many; a list of words, one of which the planner supplies and `{term}` says as it is (Netslide's tile shapes); or `{ clause: [steps] }`, the move of one of the steps named, which the planner names with what that step is told by and `{term}` says in place, its references with it (Slant's reasons a pair can't both slant one way).",
                 "additionalProperties": {
                   "oneOf": [
                     { "enum": ["number", "flag", "unit", "values"] },
-                    { "type": "array", "items": { "type": "string" }, "minItems": 2 }
+                    { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["clause"],
+                      "properties": {
+                        "clause": {
+                          "type": "array",
+                          "items": { "type": "string" },
+                          "minItems": 1
+                        }
+                      }
+                    }
                   ]
                 }
               },

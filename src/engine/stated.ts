@@ -23,7 +23,7 @@ import {
   type MarkRole,
   mark,
   NARRATION_LIMIT,
-  type Narration,
+  Narration,
   type Noun,
   phrase,
   type Relation,
@@ -279,6 +279,11 @@ function colored<E>(
   either = false,
 ): string | Narration {
   const t = cx.terms[name];
+  // Another step's clause, spoken with its references (a step's `clause` term).
+  if (t instanceof Narration) {
+    if (either) throw new Error(`stated clause: {either ${name}} is no values term`);
+    return t;
+  }
   const values =
     (name === "struck" || name === "struckOr") && cx.struck
       ? [...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value)

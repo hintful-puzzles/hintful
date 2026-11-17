@@ -1414,7 +1414,14 @@ alternatives ("yellow or teal", Map's premise dots). **A
 term declared as a list of words** (Netslide's `shape: [loose end, straight,
 corner, T-piece, cross]`) is one of them, typed as their union and said as it
 is; write one where the planner picks a word the board shows (a shape, a
-heading) rather than a number. **A step's `aim`** is what its move works
+heading) rather than a number. **A term of kind `clause`** (`{ clause:
+[steps] }`) is the `move` of one of the steps it names, said in place with
+its references: the planner gives `{ step, said }`, and the voice speaks it.
+Write one where a sentence joins reasons of several kinds, each a step of
+its own (Slant's pair that can't both `{first}`, or both `{second}`), rather
+than a wording for every combination; a clause step may hold clause terms
+in turn. The lint reads it at the length of the steps it names, and a `when`
+cannot read it. **A step's `aim`** is what its move works
 toward, said first ("Working on tile 3: slide it into place", Fifteen's);
 unless an `effect` or a judged `relation` says more, the move serves it, and
 a look after it is not capitalized. **A step's `answers`** is how its move

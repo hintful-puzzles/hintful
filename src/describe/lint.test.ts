@@ -111,6 +111,34 @@ describe("npm run describe bounds a wording's length", () => {
   });
 });
 
+describe("npm run describe reads a clause term at the length of the steps it speaks", () => {
+  /** A step whose look says another step's move, `reason`, in place. */
+  const findings = (reason: string) =>
+    lintDescription({
+      library: "t",
+      techniques: {},
+      steps: {
+        reason: { ring: "cell", move: reason },
+        main: {
+          ring: "cell",
+          terms: { why: { clause: ["reason"] } },
+          look: "{ring} must hold a line, as {why}",
+          move: "it must go",
+        },
+      },
+    } as never).map((f) => `${f.where}: ${f.message}`);
+
+  it("finds the sentence long where the clause makes it so", () => {
+    const found = findings(`no other line ${"reaches far ".repeat(6)}away`);
+    expect(found).toHaveLength(1);
+    expect(found[0]).toMatch(/step main.*runs to \d+ characters at its shortest/);
+  });
+
+  it("and not where the clause is short", () => {
+    expect(findings("no other line fits")).toEqual([]);
+  });
+});
+
 describe("npm run describe names a whole-board read a local one would do", () => {
   it.each([
     [

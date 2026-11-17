@@ -125,9 +125,18 @@ export interface GameWords {
  * `flag`, which an `if` and a `when` read; a `unit`, said as its name
  * ("row", "column", "block", "diagonal"); `values`, several numbers said by
  * the value words as a list ("1, 2 and 4"), whose count form reads how many;
- * or a list of words, one of which the planner supplies and the clause says
- * as it is (a tile's shape, a heading). */
-export type StepTermKind = "number" | "flag" | "unit" | "values" | readonly string[];
+ * a list of words, one of which the planner supplies and the clause says
+ * as it is (a tile's shape, a heading); or a `clause`, the move of one of the
+ * steps it names, which the planner names with what that step is told by and
+ * the voice speaks in place, its references with it (a reason a sentence
+ * joins to another). */
+export type StepTermKind =
+  | "number"
+  | "flag"
+  | "unit"
+  | "values"
+  | readonly string[]
+  | { readonly clause: readonly string[] };
 
 /** A kind of hint step a planner emits: what its sentence reads, which the
  * planner supplies, and its clauses. */

@@ -4810,15 +4810,21 @@ function statedTable(own: readonly Technique[]): string[] {
   ];
 }
 
-/** Whether a step's term is a word the clause says as it is: a unit's name, or
- * one of the words the term lists. */
+/** Whether a step's term is words the clause says as they are: a unit's name,
+ * one of the words the term lists, or another step's clause. */
 const saidPlainly = (kind: StepTermKind): boolean =>
   kind === "unit" || typeof kind !== "string";
+
+/** The steps a `clause` term may speak, or null for any other term. */
+const clauseOf = (kind: StepTermKind): readonly string[] | null =>
+  typeof kind === "object" && "clause" in kind ? kind.clause : null;
 
 /** A step's term as `StepsById` types it. */
 const stepTermType = (kind: StepTermKind): string =>
   typeof kind !== "string"
-    ? kind.map((w) => JSON.stringify(w)).join(" | ")
+    ? "clause" in kind
+      ? `StepClause<StepsById<E>, ${kind.clause.map((w) => JSON.stringify(w)).join(" | ")}, E>`
+      : kind.map((w) => JSON.stringify(w)).join(" | ")
     : kind === "flag"
       ? "boolean"
       : kind === "unit"
@@ -4947,14 +4953,29 @@ export function stepsBlock(
         `${s.id}: a technique states its words and a step has the name`,
       );
     checkStep(s);
+    // A clause term speaks another step's move, which must be one.
+    for (const t of s.terms)
+      for (const id of clauseOf(t.kind) ?? []) {
+        const named = steps.find((x) => x.id === id);
+        if (named === undefined)
+          throw new CompileError(
+            `${s.id}: its clause term ${t.name} names ${id}, no step`,
+          );
+        if (named.words.some((w) => w.clauses.move === undefined))
+          throw new CompileError(
+            `${s.id}: its clause term ${t.name} names ${id}, which states no move in some wording`,
+          );
+      }
   }
+  const clauseTerms = (s: Step): string[] =>
+    s.terms.filter((t) => clauseOf(t.kind) !== null).map((t) => t.name);
   const sortsOf = (s: Step, role: string): string[] =>
     s.marks.filter((m) => m.role === role).map((m) => m.sort);
   return [
     "/** What the planner supplies for each kind of step it emits, over the",
     " * elements `E` it marks: its terms, and the elements marked by role and sort. */",
     // A game whose steps mark nothing (Flood's) reads no element type.
-    `export interface StepsById<${steps.some((s) => s.marks.length > 0) ? "E" : "_E"}> {`,
+    `export interface StepsById<${steps.some((s) => s.marks.length > 0 || clauseTerms(s).length > 0) ? "E" : "_E"}> {`,
     ...steps.map((s) => {
       const roles = [...new Set(s.marks.map((m) => m.role))];
       const marks = roles
@@ -4975,11 +4996,13 @@ export function stepsBlock(
     }),
     "}",
     "",
-    "/** Each kind of step the planner emits: its clauses by wording, and the",
-    " * condition under which each wording is the one said (`null`: always). */",
+    "/** Each kind of step the planner emits: its clauses by wording, the",
+    " * condition under which each wording is the one said (`null`: always), and",
+    " * its terms that are another step's clause, which the voice speaks. */",
     "export const STEPS: {",
     "  readonly [K in keyof StepsById<unknown>]: {",
     '    readonly ring: StepsById<unknown>[K]["ring"];',
+    "    readonly spoken?: readonly string[];",
     "    readonly clauses: readonly { aim?: string; answers?: string; look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string; long?: string }[];",
     "    readonly when: readonly (",
     "      | null",
@@ -4995,13 +5018,16 @@ export function stepsBlock(
     ...steps.flatMap((s) => [
       `  ${s.id}: {`,
       `    ring: ${JSON.stringify(s.ring)},`,
+      ...(clauseTerms(s).length === 0
+        ? []
+        : [`    spoken: ${JSON.stringify(clauseTerms(s))},`]),
       `    clauses: ${JSON.stringify(s.words.map(spokenClauses))},`,
       `    when: [${s.words.map((w) => (w.when === null ? "null" : stepWhen(s, w.when, "when"))).join(", ")}],`,
       "  },",
     ]),
     "};",
     "",
-    `import { stepVoice, type StepVoice, ${steps.some((s) => s.terms.some((t) => t.kind === "unit")) ? "type Unit, " : ""}type Voice } from "${runtime.replace(/describe-runtime\.ts$/, "step-voice.ts")}";`,
+    `import { ${steps.some((s) => clauseTerms(s).length > 0) ? "type StepClause, " : ""}stepVoice, type StepVoice, ${steps.some((s) => s.terms.some((t) => t.kind === "unit")) ? "type Unit, " : ""}type Voice } from "${runtime.replace(/describe-runtime\.ts$/, "step-voice.ts")}";`,
     "",
     "/** The steps, spoken: a game declares once what its marks are drawn on and",
     " * how its values print, the description's nouns filled in. */",

@@ -27,11 +27,13 @@ export interface StepsById<E> {
   intersection: { ring: "cell"; terms: { axis: Unit; covers: boolean }; marks: { stripes: { line: readonly E[] }; outline: { clue: readonly E[] } } };
 }
 
-/** Each kind of step the planner emits: its clauses by wording, and the
- * condition under which each wording is the one said (`null`: always). */
+/** Each kind of step the planner emits: its clauses by wording, the
+ * condition under which each wording is the one said (`null`: always), and
+ * its terms that are another step's clause, which the voice speaks. */
 export const STEPS: {
   readonly [K in keyof StepsById<unknown>]: {
     readonly ring: StepsById<unknown>[K]["ring"];
+    readonly spoken?: readonly string[];
     readonly clauses: readonly { aim?: string; answers?: string; look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string; long?: string }[];
     readonly when: readonly (
       | null

@@ -41,6 +41,8 @@ interface StepType {
 export type StepTable<S extends { readonly [K in keyof S]: StepType }> = {
   readonly [K in keyof S]: {
     readonly ring: S[K]["ring"];
+    /** The terms that are another step's clause, spoken in place. */
+    readonly spoken?: readonly string[];
     readonly clauses: readonly Clauses[];
     readonly when: readonly (
       | null
@@ -72,6 +74,16 @@ export interface Voice<E> {
   readonly regions?: string;
   unit?(els: readonly E[]): string;
 }
+
+/** A `clause` term: one of the steps `K` it may speak, named with what that
+ * step is told by; the voice says the step's move where the term stands. */
+export type StepClause<
+  S extends { readonly [k in keyof S]: StepType },
+  K extends keyof S,
+  E,
+> = {
+  readonly [k in K]: { readonly step: k; readonly said: Said<S[k], E> };
+}[K];
 
 /** `K: T`, optional where `T` holds nothing. */
 type Given<K extends string, T> =
@@ -119,7 +131,24 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
     said: Said<StepType, E>,
   ): { clauses: Clauses; cx: StatedContext<E> } => {
     const step = steps[id];
-    const terms = (said.terms ?? {}) as S[typeof id]["terms"];
+    const given = (said.terms ?? {}) as Readonly<Record<string, unknown>>;
+    // A clause term is the named step's move, spoken here with its references.
+    const terms = (
+      step.spoken === undefined
+        ? given
+        : {
+            ...given,
+            ...Object.fromEntries(
+              step.spoken.map((name) => {
+                const c = given[name] as {
+                  step: keyof S & string;
+                  said: Said<StepType, E>;
+                };
+                return [name, part(c.step, "move", c.said)];
+              }),
+            ),
+          }
+    ) as S[typeof id]["terms"];
     const marks = (said.marks ?? {}) as S[typeof id]["marks"];
     // A ring of several sorts is given by sort, and each reference names one,
     // as a mark role of several sorts is.

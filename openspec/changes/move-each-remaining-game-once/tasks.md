@@ -258,15 +258,24 @@ Logic games:
   `DUMP_DEALS=400` (379k lines, under a minute); even so it never reaches
   a region side ("whose others", "squares beyond") nor "allow at most",
   "that puts", or the counts with no members' plural forms: check those
-  against the old module by a throwaway test, as Solo's were.
-- [ ] Slant. Read 2026-11-17: a v-shape step joins two reasons ("can't
-  both {a}, or both {b}"), each one of five clause kinds, the "across a 2"
-  one nested. Twenty-five combined wordings is the wrong shape: give the
-  engine a step term of kind `clause`, a `Narration` the planner supplies
-  (another step's `speak.part`), said in place with its references
-  (`stated.ts`'s `colored`/`word` returning it; `stepTermType` typing it
-  `Narration`; the lint printing it as a reference's shortest and longest
-  words). Mines' region prefixes and sides want the same term.
+  against the old module by a throwaway test, as Solo's were. Its region
+  prefixes and sides are `clause` terms (Slant's, 2026-11-17).
+- [x] Slant (2026-11-17): dump byte-identical, marks included
+  (`DUMP_DEALS=1000`, 2,906,836 lines in 97 s). Its sentences are `steps`
+  spoken through the voice in `hint.ts`. The engine gained a step term of
+  kind `clause` (`{ clause: [steps] }`): the planner names one of those
+  steps with what it is told by (`{ step, said }`, typed `StepClause`), and
+  the voice says its `move` in place, references and all; the lint reads
+  it at the length of the steps it names. What a clue already has, why a
+  pair can't meet in a v (a 1, a 3, a placed square, across a 2, and what
+  holds the pair beyond), and the cap of a line of 2s are clause steps.
+  markV's mixed reasons and vAcross, which no walk meets even at 1000 deals
+  (the dumped v-shape steps are all a line of 2s or one kind of clue at
+  both ends), were checked against the old module, words and marks, every
+  combination, by a throwaway test seen to fail on a planted word and on a
+  planted dropped reference. Read in the app (8x8 Normal): a mark step
+  (clue outlined, pair ringed), a dead end, and a clue that "already has 2
+  lines from the outlined squares" (the clause's outline drawn).
 - [ ] Net. Its baseline at 8 deals is 38,540 lines once the harness skips
   mistaken positions (2026-11-17).
 - [ ] Ascent
@@ -280,3 +289,7 @@ Logic games:
 
 - [ ] A trial kind, once a second game's Checks suppose as Path's, Spokes'
   or Boats' do (proposal § "What Changes").
+- [ ] When the last `hint-text.ts` goes, rewrite `docs/hints.md` § "The
+  sentences live in one file per game", which still names that file as
+  where a game's sentences live: they are its description's `steps` and
+  `says`.

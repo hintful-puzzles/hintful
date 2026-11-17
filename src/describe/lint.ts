@@ -34,6 +34,7 @@ import {
   parseTechnique,
   type StatedClauses,
   type StatedTechnique,
+  type Step,
   stepsOf,
   type Wording,
   withEveryVariation,
@@ -277,13 +278,74 @@ const turnsOf = (c: StatedClauses): number =>
  * reach: within the limit, no board makes it long. Every `fit` takes its last
  * form, which a sentence takes where an earlier one would run over.
  */
-function bounds(c: StatedClauses): { shortest: string; longest: string } {
+function bounds(
+  c: StatedClauses,
+  spoken: Spoken = NO_CLAUSES,
+): { shortest: string; longest: string } {
   const last = turnsOf(c) - 1;
-  const [shortest] = joined(readings(c, last, SHORTEST, shorter), SHORTEST.closing);
-  const longest = joined(readings(c, last, LONGEST, longer), LONGEST.closing).reduce(
-    longer,
-  );
+  const short = withWords(SHORTEST, spoken.shortest);
+  const long = withWords(LONGEST, spoken.longest);
+  const [shortest] = joined(readings(c, last, short, shorter), short.closing);
+  const longest = joined(readings(c, last, long, longer), long.closing).reduce(longer);
   return { shortest, longest };
+}
+
+/** A step's `clause` terms as they print: each the shortest and the longest
+ * move of the steps it may speak. */
+interface Spoken {
+  readonly shortest: Readonly<Record<string, string>>;
+  readonly longest: Readonly<Record<string, string>>;
+}
+
+const NO_CLAUSES: Spoken = { shortest: {}, longest: {} };
+
+const withWords = (p: Prints, words: Readonly<Record<string, string>>): Prints => ({
+  ...p,
+  words: { ...p.words, ...words },
+});
+
+/** What each step's `clause` terms print, the steps they speak read with
+ * their own clause terms first. */
+function spokenOf(steps: readonly Step[]): Map<string, Spoken> {
+  const out = new Map<string, Spoken>();
+  const byId = new Map(steps.map((s) => [s.id, s]));
+  const of = (s: Step, seen: ReadonlySet<string>): Spoken => {
+    const known = out.get(s.id);
+    if (known !== undefined) return known;
+    if (seen.has(s.id))
+      throw new Error(`step ${s.id}: its clause terms speak it again`);
+    const shortest: Record<string, string> = {};
+    const longest: Record<string, string> = {};
+    for (const t of s.terms) {
+      if (typeof t.kind !== "object" || !("clause" in t.kind)) continue;
+      const moves = t.kind.clause.flatMap((id) => {
+        const named = byId.get(id);
+        if (named === undefined) return [];
+        const inner = of(named, new Set([...seen, s.id]));
+        return named.words.flatMap((w) => {
+          const src = w.clauses.move;
+          if (src === undefined) return [];
+          const last = turnsOf(w.clauses) - 1;
+          const read = (p: Prints, words: Readonly<Record<string, string>>) =>
+            forms(parseClause(src), last, withWords(p, words)).map(said);
+          return [
+            {
+              short: read(SHORTEST, inner.shortest).reduce(shorter),
+              long: read(LONGEST, inner.longest).reduce(longer),
+            },
+          ];
+        });
+      });
+      if (moves.length === 0) continue;
+      shortest[t.name] = moves.map((m) => m.short).reduce(shorter);
+      longest[t.name] = moves.map((m) => m.long).reduce(longer);
+    }
+    const spoken = { shortest, longest };
+    out.set(s.id, spoken);
+    return spoken;
+  };
+  for (const s of steps) of(s, new Set());
+  return out;
 }
 
 /** What is wrong with a wording's words, one line each. */
@@ -349,8 +411,8 @@ function wordDefects(c: StatedClauses, moveRing = false, keepsIsOut = false): st
 /** Every wording a description states, each named by where. */
 function wordingsIn(
   file: DescriptionFile,
-): { where: string; w: Wording; moveRing?: boolean }[] {
-  const out: { where: string; w: Wording; moveRing?: boolean }[] = [];
+): { where: string; w: Wording; moveRing?: boolean; spoken?: Spoken }[] {
+  const out: { where: string; w: Wording; moveRing?: boolean; spoken?: Spoken }[] = [];
   const technique = (id: string, t: StatedTechnique): void => {
     const says = parseTechnique("", id, t).says;
     if (says === null) return;
@@ -363,8 +425,11 @@ function wordingsIn(
     for (const t of withEveryVariation(file).techniques ?? [])
       if (!("use" in t)) technique(t.id, t);
   const steps = "steps" in file ? (file.steps ?? {}) : {};
-  for (const s of stepsOf(steps, (_, src) => parse(src)))
-    for (const w of s.words) out.push({ where: "", w, moveRing: s.ring === "move" });
+  const parsed = stepsOf(steps, (_, src) => parse(src));
+  const spoken = spokenOf(parsed);
+  for (const s of parsed)
+    for (const w of s.words)
+      out.push({ where: "", w, moveRing: s.ring === "move", spoken: spoken.get(s.id) });
   return out;
 }
 
@@ -375,11 +440,11 @@ function wordingFindings(file: DescriptionFile): Finding[] {
   const out: Finding[] = [];
   const needed = new Map<string, boolean>();
   const keepsIsOut = "game" in file && KEEPS_IS_OUT.has(file.game);
-  for (const { where: id, w, moveRing } of wordingsIn(file)) {
+  for (const { where: id, w, moveRing, spoken } of wordingsIn(file)) {
     const where = id === "" ? w.label : `${id} ${w.label}`;
     for (const message of wordDefects(w.clauses, moveRing === true, keepsIsOut))
       out.push({ where, error: true, message });
-    const { shortest, longest } = bounds(w.clauses);
+    const { shortest, longest } = bounds(w.clauses, spoken);
     const at = w.long === null ? null : id === "" ? w.long.at : `${id} ${w.long.at}`;
     if (at !== null && !needed.has(at)) needed.set(at, false);
     if (at !== null && longest.length > NARRATION_LIMIT) needed.set(at, true);

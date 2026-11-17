@@ -551,6 +551,40 @@ describe("a stated clause names only what its technique states", () => {
       });
     });
 
+    describe("a clause term", () => {
+      const clauseSteps = (reason: Record<string, unknown>): string => {
+        if (loopy === undefined || !isFormal(loopy)) throw new Error("no Loopy");
+        return compileGame(
+          {
+            ...loopy,
+            steps: {
+              reason,
+              probe: step({
+                terms: { why: { clause: ["reason"] } },
+                look: "{ring} must be a line, as {why}",
+                move: "it must be",
+              }),
+            },
+          } as never,
+          [...sources.values()].filter(isLibrary),
+          "src/games/loopy/loopy.description.yaml",
+          "../../engine/describe-runtime.ts",
+        );
+      };
+
+      it("is typed as the step it names, and the voice speaks it", () => {
+        const code = clauseSteps({ ring: "edge", move: "no other way fits" });
+        expect(code).toContain('why: StepClause<StepsById<E>, "reason", E>');
+        expect(code).toContain('spoken: ["why"]');
+      });
+
+      it("and refuses one naming a step with no move", () => {
+        expect(() => clauseSteps({ ring: "edge", look: "no other way fits" })).toThrow(
+          /names reason, which states no move/,
+        );
+      });
+    });
+
     describe("a supplied term", () => {
       const supplying = (says: Record<string, unknown>): string =>
         stated({
