@@ -37,6 +37,8 @@ export interface Kind {
       look?: string;
       /** Absent where the game's walk says the move (a strike's "must go"). */
       move?: string;
+      /** What a later leg of the firing (`shown: legs`) says its move is for. */
+      again?: string;
       wordings?: readonly { when?: string; look: string }[];
       arms?: Record<
         string,
@@ -83,6 +85,7 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       says: {
         terms: { n: "n" },
         marks: "$marks",
+        again: "{$mark: $unit}",
         move: "{ring: the ringed {noun} | each ringed {noun}} $restWord",
         wordings: [
           { when: "$zero", look: "{$mark: $unit} takes no $items" },
@@ -99,7 +102,8 @@ export const KINDS: Readonly<Record<string, Kind>> = {
   // hold the value. One with fewer makes the marks inconsistent. `need`,
   // `mark` and `marks` as `count.met`'s; `fillMove` sets an open square `c`
   // to the value, and `slots` names the open squares. The game's term
-  // `placed` says whether the group holds some already.
+  // `placed` says whether the group holds some already. The open squares are
+  // counted, not bound, as `count.both`'s are.
   "count.exact": {
     params: ["group", "set", "unit", "items", "fillWord"],
     defaults: {
@@ -111,18 +115,19 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       marks: { stripes: "$set", reads: "$set" },
     },
     technique: {
-      for: "$group, n = $need, O = open($set) where n > 0 and n >= |O|",
-      conclude: "n = |O| and forall c in O: $fillMove",
+      for: "$group, n = $need, m = |open($set)| where n > 0 and n >= m",
+      conclude: "n = m and forall c in open($set): $fillMove",
       says: {
         terms: { n: "n" },
         marks: "$marks",
+        again: "{$mark: $unit}",
         look: "{$mark: $unit} needs {if placed: {n} more | {n}} $items and has only {n} $slots",
         move: "{ring: the ringed {noun} | each ringed {noun}} $fillWord",
       },
     },
     plant: {
-      for: "$group, n = $need, O = open($set) where n > 0 and n >= |O| - 1",
-      conclude: "forall c in O: $fillMove",
+      for: "$group, n = $need, m = |open($set)| where n > 0 and n >= m - 1",
+      conclude: "forall c in open($set): $fillMove",
     },
   },
   // `count.met` and `count.exact` read as one technique, each group's both
@@ -153,6 +158,7 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       says: {
         terms: { n: "n" },
         marks: "$marks",
+        again: "{$mark: $unit}",
         arms: {
           met: {
             when: "n = 0",

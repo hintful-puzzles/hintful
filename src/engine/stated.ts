@@ -386,18 +386,25 @@ function reference<E>(
   } else if (role === "ring") els = cx.ring;
   else els = (ofRole as readonly E[] | undefined) ?? [];
   const forms = p.words ?? DEFAULT_FORMS[role].map(parseClause);
-  // A ring said in the default words is named by its own noun.
-  const bare = role === "ring" && p.words === null;
+  // A ring is named by its own noun, in the default words or as its words'
+  // `{noun}`: a kind's sentence says "the ringed {noun}" whatever it rings.
+  const namesNoun =
+    p.words === null ||
+    forms.some((f) =>
+      f.some((q) => "name" in q && (q.name === "noun" || q.name === "nouns")),
+    );
   if (
-    bare &&
+    role === "ring" &&
+    namesNoun &&
     cx.ringNoun === undefined &&
     cx.ringKind !== undefined &&
     cx.ringKind.name !== cx.kind.name
   )
     throw new Error(
-      `stated clause: {ring} is drawn on ${cx.ringKind.name}s, which the game's noun does not name: give it words`,
+      `stated clause: {ring} is drawn on ${cx.ringKind.name}s, which the game's noun does not name: give it words, or the hint a ringNoun`,
     );
-  const said = bare && cx.ringNoun !== undefined ? { ...cx, noun: cx.ringNoun } : cx;
+  const said =
+    role === "ring" && cx.ringNoun !== undefined ? { ...cx, noun: cx.ringNoun } : cx;
   const say = (live: readonly E[]): string => {
     const many = role !== "stripes" && new Set(live.map((e) => kind.key(e))).size > 1;
     return forms[many && forms.length > 1 ? 1 : 0]

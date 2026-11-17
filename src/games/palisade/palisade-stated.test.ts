@@ -27,6 +27,7 @@ const cx = (
 ) => ({
   kind: CELL,
   ringKind: EDGE,
+  ringNoun: "edge",
   at,
   ring,
   marks: { outline: outline.map(at), stripes: stripes.map(at) },
@@ -47,13 +48,13 @@ describe("palisade hint — the wordings no walk reaches", () => {
   const two = [edge("nowall"), edge("nowall", 0, 1)];
 
   it("says a 0 clue", () => {
-    const [zero] = STATED.numberExhausted.step;
-    const terms = { clue: 0, wall: false };
-    expect(said(zero, { ...terms, multi: false }, one, [0], [])).toBe(
-      "Clue 0 allows no walls, so this edge can't be one.",
+    const [zero] = STATED["numberExhausted.met"].step;
+    const terms = { clue: 0, n: 0 };
+    expect(said(zero, terms, one, [0], [])).toBe(
+      "This 0 takes no walls, so the ringed edge can't be a wall.",
     );
-    expect(said(zero, { ...terms, multi: true }, two, [0], [])).toBe(
-      "Clue 0 allows no walls, so none of its remaining edges can be walls.",
+    expect(said(zero, terms, two, [0], [])).toBe(
+      "This 0 takes no walls, so each ringed edge can't be a wall.",
     );
   });
 
@@ -92,13 +93,7 @@ describe("palisade hint — the wordings no walk reaches", () => {
       "the same striped region",
     );
     expect(
-      basis(
-        STATED.numberExhausted.step[0],
-        { clue: 0, wall: false, multi: true },
-        two,
-        [0],
-        [],
-      ),
-    ).toBe("clue 0");
+      basis(STATED["numberExhausted.met"].step[0], { clue: 0, n: 0 }, two, [0], []),
+    ).toBe("this 0");
   });
 });

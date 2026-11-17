@@ -21,7 +21,13 @@ import {
 } from "./described-hint.ts";
 import type { HintResult, HintStep } from "./game.ts";
 import { CONTRADICTION_UNLOCALIZED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
-import { CELL, type MarkKind, type Narration, type Sentence } from "./hint-words.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Narration,
+  type Noun,
+  type Sentence,
+} from "./hint-words.ts";
 import {
   type CellMarks,
   type LadderEntry,
@@ -150,6 +156,8 @@ export interface EdgeHintSpec<
   /** What a stated clause's `ring` is drawn on: the edges (or whatever) a leg
    * decides, which are not the cells its terms and marks name. */
   ringKind?: MarkKind<Ring>;
+  /** What a ring's `{noun}` calls one of `ringKind`'s elements ("edge"). */
+  ringNoun?: Noun;
   /** What a leg decides, for a stated clause's `ring`. */
   ring?(marked: Marked): readonly Ring[];
   /** A later leg's sentence (a leg after the firing's first): its move is the
@@ -298,6 +306,7 @@ export function describedEdgeHint<
           const cx: StatedContext<Elem, Ring> = {
             kind,
             ...(spec.ringKind === undefined ? {} : { ringKind: spec.ringKind }),
+            ...(spec.ringNoun === undefined ? {} : { ringNoun: spec.ringNoun }),
             at: (index) => pointOf(index, state),
             ...(spec.termKinds === undefined ? {} : { termKinds: spec.termKinds }),
             ...(spec.termAt === undefined

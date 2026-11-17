@@ -1049,7 +1049,12 @@ the two as one technique**, each group's two readings before the next
 group's, with the same sentences as its arms `met` and `exact`: placed where
 the game's order rests on the interleaving (Mosaic's Easy deal hides the
 numbers its deduction never read, so splitting `alone` in two moved its
-boards). A game whose squares are cells says so in `words: { cell: cell }`
+boards; Palisade's `numberExhausted`, over the edges round a number, a set
+it names in `set:`). The count kinds count a group's open squares, never
+gather them: a set bound in `for` is made for every group on every pass,
+and only the conclusion that decides them walks them. Each says `again`,
+"{unit}", for a later leg of a firing walked in legs ("…, for this 0").
+A game whose squares are cells says so in `words: { cell: cell }`
 and passes `WORDS.cell` as its hint's `noun`, or a kind's `{noun}` says
 "square". A kind is checked sound per game, as a
 stated technique is. A kind with no words of its own (`one.cell`,
@@ -1300,9 +1305,11 @@ stays: a bridge is drawn a drag at a time, which no fact is. **An edge game
 states its words as a cell game does** (Separate): its `STATED` goes to
 `describedEdgeHint` with `ringKind` (what a `{ring}` reference is drawn on, the
 edges), `ring` (what a leg decides), `width` and `value`. A `{ring}` with no
-words says "this {noun}", and the game's noun names its squares, so a bare
-`{ring}` drawn on another sort is refused: give it words (`{ring: this edge |
-these edges}`), or a voice's noun for the sort (`nouns`). A kind that states
+words says "this {noun}", and the game's noun names its squares, so a
+`{ring}` drawn on another sort, bare or with words that say `{noun}` (a
+kind's "the ringed {noun}"), is refused: give it words (`{ring: this edge |
+these edges}`), or the sort's noun (`ringNoun` on `describedEdgeHint`, a
+voice's `nouns`), which a ring's `{noun}` then says. A kind that states
 `again` has a later leg say it as the basis of the game's own `later` sentence
 (`edgeContinuation`), so a kind states its first leg's `move` only. That hook
 stays (Palisade, Separate) because the move says "a wall" or "walls" by the

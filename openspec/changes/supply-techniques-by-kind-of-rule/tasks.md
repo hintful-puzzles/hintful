@@ -287,17 +287,41 @@ boundaries are judgment, and the counts carry that.
     interleaved, which splitting reorders; **Spokes** `saturation`/
     `exhaustion` carry `again`/`later` words the kinds lack; **Boats**
     `total` is a count over the whole board, with no group to bind.
-  - [ ] Next, in this order. (1) `count.exact` binds `O = open($set)` as a
-    set, gathered for every group on every pass; restate it as `count.both`
-    now is (`m = |open($set)|`, which the compiler counts since
-    2026-11-17), then re-check Norinori, Star Battle, Boats, Loopy and
-    Tracks sound and deal-compare them. (2) Palisade `numberExhausted` on
-    `count.both`: its set is the edges round a clue (`set(edge(a, y) over y
-    in adj4(a))`, its `open(c)` restated over a set), and it speaks an
-    `again` phrase in a continued walk, which the kind's `says` would carry
-    as a parameter. (3) Spokes `saturation`/`exhaustion` the same way
-    (`again`, `later`). (4) Then the ONE, PEER, REL, GRP, CMP, SUM forms
-    listed above.
+  - [x] (2026-11-17) `count.exact` counts its open squares (`m =
+    |open($set)|`), as `count.both` does, walking them only in the
+    conclusion. Norinori, Star Battle, Boats, Loopy and Tracks re-checked
+    sound (the kind's plant caught in each), their tests and snapshots
+    unchanged, and deal-compared against HEAD at 3 seeds a preset: the same
+    boards and verdicts, totals 0.96× to 1.05× (noise). The compiler's
+    growth line for these went from `n^0.5` to `n`: it now sees the line
+    array the count walks, which the old copy through `_t` hid; the work is
+    the same.
+  - [x] (2026-11-17) Palisade `numberExhausted` on `count.both`: its set is
+    the edges round a number (`set(edge(a, y) over y in adj4(a))`), its
+    per-square `open(c)` renamed `ways(c)` and `open(S)` defined over a set
+    (as Tracks did), `need` the number less its walls. The count kinds now
+    carry `again: "{unit}"` (no game's walk spoke it before, so no other
+    snapshot moved). **Found on the way:** the kind's "the ringed {noun}"
+    said "square" on Palisade's edges; a ring's words that say `{noun}`
+    are now refused like a bare ring where the ring's sort has no noun, and
+    `describedEdgeHint` takes `ringNoun` (Palisade: "edge"). **Moved, words
+    only** (same steps, same counts in the walk fingerprint): "This 0 takes
+    no walls, so each ringed edge can't be a wall" (was "Clue 0 allows no
+    walls, so none of its remaining edges can be walls"), "This 3 needs 2
+    more walls and has only 2 open edges, so each ringed edge must be a
+    wall", a later leg "…and these edges can't be walls either, for this
+    0" (was "for clue 0"). Seen in the app. The rung is now
+    `numberExhausted.met`/`.exact`; pins re-scanned. Palisade re-checked
+    sound whole (a define was renamed).
+  - [ ] Next, in this order. (3) Spokes `saturation` (`count.exact`) and
+    `exhaustion` (`count.met`), kept two techniques for `twoOnes` between
+    them. Its open edges are not just the undecided ones (an edge to a full
+    hub or across a line counts as closed), so its set is `set(edge(c, y)
+    over y in adj8(c) where spare(y) and not crossed(edge(c, y)))` and
+    `open(S)` the undecided edges of it; its own `ways(c)` stays. It needs
+    `ringNoun: "spoke"`, and its `later` and the `rest` supplied hook go
+    (the kind's `move` says a later leg). (4) Then the ONE, PEER, REL, GRP,
+    CMP, SUM forms listed above.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

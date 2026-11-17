@@ -6,11 +6,12 @@ exports[`palisade hint > palisade: pinned hint positions > says, at each pin 1`]
   "equivalentEdges": "Both ringed edges border the same region and share a fate; walling both would exceed clue 1, so neither can be a wall.",
   "inside": "This region already holds the squares either side of this edge, so it can't be a wall.",
   "join": "This region has 1 of its 5 squares and only one region left to grow into, so these edges can't be walls.",
-  "journey": "Clue 0 allows no walls, so none of its remaining edges can be walls.",
+  "journey": "This 0 takes no walls, so each ringed edge can't be a wall.",
   "noDanglingEdges": "A wall must continue at this corner, so this edge must be a wall.",
-  "noWall": "Clue 0 allows no walls, so none of its remaining edges can be walls.",
+  "noWall": "This 0 takes no walls, so each ringed edge can't be a wall.",
   "notTooBig": "Joining these two regions would make 6 squares, so this edge must be a wall.",
   "notTooSmall": "This region has 3 of its 5 squares and just one way left to grow, so this edge can't be a wall.",
-  "numberExhausted": "Clue 0 allows no walls, so none of its remaining edges can be walls.",
+  "numberExhausted.exact": "This 3 needs 2 more walls and has only 2 open edges, so each ringed edge must be a wall.",
+  "numberExhausted.met": "This 0 takes no walls, so each ringed edge can't be a wall.",
 }
 `;

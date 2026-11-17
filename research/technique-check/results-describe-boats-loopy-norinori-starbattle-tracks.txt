@@ -1,0 +1,100 @@
+ok  boats      given                          current: recorded src/games/boats/boats.description.yaml#given a3cf86c709bc7ea1
+ok  boats      near                           current: recorded src/games/boats/boats.description.yaml#near 1470f2511ceaad31
+ok  boats      touch                          current: recorded src/games/boats/boats.description.yaml#touch d7816c1e83050516
+ok  boats      lineShips                      3  sound    (want sound   )     6 queries    0.2s
+ok  boats      lineShips (planted)            3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/boats/boats.description.yaml#lineShips: recorded sound, proved whole on all 1 boards
+ok  boats      total                          current: recorded src/games/boats/boats.description.yaml#total ca8dfad539bf64db
+ok  boats      center                         current: recorded src/games/boats/boats.description.yaml#center 693414342b84811e
+ok  boats      extend                         current: recorded src/games/boats/boats.description.yaml#extend 3a19cdcbd48b32ff
+ok  boats      lineWater                      current: recorded src/games/boats/boats.description.yaml#lineWater ab2783eaff2f1d7e
+ok  boats      isolated                       current: recorded src/games/boats/boats.description.yaml#isolated 817506d2cd16614c
+ok  boats      grow                           current: recorded src/games/boats/boats.description.yaml#grow b0042b7aede060a4
+ok  boats      onlyFit                        current: recorded src/games/boats/boats.description.yaml#onlyFit 646342cf12e3c107
+ok  boats      centerRoom                     current: recorded src/games/boats/boats.description.yaml#centerRoom 1dd29a0902188f01
+ok  boats      tooLong                        current: recorded src/games/boats/boats.description.yaml#tooLong 586c1db1aaaf4cff
+ok  boats      shortRun                       current: recorded src/games/boats/boats.description.yaml#shortRun 529516ed3c752cbb
+ok  boats      hidden                         current: recorded src/games/boats/boats.description.yaml#hidden 3f5f3dd6584f63a2
+ok  boats      onlyRuns                       current: recorded src/games/boats/boats.description.yaml#onlyRuns 24065a8861b7644c
+ok  boats      shared                         current: recorded src/games/boats/boats.description.yaml#shared 1002611d0b34efc7
+ok  boats      lastWater                      current: recorded src/games/boats/boats.description.yaml#lastWater b94f7da4b6645adc
+ok  boats      lastShip                       current: recorded src/games/boats/boats.description.yaml#lastShip 6cd6388f969fbcdf
+ok  boats      centerTrial                    current: recorded src/games/boats/boats.description.yaml#centerTrial ef675dadcfea0869
+ok  loopy      deadEnd                        current: recorded src/games/loopy/loopy.description.yaml#deadEnd 50d6489e9cb1dc40
+ok  loopy      lineContinues                  current: recorded src/games/loopy/loopy.description.yaml#lineContinues d871cc82bcda1bda
+ok  loopy      dotFull                        current: recorded src/games/loopy/loopy.description.yaml#dotFull c3f3a7ded0ece702
+ok  loopy      clueFull                       current: recorded src/games/loopy/loopy.description.yaml#clueFull f7520169c2b2b43f
+ok  loopy square 2x2 clueStarved                    3  sound    (want sound   )     4 queries    0.2s
+ok  loopy square 2x2 clueStarved (planted)          3  unsound  (want unsound )     1 queries    0.1s   at face 0
+ok  loopy triangular 2x1 clueStarved                    3  sound    (want sound   )     4 queries    0.1s
+ok  loopy honeycomb 2x1 clueStarved                    3  sound    (want sound   )     2 queries    0.2s
+ok  src/games/loopy/loopy.description.yaml#clueStarved: recorded sound, proved whole on all 3 boards
+ok  loopy      clueBlockedPair                current: recorded src/games/loopy/loopy.description.yaml#clueBlockedPair c1b6ec0150bb2f3f
+ok  loopy      clueOneShort                   current: recorded src/games/loopy/loopy.description.yaml#clueOneShort 411cc438c5554416
+ok  loopy      earlyLoop                      current: recorded src/games/loopy/loopy.description.yaml#earlyLoop ca5f3c9713071b3b
+ok  loopy      closed                         current: recorded src/games/loopy/loopy.description.yaml#closed 021842d67a419652
+ok  loopy      related                        current: recorded src/games/loopy/loopy.description.yaml#related b7ef95a31a591b55
+ok  loopy      cornerAtDot                    current: recorded src/games/loopy/loopy.description.yaml#cornerAtDot 472fb601c05515e3
+ok  loopy      cornerOther                    current: recorded src/games/loopy/loopy.description.yaml#cornerOther 112cfc26909dc022
+ok  loopy      cornerBoth                     current: recorded src/games/loopy/loopy.description.yaml#cornerBoth 7b667f0195892679
+ok  loopy      clueBound                      current: recorded src/games/loopy/loopy.description.yaml#clueBound ac2278bc0f4af65a
+ok  loopy      cornerFromClue                 current: recorded src/games/loopy/loopy.description.yaml#cornerFromClue 15e3ca9fec204fb5
+ok  loopy      cornerAcross                   current: recorded src/games/loopy/loopy.description.yaml#cornerAcross 142e90ed63945183
+ok  loopy      cornerExit                     current: recorded src/games/loopy/loopy.description.yaml#cornerExit aa17ad79c495de55
+ok  loopy      cornerOppositeExit             current: recorded src/games/loopy/loopy.description.yaml#cornerOppositeExit 26dd5fdff4b867d5
+ok  loopy      matchingPair                   current: recorded src/games/loopy/loopy.description.yaml#matchingPair 57b126dbb4ab995f
+ok  loopy      pairAtClue                     current: recorded src/games/loopy/loopy.description.yaml#pairAtClue bfad557427aa4264
+ok  loopy      parityClue                     current: recorded src/games/loopy/loopy.description.yaml#parityClue 01831a5a5325647c
+ok  loopy      linkClue                       current: recorded src/games/loopy/loopy.description.yaml#linkClue 3459cf1f60791e2b
+ok  loopy      pairFromCorner                 current: recorded src/games/loopy/loopy.description.yaml#pairFromCorner 711876e7d553acf3
+ok  loopy      cornerFromPair                 current: recorded src/games/loopy/loopy.description.yaml#cornerFromPair 9f29e93cb78a6ddc
+ok  loopy      pairAtDot                      current: recorded src/games/loopy/loopy.description.yaml#pairAtDot 7c963a373e7acb8f
+ok  loopy      parityDot                      current: recorded src/games/loopy/loopy.description.yaml#parityDot 7bede4f33d2c98ab
+ok  loopy      linkDot                        current: recorded src/games/loopy/loopy.description.yaml#linkDot 5224dcb63eeb1154
+ok  norinori   domino                         current: recorded src/games/norinori/norinori.description.yaml#domino b1858d124828a766
+ok  norinori   partner                        current: recorded src/games/norinori/norinori.description.yaml#partner 7f147dc92de5d2f9
+ok  norinori   between                        current: recorded src/games/norinori/norinori.description.yaml#between b42eb1c83bbaf5ec
+ok  norinori   alone                          current: recorded src/games/norinori/norinori.description.yaml#alone e12076ce6dfdd6ee
+ok  norinori   claimed                        current: recorded src/games/norinori/norinori.description.yaml#claimed c87f6dfe1144e5f6
+ok  norinori   fullRegion                     current: recorded src/games/norinori/norinori.description.yaml#fullRegion 0b66d02b95e27a21
+ok  norinori   exactRegion                    3  sound    (want sound   )   128 queries    7.4s
+ok  norinori   exactRegion (planted)          3  unsound  (want unsound )    44 queries    2.3s   at region region 43
+ok  src/games/norinori/norinori.description.yaml#exactRegion: recorded sound, proved whole on all 1 boards
+ok  norinori   neededRegion                   current: recorded src/games/norinori/norinori.description.yaml#neededRegion 1413663ee6b26402
+ok  norinori   blocked                        current: recorded src/games/norinori/norinori.description.yaml#blocked 2fe178fc9c5073d8
+ok  norinori   crowded                        current: recorded src/games/norinori/norinori.description.yaml#crowded d4cc4e54b3ad5276 held
+--  starbattle stars=1: no board of order 3 has an answer, so nothing is checked there
+--  starbattle stars=2: no board of order 3 has an answer, so nothing is checked there
+--  starbattle stars=3: no board of order 3 has an answer, so nothing is checked there
+--  starbattle stars=2: no board of order 4 has an answer, so nothing is checked there
+--  starbattle stars=3: no board of order 4 has an answer, so nothing is checked there
+ok  starbattle around                         current: recorded src/games/starbattle/starbattle.description.yaml#around a8c0a98d4a72875f
+ok  starbattle fullLine                       current: recorded src/games/starbattle/starbattle.description.yaml#fullLine dcbdcd34c20fcc4a
+ok  starbattle fullRegion                     current: recorded src/games/starbattle/starbattle.description.yaml#fullRegion 5bb66d1da414b1dd
+ok  starbattle stars=1 exactLine                      4  sound    (want sound   )     8 queries    1.0s
+ok  starbattle stars=1 exactLine (planted)            4  unsound  (want unsound )     1 queries    0.2s   at line 0
+ok  src/games/starbattle/starbattle.description.yaml#exactLine: recorded sound, proved whole on all 1 boards
+ok  starbattle stars=1 exactRegion                    4  sound    (want sound   )   205 queries   83.9s
+ok  starbattle stars=1 exactRegion (planted)          4  unsound  (want unsound )    93 queries    9.7s   at region region 92
+ok  src/games/starbattle/starbattle.description.yaml#exactRegion: recorded sound, proved whole on all 1 boards
+ok  starbattle confined                       current: recorded src/games/starbattle/starbattle.description.yaml#confined 1732c5fbaade821b
+ok  starbattle neededLine                     current: recorded src/games/starbattle/starbattle.description.yaml#neededLine 53f3380a9d3457a8
+ok  starbattle neededRegion                   current: recorded src/games/starbattle/starbattle.description.yaml#neededRegion beedf9f193af30d3
+ok  starbattle crowdedLine                    current: recorded src/games/starbattle/starbattle.description.yaml#crowdedLine 9b20a209cef02f5f
+ok  starbattle crowdedRegion                  current: recorded src/games/starbattle/starbattle.description.yaml#crowdedRegion 56d6bb048c3f4f02
+ok  starbattle banded                         current: recorded src/games/starbattle/starbattle.description.yaml#banded c0cf4119eeddf0c7
+ok  starbattle starvedLine                    current: recorded src/games/starbattle/starbattle.description.yaml#starvedLine aa9d2609471fafd5
+ok  starbattle starvedRegion                  current: recorded src/games/starbattle/starbattle.description.yaml#starvedRegion 16c0e704c1c3e5d0
+ok  tracks     oneWayIn                       current: recorded src/games/tracks/tracks.description.yaml#oneWayIn 6b7f9244e905ef16
+ok  tracks     bothSidesLeft                  current: recorded src/games/tracks/tracks.description.yaml#bothSidesLeft 8996a02c55eefbca
+ok  tracks     clueFull                       current: recorded src/games/tracks/tracks.description.yaml#clueFull 1c80b9e04d103866
+ok  tracks     clueExact                      3  sound    (want sound   )     6 queries    0.6s
+ok  tracks     clueExact (planted)            3  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  src/games/tracks/tracks.description.yaml#clueExact: recorded sound, proved whole on all 1 boards
+ok  tracks     closeLoop                      current: recorded src/games/tracks/tracks.description.yaml#closeLoop a330c6380a58c436
+ok  tracks     strand                         current: recorded src/games/tracks/tracks.description.yaml#strand 0cd5b74f000ea10d
+ok  tracks     finishEarly                    current: recorded src/games/tracks/tracks.description.yaml#finishEarly 276b91b20b42354a
+ok  tracks     looseEnd                       current: recorded src/games/tracks/tracks.description.yaml#looseEnd 9255efbee0396a4e
+ok  tracks     sharedFate                     current: recorded src/games/tracks/tracks.description.yaml#sharedFate 3ad0d4222ad2e766
+ok  tracks     sharedFateEmpties              current: recorded src/games/tracks/tracks.description.yaml#sharedFateEmpties ebbef903349cc82f
+ok  tracks     parity                         current: recorded src/games/tracks/tracks.description.yaml#parity 665a5867509475b3 held

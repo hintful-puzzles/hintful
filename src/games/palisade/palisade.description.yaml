@@ -91,7 +91,9 @@ define:
   # The sides of square c known to have no wall.
   opens(c): "count(y in adj4(c) where value(edge(c, y)) = 2)"
   # The squares beside c across an edge not yet decided.
-  open(c): "{y in adj4(c) where not known(edge(c, y))}"
+  ways(c): "{y in adj4(c) where not known(edge(c, y))}"
+  # The edges of S not yet decided.
+  open(S): "{e in S where not known(e)}"
 shape:
   # A wall stands between two squares side by side exactly where they are in
   # different regions.
@@ -107,6 +109,23 @@ deal:
   number: every square's, stripped while the ladder, or the search at Unreasonable, still finds the one answer
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
+kindWords:
+  # A number counts the walls round its square, the rim's included.
+  group: "q in clues(number), a = at(q)"
+  set: "set(edge(a, y) over y in adj4(a))"
+  need: "v(q) - walls(a)"
+  rest: 2
+  fill: 1
+  zero: "v(q) = 0"
+  mark: outline
+  marks: { outline: "{a}" }
+  unit: "this {clue}"
+  has: "{clue: its wall | all {clue} of its walls}"
+  items: "{n: wall | walls}"
+  slots: "open {n: edge | edges}"
+  restWord: "can't be a wall"
+  fillWord: "must be a wall"
+  terms: { clue: "v(q)" }
 techniques:
   # Two numbers side by side, c and d: open, the edge between them would
   # join their squares, each with its other open sides leading further into
@@ -142,42 +161,13 @@ techniques:
       again: "{outline: the same outlined clue | the same outlined clues}"
   # A number with all its walls has no more: its other edges are open. One
   # that reaches its count only with every edge left a wall has them all.
-  # One with more walls, or too few edges left, makes the marks inconsistent.
-  - id: numberExhausted
+  # Each number's two readings come before the next number's.
+  - kind: count.both
+    as: numberExhausted
     tier: Easy
-    for: >-
-      q in clues(number), c = at(q), U = open(c), n = walls(c)
-      where (|U| > 0 or n != v(q)) and (n >= v(q) or n + |U| <= v(q))
-    conclude: >-
-      n <= v(q) and n + |U| >= v(q)
-      and (n = v(q) implies forall y in U: place(edge(c, y), 2))
-      and (n < v(q) implies forall y in U: place(edge(c, y), 1))
-    says:
-      terms:
-        anchor: "{c}"
-        clue: "v(q)"
-        # Whether the edges left are all walls, which is how the number is met.
-        wall: "n < v(q)"
-        # Whether the firing sets several edges, which the engine says.
-        multi: { supplied: several }
-      marks: { outline: "{c}" }
-      wordings:
-        - when: "clue = 0"
-          look: "{outline: Clue {clue}} allows no walls"
-          move: >-
-            {if multi: none of {ring: its remaining edges} can be walls |
-            {ring: this edge} can't be one}
-        - when: "wall"
-          look: >-
-            {outline: Clue {clue}} {if multi: reaches its count only if
-            {ring: every ringed edge} is a wall | needs all its remaining edges
-            to be walls}
-          move: "{if multi: draw them all | {ring: the ringed edge} must be a wall}"
-        - look: "{outline: Clue {clue}} already has all its walls"
-          move: >-
-            {if multi: {ring: its remaining edges} can't be walls |
-            {ring: this edge} can't be one}
-      again: "{outline: clue {clue}}"
+    with:
+      # `anchor`: the square the hint names the firing's edges from.
+      terms: { anchor: "{a}", placed: "n < v(q)" }
   # Two groups whose squares together outnumber a region are different
   # regions: wall the edge between them.
   - id: notTooBig
@@ -201,7 +191,7 @@ techniques:
     tier: Easy
     for: >-
       O = joined, c in cells, A = through(c, O) where c = nth(A, 0) and |A| != k,
-      S = set(s over x in A, s in open(x))
+      S = set(s over x in A, s in ways(x))
     conclude: >-
       |A| < k and |S| > 0
       and (forall B = through(nth(S, 0), O):
@@ -248,7 +238,7 @@ techniques:
     tier: Easy
     for: >-
       O = joined, q in clues(number), c = at(q) where v(q) >= 1 and v(q) <= 3,
-      y in open(c) where not known(edge(c, y)), R = through(y, O) where c not in R,
+      y in ways(c) where not known(edge(c, y)), R = through(y, O) where c not in R,
       z in before(y, adj4(c)) where not known(edge(c, z)) and z in R
     conclude: >-
       (walls(c) + 2 > v(q) implies

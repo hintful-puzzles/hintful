@@ -1,19 +1,21 @@
-ok  palisade   cluesVersusRegionSize          current: recorded src/games/palisade/palisade.description.yaml#cluesVersusRegionSize 306e99ef1c7604a1
-ok  palisade   numberExhausted                current: recorded src/games/palisade/palisade.description.yaml#numberExhausted 43a558dd5d9340cd
-ok  palisade   notTooBig                      current: recorded src/games/palisade/palisade.description.yaml#notTooBig be0999777791236f
-ok  palisade   notTooSmall                    3  sound    (want sound   )     1 queries    0.7s
-ok  palisade   notTooSmall (planted)          3  unsound  (want unsound )     1 queries    0.2s   at eset
-ok  palisade   notTooSmall                    4  sound    (want sound   )     1 queries   84.7s
-ok  palisade   notTooSmall (planted)          4  unsound  (want unsound )     1 queries    1.8s   at eset
-ok  palisade   noDanglingEdges                3  sound    (want sound   )     4 queries    0.2s
+ok  palisade   cluesVersusRegionSize          3  sound    (want sound   )     9 queries    1.1s
+ok  palisade   cluesVersusRegionSize (planted) 3  unsound  (want unsound )     1 queries    0.1s   at clue number 0
+ok  src/games/palisade/palisade.description.yaml#cluesVersusRegionSize: recorded sound, proved whole on all 1 boards
+ok  palisade   numberExhausted                3  sound    (want sound   )     9 queries    0.5s
+ok  palisade   numberExhausted (planted)      3  unsound  (want unsound )     1 queries    0.1s   at clue number 0
+ok  src/games/palisade/palisade.description.yaml#numberExhausted: recorded sound, proved whole on all 1 boards
+ok  palisade   notTooBig                      3  sound    (want sound   )     1 queries    0.8s
+ok  palisade   notTooBig (planted)            3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  src/games/palisade/palisade.description.yaml#notTooBig: recorded sound, proved whole on all 1 boards
+ok  palisade   notTooSmall                    3  sound    (want sound   )     1 queries    1.0s
+ok  palisade   notTooSmall (planted)          3  unsound  (want unsound )     1 queries    0.3s   at eset
+ok  src/games/palisade/palisade.description.yaml#notTooSmall: recorded sound, proved whole on all 1 boards
+ok  palisade   noDanglingEdges                3  sound    (want sound   )     4 queries    0.4s
 ok  palisade   noDanglingEdges (planted)      3  unsound  (want unsound )     1 queries    0.1s   at corner 0
-ok  palisade   noDanglingEdges                4  sound    (want sound   )     9 queries    6.5s
-ok  palisade   noDanglingEdges (planted)      4  unsound  (want unsound )     1 queries    0.4s   at corner 0
-ok  palisade   equivalentEdges                3  sound    (want sound   )     1 queries    0.2s
+ok  src/games/palisade/palisade.description.yaml#noDanglingEdges: recorded sound, proved whole on all 1 boards
+ok  palisade   equivalentEdges                3  sound    (want sound   )     1 queries    0.3s
 ok  palisade   equivalentEdges (planted)      3  unsound  (want unsound )     1 queries    0.1s   at eset
-ok  palisade   equivalentEdges                4  sound    (want sound   )     1 queries   14.8s
-ok  palisade   equivalentEdges (planted)      4  unsound  (want unsound )     1 queries    0.9s   at eset
+ok  src/games/palisade/palisade.description.yaml#equivalentEdges: recorded sound, proved whole on all 1 boards
 ok  palisade   inside                         3  sound    (want sound   )     1 queries    0.1s
 ok  palisade   inside (planted)               3  unsound  (want unsound )     1 queries    0.1s   at eset
-ok  palisade   inside                         4  sound    (want sound   )     1 queries   12.3s
-ok  palisade   inside (planted)               4  unsound  (want unsound )     1 queries    0.5s   at eset
+ok  src/games/palisade/palisade.description.yaml#inside: recorded sound, proved whole on all 1 boards

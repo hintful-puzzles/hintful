@@ -310,33 +310,39 @@ describe("palisade hint", () => {
         step.rung === "notTooSmall" && steps[1]?.continuesPrevious === true,
     },
     pins: {
-      /** Held on 324 of 1390 positions walked. */
+      /** Held on 317 of 1372 positions walked. */
       journey: "5x5n5:g0g2b2b2b2",
-      /** Held on 746 of 1390 positions walked. */
+      /** Held on 728 of 1372 positions walked. */
       noWall: "5x5n5:g0g2b2b2b2",
-      /** Held on 20 of 1390 positions walked. */
+      /** Held on 22 of 1372 positions walked. */
       join: {
         id: "5x5n5de:j12a1a3f232",
         moves:
           '[{"type":"edges","edits":[{"x":0,"y":2,"flag":16},{"x":0,"y":1,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":2,"flag":32},{"x":1,"y":2,"flag":128}]},{"type":"edges","edits":[{"x":0,"y":2,"flag":64},{"x":0,"y":3,"flag":16}]},{"type":"edges","edits":[{"x":0,"y":3,"flag":2},{"x":1,"y":3,"flag":8}]},{"type":"edges","edits":[{"x":0,"y":3,"flag":4},{"x":0,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":4,"y":4,"flag":16},{"x":4,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":4,"y":4,"flag":128},{"x":3,"y":4,"flag":32}]},{"type":"edges","edits":[{"x":3,"y":4,"flag":1},{"x":3,"y":3,"flag":4}]},{"type":"edges","edits":[{"x":3,"y":4,"flag":8},{"x":2,"y":4,"flag":2}]},{"type":"edges","edits":[{"x":2,"y":4,"flag":16},{"x":2,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":2,"y":4,"flag":128},{"x":1,"y":4,"flag":32}]},{"type":"edges","edits":[{"x":0,"y":4,"flag":32},{"x":1,"y":4,"flag":128}]},{"type":"edges","edits":[{"x":1,"y":3,"flag":1},{"x":1,"y":2,"flag":4}]}]',
       },
-      /** Held on 24 of 1390 positions walked. */
+      /** Held on 14 of 1372 positions walked. */
       cluesVersusRegionSize: "5x5n5:a2a1a2b2e1e33",
-      /** Held on 1311 of 1390 positions walked. */
-      numberExhausted: "5x5n5:g0g2b2b2b2",
-      /** Held on 1383 of 1390 positions walked. */
+      /** Held on 1112 of 1372 positions walked. */
+      "numberExhausted.met": "5x5n5de:g0g2b2b2b2",
+      /** Held on 968 of 1372 positions walked. */
+      "numberExhausted.exact": {
+        id: "5x5n5de:b31c2a3b3d1c2",
+        moves:
+          '[{"type":"edges","edits":[{"x":3,"y":0,"flag":32},{"x":4,"y":0,"flag":128}]},{"type":"edges","edits":[{"x":3,"y":0,"flag":64},{"x":3,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":3,"y":0,"flag":128},{"x":2,"y":0,"flag":32}]}]',
+      },
+      /** Held on 1372 of 1372 positions walked. */
       notTooBig: {
         id: "5x5n5:a2c1e232c22d2",
         moves:
           '[{"type":"edges","edits":[{"x":0,"y":1,"flag":16},{"x":0,"y":0,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":32},{"x":1,"y":1,"flag":128}]},{"type":"edges","edits":[{"x":0,"y":1,"flag":64},{"x":0,"y":2,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":64},{"x":1,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":2},{"x":2,"y":0,"flag":8}]}]',
       },
-      /** Held on 1300 of 1390 positions walked. */
+      /** Held on 1300 of 1372 positions walked. */
       notTooSmall: {
         id: "5x5n5:23m2a33b1a3",
         moves:
           '[{"type":"edges","edits":[{"x":2,"y":3,"flag":2},{"x":3,"y":3,"flag":8}]},{"type":"edges","edits":[{"x":3,"y":3,"flag":4},{"x":3,"y":4,"flag":1}]},{"type":"edges","edits":[{"x":0,"y":0,"flag":32},{"x":1,"y":0,"flag":128}]},{"type":"edges","edits":[{"x":0,"y":0,"flag":64},{"x":0,"y":1,"flag":16}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":2},{"x":2,"y":0,"flag":8}]},{"type":"edges","edits":[{"x":1,"y":0,"flag":4},{"x":1,"y":1,"flag":1}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":16},{"x":1,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":32},{"x":2,"y":4,"flag":128}]},{"type":"edges","edits":[{"x":1,"y":4,"flag":128},{"x":0,"y":4,"flag":32}]},{"type":"edges","edits":[{"x":1,"y":1,"flag":8},{"x":0,"y":1,"flag":2}]}]',
       },
-      /** Held on 905 of 1390 positions walked. */
+      /** Held on 778 of 1372 positions walked. */
       noDanglingEdges: {
         id: "5x5n5:b31c2a3b3d1c2",
         moves:
@@ -347,7 +353,7 @@ describe("palisade hint", () => {
         moves:
           '[{"type":"edges","edits":[{"x":0,"y":4,"flag":16},{"x":0,"y":3,"flag":64}]},{"type":"edges","edits":[{"x":0,"y":4,"flag":32},{"x":1,"y":4,"flag":128}]}]',
       },
-      /** Held on 737 of 1390 positions walked. */
+      /** Held on 586 of 1372 positions walked. */
       inside: {
         id: "8x6n6de:a2d33b3b2c22c2a22a1a3b21b12c1a333",
         moves:

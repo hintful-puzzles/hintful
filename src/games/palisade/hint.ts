@@ -80,6 +80,7 @@ export const palisadeHint = describedEdgeHint<
   step: stepOf,
   stated: STATED,
   ringKind: EDGE,
+  ringNoun: "edge",
   ring: ({ left }) => left,
   later: edgeContinuation,
   width: (state) => state.w,
