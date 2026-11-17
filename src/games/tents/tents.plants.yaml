@@ -4,12 +4,6 @@
 # unsound.
 
 techniques:
-  # A tent with two trees beside it still without their tent read as the
-  # first one's.
-  tentLink:
-    for: >-
-      c in cells where value(c) = 1 and link(c) = none, K = free(c) where |K| < 3
-    conclude: "|K| > 0 and mark(c, nth(K, 0))"
   # A square beside one tree read as beside none.
   noTree:
     for: S = {c in cells where blank(c) and |trees(c)| < 2} where |S| > 0

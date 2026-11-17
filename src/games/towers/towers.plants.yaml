@@ -17,5 +17,6 @@ techniques:
       strike(nth(L, j), h)))
   arrangement:
     conclude: >-
-      forall d in cand(c) where not (exists fill f of L from cand where
-      distinct(f(x) over x in L) and f(c) = d: seen(f, L) = v + 1): strike(c, d)
+      forall c in {q}, d in cand(c) where not (exists fill f of L from cand
+      where f(c) = d and (distinct(f(x) over x in L) and seen(f, L) = v + 1):
+      true): strike(c, d)

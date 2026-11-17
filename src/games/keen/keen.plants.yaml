@@ -12,8 +12,8 @@ techniques:
   cage:
     conclude: >-
       forall c in K, d in cand(c) where not (exists fill f of K from cand where
-      distinct(f(x) over x in K) and makes(f, r) and f(c) = d: true): strike(c,
-      d)
+      f(c) = d and (distinct(f(x) over x in K) and makes(f, r)): true):
+      strike(c, d)
   cageLine:
     conclude: >-
       forall d in domain where (forall fill f of K from cand where apart(f, K)

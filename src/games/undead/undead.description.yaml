@@ -173,20 +173,21 @@ techniques:
   # numbers and leaving room for each monster in the counts, is struck from
   # it. How many passes over every sightline Easy needs is part of its
   # grade, and the order of the sightlines in a pass moves it.
-  - id: sightline
+  - kind: fill.support
+    as: sightline
     tier: Easy
-    for: >-
-      n in range(0, |cells|), r in range(0, |slots| - 1), s = nth(slots, ofRound(r))
-      where |sight(s, mirror)| = n and r < round(sight_exit(s, mirror)),
-      t = sight_exit(s, mirror), L = sight(s, mirror),
-      a = clue(sees, s), b = clue(sees, t), g = room(1), v = room(2), z = room(3)
-    conclude: >-
-      forall c in L, d in cand(c) where not (exists fill f of L from cand
-      where f(c) = d: (a < 0 or shows(f, s) = a) and (b < 0 or shows(f, t) = b)
-      and count(x in L where f(x) = 1 and |cand(x)| > 1) <= g
-      and count(x in L where f(x) = 2 and |cand(x)| > 1) <= v
-      and count(x in L where f(x) = 3 and |cand(x)| > 1) <= z):
-      strike(c, d)
+    with:
+      group: >-
+        n in range(0, |cells|), r in range(0, |slots| - 1), s = nth(slots, ofRound(r))
+        where |sight(s, mirror)| = n and r < round(sight_exit(s, mirror)),
+        t = sight_exit(s, mirror), L = sight(s, mirror),
+        a = clue(sees, s), b = clue(sees, t), g = room(1), v = room(2), z = room(3)
+      set: L
+      fits: >-
+        (a < 0 or shows(f, s) = a) and (b < 0 or shows(f, t) = b)
+        and count(x in L where f(x) = 1 and |cand(x)| > 1) <= g
+        and count(x in L where f(x) = 2 and |cand(x)| > 1) <= v
+        and count(x in L where f(x) = 3 and |cand(x)| > 1) <= z
     says:
       terms: { s: s }
       marks: {}

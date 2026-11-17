@@ -152,13 +152,14 @@ techniques:
   - { use: latin.single, tier: Easy, rung: single }
   # Cage by cage: a value no filling of the cage that makes its clue puts in
   # a cell is struck from it. One cage a firing.
-  - id: cage
+  - kind: fill.support
+    as: cage
     tier: Normal
     rung: cage
-    for: "r in cage, K = cells(r)"
-    conclude: >-
-      forall c in K, d in cand(c) where not (exists fill f of K from cand
-      where apart(f, K) and makes(f, r) and f(c) = d: true): strike(c, d)
+    with:
+      group: "r in cage, K = cells(r)"
+      set: K
+      fits: "apart(f, K) and makes(f, r)"
     says: *cageSays
   # Cage by cage, and line by line, the columns before the rows: a value
   # every filling of the cage that makes its clue puts in its part of the

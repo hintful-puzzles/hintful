@@ -137,13 +137,15 @@ deal:
 tiers: [Easy, Normal]
 techniques:
   # A tent with one tree beside it still without its tent is that tree's.
-  # One with none makes the marks inconsistent.
-  - id: tentLink
+  - kind: one.cell
+    as: tentLink
     tier: Easy
-    for: "c in cells where value(c) = 1 and link(c) = none, K = free(c) where |K| < 2"
-    conclude: "|K| > 0 and (forall q in K: mark(c, q))"
+    with:
+      square: "value(c) = 1 and link(c) = none"
+      options: free(c)
+      move: "forall q in U: mark(c, q)"
     says:
-      terms: { c: c, K: K }
+      terms: { c: c, K: U }
       marks: {}
   # The open squares beside no tree are grass, every one at once.
   - id: noTree

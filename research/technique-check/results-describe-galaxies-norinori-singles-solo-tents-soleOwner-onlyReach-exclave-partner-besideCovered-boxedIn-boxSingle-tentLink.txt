@@ -1,0 +1,27 @@
+ok  galaxies   soleOwner                      3  sound    (want sound   )     1 queries    5.2s
+ok  galaxies   soleOwner (planted)            3  unsound  (want unsound )     1 queries    2.6s   at eset
+ok  src/games/galaxies/galaxies.description.yaml#soleOwner: recorded sound, proved whole on all 1 boards
+ok  galaxies   onlyReach                      3  sound    (want sound   )     9 queries    7.9s
+ok  galaxies   onlyReach (planted)            3  unsound  (want unsound )     1 queries    1.2s   at cell 0
+ok  src/games/galaxies/galaxies.description.yaml#onlyReach: recorded sound, proved whole on all 1 boards
+ok  galaxies   exclave                        3  sound    (want sound   )     9 queries    5.7s
+ok  galaxies   exclave (planted)              3  unsound  (want unsound )     1 queries    0.8s   at cell 0
+ok  src/games/galaxies/galaxies.description.yaml#exclave: recorded sound, proved whole on all 1 boards
+ok  norinori   partner                        3  sound    (want sound   )     9 queries    1.3s
+ok  norinori   partner (planted)              3  unsound  (want unsound )     1 queries    0.3s   at cell 0
+ok  src/games/norinori/norinori.description.yaml#partner: recorded sound, proved whole on all 1 boards
+ok  singles    besideCovered                  3  sound    (want sound   )     9 queries    0.1s
+ok  singles    besideCovered (planted)        3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/singles/singles.description.yaml#besideCovered: recorded sound, proved whole on all 1 boards
+ok  singles    boxedIn                        3  sound    (want sound   )     9 queries    0.2s
+ok  singles    boxedIn (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/singles/singles.description.yaml#boxedIn: recorded sound, proved whole on all 1 boards
+--  solo +Jigsaw +Killer: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Jigsaw +Killer +X: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Killer +X: no board of order 3 has an answer, so nothing is checked there
+ok  solo +Killer boxSingle                      3  sound    (want sound   )     3 queries    0.3s
+ok  solo +Killer boxSingle (planted)            3  unsound  (want unsound )     1 queries    0.1s   at line 6
+ok  src/games/solo/solo.description.yaml#boxSingle: recorded sound, proved whole on all 1 boards
+ok  tents      tentLink                       3  sound    (want sound   )     9 queries    0.1s
+ok  tents      tentLink (planted)             3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/tents/tents.description.yaml#tentLink: recorded sound, proved whole on all 1 boards

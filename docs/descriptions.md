@@ -1126,6 +1126,13 @@ game's `group` binds the pair and its look names both (only it can tell two
 `says`, so a game whose hint narrates the firing itself (Mines') gives none
 and takes no words. A placement is checked against the schema again once
 expanded, so a game's words over a frame are checked whole.
+`fill.support` strikes a value no filling of a set that keeps the rule puts
+in a square (Keen's cage, Towers' line from a clue, Undead's sightline): the
+game binds the set in `group`, names it in `set`, and gives the rule a
+filling `f` keeps as `fits`, which the kind sets in the filling's `where`
+beside `f(c) = d`, so the compiler prunes a part-filling by it; `each` is the
+squares one firing reads where it is not the whole set (Towers' one square a
+firing, `{q}`). It carries no words: each game's walk names its own rule.
 `fit.flip` is the Check of a
 two-valued square (`holds`, `scope`). How the tried value breaks the rule is
 the game's to say, so the game's `says:` holds the look; the kind lays it over

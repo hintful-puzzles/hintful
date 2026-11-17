@@ -168,14 +168,15 @@ techniques:
   # Clue by clue, and cell by cell along its line: a height no filling of the
   # line from its candidates, every height once, that shows the clue's count
   # puts in the cell, is struck from it. One cell a firing.
-  - id: arrangement
+  - kind: fill.support
+    as: arrangement
     tier: Normal
     rung: arrangement
-    for: "k in clues(sees), s = at(k), v = v(k), L = sight(s), c in L"
-    conclude: >-
-      forall d in cand(c) where not (exists fill f of L from cand
-      where distinct(f(x) over x in L) and f(c) = d: seen(f, L) = v):
-      strike(c, d)
+    with:
+      group: "k in clues(sees), s = at(k), v = v(k), L = sight(s), q in L"
+      set: L
+      each: "{q}"
+      fits: "distinct(f(x) over x in L) and seen(f, L) = v"
     # The hint names the clue.
     says:
       terms: { s: s, v: v }

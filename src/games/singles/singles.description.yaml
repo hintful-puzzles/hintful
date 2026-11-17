@@ -92,16 +92,20 @@ deal:
 tiers: [Easy, Normal]
 techniques:
   # A covered square's neighbors are clear.
-  - id: besideCovered
+  - kind: peer.touch
+    as: besideCovered
     tier: Easy
-    for: "c in cells where value(c) = 1"
-    conclude: "forall p in adj4(c): place(p, 2)"
+    with:
+      adj: adj4
+      fill: 1
+      rest: 2
+      piece: "{shaded} square"
+      pieces: "{shaded} squares"
+      restWord: "must be {unshaded}"
     # The squares it decides are named by their numbers, though the numbers
     # play no part, so the player finds them without hunting the rings.
     says:
-      marks: { outline: "{c}" }
-      look: "{outline: a {shaded} square (outlined)} touches {ring: this {each} | these {nouns} ({each})}"
-      move: "{ring: that {each} | those {nouns}} must be {unshaded}"
+      move: "{ring: this {each} | these {nouns} ({each})} must be {unshaded}"
   # A clear square's number is covered everywhere else in its row and column.
   - id: sameLine
     tier: Easy
@@ -233,12 +237,15 @@ techniques:
           move: *pairMove
   # A square with one neighbor not covered has that neighbor clear: covered
   # or clear, it needs one.
-  - id: boxedIn
+  - kind: one.cell
+    as: boxedIn
     tier: Easy
-    for: "c in cells where value(c) != 1, F = {p in adj4(c) where value(p) != 1}"
-    conclude: "|F| > 0 and (|F| > 1 or place(first(F), 2))"
+    with:
+      square: "value(c) != 1"
+      options: "{p in adj4(c) where value(p) != 1}"
+      move: "place(first(U), 2)"
     says:
-      terms: { number: "clue(number, first(F))" }
+      terms: { number: "clue(number, first(U))" }
       marks: { outline: "{c}" }
       look: "{ring: this {number}} is {outline: the outlined {unshaded} square}'s last neighbor that isn't {shaded}"
       move: "it must be {unshaded} to keep that square joined"

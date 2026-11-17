@@ -190,40 +190,44 @@ techniques:
       marks: {}
   # A square only one dot's galaxy could hold, by the dots and the finished
   # galaxies, is that dot's: the one dot a drag from it rings.
-  - id: soleOwner
+  - kind: one.cell
+    as: soleOwner
     tier: Easy
-    for: >-
-      O = {e in edges where value(e) != 1},
-      c in cells where arrow(c) = none and not finished(c, O),
-      K = {q in near(c) where not finished(opp(c, at(q)), O)} where |K| < 2
-    conclude: "|K| > 0 and (forall q in K: mark(c, q) and mark(opp(c, at(q)), q))"
+    with:
+      group: "O = {e in edges where value(e) != 1}, c in cells"
+      square: "arrow(c) = none and not finished(c, O)"
+      options: "{q in near(c) where not finished(opp(c, at(q)), O)}"
+      move: "(forall q in U: mark(c, q) and mark(opp(c, at(q)), q))"
     says:
-      terms: { c: c, K: K }
+      terms: { c: c, K: U }
       marks: {}
   # A square only one dot's galaxy can still stretch to is that dot's.
-  - id: onlyReach
+  - kind: one.cell
+    as: onlyReach
     tier: Easy
-    for: >-
-      c in cells where arrow(c) = none,
-      K = {q in near(c) where c in reach(q)} where |K| < 2
-    conclude: "|K| > 0 and (forall q in K: mark(c, q) and mark(opp(c, at(q)), q))"
+    with:
+      square: "arrow(c) = none"
+      options: "{q in near(c) where c in reach(q)}"
+      move: "(forall q in U: mark(c, q) and mark(opp(c, at(q)), q))"
     says:
-      terms: { c: c, K: K }
+      terms: { c: c, K: U }
       marks: {}
   # A piece of dot q's galaxy that does not hold the dot must grow toward
   # it: where only one free square lies beside it across no line, that
   # square is q's. G is the piece, by its first square.
-  - id: exclave
+  - kind: one.cell
+    as: exclave
     tier: Easy
-    for: >-
-      c in cells, q = arrow(c) where q != none,
-      G = through(c, {e in edges where value(e) != 1 and arrow(end1(e)) = q and arrow(end2(e)) = q})
-      where nth(G, 0) = c and nth(cells(at(q)), 0) not in G,
-      L = set(n over x in G, n in adj4(x) where arrow(n) = none and value(edge(x, n)) != 1)
-      where |L| < 2
-    conclude: "|L| > 0 and (forall l in L: mark(l, q) and mark(opp(l, at(q)), q))"
+    with:
+      group: >-
+        c in cells, q = arrow(c) where q != none,
+        G = through(c, {e in edges where value(e) != 1 and arrow(end1(e)) = q and arrow(end2(e)) = q})
+      square: "nth(G, 0) = c and nth(cells(at(q)), 0) not in G"
+      options: >-
+        set(n over x in G, n in adj4(x) where arrow(n) = none and value(edge(x, n)) != 1)
+      move: "(forall l in U: mark(l, q) and mark(opp(l, at(q)), q))"
     says:
-      terms: { q: q, G: G, L: L }
+      terms: { q: q, G: G, L: U }
       marks: {}
   # A galaxy is the same turned about its dot, so a line beside one of its
   # squares, or the grid's edge, stands beside the square opposite too.

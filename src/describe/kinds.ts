@@ -363,6 +363,28 @@ export const KINDS: Readonly<Record<string, Kind>> = {
         "forall d in cand($end) where (exists u in cand($partner): $rel): strike($end, d)",
     },
   },
+  // A value no filling of a set from its candidates that keeps the rule
+  // puts in a square of it is struck there: each square's values checked
+  // against every way the whole set could be filled. `group` binds the set,
+  // `set` names it, and `fits` is the rule a filling `f` of it keeps; `each`
+  // is the squares read in one firing, the whole set unless the game reads a
+  // square a firing (Towers'). A square left with no value makes the marks
+  // inconsistent. `fits` sits in the filling's `where`, beside `f(c) = d`, so
+  // the compiler prunes a part-filling by it.
+  "fill.support": {
+    params: ["group", "set", "fits"],
+    defaults: { each: "$set" },
+    technique: {
+      for: "$group",
+      conclude:
+        "forall c in $each, d in cand(c) where not (exists fill f of $set from cand where f(c) = d and ($fits): true): strike(c, d)",
+    },
+    // A value some filling does put there read as struck.
+    plant: {
+      conclude:
+        "forall c in $each, d in cand(c) where (exists fill f of $set from cand where f(c) = d and ($fits): true): strike(c, d)",
+    },
+  },
   // An open edge whose ends the lines already join would close a loop, which
   // is the answer only once nothing else needs it: `elsewhere` says what
   // still does, reading the lines `L`, the edge `e` and the lines' group `G`

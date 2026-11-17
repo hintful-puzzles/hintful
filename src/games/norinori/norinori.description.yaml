@@ -116,11 +116,14 @@ techniques:
       look: "{outline: these two {shaded} squares} make a domino, and no other {shaded} square may touch it"
       move: "{ring} must be {unshaded}"
   # A shaded square with no shaded neighbor and one open one is paired with
-  # it. With none open, the marks are inconsistent.
-  - id: partner
+  # it.
+  - kind: one.cell
+    as: partner
     tier: Easy
-    for: "c in cells where value(c) = 1 and lit(c) = 0, O = free(c) where |O| <= 1"
-    conclude: "|O| = 1 and forall d in O: place(d, 1)"
+    with:
+      square: "value(c) = 1 and lit(c) = 0"
+      options: free(c)
+      move: "forall d in U: place(d, 1)"
     says:
       marks: { outline: "{c}", reads: "{c} + adj4(c)" }
       look: "{outline: this {shaded} square} has no {shaded} neighbor and only one open one"

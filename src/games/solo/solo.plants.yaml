@@ -4,12 +4,6 @@
 # unsound.
 
 techniques:
-  # A box's value placed with two places left.
-  boxSingle:
-    for: >-
-      u in box, placed = set(value(c) over c in cells(u) where known(c)), d in
-      domain - placed, n = count(c in cells(u) where d in cand(c)) where n < 3
-    conclude: n >= 1 and place(first({c in cells(u) where d in cand(c)}), d)
   # A cage's last cell given one less than its total leaves.
   cageSingle:
     for: >-

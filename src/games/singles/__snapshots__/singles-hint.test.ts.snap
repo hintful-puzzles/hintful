@@ -1197,7 +1197,7 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
 
 exports[`singles: pinned hint positions > says, at each pin 1`] = `
 {
-  "besideCovered": "A shaded square (outlined) touches these squares (1, 3, 2 and 6), so those squares must be clear.",
+  "besideCovered": "No shaded square may touch the outlined shaded square, so these squares (1, 3, 2 and 6) must be clear.",
   "boxedIn": "This 6 is the outlined clear square's last neighbor that isn't shaded, so it must be clear to keep that square joined.",
   "corner.across": "Left clear, this inner 4 would make both 4s flanking corner 6 shaded and box the corner in, so it must be shaded.",
   "corner.apex": "Left clear, this corner 1 would box itself in with both 1s beside it shaded, so it must be shaded.",

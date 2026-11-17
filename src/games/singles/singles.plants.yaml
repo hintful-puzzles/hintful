@@ -6,7 +6,7 @@
 techniques:
   # A covered square's diagonal neighbors read as beside it.
   besideCovered:
-    conclude: "forall p in adj8(c): place(p, 2)"
+    conclude: "forall c in adj8(t) where not known(c): place(c, 2)"
   # A square not yet decided read as clear.
   sameLine:
     for: c in cells where value(c) != 1, n = clue(number, c)
@@ -25,9 +25,6 @@ techniques:
       ((ns = n and nt = n) or (ns = nt and ni = nt) or ((ns != n and ns != ni)
       or place(t, 2)) and (ns = n or ns = ni or (nt != n and nt != ni) or
       place(s, 2)))
-  # A square with two neighbors not covered read as having one.
-  boxedIn:
-    conclude: "|F| > 0 and (|F| > 2 or place(first(F), 2))"
   # The second pair's numbers not compared.
   offset:
     for: >-

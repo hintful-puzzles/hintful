@@ -11,11 +11,6 @@ techniques:
       1}, O = {e in cells where not known(e) and (exists d in D: e in adj4(d))}
       where |O| > 0
     conclude: "forall e in O: place(e, 2)"
-  # A lone shaded square with two open neighbors paired with both.
-  partner:
-    for: >-
-      c in cells where value(c) = 1 and lit(c) = 0, O = free(c) where |O| = 2
-    conclude: "forall d in O: place(d, 1)"
   # An open square beside one shaded square read as beside two.
   between:
     for: x in cells where not known(x) and lit(x) >= 1, k = lit(x)

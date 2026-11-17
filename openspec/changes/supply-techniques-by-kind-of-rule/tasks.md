@@ -473,6 +473,31 @@ boundaries are judgment, and the counts carry that.
     each` with "{ring} must hold a {piece fill}", which the B side's cleared
     squares (the other piece) would contradict; it needs a fact-level
     wording first.
+  - [x] (2026-11-17) A FIT form that holds across games, `fill.support`:
+    a value no filling of a set that keeps the rule puts in a square is
+    struck (generalized arc consistency). Placed on Keen `cage`, Towers
+    `arrangement` (a square a firing, `each: "{q}"`) and Undead
+    `sightline`; the game's rule sits in the filling's `where`, so the
+    compiler still prunes part-fillings by it. Keen's module is
+    byte-identical, Towers' and Undead's differ by renames and a no-op
+    `if (!(true))`. Their sharper plants (Keen's repeat in a cage, Towers'
+    count one off, Undead's ghost seen as a vampire) are restated over the
+    kind. **In passing, on kinds that exist:** Solo `boxSingle`
+    (`one.place`; its plant was the kind's and went); Norinori `partner`,
+    Tents `tentLink`, Galaxies `soleOwner`, `onlyReach` and `exclave`, and
+    Singles `boxedIn` (`one.cell`, a thing with one option left; every
+    module differs from HEAD only in names and `<= 1` read as `< 2`; the
+    plants that were the kind's went, Galaxies keeps `exclave`'s boundary
+    plant); Singles `besideCovered` (`peer.touch`), which takes the kind's
+    look and keeps its own move naming the ringed squares by number,
+    restating its diagonal plant over `t`. **Moved, words only:** Singles
+    "No shaded square may touch the outlined shaded square, so these
+    squares (1, 3, 5 and 1) must be clear" (was "A shaded square
+    (outlined) touches these squares …, so those squares must be clear"),
+    seen in the app. Deal-compared against HEAD at 3
+    seeds a preset (Solo, Towers, Undead): same boards and verdicts, totals
+    0.95× to 0.98×. Not placed: Light Up `shine` (its `lights(c)` holds the
+    bulb itself, and it runs on a placement; `peer.touch` reads neither).
   - [ ] Next: Clusters on `count.compare` (above), PEER's other forms
     (Dominosa's `placed` reads two rules, a spot's neighbors and its
     domino's other spots), REL's bounds form (Unequal `sign`), GRP over

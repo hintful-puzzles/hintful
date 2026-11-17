@@ -144,16 +144,16 @@ scales:
   killer: [Single, MinMax, Sums, Region]
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
-  # A value with one place left in a box goes there. With no place left, the
-  # marks are inconsistent.
-  - id: boxSingle
+  # A value with one place left in a box goes there.
+  - kind: one.place
+    as: boxSingle
     tier: Easy
-    for: >-
-      u in box,
-      placed = set(value(c) over c in cells(u) where known(c)),
-      d in domain - placed,
-      n = count(c in cells(u) where d in cand(c)) where n < 2
-    conclude: "n = 1 and place(the(c in cells(u) where d in cand(c)), d)"
+    with:
+      group: >-
+        u in box, placed = set(value(c) over c in cells(u) where known(c)),
+        d in domain - placed
+      set: cells(u)
+      value: d
   # A cage with one open cell holds what its total leaves there.
   - id: cageSingle
     tier: Single
