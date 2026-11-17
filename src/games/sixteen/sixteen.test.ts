@@ -24,8 +24,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { netslideGame } from "../netslide/index.ts";
 import { COL_LOWLIGHT } from "../netslide/render.ts";
-import { say } from "./hint-text.ts";
-import { executeMove, sixteenGame } from "./index.ts";
+import { executeMove, sixteenGame, slideWords } from "./index.ts";
 import {
   COL_ARROW,
   COL_FLASH,
@@ -1162,7 +1161,7 @@ describe("Sixteen hint track and direction fixes", () => {
     tile: number,
     targetPos: number,
   ): HintStep<SixteenMove, SixteenHintHighlights> => {
-    const words = say.step({
+    const words = slideWords({
       tile,
       target: targetPos,
       onward: null,

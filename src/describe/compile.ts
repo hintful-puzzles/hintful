@@ -4890,6 +4890,12 @@ function stepWhen(step: Step, e: Expr, where: string): string {
       const { name } = x.of;
       // What the step decides: none where a move gains nothing to point at.
       if (name === "ring") return "r.length";
+      // A ring of several sorts is read by sort (`s`), as a mark is.
+      const ringSort = (typeof step.ring === "string" ? [] : step.ring).find(
+        (sort) => `ring${sort[0].toUpperCase()}${sort.slice(1)}` === name,
+      );
+      if (ringSort !== undefined)
+        return `(s[${JSON.stringify(ringSort)}]?.length ?? 0)`;
       const mark = step.marks.find(
         (m) => m.role + m.sort[0].toUpperCase() + m.sort.slice(1) === name,
       );
@@ -4914,8 +4920,9 @@ function stepWhen(step: Step, e: Expr, where: string): string {
   };
   const body = bool(e);
   // A parameter the condition does not read is named `_`, as `noUnusedParameters` asks.
-  const ring = body.includes("r.") ? ", r" : "";
-  return `(${body.includes("t.") ? "t" : "_t"}, ${body.includes("m.") ? "m" : "_m"}${ring}) => ${body}`;
+  const reads = (p: string): boolean => new RegExp(`\\b${p}[.[]`).test(body);
+  const ring = reads("s") ? `, ${reads("r") ? "r" : "_r"}, s` : reads("r") ? ", r" : "";
+  return `(${reads("t") ? "t" : "_t"}, ${reads("m") ? "m" : "_m"}${ring}) => ${body}`;
 }
 
 /** The module's planner steps: each kind's clauses in `STATED`'s form, what
@@ -4977,6 +4984,7 @@ export function stepsBlock(
     '          t: StepsById<unknown>[K]["terms"],',
     '          m: StepsById<unknown>[K]["marks"],',
     "          r: readonly unknown[],",
+    "          s: Readonly<Record<string, readonly unknown[]>>,",
     "        ) => boolean)",
     "    )[];",
     "  };",

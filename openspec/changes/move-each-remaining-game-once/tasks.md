@@ -34,8 +34,12 @@ Planning games (a `steps` block, Slide's form):
   joins no square, pinned by a test: no dumped walk meets it).
 - [x] Fifteen (2026-11-17): dump byte-identical. The engine gained `aim`, a
   step's clause said first ("Working on tile 3:"), with the move serving it.
-- [ ] Sixteen
-- [ ] Flip
+- [x] Sixteen (2026-11-17): dump byte-identical. A wording may read one
+  ring sort's size (`|ringOnward|`); the engine's `HINT_SETTING_UP`, which
+  only Sixteen said, went into its description.
+- [x] Flip (2026-11-17): dump byte-identical. Stripes mark one region, so
+  their count form is fixed: "the striped one" and "the striped ones" are
+  two wordings by `|stripesCell|`.
 - [x] Netslide (2026-11-17): dump byte-identical. The engine gained a term
   declared as a list of words (the tile's shape, the heading).
 - [x] Numgame (2026-11-17): dump byte-identical. The engine gained a ring

@@ -34,7 +34,7 @@ import type {
   Size,
 } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
-import { SQUARE, TILE } from "./hint-text.ts";
+import { SQUARE, TILE } from "./kinds.ts";
 import type { SixteenMove, SixteenParams, SixteenState, SixteenUi } from "./state.ts";
 
 // --- constants --------------------------------------------------------

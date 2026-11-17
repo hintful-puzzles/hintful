@@ -2,14 +2,11 @@
  * The sentences the collection's hints share, and the English they are built
  * from.
  *
- * A game's own sentences live in its `hint-text.ts`; these are the ones several
+ * A game's own sentences live in its description; these are the ones several
  * games speak word for word, so a wording pass on them lands once: the generic
  * Latin arms (Keen, Unequal, Group, Salad), the candidate games' two setup
- * steps and the conclusions
- * their strikes end in, the sliding-tile
- * games' "Working on tile N:" prefix, the border-grid games' later legs, and
- * the helpers that join a list or
- * choose "a" or "an". Which sentence a step speaks is decided by
+ * steps and the conclusions their strikes end in, the border-grid games' later
+ * legs, and the helpers that join a list or choose "a" or "an". Which sentence a step speaks is decided by
  * the deduction (`latin-hint.ts`, `candidate-hint.ts` and each game's hint);
  * nothing here decides anything.
  */
@@ -48,20 +45,6 @@ export { indefinite, joinNums, joinOr, joinWith };
 
 /** Each value once, in order. */
 const distinct = (ns: number[]): number[] => [...new Set(ns)].sort((a, b) => a - b);
-
-// --- the sliding-tile games' goal prefix -------------------------------------
-//
-// The sliding-tile games (Fifteen, Sixteen, Netslide) name the tile a step works
-// toward home as the sentence's aim (`hint-words.ts`'s `Said.aim`, "Working on
-// tile N:") and then state the tactic, so the player always sees the goal
-// behind a move, even when the tile being slid is only clearing the way. A move
-// that lands its tile in the solved cell is a **home** move; one that only
-// repositions toward a later home is a **staging** move (marked with
-// `HINT_SETTING_UP`).
-
-/** Shared marker appended to a staging move (one that does not yet land
- * its tile in its final spot). */
-export const HINT_SETTING_UP = "(setting up)";
 
 // --- the border-grid games' later legs ---------------------------------------
 

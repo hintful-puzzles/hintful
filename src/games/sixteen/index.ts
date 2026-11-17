@@ -11,6 +11,7 @@ import { UI_UPDATE } from "../../engine/game.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -39,7 +40,7 @@ import {
 } from "../../engine/slide-planner.ts";
 import type { Point } from "../../engine/types.ts";
 import * as sixteen from "../../generated/games/sixteen/sixteen.compiled.ts";
-import { say } from "./hint-text.ts";
+import { SQUARE, TILE } from "./kinds.ts";
 import {
   ANIM_TIME,
   cellCenter,
@@ -574,6 +575,31 @@ function hint(
   return { ok: true, steps };
 }
 
+const speak = sixteen.voice<number>({
+  kind: TILE,
+  kinds: { tile: TILE, target: SQUARE, onward: SQUARE },
+  value: String,
+});
+
+/** One slide of `tile`'s journey to `target`, with the next landing,
+ * `onward`, where the next slide carries it on across; `home` is whether the
+ * journey ends in the tile's solved cell. */
+export const slideWords = (p: {
+  tile: number;
+  target: number;
+  onward: number | null;
+  continues: boolean;
+  home: boolean;
+}): Sentence =>
+  speak.sentence("step", {
+    ring: {
+      tile: [p.tile],
+      target: [p.target],
+      onward: p.onward === null ? [] : [p.onward],
+    },
+    terms: { tile: p.tile, home: p.home, continues: p.continues },
+  });
+
 /** Narrate one plan step against the board it applies to. The highlighted tile
  * is the lowest-numbered out-of-place tile on the moved line, unless the
  * previous step previewed this move as the continuation of a tile's journey, in
@@ -655,7 +681,7 @@ function narrateStep(
   // cell, so a first leg that merely stages but whose second leg homes the
   // tile reads as a home move.
   const home = (ultimatePos ?? targetPos) === bestTile - 1;
-  const words = say.step({
+  const words = slideWords({
     tile: bestTile,
     target: targetPos,
     onward: ultimatePos,

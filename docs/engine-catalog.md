@@ -1052,8 +1052,7 @@ its `hint-text.ts`. Nothing here decides which sentence fires. See
 - `populateText`, `cleanObviousText`, the `Premise` a strike's words are,
   the `Conclusions` the walk ends it with (`candidateConclusions`) and the
   `LatinVocab` a value is spoken in.
-- `HINT_SETTING_UP` for the sliding-tile games, and the list joiners
-  `joinNums` and `joinWith`.
+- The list joiners `joinNums` and `joinWith`.
 
 ### `slide-planner.ts` — sliding-permutation search
 

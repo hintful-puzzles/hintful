@@ -29,6 +29,55 @@ export interface PressMove {
 /** A move: its name and its binding. */
 export type Move = PressMove;
 
+/** What the planner supplies for each kind of step it emits, over the
+ * elements `E` it marks: its terms, and the elements marked by role and sort. */
+export interface StepsById<E> {
+  lastChance: { ring: "cell"; terms: Record<string, never>; marks: { outline: { cell: readonly E[] }; stripes: { cell: readonly E[] } } };
+  fromTheAnswer: { ring: "cell"; terms: { left: number; only: boolean }; marks: {  } };
+  lastPress: { ring: "cell"; terms: Record<string, never>; marks: { outline: { cell: readonly E[] } } };
+}
+
+/** Each kind of step the planner emits: its clauses by wording, and the
+ * condition under which each wording is the one said (`null`: always). */
+export const STEPS: {
+  readonly [K in keyof StepsById<unknown>]: {
+    readonly ring: StepsById<unknown>[K]["ring"];
+    readonly clauses: readonly { aim?: string; look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string; long?: string }[];
+    readonly when: readonly (
+      | null
+      | ((
+          t: StepsById<unknown>[K]["terms"],
+          m: StepsById<unknown>[K]["marks"],
+          r: readonly unknown[],
+          s: Readonly<Record<string, readonly unknown[]>>,
+        ) => boolean)
+    )[];
+  };
+} = {
+  lastChance: {
+    ring: "cell",
+    clauses: [{"look":"row by row, only {ring: this square} can still light {outline cell: the outlined square | the outlined squares}","move":"it must be pressed"},{"look":"row by row, only {ring: this square} can still light {outline cell: the outlined square | the outlined squares}","move":"it must be pressed. It flips {stripes cell: the striped one} too"},{"look":"row by row, only {ring: this square} can still light {outline cell: the outlined square | the outlined squares}","move":"it must be pressed. It flips {stripes cell: the striped ones} too"}],
+    when: [(_t, m) => (m.stripes.cell.length === 0), (_t, m) => (m.stripes.cell.length === 1), null],
+  },
+  fromTheAnswer: {
+    ring: "cell",
+    clauses: [{"look":"{if only: there is only one way to light the whole board, and it takes {left} presses | the whole board can be lit in {left} presses, and no fewer}","move":"press {ring: this square}"}],
+    when: [null],
+  },
+  lastPress: {
+    ring: "cell",
+    clauses: [{"move":"press {ring: this square}","effect":"that finishes the board"},{"move":"press {ring: this square}","effect":"that lights {outline cell: the outlined square | the outlined squares} and finishes the board"}],
+    when: [(_t, m) => (m.outline.cell.length === 0), null],
+  },
+};
+
+import { stepVoice, type StepVoice, type Voice } from "../../../engine/step-voice.ts";
+
+/** The steps, spoken: a game declares once what its marks are drawn on and
+ * how its values print, the description's nouns filled in. */
+export const voice = <E>(v: Voice<E>): StepVoice<StepsById<E>, E> =>
+  stepVoice<StepsById<E>, E>(STEPS, { ...v });
+
 /** The description's dead-end claims, by id. */
 export type DeadEndId = never;
 

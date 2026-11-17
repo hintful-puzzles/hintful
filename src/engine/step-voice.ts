@@ -37,7 +37,12 @@ export type StepTable<S extends { readonly [K in keyof S]: StepType }> = {
     readonly clauses: readonly Clauses[];
     readonly when: readonly (
       | null
-      | ((t: S[K]["terms"], m: S[K]["marks"], r: readonly unknown[]) => boolean)
+      | ((
+          t: S[K]["terms"],
+          m: S[K]["marks"],
+          r: readonly unknown[],
+          s: Readonly<Record<string, readonly unknown[]>>,
+        ) => boolean)
     )[];
   };
 };
@@ -119,7 +124,9 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
       bySort === null
         ? ((said.ring ?? []) as readonly E[])
         : Object.values(bySort).flat();
-    const i = step.when.findIndex((w) => w === null || w(terms, marks, ring));
+    const i = step.when.findIndex(
+      (w) => w === null || w(terms, marks, ring, bySort ?? {}),
+    );
     if (i < 0) throw new Error(`step ${id}: no wording holds`);
     const sort = typeof step.ring === "string" ? step.ring : "";
     return {

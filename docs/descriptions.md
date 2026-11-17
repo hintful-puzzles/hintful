@@ -1410,8 +1410,11 @@ toward, said first ("Working on tile 3: slide it into place", Fifteen's);
 with no `look` and no `effect` the move serves it, and a look after it is
 not capitalized. **A step that decides elements of several kinds** declares
 its `ring` as a list of sorts (Numgame's `[high, sign, low]`); the planner
-gives the ring by sort, each reference names one (`{ring sign: {op}}`), and
-the voice's `kinds` draws each. **How a searching step's move stands to its
+gives the ring by sort, each reference names one (`{ring sign: {op}}`), the
+voice's `kinds` draws each, and a wording reads one sort's size as
+`|ringOnward|` (Sixteen's second landing). A stripes reference takes its
+first form whatever it covers (it marks one region), so a count of striped
+squares is a wording's `|stripesCell|` (Flip). **How a searching step's move stands to its
 look** is what the search proved, so the planner passes it as `relation`
 (`judgeRivals`' claim, or `oneOf`); the description states the words. Write
 one where a clause would choose a unit's name by flags, and a second (Magnets'

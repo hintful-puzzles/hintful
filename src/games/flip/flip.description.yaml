@@ -71,6 +71,47 @@ moves:
         grid: "1 - grid(d)"
 finish:
   - "forall c in cells: grid(c) = 0"
+steps:
+  # The hint plays the shortest answer, a press at a time in reading order.
+  # The square to press is what a step decides.
+  # The square is the last in reading order that flips each outlined unlit
+  # square; the striped ones are every other square it flips. "Row by row" is
+  # the order, said because "can still" is false without it: an earlier
+  # square could light them if the player went back to one.
+  lastChance:
+    ring: cell
+    marks: { outline: [cell], stripes: [cell] }
+    wordings:
+      - when: "|stripesCell| = 0"
+        look: &only "row by row, only {ring: this square} can still light {outline cell: the outlined square | the outlined squares}"
+        move: "it must be pressed"
+      # Stripes mark one region whatever its size, so the count of the squares
+      # they cover is the wording's.
+      - when: "|stripesCell| = 1"
+        look: *only
+        move: "it must be pressed. It flips {stripes cell: the striped one} too"
+      - look: *only
+        move: "it must be pressed. It flips {stripes cell: the striped ones} too"
+  # A press the order gives no reason for, so the step gives the one it has:
+  # the board takes `left` presses and no fewer, and this is one of them
+  # (the planner says it as one of several). `only` when no other set of
+  # presses lights the board.
+  fromTheAnswer:
+    ring: cell
+    terms: { left: number, only: flag }
+    look: "{if only: there is only one way to light the whole board, and it takes {left} presses | the whole board can be lit in {left} presses, and no fewer}"
+    move: "press {ring: this square}"
+  # The press that leaves no square unlit; the outlined squares are every
+  # unlit square but the one pressed, all of which it flips.
+  lastPress:
+    ring: cell
+    marks: { outline: [cell] }
+    wordings:
+      - when: "|outlineCell| = 0"
+        move: &press "press {ring: this square}"
+        effect: "that finishes the board"
+      - move: *press
+        effect: "that lights {outline cell: the outlined square | the outlined squares} and finishes the board"
 deal:
   start: >-
     a random set of presses applied to the lit board, dealt again until some

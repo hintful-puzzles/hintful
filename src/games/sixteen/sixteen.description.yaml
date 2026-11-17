@@ -69,6 +69,37 @@ deadEnds:
     w mod 2 = 1 and h mod 2 = 1
     and count(a in cells, b in cells where index(a, cells) < index(b, cells)
     and value(a) > value(b)) mod 2 = 1
+steps:
+  # One slide of a tile's journey toward home: the aim names the tile, the
+  # move where this slide sends it, and the end says why: "its final spot"
+  # where the journey ends in the tile's solved cell (`home`), else that it is
+  # setting up. Where it goes is a square marked on the board, never a row or
+  # column number the board does not draw; where the next slide carries the
+  # same tile on across, both landings are marked (`onward`), this slide's the
+  # nearer. A later leg (`continues`) repeats neither the setup nor the why:
+  # its first leg is still on screen. Everything is what the step decides, so
+  # all of it is ringed, the arrow to click beside the tile's line included.
+  step:
+    ring: [tile, target, onward]
+    terms: { tile: number, home: flag, continues: flag }
+    wordings:
+      - when: "continues and |ringOnward| = 0"
+        aim: &tile "{ring tile: tile {tile}}"
+        move: "move it on to {ring target: the ringed square}"
+      - when: "continues"
+        aim: *tile
+        move: "move it on to {ring target: the nearer ringed square}, then {ring onward: the other ringed square}"
+      - when: "home and |ringOnward| = 0"
+        aim: *tile
+        move: "move it to {ring target: the ringed square}, its final spot"
+      - when: "home"
+        aim: *tile
+        move: "move it to {ring target: the nearer ringed square}, then {ring onward: the other ringed square}, its final spot"
+      - when: "|ringOnward| = 0"
+        aim: *tile
+        move: "move it to {ring target: the ringed square} (setting up)"
+      - aim: *tile
+        move: "move it to {ring target: the nearer ringed square}, then {ring onward: the other ringed square} (setting up)"
 deal:
   start: >-
     at m = 0, a random arrangement the slides can finish; otherwise m random

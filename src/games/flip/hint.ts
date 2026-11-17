@@ -14,8 +14,9 @@ import {
   NO_MOVE_WORTH_MAKING,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
+import { CELL } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import { say } from "./hint-text.ts";
+import { voice } from "../../generated/games/flip/flip.compiled.ts";
 import { shortestAnswer } from "./solver.ts";
 import { type FlipMove, type FlipState, rulesOf } from "./state.ts";
 
@@ -24,6 +25,8 @@ export const FLIP_RUNGS = ["lastPress", "lastChance", "fromTheAnswer"] as const;
 export type FlipRung = (typeof FLIP_RUNGS)[number];
 
 type Step = HintStep<FlipMove, unknown, FlipRung>;
+
+const speak = voice<Point>({ kind: CELL, value: String });
 
 /** For each square, the last square in reading order that flips it; -1 when
  * none does. */
@@ -68,12 +71,21 @@ export function hint(state: FlipState): HintResult<FlipMove, unknown, FlipRung> 
     // square still unlit is one it flips.
     const rung: FlipRung =
       left === 1 ? "lastPress" : owed.length > 0 ? "lastChance" : "fromTheAnswer";
+    const ring = [at(i)];
     const words =
       rung === "lastPress"
-        ? say.lastPress(at(i), unlit)
+        ? speak.sentence("lastPress", { ring, marks: { outline: { cell: unlit } } })
         : rung === "lastChance"
-          ? say.lastChance(at(i), owed, also)
-          : say.fromTheAnswer(at(i), left, answer.only);
+          ? speak.sentence("lastChance", {
+              ring,
+              marks: { outline: { cell: owed }, stripes: { cell: also } },
+            })
+          : // The press is one of the answer's, which the look counts.
+            speak.sentence("fromTheAnswer", {
+              ring,
+              terms: { left, only: answer.only },
+              relation: { kind: "oneOf" },
+            });
     left--;
     steps.push({
       move: { kind: "flip", ...at(i) },

@@ -193,9 +193,8 @@ moves that serves it: derive it once, from the plan, and carry it. A goal
 re-derived per step flips between goals from one step to the next.
 
 Use the sentence's `aim` part ([`hints.md`](./hints.md) § "A sentence has
-parts") and the shared `HINT_SETTING_UP`
-([`engine/hint-text.ts`](../src/engine/hint-text.ts)) so the games read as one
-voice. Where the game has no name for the goal, mark it on the board and say
+parts"), a declared step's `aim` clause ([`descriptions.md`](./descriptions.md)
+§ "A firing's reason is built from its binding"). Where the game has no name for the goal, mark it on the board and say
 "the marked gem". A mark drawn on a tile goes in that tile's diff key, even
 where the game's other overlays ride a sprite repainted every frame
 ([`rendering.md`](./rendering.md) § "The tile cache and the diff key").
