@@ -215,8 +215,9 @@ whether a trial was involved:
 
 Write every nontrivial step as indication, then reasoning, then conclusion:
 the spotted pattern in board terms, why it forces the move, and the action.
-The sections below are the rules for each part; `src/skeleton/grid/hint-text.ts`
-is the smallest example of all of them.
+The sections below are the rules for each part; the `says` of
+`src/skeleton/grid/skeleton.description.yaml` is the smallest example of all
+of them.
 
 ### A sentence has parts
 
@@ -617,9 +618,10 @@ search's, a planner's), a declared step in `steps`, spoken through the
 compiled module's `voice` (`docs/descriptions.md` § "A firing's reason is
 built from its binding"). The deduction decides which sentence and with what values; the
 description decides only how it reads. Sentences several games speak word
-for word are the engine's [`hint-text.ts`](../src/engine/hint-text.ts) and
-the skeletons'. No game has a `hint-text.ts`, and the hint-text convention
-guard refuses one. Exemplars: Ascent's and Sokoban's `steps`.
+for word are the engine's [`hint-text.ts`](../src/engine/hint-text.ts). No
+game or skeleton has a `hint-text.ts`, and the hint-text convention guard
+refuses one in a game, so a copy of a skeleton that kept one would be refused
+at birth. Exemplars: Ascent's and Sokoban's `steps`.
 
 - **Values arrive as the board means them, never as words.** An axis, a
   count, a direction: the plural, "both" at two, "a" or "an" and a

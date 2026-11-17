@@ -96,7 +96,7 @@ interface SaidMarks {
  * square has of its own (`says.fact`), `outline`, `stripes` and `strand` hold
  * the firing's with those of the squares the step is about, and `facts` has
  * each of those squares with its own terms. */
-export type FiringSpoken<S> = S extends { terms: infer T }
+type FiringSpoken<S> = S extends { terms: infer T }
   ? {
       terms: T;
       arm: S extends { arm: infer A } ? A : undefined;

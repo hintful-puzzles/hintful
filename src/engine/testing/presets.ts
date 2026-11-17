@@ -353,7 +353,10 @@ export function rectangleShortfall<Params>(game: SizedGame<Params>): string | nu
     return w !== h;
   }).length;
   const owed = Math.floor(sizes.size / 2);
+  // The menu's other rule on a rectangle is said with this one, so that a
+  // board added to meet it meets both (orientation.test.ts, "portrait by
+  // default").
   return held >= owed
     ? null
-    : `${held} of ${sizes.size} sizes are rectangles, and half is ${owed}: ${[...sizes].join(", ")}`;
+    : `${held} of ${sizes.size} sizes are rectangles, and half is ${owed}: ${[...sizes].join(", ")}. Add one taller than wide, since no board on the menu is drawn wider than tall`;
 }

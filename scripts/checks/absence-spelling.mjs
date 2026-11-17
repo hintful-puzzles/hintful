@@ -38,10 +38,10 @@
  * floors what it examined, because a guard that stops matching reports a clean
  * tree.
  */
-import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import ts from "typescript";
+import { listedFiles } from "./listed-files.mjs";
 
 const FLOORS = { files: 700, unions: 1000, comparisons: 300 };
 
@@ -188,9 +188,7 @@ interface L { a: string | undefined }
 // --- The scan. ---
 
 const root = process.cwd();
-const files = execFileSync("git", ["ls-files", "-z", "*.ts"], { encoding: "utf8" })
-  .split("\0")
-  .filter((f) => f && !f.endsWith(".d.ts"));
+const files = listedFiles(["*.ts"]).filter((f) => !f.endsWith(".d.ts"));
 if (files.length < FLOORS.files)
   fail(
     `listed only ${files.length} files (floor ${FLOORS.files}) — the listing is broken`,

@@ -83,6 +83,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import ts from "typescript";
+import { listedFiles } from "./listed-files.mjs";
 
 /**
  * Exports nothing imports and which stay anyway, each with the reason. Asserted
@@ -176,26 +177,19 @@ const fail = (msg) => {
   process.exit(1);
 };
 
-const files = execFileSync(
-  "git",
-  [
-    "ls-files",
-    "-z",
-    "src/*.ts",
-    "vite-plugins/*.ts",
-    // The four advisory color/deixis reports. They are `.ts` and they import
-    // from `src/`, so leaving them out made a symbol they are the only consumer
-    // of read as dead — `hint-games.ts`'s `markRoles`, which is exactly the kind
-    // of finding this check exists to be trusted about. Written as `src/` is:
-    // a pathspec's `*` crosses directories, where `scripts/**/*.ts` asked for
-    // one below `scripts/` and so left out the commands that sit in it.
-    "scripts/*.ts",
-    "vite.config.ts",
-    "vitest.config.ts",
-  ],
-  { encoding: "utf8" },
-)
-  .split("\0")
+const files = listedFiles([
+  "src/*.ts",
+  "vite-plugins/*.ts",
+  // The four advisory color/deixis reports. They are `.ts` and they import
+  // from `src/`, so leaving them out made a symbol they are the only consumer
+  // of read as dead — `hint-games.ts`'s `markRoles`, which is exactly the kind
+  // of finding this check exists to be trusted about. Written as `src/` is:
+  // a pathspec's `*` crosses directories, where `scripts/**/*.ts` asked for
+  // one below `scripts/` and so left out the commands that sit in it.
+  "scripts/*.ts",
+  "vite.config.ts",
+  "vitest.config.ts",
+])
   // The compiled modules are generated and ignored by git, and the runtime's
   // exports that only compiled code calls are used through them.
   .concat(

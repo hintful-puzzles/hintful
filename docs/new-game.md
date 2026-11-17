@@ -21,21 +21,26 @@ state and one set of marks, so the writing is not divided among agents.
    sections of each guide the game needs, and the rest are skipped.
 3. **Scaffold.** `scripts/new-game.sh <gameId> [kind]` copies the skeleton
    of the game's kind ([`src/skeleton/`](../src/skeleton/README.md)) to
-   `src/games/<gameId>/`, renamed for the game, checks that the copy
-   compiles, lints and passes its tests, and prints what the copy leaves
-   undone: the list to work through. No existing game is required reading:
-   the skeleton is a small game that plays, on the shared way for every
-   concern that has one, and § "File anatomy" maps its files.
-4. **Replace the skeleton's puzzle with yours, a concern at a time**: the
+   `src/games/<gameId>/`, renamed for the game, registers it (§
+   "Registering a game"), checks that the copy compiles, lints and passes
+   its tests, and prints what the copy leaves undone: the list to work
+   through. No existing game is required reading: the skeleton is a small
+   game that plays, on the shared way for every concern that has one, and
+   § "File anatomy" maps its files.
+4. **Run the first verdict at once**: `npm run game -- <gameId>`
+   ([`testing.md`](./testing.md) § "A game's verdict in one command"). It
+   names, in one run, every record the new game owes and every guard that
+   refuses it, before a line is changed, so none arrives one commit at a
+   time later.
+5. **Replace the skeleton's puzzle with yours, a concern at a time**: the
    board and the moves, the rules, the generator, the picture, the hint's
-   sentences. Keep the game's own tests green, and `npm run game -- <gameId>`
-   once it is registered ([`testing.md`](./testing.md) § "A game's verdict
-   in one command"). Where your puzzle fits the shared way, change the
-   puzzle's part and leave the shape. Where it does not, the guide for the
-   concern says what else a game may do.
-5. **Register the game**: § "Registering a game".
+   sentences, and the catalog entry's words. Keep the game's own tests
+   green, and run the verdict after each concern. Where your puzzle fits the
+   shared way, change the puzzle's part and leave the shape. Where it does
+   not, the guide for the concern says what else a game may do.
 6. **Write the help page and the spec**: [`help-pages.md`](./help-pages.md),
-   and § "What a game's spec holds".
+   and § "What a game's spec holds". The scaffold took `skip_specs` off the
+   change, so the spec is owed from the first verdict on.
 7. **Capture the icons**: two committed PNGs, taken from the running game in
    the dev-only `?screenshot` mode
    ([`puzzle-icons`](../openspec/specs/puzzle-icons/spec.md)).
@@ -246,9 +251,11 @@ header says how, and its catalog entry in
 from the registry cannot be played. One that is registered is visible to
 every player at once, so the entry goes in with the first registration.
 
-**No cross-game guard reads the game until it is registered.** Once it is, a
-few records kept by hand refuse it until each has it. `scripts/new-game.sh`
-prints them, and the failing guard names each.
+**The scaffold makes both edits**, so that every cross-game guard reads the
+game from the first verdict: no guard reads a game until it is registered.
+The entry describes the skeleton's puzzle until you replace its words. A few
+records kept by hand refuse a registered game until each has it.
+`scripts/new-game.sh` prints them, and the failing guard names each.
 
 **The entry names the game's family**, one of `puzzleFamilies`, which a
 player browses by. Choose the family whose other members a player of the new

@@ -112,6 +112,13 @@ if (due.deadEnds.length > 0)
       `Check them: GAMES=${gamesOf(due.deadEnds)} npx vitest run -c research/technique-check/vitest.config.ts dead-end-check`,
     ].join("\n"),
   );
+if (due.orphans.length > 0)
+  console.warn(
+    [
+      `${due.orphans.length} verdicts in src/describe/soundness.json are for a technique or claim that is gone; delete them:`,
+      ...due.orphans.map((k) => `  ${k}`),
+    ].join("\n"),
+  );
 if (findings.some((x) => x.error)) process.exitCode = 1;
 if (steep.length > 0)
   console.warn(

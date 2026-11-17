@@ -84,9 +84,6 @@ define:
     and (b not in piece(a) or |piece(a)| = w * h)
   # The edges square c may still take a line on.
   ways(c): "{y in adj4(c) where live(c, y)}"
-  # Whether square c is left short of its two lines: too few edges left for
-  # them.
-  stuck(c): "lines(c) < 2 and lines(c) + |ways(c)| < 2"
   # Whether a square near the piece through a, where lines were just tried
   # on the edges of a, b and d, is left short: a square whose lines the
   # trial changed, an end of the piece, or one beside either.
@@ -97,8 +94,25 @@ define:
   # of its own, would break the board at once: close a loop short of every
   # square, or leave a square short.
   bothBreak(c, i, j): >-
-    (j in piece(i) and |piece(i)| + 1 < w * h)
+    closes(i, j, c)
     or (with place(edge(c, i), 1): with place(edge(c, j), 1): shortNear(c, i, j))
+# How a Check's tried lines are seen to break the board, each said where it
+# is what broke ({broke}).
+breaks:
+  # A line from square c joins i to j, already one piece short of every
+  # square: a loop of the squares of that piece and c.
+  closes(i, j, c):
+    when: "j in piece(i) and |piece(i)| + 1 < w * h"
+    terms: { circuit: "piece(i) + {c}" }
+    look: "make a loop of {outline circuit: the outlined squares}"
+  # Square t is left short of its two lines: too few edges left for them. A
+  # dead end where it has a line or an edge left, else cut off.
+  stuck(t):
+    when: "lines(t) < 2 and lines(t) + |ways(t)| < 2"
+    terms: { sq: t, dead: "lines(t) + |ways(t)| > 0" }
+    look: >-
+      {if dead: leave {outline sq: the outlined square} a dead end |
+      cut off {outline sq: the outlined square}}
 shape:
   # Every square has two lines, one in and one out.
   - "forall c in cells: lines(c) = 2"
@@ -131,8 +145,18 @@ techniques:
     # The hint outlines the square and says how many lines it still needs; it
     # reads the squares round it.
     says:
-      terms: { c: "c", need: "n" }
+      terms:
+        c: "c"
+        need: "n"
+        # Whether the step sets several edges.
+        multi: { supplied: several }
       marks: { outline: "{c}", reads: "{c} + adj4(c)" }
+      wordings:
+        - when: "n = 2"
+          look: "{outline c: the outlined square} has only two edges left for its two lines"
+          move: "{ring: this edge | these edges} must be {if multi: lines | a line}"
+        - look: "{outline c: the outlined square} has only one edge left for its second line"
+          move: "{ring: this edge | these edges} must be {if multi: lines | a line}"
   # A square with no line and three edges left, where lines on two of them
   # would break the board: the third takes a line. Each of the three is
   # asked to be open still, since a solve places the line of one binding
@@ -148,5 +172,12 @@ techniques:
     # The hint draws thin the two edges tried; it reads the squares they run
     # between.
     says:
-      terms: { c: "c", first: "edge(c, i)", second: "edge(c, j)" }
+      terms:
+        c: "c"
+        first: "edge(c, i)"
+        second: "edge(c, j)"
+        # The two edges tried.
+        tried: { supplied: elements }
       marks: { reads: "{c} + {i} + {j}" }
+      look: "lines on both {outline tried: outlined edges} would {broke}"
+      move: "{ring: this edge | these edges} must be a line"

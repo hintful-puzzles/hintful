@@ -144,9 +144,9 @@ fires its kind, and a snapshot of the sentence said at each pin, which is
 where a rung's wording is held. It returns the loader the game's own tests
 read through, `pinned(kind)`; `PinnedPosition` says what a pin gives.
 
-- **Adding a rung is: name it, run the command, read the count.** The types
-  require a pin for every rung, so a new one does not compile until the
-  command has run. It walks hint-guided play over fixed seeds and writes each
+- **Adding a rung is: name it, run the command, read the count.** A rung
+  with no pin fails the file's test, naming the command; the types let it be
+  missing, so the typecheck stays green while the scan runs. It walks hint-guided play over fixed seeds and writes each
   pin under how many of the positions walked it held on. That count is the
   power argument the pin owes ([`method.md`](./method.md)): a rung that held
   on a handful of several hundred is the one to watch.
@@ -256,8 +256,8 @@ Run `npm run game -- <id>` while you write a game, after each concern you
 change. It takes about a minute and runs what a commit staging the game
 would, with the other games' cases skipped; its header in
 [`scripts/game.ts`](../scripts/game.ts) lists the steps. Its node checks read
-the whole tree, so a refusal there may be another file's. Its unused-export
-check reads only files git tracks: `git add -N` a new game's files first.
+the whole tree, so a refusal there may be another file's, and they read the
+game's files whether git tracks them yet or not.
 
 Do not take a green `vitest run src/games/<game>` as the game's coverage. Its
 input paths, save round-trip, params codec and its source text (color

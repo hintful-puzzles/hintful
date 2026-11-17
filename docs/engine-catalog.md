@@ -995,8 +995,7 @@ game whose sentence names one cell's notes. Exemplars:
 
 ### `hint-words.ts` — a hint's words bound to its marks
 
-Write every step's words through it. Exemplar:
-`src/skeleton/grid/hint-text.ts`.
+Write every step's words through it.
 
 - **The three mark roles** are ring (what the step decides), outline (what
   it reasons from) and stripes (the line or region whose contents it reasons

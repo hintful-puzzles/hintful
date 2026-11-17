@@ -334,8 +334,8 @@
   "src/games/unruly/unruly.description.yaml#quota": "6e4ce5616cafabeb",
   "src/games/unruly/unruly.description.yaml#threes": "e1e2375ab403b9de",
   "src/games/unruly/unruly.description.yaml#unique": "ded2bc81e95a2323",
-  "src/skeleton/edges/skeleton.description.yaml#forced": "80bab7a3467d114f",
-  "src/skeleton/edges/skeleton.description.yaml#pairBreaks": "93b5329729bbf6dd",
+  "src/skeleton/edges/skeleton.description.yaml#forced": "d53254da4816de74",
+  "src/skeleton/edges/skeleton.description.yaml#pairBreaks": "5bbfbd40580a714a",
   "src/skeleton/grid/skeleton.description.yaml#count": "ce7c19a6fc164862",
   "src/skeleton/grid/skeleton.description.yaml#shared": "174fec326783f63e"
 }

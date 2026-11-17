@@ -136,35 +136,44 @@ export function deadEndFingerprint(d: PlanningJson, src: string): string {
 /**
  * The compiled techniques and dead-end claims with no verdict for what they
  * read now, by their keys in `soundness.json`: each edited, or its rules, since
- * it was last checked. `compile.test.ts` fails on any, and `npm run describe`
- * names them at the edit.
+ * it was last checked. And the verdicts no technique or claim reads any more,
+ * `orphans`. `compile.test.ts` fails on any, and `npm run describe` names them
+ * at the edit.
  */
 export function unchecked(
   sources: ReadonlyMap<string, DescriptionFile>,
   verdicts: Readonly<Record<string, string>>,
-): { techniques: string[]; deadEnds: string[] } {
+): { techniques: string[]; deadEnds: string[]; orphans: string[] } {
   const techniques: string[] = [];
   const deadEnds: string[] = [];
+  const live = new Set<string>();
   for (const [source, d] of sources) {
     if (isLibrary(d)) {
-      for (const id of Object.keys(d.techniques))
+      for (const id of Object.keys(d.techniques)) {
+        live.add(soundnessKey(source, id));
         if (!checkedAs(libraryFingerprint(d, id), verdicts[soundnessKey(source, id)]))
           techniques.push(soundnessKey(source, id));
+      }
     } else if (isPlanning(d)) {
       for (const { id, src } of planningWith(d, Object.keys(d.variations ?? {}))
-        .deadEnds)
+        .deadEnds) {
+        live.add(deadEndKey(source, id));
         if (verdicts[deadEndKey(source, id)] !== deadEndFingerprint(d, src))
           deadEnds.push(deadEndKey(source, id));
+      }
     } else if (isFormal(d))
       // A variation's techniques are compiled too.
-      for (const t of withEveryVariation(d).techniques ?? [])
-        if (
-          !("use" in t) &&
-          !checkedAs(gameFingerprint(d, t), verdicts[soundnessKey(source, t.id)])
-        )
+      for (const t of withEveryVariation(d).techniques ?? []) {
+        if ("use" in t) continue;
+        live.add(soundnessKey(source, t.id));
+        if (!checkedAs(gameFingerprint(d, t), verdicts[soundnessKey(source, t.id)]))
           techniques.push(soundnessKey(source, t.id));
+      }
   }
-  return { techniques, deadEnds };
+  // A verdict outlives its technique where a technique is renamed or dropped,
+  // or a game copied from a skeleton replaces the skeleton's.
+  const orphans = Object.keys(verdicts).filter((k) => !live.has(k));
+  return { techniques, deadEnds, orphans };
 }
 
 /** A game's own technique's fingerprint, under its description's rules. */

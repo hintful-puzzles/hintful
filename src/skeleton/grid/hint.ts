@@ -14,8 +14,10 @@ import {
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
-import type { SaysById } from "../../generated/skeleton/grid/skeleton.compiled.ts";
-import { sentences } from "./hint-text.ts";
+import {
+  type SaysById,
+  STATED,
+} from "../../generated/skeleton/grid/skeleton.compiled.ts";
 import { hintWalk, type SkeletonBoard, type SkeletonRung } from "./solver.ts";
 import {
   BLANK,
@@ -54,7 +56,8 @@ const described = describedFiringHint<
     kind: "mark",
     cells: targets.map((t) => ({ index: t.y * state.w + t.x, mark: t.value })),
   }),
-  say: sentences,
+  stated: STATED,
+  say: {},
 });
 
 export const { hint: skeletonHint, hintKeepTrack: skeletonKeepTrack } = described;

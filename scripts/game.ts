@@ -212,8 +212,14 @@ const CHEAP_CHECKS: [name: string, command: string, args: string[]][] = [
   ],
 ];
 const checked = CHEAP_CHECKS.map(([name, command, args]) => {
-  // Its output only where it refuses: a pass is a line of the summary.
-  const run = spawnSync(command, args, { cwd: ROOT, encoding: "utf8" });
+  // Its output only where it refuses: a pass is a line of the summary. A
+  // check that lists tracked files reads the game's untracked ones too
+  // (`scripts/checks/listed-files.mjs`), so a game not yet added is read.
+  const run = spawnSync(command, args, {
+    cwd: ROOT,
+    encoding: "utf8",
+    env: { ...process.env, GAME_VERDICT_UNTRACKED: id },
+  });
   if (run.status !== 0) process.stdout.write(`${run.stdout}${run.stderr}`);
   return [name, run.status === 0] as const;
 });

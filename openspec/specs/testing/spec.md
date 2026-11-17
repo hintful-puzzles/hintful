@@ -1004,6 +1004,17 @@ whatever an earlier one found, and SHALL write nothing in the repository.
 - **WHEN** the command is given an id with no directory under `src/games/`
 - **THEN** it says so and runs nothing
 
+### Requirement: The verdict reads a game's files before git tracks them
+
+The verdict command's checks that list the files git tracks SHALL read the
+game's files git does not track yet as well, and the gate's SHALL NOT, since
+an untracked file is left out of a commit.
+
+#### Scenario: A game not yet added to git
+
+- **WHEN** a game's files are untracked and one exports what nothing imports
+- **THEN** the command's unused-export check names that export
+
 ### Requirement: The verdict command reports a refusal with the sections its guard cites
 
 For each test file outside the game's directory that refuses the game, the
@@ -1087,3 +1098,17 @@ first test show.
 
 - **WHEN** the census walks a case at several caps
 - **THEN** the case's board is dealt once
+
+### Requirement: A rung with no pin fails its hint test, not the typecheck
+
+`describeHintPins` SHALL let a kind's pin be missing from its `pins` object in
+the types, and SHALL refuse a pin under a name that is no kind. A kind with
+no pin SHALL fail the file's "every kind's pin fires its kind" test, naming
+the `npm run hint-scan` command for the file.
+
+#### Scenario: A new game renames its rungs
+
+- **WHEN** a game's rungs are renamed and its hint test's pins are not yet
+  scanned
+- **THEN** the typecheck passes
+- **AND** the hint test fails, naming the command that writes the pins

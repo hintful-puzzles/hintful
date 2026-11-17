@@ -61,6 +61,12 @@ describe("compiled descriptions", () => {
     expect(unchecked(sources, soundness).deadEnds).toEqual([]);
   });
 
+  it("keeps no verdict whose technique or claim is gone", () => {
+    // Delete each key named: its technique was renamed or dropped, or it was
+    // copied with a skeleton whose techniques the game has replaced.
+    expect(unchecked(sources, soundness).orphans).toEqual([]);
+  });
+
   it("finds no wording or formula npm run describe refuses", () => {
     const errors = [...sources].flatMap(([f, d]) =>
       lintDescription(d)

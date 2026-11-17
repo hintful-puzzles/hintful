@@ -1,7 +1,7 @@
 #!/bin/bash
 # Start a new game from the skeleton: copy src/skeleton/<kind>/ to
-# src/games/<gameId>/, renamed for the game, and check that the copy compiles,
-# lints and passes its tests.
+# src/games/<gameId>/, renamed for the game, register it, and check that the
+# copy compiles, lints and passes its tests.
 #
 # Usage:
 #   scripts/new-game.sh <gameId> [kind]
@@ -50,10 +50,12 @@ case "${KIND}" in
 the desc, target-verb input, a deduction ladder with two tiers, a solver-gated
 generator, the mistake check, an explained hint with its marks and gesture, a
 tile-cached renderer, and tests for each."
-    PUZZLE="The rules live in solver.ts, the board in state.ts,
-     the sentences in hint-text.ts. Rename what the copy calls a \"mark\", a
+    PUZZLE="The rules and the hint's sentences live in
+     ${GAME}.description.yaml, the board in state.ts. Rename what the copy calls a \"mark\", a
      \"clue\" and its two rungs to this puzzle's own words as you go."
     ROLES="Each of the three hint roles in hintMarks (ring, outline, stripes)"
+    DESCRIPTION="Shading puzzle"
+    OBJECTIVE="Shade squares so that every number counts the shaded squares beside it."
     ;;
   edges)
     HAS="params and their codec, presets,
@@ -62,12 +64,15 @@ sweep), a deduction ladder with two tiers (a square's count of edges, and a
 bounded look-ahead), a solver-gated generator, the mistake check on set edges,
 an explained hint with its edge marks and gesture, a tile-cached renderer, and
 tests for each."
-    PUZZLE="The rules live in solver.ts and what a line may do in
-     moves.ts, the board in state.ts, the sentences in hint-text.ts. Rename
+    PUZZLE="The rules and the hint's sentences live in
+     ${GAME}.description.yaml, what a line may do in moves.ts, the board in
+     state.ts. Rename
      what the copy calls a \"wall\" and its two rungs to this puzzle's own
      words as you go. The generator's answer is a loop through every square;
      a puzzle with other answers draws its own."
     ROLES="Each of the two hint roles in hintMarks (ring, outline)"
+    DESCRIPTION="Loop puzzle"
+    OBJECTIVE="Draw one loop through every square that never crosses a wall."
     ;;
   *)
     echo "scripts/new-game.sh has no checklist for kind '${KIND}'" >&2
@@ -91,8 +96,9 @@ rename() {
 }
 
 # Every file of the skeleton, under its renamed path: its description, which
-# holds the help page, among them.
-(cd "${SRC}" && find . -type f | sort) | while IFS= read -r file; do
+# holds the help page, among them. Not its snapshots: they are the skeleton's
+# output, and the copy's own tests write the copy's below.
+(cd "${SRC}" && find . -type f -not -path './__snapshots__/*' | sort) | while IFS= read -r file; do
   target="${DIR}/$(printf '%s' "${file#./}" | rename)"
   mkdir -p "$(dirname "${target}")"
   rename < "${SRC}/${file}" > "${target}"
@@ -116,14 +122,17 @@ mv "${INDEX}.new" "${INDEX}"
 
 cd "${REPO_ROOT}"
 
-# A longer name reflows lines, and the import above wants its sorted place.
-npx biome check --write "src/games/${GAME}" > /dev/null
+# Registered in the collection, so that every cross-game guard reads it from
+# the first verdict on (the script's header says why).
+node scripts/new-game-register.mjs "${GAME}" "${DESCRIPTION}" "${OBJECTIVE}"
 
-# The copy's module is compiled from its description. Its techniques are the
-# skeleton's as written, so the skeleton's soundness verdicts are the copy's:
-# each is a fingerprint of the technique, which src/describe/compile.test.ts
-# checks against the copy.
-npm run -s describe > /dev/null
+# A longer name reflows lines, and the imports added want their sorted place.
+npx biome check --write "src/games/${GAME}" src/games/index.ts src/puzzle/catalog-data.ts > /dev/null
+
+# Its techniques are the skeleton's as written, so the skeleton's soundness
+# verdicts are the copy's: each is a fingerprint of the technique, which
+# src/describe/compile.test.ts checks against the copy, and refuses once the
+# technique it was for is gone.
 node -e '
   const fs = require("node:fs");
   const [file, from, to] = process.argv.slice(1);
@@ -135,6 +144,8 @@ node -e '
 ' src/describe/soundness.json \
   "src/skeleton/${KIND}/skeleton.description.yaml#" \
   "src/games/${GAME}/${GAME}.description.yaml#"
+# The copy's module is compiled from its description.
+npm run -s describe > /dev/null
 
 # The copy's verdict, before a line of it is changed.
 echo "Checking the copy: typecheck, lint, tests."
@@ -149,30 +160,32 @@ skeleton's own puzzle, and ${GAME}.description.yaml there holds its help page.
 
 What the copy has, each on the shared way: ${HAS}
 
+The game is registered: ${GAME_OBJECT} in src/games/index.ts, and its entry
+in src/puzzle/catalog-data.ts, whose words are the skeleton's puzzle's.
+
 What is left to do, and the copy does none of it:
-  1. Replace the puzzle. ${PUZZLE}
-  2. Register the game, two edits made together (catalog-registry.test.ts
-     holds them to each other):
-       - import ${GAME_OBJECT} in src/games/index.ts and register it there
-       - add its entry to src/puzzle/catalog-data.ts, with its family
-     Until then no cross-game guard reads the game. Once it is registered,
-     run the game's whole verdict, here and after every concern you change:
+  1. Run the game's whole verdict now, and after every concern you change:
        npm run game -- ${GAME}
      It names every guard that refuses the game, with the guide section the
-     guard cites. Records kept by hand refuse a game on its first run:
+     guard cites, all on its first run. Records kept by hand refuse a new
+     game at once:
        - help/puzzles.md: its row (help-coverage.test.ts)
        - the snapshots of capability-surface.test.ts and
-         params-stability.test.ts (run each with --update and read the diff)
-     and one thing the copy has no reason to hold yet refuses it later:
-       - a help page that says where the puzzle comes from says it in its
-         description's help.origins (help-coverage.test.ts)
+         params-stability.test.ts (run each with -u and read the diff)
+       - its icons and its spec, steps 5 and 6 below
+  2. Replace the puzzle. ${PUZZLE}
+     The catalog entry is the puzzle's too: its name, description,
+     objective, aliases and family.
      ${ROLES} is
      drawn by the copy; one the puzzle's hint never names goes, with its
      line in the legend (warm-repaint.test.ts holds the two together).
+     A help page that says where the puzzle comes from says it in its
+     description's help.origins (help-coverage.test.ts).
   3. Pin the hint again once the rungs are this puzzle's:
        npm run hint-scan -- src/games/${GAME}/${GAME}-hint.test.ts --all
-     and update the snapshots the copy brought with it:
-       npx vitest run src/games/${GAME}/${GAME}.test.ts --update
+     A rung with no pin fails the hint test, naming that command, and the
+     typecheck stays green meanwhile. The copy's snapshots are its own:
+     where a change moves one, read the diff and write it again with -u.
   4. Write the help page's rules and its Hints section in the game's words.
   5. Add the two icons, src/assets/icons/${GAME}-{64,128}d8.png, captured
      from the running game (openspec/specs/puzzle-icons/spec.md).

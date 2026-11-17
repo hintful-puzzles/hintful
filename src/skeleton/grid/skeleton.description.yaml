@@ -66,9 +66,25 @@ techniques:
     # The hint names the number, how many it counts, how many it still needs
     # and how many open squares it has, and outlines it; it reads the squares
     # round it.
+    # A number that needs none says whether it counts any; one that needs
+    # some says "more" once it has some beside it already.
     says:
-      terms: { c: "c", value: "clue(count, c)", need: "n", open: "|O|" }
+      terms:
+        c: "c"
+        value: "clue(count, c)"
+        need: "n"
+        open: "|O|"
+        placed: "n < clue(count, c)"
       marks: { outline: "{c}", reads: "{c} + adj4(c)" }
+      wordings:
+        - when: "n = 0 and clue(count, c) = 0"
+          look: "{outline c: the outlined {value}} has no {shaded} square beside it"
+          move: "{ring} must be {unshaded}"
+        - when: "n = 0"
+          look: "{outline c: the outlined {value}} already has its {value} {shaded} {value: square | squares} beside it"
+          move: "{ring} must be {unshaded}"
+        - look: "{outline c: the outlined {value}} needs {need} {if placed: more {shaded} | {shaded}} {need: square | squares} and has only {open} open {open: square | squares} beside it"
+          move: "{ring} must be {shaded}"
   # Two numbers, every open square of b's also one of c's: those are where
   # the two meet, M, and b gets exactly what it needs there, so c needs the
   # difference, by, on the rest of its own, R. With none, they are clear;
@@ -91,3 +107,17 @@ techniques:
     says:
       terms: { c: "c", value: "clue(count, c)", need: "need(c)", b: "b", bValue: "clue(count, b)", bNeed: "need(b)", by: "by" }
       marks: { outline: "{c} + {b}", stripes: "M", reads: "{c} + adj4(c) + {b} + adj4(b)" }
+      # The first number is beside the ringed squares and the second is not,
+      # which is how the words tell two numbers of one value apart.
+      wordings:
+        - when: "by = 0 and need(b) = 1"
+          look: "{outline c: the {value}} beside {ring} needs {need}; {outline b: the other outlined {bValue}} puts it in {stripes: the striped squares}"
+          move: "{ring} must be {unshaded}"
+        - when: "by = 0"
+          look: "{outline c: the {value}} beside {ring} needs {need}; {outline b: the other outlined {bValue}} puts them all in {stripes: the striped squares}"
+          move: "{ring} must be {unshaded}"
+        - when: "by > 0"
+          look: "{outline c: the {value}} beside {ring} needs {need}; {outline b: the other outlined {bValue}} puts {bNeed} in {stripes: the striped squares}"
+          move: "{ring} must be {shaded}"
+        - look: "{outline c: the {value}} beside {ring} needs {need}; {outline b: the other outlined {bValue}} puts {bNeed} in {stripes: the striped squares}"
+          move: "{ring} must be {unshaded}"

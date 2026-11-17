@@ -15,9 +15,16 @@ import { describe, expect, it } from "vitest";
 import { dealt } from "./testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 
-/** Game ids with a text module, read off the paths alone (nothing is loaded). */
+/** Game ids with a text module, read off the paths alone (nothing is loaded),
+ * and the skeletons', `skeleton/<kind>`: a game is a copy of one, so a
+ * skeleton's text module is refused in every game made from it. */
 const WITH_TEXT = new Set(
-  Object.keys(import.meta.glob("../games/*/hint-text.ts")).map((p) => p.split("/")[2]),
+  Object.keys(
+    import.meta.glob(["../games/*/hint-text.ts", "../skeleton/*/hint-text.ts"]),
+  ).map((p) => {
+    const [, dir, id] = p.split("/");
+    return dir === "games" ? id : `${dir}/${id}`;
+  }),
 );
 
 /** Game ids whose description states its sentences: a compiled module with a
@@ -89,10 +96,10 @@ describe("hint sentences live in the description", () => {
     ).toEqual([]);
   });
 
-  it("no game keeps a hint-text.ts", () => {
+  it("no game or skeleton keeps a hint-text.ts", () => {
     expect(
       [...WITH_TEXT],
-      "these games keep sentences outside their description",
+      "these games or skeletons keep sentences outside their description",
     ).toEqual([]);
   });
 });

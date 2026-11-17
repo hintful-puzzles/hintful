@@ -395,8 +395,12 @@ function declarePins<P, S, M, U, D, H, R extends string>(
  * accepts, or holds one where the kind is a `leg`. `npm run hint-scan --
  * <this file>` scans again and writes the pins.
  *
- * The types require a pin for every rung, so a game that adds a rung does not
- * compile until it has one. A rung no board is known to fire goes in
+ * Every rung owes a pin, and a rung without one fails "every kind's pin fires
+ * its kind" with the scan's command. The types name the rungs, so a pin under
+ * a name that is no kind does not compile, but they let one be missing: the
+ * typecheck stays green while the scan runs, which takes up to an hour on a
+ * new game, and the refusal names its remedy. A rung no board is known to
+ * fire goes in
  * `unreached` with the reason, which is a shortfall on show: empty is the goal
  * (`describeLadderCensus`'s `unreached` is the same ledger). One call a game;
  * a test file that wants positions of its own besides takes
@@ -418,8 +422,10 @@ export function describeHintPins<
     kinds?: Record<K, HintKind<S, M, H, R>>;
     /** The rungs with no pin, each with why no board fires it. */
     unreached?: Record<X, string>;
-    // The kinds are named by `kinds` and `unreached`, never by the pins.
-    pins: Record<Exclude<R, NoInfer<X>> | NoInfer<K>, HintPin<M>>;
+    // The kinds are named by `kinds` and `unreached`, never by the pins. A
+    // kind not yet pinned may be absent, so a file whose scan has not run
+    // still typechecks; its test then fails, naming the command.
+    pins: Partial<Record<Exclude<R, NoInfer<X>> | NoInfer<K>, HintPin<M>>>;
   },
 ): (kind: Exclude<R, X> | K) => PinnedPosition<S, M, H, R> {
   const { game } = spec;
@@ -452,7 +458,7 @@ export function describeHintKindPins<
 >(
   spec: HintPositionScan<P, S, M, U, D, H, R> & {
     kinds: Record<K, HintKind<S, M, H, R>>;
-    pins: Record<NoInfer<K>, HintPin<M>>;
+    pins: Partial<Record<NoInfer<K>, HintPin<M>>>;
   },
 ): (kind: K) => PinnedPosition<S, M, H, R> {
   return declarePins({ ...spec, unreached: [] });
