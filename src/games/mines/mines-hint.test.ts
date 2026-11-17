@@ -1,5 +1,5 @@
 /**
- * Mines' hint (`hint.ts`, `deduce.ts`, `hint-text.ts`): what it says, what it
+ * Mines' hint (`hint.ts`, `solver.ts`, its description's steps): what it says, what it
  * marks, and that it never takes a flag on trust.
  */
 

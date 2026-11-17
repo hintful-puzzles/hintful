@@ -1,6 +1,12 @@
 /**
  * Mines' hint: the compiled ladder's firings (`solver.ts`), played from the
- * player's board and narrated by `hint-text.ts`.
+ * player's board, each spoken as a step of `mines.description.yaml`.
+ *
+ * **Every word that points at the board is a reference to its mark**: the
+ * squares a step decides are ringed; the numbers it reasons from, and the
+ * mines they already touch, are outlined; and the one set of squares the
+ * reasoning treats as a whole (the squares two numbers share, a number's
+ * squares beyond another's, the squares a count covers) is striped.
  *
  * **The plan is the board's own proof, step by step.** Each firing proves some
  * squares mines and some safe; a step flags the mines not yet flagged and opens
@@ -18,26 +24,22 @@
  * the player had not flagged it already.
  */
 
+import { apartByPosition } from "../../engine/apart-by-position.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED, puzzleDeadEnd } from "../../engine/hint-refusal.ts";
-import { CELL, mark, Narration, type Sentence } from "../../engine/hint-words.ts";
+import { CELL, Narration, type Sentence, so } from "../../engine/hint-words.ts";
+import type { Said, StepClause } from "../../engine/step-voice.ts";
 import type { Point } from "../../engine/types.ts";
+import * as mines from "../../generated/games/mines/mines.compiled.ts";
 import { firstOpen } from "./generator.ts";
 import {
-  after,
-  type Clue,
-  conclude,
-  numberSide,
-  type Premise,
-  regionSide,
-  type SideWords,
-  say,
-  sayCount,
-  sayPair,
-  sayRegion,
-  Words,
-} from "./hint-text.ts";
-import { type Firing, minesWalk, type Shown, type Side } from "./solver.ts";
+  type Firing,
+  type Group,
+  minesWalk,
+  type Region,
+  type Shown,
+  type Side,
+} from "./solver.ts";
 import {
   COVERED,
   cloneState,
@@ -55,7 +57,7 @@ export interface MinesHint {
 }
 
 /** What a step rests on: the two openings no number decides, then
- * `deduce.ts`'s rungs. The legs of one firing share its rung. */
+ * the ladder's (`solver.ts`). The legs of one firing share its rung. */
 export const MINES_RUNGS = [
   "firstClick",
   "satisfied",
@@ -134,12 +136,16 @@ function legsOf(board: MinesState, f: Firing, execute: Execute): Leg[] {
   return legs;
 }
 
+type Steps = mines.StepsById<Point>;
+type Clause<K extends keyof Steps> = StepClause<Steps, K, Point>;
+/** A leg's sentence, by the squares it rings. */
+type Speak = (ring: readonly Point[]) => Sentence;
+
 /** The sentence for each leg of one firing: the first carries the reason, and
  * the others say what follows from it. */
 function narrate(board: MinesState, f: Firing, legs: readonly Leg[]): Sentence[] {
   const { w } = board;
   const pt = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
-  const clueOf = (i: number): Clue => ({ at: pt(i), value: board.grid[i] });
   const pts = (cells: readonly number[]): Point[] => cells.map(pt);
 
   // Every number the sentence will name, so two of one value are told apart.
@@ -154,118 +160,218 @@ function narrate(board: MinesState, f: Firing, legs: readonly Leg[]): Sentence[]
     nameSide(f.light);
   }
   if (f.rung === "count") for (const m of f.members) nameSide(m);
-  const words = new Words(named.map(clueOf));
+  const apart = apartByPosition(named, pt, (i) => String(board.grid[i]));
+  /** A number term is the number's square. Where two share a value, their
+   * places tell them apart and the outline says which square each is: "the
+   * lower 3", not "the lower outlined 3". */
+  const speak = mines.voice<Point>({
+    kind: CELL,
+    value: (i) => {
+      const name = apart(i);
+      return name === String(board.grid[i]) ? `outlined ${name}` : name;
+    },
+  });
 
-  let lead: Premise;
-  /** The premise a leg after the first rests on, when the firing proves both
-   * kinds (rung 2's split): the light side's mines are in the shared squares. */
-  let then: Premise | null = null;
+  let lead: Speak;
+  /** What a leg after the first rests on, when the firing proves both kinds
+   * (a pair's split): the light side's mines are in the shared squares. */
+  let then: Speak | null = null;
 
   switch (f.rung) {
-    case "satisfied":
-      lead = say.satisfied(words, clueOf(f.group.clue), pts(f.group.mines));
+    case "satisfied": {
+      const c = f.group.clue;
+      lead = (ring) =>
+        speak.sentence("satisfied", {
+          ring,
+          terms: { c, v: board.grid[c] },
+          marks: { outline: { clue: [pt(c)], found: pts(f.group.mines) } },
+        });
       break;
-    case "full":
-      lead = say.full(
-        words,
-        clueOf(f.group.clue),
-        f.group.mines.length > 0,
-        f.group.cells.length,
-      );
+    }
+    case "full": {
+      const c = f.group.clue;
+      lead = (ring) =>
+        speak.sentence("full", {
+          ring,
+          terms: { c, n: f.group.cells.length, more: f.group.mines.length > 0 },
+          marks: { outline: { clue: [pt(c)] } },
+        });
       break;
+    }
     case "pair": {
-      const regionSides = [f.heavy, f.light].filter((s) => "region" in s);
-      const markedRegion = regionSides[0] ?? null;
-      const prefix: Narration[] = [];
-      for (const s of regionSides)
-        if ("region" in s)
-          prefix.push(
-            sayRegion(
-              words,
-              clueOf(s.region.outer.clue),
-              clueOf(s.region.inner.clue),
-              s === markedRegion ? pts(s.region.cells) : null,
-              s.region.need,
-            ),
-          );
-      const bothNumbers = regionSides.length === 0;
+      const regionSides = [f.heavy, f.light].flatMap((s) =>
+        "region" in s ? [s.region] : [],
+      );
+      // The first region is the one the sentence stripes.
+      const marked = regionSides[0] ?? null;
+      const both = regionSides.length === 0;
       const sharedPts = pts(f.shared);
-      const shared: Narration = bothNumbers
-        ? mark.as("stripes", CELL, sharedPts, (els) =>
-            els.length === 1 ? "the striped square" : "the striped squares",
-          )
-        : Narration.plain("the shared squares");
-      const sideWords = (s: Side, inner: boolean): SideWords =>
+      const sharedOne = sharedPts.length === 1;
+      const prefix = regionSides.map((r) => {
+        const striped = r === marked;
+        return speak.premise("regionBefore", {
+          terms: { o: r.outer.clue, i: r.inner.clue, n: r.need, striped },
+          marks: {
+            outline: { outer: [pt(r.outer.clue)], inner: [pt(r.inner.clue)] },
+            stripes: { region: striped ? pts(r.cells) : [] },
+          },
+        });
+      });
+      const numberSaid = (g: Group) => ({
+        terms: { c: g.clue, n: g.need, more: g.mines.length > 0 },
+        marks: { outline: { clue: [pt(g.clue)] } },
+      });
+      const regionSaid = (r: Region) => {
+        const striped = r === marked;
+        return {
+          terms: {
+            o: r.outer.clue,
+            i: r.inner.clue,
+            n: r.need,
+            striped,
+            one: striped && r.cells.length === 1,
+          },
+          marks: {
+            outline: striped
+              ? { outer: [], inner: [] }
+              : { outer: [pt(r.outer.clue)], inner: [pt(r.inner.clue)] },
+            stripes: { region: striped ? pts(r.cells) : [] },
+          },
+        };
+      };
+      const needs = (s: Side): Clause<"numberNeeds" | "regionNeeds"> =>
         "group" in s
-          ? numberSide(
-              words,
-              clueOf(s.group.clue),
-              s.group.need,
-              s.group.mines.length > 0,
-              inner && bothNumbers ? sharedPts : null,
-            )
-          : regionSide(
-              words,
-              clueOf(s.region.outer.clue),
-              clueOf(s.region.inner.clue),
-              pts(s.region.cells),
-              s.region.need,
-              s === markedRegion,
-            );
+          ? { step: "numberNeeds", said: numberSaid(s.group) }
+          : { step: "regionNeeds", said: regionSaid(s.region) };
+      const allows = (s: Side): Clause<"numberAllows" | "regionAllows"> =>
+        "group" in s
+          ? { step: "numberAllows", said: numberSaid(s.group) }
+          : { step: "regionAllows", said: regionSaid(s.region) };
+      const minesOf = (s: Side): Clause<"numberMines" | "regionMines"> =>
+        "group" in s
+          ? { step: "numberMines", said: numberSaid(s.group) }
+          : { step: "regionMines", said: regionSaid(s.region) };
+      // The inner side's own squares are striped where both sides are
+      // numbers: they are all shared.
+      const own = (s: Side): Clause<"numberOwn" | "regionOwn"> =>
+        "group" in s
+          ? {
+              step: "numberOwn",
+              said: {
+                terms: { c: s.group.clue, striped: both, sharedOne },
+                marks: {
+                  outline: { clue: [pt(s.group.clue)] },
+                  stripes: { shared: both ? sharedPts : [] },
+                },
+              },
+            }
+          : { step: "regionOwn", said: regionSaid(s.region) };
+      // How `inner`'s squares lie inside `s`'s. Only a striped region can
+      // be a lone square: a number with one unopened square is decided on
+      // its own before any pair is read.
+      const around = (
+        s: Side,
+        inner: Side,
+      ): Clause<"numberAround" | "regionAround"> => {
+        const lone = "region" in inner && regionSaid(inner.region).terms.one;
+        if ("group" in s)
+          return {
+            step: "numberAround",
+            said: { ...numberSaid(s.group), terms: { c: s.group.clue, lone } },
+          };
+        const r = regionSaid(s.region);
+        return { step: "regionAround", said: { ...r, terms: { ...r.terms, lone } } };
+      };
+      const shared = { both, sharedOne };
+      const sharedMarks = { stripes: { shared: both ? sharedPts : [] } };
+      /** A pair's sentence, after the sentences saying what its regions hold. */
+      const said = <K extends "split" | "splitSafe" | "same" | "more">(
+        id: K,
+        s: Said<Steps[K], Point>,
+      ): Speak => {
+        // Every pair step rings squares of one sort, which TypeScript cannot
+        // see through the generic `K`.
+        const at = (ring: readonly Point[]) =>
+          ({ ...s, ring }) as Said<Steps[K], Point>;
+        return prefix.length === 0
+          ? (ring) => speak.sentence(id, at(ring))
+          : (ring) =>
+              so({
+                look: Narration.join([
+                  ...prefix.flatMap((p) => [p, ". "]),
+                  speak.premise(id, at(ring)),
+                ]),
+                move: speak.part(id, "move", at(ring)),
+              });
+      };
       const lightNeed = "group" in f.light ? f.light.group.need : f.light.region.need;
       if (f.mines.length > 0 && f.safes.length > 0) {
-        const heavy = sideWords(f.heavy, false);
-        const light = sideWords(f.light, false);
-        const flagsFirst = legs[0]?.kind === "flag";
-        lead = after(
-          prefix,
-          flagsFirst
-            ? sayPair.split(heavy, light, lightNeed, shared)
-            : sayPair.splitSafeOnly(heavy, light, lightNeed, shared),
-        );
-        then = sayPair.splitThen(light, lightNeed, shared);
+        lead =
+          legs[0]?.kind === "flag"
+            ? said("split", {
+                terms: {
+                  heavy: needs(f.heavy),
+                  light: allows(f.light),
+                  n: lightNeed,
+                  ...shared,
+                },
+                marks: sharedMarks,
+              })
+            : said("splitSafe", {
+                terms: { heavy: needs(f.heavy), light: minesOf(f.light), ...shared },
+                marks: sharedMarks,
+              });
+        const light = minesOf(f.light);
+        then = (ring) =>
+          speak.sentence("splitThen", {
+            ring,
+            terms: { light, ...shared },
+            marks: sharedMarks,
+          });
       } else if (f.mines.length === 0) {
-        lead = after(
-          prefix,
-          sayPair.same(sideWords(f.heavy, true), sideWords(f.light, false), lightNeed),
-        );
+        lead = said("same", {
+          terms: { inner: own(f.heavy), outer: around(f.light, f.heavy), n: lightNeed },
+        });
       } else {
-        lead = after(
-          prefix,
-          sayPair.more(sideWords(f.light, true), sideWords(f.heavy, false), lightNeed),
-        );
+        lead = said("more", {
+          terms: { outer: needs(f.heavy), inner: own(f.light), n: lightNeed },
+        });
       }
       break;
     }
     case "count": {
       if (f.members.length === 0) {
         lead =
-          f.safes.length > 0 ? sayCount.allFound(f.total) : sayCount.allMines(f.left);
+          f.safes.length > 0
+            ? (ring) => speak.sentence("allFound", { ring, terms: { total: f.total } })
+            : (ring) => speak.sentence("allMines", { ring, terms: { left: f.left } });
         break;
       }
-      const numberCells = f.members.map((m) => pt(m.group.clue));
       const need = f.members.reduce((sum, m) => sum + m.group.need, 0);
-      const numbers = mark.as("outline", CELL, numberCells, (els) =>
-        els.length === 1 ? "the outlined number" : "the outlined numbers",
-      );
-      const counted = mark.as("stripes", CELL, pts(f.counted), (els) =>
-        els.length === 1 ? "the striped square" : "the striped squares",
-      );
+      const marks = {
+        outline: { numbers: f.members.map((m) => pt(m.group.clue)) },
+        stripes: { counted: pts(f.counted) },
+      };
+      const one = f.counted.length === 1;
       lead =
         f.safes.length > 0
-          ? sayCount.outsideSafe(f.left, numberCells.length, numbers, counted)
-          : sayCount.outsideMines(f.left, need, numberCells.length, numbers, counted);
+          ? (ring) =>
+              speak.sentence("outsideSafe", {
+                ring,
+                terms: { left: f.left, one },
+                marks,
+              })
+          : (ring) =>
+              speak.sentence("outsideMines", {
+                ring,
+                terms: { left: f.left, need, one },
+                marks,
+              });
       break;
     }
   }
 
-  return legs.map((leg, i) =>
-    conclude.plain(
-      i === 0 ? lead : (then ?? lead),
-      leg.targets,
-      leg.kind === "flag" ? "mine" : "safe",
-    ),
-  );
+  return legs.map((leg, i) => (i === 0 ? lead : (then ?? lead))(leg.targets));
 }
 
 /** The hint plan from `state`, or the reason there is none. `execute` is the
@@ -280,7 +386,10 @@ export function minesHint(
   // No board yet: the first square opened is laid out to be safe.
   if (!state.mines) {
     const at = { x: w >> 1, y: h >> 1 };
-    const step = stepFor("firstClick", "open", [at], say.firstClick(at), false);
+    const words = mines
+      .voice<Point>({ kind: CELL, value: String })
+      .sentence("firstClick", { ring: [at] });
+    const step = stepFor("firstClick", "open", [at], words, false);
     return { ok: true, steps: [{ ...step, move: firstOpen(state, at) }] };
   }
 

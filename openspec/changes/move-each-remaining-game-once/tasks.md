@@ -247,19 +247,27 @@ Logic games:
   clause references no strike. The notes reason, which no dumped walk
   meets, was checked against the old words; the articles test now speaks
   through `narrateCrossing`. Read in the app: a run's digits, a crossing.
-- [ ] Mines. Read 2026-11-17: its sentences are built of parts (a premise,
-  then a conclusion by how many squares are ringed and whether they are
-  mines; a pair's two sides, each a number or a region, striped or named
-  through its two numbers; region sentences said before the pair), and
-  two numbers of one value are told apart by position (`apartByPosition`,
-  which only Mines calls: a per-sentence voice whose `value` prints a
-  clue's index as "outlined 3" or "upper 3", as Rect's prints a clue,
-  carries it). Mines' dump has one preset, so take it at
-  `DUMP_DEALS=400` (379k lines, under a minute); even so it never reaches
-  a region side ("whose others", "squares beyond") nor "allow at most",
-  "that puts", or the counts with no members' plural forms: check those
-  against the old module by a throwaway test, as Solo's were. Its region
-  prefixes and sides are `clause` terms (Slant's, 2026-11-17).
+- [x] Mines (2026-11-17): dump byte-identical, marks included
+  (`DUMP_DEALS=400`, 378,720 lines in 15 s). Its sentences are `steps`
+  spoken through a voice `hint.ts` makes a sentence, whose `value` prints
+  a number term (the number's square) as "outlined 3" or, beside another
+  of its value, "upper 3"; every count is `{numeral …}`, and the
+  conclusions are the phrases `safe` and `mines`. A pair's sides are
+  clause steps, a number or a region by what the sentence says of it
+  (what it needs, allows, its mines, its own squares, how the inner
+  side's lie inside it); the sentence saying what a region holds goes
+  before the pair's, joined by `hint.ts` from the voice's `premise` and
+  `part`, as no step says two sentences. The forms no dumped walk meets
+  (every region side, the shared squares named, a 0, no members' counts,
+  the numbers' "need just") were checked against the old module, words
+  and marks, 355 cases, by a throwaway test seen to fail on a planted
+  word and a dropped mark. **Fixed in passing**, in those forms only: a
+  striped region of one square inside a number said "The striped square
+  all touch the outlined 2 too"; it says "touches". The count steps with
+  several numbers carry `long:` (126 characters at their shortest: the
+  numbers' needs add up only because none of their squares are shared).
+  Read in the app (9x9, 35 mines): the first click, a split and its
+  second leg, numbers outlined, the shared squares striped.
 - [x] Slant (2026-11-17): dump byte-identical, marks included
   (`DUMP_DEALS=1000`, 2,906,836 lines in 97 s). Its sentences are `steps`
   spoken through the voice in `hint.ts`. The engine gained a step term of

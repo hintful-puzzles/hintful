@@ -89,8 +89,8 @@ deal:
 tiers: [Normal]
 techniques:
   # One number with no mines left to find has its unopened squares safe;
-  # one needing as many as it has unopened, mines. Its words are the hint's
-  # (`hint-text.ts`).
+  # one needing as many as it has unopened, mines. Its words are the
+  # `satisfied` and `full` steps'.
   - kind: count.both
     as: alone
     tier: Normal
@@ -103,7 +103,8 @@ techniques:
     says: false
   # Two numbers whose undecided squares meet, compared: the first's own
   # squares are mines where it needs as many more as it has, and the second's
-  # own squares are then safe. Its words are the hint's (`hint-text.ts`).
+  # own squares are then safe. Its words are the pair steps' (`split`,
+  # `same`, `more`).
   - kind: count.compare
     as: pair
     tier: Normal
@@ -184,3 +185,232 @@ techniques:
       (n = left implies (forall d in outside(X): place(d, 2)))
       and ((n != left and left - n = |outside(X)|)
         implies (forall d in outside(X): place(d, 1)))
+# A number is named by its value, and two of one value in a sentence by where
+# they sit ("the upper 1"), so "the outlined 1" always means one square: a
+# number term `c`, `o` or `i` is the number's square, which the hint's voice
+# prints that way, and a count is said `{numeral …}`.
+phrases:
+  # What a step concludes of the squares it rings: the ringed squares are
+  # safe, or each is a mine.
+  safe: "{ring: this square | the ringed squares} must be safe"
+  mines: "{ring: this square | each ringed one} must be a mine"
+  # The squares two numbers share: striped where both sides are numbers,
+  # else named, the stripes being a region's.
+  shared: >-
+    {if both: {stripes shared: {if sharedOne: the striped square | the striped squares}} | the shared squares}
+  # A region, the squares of number `o` beyond those of number `i`: striped
+  # where it is the one region the sentence marks, named through its two
+  # numbers otherwise.
+  regionName: >-
+    {if striped: {stripes region: {if one: the striped square | the striped squares}} |
+    {outline outer: the {o}'s} squares beyond {outline inner: the {i}'s}}
+  regionOf: >-
+    {if striped: {stripes region: {if one: the striped square's | the striped squares'}} |
+    {outline outer: the {o}'s} other squares'}
+  # The squares the counted numbers' mines lie in.
+  counted: "{stripes counted: {if one: the striped square | the striped squares}}"
+steps:
+  # No board yet: the mines are laid out round the first square opened.
+  firstClick:
+    ring: cell
+    look: "no mine is ever laid in the first square you open or beside it"
+    follows: "{ring} can't hold one"
+    move: "open it to begin"
+  # A number, `v` its value, already touching all its mines.
+  satisfied:
+    ring: cell
+    terms: { c: number, v: number }
+    marks: { outline: [clue, found] }
+    move: "{safe}"
+    wordings:
+      - when: "v = 0"
+        look: "{outline clue: the {c}} has no mine around it"
+      - when: "v = 1"
+        look: "{outline clue: the {c}} already touches {outline found: its mine (outlined)}"
+      - when: "v = 2"
+        look: "{outline clue: the {c}} already touches {outline found: both its mines (outlined)}"
+      - look: "{outline clue: the {c}} already touches {outline found: all {numeral v} of its mines (outlined)}"
+  # A number with exactly as many unopened squares, `n`, as mines still to
+  # place; `more` where it touches mines already, which "still needs" counts
+  # without outlining them.
+  full:
+    ring: cell
+    terms: { c: number, n: number, more: flag }
+    marks: { outline: [clue] }
+    move: "{mines}"
+    wordings:
+      - when: more
+        look: >-
+          {outline clue: the {c}} still needs {numeral n} {n: mine | mines} and has just
+          {numeral n} unopened {n: square | squares} left
+      - look: "{outline clue: the {c}} has exactly {numeral n} unopened {n: square | squares} around it"
+  # Two numbers, or regions read as numbers, whose squares meet. Each side is
+  # a clause: a number or a region, saying what it needs, what it allows,
+  # its mines, its own squares or how its squares lie inside the other's.
+  #
+  # Both keep squares of their own: the heavy side needs more than the light
+  # side allows, `n`, in the shared squares, so its own are mines.
+  split:
+    ring: cell
+    terms:
+      heavy: &needs { clause: [numberNeeds, regionNeeds] }
+      light: { clause: [numberAllows, regionAllows] }
+      n: number
+      both: flag
+      sharedOne: flag
+    marks: &sharedMark { stripes: [shared] }
+    look: "{heavy}; {light} at most {numeral n} in {shared}"
+    move: "{mines}"
+  # The leg after `split`'s mines: the light side's are all shared.
+  splitThen:
+    ring: cell
+    terms: { light: &theMines { clause: [numberMines, regionMines] }, both: flag, sharedOne: flag }
+    marks: *sharedMark
+    look: "that puts {light} in {shared}"
+    move: "{safe}"
+  # `split`, said for its safe squares alone, its mines flagged already.
+  splitSafe:
+    ring: cell
+    terms: { heavy: *needs, light: *theMines, both: flag, sharedOne: flag }
+    marks: *sharedMark
+    look: "{heavy}, which leaves {light} in {shared}"
+    move: "{safe}"
+  # The inner side's squares all lie inside the outer's, and both need `n`:
+  # the outer's own squares are safe.
+  same:
+    ring: cell
+    terms:
+      inner: &own { clause: [numberOwn, regionOwn] }
+      outer: { clause: [numberAround, regionAround] }
+      n: number
+    look: "{inner} {outer}, and both need {numeral n} {n: mine | mines}"
+    move: "{safe}"
+  # The inner side's squares, which hold at most `n`, all lie inside the
+  # outer's, which needs more: the outer's own squares are mines.
+  more:
+    ring: cell
+    terms: { outer: *needs, inner: *own, n: number }
+    look: "{outer}, but at most {numeral n} fits in {inner}"
+    move: "{mines}"
+  # Said before a pair whose side is a region: number `i`'s unopened squares
+  # all touch number `o`, whose others hold exactly `n`; `striped` where
+  # they are the region the sentence marks.
+  regionBefore:
+    ring: cell
+    terms: { o: number, i: number, n: number, striped: flag }
+    marks: { outline: [outer, inner], stripes: [region] }
+    look: >-
+      {outline inner: the {i}'s} unopened squares all touch {outline outer: the {o}}, whose
+      {if striped: {stripes region: others (striped)} | others} hold exactly {numeral n} {n: mine | mines}
+  # A number as a side: `c` needing `n`, or `n` more where it touches mines
+  # already (`more`).
+  numberNeeds:
+    ring: cell
+    terms: { c: number, n: number, more: flag }
+    marks: &clueMark { outline: [clue] }
+    move: "{outline clue: the {c}} needs {if more: {numeral n} more | {numeral n} {n: mine | mines}}"
+  numberAllows:
+    ring: cell
+    terms: { c: number }
+    marks: *clueMark
+    move: "{outline clue: the {c}} allows"
+  numberMines:
+    ring: cell
+    terms: { c: number, n: number }
+    marks: *clueMark
+    wordings:
+      - when: "n = 1"
+        move: "{outline clue: the {c}'s} mine"
+      - move: "all {numeral n} of {outline clue: the {c}'s} mines"
+  # Its squares, striped where they are all shared and nothing else is.
+  numberOwn:
+    ring: cell
+    terms: { c: number, striped: flag, sharedOne: flag }
+    marks: { outline: [clue], stripes: [shared] }
+    move: >-
+      {outline clue: the {c}'s} {if striped: {stripes shared: {if sharedOne: square | squares}} | unopened squares}
+  # How the inner side's squares lie inside this, the outer side's: `lone`
+  # where the inner side is one square, which only a striped region can be,
+  # so never beside a striped outer side.
+  numberAround:
+    ring: cell
+    terms: { c: number, lone: flag }
+    marks: *clueMark
+    move: "{if lone: touches | all touch} {outline clue: the {c}} too"
+  # A region as a side (`regionName`), holding exactly `n`; `one` where it
+  # is striped and one square.
+  regionNeeds:
+    ring: cell
+    terms: &regionTerms { o: number, i: number, n: number, striped: flag, one: flag }
+    marks: &regionMarks { outline: [outer, inner], stripes: [region] }
+    move: "{regionName} {if one: holds | hold} exactly {numeral n} {n: mine | mines}"
+  regionAllows:
+    ring: cell
+    terms: *regionTerms
+    marks: *regionMarks
+    move: "{regionName} {if one: allows | allow}"
+  regionMines:
+    ring: cell
+    terms: *regionTerms
+    marks: *regionMarks
+    wordings:
+      - when: "n = 1"
+        move: "{regionOf} mine"
+      - move: "all {numeral n} of {regionOf} mines"
+  regionOwn:
+    ring: cell
+    terms: *regionTerms
+    marks: *regionMarks
+    move: "{regionName}"
+  regionAround:
+    ring: cell
+    terms: { o: number, i: number, n: number, striped: flag, one: flag, lone: flag }
+    marks: *regionMarks
+    move: >-
+      {if striped: are all among {regionName} | {if lone: touches | all touch} {regionName} too}
+  # Every mine is found, `total` of them.
+  allFound:
+    ring: cell
+    terms: { total: number }
+    look: "all {numeral total} mines are found"
+    move: "{safe}"
+  # As many mines left as unopened squares, `left`.
+  allMines:
+    ring: cell
+    terms: { left: number }
+    look: >-
+      {numeral left} {left: mine is | mines are} left and just {numeral left} unopened {left: square | squares}
+    move: "{mines}"
+  # The outlined numbers need every mine left, `left`, among squares none of
+  # them share (`one` where they are one square): everything else is safe.
+  outsideSafe:
+    ring: cell
+    terms: { left: number, one: flag }
+    marks: &countMarks { outline: [numbers], stripes: [counted] }
+    move: "{safe}"
+    wordings:
+      - when: "|outlineNumbers| = 1"
+        look: >-
+          {numeral left} {left: mine is | mines are} left, and {outline numbers: the outlined number}
+          needs {left: it | all {numeral left}} in {counted}
+      - look: >-
+          {numeral left} {left: mine is | mines are} left, and {outline numbers: the outlined numbers}
+          need {left: it | all {numeral left}} in {counted}, which none of them share
+        long: &countLong >-
+          the numbers' needs add up to the mines left only because none of
+          their squares are shared, which the premise has to say
+  # They need just `need` of them: everything else is a mine.
+  outsideMines:
+    ring: cell
+    terms: { left: number, need: number, one: flag }
+    marks: *countMarks
+    move: "{mines}"
+    wordings:
+      - when: "|outlineNumbers| = 1"
+        look: >-
+          {numeral left} {left: mine is | mines are} left, and {outline numbers: the outlined number}
+          needs just {numeral need} in {counted}
+      - look: >-
+          {numeral left} {left: mine is | mines are} left, and {outline numbers: the outlined numbers}
+          need just {numeral need} in {counted}, which none of them share
+        long: *countLong
