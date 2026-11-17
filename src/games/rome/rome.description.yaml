@@ -89,12 +89,12 @@ techniques:
     tier: Easy
   # An arrow pointing at a square whose arrows lead back here would go round
   # in a loop and never reach a goal.
-  - id: loop
+  - kind: loop.never
+    as: loop
     tier: Easy
-    for: >-
-      c in cells where not known(c), d in cand(c), q = step(c, d)
-      where q != none and c in chain(q)
-    conclude: "strike(c, d)"
+    with:
+      more: ", q = step(c, d)"
+      closes: "q != none and c in chain(q)"
     says:
       terms: { c: c, q: q }
       marks: {}

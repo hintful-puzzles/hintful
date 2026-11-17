@@ -1,4 +1,4 @@
-8x8 Easy #0: 45 steps, solved, 268fefa40266589a [bothSidesLeft:19 closeLoop:1 clueExact:4 clueFull:6 oneWayIn:13 strand:2]
-8x8 Normal #0: 38 steps, solved, 4af4e330709d7fc6 [bothSidesLeft:17 closeLoop:1 clueExact:2 clueFull:8 oneWayIn:3 sharedFate:7]
-10x10 Tricky #0: 60 steps, solved, b2820c17ebee9d07 [bothSidesLeft:27 closeLoop:2 clueExact:5 clueFull:11 oneWayIn:3 parity:1 sharedFate:11]
-8x8 Easy, Disallow consecutive 1 clues: off #0: 43 steps, solved, 3fccaa346836e032 [bothSidesLeft:25 closeLoop:3 clueExact:8 clueFull:4 finishEarly:1 strand:2]
+8x8 Easy #0: 45 steps, solved, 07ccefe5cf4052c9 [bothSidesLeft:19 closeLoop:1 clueExact:4 clueFull:6 oneWayIn:13 strand:2]
+8x8 Normal #0: 38 steps, solved, 950770d79ad0d4b9 [bothSidesLeft:17 closeLoop:1 clueExact:2 clueFull:8 oneWayIn:3 sharedFate:7]
+10x10 Tricky #0: 60 steps, solved, f0fcaae517a9bf2b [bothSidesLeft:27 closeLoop:2 clueExact:5 clueFull:11 oneWayIn:3 parity:1 sharedFate:11]
+8x8 Easy, Disallow consecutive 1 clues: off #0: 43 steps, solved, 8670ad4545cf51d9 [bothSidesLeft:25 closeLoop:3 clueExact:8 clueFull:4 finishEarly:1 strand:2]

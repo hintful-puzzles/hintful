@@ -155,7 +155,6 @@ kindWords:
   items: "track {n: square | squares} by {outline clueAt: its clue}"
   restWord: must be empty
   fillWord: must carry track
-  terms: { L: L, clueAt: L, target: "clue(count, L)", col: "L in cols" }
 techniques:
   # A square's own sides come first: a firing runs the ladder again from its
   # top, so a rail forced along a run of squares is laid before a clue is
@@ -216,6 +215,7 @@ techniques:
     tier: Easy
     with:
       marks: { reads: "cells(L)", outline: "{c in cells(L) where on(c)}" }
+      terms: { L: L, clueAt: L, target: "clue(count, L)", col: "L in cols" }
   # A row or column with as few squares open as its clue still wants: they
   # hold track. One with fewer is inconsistent.
   - kind: count.exact
@@ -223,23 +223,27 @@ techniques:
     tier: Easy
     with:
       marks: { reads: "cells(L)" }
-      terms: { placed: "n < clue(count, L)" }
+      terms:
+        L: L
+        clueAt: L
+        target: "clue(count, L)"
+        col: "L in cols"
+        placed: "n < clue(count, L)"
   # An open side between two track squares the rails already join: crossing
-  # it would close a loop.
-  - id: closeLoop
+  # it would close a loop, which a track never makes.
+  - kind: loop.early
+    as: closeLoop
     tier: Easy
-    for: >-
-      R = {e in edges where value(e) = 1},
-      e in edges where not known(e) and on(end1(e)) and on(end2(e))
-      and not shut(end1(e), end2(e)),
-      G = through(end1(e), R) where end2(e) in G
-    conclude: "place(e, 2)"
-    says:
+    with:
+      elsewhere: "true"
+      edge: " and on(end1(e)) and on(end2(e)) and not shut(end1(e), end2(e))"
       terms: { e: e, G: G }
       marks: { reads: "{end1(e)}", outline: "G" }
-      look: "{outline: The outlined track} already joins the squares {ring: this side} separates"
-      follows: "crossing it would close a loop"
-      move: "it must be blocked"
+      line: outline
+      edgeWords: "{ring: this side | these sides}"
+      lineNoun: track
+      leaves: ""
+      blockWord: must be blocked
   # An open side between two track squares the rails join to the track's
   # two ends: crossing it would finish the track, leaving a track square
   # off it.

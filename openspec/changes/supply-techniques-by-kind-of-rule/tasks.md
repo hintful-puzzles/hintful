@@ -667,13 +667,34 @@ boundaries are judgment, and the counts carry that.
     seeds a preset: same boards and verdicts, 1.01×. No words (neither game
     speaks it); Loopy's and Pearl's tests and `test:hint-sweeps` pass
     unchanged.
-  - [ ] Next: the CNT techniques not placed yet (the item above says why
-    each waits), then LOOP's remaining formulas: Tracks `closeLoop` (a
-    track never closes, so `loop.early` with `elsewhere: "true"`; it needs a
-    filter on the edge's ends, Tracks' `on(…)` and `not shut(…)`, and a
-    wording for no `elsewhere`, "would close the outlined track into a
-    loop", since "leaves other lines out" is false there), Slant and Rome `loop` (each its own notion of a
-    loop: a kind only if one formula fits both).
+  - [x] (2026-11-17) LOOP's remaining formulas. Tracks `closeLoop` on
+    `loop.early`, which gained `edge` (" and …", Tracks' side between two
+    track squares, not shut), `leaves` (the loop's "that leaves other lines
+    out", "" for a track that may never close) and nouns (`edgeWords`,
+    `lineNoun`, `blockWord`); `off`/`offWords` became optional. The compiled
+    module differs from HEAD only by `R` renamed `L` and a no-op `&& true`;
+    Loopy's and Pearl's are unchanged. Tracks' line terms moved from
+    `kindWords` into its two count placements, for they read the count's `L`.
+    **Found:** the kind's plant drops `elsewhere`, which for Tracks is `true`,
+    so the plant was the technique itself and the checker found it sound;
+    Tracks keeps its own plant (any open side between track squares),
+    restated over `L`, caught. **Moved, words only** (same steps and rung
+    counts in the walk fingerprint): "This side would close the outlined
+    track into a loop, so it must be blocked" (was "The outlined track
+    already joins the squares this side separates, so crossing it would
+    close a loop: it must be blocked"), seen in the app on an 8x8 Easy walk,
+    the side ringed and the U of track outlined. **Slant and Rome `loop` are
+    one formula**, a new `loop.never`: a value the game's `closes` says
+    would close a cycle is ruled out (`values`, `more` binding Rome's `q`,
+    `move` Slant's placing the other). Both modules byte-identical to HEAD,
+    no verdict moved; each game keeps its boundary plant. LOOP now places 7
+    techniques in 5 games (`git grep "kind: loop\." -- 'src/games/*.yaml'`);
+    the rest § 1 counted there are read again in the recount below.
+  - [ ] Next: the CNT techniques not placed yet (the item above the
+    `count.exact` entry says why each waits: Mines `alone`, Light Up
+    `square`), then a recount of § 1's table against the placements, to
+    say the share of stated techniques now placed by kind against the 50%
+    bar of 2.2.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

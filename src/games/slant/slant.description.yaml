@@ -137,12 +137,13 @@ techniques:
   # A diagonal joining two points already joined would close a loop, so the
   # square takes the other. One whose diagonals both would makes the marks
   # inconsistent.
-  - id: loop
+  - kind: loop.never
+    as: loop
     tier: Easy
-    for: >-
-      c in cells where not known(c),
-      d in range(1, 2) where closes(c, d)
-    conclude: "not closes(c, 3 - d) and place(c, 3 - d)"
+    with:
+      values: "range(1, 2)"
+      closes: "closes(c, d)"
+      move: "not closes(c, 3 - d) and place(c, 3 - d)"
   # Two open squares side by side round a number that slant alike give it
   # one line between them whichever way they slant, so the rest of its open
   # squares are read as `clue` reads them all.

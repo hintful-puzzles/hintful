@@ -384,7 +384,7 @@ describe("every narratable premise is reached", () => {
       "one way in, and track needs two", // onlyOneSideLeft
       "its clue asks for, the outlined", // clueFull
       "track squares by its clue and has only", // clueExact
-      "would close a loop", // wouldCloseLoop
+      "would close the outlined track into a loop", // closeLoop
       // wouldStrandTrack is never a first step on these boards, since the ladder
       // tries closing a loop first; its pin above is the step that says it.
       "the loose end must run on", // looseEndSpans

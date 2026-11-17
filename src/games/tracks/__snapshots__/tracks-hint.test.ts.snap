@@ -3,7 +3,7 @@
 exports[`tracks: pinned hint positions > says, at each pin 1`] = `
 {
   "bothSidesLeft": "The track can't cross the outlined sides, so it must run through the ringed one.",
-  "closeLoop": "The outlined track already joins the squares this side separates, so crossing it would close a loop: it must be blocked.",
+  "closeLoop": "This side would close the outlined track into a loop, so it must be blocked.",
   "clueExact": "This row needs 8 track squares by its clue and has only 8 open squares, so each ringed square must carry track.",
   "clueFull": "This row already has all 2 track squares its clue asks for, the outlined ones, so each ringed square must be empty.",
   "finishEarly": "Crossing this side would finish the track from A to B short of this column's outlined clue, so the side must be blocked.",

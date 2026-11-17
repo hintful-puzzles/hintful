@@ -13,12 +13,13 @@ techniques:
       c in cells where on(c) and drawn(c) < 2, F = ways(c) where |F| > 0 and |F|
       + drawn(c) <= 3
     conclude: "forall y in F: place(edge(c, y), 1)"
-  # Any open side between two track squares read as closing a loop.
+  # Any open side between two track squares read as closing a loop. The
+  # kind's plant drops `elsewhere`, which a track never has.
   closeLoop:
     for: >-
-      R = {e in edges where value(e) = 1}, e in edges where not known(e) and
+      L = {e in edges where value(e) = 1}, e in edges where not known(e) and
       on(end1(e)) and on(end2(e)) and not shut(end1(e), end2(e)), G =
-      through(end1(e), R)
+      through(end1(e), L)
   # The side that joins the two ends read as stranding track with none off
   # them.
   strand:

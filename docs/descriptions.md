@@ -1103,12 +1103,23 @@ game whose hint is its own renders the compiled step (Tents' `hint-text.ts`).
 `loop.early` carries its own sentence ("this edge would close the
 outlined line into a loop that leaves other lines out"); a game gives its marks,
 which mark draws the line (`line`), and what else the loop may miss (`off`,
-`offWords`: Pearl's pearl, Loopy's unmet clues).
+`offWords`: Pearl's pearl, Loopy's unmet clues). A line that may never close
+(Tracks') gives `elsewhere: "true"` and `leaves: ""` ("this side would close
+the outlined track into a loop"), its nouns (`edgeWords`, `lineNoun`,
+`blockWord`), and in `edge` what else an edge must be to be read (" and …":
+Tracks' side between two track squares, not shut).
 `loop.closed` is the loop finished: lines with no loose end, while an edge is
 open, are the loop, and every other edge is empty; lines in more than one
 group are a contradiction. The game names how it counts a point's lines
 (`lines`: Loopy's `dotLines`, Pearl's `drawn`) and, in `more`, what else must
 lie on the loop `G` (Pearl's pearls). It carries no words.
+`loop.never` is a rule that allows no cycle at all: a value of an open square
+that the game's `closes` says would close one is ruled out (Slant's diagonal
+joining two points already joined, Rome's arrow into a chain leading back).
+The game gives `values` where they are not its candidates, `more` for what
+`closes` binds (Rome's `q`, the square pointed at), and `move` where it rules
+a value out by placing the other (Slant's). It carries no words, and its
+coarse plant is no game's: each plants the edge of its own `closes`.
 `rel.support` carries its look, "{link} joins {cell} to its neighbor with
 {none} {fits} {struckOr}", and the walk says the strike: Adjacent gives its bar
 (`{if bar: …}` inside the words), Subsets its horseshoe and the tally's sets.
