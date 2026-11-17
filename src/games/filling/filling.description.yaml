@@ -115,3 +115,25 @@ techniques:
   - kind: one.cell
     as: onlyNumber
     tier: Easy
+    # The numbers it rules out were ruled out by regions anywhere, so the
+    # step names the filled neighbors that pin the square, and a 1 boxed in
+    # by them as a square no region can reach.
+    says:
+      terms: { n: "first(U)" }
+      marks: { outline: "{z in adj4(c) where known(z)}" }
+      arms:
+        lonely:
+          when: "first(U) = 1 and (forall z in adj4(c): known(z))"
+          move: "it can only be a 1"
+          wordings:
+            - when: "|outline| > 0"
+              look: "The region of {outline: each outlined neighbor} can't grow to include {ring}"
+            - look: "No neighboring region can grow to include {ring}"
+        # "be N", not "be a N": the article trap ("a 8").
+        bitmap:
+          when: "true"
+          move: "it must be {n}"
+          wordings:
+            - when: "|outline| > 0"
+              look: "Every other number in {ring} would match {outline: an outlined neighbor} or leave a region short of its size"
+            - look: "Every other number in {ring} would touch an equal number or leave a region short of its size"

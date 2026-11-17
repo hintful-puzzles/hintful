@@ -33,8 +33,13 @@ describe("deduceHintPlan", () => {
     expect(plan.length).toBe(1);
     expect(plan[0].cells).toEqual([1]);
     expect(plan[0].value).toBe(2);
-    expect(plan[0].reason).toEqual({ kind: "growth", n: 2, exact: true });
-    expect(plan[0].area).toEqual([2]); // the existing clue-2 cell, shaded
+    expect(plan[0].kind).toBe("mustGrow");
+    // The exact fit, about the existing clue-2 cell, striped.
+    expect(plan[0].says).toEqual({
+      terms: { d: 2 },
+      marks: { stripes: [2] },
+      wording: 0,
+    });
   });
 
   it("can force several squares of one region in a single step", () => {
@@ -44,36 +49,30 @@ describe("deduceHintPlan", () => {
     const plan = deduceHintPlan(st.board, 4, 1);
     expect(plan.length).toBe(1);
     expect([...plan[0].cells].sort((a, b) => a - b)).toEqual([1, 2, 3]);
-    expect(plan[0].reason).toEqual({ kind: "growth", n: 4, exact: true });
-  });
-
-  it("only ever emits the four known reason kinds", () => {
-    const kinds = new Set<string>();
-    for (let s = 0; s < 24; s++) {
-      const st = fromSeed("9x7", `filling-kinds-${s}`);
-      for (const m of deduceHintPlan(st.board, st.w, st.h)) kinds.add(m.reason.kind);
-    }
-    for (const k of kinds) {
-      expect(["growth", "blocked", "lonely", "bitmap"]).toContain(k);
-    }
-    expect(kinds.has("growth")).toBe(true); // region growth dominates
+    expect(plan[0].kind).toBe("mustGrow");
+    expect(plan[0].says).toMatchObject({ wording: 0 }); // the exact fit
   });
 
   it("every region-based step shows non-empty evidence, never its own targets", () => {
-    // The product goal: a hint shows *why*. Region steps (growth / blocked)
-    // must carry a shaded region; the global candidate-elimination (bitmap)
-    // step may reason non-locally — relaxed. No step shades a target cell.
+    // The product goal: a hint shows *why*. Region steps (mustGrow / onlyWay)
+    // must carry a striped region; a square's one number may be pinned by
+    // regions anywhere, so its outline may be empty. No step marks a target.
+    const kinds = new Set<string>();
     for (const seed of SEEDS) {
       const st = fromSeed("9x7", seed);
       const plan = deduceHintPlan(st.board, st.w, st.h);
       expect(plan.length).toBeGreaterThan(0);
       for (const m of plan) {
-        for (const c of m.cells) expect(m.area).not.toContain(c);
-        if (m.reason.kind === "growth" || m.reason.kind === "blocked") {
-          expect(m.area.length).toBeGreaterThan(0);
-        }
+        kinds.add(m.kind);
+        const marks: { stripes?: readonly number[]; outline?: readonly number[] } =
+          m.says.marks;
+        const area = [...(marks.stripes ?? []), ...(marks.outline ?? [])];
+        for (const c of m.cells) expect(area).not.toContain(c);
+        if (m.kind === "mustGrow" || m.kind === "onlyWay")
+          expect(marks.stripes?.length).toBeGreaterThan(0);
       }
     }
+    expect(kinds.has("mustGrow")).toBe(true); // region growth dominates
   });
 });
 
@@ -237,21 +236,21 @@ const pinned = describeHintPins({
     /** Held on 298 of 310 positions walked. */
     stripedRegion: "9x7:c2c2b6a5d53663a27a4c3a7a4b773a7c7b22324b6d2b",
     /** Held on 309 of 310 positions walked. */
-    growth: "9x7:c2c2b6a5d53663a27a4c3a7a4b773a7c7b22324b6d2b",
+    mustGrow: "9x7:c2c2b6a5d53663a27a4c3a7a4b773a7c7b22324b6d2b",
     /** Held on 116 of 310 positions walked. */
-    blocked: {
+    onlyWay: {
       id: "9x7:a64e4a65b354c95d569a9b7b4c5f45a52b3d4a2a",
       moves:
         '[{"type":"set","cells":[3],"value":4},{"type":"set","cells":[18],"value":6},{"type":"set","cells":[12],"value":5},{"type":"set","cells":[4],"value":4},{"type":"set","cells":[22],"value":5},{"type":"set","cells":[24],"value":5},{"type":"set","cells":[58],"value":4}]',
     },
     /** Held on 51 of 310 positions walked. */
-    lonely: {
+    "onlyNumber.lonely": {
       id: "9x7:12d95d992a5542a99b55a4499c3a7h778b64478b8c5",
       moves:
         '[{"type":"set","cells":[45],"value":7},{"type":"set","cells":[56,57],"value":8},{"type":"set","cells":[61,60,59,50],"value":5},{"type":"set","cells":[42],"value":6},{"type":"set","cells":[43],"value":4},{"type":"set","cells":[34],"value":3},{"type":"set","cells":[44],"value":4},{"type":"set","cells":[33],"value":3},{"type":"set","cells":[41],"value":6},{"type":"set","cells":[39],"value":8},{"type":"set","cells":[32],"value":6},{"type":"set","cells":[36],"value":7},{"type":"set","cells":[2],"value":2},{"type":"set","cells":[20],"value":2},{"type":"set","cells":[27],"value":4},{"type":"set","cells":[38],"value":7},{"type":"set","cells":[49,40],"value":8},{"type":"set","cells":[23,24],"value":6},{"type":"set","cells":[5,4],"value":9},{"type":"set","cells":[15],"value":2}]',
     },
     /** Held on 120 of 310 positions walked. */
-    bitmap: {
+    "onlyNumber.bitmap": {
       id: "9x7:2b5a5a3b1a95b68b4a9a6e99a6b345a992d6b44b26d4b",
       moves:
         '[{"type":"set","cells":[4],"value":5},{"type":"set","cells":[6],"value":3},{"type":"set","cells":[21],"value":9},{"type":"set","cells":[26],"value":8},{"type":"set","cells":[28],"value":4},{"type":"set","cells":[39,48],"value":5},{"type":"set","cells":[43],"value":2},{"type":"set","cells":[35,44,53],"value":8},{"type":"set","cells":[56,57],"value":6},{"type":"set","cells":[49],"value":5},{"type":"set","cells":[45],"value":2},{"type":"set","cells":[27,18],"value":3},{"type":"set","cells":[58],"value":6},{"type":"set","cells":[29],"value":5},{"type":"set","cells":[19],"value":4}]',

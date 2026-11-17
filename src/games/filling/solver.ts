@@ -39,93 +39,63 @@ import { stepBudget } from "../../engine/step-budget.ts";
 import * as filling from "../../generated/games/filling/filling.compiled.ts";
 import { dealtOf, spaceOf } from "./state.ts";
 
-/** Why a *set* of cells is forced — drives the hint's narration. A single
- * deduction usually forces several squares at once, so a hint step carries a
- * group of cells sharing one reason (the cross-game "one firing = one journey"
- * bar), not a lone cell.
- * - `growth`: a region cannot reach its size without these empty squares (they
- *   are on every completion). `exact` ⇒ they *complete* the region.
- * - `blocked`: a region with one empty square beside it that it can grow into
- *   — always a single cell.
- * - `lonely`: every neighbor is filled and no neighboring region can grow to
- *   include this square, so it is a region of one — a 1.
- * - `bitmap`: every number but one is ruled out here; the local eliminators
- *   are the filled orthogonal neighbors. */
-export type FillingHintReason =
-  | { kind: "growth"; n: number; exact: boolean }
-  | { kind: "blocked"; n: number }
-  | { kind: "lonely" }
-  | { kind: "bitmap"; n: number };
-
-/** The rungs a hint step can be: the reasons' kinds. */
-export const FILLING_RUNGS = ["growth", "blocked", "lonely", "bitmap"] as const;
+/** The rungs a hint step can be: the kinds of step the description says. */
+export const FILLING_RUNGS = filling.SAYS_KINDS;
 export type FillingRung = (typeof FILLING_RUNGS)[number];
 
-/** One step of a hint plan: a set of cells forced to the same value, the
- * evidence cells to shade (the region the deduction reasons about, or the
- * neighbors that pin a lonely / eliminated cell), and the reason. */
+/** What a placing firing says: its terms, its marks and the wording that
+ * held. */
+export type FillingSays = filling.SaysById[keyof filling.SaysById];
+
+/** One step of a hint plan: a set of cells forced to the same value by one
+ * firing (a single deduction usually forces several squares at once, so a
+ * step carries the group, not a lone cell), its kind and what it says. */
 export interface FillingHintMove {
   cells: number[];
   value: number;
-  area: number[];
-  reason: FillingHintReason;
+  kind: FillingRung;
+  says: FillingSays;
 }
 
-/** What a firing records: the reason a hint step narrates and the squares it
- * shades, or for a number ruled out of a square, which no step shows, `null`
- * and the square. */
+/** What a firing records: what a placing firing says, its kind and the
+ * squares it reads, or for a number ruled out of a square, which no step
+ * shows, `null` and the square. */
 interface Recorded {
-  reason: FillingHintReason | null;
-  area: number[];
+  said: { kind: FillingRung; says: FillingSays } | null;
+  area: readonly number[];
 }
 
-/** The filled neighbors of square `c`: what pins a square's one number. */
-function filledNeighbors(m: CellMarks, c: number): number[] {
-  return m.sp.adj4[c].filter((y) => m.known(y));
-}
+/** What a placing firing of technique `id` records. */
+const placed =
+  (id: keyof filling.SaysById) =>
+  (
+    _binding: unknown,
+    _c: number,
+    _n: number,
+    _m: CellMarks,
+    says: FillingSays,
+  ): Recorded => {
+    const kind = ("arm" in says ? `${id}.${says.arm}` : id) as FillingRung;
+    const marks: { stripes?: readonly number[]; outline?: readonly number[] } =
+      says.marks;
+    return {
+      said: { kind, says },
+      area: [...(marks.stripes ?? []), ...(marks.outline ?? [])],
+    };
+  };
 
-/** The ladder, each technique with the reason its firings record, built from
- * the binding on the marks before the firing. It reads no clue, the numbers
- * given being placed on the marks, so one serves every board. */
+/** The ladder, each technique with what its firings record, built on the
+ * marks before the firing. It reads no clue, the numbers given being placed
+ * on the marks, so one serves every board. */
 function fillingLadder(): Ladder {
+  const struck = ({ c }: { c: number }): Recorded => ({ said: null, area: [c] });
   return describedLadder(filling, null, {
-    mustGrow: uncluedRung(
-      filling.mustGrow,
-      ({ A, d, Y }: filling.MustGrowBinding): Recorded => ({
-        reason: { kind: "growth", n: d, exact: Y.length === d - A.length },
-        area: [...A],
-      }),
-    ),
-    onlyWay: uncluedRung(
-      filling.onlyWay,
-      ({ A, d }: filling.OnlyWayBinding): Recorded => ({
-        reason: { kind: "blocked", n: d },
-        area: [...A],
-      }),
-    ),
-    tooBig: uncluedRung(
-      filling.tooBig,
-      ({ c }: filling.TooBigBinding): Recorded => ({ reason: null, area: [c] }),
-    ),
-    noRoom: uncluedRung(
-      filling.noRoom,
-      ({ c }: filling.NoRoomBinding): Recorded => ({ reason: null, area: [c] }),
-    ),
-    tooFar: uncluedRung(
-      filling.tooFar,
-      ({ c }: filling.TooFarBinding): Recorded => ({ reason: null, area: [c] }),
-    ),
-    onlyNumber: uncluedRung(
-      filling.onlyNumber,
-      ({ c }: filling.OnlyNumberBinding, _at, n, m): Recorded => {
-        const evidence = filledNeighbors(m, c);
-        const lonely = n === 1 && evidence.length === m.sp.adj4[c].length;
-        return {
-          reason: lonely ? { kind: "lonely" } : { kind: "bitmap", n },
-          area: evidence,
-        };
-      },
-    ),
+    mustGrow: uncluedRung(filling.mustGrow, placed("mustGrow")),
+    onlyWay: uncluedRung(filling.onlyWay, placed("onlyWay")),
+    tooBig: uncluedRung(filling.tooBig, struck),
+    noRoom: uncluedRung(filling.noRoom, struck),
+    tooFar: uncluedRung(filling.tooFar, struck),
+    onlyNumber: uncluedRung(filling.onlyNumber, placed("onlyNumber")),
   });
 }
 
@@ -286,8 +256,8 @@ export function deduceHintPlan(
   const plan: FillingHintMove[] = [];
   let group = -1;
   m.recorder = (rec: DeductionRecord) => {
-    const { reason, area } = rec.reason as Recorded;
-    if (rec.kind !== "place" || reason === null) return;
+    const { said } = rec.reason as Recorded;
+    if (rec.kind !== "place" || said === null) return;
     const cell = rec.y * w + rec.x;
     const last = plan.at(-1);
     if (last !== undefined && rec.group === group) {
@@ -295,7 +265,7 @@ export function deduceHintPlan(
       return;
     }
     group = rec.group;
-    plan.push({ cells: [cell], value: rec.n, area, reason });
+    plan.push({ cells: [cell], value: rec.n, ...said });
   };
   m.budget = stepBudget("filling hint");
   // The squares a firing reads and fills: a player follows a region as it
@@ -307,9 +277,5 @@ export function deduceHintPlan(
   };
   const walk = ladderWalk(m, LADDER.entries, { [TIERS]: 0 }, reads);
   for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next());
-  for (const step of plan) {
-    const filled = new Set(step.cells);
-    step.area = step.area.filter((c) => !filled.has(c));
-  }
   return plan;
 }

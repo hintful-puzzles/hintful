@@ -517,6 +517,17 @@ function statedOnce<E>(
     !(relation?.kind === "sequence" && relation.at !== "first"),
   );
   const move = parts.move ?? closing;
+  // A wording that states only its look leaves the move to the ringed squares
+  // and the board (Filling's region that fits exactly into them).
+  if (
+    move === null &&
+    parts.look !== undefined &&
+    parts.follows === undefined &&
+    parts.aim === undefined &&
+    effect === undefined &&
+    relation === null
+  )
+    return unshaped(phrase`${parts.look}.`, "evident");
   if (move === null)
     throw new Error("stated clause: no move, and no closing from the fact");
   if (cx.later === true && again !== undefined)

@@ -92,7 +92,14 @@ Planning games (a `steps` block, Slide's form):
 Logic games:
 
 - [ ] Pattern
-- [ ] Filling
+- [x] Filling (2026-11-17): every sentence is the same, and its marks; the
+  rungs are the description's kinds (growth → `mustGrow`, blocked →
+  `onlyWay`, lonely and bitmap → `onlyNumber.lonely` and `.bitmap`), and
+  the dump is byte-identical with those renamed. The area kinds that place
+  carry their sentence, a look alone; the engine says a wording with a look
+  and no move as `evident`, as it says a move alone `bare`. Its own walk
+  stays (a strike is no step where a player keeps no notes) and speaks
+  `STATED`. Read in the app: the exact fit, region striped, square ringed.
 - [ ] Signpost
 - [ ] Seismic
 - [ ] Rome

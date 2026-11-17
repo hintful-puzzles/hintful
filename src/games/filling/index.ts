@@ -45,9 +45,10 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { statedSentence } from "../../engine/stated.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
+import { STATED } from "../../generated/games/filling/filling.compiled.ts";
 import { newFillingDesc } from "./generator.ts";
-import { type Marked, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -61,7 +62,7 @@ import {
   answerOf,
   deduceHintPlan,
   FILLING_RUNGS,
-  type FillingHintReason,
+  type FillingHintMove,
   type FillingRung,
   solveFilling,
 } from "./solver.ts";
@@ -244,59 +245,41 @@ export interface FillingHint {
   value: number;
 }
 
-/** A growth or blocked step is about one region, which is its hatch. */
-const namesRegion = (reason: FillingHintReason): boolean =>
-  reason.kind === "growth" || reason.kind === "blocked";
-
 const pointOf = (i: number, w: number): Point => ({ x: i % w, y: (i / w) | 0 });
 
-/** Narrate *why* the squares are forced, per the technique that fired. The
- * forced `cells` are ringed; `region` is the region the sentence is about
- * ("the striped region of N"), and `evidence` the neighbors that pin a lonely
- * or eliminated cell, outlined, so the player sees the reasoning, not just the
- * conclusion (docs/hints-marks.md § "Hatch the line the sentence names"). All
- * are indices into a grid `w` wide. The words are
- * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(
-  reason: FillingHintReason,
-  w: number,
-  cells: readonly number[],
-  region: readonly number[],
-  evidence: readonly number[],
-): Sentence {
+/** Why the squares are forced, in the words `filling.description.yaml`
+ * states for the step's kind: the forced `cells` are ringed, the region a
+ * step grows striped, and the filled neighbors that pin a square's one
+ * number outlined. */
+function narrate(m: FillingHintMove, w: number): Sentence {
   const at = (i: number): Point => pointOf(i, w);
-  const m: Marked = {
-    cells: cells.map(at),
-    region: region.map(at),
-    evidence: evidence.map(at),
-  };
-  switch (reason.kind) {
-    case "growth":
-      return say.growth(reason.n, reason.exact, m);
-    case "blocked":
-      return say.blocked(reason.n, m);
-    case "lonely":
-      return say.lonely(m);
-    case "bitmap":
-      return say.bitmap(reason.n, m);
-  }
+  const marks: { stripes?: readonly number[]; outline?: readonly number[] } =
+    m.says.marks;
+  const wording = "wording" in m.says ? m.says.wording : 0;
+  return statedSentence(STATED[m.kind].step[wording], {
+    kind: CELL,
+    at,
+    ring: m.cells.map(at),
+    marks: {
+      stripes: (marks.stripes ?? []).map(at),
+      outline: (marks.outline ?? []).map(at),
+    },
+    terms: m.says.terms,
+    value: String,
+  });
 }
 
 function hint(state: FillingState): HintResult<FillingMove, FillingHint, FillingRung> {
   const plan = deduceHintPlan(state.board, state.w, state.h);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  const w = state.w;
   const steps: HintStep<FillingMove, FillingHint, FillingRung>[] = plan.map((m) => {
-    const highlights: FillingHint = { cells: m.cells, value: m.value };
-    const words = namesRegion(m.reason)
-      ? narrate(m.reason, w, m.cells, m.area, [])
-      : narrate(m.reason, w, m.cells, [], m.area);
+    const words = narrate(m, state.w);
     return {
       move: { type: "set", cells: m.cells, value: m.value },
-      rung: m.reason.kind,
+      rung: m.kind,
       explanation: words.text,
       words,
-      highlights,
+      highlights: { cells: m.cells, value: m.value },
     };
   });
   return { ok: true, steps };

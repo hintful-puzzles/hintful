@@ -751,8 +751,10 @@ export const KINDS: Readonly<Record<string, Kind>> = {
   // pairs a new region of d may take, and `holding(a, c, O)`, the fewest
   // squares a region holding both `c` and `a`'s group holds. They are the
   // region kinds (`region.grow`) over numbers in place of walls: a region
-  // grows by a number placed, not an edge opened. Each game's hint names its
-  // own rule, so they carry no words.
+  // grows by a number placed, not an edge opened. The two that place carry
+  // their sentences, a look alone: the ringed squares and the region's number
+  // say what fills them. The three that strike carry none, for a strike is no
+  // step of a game with no notes.
   //
   // A square without which the squares a region short of its number can
   // reach would hold too few is in it; where they hold exactly enough, it
@@ -764,6 +766,19 @@ export const KINDS: Readonly<Record<string, Kind>> = {
     technique: {
       for: "O = alike, d in domain, F = room(d), c in cells where value(c) = d, A = through(c, O) where c = nth(A, 0) and |A| != d and not grown(A), R = through(c, F), Y = {t in R where not known(t) and reaches(c, R, t) < d}",
       conclude: "|A| < d and |R| >= d and forall t in Y: place(t, d)",
+      says: {
+        terms: { d: "d" },
+        marks: { stripes: "A" },
+        wordings: [
+          {
+            when: "|Y| = d - |A|",
+            look: "{stripes: the striped region of {d}} fits exactly into {ring: this last {noun} | these {nouns}}",
+          },
+          {
+            look: "{stripes: the striped region of {d}} can't fully grow without {ring}",
+          },
+        ],
+      },
     },
     // A square whose loss leaves a region exactly enough read as one it needs.
     plant: {
@@ -778,6 +793,11 @@ export const KINDS: Readonly<Record<string, Kind>> = {
     technique: {
       for: "O = alike, c in cells where known(c), A = through(c, O) where c = nth(A, 0) and |A| < value(c) and not grown(A), d = value(c), T = set(t over a in A, t in adj4(a) where not known(t) and 1 + |joins(t, d, O)| <= d) where |T| <= 1",
       conclude: "|T| = 1 and place(nth(T, 0), d)",
+      says: {
+        terms: { d: "d" },
+        marks: { stripes: "A" },
+        look: "{stripes: the striped region of {d}} has only {ring: this one empty {noun}} to grow into",
+      },
     },
     // A square that would complete the region read as one it can't take.
     plant: {

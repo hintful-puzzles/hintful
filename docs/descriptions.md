@@ -1168,8 +1168,10 @@ number cannot reach enough without, `area.grow` its one square left to grow
 into, and `area.over`, `area.short` and `area.far` strike a number that would
 make a region too big, could not make one big enough, or lies too far from
 every region of it. They read the game's `alike`, `room(d)`, `joins(c, d,
-O)` and `grown(A)` (and `fresh(d)`, `holding(a, c, O)` for `area.far`), take
-no parameters, and carry no words, Filling's hint naming its own rule.
+O)` and `grown(A)` (and `fresh(d)`, `holding(a, c, O)` for `area.far`) and
+take no parameters. The two that place carry their sentence, a look alone
+("the striped region of 4 can't fully grow without these squares"); the three
+that strike carry none, a strike being no step where a player keeps no notes.
 `connect.cut` is a rule that a `set` of squares be one group (Range's clear
 squares, Singles' uncovered ones): an open square whose loss would split it
 takes `rest`, and a set already apart is a contradiction. It carries its
@@ -1356,7 +1358,10 @@ beside the list, and only the last may leave out `when`. A firing's `when`
 reads the binding, the terms, and the marks by role (`|stripes| > 0`); a
 fact's is read where the fact is made, in the conclusion's scope. An arm is a
 different deduction, with its own rung; a wording is not, so a sentence that
-differs by what the board shows is a wording, never an arm. A clause is
+differs by what the board shows is a wording, never an arm. A wording with a
+`look` and no `move` (where the engine has no closing for it) is said as the
+look alone, `evident`: the ringed squares and the board say the move
+(Filling's region that fits exactly into them). A clause is
 whole, with slots, and its grammar is
 [`engine/stated-clauses.ts`](../src/engine/stated-clauses.ts)'s header; the
 compiler refuses a slot that names no number term, lexicon word, role the

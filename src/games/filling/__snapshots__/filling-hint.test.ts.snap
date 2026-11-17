@@ -4242,10 +4242,10 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
 
 exports[`filling: pinned hint positions > says, at each pin 1`] = `
 {
-  "bitmap": "Every other number in this square would match an outlined neighbor or leave a region short of its size, so it must be 2.",
-  "blocked": "The striped region of 5 has only this one empty square to grow into.",
-  "growth": "The striped region of 3 fits exactly into these squares.",
-  "lonely": "The region of each outlined neighbor can't grow to include this square, so it can only be a 1.",
+  "mustGrow": "The striped region of 3 fits exactly into these squares.",
+  "onlyNumber.bitmap": "Every other number in this square would match an outlined neighbor or leave a region short of its size, so it must be 2.",
+  "onlyNumber.lonely": "The region of each outlined neighbor can't grow to include this square, so it can only be a 1.",
+  "onlyWay": "The striped region of 5 has only this one empty square to grow into.",
   "stripedRegion": "The striped region of 3 fits exactly into these squares.",
 }
 `;
