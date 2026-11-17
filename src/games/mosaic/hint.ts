@@ -44,10 +44,6 @@ const described = describedFiringHint<
 >({
   name: "mosaic hint",
   walk: hintWalk,
-  // A player rarely follows more than a few steps before going their own way,
-  // and the plan is asked for again then; each step reads every number on the
-  // board, which on a large one is the cost of a hint.
-  plan: 24,
   width: (s) => s.width,
   size: (s) => s.width * s.height,
   valueAt: markAt,

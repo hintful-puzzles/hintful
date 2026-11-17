@@ -22,7 +22,7 @@
  * Cell games only: a fact is a placement of a value on a cell.
  */
 import { PLACE } from "./describe-runtime.ts";
-import { filledBy, premiseOf, spokenOf } from "./described-hint.ts";
+import { DEFAULT_PLAN, filledBy, premiseOf, spokenOf } from "./described-hint.ts";
 import { type DescribedRulesOut, describedRulesOut } from "./described-rules-out.ts";
 import type { HintResult, HintStep, HintTrackVerdict, RulesOut } from "./game.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
@@ -145,7 +145,7 @@ interface FiringShape<
    * open. */
   tiers?: { lowest(state: State): number; count: number };
   /** The most firings a plan holds: a player rarely follows more, and a
-   * recompute yields the next batch. */
+   * recompute yields the next batch; {@link DEFAULT_PLAN} where left out. */
   plan?: number;
   /** The techniques whose step is made for each square the firing decides
    * (`says.shown: each`): the compiled module's `SAYS_EACH`. */
@@ -279,6 +279,7 @@ export function describedFiringHint<
       throw new Error(`${spec.name}: ${id} is both stated and overridden`);
 
   /** The steps of the firings the ladder makes from `state` at tier `cap`. */
+  const plan = spec.plan ?? DEFAULT_PLAN;
   const stepsAt = (state: State, cap: number): Step[] => {
     const walked = spec.walk(state, cap);
     if (walked === null) return [];
@@ -288,7 +289,7 @@ export function describedFiringHint<
     m.budget = stepBudget(spec.name);
     const walk = ladderWalk(m, entries, { [TIERS]: cap }, premiseOf);
     const steps: Step[] = [];
-    for (let fired = 0; spec.plan === undefined || fired < spec.plan; fired++) {
+    for (let fired = 0; fired < plan; fired++) {
       const before = m.grid.slice();
       const f = walk.next();
       if (f === null || f === "contradiction") break;

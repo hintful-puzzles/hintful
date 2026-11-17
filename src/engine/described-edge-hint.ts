@@ -13,6 +13,7 @@
  */
 
 import {
+  DEFAULT_PLAN,
   type SuppliedHooks,
   type SuppliedOf,
   spokenOf,
@@ -120,7 +121,7 @@ export interface EdgeHintSpec<
    * firing to tell what the firing changed (Magnets). */
   settle?(marks: CellMarks, ctx: Ctx): boolean;
   /** The most steps a plan holds, a firing's last leg included; {@link
-   * EDGE_PLAN} where left out. */
+   * DEFAULT_PLAN} where left out. */
   plan?: number;
   /** The elements a firing writes, which the walk continues from. Left out, a
    * firing writes the two cells each of its edges lies between. */
@@ -199,15 +200,6 @@ export interface EdgeHintSpec<
       };
 }
 
-/**
- * The most steps a plan holds unless a game says otherwise: a UX bound, not a
- * correctness one. A player rarely follows more than a handful of steps before
- * going their own way, and the plan is recomputed then anyway; it also keeps a
- * hint cheap enough for the cross-game resume walk, which asks after every
- * move.
- */
-const EDGE_PLAN = 40;
-
 /** The hint of a game whose ladder works on the edges, a step a firing. */
 export function describedEdgeHint<
   State,
@@ -236,7 +228,7 @@ export function describedEdgeHint<
     typeof say === "function"
       ? (say as Say)
       : ((say as unknown as Record<string, Say> | undefined)?.[technique] ?? null);
-  const plan = spec.plan ?? EDGE_PLAN;
+  const plan = spec.plan ?? DEFAULT_PLAN;
 
   /** The steps the ladder makes from `state` at tier `cap`, or the refusal
    * where its marks contradict themselves. */

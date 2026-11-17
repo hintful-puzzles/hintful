@@ -205,7 +205,6 @@ export const bridgesHint = describedEdgeHint<
   name: "bridges hint",
   walk: (state, _cap) => bridgesWalk(state),
   tiers: { lowest: walkTier, count: TIER_COUNT },
-  plan: 12,
   // A player follows the islands: a firing reads the island it is about and
   // those it counts, and writes the islands its lines join.
   writes: (taken, ctx) => linesJoined(ctx.geo, taken),

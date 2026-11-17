@@ -105,6 +105,15 @@ export interface DescribedHint<State, Move, Kind extends string> {
 const sameMove = (a: unknown, b: unknown): boolean =>
   JSON.stringify(a) === JSON.stringify(b);
 
+/**
+ * The most steps a plan holds unless a game says otherwise: a UX bound, not a
+ * correctness one. A player rarely follows more than a handful of steps before
+ * going their own way, and the plan is recomputed then anyway; it also keeps a
+ * hint cheap enough for the cross-game resume walk, which asks after every
+ * move.
+ */
+export const DEFAULT_PLAN = 40;
+
 /** What a firing says: recorded for each of its facts by a technique that
  * `says`; the first fact's is the firing's. */
 export const spokenOf = <Y>(taken: Taken): Said<unknown, Y> =>

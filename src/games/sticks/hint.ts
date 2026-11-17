@@ -52,9 +52,6 @@ const described = describedFiringHint<
 >({
   name: "sticks hint",
   walk: hintWalk,
-  // A player rarely follows more firings than this before diverging, and a
-  // recompute yields the next batch.
-  plan: 40,
   // Every technique decides a square to a step, the evidence being that
   // square's own; a number's later squares continue the first.
   each: SAYS_EACH,

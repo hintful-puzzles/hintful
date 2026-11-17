@@ -56,9 +56,6 @@ const described = describedFiringHint<
 >({
   name: "bricks hint",
   walk: hintWalk,
-  // A player rarely follows more than a few steps before going their own way,
-  // and the plan is asked for again then.
-  plan: 40,
   // Every technique decides a square to a step: the evidence is what that
   // square's own rule reads.
   each: SAYS_EACH,

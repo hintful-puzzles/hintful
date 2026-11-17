@@ -43,7 +43,6 @@ const described = describedFiringHint<
 >({
   name: "skeleton hint",
   walk: (state: SkeletonBoard) => hintWalk(state, 0),
-  plan: 24,
   width: (s) => s.w,
   size: (s) => s.w * s.h,
   valueAt: (s, cell) => (s.grid[cell] === BLANK ? 0 : s.grid[cell]),

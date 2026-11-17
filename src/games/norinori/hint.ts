@@ -46,9 +46,6 @@ const described = describedFiringHint<
   name: "norinori hint",
   walk: hintWalk,
   rulesOut: RULES_OUT,
-  // A player rarely follows more than a few steps before going their own way,
-  // and the plan is asked for again then.
-  plan: 24,
   width: (s) => s.w,
   size: (s) => s.w * s.h,
   valueAt: (s, cell) => s.grid[cell],

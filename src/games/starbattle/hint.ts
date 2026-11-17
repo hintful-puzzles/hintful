@@ -50,9 +50,6 @@ const described = describedFiringHint<
   name: "starbattle hint",
   walk: hintWalk,
   rulesOut: RULES_OUT,
-  // A player rarely follows more than a few steps before going their own way,
-  // and the plan is asked for again then.
-  plan: 24,
   width: (s) => s.size,
   size: (s) => s.grid.length,
   valueAt: (s, cell) => s.grid[cell],

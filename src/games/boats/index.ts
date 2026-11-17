@@ -452,9 +452,6 @@ const described = describedFiringHint<
   name: "boats hint",
   walk: hintWalk,
   tiers: { lowest: lowestSolvingDiff, count: DIFFCOUNT },
-  // A player rarely follows more than a few steps before diverging, and a
-  // recompute yields the next batch.
-  plan: 40,
   width: (s) => s.params.w,
   size: (s) => s.params.w * s.params.h,
   valueAt,

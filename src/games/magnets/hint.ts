@@ -63,14 +63,6 @@ import {
   ROW,
 } from "./state.ts";
 
-/**
- * How many steps ahead the plan is computed: a UX bound, not a correctness
- * one. A player rarely follows more than a handful of steps before going their
- * own way, and the plan is recomputed then anyway; it also keeps `hint()` cheap
- * enough to call after every move, which the cross-game resume walk does.
- */
-const PLAN_CAP = 24;
-
 /** The board a firing read, captured before it changed anything. */
 export interface Snapshot extends ReadableBoard {
   readonly grid: Int32Array;
@@ -872,7 +864,6 @@ export const magnetsHint = describedEdgeHint<
   walk: magnetsWalk,
   settle: noteBoard,
   tiers: { lowest: () => DIFF_TRICKY, count: DIFF_TRICKY + 1 },
-  plan: PLAN_CAP,
   done: (m) => !m.grid.includes(0),
   step: stepOf,
   say: sentence,
