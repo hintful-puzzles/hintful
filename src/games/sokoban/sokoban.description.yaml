@@ -192,6 +192,117 @@ deadEnds:
   # Where every barrel is needed, a barrel off a target that can never move
   # again.
   jammed: "tight and exists c in cells where barrel(c) = 1 and target(c) = 0: not loose(c)"
+# Sokoban's sentences, spoken through the hint's voice (`hint.ts`). A step
+# offers one push, ringed on its barrel and the square it goes into; `way` is
+# which way. What it says is what the search settled about the barrel's other
+# pushes, a trap the player can see first; whether "so" may be said is the
+# rival judging's, passed as the relation, and where a push stands in a run
+# is the planner's, passed as the relation too.
+phrases:
+  # The push, mid-sentence.
+  push: "push {ring: this barrel} {way}"
+  # What a trap's striped push would leave stuck: the barrel itself (`own`),
+  # or the outlined barrel it would freeze against it.
+  it: "{if own: it | {outline victim: the outlined barrel}}"
+steps:
+  # This barrel pushed the striped way would be stuck for good: wedged in a
+  # corner, where no push leads it to a target, or jammed so it can never
+  # move again.
+  trap:
+    ring: push
+    terms: { way: &way [left, up, right, down], why: [corner, dead, frozen], own: flag }
+    marks: { outline: [victim], stripes: [rival] }
+    answers: "One way to avoid that"
+    move: "push it {way}"
+    wordings:
+      - when: "why = corner"
+        look: >-
+          {ring: this barrel}'s {stripes rival: striped push} would wedge {it}
+          in a corner it can never leave
+      - when: "why = dead"
+        look: >-
+          {ring: this barrel}'s {stripes rival: striped push} would leave {it}
+          where no push can bring it to a target
+      - look: "{ring: this barrel}'s {stripes rival: striped push} would jam {it} so it can never move"
+  # Every other push of this barrel was searched to the end and none can
+  # finish.
+  only:
+    ring: push
+    terms: { way: *way }
+    look: "No other push of {ring: this barrel} can still finish"
+    move: "push it {way}"
+  # Every other push was settled: those with arrows can finish, the rest
+  # cannot. The offered push carries an arrow too, being one of them.
+  onlyThese:
+    ring: push
+    terms: { way: *way }
+    marks: { outline: [goods] }
+    look: "{ring: this barrel} can still finish only along {outline goods: the arrow | the arrows}"
+    move: "push it {way}"
+  # Those with arrows can finish, at least one other cannot, and some were
+  # not settled.
+  alsoThese:
+    ring: push
+    terms: { way: *way }
+    marks: { outline: [goods] }
+    look: "{ring: this barrel} can still finish along {outline goods: the arrow | the arrows}, but not every way"
+    move: "push it {way}"
+  # A barrel on the outlined target would shut off the one this push fills:
+  # no barrel could be pushed onto it from any square. Every target has to
+  # be filled, so this one goes first.
+  fillFirst:
+    ring: push
+    terms: { way: *way }
+    marks: { outline: [goal] }
+    look: "A barrel on {outline goal: the outlined target} would wall off {ring: the ringed one}"
+    answers: "Fill that one first"
+    move: "{push}"
+  # The outlined barrel cannot reach a target while this one stands where
+  # it is, and can once it is pushed. This barrel may stand on the other's
+  # path or where the player must stand to push it, so the words say
+  # neither.
+  clearsWay:
+    ring: push
+    terms: { way: *way }
+    marks: { outline: [victim] }
+    look: "{ring: this barrel} keeps {outline victim: the outlined barrel} from reaching a target"
+    move: "push it {way}"
+    effect: "that opens a way"
+  # A run of pushes of one barrel that ends with it on a target. The hint's
+  # counter shows how many there are, so the words do not.
+  runFirst:
+    ring: push
+    terms: { way: *way }
+    look: "A run of pushes puts {ring: this barrel} on a target"
+    move: "push it {way}"
+  runNext:
+    ring: push
+    terms: { way: *way }
+    move: "{push}"
+  runLast:
+    ring: push
+    terms: { way: *way }
+    move: "{push}"
+    effect: "that puts it on a target"
+  onTarget:
+    ring: push
+    terms: { way: *way }
+    move: "{push}"
+    effect: "that puts it on a target"
+  # The player can walk to little of the board, and this push opens much of
+  # it: four times the squares or more.
+  freesYou:
+    ring: push
+    terms: { way: *way }
+    look: "Barrels box you in"
+    move: "{push}"
+    effect: "that lets you out"
+  # Nothing settled about the rivals worth saying. That this push can still
+  # finish goes without saying: the hint offers no other kind.
+  plain:
+    ring: push
+    terms: { way: *way }
+    move: "{push}"
 deal:
   start: >-
     the game played backward from a finished board, the player pulling

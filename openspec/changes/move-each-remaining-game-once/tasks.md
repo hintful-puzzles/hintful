@@ -82,12 +82,17 @@ Planning games (a `steps` block, Slide's form):
   itself, the engine's MOVE kind ("go back for it"), and the lint lets its
   words be a clause. A sequence's later leg no longer capitalizes the look
   after its "Next,".
-- [ ] Sokoban. Needs, read 2026-11-17: the same sequence-with-effect
-  (`runLast`), and a `when` that compares a word term with one of its words
-  (`why = corner`; `stepWhen` in `describe/compile.ts` compares numbers
-  only) for the trap's three fates, or three trap steps. "it" or the
-  outlined barrel is an `{if own: …}`; `stuckBarrel` (a refusal's words)
-  stays in hint.ts. One voice over `Push | number`.
+- [x] Sokoban (2026-11-17): dump byte-identical, marks included
+  (`DUMP_DEALS=150`, 17,704 lines), every step met but a corner or dead
+  trap on another barrel, which says the same `{it}` phrase as the jam
+  that is met. Its sentences are `steps` spoken through one voice over
+  `Push | number` in `hint.ts`; its marks and legend are `hint-marks.ts`,
+  and a refusal's stuck barrel stays the hint's own words. The engine
+  gained two things: a step that states an `effect` and is passed a
+  `sequence` relation says both ("Last, push this barrel right: that puts
+  it on a target"; `stated.ts` made it a lone effect), and a step's `when`
+  compares a word term with one of its words (`why = corner`). Read in the
+  app (10x12): a push that opens a way, a run's next and last pushes.
 
 Logic games:
 

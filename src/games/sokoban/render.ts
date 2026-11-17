@@ -34,7 +34,7 @@ import { drawPiece } from "../../engine/piece.ts";
 import { textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
-import { BARREL, GOAL, PUSH } from "./hint-text.ts";
+import { BARREL, GOAL, PUSH } from "./hint-marks.ts";
 import { motionAt, motionFor, motionLength } from "./motion.ts";
 import { DIRS, type Push } from "./solver.ts";
 import {

@@ -46,14 +46,21 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
-import { phrase, type Sentence } from "../../engine/hint-words.ts";
+import {
+  type MarkKind,
+  mark,
+  phrase,
+  type Relation,
+  type Sentence,
+} from "../../engine/hint-words.ts";
 import { judgeRivals, type Verdict } from "../../engine/rival-judging.ts";
 import {
   searchRefusal,
   searchVerdict,
   type Unfinished,
 } from "../../engine/search-outcome.ts";
-import { type Stuck, say, stuckBarrel } from "./hint-text.ts";
+import * as sokoban from "../../generated/games/sokoban/sokoban.compiled.ts";
+import { BARREL, GOAL, PUSH } from "./hint-marks.ts";
 import {
   DIRS,
   type Finish,
@@ -107,6 +114,35 @@ const keyOf = (p: Push) => `${p.barrel}>${p.dir}`;
 
 /** The square a push moves its barrel into. */
 const into = (board: SokobanBoard, p: Push) => board.step(p.barrel, p.dir);
+
+/** Why a barrel can never reach a target: wedged in a corner, on a square no
+ * push leads a target from, or jammed against walls and barrels so that it can
+ * never move again. */
+export type Stuck = "corner" | "dead" | "frozen";
+
+/** The steps of `sokoban.description.yaml`, spoken: a push is drawn on its
+ * barrel and the square it goes into, a barrel or a target on its square. */
+const speak = sokoban.voice<number | Push>({
+  kind: BARREL as MarkKind<number | Push>,
+  kinds: {
+    push: PUSH as MarkKind<number | Push>,
+    rival: PUSH as MarkKind<number | Push>,
+    goods: PUSH as MarkKind<number | Push>,
+    goal: GOAL as MarkKind<number | Push>,
+  },
+  value: String,
+});
+
+const WAY = ["left", "up", "right", "down"] as const;
+
+/** What every step is told: the push it rings, and which way it goes. */
+const pushed = (m: Push) => ({ ring: [m], terms: { way: WAY[m.dir] } });
+
+/** The sentence of a step that says nothing but the push, or how it stands
+ * in a run (`relation`). */
+type Plain = "plain" | "onTarget" | "freesYou" | "runFirst" | "runNext" | "runLast";
+const sayPlain = (id: Plain, m: Push, relation?: Relation): Sentence =>
+  speak.sentence(id, { ...pushed(m), ...(relation ? { relation } : {}) });
 
 /** Why the barrel at `c` is stuck, in the words' terms. */
 function stuckWhy(board: SokobanBoard, p: Position, c: number): Stuck | null {
@@ -171,7 +207,7 @@ export function hasNoSolution(state: SokobanState): false | MarkedDeadEnd {
     : board.cornered(c)
       ? "corner"
       : "dead";
-  const it = stuckBarrel(c);
+  const it = mark.the("outline", BARREL, [c], "barrel");
   if (why === "corner")
     return markedDeadEnd(
       phrase`${it.capitalized()} is wedged in a corner it can never leave. Undo.`,
@@ -265,16 +301,33 @@ export function hint(
       const own = trap.victim === into(board, trap.r);
       return {
         rung: "trap",
-        words: say.trap(m, trap.r, trap.why, own ? null : trap.victim),
+        words: speak.sentence("trap", {
+          ring: [m],
+          terms: { way: WAY[m.dir], why: trap.why, own },
+          marks: {
+            outline: { victim: own ? [] : [trap.victim] },
+            stripes: { rival: [trap.r] },
+          },
+        }),
       };
     }
 
+    // The relation is the judging's own (`judgeRivals`).
     const c = judgeRivals(rivals, ALLOWANCE, judge).claim;
-    if (c.kind === "only") return { rung: "only", words: say.only(m, c.relation) };
-    if (c.kind === "onlyThese")
-      return { rung: "onlyThese", words: say.onlyThese(m, c.goods, c.relation) };
-    if (c.kind === "alsoThese")
-      return { rung: "alsoThese", words: say.alsoThese(m, c.goods, c.relation) };
+    if (c.kind === "only")
+      return {
+        rung: "only",
+        words: speak.sentence("only", { ...pushed(m), relation: c.relation }),
+      };
+    if (c.kind === "onlyThese" || c.kind === "alsoThese")
+      return {
+        rung: c.kind,
+        words: speak.sentence(c.kind, {
+          ...pushed(m),
+          marks: { outline: { goods: [m, ...c.goods] } },
+          relation: c.relation,
+        }),
+      };
     // With nothing settled to contrast, what the push does to the order the
     // barrels can go home in, then what it does where the board shows it: a
     // barrel onto a target, or a player let out of a corner of the board
@@ -284,16 +337,29 @@ export function hint(
     const after = board.apply(here, m);
     if (board.target[to]) {
       const later = shutBy(board, here, to);
-      if (later !== null) return { rung: "fillFirst", words: say.fillFirst(m, later) };
+      if (later !== null)
+        return {
+          rung: "fillFirst",
+          words: speak.sentence("fillFirst", {
+            ...pushed(m),
+            marks: { outline: { goal: [later] } },
+          }),
+        };
     }
     const frees = board.region(after).length >= FREED * board.region(here).length;
     if (!frees) {
       const blocked = clearedBy(board, here, after, m.barrel);
       if (blocked !== null)
-        return { rung: "clearsWay", words: say.clearsWay(m, blocked) };
+        return {
+          rung: "clearsWay",
+          words: speak.sentence("clearsWay", {
+            ...pushed(m),
+            marks: { outline: { victim: [blocked] } },
+          }),
+        };
     }
-    if (board.target[to]) return { rung: "onTarget", words: say.onTarget(m) };
-    if (frees) return { rung: "freesYou", words: say.freesYou(m) };
+    if (board.target[to]) return { rung: "onTarget", words: sayPlain("onTarget", m) };
+    if (frees) return { rung: "freesYou", words: sayPlain("freesYou", m) };
     return null;
   };
 
@@ -309,13 +375,21 @@ export function hint(
   // Nothing to say of the push alone. Where the plan goes on pushing this
   // barrel until it stands on a target, the run is told as one journey.
   const run = offered === plan.line[0] ? runHome(board, here, plan.line, next) : null;
-  if (!run) return { ok: true, steps: [step(offered, "plain", say.plain(offered))] };
+  if (!run)
+    return { ok: true, steps: [step(offered, "plain", sayPlain("plain", offered))] };
   return {
     ok: true,
     steps: run.map((p, i) =>
       i === 0
-        ? step(p, "run", say.runFirst(p))
-        : step(p, "run", i < run.length - 1 ? say.runNext(p) : say.runLast(p), true),
+        ? step(p, "run", sayPlain("runFirst", p, { kind: "sequence", at: "first" }))
+        : step(
+            p,
+            "run",
+            i < run.length - 1
+              ? sayPlain("runNext", p, { kind: "sequence", at: "next" })
+              : sayPlain("runLast", p, { kind: "sequence", at: "last" }),
+            true,
+          ),
     ),
   };
 }

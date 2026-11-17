@@ -462,6 +462,19 @@ describe("a stated clause names only what its technique states", () => {
       expect(code).toContain("(_t, _m, r) => (r.length === 0)");
     });
 
+    it("compares a word term with one of its words, and refuses another", () => {
+      const worded = (when: string) =>
+        compileStep(
+          step({
+            terms: { n: "number", line: "flag", side: ["near", "far"] },
+            wordings: [{ when, look: "{side}" }, { look: "{n}" }],
+            move: "{ring} must be a line",
+          }),
+        );
+      expect(worded("side = far")).toContain('(t.side === "far")');
+      expect(() => worded("side = wide")).toThrow(/side against no word of it/);
+    });
+
     it.each([
       ["a term it does not declare", { look: "{m} is it" }, /says \{m\}/],
       ["an if over a number", { look: "{if n: a | b}" }, /\{if n\}, which is no flag/],

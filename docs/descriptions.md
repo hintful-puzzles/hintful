@@ -1414,7 +1414,8 @@ alternatives ("yellow or teal", Map's premise dots). **A
 term declared as a list of words** (Netslide's `shape: [loose end, straight,
 corner, T-piece, cross]`) is one of them, typed as their union and said as it
 is; write one where the planner picks a word the board shows (a shape, a
-heading) rather than a number. **A term of kind `clause`** (`{ clause:
+heading) rather than a number. A wording's `when` compares it with one of
+its words (`why = corner`, Sokoban's trap). **A term of kind `clause`** (`{ clause:
 [steps] }`) is the `move` of one of the steps it names, said in place with
 its references: the planner gives `{ step, said }`, and the voice speaks it.
 Write one where a sentence joins reasons of several kinds, each a step of
@@ -1488,7 +1489,10 @@ Path's and Pearl's `multi`), which `STATED` lists by kind.
 ("1 move" | "{n} moves"). **A move no rule forces** (a search game's slide)
 states its `move` and an `effect`, said after it ("that makes room for the
 outlined block"); a planning game's description (Slide's) declares `steps` the
-same way, and its blocks are a sort `block` the planner marks whole.
+same way, and its blocks are a sort `block` the planner marks whole. A leg
+of a run the planner passes as a `sequence` relation keeps its `effect`,
+said after the move ("Last, push this barrel right: that puts it on a
+target", Sokoban's).
 
 **A step that is a journey** (Boats: one firing, a fill a leg, each judged by
 the squares it makes) gives `describedFiringHint` a `journey`; the squares its

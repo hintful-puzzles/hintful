@@ -309,6 +309,14 @@ describe("a stated clause", () => {
         at: "next",
       }).text,
     ).toBe("Next, to clear the outlined square, go.");
+    // A sequence's leg keeps its stated effect, said after the move.
+    const last = statedSentence({ move: "go", effect: "that ends it" }, cx(), null, {
+      kind: "sequence",
+      at: "last",
+    });
+    const alone = statedSentence({ move: "go", effect: "that ends it" }, cx());
+    expect(last.text).toContain("ends it");
+    expect(last.text).not.toBe(alone.text);
   });
 
   it("says a later leg's `again` after its move in place of look and follows, and a first leg ignores it", () => {

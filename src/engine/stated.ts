@@ -570,9 +570,12 @@ function statedOnce<E>(
     move,
     // A move with an aim serves it unless a search proved more: an aimed
     // planner's step claims no "so" of its own.
+    // A sequence's leg says its effect after the move, as a lone move does.
     relation:
       effect !== undefined
-        ? { kind: "effect", effect }
+        ? relation?.kind === "sequence"
+          ? { ...relation, effect }
+          : { kind: "effect", effect }
         : c.answers !== undefined
           ? { kind: "answers", how: render(c.answers, cx).text }
           : (relation ??

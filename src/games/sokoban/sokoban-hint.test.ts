@@ -21,6 +21,7 @@ import {
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import type { Stuck } from "./hint.ts";
 import {
   hasNoSolution,
   hint,
@@ -28,7 +29,7 @@ import {
   pushMove,
   type SokobanRung,
 } from "./hint.ts";
-import { BARREL, GOAL, PUSH, type Stuck } from "./hint-text.ts";
+import { BARREL, GOAL, PUSH } from "./hint-marks.ts";
 import { executeMove, sokobanGame } from "./index.ts";
 import { COL_HINT_EVIDENCE } from "./render.ts";
 import { DIRS, SokobanBoard, search, searchFrom } from "./solver.ts";

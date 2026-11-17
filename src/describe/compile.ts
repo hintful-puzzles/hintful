@@ -4931,6 +4931,16 @@ function stepWhen(step: Step, e: Expr, where: string): string {
     if (x.k === "bin") {
       if (x.op === "and" || x.op === "or")
         return `(${bool(x.a)} ${x.op === "and" ? "&&" : "||"} ${bool(x.b)})`;
+      // A word term is compared with one of its words: `why = corner`.
+      if ((x.op === "=" || x.op === "!=") && x.a.k === "name") {
+        const kind = term(x.a.name).kind;
+        if (Array.isArray(kind)) {
+          const word = x.b.k === "name" ? x.b.name : null;
+          if (word === null || !kind.includes(word))
+            fail(`${x.a.name} against no word of it`);
+          return `(t.${x.a.name} ${x.op === "=" ? "===" : "!=="} ${JSON.stringify(word)})`;
+        }
+      }
       if (["=", "!=", "<", "<=", ">", ">="].includes(x.op))
         return `(${num(x.a)} ${x.op === "=" ? "===" : x.op === "!=" ? "!==" : x.op} ${num(x.b)})`;
     }

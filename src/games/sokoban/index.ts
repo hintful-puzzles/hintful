@@ -36,7 +36,7 @@ import {
   SOKOBAN_RUNGS,
   type SokobanRung,
 } from "./hint.ts";
-import { HINT_MARKS } from "./hint-text.ts";
+import { HINT_MARKS } from "./hint-marks.ts";
 import { motionFor, motionLength } from "./motion.ts";
 import {
   colors,
