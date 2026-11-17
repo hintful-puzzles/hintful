@@ -287,6 +287,17 @@ boundaries are judgment, and the counts carry that.
     interleaved, which splitting reorders; **Spokes** `saturation`/
     `exhaustion` carry `again`/`later` words the kinds lack; **Boats**
     `total` is a count over the whole board, with no group to bind.
+  - [ ] Next, in this order. (1) `count.exact` binds `O = open($set)` as a
+    set, gathered for every group on every pass; restate it as `count.both`
+    now is (`m = |open($set)|`, which the compiler counts since
+    2026-11-17), then re-check Norinori, Star Battle, Boats, Loopy and
+    Tracks sound and deal-compare them. (2) Palisade `numberExhausted` on
+    `count.both`: its set is the edges round a clue (`set(edge(a, y) over y
+    in adj4(a))`, its `open(c)` restated over a set), and it speaks an
+    `again` phrase in a continued walk, which the kind's `says` would carry
+    as a parameter. (3) Spokes `saturation`/`exhaustion` the same way
+    (`again`, `later`). (4) Then the ONE, PEER, REL, GRP, CMP, SUM forms
+    listed above.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried
