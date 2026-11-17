@@ -1210,7 +1210,7 @@ exports[`singles: pinned hint positions > says, at each pin 1`] = `
   "sameLine": "The outlined clear 2 already holds this row's 2, so the ringed 2 must be shaded.",
   "sandwich": "The outlined 6s sit one square apart, so one of them must be shaded: the 2 between them must be clear.",
   "sharedLine": "The outlined clear 2 already holds this row's 2, so the ringed 2 must be shaded.",
-  "split": "Shading this 4 would cut some of the outlined squares off from the rest of the clear region, so it must be clear.",
+  "split": "Shading this 4 would cut off some of the outlined squares around it from the rest, so it must be clear.",
   "twoCells": "The outlined clear 4 already holds this column's 4, so the ringed 4s must be shaded.",
 }
 `;

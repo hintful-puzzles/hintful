@@ -32,6 +32,3 @@ techniques:
       clue(number, b), L in {col(a), row(a)}, a1 in cells(L) where a1 != a and
       a1 not in adj4(b) and clue(number, a1) = n, b1 = the(p in adj4(a1) where p
       not in cells(L) and (x(p) = x(b) or y(p) = y(b)))
-  # The squares the uncovered ones stay joined without read as needed.
-  split:
-    for: K = cuts(uncovered), c in uncovered where not known(c) and c not in K

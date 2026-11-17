@@ -1,0 +1,6 @@
+ok  range      cut                            3  sound    (want sound   )     1 queries    0.0s
+ok  range      cut (planted)                  3  unsound  (want unsound )     1 queries    0.0s   at eset
+ok  src/games/range/range.description.yaml#cut: recorded sound, proved whole on all 1 boards
+ok  singles    split                          3  sound    (want sound   )     1 queries    0.0s
+ok  singles    split (planted)                3  unsound  (want unsound )     1 queries    0.0s   at eset
+ok  src/games/singles/singles.description.yaml#split: recorded sound, proved whole on all 1 boards

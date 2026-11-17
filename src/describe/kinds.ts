@@ -463,6 +463,27 @@ export const KINDS: Readonly<Record<string, Kind>> = {
         "forall q in $adj(t): (forall c in $adj(q) where c != t and $square: $restMove)",
     },
   },
+  // The squares of `set` are one group: an open square without which they
+  // would not be (a cut) takes `rest`, staying in it. A set already apart
+  // makes the marks inconsistent. The sentence names the move tried on the
+  // ringed square (`tried`: "shading {ring}") and the move (`restWord`); the
+  // group's squares around it are outlined, and "around it" ties them to the
+  // ring.
+  "connect.cut": {
+    params: ["set", "rest", "tried", "restWord"],
+    technique: {
+      for: "U = $set, K = cuts(U), c in K where not known(c)",
+      conclude: "connected(U) and place(c, $rest)",
+      says: {
+        terms: {},
+        marks: { outline: "{q in adj4(c) where q in U}" },
+        look: "$tried would cut off {outline: the outlined square | some of the outlined squares} around it from the rest",
+        move: "it $restWord",
+      },
+    },
+    // Every open square of the group read as a cut.
+    plant: { for: "U = $set, K = U, c in K where not known(c)" },
+  },
   // A value of one end of a pair that no value at the other end can stand
   // beside is struck. `rel` reads the struck end's value `d` and the partner's
   // `u`. An end left with no value makes the marks inconsistent. The sentence

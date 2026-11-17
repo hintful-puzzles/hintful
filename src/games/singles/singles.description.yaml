@@ -286,12 +286,12 @@ techniques:
   # A square without which the squares not covered would not be one group
   # is clear: covered, it would leave a group of them with no clear square
   # to join the rest by.
-  - id: split
+  - kind: connect.cut
+    as: split
     tier: Normal
-    for: "K = cuts(uncovered), c in K where not known(c)"
-    conclude: "place(c, 2)"
-    says:
+    with:
+      set: uncovered
+      rest: 2
+      tried: "shading {ring: this {number}}"
+      restWord: "must be {unshaded}"
       terms: { number: "clue(number, c)" }
-      marks: { outline: "{q in adj4(c) where value(q) != 1}" }
-      look: "Shading {ring: this {number}} would cut some of {outline} off from the rest of the {unshaded} region"
-      move: "it must be {unshaded}"

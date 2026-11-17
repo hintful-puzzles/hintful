@@ -639,10 +639,26 @@ boundaries are judgment, and the counts carry that.
     Filling's tests pass. Re-checked sound, each kind's plant (Filling's five,
     now the kinds') caught at order 3; Filling's plants file went whole.
     GRP's remaining techniques: Galaxies `separate` (reads its arrows), Range
-    `cut` (connection, not size).
+    `cut` (connection, not size; placed below).
+  - [x] (2026-11-17) GRP's connection form, `connect.cut`: Range `cut` and
+    Singles `split`, one formula (a square whose loss would split the group
+    that must stay one takes the rest value). Singles' now reads a set
+    already apart as a contradiction, as Range's did: re-checked sound,
+    the kind's plant (every open square read as a cut) caught in both, both
+    plants files shed theirs. Deal-compare at 3 seeds a preset: same boards
+    and verdicts, totals 1.03× (Singles) and 1.01× (Range). `test:hint-sweeps`
+    green, walk fingerprints unchanged. **Moved, words only:** one sentence in
+    both, "Shading this 4 would cut off some of the outlined squares around
+    it from the rest, so it must be clear" (Singles, was "…cut some of the
+    outlined squares off from the rest of the clear region"), "Making this
+    square shaded would cut off some of the outlined squares around it from
+    the rest, so it must stay clear" (Range, word order). Naming the group
+    ("from the other clear squares") ran Range's sentence past 120
+    characters, and dropping "around it" failed Range's test that every step
+    ties its outline to the ring, so the group goes unnamed. Seen in the app
+    in both, the ring and outlines where the sentence says.
   - [ ] Next: the CNT techniques not placed yet (the item above says why
-    each waits), then GRP's connection form (Range `cut`) and LOOP's
-    remaining formulas (Tracks `closeLoop`, Loopy/Pearl `closed`, Slant and
+    each waits), then LOOP's remaining formulas (Tracks `closeLoop`, Loopy/Pearl `closed`, Slant and
     Rome `loop`).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by

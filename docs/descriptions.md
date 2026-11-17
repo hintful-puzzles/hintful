@@ -1140,6 +1140,13 @@ make a region too big, could not make one big enough, or lies too far from
 every region of it. They read the game's `alike`, `room(d)`, `joins(c, d,
 O)` and `grown(A)` (and `fresh(d)`, `holding(a, c, O)` for `area.far`), take
 no parameters, and carry no words, Filling's hint naming its own rule.
+`connect.cut` is a rule that a `set` of squares be one group (Range's clear
+squares, Singles' uncovered ones): an open square whose loss would split it
+takes `rest`, and a set already apart is a contradiction. It carries its
+sentence, "{tried} would cut off some of the outlined squares around it from
+the rest", the game giving the move tried on the ring (`tried`: "shading
+{ring: this {number}}") and `restWord`; "around it" is what ties the outline
+to the ring, which Range's hint test asks of every step.
 `count.compare` reads two counts whose open squares overlap (Mines' `pair`
 and `regions`, Mosaic's `compared`): where A needs at least `least` and B
 holds at most `most`, A's own squares hold the difference, and where that is

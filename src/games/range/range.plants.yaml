@@ -16,6 +16,3 @@ techniques:
   reach:
     conclude: >-
       M >= n and (forall p in R where index(p, R) < n - M + f + 1: place(p, 2))
-  # Every square not shaded read as one the rest need.
-  cut:
-    for: U = unshaded, K = U, c in K where not known(c)

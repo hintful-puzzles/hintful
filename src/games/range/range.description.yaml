@@ -198,16 +198,13 @@ techniques:
             value(r) = 2)}
           stripes: "{k} + {q in R where index(q, R) < index(p, R)}"
   # A square without which the squares not shaded would not be one group is
-  # clear: shaded, it would cut some of them off from the rest. Squares not
-  # shaded that are already apart break the rules.
-  - id: cut
+  # clear: shaded, it would cut some of them off from the rest.
+  - kind: connect.cut
+    as: cut
     tier: Easy
-    for: "U = unshaded, K = cuts(U), c in K where not known(c)"
-    conclude: "connected(U) and place(c, 2)"
-    # The hint outlines the squares around it that are not shaded, which
-    # shading it would cut apart.
-    says:
-      shown: each
-      marks: { outline: "{p in adj4(c) where value(p) != 1}" }
-      look: "making {ring} {shaded} would cut some of {outline: the outlined square | the outlined squares} around it off from the rest"
-      move: "it must stay {unshaded}"
+    with:
+      set: unshaded
+      rest: 2
+      tried: "making {ring} {shaded}"
+      restWord: "must stay {unshaded}"
+    says: { shown: each }
