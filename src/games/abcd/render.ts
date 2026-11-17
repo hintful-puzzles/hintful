@@ -68,7 +68,7 @@ import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts"
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { AbcdHint } from "./hint.ts";
-import { CLUE } from "./hint-text.ts";
+import { CLUE } from "./hint-marks.ts";
 import {
   type AbcdMove,
   type AbcdState,

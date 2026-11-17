@@ -21,9 +21,11 @@ import {
   type AbcdHint,
   type AbcdRung,
   hintKeepTrack,
+  type LineMarks,
   refreshHintStep,
+  say,
 } from "./hint.ts";
-import { CLUE, type LineMarks, say } from "./hint-text.ts";
+import { CLUE } from "./hint-marks.ts";
 import { abcdGame } from "./index.ts";
 import { COL_HINT_CELL } from "./render.ts";
 import {

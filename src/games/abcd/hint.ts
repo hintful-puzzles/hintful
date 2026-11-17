@@ -38,7 +38,21 @@ import {
 import { rangeMask } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
-import { candidateConclusions } from "../../engine/hint-text.ts";
+import {
+  candidateConclusions,
+  cleanObviousText,
+  type LatinVocab,
+  narrateLatinReason,
+  placedRulesOut,
+  populateText,
+} from "../../engine/hint-text.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Narration,
+  type Note,
+  type Sentence,
+} from "../../engine/hint-words.ts";
 import {
   CellMarks,
   type Firing as LadderFiring,
@@ -48,8 +62,12 @@ import {
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
-import type { SaysById } from "../../generated/games/abcd/abcd.compiled.ts";
-import { LETTERS, type LineMarks, type LineWord, say } from "./hint-text.ts";
+import {
+  type SaysById,
+  voice,
+  WORDS,
+} from "../../generated/games/abcd/abcd.compiled.ts";
+import { CLUE } from "./hint-marks.ts";
 import { abcdLadder, abcdSpace, dealtOf, neighbors } from "./solver.ts";
 import {
   type AbcdMove,
@@ -59,6 +77,136 @@ import {
   letterBit,
   verClue,
 } from "./state.ts";
+
+/** The letters as a hint prints them: candidate `n` is the `n`th letter. */
+const LETTERS: LatinVocab = {
+  noun: "letter",
+  cell: WORDS.cell,
+  value: (n) => String.fromCharCode(64 + n),
+};
+
+type LineWord = "row" | "column";
+
+/** A line a step names, and its clue for the letter the step reads. */
+export interface LineMarks {
+  word: LineWord;
+  cells: readonly Point[];
+  clue: number;
+}
+
+const speak = voice<Point | number>({
+  kind: CELL as MarkKind<Point | number>,
+  kinds: { count: CLUE as MarkKind<Point | number> },
+  value: LETTERS.value,
+  noun: WORDS.cell,
+});
+
+/** A step's line, striped, with the clue whose count it reads. */
+const lineMarks = (line: LineMarks) => ({
+  stripes: { cells: line.cells },
+  count: [line.clue],
+});
+
+/**
+ * Every sentence ABCD's hint speaks: its own are the steps
+ * `abcd.description.yaml` declares, the candidate walk's (a lone note, the
+ * opening clean, a placement's cull) every game's. A strike's words are a
+ * premise, which the shared walk ends with the move its step makes.
+ */
+export const say = {
+  populate: populateText("letter", WORDS.cell),
+
+  clean: (diag: boolean): ((marks: readonly Note[]) => Sentence) =>
+    cleanObviousText(
+      "letter",
+      "",
+      speak.part("cull", "move", { terms: { diag } }).text,
+      WORDS.cell,
+    ),
+
+  /** A note-less cell's candidates, written because a deduction rests on them. */
+  note: (at: Point, vs: readonly number[], every: boolean, diag: boolean): Sentence =>
+    speak.sentence("note", { ring: [at], terms: { diag, every, vs } }),
+
+  naked: (at: Note, w: number): Sentence =>
+    narrateLatinReason({ kind: "single" }, at, w, LETTERS),
+
+  regionsFull: (at: Note, diag: boolean): Sentence =>
+    speak.sentence("regionsFull", { ring: [at], terms: { diag, n: at.n } }),
+
+  /** A placement's own strikes, as the leg after it: the `peer.placed` kind's
+   * sentence, every game's, with ABCD's neighbors. */
+  cull: (placed: Point, n: number, diag: boolean): Narration =>
+    placedRulesOut(
+      { px: placed.x, py: placed.y, n },
+      LETTERS.value,
+      speak.part("cull", "move", { terms: { diag } }).text,
+    ),
+
+  culled: (n: number): string => speak.part("culled", "move", { terms: { n } }).text,
+
+  /** A line whose clue for `n` is already met, or is 0. */
+  satisfied: (
+    line: LineMarks,
+    n: number,
+    clue: number,
+    placed: readonly Point[],
+  ): Narration =>
+    speak.premise("satisfied", {
+      terms: { axis: line.word, n, clue, one: false },
+      marks: {
+        stripes: { cells: line.cells },
+        outline: { count: [line.clue], placed },
+      },
+    }),
+
+  /** What a satisfied line strikes: the rest of the line's `n` notes. */
+  satisfiedStruck: (n: number, clue: number, targets: number): string =>
+    speak.part("satisfied", "move", {
+      terms: { axis: "row", n, clue, one: targets === 1 },
+      marks: { stripes: { cells: [] }, outline: { count: [], placed: [] } },
+    }).text,
+
+  onlyHomes: (
+    line: LineMarks,
+    at: Note,
+    need: number,
+    more: boolean,
+    open: readonly Point[],
+  ): Sentence => {
+    const { stripes, count } = lineMarks(line);
+    return speak.sentence("onlyHomes", {
+      ring: [at],
+      terms: { axis: line.word, n: at.n, need, one: need === 1, more },
+      marks: { stripes, outline: { count, open } },
+    });
+  },
+
+  packed: (
+    line: LineMarks,
+    at: Note,
+    need: number,
+    more: boolean,
+    open: readonly Point[],
+  ): Sentence => {
+    const { stripes, count } = lineMarks(line);
+    return speak.sentence("packed", {
+      ring: [at],
+      terms: { axis: line.word, n: at.n, need, one: need === 1, more },
+      marks: { stripes, outline: { count, open } },
+    });
+  },
+
+  /** A later cell of the same firing: the line its first leg named is still
+   * striped, and the words point back to it. */
+  alsoForced: (line: LineMarks, at: Note): Sentence =>
+    speak.sentence("packed", {
+      ring: [at],
+      later: true,
+      terms: { axis: line.word, n: at.n, need: 0, one: false, more: false },
+      marks: { stripes: { cells: line.cells }, outline: { count: [], open: [] } },
+    }),
+};
 
 /** A candidate hint's highlights, and the clue whose count the step reads,
  * as its index in `numbers`. */

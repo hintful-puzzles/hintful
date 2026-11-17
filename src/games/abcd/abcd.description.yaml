@@ -124,3 +124,88 @@ techniques:
     says:
       terms: { L: L, d: d, v: v }
       marks: {}
+# ABCD's own sentences, spoken through the hint's voice (`hint.ts`); the
+# candidate walk's (a lone note, the opening clean, a placement's cull) are
+# every game's. The no-touch rule is the one thing the two modes say
+# differently, so a sentence saying where a letter keeps its twin out of
+# takes `diag`. A line is striped, the letters it holds outlined, and the
+# count it reads drawn in the hint color by the words that state it (`count`,
+# the line's clue for the letter). A number term is a letter; a count of
+# letters is `{numeral …}`.
+phrases:
+  around: "{if diag: touching {ring}, even at a corner | beside, above or below {ring}}"
+  line: "{stripes cells: This {axis}}"
+  # What a line still needs of letter `n`: "one A", "2 more As".
+  needs: "{if one: one {if more: more {n} | {n}} | {numeral need} {if more: more {n}s | {n}s}}"
+steps:
+  # A note-less cell's candidates, written because a deduction rests on them;
+  # `every` where nothing next to it rules any out yet.
+  note:
+    ring: cell
+    terms: { diag: flag, every: flag, vs: values }
+    wordings:
+      - when: every
+        look: "No letter stands next to {ring} yet"
+        move: "pencil in every one"
+      - look: "Only {vs} {vs: isn't | aren't} already {around}"
+        move: "pencil {vs: it | them} in"
+  # A note-less cell every other letter is ruled out of.
+  regionsFull:
+    ring: cell
+    terms: { diag: flag, n: number }
+    look: "Every other letter is already {around}"
+    move: "it can only be {n}"
+  # Where a letter just placed rules itself out, after "its" (the
+  # `peer.placed` kind's sentence), and what that strikes.
+  cull:
+    ring: cell
+    terms: { diag: flag }
+    move: "{if diag: eight neighbors | four neighbors}"
+  culled:
+    ring: cell
+    terms: { n: number }
+    move: "those {n}s"
+  # A line whose clue for `n` is already met, or is 0: worded as what the
+  # line holds, and its move as the rest of the line's `n` notes.
+  satisfied:
+    ring: cell
+    terms: { axis: unit, n: number, clue: number, one: flag }
+    marks: { stripes: [cells], outline: [count, placed] }
+    move: "{if one: the other {n} in it | the other {n}s in it}"
+    wordings:
+      - when: "clue = 0"
+        look: "{line} must hold {outline count: no {n}}"
+        move: "{if one: the {n} in it | the {n}s in it}"
+      - when: "clue = 1"
+        look: "{line} already holds {outline count: its one} {outline placed: {n}}"
+      - when: "clue = 2"
+        look: "{line} already holds {outline count: both its} {outline placed: {n}s}"
+      - look: "{line} already holds {outline count: all {numeral clue} of its} {outline placed: {n}s}"
+  # The runs technique when every cell that can still take `n` must: as many
+  # cells left as the line still needs (`need`; `more` where some are placed),
+  # those cells outlined when there are several.
+  onlyHomes:
+    ring: cell
+    terms: { axis: unit, n: number, need: number, one: flag, more: flag }
+    marks: { stripes: [cells], outline: [count, open] }
+    move: "{ring} must be {n}"
+    wordings:
+      - when: one
+        look: "{line} needs {outline count: {needs}} and no other cell in it can take one"
+      - look: "{line} needs {outline count: {needs}} and only {outline open: the outlined cell | the outlined cells} can take one"
+  # The runs technique proper: the outlined cells, split into stretches by
+  # the cells that cannot take `n`, fit only `need` of it with no two touching
+  # (a stretch of L cells fits ⌈L/2⌉), and the line needs exactly that many,
+  # so every stretch is packed full and an odd one packs only one way. A
+  # later cell of the same firing points back at the line, still striped.
+  packed:
+    again: "{stripes cells: the same striped {axis}}"
+    later: "{ring} must be {n} too"
+    ring: cell
+    terms: { axis: unit, n: number, need: number, one: flag, more: flag }
+    marks: { stripes: [cells], outline: [count, open] }
+    look: >-
+      {line} needs {outline count: {needs}}, and {outline open: the outlined cell | the outlined cells}
+      fit only {numeral need} apart
+    follows: "each stretch is full"
+    move: "{ring} must be {n}"

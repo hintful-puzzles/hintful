@@ -175,7 +175,20 @@ Logic games:
   terms each technique says; a count of bridges is a word term (`over`,
   `most`), and its mark kinds are `hint-marks.ts`. Read in the app: an
   exact fit, every neighbor (focus, neighbors and lines marked apart).
-- [ ] ABCD
+- [x] ABCD (2026-11-17): its own sentences (a note, every other letter
+  next to a cell, the cull's neighbors, a satisfied line, a line's only
+  homes and its packed stretches) are `steps` spoken through the voice in
+  `hint.ts`; the Latin library's stay the engine's. A packed run's later
+  cell is the step's `later` leg, said with `again` ("for the same striped
+  row"), which a step may now state (`description.schema.json`). **One
+  sentence changed**, to the engine's: the opening clean says "cross out
+  any letter already in its cell's four neighbors" (or "eight
+  neighbors"), was "…already beside, above or below the cell" (or "…in a
+  cell touching the cell, even at a corner"), 2,920 dump lines; its notes
+  are referenced as struck, as every other candidate game's clean is, where
+  they were ringed. Every other line is byte-identical. Read in the app: a
+  zero line, a packed run and its later cell, the clean (neighbors' notes
+  struck).
 - [ ] Map
 - [ ] Subsets
 - [ ] Solo (after 0.3)

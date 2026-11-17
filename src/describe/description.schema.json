@@ -834,6 +834,11 @@
                 "$ref": "#/$defs/clause",
                 "description": "What the move does, where no rule forces it: said after the move as an `effect` relation (Slide's \"that makes room for the outlined block\")."
               },
+              "again": {
+                "$ref": "#/$defs/clause",
+                "description": "A later leg's reasoning, said after its move where the planner says the step is one (`later`): an `again` relation (ABCD's \"the same striped row\")."
+              },
+              "later": { "$ref": "#/$defs/clause" },
               "wordings": { "$ref": "#/$defs/wordings" },
               "long": { "$ref": "#/$defs/long" }
             }
