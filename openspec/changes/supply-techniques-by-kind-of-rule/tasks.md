@@ -544,15 +544,28 @@ boundaries are judgment, and the counts carry that.
     hint snapshot of the three games passes unchanged. CNT now 25
     placements in 12 games (`git grep "kind: count\." -- 'src/games/*.yaml'`,
     `count.compare` included).
+  - [x] (2026-11-17) REL's bounds form: Unequal `sign` on `rel.support`,
+    no new kind. Its group is each end of a sign in turn (`c in {big,
+    small}`, partner `p`), `rel` "(c = big and u < d) or (c = small and u >
+    d)". Its bound wordings stay the game's `says`: **a clause of a kind's
+    sentence reading a word the game did not give is now left out** where
+    the game gives its own `says`, so `rel.support`'s `link`, `cell`,
+    `none`, `fits` became optional (a kinds test, and planted out Unequal
+    fails to load). Striking an end's low (or high) values never moves the
+    other end's bound short of emptying it, so the strikes are the same:
+    **deal-compare at 3 seeds a preset gives the same boards and verdicts**,
+    totals 0.95× deals, 1.11× solves (sub-millisecond). **Moved: a sign's
+    two ends are two steps**, no longer one step and a continuing leg, same
+    words; the plan places what it needs sooner (5x5 Normal #0 59 steps to
+    58, one `lesser` and one `single` fewer, one `hiddenSingle` more; the
+    other walks the same rung counts, reordered). Seen in the app: the
+    larger end ("The outlined smaller side of this greater-than sign is at
+    least 3, so this cell can only be 4 or 5"), then the smaller end's step
+    on the same sign. Its plant restated over `c`/`p`, caught; re-checked
+    sound.
   - [ ] Next: Clusters on `count.compare` (above), PEER's other forms
     (Dominosa's `placed` reads two rules, a spot's neighbors and its
-    domino's other spots), REL's bounds form (Unequal `sign`: found
-    2026-11-17 to be `rel.support` under `>`, a value with no smaller
-    candidate across the sign, so no new kind is needed; but `sign` strikes
-    both ends in one firing, and `rel.support` fires an end at a time, so
-    the smaller end's firing would read the larger's strikes and a pass may
-    strike more: deal-compare and walk it, and keep its bound wordings as
-    the game's `says`), GRP over
+    domino's other spots), GRP over
     numbered squares (Filling), SUM, and the CNT techniques not placed yet
     (the item above says why each waits).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the

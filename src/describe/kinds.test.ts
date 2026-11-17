@@ -213,6 +213,22 @@ describe("a kind of rule expands to the technique it stands for", () => {
     });
   });
 
+  it("leaves out the kind's look where the game words the step and gives none of its words", () => {
+    const sign = {
+      kind: "rel.support",
+      as: "sign",
+      tier: "Normal",
+      with: { group: "k in signs", end: "a", partner: "b", rel: "u < d", marks: {} },
+    };
+    expect(() => expandKind(sign, "x")).toThrow(/missing .*link/);
+    const t = expandKind({ ...sign, says: { fact: { look: "own" } } }, "x");
+    expect(t["says"]).toEqual({
+      terms: { partner: "b" },
+      marks: {},
+      fact: { look: "own" },
+    });
+  });
+
   it("is read by the loader where a description places one", () => {
     const text = `
 game: probe

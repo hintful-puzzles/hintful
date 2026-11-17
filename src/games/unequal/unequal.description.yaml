@@ -95,17 +95,21 @@ techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
-  # One sign, both its ends, value by value: the larger end is larger than the
-  # smaller end's least candidate, and the smaller end smaller than the larger
-  # end's greatest.
-  - id: sign
+  # One sign, each end in turn, value by value: the larger end is larger than
+  # some candidate of the smaller end, and the smaller end smaller than some
+  # candidate of the larger.
+  - kind: rel.support
+    as: sign
     tier: Normal
     rung: [greater, lesser]
-    for: "k in clues(greater), big = v(k), small = lesser(k)"
-    conclude: >-
-      forall c in {big, small}, d in domain:
-      ((c = big and (forall d2 in cand(small): d <= d2)) implies strike(c, d))
-      and ((c = small and (forall d2 in cand(big): d >= d2)) implies strike(c, d))
+    with:
+      group: >-
+        k in clues(greater), big = v(k), small = lesser(k), c in {big, small},
+        p = the(q in {big, small} where q != c)
+      end: c
+      partner: p
+      rel: "(c = big and u < d) or (c = small and u > d)"
+      marks: {}
     # The hint names the sign's two ends, and the bound each struck end is
     # held to: the least the smaller end can be, the greatest the larger. At
     # the value's extreme the bound says nothing, so the sentence names the
@@ -116,10 +120,9 @@ techniques:
         small: small
         lo: "min(d in cand(small))"
         hi: "max(d in cand(big))"
-      marks: {}
       fact:
         # The sign's two ends, the struck one first.
-        terms: { sign: "{c, the(p in {big, small} where p != c)}" }
+        terms: { sign: "{c, p}" }
         # The larger end, then the smaller, each at the value's extreme first.
         wordings:
           - when: "c = big and min(d2 in cand(small)) <= 1"

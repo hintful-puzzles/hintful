@@ -1,0 +1,3 @@
+ok  unequal    sign                           3  sound    (want sound   )    24 queries    0.2s
+ok  unequal    sign (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at clue greater 0
+ok  src/games/unequal/unequal.description.yaml#sign: recorded sound, proved whole on all 1 boards

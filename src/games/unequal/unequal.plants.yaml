@@ -4,8 +4,9 @@
 # unsound.
 
 techniques:
+  # The larger end held one past the smaller end's least: sharper than the
+  # kind's plant, a value with support struck.
   sign:
     conclude: >-
-      forall d in domain: ((forall d2 in cand(small): d <= d2 + 1) implies
-      strike(big, d)) and ((forall d2 in cand(big): d >= d2) implies
-      strike(small, d))
+      forall d in cand(c) where not (exists u in cand(p):
+      (c = big and u + 1 < d) or (c = small and u > d)): strike(c, d)

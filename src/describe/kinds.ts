@@ -461,9 +461,12 @@ export const KINDS: Readonly<Record<string, Kind>> = {
   // `u`. An end left with no value makes the marks inconsistent. The sentence
   // names what joins the two (`link`), the struck end as the game marks it
   // (`cell`), what the partner has open (`none`) and the relation in words
-  // (`fits`, before the struck value); the game's walk says the strike.
+  // (`fits`, before the struck value); the game's walk says the strike. A
+  // game that words each end itself (Unequal's bound on a sign's other end)
+  // gives its own `says` and none of these words.
   "rel.support": {
-    params: ["group", "end", "partner", "rel", "marks", "link", "cell", "none", "fits"],
+    params: ["group", "end", "partner", "rel", "marks"],
+    defaults: { link: null, cell: null, none: null, fits: null },
     technique: {
       for: "$group",
       conclude:
@@ -714,6 +717,14 @@ export function expandKind(
   if (unfilled.length > 0) throw refuse(unfilled);
   const { kind: _k, as, with: _w, says: gameSays, ...placing } = placed;
   const t = fill(kind.technique, args) as Kind["technique"];
+  // A clause of the kind's sentence reading words the game did not give is
+  // left out, the game's own `says` wording the step (Unequal's sign).
+  const unsaid = (v: unknown): boolean =>
+    [...JSON.stringify(v).matchAll(/\$(\w+)/g)].some((m) => takes.includes(m[1]));
+  if (t.says !== undefined && gameSays !== undefined)
+    t.says = Object.fromEntries(
+      Object.entries(t.says).filter(([k, v]) => k === "marks" || !unsaid(v)),
+    ) as typeof t.says;
   // The game's `says` beside the placement is laid over the kind's own (Range
   // shows its touch a square at a time), or over its frame.
   // A frame is laid only under a game's words: a game whose hint narrates

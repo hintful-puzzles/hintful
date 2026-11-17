@@ -1104,6 +1104,12 @@ which mark draws the line (`line`), and what else the loop may miss (`off`,
 `rel.support` carries its look, "{link} joins {cell} to its neighbor with
 {none} {fits} {struckOr}", and the walk says the strike: Adjacent gives its bar
 (`{if bar: …}` inside the words), Subsets its horseshoe and the tally's sets.
+Unequal's sign is the same kind under `>`, its group each end of a sign in
+turn (`c`, its partner `p`), a firing an end: a game that words each end
+itself gives its own `says` and none of the kind's words (`link`, `cell`,
+`none`, `fits`), and a clause of the kind's sentence reading a word the game
+did not give is left out (Unequal names the bound the other end holds it to,
+"the outlined smaller side of this greater-than sign is at least 3").
 A walk that speaks a kind's step itself (Subsets') renders the compiled
 `STATED` step with `statedParts`, as `placedRulesOut` does the library's; a
 `{fit: …}` there is never tried, for only `statedSentence` sees the whole
