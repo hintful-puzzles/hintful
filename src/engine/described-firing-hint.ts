@@ -350,7 +350,9 @@ export function describedFiringHint<
           throw new Error(
             `${spec.name}: ${kind} states its facts, so its step is for one square (each)`,
           );
-        const ownFact = factClauses === undefined ? undefined : own.get(squares[0]);
+        // A step for one square reads that square's own terms, whether the
+        // fact or the step states the clauses (Clusters' `own`).
+        const ownFact = group.length === 1 ? own.get(squares[0]) : undefined;
         const clauses =
           stated[kind]?.step?.[says.wording ?? 0] ??
           (factClauses === undefined ? undefined : factClauses[ownFact?.wording ?? 0]);

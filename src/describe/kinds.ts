@@ -412,13 +412,20 @@ export const KINDS: Readonly<Record<string, Kind>> = {
     },
   },
   // A placed value leaves every square `peer` names, a binder that reads the
-  // placed square `c` and its value `n` and binds `p`.
+  // placed square `c` and its value `n` and binds `p`. A game whose placed
+  // thing is not a square's value names it (`group`, binding `c`: Dominosa's
+  // spot holding a domino) and how it leaves a peer (`move`: the spot empty),
+  // and plants its own defect, for the kind's reads `n`.
   "peer.placed": {
     params: ["peer"],
+    defaults: {
+      group: "c in cells where known(c), n = value(c)",
+      move: "strike(p, n)",
+    },
     technique: {
       on: "place",
-      for: "c in cells where known(c), n = value(c), $peer",
-      conclude: "strike(p, n)",
+      for: "$group, $peer",
+      conclude: "$move",
     },
     plant: {
       conclude: "strike(p, n + 1)",

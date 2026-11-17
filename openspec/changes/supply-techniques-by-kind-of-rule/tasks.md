@@ -593,11 +593,40 @@ boundaries are judgment, and the counts carry that.
     make this killer cage total 6 uses 3 in this cell") speak and apply as
     before. **SUM is placed**: five of § 1's six; `regionRule` (a unit's
     sum less its whole cages, read across two rules) stays Solo's own.
-  - [ ] Next: Clusters on `count.compare` (above), PEER's other forms
-    (Dominosa's `placed` reads two rules, a spot's neighbors and its
-    domino's other spots), GRP over
-    numbered squares (Filling), and the CNT techniques not placed yet
-    (the item above says why each waits).
+  - [x] (2026-11-17) Dominosa `placed` on `peer.placed`: the kind takes
+    `group` (what was placed, binding `c`: a spot holding a domino) and
+    `move` (how a peer is left: the spot empty); its peers are the spots
+    sharing a square with it and those of the same domino, one binder. A
+    firing is now a peer, where it was the placed spot with every peer.
+    Silent (`placed` says nothing), so no words; its plant restated over
+    the kind's names, caught at order 4. Deal-compare at 3 seeds a preset:
+    same boards and verdicts, 0.97×.
+  - [x] (2026-11-17) Clusters `countFull` and `countShort` on
+    `count.compare`, with two defines naming each tile's bounds for a piece
+    (`fewest(t, d)`, `allows(t, d)`): countFull is A = b, B = a; countShort A
+    = a, B = b. **What moved:** a firing now also settles the other tile's
+    own squares (Mosaic's form), sound, so **1 of 30 boards differs** in
+    deal-compare (6x8 Normal), the same verdicts on every board, totals
+    0.70×. The hint stays a square a step, now `shown: legs`, its later
+    squares quoting no count (a count the first leg's move has made stale on
+    the board). The `{ring 1}`/`{ring 2}` move of the kind names squares by
+    value, which Clusters' varying piece cannot use, so its arms give the
+    move and read a fact term `own`: **the compiler now lets a one-square
+    step's clauses read its fact terms**, as the renderer already merged
+    them. Words (seen in the app): "The outlined dotted disc must touch
+    three more blocks, and the outlined dotted block allows at most one
+    block beside it, so this square, beside only the dotted disc, must hold
+    a block" (was "The outlined dotted disc's last disc must also touch the
+    outlined dotted block, so …"), a later leg "…and this square, beside
+    only the dotted block, must hold a disc, for the same two outlined
+    tiles". Rungs `countFull.more`/`.same`, `countShort.more`
+    (`countShort.same` cannot hold: its group asks for an own square of A,
+    listed unreached). Walk fingerprints: same steps and rung counts; the
+    wide file was stale at HEAD and is rewritten. Help's Normal paragraph
+    restated. Re-checked sound whole (defines added), both plants the
+    kind's.
+  - [ ] Next: GRP over numbered squares (Filling), and the CNT techniques
+    not placed yet (the item above says why each waits).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

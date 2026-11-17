@@ -1090,7 +1090,10 @@ arrow that may still lead into a square, Dominosa's spot not yet ruled out
 (whose `group` leaves out a domino already placed).
 `peer.placed`'s is the library's `placed` ("the 2 just placed can't repeat in
 its {regions}"), which a walk speaks through `placedRulesOut` with the game's
-`{regions}`. `peer.touch`, no two squares holding `fill` touch, carries its
+`{regions}`. A game whose placed thing is not a square's value names it in
+`group` and how it leaves a peer in `move`, and plants its own defect, for the
+kind's reads the value (Dominosa's spot holding a domino, whose peers are the
+spots sharing a square with it and those of the same domino, left empty). `peer.touch`, no two squares holding `fill` touch, carries its
 sentence, "no {piece} may touch the outlined {piece}{how}, so each ringed
 square {restWord}"; the game gives `adj` (`adj4`, or `adj8` with `how`: ",
 even diagonally"), its nouns, and `square` where its open squares are not
@@ -1134,7 +1137,11 @@ all of them they are filled and B's own squares cleared, in one step. The
 game's `group` binds the pair and its look names both (only it can tell two
 3s apart); the kind says the move, where each set lies (`outsideA`,
 `outsideB`), with `{ring 1}` and `{ring 2}`, so a step gives two marks (Mosaic's
-`fill` takes a mark per square). A kind's frame is laid only under a game's
+`fill` takes a mark per square). `{ring 1}` and `{ring 2}` name squares by the
+value they take, so a game whose filled piece is not one value (Clusters', the
+first tile's own piece) gives its arms' `move` itself, shows each square a leg
+(`shown: legs`), and reads which side a square is on from a fact term (`own:
+"c in RA"`). A kind's frame is laid only under a game's
 `says`, so a game whose hint narrates the firing itself (Mines') gives none
 and takes no words. A placement is checked against the schema again once
 expanded, so a game's words over a frame are checked whole.
@@ -1267,7 +1274,13 @@ may be written (`outline: "with place(c, 1): run(c)"`). The module types it as
 `<Id>SaysFact`, held in `says.facts` in step with the firing's facts, and a
 sentence reads `spoken.facts` (each square of its step, with its own terms) and
 `spoken.outline`, which holds the firing's marks and those of the step's
-squares. The walk reads the facts' marks too. Only a cell game's `place` and
+squares. The walk reads the facts' marks too. A step for one square (`each`,
+`legs`) is spoken with that square's fact terms beside the firing's, so the
+technique's own clauses may read them where its wording is the firing's
+(Clusters' `{if own: …}`); a wording's `when` still reads only the firing's.
+A count a later leg would quote is stale by then, its first leg's move having
+changed the board, so a sentence that quotes one is `legs`, never `each`
+(Clusters' count steps). Only a cell game's `place` and
 `strike` read one; a fact made elsewhere throws.
 
 **A technique may state its step's words**: `look`, `follows` and `move` on

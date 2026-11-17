@@ -80,27 +80,42 @@ function decided(step: Step): { index: number; fill: ClustersFill } {
 const pinned = describeHintPins({
   game: clustersGame,
   params: [P],
+  unreached: {
+    "countShort.same":
+      "countShort's group asks that its first tile have an empty neighbor the " +
+      "other does not touch, which is the kind's own squares of that tile, so " +
+      "the arm for none of them never holds.",
+  },
   pins: {
-    /** Held on 222 of 431 positions walked. */
+    /** Held on 196 of 431 positions walked. */
     "refute.selfSurrounded": "7x7dt:bcAbeICacDCIaca",
-    /** Held on 413 of 431 positions walked. */
+    /** Held on 415 of 431 positions walked. */
     "refute.selfReach": "7x7dt:cGadAadGgKbb",
-    /** Held on 305 of 431 positions walked. */
+    /** Held on 292 of 431 positions walked. */
     "refute.nearSurrounded": "7x7dt:cGadAadGgKbb",
-    /** Held on 364 of 431 positions walked. */
+    /** Held on 385 of 431 positions walked. */
     "refute.nearReach": "7x7dt:cGadAadGgKbb",
     /** Held on 411 of 431 positions walked. */
     "refute.dotOvercount": {
       id: "7x7dt:cGadAadGgKbb",
       moves: [{ kind: "paint", cells: [{ index: 3, fill: 1 }] }],
     },
-    /** Held on 221 of 431 positions walked. */
-    countFull: "7x7dt:DgfcfBEdHe",
-    /** Held on 54 of 431 positions walked. */
-    countShort: {
-      id: "7x7dt:BaAaAckAbDafDaDaea",
+    /** Held on 104 of 431 positions walked. */
+    "countFull.more": {
+      id: "7x7dt:DgfAgCbBbCfdc",
+      moves: [{ kind: "paint", cells: [{ index: 18, fill: 2 }] }],
+    },
+    /** Held on 138 of 431 positions walked. */
+    "countFull.same": {
+      id: "7x7dt:BeAEDaAaJkEd",
       moves:
-        '[{"kind":"paint","cells":[{"index":0,"fill":2}]},{"kind":"paint","cells":[{"index":6,"fill":2}]},{"kind":"paint","cells":[{"index":7,"fill":2}]},{"kind":"paint","cells":[{"index":9,"fill":1}]},{"kind":"paint","cells":[{"index":10,"fill":2}]},{"kind":"paint","cells":[{"index":11,"fill":1}]},{"kind":"paint","cells":[{"index":12,"fill":1}]},{"kind":"paint","cells":[{"index":13,"fill":2}]},{"kind":"paint","cells":[{"index":14,"fill":2}]},{"kind":"paint","cells":[{"index":15,"fill":2}]},{"kind":"paint","cells":[{"index":16,"fill":2}]},{"kind":"paint","cells":[{"index":17,"fill":2}]},{"kind":"paint","cells":[{"index":18,"fill":2}]},{"kind":"paint","cells":[{"index":25,"fill":2}]},{"kind":"paint","cells":[{"index":34,"fill":1}]},{"kind":"paint","cells":[{"index":32,"fill":2}]},{"kind":"paint","cells":[{"index":35,"fill":2}]},{"kind":"paint","cells":[{"index":40,"fill":2}]},{"kind":"paint","cells":[{"index":41,"fill":1}]},{"kind":"paint","cells":[{"index":39,"fill":2}]},{"kind":"paint","cells":[{"index":47,"fill":2}]},{"kind":"paint","cells":[{"index":46,"fill":2}]},{"kind":"paint","cells":[{"index":30,"fill":1}]},{"kind":"paint","cells":[{"index":21,"fill":2}]},{"kind":"paint","cells":[{"index":28,"fill":2}]}]',
+        '[{"kind":"paint","cells":[{"index":0,"fill":2}]},{"kind":"paint","cells":[{"index":2,"fill":1}]},{"kind":"paint","cells":[{"index":3,"fill":1}]},{"kind":"paint","cells":[{"index":8,"fill":1}]},{"kind":"paint","cells":[{"index":9,"fill":1}]},{"kind":"paint","cells":[{"index":10,"fill":1}]},{"kind":"paint","cells":[{"index":14,"fill":1}]},{"kind":"paint","cells":[{"index":15,"fill":1}]},{"kind":"paint","cells":[{"index":21,"fill":1}]},{"kind":"paint","cells":[{"index":23,"fill":2}]},{"kind":"paint","cells":[{"index":24,"fill":2}]}]',
+    },
+    /** Held on 28 of 431 positions walked. */
+    "countShort.more": {
+      id: "7x7dt:ACaAgACdcEBdDaDdAa",
+      moves:
+        '[{"kind":"paint","cells":[{"index":6,"fill":2}]},{"kind":"paint","cells":[{"index":11,"fill":1}]},{"kind":"paint","cells":[{"index":19,"fill":2}]},{"kind":"paint","cells":[{"index":18,"fill":2}]},{"kind":"paint","cells":[{"index":26,"fill":2}]},{"kind":"paint","cells":[{"index":27,"fill":1}]},{"kind":"paint","cells":[{"index":33,"fill":2}]},{"kind":"paint","cells":[{"index":41,"fill":2}]},{"kind":"paint","cells":[{"index":40,"fill":2}]},{"kind":"paint","cells":[{"index":42,"fill":2}]},{"kind":"paint","cells":[{"index":35,"fill":2}]},{"kind":"paint","cells":[{"index":21,"fill":1}]},{"kind":"paint","cells":[{"index":14,"fill":1}]},{"kind":"paint","cells":[{"index":22,"fill":1}]},{"kind":"paint","cells":[{"index":24,"fill":2}]},{"kind":"paint","cells":[{"index":17,"fill":2}]},{"kind":"paint","cells":[{"index":9,"fill":1}]},{"kind":"paint","cells":[{"index":15,"fill":1}]},{"kind":"paint","cells":[{"index":25,"fill":2}]},{"kind":"paint","cells":[{"index":29,"fill":1}]},{"kind":"paint","cells":[{"index":31,"fill":2}]},{"kind":"paint","cells":[{"index":32,"fill":2}]},{"kind":"paint","cells":[{"index":36,"fill":1}]},{"kind":"paint","cells":[{"index":37,"fill":1}]},{"kind":"paint","cells":[{"index":44,"fill":1}]},{"kind":"paint","cells":[{"index":45,"fill":1}]},{"kind":"paint","cells":[{"index":46,"fill":1}]}]',
     },
   },
 });
@@ -208,19 +223,18 @@ describe("the hint's plan", () => {
   });
 
   it.each([
-    "countFull",
-    "countShort",
-  ] as const)("a %s firing: the cell is a neighbor of the first tile that the shared squares leave out, and the answer's color", (kind) => {
+    "countFull.more",
+    "countFull.same",
+    "countShort.more",
+  ] as const)("a %s firing: the cell is beside one of the two tiles and not the other, and the answer's color", (kind) => {
     const hit = findDeduction(kind);
     const tiles = outlinedOf(hit.step);
     expect(tiles).toHaveLength(2);
     for (const t of tiles) expect(hit.grid[t] & COLMASK).not.toBe(0);
-    // The first tile is the one beside the cell; the second does not touch it.
-    const [a, b] = neighborsOf(tiles[0], P.w, P.h).includes(hit.index)
-      ? tiles
-      : [tiles[1], tiles[0]];
-    expect(neighborsOf(a, P.w, P.h)).toContain(hit.index);
-    expect(neighborsOf(b, P.w, P.h)).not.toContain(hit.index);
+    // A count decides only the squares one tile touches and the other does not.
+    expect(
+      tiles.filter((t) => neighborsOf(t, P.w, P.h).includes(hit.index)),
+    ).toHaveLength(1);
     const solved = clustersGame.solve?.(hit.state, hit.state);
     if (!solved?.ok || solved.move.kind !== "solve") throw new Error("no answer");
     expect(solved.move.fills[hit.index]).toBe(hit.fill);
@@ -240,8 +254,9 @@ describe("hint", () => {
         { x: index % P.w, y: Math.floor(index / P.w) },
       ]);
       if (step.rung.startsWith("count")) {
+        // A firing's later squares continue its first, and quote no count.
         expect(step.explanation).toMatch(
-          /must also touch|allows (?:no|at most \w+) \w+ beside/,
+          /must touch \w+ more \w+, and .* allows (?:no \w+|at most \w+ \w+) beside it|^…and .*, for the same two outlined tiles\.$/,
         );
         expect(outlined).toHaveLength(2);
       } else if (step.rung === "refute.dotOvercount") {
@@ -263,11 +278,11 @@ describe("hint", () => {
       // board, so wherever one exists the sentence must tie the target to it,
       // and the tie is geometric rather than a color name (`hints.md`: color is
       // never the only cue). `beside this cell` / `its outlined … neighbor` for
-      // the adjacent break; for a count, "this cell" is the first tile's
-      // neighbor that does not touch the second.
+      // the adjacent break; for a count, "this cell" is beside only one of
+      // the two tiles, named.
       if (outlined.length > 0) {
         expect(
-          /beside this square|its outlined \w+ neighbor|from it|also touch|beside the/.test(
+          /beside this square|its outlined \w+ neighbor|from it|beside only the|beside the/.test(
             step.explanation,
           ),
           `${step.explanation} — a second mark is shown but "this cell" is not tied to it`,
@@ -306,7 +321,7 @@ describe("hint", () => {
     // Painting a *count* firing's refuted color breaks no local rule (the
     // contradiction needs the two counts), so only the answer can say which
     // tile is wrong, and the midend then never asks the hint about the board.
-    const hit = findDeduction("countFull");
+    const hit = findDeduction("countFull.more");
     const grid = hit.grid.slice();
     grid[hit.index] = hit.refuted;
     const wrong: ClustersState = { ...hit.state, grid };
@@ -315,28 +330,33 @@ describe("hint", () => {
   });
 });
 
-// The Normal walk reaches the count wordings below only with a tile that allows
-// some of the other's color (`most` above 0) and tiles told apart by color or
-// kind. The three that no walk meets (a `most` of none, and "one outlined"
-// beside "the other" for a count that is not none) are rendered from the
-// compiled clauses, so a change to their words or slots shows.
-describe("countShort, the wordings no walk reaches", () => {
+// A count's sentence by what its two tiles are and which one the square is
+// beside, rendered from the compiled clauses so that a change to their words or
+// slots shows: the walk meets only some of them (a `most` of none, tiles of one
+// kind and a square beside the second are rare).
+describe("a count's wordings", () => {
   const at = (c: number): Point => ({ x: c % 3, y: (c / 3) | 0 });
-  const words = (wording: number, terms: Record<string, number>): string =>
-    statedSentence(STATED.countShort.step[wording], {
+  const words = (wording: number, terms: Record<string, number | boolean>): string =>
+    statedSentence(STATED["countShort.more"].step[wording], {
       kind: CELL,
       at,
       ring: [at(8)],
       marks: { outline: [at(0), at(4)] },
       terms: {
-        fill: F_COLOR_1,
-        a: 0,
-        b: 4,
-        aValue: F_COLOR_1,
-        bValue: F_COLOR_1,
-        aDot: 1,
-        bDot: 1,
-        most: 0,
+        one: 0,
+        two: 4,
+        oneValue: F_COLOR_1,
+        oneDot: 1,
+        twoValue: F_COLOR_1,
+        twoDot: 1,
+        v: F_COLOR_1,
+        w: F_COLOR_0,
+        least: 2,
+        most: 1,
+        by: 1,
+        none: false,
+        alike: true,
+        own: true,
         ...terms,
       },
       value: String,
@@ -344,21 +364,25 @@ describe("countShort, the wordings no walk reaches", () => {
     }).text;
   const [first, second] = PAIR_NAMES;
 
-  it("says a tile that allows none of its piece beside the other, of one kind", () => {
+  it("tells two tiles of one kind apart as one and the other", () => {
     expect(words(0, {})).toBe(
-      `One outlined dotted ${first} allows no ${first} beside the other outlined dotted ${first}, so this square must hold a ${first}.`,
+      `One outlined dotted ${first} must touch two more ${first}s, and the other outlined dotted ${first} allows at most one ${first} beside it, so this square, beside only the first, must hold a ${first}.`,
     );
   });
 
-  it("says a tile that allows none by the other's piece and dot", () => {
-    expect(words(1, { bValue: F_COLOR_0, bDot: 0 })).toBe(
-      `The outlined ${second} allows no ${first} beside the outlined dotted ${first}, so this square must hold a ${first}.`,
+  it("names each tile by its piece and dot, and the square the other's own", () => {
+    expect(
+      words(1, { twoValue: F_COLOR_0, twoDot: 0, alike: false, own: false, least: 1 }),
+    ).toBe(
+      `The outlined dotted ${first} must touch one more ${first}, and the outlined ${second} allows at most one ${first} beside it, so this square, beside only the ${second}, must hold a ${second}.`,
     );
   });
 
-  it("says how many it allows in words, of one kind", () => {
-    expect(words(2, { most: 3 })).toBe(
-      `One outlined dotted ${first} allows at most three ${first}s beside the other outlined dotted ${first}, so this square must hold a ${first}.`,
+  it("says a tile that allows none", () => {
+    expect(
+      words(1, { twoValue: F_COLOR_0, twoDot: 0, alike: false, none: true, most: 0 }),
+    ).toBe(
+      `The outlined dotted ${first} must touch two more ${first}s, and the outlined ${second} allows no ${first}s beside it, so this square, beside only the dotted ${first}, must hold a ${first}.`,
     );
   });
 });
@@ -456,7 +480,7 @@ describe("hint rendering (tier 2.5)", () => {
   });
 
   it("a count frame rings both tiles it reads", () => {
-    const result = renderPinnedHint(clustersGame, pinned("countFull"));
+    const result = renderPinnedHint(clustersGame, pinned("countFull.more"));
     const tiles = stepMarks(result.step).of("outline", CELL);
     expect(tiles).toHaveLength(2);
     const ops = result.recording.ops;

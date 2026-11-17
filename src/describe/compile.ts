@@ -4643,12 +4643,17 @@ function checkStated(
     );
   const wording = (words: readonly Wording[], i: number): string =>
     words.length > 1 ? `wording ${i} ` : "";
+  // A step for one square (`shown: each`) is spoken with that square's fact
+  // terms beside the firing's, so its clauses may read them (Clusters' `own`:
+  // which of two counts' squares it is); its wording is still chosen by the
+  // firing's.
+  const own = says.each && factSorts !== null ? [...factSorts] : [];
   for (const [i, v] of says.variants.entries())
     for (const [j, w] of v.words.entries())
       check(
         `${v.name === null ? "" : `${v.name} `}${wording(v.words, j)}`,
         w.clauses,
-        variants[i].sorts,
+        new Map([...variants[i].sorts, ...own]),
         rolesOf(v.marks),
       );
   if (says.fact !== null && factSorts !== null) {

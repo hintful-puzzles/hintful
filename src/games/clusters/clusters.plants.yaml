@@ -15,20 +15,3 @@ techniques:
       value(n)), r = room(n, e, x) where ((n = x or e != d) and (r < 1 or
       (dot(n) = 0 and r < 3))) or (n != x and e = d and dot(n) = 1 and same(n)
       >= 1)
-  # b's least one short of all a may take.
-  countFull:
-    for: >-
-      a in cells where known(a) and hi(a) > 0, b in within(a, 2) where b != a
-      and known(b), S = {u in open(a) where u in adj4(b)}, R = {u in open(a)
-      where u not in adj4(b)}, bo = count(u in open(b) where u not in adj4(a))
-      where |S| > 0 and |R| > 0 and ((value(b) = value(a) and lo(b) - bo >=
-      hi(a) - 1) or (value(b) != value(a) and |S| - hi(b) >= hi(a)))
-  # a's need one short of every other empty neighbor.
-  countShort:
-    for: >-
-      a in cells where known(a) and lo(a) > 0, b in within(a, 2) where b != a
-      and known(b), S = {u in open(a) where u in adj4(b)}, R = {u in open(a)
-      where u not in adj4(b)}, bo = count(u in open(b) where u not in adj4(a)),
-      alike = count(k in {b} where value(k) = value(a)), most = alike * hi(b) +
-      (1 - alike) * (|S| - lo(b) + bo) where |S| > 0 and |R| > 0 and most < |S|
-      and lo(a) - most >= |R| - 1

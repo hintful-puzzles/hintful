@@ -19,6 +19,8 @@ import {
 } from "../../engine/described-firing-hint.ts";
 import type { Point } from "../../engine/types.ts";
 import {
+  SAYS_EACH,
+  SAYS_LEGS,
   type SaysById,
   STATED,
 } from "../../generated/games/clusters/clusters.compiled.ts";
@@ -61,7 +63,8 @@ const described = describedFiringHint<
     kind: "paint",
     cells: targets.map((t) => ({ index: t.y * state.w + t.x, fill: t.value })),
   }),
-  each: ["countFull", "countShort"],
+  each: SAYS_EACH,
+  legs: SAYS_LEGS,
   stated: STATED,
   piece: pairIndex,
   say: {},

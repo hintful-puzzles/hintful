@@ -6,11 +6,10 @@
 techniques:
   # A domino read as ruling out every spot showing either of its numbers.
   placed:
-    conclude: >-
-      (forall x in {end1(e), end2(e)}, y in adj4(x) where edge(x, y) != e:
-      place(edge(x, y), 2)) and (forall f in edges where f != e and not touch(e,
-      f) and (num(end1(f)) = num(end1(e)) or num(end2(f)) = num(end1(e))):
-      place(f, 2))
+    for: >-
+      c in edges where value(c) = 1, p in edges where p != c and value(p) != 2
+      and (touch(p, c) or num(end1(p)) = num(end1(c)) or num(end2(p)) =
+      num(end1(c)))
   # A square read as taking its first spot's domino, whatever its others.
   squareSingleDomino:
     for: c in cells, S = spots(c) where |S| >= 2, s = nth(S, 0)

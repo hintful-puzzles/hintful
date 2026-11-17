@@ -115,14 +115,13 @@ tiers: [Easy, Normal, Tricky, Unreasonable]
 techniques:
   # A domino covers a spot: no other covers either of its squares, and no
   # other spot holds that domino.
-  - id: placed
+  - kind: peer.placed
+    as: placed
     tier: Easy
-    on: place
-    for: "e in edges where value(e) = 1"
-    conclude: >-
-      (forall x in {end1(e), end2(e)}, y in adj4(x) where edge(x, y) != e:
-      place(edge(x, y), 2))
-      and (forall f in edges where f != e and same(e, f): place(f, 2))
+    with:
+      group: "c in edges where value(c) = 1"
+      peer: "p in edges where p != c and value(p) != 2 and (touch(p, c) or same(p, c))"
+      move: "place(p, 2)"
   # A domino with one spot left goes there. One with none is not read: its
   # rules allow it, for the soundness check finds a board where a domino has
   # no spot and the marks are consistent.
