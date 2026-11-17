@@ -77,8 +77,10 @@ describe("hint sentences live in one file per game", () => {
     const speaking = HINT_GAMES.map(([id]) => id).filter(speaks);
     // Vacuity: a glob or a registry that found nothing would pass both checks.
     expect(speaking.length, "almost no hinting game spoke").toBeGreaterThan(25);
-    expect(WITH_TEXT.size, "the glob found almost no text modules").toBeGreaterThan(25);
-
+    expect(
+      SPOKEN_FROM.size,
+      "the globs found almost no text modules or stated descriptions",
+    ).toBeGreaterThan(25);
     expect(STATED_GAMES.size, "the glob found no stated description").toBeGreaterThan(
       0,
     );

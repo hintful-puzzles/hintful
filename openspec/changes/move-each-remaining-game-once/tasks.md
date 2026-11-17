@@ -55,7 +55,14 @@ Planning games (a `steps` block, Slide's form):
   **One mark key changed form, not place:** the ring's block is keyed by
   the cell of its top-left square ("3", was "0,1"), so that one voice
   serves blocks and tiles. Render maps it back, and a ring-stripped diff of
-  the dump is empty.
+  the dump is empty. **Fixed in passing, seen in the app:** a free turn's
+  outline went on whichever tile that one turn brought to the stage's cell
+  (the 4, beside "Working on tile 1"); it now traces the whole stage's
+  turns and outlines the tile the words name. Carry steps' outlines move;
+  no sentence changes.
+- [x] Read in the running app (2026-11-17, Chrome): Twiddle, Pegs, Same
+  Game, Inertia, Sixteen, Flip and Cube, one explained hint each; words
+  and marks agree.
 - [x] Inertia (2026-11-17): dump byte-identical. The slide's compass point
   is a word-list term, "One safe way" is `answers`, and a forced slide
   passes the rival judging's relation. A step with an aim and no judged

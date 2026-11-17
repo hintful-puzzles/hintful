@@ -215,12 +215,13 @@ export function hint(
       turns.push(...seg.moves);
       for (const p of partsOf(seg, first)) parts.push(p);
     };
+    // The tile served: the one the stage's turns end on its cell. A free
+    // turn is one of several, so the rest are traced too.
+    const track = Int32Array.from({ length: size }, (_, c) => c);
+    for (let j = i; j < segs.length && segs[j].stage === stage; j++)
+      for (const t of segs[j].moves) play(track, t);
     if (free) take(segs[i++]);
     else for (; i < segs.length && segs[i].stage === stage; i++) take(segs[i]);
-
-    // The tile served: the one the turns end on the stage's cell.
-    const track = Int32Array.from({ length: size }, (_, c) => c);
-    for (const t of turns) play(track, t);
     let at = track[stage];
 
     // Which of the cells up to the stage's are right after each turn of the
