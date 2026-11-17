@@ -160,6 +160,38 @@ function tokenize(src: string): Token[] {
   return out;
 }
 
+/** The terms directly under `e`. */
+export function children(e: Expr): Expr[] {
+  switch (e.k) {
+    case "num":
+    case "name":
+      return [];
+    case "call":
+      return e.args;
+    case "set":
+      return e.elems;
+    case "size":
+    case "not":
+    case "neg":
+      return [e.of];
+    case "bin":
+      return [e.a, e.b];
+    case "with":
+      return [e.cell, e.value, e.body];
+    case "quant":
+      return [
+        ...e.binders.flatMap((b) => [b.of, ...(b.where ? [b.where] : [])]),
+        e.body,
+      ];
+    case "agg":
+      return [
+        ...e.binders.flatMap((b) => [b.of, ...(b.where ? [b.where] : [])]),
+        ...(e.where ? [e.where] : []),
+        ...(e.term ? [e.term] : []),
+      ];
+  }
+}
+
 export function parse(src: string): Expr {
   const toks = tokenize(src);
   let p = 0;

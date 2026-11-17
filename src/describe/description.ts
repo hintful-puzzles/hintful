@@ -70,6 +70,11 @@ export interface DescriptionJson {
     { sort: string; notation: string; of?: string; means?: string }
   >;
   define?: Record<string, string>;
+  /** How a rule is seen broken, by name with its parameters (`stuck(t)`):
+   * `when` is a definition the techniques call, and `look` the words naming
+   * what broke, which a technique's `{broke}` says (`load.ts` expands it),
+   * its `terms` read at the firing's witness. */
+  breaks?: Record<string, BreakJson>;
   shape?: string[];
   rules?: Record<string, string>;
   clues?: Record<
@@ -329,16 +334,30 @@ type SaidMarksJson = Partial<
  * decides more than one element over all its legs. */
 export type SuppliedKind = "flag" | "number" | "element" | "elements" | "several";
 
-/** A term as a description states it: a formula over the binding, or the
- * kind of value the game supplies. */
-type SaidTermJson = string | { supplied: SuppliedKind };
+/** A rule's break clause as a description states it (`DescriptionJson.breaks`). */
+export interface BreakJson {
+  when: string;
+  terms?: Record<string, string>;
+  look: string;
+}
 
-/** A term a firing says: its formula, or where the game supplies it, its kind
- * (`expr` is then `null`). */
+/** A term as a description states it: a formula over the binding, the kind
+ * of value the game supplies, or a term of the break that held, which the
+ * loader adds for `{broke}` (`term: null` for whether that break held). */
+type SaidTermJson =
+  | string
+  | { supplied: SuppliedKind }
+  | { broke: string; term: string | null };
+
+/** A term a firing says: its formula, where the game supplies it its kind,
+ * or where it is a break's, the break and its term (`null`: whether it was
+ * the break that held), read at the firing's witness. `expr` is `null` for
+ * both of the last. */
 export interface SaidTerm {
   name: string;
   expr: Expr | null;
   supplied: SuppliedKind | null;
+  broke: { name: string; term: string | null } | null;
 }
 
 /** One set a firing marks: its role, and where the role holds several sorts,
@@ -716,6 +735,9 @@ const BOARD = "board";
 export interface Description {
   json: DescriptionJson;
   defs: Map<string, Definition>;
+  /** The terms of each break clause, by its name: its definition is in
+   * `defs`, and a technique's witness reads these where it held. */
+  breaks: Map<string, { params: string[]; terms: { name: string; expr: Expr }[] }>;
   /** The shape and the rules, each by name. */
   rules: { name: string; expr: Expr }[];
   clueKinds: Map<string, ClueKind>;
@@ -888,8 +910,15 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
       terms: Object.entries({ ...stated.terms, ...terms }).map(
         ([n, src]): SaidTerm =>
           typeof src === "string"
-            ? { name: n, expr: at(`${label} ${n}`, src), supplied: null }
-            : { name: n, expr: null, supplied: src.supplied },
+            ? { name: n, expr: at(`${label} ${n}`, src), supplied: null, broke: null }
+            : "broke" in src
+              ? {
+                  name: n,
+                  expr: null,
+                  supplied: null,
+                  broke: { name: src.broke, term: src.term },
+                }
+              : { name: n, expr: null, supplied: src.supplied, broke: null },
       ),
       marks: (
         Object.entries({ ...stated.marks, ...marks }) as [
@@ -966,6 +995,20 @@ export function loadDescription(
     }
   };
   const defs = parseDefinitions(json.game, json.define ?? {});
+  const breaks: Description["breaks"] = new Map();
+  for (const [head, b] of Object.entries(json.breaks ?? {})) {
+    // The loader puts its definition in `define`, where every reader of the
+    // file finds it (`load.ts`).
+    const [[name, def]] = parseDefinitions(json.game, { [head]: b.when });
+    if (!defs.has(name)) defs.set(name, def);
+    breaks.set(name, {
+      params: def.params,
+      terms: Object.entries(b.terms ?? {}).map(([n, src]) => ({
+        name: n,
+        expr: at(`break ${name} ${n}`, src),
+      })),
+    });
+  }
   const rules: Description["rules"] = [];
   (json.shape ?? []).forEach((s, i) => {
     rules.push({ name: `shape ${i}`, expr: at(`shape ${i}`, s) });
@@ -1059,6 +1102,7 @@ export function loadDescription(
   return {
     json,
     defs,
+    breaks,
     rules,
     clueKinds,
     answerSort: json.answer.value.sort,

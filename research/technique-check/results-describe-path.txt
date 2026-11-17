@@ -1,10 +1,19 @@
-ok  path       forced                         current: recorded src/games/path/path.description.yaml#forced 4166c7676819ceb9
-ok  path       lineBreaks                     current: recorded src/games/path/path.description.yaml#lineBreaks 03e5b94937ea48f3
-ok  path       pairBreaks                     current: recorded src/games/path/path.description.yaml#pairBreaks c7e3af7795ad73a7 held
-ok  path step=0 weighed                        3  sound    (want sound   )     9 queries  121.5s
-..  path step=0 weighed (planted): not proved whole in time, asked on 8 boards: unsound
-ok  path step=0 weighed (planted)              3  unsound  (want unsound )    50 queries   11.1s   at cell 4
-..  path step=1 weighed: not proved whole in time, asked on 16 boards: no defect
-ok  path step=1 weighed                        3  sound    (want sound   )   144 queries  108.4s
-..  path step=1 weighed (planted): not proved whole in time, asked on 8 boards: unsound
-ok  path step=1 weighed (planted)              3  unsound  (want unsound )     5 queries    7.3s   at cell 4
+ok  path step=0 forced                         3  sound    (want sound   )     9 queries    4.8s
+ok  path step=0 forced (planted)               3  unsound  (want unsound )     1 queries    0.2s   at cell 0
+ok  path step=1 forced                         3  sound    (want sound   )     9 queries   27.2s
+ok  src/games/path/path.description.yaml#forced: recorded sound, proved whole on all 2 boards
+ok  path step=0 lineBreaks                     3  sound    (want sound   )    12 queries   50.1s
+ok  path step=0 lineBreaks (planted)           3  unsound  (want unsound )     1 queries    2.9s   at edge 0
+ok  path step=1 lineBreaks                     3  sound    (want sound   )    12 queries  117.6s
+ok  src/games/path/path.description.yaml#lineBreaks: recorded sound, proved whole on all 2 boards
+ok  path step=0 pairBreaks                     3  sound    (want sound   )     9 queries   96.2s
+ok  path step=0 pairBreaks (planted)           3  unsound  (want unsound )     2 queries   19.3s   at cell 1
+..  path step=1 pairBreaks: not proved whole in time, asked on 20 boards, one an answer, every answer: no defect
+ok  path step=1 pairBreaks                     3  held     (want sound   )   180 queries  118.6s
+ok  src/games/path/path.description.yaml#pairBreaks: recorded held, proved whole on 1 of 2 boards and asked on sampled answers on the rest
+ok  path step=0 weighed                        3  sound    (want sound   )     9 queries  121.2s
+..  path step=0 weighed (planted): not proved whole in time, asked on 16 boards: unsound
+ok  path step=0 weighed (planted)              3  unsound  (want unsound )   131 queries   37.2s   at cell 4
+..  path step=1 weighed: not proved whole in time, asked on 20 boards, one an answer, every answer: no defect
+ok  path step=1 weighed                        3  held     (want sound   )   180 queries   97.9s
+ok  src/games/path/path.description.yaml#weighed: recorded held, proved whole on 1 of 2 boards and asked on sampled answers on the rest

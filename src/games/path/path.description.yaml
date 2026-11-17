@@ -157,11 +157,6 @@ define:
     and (step = 0 or b not in piece(a))
   # The edges square c may still take a line on.
   ways(c): "{y in adj4(c) where live(c, y)}"
-  # Whether square c is left short of the lines it takes: too few edges
-  # left for them.
-  stuck(c): >-
-    spare(c) and not (exists y in adj4(c) where live(c, y):
-    lines(c) + 1 = takes(c) or (exists z in before(y, adj4(c)): live(c, z)))
   # Whether a square near the piece through a, where lines were just tried
   # on the edges of a, b and d, is left short: a square whose lines the
   # trial changed, an end of the piece, or one beside either.
@@ -172,8 +167,40 @@ define:
   # of its own, would break the board at once: close a loop, join two
   # numbers that may not meet, or leave a square short.
   bothBreak(c, i, j): >-
-    j in piece(i) or (not numbered(c) and not meets(i, j))
+    closes(i, j, c) or joins(c, i, j)
     or (with place(edge(c, i), 1): with place(edge(c, j), 1): shortNear(c, i, j))
+# How a Check's tried lines are seen to break the board, each said where it
+# is what broke ({broke}).
+breaks:
+  # A line from square c joins i to j, already one piece: a loop of the
+  # squares of that piece and c.
+  closes(i, j, c):
+    when: "j in piece(i)"
+    terms: { circuit: "piece(i) + {c}" }
+    look: "make a loop of {outline circuit: the outlined squares}"
+  # Lines through square c, which has no number, join the pieces ending at i
+  # and j, whose numbers may not meet.
+  joins(c, i, j):
+    when: "not numbered(c) and not meets(i, j)"
+    terms:
+      twoNums: "nearest(i) + nearest(j)"
+      n1: "min(p in nearest(i) + nearest(j) of clue(number, p))"
+      n2: "max(p in nearest(i) + nearest(j) of clue(number, p))"
+    look: "join {outline twoNums: the outlined {n1} to the {n2}}"
+  # Square t is left short of the lines it takes: too few edges left for
+  # them. A dead end where it has a line or an edge left, else cut off.
+  stuck(t):
+    when: >-
+      spare(t) and not (exists y in adj4(t) where live(t, y):
+      lines(t) + 1 = takes(t) or (exists z in before(y, adj4(t)): live(t, z)))
+    terms:
+      sq: t
+      dead: "lines(t) > 0 or (exists y in adj4(t): live(t, y))"
+      hasNum: "numbered(t)"
+      num: "sum(k in {t} where numbered(k) of clue(number, k))"
+    look: >-
+      {if dead: leave {outline sq: the outlined {if hasNum: {num} | square}} a dead end |
+      cut off {outline sq: the outlined {if hasNum: {num} | square}}}
 shape:
   # Every square has the lines it takes.
   - "forall c in cells: lines(c) = takes(c)"
@@ -250,38 +277,13 @@ techniques:
     tier: Normal
     for: >-
       e in edges, a = end1(e), b = end2(e) where live(a, b)
-      and (b in piece(a) or (with place(e, 1): shortNear(a, b, b)))
+      and (closes(a, b, a) or (with place(e, 1): shortNear(a, b, b)))
     conclude: "place(e, 2)"
     says:
-      terms:
-        e: e
-        # What the line would break is the game's to find: a square crowded
-        # (`held` lines on it) or left short (a `dead` end, else cut off), a
-        # loop of the squares in `circuit`, or else the numbers `n1` and `n2`
-        # that `twoNums` joins; `sq` is the square, `hasNum` and `num` its
-        # number.
-        crowd: { supplied: flag }
-        short: { supplied: flag }
-        loops: { supplied: flag }
-        dead: { supplied: flag }
-        sq: { supplied: element }
-        hasNum: { supplied: flag }
-        num: { supplied: number }
-        held: { supplied: number }
-        circuit: { supplied: elements }
-        twoNums: { supplied: elements }
-        n1: { supplied: number }
-        n2: { supplied: number }
+      terms: { e: e }
       marks: {}
-      look: >-
-        a line on {ring: this edge | these edges} would {if crowd: give
-        {outline sq: the outlined {if hasNum: {num} | square}} {spelled held} lines |
-        {if short: {if dead: leave {outline sq: the outlined {if hasNum: {num} | square}} a dead end |
-        cut off {outline sq: the outlined {if hasNum: {num} | square}}} |
-        {if loops: make a loop of {outline circuit: the outlined squares} |
-        join {outline twoNums: the outlined {n1} to the {n2}}}}}
+      look: "a line on {ring: this edge | these edges} would {broke}"
       move: "it must be crossed out"
-      witness: true
       reads: true
   # A square that takes two more lines from three edges left, where lines
   # on two of them would break the board: the third takes a line.
@@ -297,30 +299,11 @@ techniques:
         c: c
         i: i
         j: j
-        # The two edges tried, and what they break, as in `lineBreaks`.
+        # The two edges tried.
         tried: { supplied: elements }
-        crowd: { supplied: flag }
-        short: { supplied: flag }
-        loops: { supplied: flag }
-        dead: { supplied: flag }
-        sq: { supplied: element }
-        hasNum: { supplied: flag }
-        num: { supplied: number }
-        held: { supplied: number }
-        circuit: { supplied: elements }
-        twoNums: { supplied: elements }
-        n1: { supplied: number }
-        n2: { supplied: number }
       marks: {}
-      look: >-
-        lines on both {outline tried: outlined edges} would {if crowd: give
-        {outline sq: the outlined {if hasNum: {num} | square}} {spelled held} lines |
-        {if short: {if dead: leave {outline sq: the outlined {if hasNum: {num} | square}} a dead end |
-        cut off {outline sq: the outlined {if hasNum: {num} | square}}} |
-        {if loops: make a loop of {outline circuit: the outlined squares} |
-        join {outline twoNums: the outlined {n1} to the {n2}}}}}
+      look: "lines on both {outline tried: outlined edges} would {broke}"
       move: "{ring: this edge | these edges} must be a line"
-      witness: true
   # A square that takes two more lines from four edges left, weighed whole:
   # of its six pairs of edges, those that would not break the board are
   # left. N is the edges some pair left holds. An edge every pair left

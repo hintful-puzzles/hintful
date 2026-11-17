@@ -82,6 +82,52 @@ describe("a description's YAML", () => {
     });
   });
 
+  describe("a break clause", () => {
+    const withBreaks = (forClause: string, terms = "{ c: c }") =>
+      `${rules(' "strike(c, 1)"')
+        .replace('for: "c in cells"', `for: "${forClause}"`)
+        .replace(
+          'conclude: "strike(c, 1)"',
+          `conclude: "strike(c, 1)"\n    says:\n      terms: ${terms}\n      marks: {}\n      look: "a 1 here would {broke}"\n      move: "it must go"`,
+        )}define:\n  near(c): "exists d in adj4(c): crowd(d) or full(d)"\nbreaks:\n  full(d):\n    when: "known(d)"\n    look: "fill it"\n  crowd(d):\n    when: "value(d) = 1"\n    terms: { at: d }\n    look: "crowd {outline at: the outlined square}"\n`;
+
+    it("is a definition, and {broke} says each break the formula reads", () => {
+      const d = loadDescriptionFile(
+        withBreaks("c in cells where near(c)"),
+        "b.yaml",
+      ) as DescriptionJson;
+      expect(d.define?.["full(d)"]).toBe("known(d)");
+      const [t] = d.techniques ?? [];
+      if (t === undefined || !("says" in t) || t.says === undefined)
+        throw new Error("no says");
+      // In the order the breaks are declared, the last said where no other held.
+      expect(t.says.look).toBe(
+        "a 1 here would {if brokeFull: fill it | crowd {outline at: the outlined square}}",
+      );
+      expect(t.says.terms).toEqual({
+        c: "c",
+        brokeFull: { broke: "full", term: null },
+        at: { broke: "crowd", term: "at" },
+      });
+      expect(t.says.witness).toBe(true);
+    });
+
+    it("is refused for a technique whose formula reads none", () => {
+      expect(() => loadDescriptionFile(withBreaks("c in cells"), "b.yaml")).toThrow(
+        "b.yaml: t says {broke}, and its formula reads no break",
+      );
+    });
+
+    it("is refused where its term is named as the technique's own", () => {
+      expect(() =>
+        loadDescriptionFile(
+          withBreaks("c in cells where near(c)", "{ at: c }"),
+          "b.yaml",
+        ),
+      ).toThrow("b.yaml: t: a break's term at is also its own");
+    });
+  });
+
   it("refuses a field the schema does not name", () => {
     expect(() =>
       loadDescriptionFile(

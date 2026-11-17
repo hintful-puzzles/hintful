@@ -641,6 +641,26 @@
           }
         },
         "define": { "$ref": "#/$defs/define" },
+        "breaks": {
+          "type": "object",
+          "description": "How a rule is seen broken, `name(params)` to its clause: `when`, a formula the techniques read as a definition; `look`, the words naming what broke, which a technique's `{broke}` says where this break is the one its witness holds; and `terms`, formulas over the parameters those words read, read on the marks the break was found on (under a supposition where it was read under one).",
+          "propertyNames": {
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\([A-Za-z_, ]*\\))?$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["when", "look"],
+            "properties": {
+              "when": { "$ref": "#/$defs/formula" },
+              "terms": {
+                "type": "object",
+                "additionalProperties": { "$ref": "#/$defs/formula" }
+              },
+              "look": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
         "views": {
           "type": "array",
           "items": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },

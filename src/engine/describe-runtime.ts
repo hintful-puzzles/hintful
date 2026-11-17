@@ -305,7 +305,8 @@ export class EdgeRelation {
  * - `arm`: which side of an `or` held, the left (0) tried first.
  * - `member`: the binders' values of the first member an `exists` held for.
  * - `supposing`: the cell and value a `with` placed, and what held under it.
- * - `def`: a definition read, and what held in its body.
+ * - `def`: a definition read, and what held in its body; a break clause's
+ *   (`breaks`) carries the terms its words read, read where it held.
  * - `all`: the parts of an `and` that have any.
  */
 export type Witness =
@@ -316,7 +317,12 @@ export type Witness =
       of: Witness | null;
     }
   | { held: "supposing"; cell: number; value: number; of: Witness | null }
-  | { held: "def"; name: string; of: Witness | null }
+  | {
+      held: "def";
+      name: string;
+      of: Witness | null;
+      says?: Readonly<Record<string, unknown>>;
+    }
   | { held: "all"; of: readonly Witness[] };
 
 /**
@@ -354,6 +360,24 @@ export function witnessAll(...parts: (Witness | null)[]): Witness | null {
 export function witnessNodes(w: Witness | null): Witness[] {
   if (w === null) return [];
   return [w, ...(w.held === "all" ? w.of.flatMap(witnessNodes) : witnessNodes(w.of))];
+}
+
+/** The break that held in `w`: the innermost node of a definition named in
+ * `breaks`, the first such where several held side by side, with the terms
+ * its words read; `null` where none did. */
+export function brokeAt(
+  w: Witness | null,
+  breaks: readonly string[],
+): { name: string; says: Readonly<Record<string, unknown>> } | null {
+  if (w === null) return null;
+  const under =
+    w.held === "all"
+      ? (w.of.map((x) => brokeAt(x, breaks)).find((x) => x !== null) ?? null)
+      : brokeAt(w.of, breaks);
+  if (under !== null) return under;
+  return w.held === "def" && breaks.includes(w.name)
+    ? { name: w.name, says: w.says ?? {} }
+    : null;
 }
 
 /** The first node of `w`, outermost first, that is the definition `name`'s. */

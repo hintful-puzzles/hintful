@@ -106,7 +106,7 @@ and techniques, and:
 | The answer check | you decide whether a board is solved, or write an error overlay |
 | A kind of rule places its techniques | a rule is "this group holds exactly k", and you would state its techniques by hand |
 | What a placement rules out | a placed thing rules out squares the player would cross by hand |
-| A firing's reason is built from its binding | a hint's words need a fact about a firing |
+| A firing's reason is built from its binding | a hint's words need a fact about a firing, or a Check must say what its tried value broke |
 | What the compiler checks of a wording | you write a wording, or `npm run describe` reports one |
 | Checking a technique sound | you state or edit a technique, or the gate reports one unchecked |
 | A planning game's position and moves | you describe a planning game, or its moves or finish change |
@@ -1544,16 +1544,30 @@ A game writes no parent list. Relation facts have no readable element yet.
 `placeNotes` (same module) places the notes among a walk's steps from the
 graph, so no game keeps its own "where does this mark go" pass.
 
+**A rule states how it is seen broken, with its words, in `breaks:`**, so a
+Check says what its tried value broke without the game finding it again. A
+break is named with its parameters, `stuck(t)`: its `when` is a definition
+the techniques call (the loader puts it in `define`), its `look` the words
+naming what broke, and its `terms` formulas over the parameters those words
+read. A technique whose clause says `{broke}` speaks the break that held:
+the loader puts there the words of each break its formula reads, in the
+order they are declared, each said where it is the one that held (`{if
+brokeStuck: …}`), and adds their terms to the technique's; the compiler
+reads them where the witness holds the break (its node carries them,
+`brokeAt` finds the innermost), under the suppositions in force there, so a
+square's ways are counted with the tried lines drawn. Path's `lineBreaks` and
+`pairBreaks` say a loop closed, two numbers joined or a square left short
+this way (`closes`, `joins`, `stuck`); a break under a `not`, a `forall` or
+an aggregate is not witnessed, and the compiler refuses a technique whose
+`{broke}` it never holds. Exemplar: `path-witness.test.ts`.
+
 **The witness is read where the sentence is built, by the name of what it
 holds**, not written into a term: `witnessOfDef(w, "shortNear")` finds the
 definition's node (null where that part of the formula did not hold, so its
 absence says which arm held), `witnessNodes(w)` lists every node, outermost
 first, and a `member` node's record is keyed by the binders' own names. A
-game's reason callback that re-read the board to find what broke reads this
-instead (Path's `brokeOf`, `solver.ts`, moved `lineBreaks` and `pairBreaks`
-off `clashOf`: the hint-walk fingerprint, `hint-walk-fingerprint.test.ts`, is
-unchanged, and fails when `brokeOf` names another member or arm). Count and geometry stay the
-game's: the witness names the square, the board says how many ways it has.
+game's reason callback that re-reads the board to find what broke reads this
+instead, or states the break (above).
 
 A rule that only a run of the validator can name
 (Boats' three trials) stays a reason callback, which receives what the

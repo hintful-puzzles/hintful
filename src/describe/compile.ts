@@ -33,6 +33,7 @@ import {
   type MarkSort,
   parseTechnique,
   relationMarkOf,
+  type SaidTerm,
   type Says,
   type StatedClauses,
   type Step,
@@ -43,7 +44,7 @@ import {
   type Wording,
   withEveryVariation,
 } from "./description.ts";
-import { type Binder, type Expr, parse } from "./expr.ts";
+import { type Binder, children, type Expr, parse } from "./expr.ts";
 import { footprintOf } from "./footprint.ts";
 
 /** A region's sort names its partition, as a clue's names its kind. */
@@ -477,6 +478,16 @@ interface Env {
    * it before they fire (`rechecked`); absent elsewhere. */
   recheck?: Recheck;
   defs: ReadonlyMap<string, Definition>;
+  /** The break clauses (`Description.breaks`), whose terms a witness reads
+   * where one held, and each term's sort as first read there, by
+   * `break.term`, for the technique terms that say it. */
+  breaks: {
+    of: ReadonlyMap<
+      string,
+      { params: string[]; terms: { name: string; expr: Expr }[] }
+    >;
+    sorts: Map<string, Sort>;
+  };
   clues: ReadonlyMap<string, ClueKind>;
   /** The partitions the board deals, by name. */
   regions: ReadonlySet<string>;
@@ -1238,14 +1249,34 @@ function witnessOf(e: Expr, scope: Scope, env: Env, out: Out): string | null {
     return once(v, out);
   };
   const of = (w: string | null): string => w ?? "null";
+  // A break clause's node carries the terms its words read, read here, where
+  // it held, under the suppositions in force, its parameters the arguments.
+  const said = (name: string, args: readonly Expr[]): string => {
+    const brk = env.breaks.of.get(name);
+    if (brk === undefined) return "";
+    const inner = new Map(scope);
+    brk.params.forEach((p, i) => {
+      inner.set(p, once(compileExpr(args[i], scope, env, out), out));
+    });
+    const fields = brk.terms.map(({ name: term, expr }) => {
+      const v = compileExpr(expr, inner, env, out);
+      const key = `${name}.${term}`;
+      const was = env.breaks.sorts.get(key);
+      if (was !== undefined && !sameSort(was, v.sort))
+        throw new CompileError(`break ${name}: ${term} is read as two sorts`);
+      env.breaks.sorts.set(key, v.sort);
+      return `${term}: ${isArray(v.sort) ? `${v.code}.slice()` : v.code}`;
+    });
+    return `, says: { ${fields.join(", ")} }`;
+  };
   if (e.k === "name" && !scope.has(e.name)) {
     const def = env.defs.get(e.name);
     if (def === undefined || def.params.length > 0) return null;
-    return `{ held: "def", name: ${JSON.stringify(e.name)}, of: ${of(witnessOf(def.body, scope, env, out))} }`;
+    return `{ held: "def", name: ${JSON.stringify(e.name)}, of: ${of(witnessOf(def.body, scope, env, out))}${said(e.name, [])} }`;
   }
   const body = inlined(e, scope, env);
   if (body !== e && e.k === "call")
-    return `{ held: "def", name: ${JSON.stringify(e.fn)}, of: ${of(witnessOf(body, scope, env, out))} }`;
+    return `{ held: "def", name: ${JSON.stringify(e.fn)}, of: ${of(witnessOf(body, scope, env, out))}${said(e.fn, e.args)} }`;
   if (e.k === "bin" && e.op === "and") {
     const parts = [e.a, e.b]
       .map((x) => witnessOf(x, scope, env, out))
@@ -5933,38 +5964,6 @@ function isMarkRead(fn: string, env: Env): boolean {
   );
 }
 
-/** The terms directly under `e`. */
-function children(e: Expr): Expr[] {
-  switch (e.k) {
-    case "num":
-    case "name":
-      return [];
-    case "call":
-      return e.args;
-    case "set":
-      return e.elems;
-    case "size":
-    case "not":
-    case "neg":
-      return [e.of];
-    case "bin":
-      return [e.a, e.b];
-    case "with":
-      return [e.cell, e.value, e.body];
-    case "quant":
-      return [
-        ...e.binders.flatMap((b) => [b.of, ...(b.where ? [b.where] : [])]),
-        e.body,
-      ];
-    case "agg":
-      return [
-        ...e.binders.flatMap((b) => [b.of, ...(b.where ? [b.where] : [])]),
-        ...(e.where ? [e.where] : []),
-        ...(e.term ? [e.term] : []),
-      ];
-  }
-}
-
 /** Whether `e` reads definition `fn`, itself or through the definitions it
  * calls. */
 function mentions(
@@ -6891,10 +6890,53 @@ function techniqueFunction(
           if (group === "terms") sorts.set(name, sort);
           return `${name}: ${isArray(sort) ? "[]" : sort.k === "bool" ? "false" : sort.k === "elem" ? "-1" : "0"}`;
         };
+        // A term of a break (`{broke}`, `load.ts`) is read off the witness:
+        // whether the break that held is this one, or its term where it is,
+        // the placeholder elsewhere.
+        let at: string | null = null;
+        const broken = (b: NonNullable<SaidTerm["broke"]>, name: string): string => {
+          if (!t.says?.witness)
+            throw new CompileError(
+              `${t.id}: ${name} is a break's, read off a witness it does not say`,
+            );
+          if (at === null) {
+            env.used.add("brokeAt");
+            at = Out.fresh("_bk");
+            body.emit(
+              `const ${at} = brokeAt(_w, ${JSON.stringify([...env.breaks.of.keys()])});`,
+            );
+          }
+          const sort =
+            b.term === null ? BOOL : env.breaks.sorts.get(`${b.name}.${b.term}`);
+          if (sort === undefined)
+            throw new CompileError(
+              `${t.id}: its witness never holds break ${b.name}, whose ${b.term} it says`,
+            );
+          fields.terms.push(`${name}: ${tsType(sort)};`);
+          sorts.set(name, sort);
+          const none = isArray(sort)
+            ? "[]"
+            : sort.k === "bool"
+              ? "false"
+              : sort.k === "elem"
+                ? "-1"
+                : "0";
+          const held = `${at}?.name === ${JSON.stringify(b.name)}`;
+          const code =
+            b.term === null
+              ? held
+              : `(${held} ? (${at}.says[${JSON.stringify(b.term)}] as ${tsType(sort)}) : ${none})`;
+          if (!worded) return `${name}: ${code}`;
+          body.emit(`const _sw_${name} = ${code};`);
+          named.set(name, { code: `_sw_${name}`, sort });
+          return `${name}: _sw_${name}`;
+        };
         const terms = v.terms.map((x) =>
-          x.supplied === null
-            ? read(x.expr as Expr, "terms", x.name)
-            : placeholder(x.supplied, "terms", x.name),
+          x.broke !== null
+            ? broken(x.broke, x.name)
+            : x.supplied === null
+              ? read(x.expr as Expr, "terms", x.name)
+              : placeholder(x.supplied, "terms", x.name),
         );
         const marks: string[] = [];
         for (const role of new Set(v.marks.map((m) => m.role))) {
@@ -7271,6 +7313,7 @@ export function compileLibrary(
   const used = new Set<string>();
   const env: Env = {
     defs: new Map(),
+    breaks: { of: new Map(), sorts: new Map() },
     clues: new Map(),
     regions: new Set(),
     boxes: null,
@@ -7463,6 +7506,7 @@ export function compileGame(
       );
   const env: Env = {
     defs: d.defs,
+    breaks: { of: d.breaks, sorts: new Map() },
     clues,
     regions,
     boxes,

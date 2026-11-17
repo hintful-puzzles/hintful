@@ -1,7 +1,6 @@
 /**
- * The wordings of Path's stated hint that no walk of the word dump reaches: a
- * line that would crowd a square, and the shorter turns of a weighed step's
- * list of what its ruled-out ways break. Each is rendered from the compiled
+ * The wordings of Path's stated hint that no walk of the word dump reaches:
+ * the shorter turns of a weighed step's list of what its ruled-out ways break. Each is rendered from the compiled
  * module's clauses, as the engine renders it.
  */
 import { describe, expect, it } from "vitest";
@@ -32,34 +31,7 @@ const said = (
     value: String,
   }).text;
 
-const clash = {
-  crowd: false,
-  short: false,
-  loops: false,
-  dead: false,
-  sq: 5,
-  hasNum: false,
-  num: 0,
-  held: 0,
-  circuit: [1, 2],
-  twoNums: [1, 2],
-  n1: 0,
-  n2: 0,
-};
-
 describe("path hint — the wordings no walk reaches", () => {
-  it("says a line that would crowd a square, numbered or not", () => {
-    const [line] = STATED.lineBreaks.step;
-    expect(said(line, { ...clash, crowd: true, held: 3 }, [4])).toBe(
-      "A line on this edge would give the outlined square three lines, so it must be crossed out.",
-    );
-    expect(
-      said(line, { ...clash, crowd: true, held: 2, hasNum: true, num: 7 }, [4]),
-    ).toBe(
-      "A line on this edge would give the outlined 7 two lines, so it must be crossed out.",
-    );
-  });
-
   it("says a weighed step's ruled-out ways, shorter where the list is long", () => {
     const [, pair] = STATED.weighed.step;
     const terms = { c: 5, hasNum: false, num: 0, multi: true };

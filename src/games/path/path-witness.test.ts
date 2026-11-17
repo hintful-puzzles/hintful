@@ -7,7 +7,7 @@
  * closes it is placed, so no firing of `lineBreaks` is left to name it.
  */
 import { describe, expect, it } from "vitest";
-import { witnessNodes, witnessOfDef } from "../../engine/describe-runtime.ts";
+import { brokeAt, witnessNodes, witnessOfDef } from "../../engine/describe-runtime.ts";
 import {
   ladderTechniques,
   runLadder,
@@ -79,6 +79,31 @@ describe("a lineBreaks firing's witness", () => {
         }
       }
     // What the check looked at.
+    expect(seen).toBeGreaterThan(20);
+  });
+
+  it("says the square its break left short, read where the break held", () => {
+    let seen = 0;
+    for (const mode of [MODE_PATH, MODE_PAIRS])
+      for (const firings of firingsOf(mode))
+        for (const f of firings) {
+          const { witness, terms } = (
+            f.reasons[0] as Said<LineBreaksBinding, LineBreaksSays>
+          ).says;
+          const broke = brokeAt(witness, ["closes", "joins", "stuck"]);
+          if (broke === null) throw new Error("no break held");
+          // The left arm, a loop, is not met on a hint's path (above).
+          expect(broke.name).toBe("stuck");
+          expect(terms.brokeCloses).toBe(false);
+          // `shortNear` names the square as a member, `t` or `s` under it.
+          const members = witnessNodes(witness).flatMap((w) =>
+            w.held === "member" ? [w.member] : [],
+          );
+          const last = members.at(-1);
+          expect(terms.sq).toBe(last?.["s"] ?? last?.["t"]);
+          expect(broke.says["sq"]).toBe(terms.sq);
+          seen++;
+        }
     expect(seen).toBeGreaterThan(20);
   });
 

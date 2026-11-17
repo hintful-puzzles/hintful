@@ -784,10 +784,75 @@ boundaries are judgment, and the counts carry that.
     squares); Path's and Spokes' `lineBreaks`/`pairBreaks`/`spareBreaks`,
     each a trial read by a break predicate of the game's own (`shortNear`,
     `brokenH`), which is where a rule's break clause would have to start.
-  - [ ] Next: FIT from a rule's break clause (proposal § "A rule states how
-    it breaks"): read the FIT techniques left (above), say which rule each
-    supposes broken, and design the clause on the rules `shape:` and the
-    count kinds already state; then REL (10 left) and PEER (6).
+  - [x] (2026-11-17) FIT from a rule's break clause, the reading: which rule
+    each FIT technique left supposes broken.
+    - **Path** `lineBreaks`, `pairBreaks`, `weighed`: the count rule (a
+      square crowded, `lines > takes`, or short, `stuck`: more lines owed
+      than live edges), the loop rule (`b in piece(a)`: a line joining its
+      piece's two ends) and the number rule (`not meets(i, j)`). What broke
+      is found twice: `brokeOf` (solver.ts) reads the witness for which, and
+      `clashRead`/`clashTerms` (hint.ts) count it again for the words.
+    - **Spokes** `lineBreaks`, `spareBreaks`: the count rule (`shortH`, a
+      hub owing more lines than free spokes) and the connect rule
+      (`sealedH`, a group of full hubs closed off); `twoOnes` is the connect
+      rule's one case. The supposition is by hand (`H`, with `drawn`,
+      `linesH`, `spareH` copies of the count rule's defines), because `with`
+      places one element and `spareBreaks` places a set; and what broke is
+      found a second time in TS (solver.ts' break finder, `trialBreaks`).
+    - **Norinori** `crowded`, `blocked`: the domino rule (`lit = 1`) with
+      the count read as room. **Pearl** `blackRunsOn`, `blackCannotRunOn`,
+      `whiteCannotTurn`: the pearl clue's `means`. **Keen** `cageEasy`,
+      `cageLine`, **Mathrax**'s three: a clue rule under upstream's tier
+      gates.
+    So the rules broken repeat (count, loop, connect, a clue's meaning), and
+    what each game writes twice is not the trial, which is one `with`, but
+    **what broke and its words**: each game finds it again in TS from the
+    witness or the board.
+  - [ ] The design, in this order (each a commit, each game moved
+    deal-compared and walked and seen in the app):
+    1. **`breaks:`, a rule's break clause with its words**: a named clause
+       (`stuck(t)`, `closes(a, b)`) whose `when` is a define the
+       techniques call, and whose `says` names what broke, its terms read
+       at the witness under the supposition (hint path only), carried in
+       the witness's def node.
+    2. **`{broke}` in a look speaks the break that held** (the innermost
+       break in the firing's witness), so Path's three Checks share one set
+       of words and its `brokeOf`, `clashRead` and `clashTerms` go; then
+       Spokes', its TS break finder going.
+    3. **`with place(S, v)` over a set** (compiler, checker, interpreter,
+       witness), so Spokes' `H` copies go and its breaks are the count and
+       connect rules' own, read under the supposition.
+    4. **A trial kind** once two games read their breaks the same way.
+  - [x] (2026-11-17) Steps 1 and 2 on Path. `breaks:` (schema, `load.ts`'s
+    `withBreaks`, `Description.breaks`): a break's `when` goes into
+    `define`, and `{broke}` in a clause becomes `{if brokeCloses: … | …}`
+    over the breaks the technique's formula reads, its terms added as
+    `{ broke, term }`; the compiler reads them in the witness's def node,
+    under the suppositions there, and `brokeAt` (runtime) finds the
+    innermost. Path states `closes(i, j, c)`, `joins(c, i, j)` and
+    `stuck(t)`; `lineBreaks` and `pairBreaks` say `{broke}`, and Path's
+    `brokeOf`, `Broke`, `clashRead`, `clashTerms` and their crowd wording
+    (which no firing could reach: `live` needs both ends spare) went.
+    **Moved:** one pin's words, a Pairs join said lower number first ("join
+    the outlined 1 to the 4", was "4 to the 1"), as Path's already were;
+    walk fingerprints unchanged on both tiers; deal-compare at 3 seeds a
+    preset: same boards and verdicts, 1.01× deals, 1.00× solves. Seen in
+    the app on the pin's board (Pairs 5x5 Normal): the join and the dead
+    end, outlines and tried edges where the words say. `weighed` keeps its
+    TS clash reading (a set of pairs, no one witness). A new
+    `path-witness` test (the square said is the witness's member) seen to
+    fail with `sq` planted as a neighbor. Soundness re-checked.
+  - [ ] Spokes on `breaks:` (step 2's second game), found while reading it:
+    its `breakOf` (solver.ts) scans the changed hubs' neighbors in index
+    order across both ends, where `brokenH(a, H) or brokenH(b, H)` reads
+    `a`'s first, so where two hubs starve the outlined one may differ
+    (words move; accept, fingerprint re-recorded). `spareBreaks`' look
+    tells the filled hub from a broken one of the same number ("the other
+    outlined 3", `same`), which a break's words cannot know: give the
+    break the filled hub as a parameter, or drop the "other". The outline
+    (`marks.outline` supplied from `evidenceHubs`) must come from the break's
+    `broken` term once `breakOf` goes. Then step 3 (`with place(S, v)`).
+  - [ ] Then REL (10 left) and PEER (6).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

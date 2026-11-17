@@ -479,6 +479,7 @@ export function compilePlanning(
       throw new CompileError(`${json.game}: ${l} is over faces, which the space lacks`);
   const env: Env = {
     defs: parseDefinitions(json.game, d.define ?? {}),
+    breaks: { of: new Map(), sorts: new Map() },
     clues: new Map(),
     regions: new Set(),
     boxes: null,
