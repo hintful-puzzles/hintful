@@ -112,6 +112,84 @@ its verdict, and saving is gated as today.
   verdict or none.
 - **Offline**, and touch, keyboard and mouse alike.
 
+## What was measured (2026-11-17)
+
+Each game's largest preset, at its hardest tier on the menu, two boards,
+played by following the hint, and timed at every position. Also timed: the
+game's deduction to its fixpoint from the board as dealt, three boards; and
+its search for answers on an Unreasonable board of the same size, where it
+has one. Taken from a scratch probe on this machine under its usual load.
+
+- **The "forced" search decides nothing on a board with one answer.** Every
+  board the app deals has exactly one answer. So for a correct move, no
+  answer that agrees with the rules and the position before it can disagree
+  with it, and "forced" is simply "correct". "Not forced" is never the
+  verdict of a correct move, and a wrong move is already a mistake. The
+  three verdicts collapse to the answer check plus one question: **did the
+  game's own deductions reach the move from the position before it?** That
+  holds however the second verdict is judged, and it needs no search.
+  Exceptions: the games whose answer the player cannot see, below.
+- **That question costs one deduction fixpoint**, from the position before
+  the move. The fixpoint from the board as dealt, where the deductions have
+  the most to do, took at most 43 ms on any game (Crossing 15×15), and under
+  10 ms on most. The hint's walk, which also builds the explanation, took a
+  median of 20 ms or less at every position in every game that marks cells,
+  except Loopy (54 ms); the slowest single position was Mines' at 208 ms.
+  Both fit a button press without a worker.
+- **For comparison, the search**: on an Unreasonable board at the largest
+  size it took 113 ms or less in every game but Group, where it took 2.1 s
+  and 7.7 s on 12×12. A design that searches would have to answer for
+  Group.
+- **The games it cannot serve as stated:**
+  - *Moves that are not marks* (Cube, Fifteen, Flip, Flood, Inertia,
+    Netslide, Numgame, Pegs, Same Game, Sixteen, Slide, Sokoban, Twiddle,
+    Untangle): any legal move is allowed, so "forced" has no meaning. Whether
+    a move keeps the puzzle winnable is what Check & save's dead-end check
+    already says. Their hints plan by search, at up to 3.6 s a position
+    (Sixteen).
+  - *An answer the player cannot see* (Guess, Black Box): a probe is never
+    forced. In Mines the question is real (is this square safe in every
+    layout the shown numbers allow?), and its deductions answer it as they
+    do everywhere else.
+  - *Marks, but a hint that is not the engine's walk* (Ascent, Undead,
+    Mines, Black Box): each needs its own solver's reach, or a move onto
+    the walk, before the engine can judge a move there. The other 44 games
+    walk the engine's ladder, so the engine judges them from what they
+    already declare.
+- **Found in passing, fixed**: Solo's difficulty contract called a stuck
+  board "impossible" below the recursive tier (every Unreasonable Jigsaw
+  board). The monotone-in-cap guard now refuses that for every game.
+
+## Proposed answers
+
+- **Uniqueness**: judge by the rules and the marks, as the hint does. Then
+  the verdicts for a correct move are *a known deduction*, with the walk's
+  explanation; *one try away* (assuming the opposite and deducing breaks
+  the board: what an Unreasonable board asks, one fixpoint per value
+  assumed); and *not reached by the game's reasoning* (right, but nothing
+  the hint could show forced it yet).
+- **The last move**: the facts the marks differ by, before and after, each
+  judged. The move takes the weakest verdict of its facts, and the words
+  name the fact that set it.
+- **Which marks count**: a mark the description gives a meaning (a cross, a
+  struck candidate) counts as a placed value does. A play aid with none
+  does not.
+- **How far a combination reaches**: any chain of firings, at every tier
+  the hint walks, not only the board's own. The hint would teach it.
+- **Only the last move, or any**: every move since the previous Check &
+  save, reporting the first that was not a known deduction. Judging only
+  the last move is arbitrary when a player saves after twenty. The cost is
+  one fixpoint a move: under a second for thirty moves on the slowest game.
+- **Unreasonable boards**: reported. "One try away" is that tier's
+  reasoning.
+- **What the player sees**: one sentence in Check & save's confirmation.
+  It never gates the save, since a correct move is never refused, and a
+  "Why?" opens the walk's explanation as a hint step. Draft wording: "Every
+  move since your last save followed from the board." / "This move was
+  right, but nothing on the board forced it yet."
+- **Whether it is Check & save**: yes, since that is where a player asks
+  "am I right?". The games it cannot serve say nothing new there.
+
 ## Acceptance
 
 Written once the owner has answered the questions above.
