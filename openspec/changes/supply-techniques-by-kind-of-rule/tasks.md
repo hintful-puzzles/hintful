@@ -625,8 +625,25 @@ boundaries are judgment, and the counts carry that.
     wide file was stale at HEAD and is rewritten. Help's Normal paragraph
     restated. Re-checked sound whole (defines added), both plants the
     kind's.
-  - [ ] Next: GRP over numbered squares (Filling), and the CNT techniques
-    not placed yet (the item above says why each waits).
+  - [x] (2026-11-17) GRP over numbered squares, the area kinds: `area.must`,
+    `area.grow`, `area.over`, `area.short`, `area.far`, placed on all five of
+    Filling's (`mustGrow`, `onlyWay`, `tooBig`, `noRoom`, `tooFar`). Not
+    `region.grow`/`region.apart` generalized: a region of numbers grows by a
+    number placed, and Filling's `tooBig` joins every region beside a square
+    at once where `region.apart` reads two across an edge, so folding them in
+    would weaken Filling or take every part as a parameter. The kinds read
+    the game's defines (`alike`, `room`, `joins`, `grown`, `fresh`,
+    `holding`), as the count kinds read `need` and `open`, and carry no
+    words (Filling narrates by its reasons). **Moved: nothing.** The compiled
+    module is byte-identical to HEAD, so no board, grade or hint can move;
+    Filling's tests pass. Re-checked sound, each kind's plant (Filling's five,
+    now the kinds') caught at order 3; Filling's plants file went whole.
+    GRP's remaining techniques: Galaxies `separate` (reads its arrows), Range
+    `cut` (connection, not size).
+  - [ ] Next: the CNT techniques not placed yet (the item above says why
+    each waits), then GRP's connection form (Range `cut`) and LOOP's
+    remaining formulas (Tracks `closeLoop`, Loopy/Pearl `closed`, Slant and
+    Rome `loop`).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

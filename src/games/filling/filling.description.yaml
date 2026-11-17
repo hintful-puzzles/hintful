@@ -89,60 +89,27 @@ deal:
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
 techniques:
-  # A region short of its number grows through squares empty or of its
-  # number. A square without which the squares it can reach would hold too
-  # few is in it, so where they hold exactly enough, it takes them all. Past
-  # its number, or with too few squares to reach, the marks are
-  # inconsistent. A solve fills squares as it goes, so a group is read only
-  # while no square of its number stands beside it. A d placed leaves
-  # room(d) as it was, so it is bound once a number. It is stated first: it
-  # fills a region's squares in one firing, which keeps a hint's walk and a
-  # solve's passes short.
-  - id: mustGrow
+  # A region of d holds d squares: the area kinds. A region short of its
+  # number grows where it must (`mustGrow`, `onlyWay`), and a number is struck
+  # where it would make a region too big (`tooBig`), could not make one big
+  # enough (`noRoom`), or lies too far from every region of it (`tooFar`).
+  # `mustGrow` is placed first: it fills a region's squares in one firing,
+  # which keeps a hint's walk and a solve's passes short.
+  - kind: area.must
+    as: mustGrow
     tier: Easy
-    for: >-
-      O = alike, d in domain, F = room(d), c in cells where value(c) = d,
-      A = through(c, O) where c = nth(A, 0) and |A| != d and not grown(A),
-      R = through(c, F),
-      Y = {t in R where not known(t) and reaches(c, R, t) < d}
-    conclude: "|A| < d and |R| >= d and forall t in Y: place(t, d)"
-  # A region short of its number with one empty square beside it that it
-  # can take without joining squares of its number past it grows into that
-  # square. With none, the marks are inconsistent.
-  - id: onlyWay
+  - kind: area.grow
+    as: onlyWay
     tier: Easy
-    for: >-
-      O = alike, c in cells where known(c), A = through(c, O)
-      where c = nth(A, 0) and |A| < value(c) and not grown(A), d = value(c),
-      T = set(t over a in A, t in adj4(a) where not known(t)
-      and 1 + |joins(t, d, O)| <= d) where |T| <= 1
-    conclude: "|T| = 1 and place(nth(T, 0), d)"
-  # A d in an empty square that would join squares of d into a group past d
-  # can't go there.
-  - id: tooBig
+  - kind: area.over
+    as: tooBig
     tier: Easy
-    for: >-
-      O = alike, c in cells where not known(c),
-      d in cand(c) where 1 + |joins(c, d, O)| > d
-    conclude: "strike(c, d)"
-  # Nor can a d where the squares a region of d holding it could reach,
-  # empty or of d, number fewer than d.
-  - id: noRoom
+  - kind: area.short
+    as: noRoom
     tier: Easy
-    for: >-
-      d in domain, F = room(d),
-      c in cells where not known(c) and d in cand(c) and |through(c, F)| < d
-    conclude: "strike(c, d)"
-  # Nor can a d where every square of d is too far away for a region to hold
-  # both, and the empty squares it could share a new region with, none of
-  # them beside a d, number fewer than d.
-  - id: tooFar
+  - kind: area.far
+    as: tooFar
     tier: Easy
-    for: >-
-      O = alike, d in domain, F = fresh(d),
-      c in cells where not known(c) and d in cand(c) and |through(c, F)| < d
-      and not (exists a in cells where value(a) = d: holding(a, c, O) <= d)
-    conclude: "strike(c, d)"
   # An empty square with one number left takes it; with none, the marks are
   # inconsistent.
   - kind: one.cell

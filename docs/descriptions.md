@@ -1130,6 +1130,16 @@ to grow", or a lone square "walled in on every side but one", named by `lone`).
 Both name their edges from the term `anchor`, the first group. `kindWords`'
 `terms` are added to every placement, so a term reading one kind's binding
 (Palisade's clue, `v(q)`) goes in that placement's `with.terms`.
+The area kinds are the same rule on a board with no walls, whose regions are
+the squares of one number side by side and a region of d holds d squares
+(Filling): a region grows by a number placed, not an edge opened, so they
+are kinds of their own. `area.must` places the squares a region short of its
+number cannot reach enough without, `area.grow` its one square left to grow
+into, and `area.over`, `area.short` and `area.far` strike a number that would
+make a region too big, could not make one big enough, or lies too far from
+every region of it. They read the game's `alike`, `room(d)`, `joins(c, d,
+O)` and `grown(A)` (and `fresh(d)`, `holding(a, c, O)` for `area.far`), take
+no parameters, and carry no words, Filling's hint naming its own rule.
 `count.compare` reads two counts whose open squares overlap (Mines' `pair`
 and `regions`, Mosaic's `compared`): where A needs at least `least` and B
 holds at most `most`, A's own squares hold the difference, and where that is

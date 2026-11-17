@@ -670,6 +670,90 @@ export const KINDS: Readonly<Record<string, Kind>> = {
         "|A| < $size and |S| > 0 and (forall B = through(nth(S, 0), O): forall x in A, y in adj4(x) where y in B: place(edge(x, y), $gap))",
     },
   },
+  // The area kinds read a board with no walls, whose regions are the squares
+  // of one number side by side, and where a region of d holds d squares
+  // (Filling's rule). A region is what the game's `alike` (the pairs side by
+  // side holding one number) joins. The game also defines `room(d)`, the
+  // pairs whose squares are each empty or d, within which a region of d lies;
+  // `joins(c, d, O)`, the squares of d that a d in square c would join;
+  // `grown(A)`, whether a square of A's number stands beside A outside it
+  // (A read before its region grew); and for `area.far`, `fresh(d)`, the
+  // pairs a new region of d may take, and `holding(a, c, O)`, the fewest
+  // squares a region holding both `c` and `a`'s group holds. They are the
+  // region kinds (`region.grow`) over numbers in place of walls: a region
+  // grows by a number placed, not an edge opened. Each game's hint names its
+  // own rule, so they carry no words.
+  //
+  // A square without which the squares a region short of its number can
+  // reach would hold too few is in it; where they hold exactly enough, it
+  // takes them all. Past its number, or with too few to reach, the marks are
+  // inconsistent. A d placed leaves room(d) as it was, so it is bound once a
+  // number.
+  "area.must": {
+    params: [],
+    technique: {
+      for: "O = alike, d in domain, F = room(d), c in cells where value(c) = d, A = through(c, O) where c = nth(A, 0) and |A| != d and not grown(A), R = through(c, F), Y = {t in R where not known(t) and reaches(c, R, t) < d}",
+      conclude: "|A| < d and |R| >= d and forall t in Y: place(t, d)",
+    },
+    // A square whose loss leaves a region exactly enough read as one it needs.
+    plant: {
+      for: "O = alike, d in domain, F = room(d), c in cells where value(c) = d, A = through(c, O) where c = nth(A, 0) and |A| != d and not grown(A), R = through(c, F), Y = {t in R where not known(t) and reaches(c, R, t) <= d}",
+    },
+  },
+  // A region short of its number with one empty square beside it that it can
+  // take without joining squares of its number past it grows into that
+  // square. With none, the marks are inconsistent.
+  "area.grow": {
+    params: [],
+    technique: {
+      for: "O = alike, c in cells where known(c), A = through(c, O) where c = nth(A, 0) and |A| < value(c) and not grown(A), d = value(c), T = set(t over a in A, t in adj4(a) where not known(t) and 1 + |joins(t, d, O)| <= d) where |T| <= 1",
+      conclude: "|T| = 1 and place(nth(T, 0), d)",
+    },
+    // A square that would complete the region read as one it can't take.
+    plant: {
+      for: "O = alike, c in cells where known(c), A = through(c, O) where c = nth(A, 0) and |A| < value(c) and not grown(A), d = value(c), T = set(t over a in A, t in adj4(a) where not known(t) and 1 + |joins(t, d, O)| < d) where |T| <= 1",
+    },
+  },
+  // A d in an empty square that would join squares of d into a region past d
+  // can't go there.
+  "area.over": {
+    params: [],
+    technique: {
+      for: "O = alike, c in cells where not known(c), d in cand(c) where 1 + |joins(c, d, O)| > d",
+      conclude: "strike(c, d)",
+    },
+    // A d that would complete a region of d read as making it too big.
+    plant: {
+      for: "O = alike, c in cells where not known(c), d in cand(c) where 1 + |joins(c, d, O)| >= d",
+    },
+  },
+  // Nor can a d where the squares a region of d holding it could reach,
+  // empty or of d, number fewer than d.
+  "area.short": {
+    params: [],
+    technique: {
+      for: "d in domain, F = room(d), c in cells where not known(c) and d in cand(c) and |through(c, F)| < d",
+      conclude: "strike(c, d)",
+    },
+    // Exactly enough room read as too little.
+    plant: {
+      for: "d in domain, F = room(d), c in cells where not known(c) and d in cand(c) and |through(c, F)| <= d",
+    },
+  },
+  // Nor can a d where every square of d is too far away for a region to hold
+  // both, and the empty squares it could share a new region with, none of
+  // them beside a d, number fewer than d.
+  "area.far": {
+    params: [],
+    technique: {
+      for: "O = alike, d in domain, F = fresh(d), c in cells where not known(c) and d in cand(c) and |through(c, F)| < d and not (exists a in cells where value(a) = d: holding(a, c, O) <= d)",
+      conclude: "strike(c, d)",
+    },
+    // A group exactly near enough to join read as too far.
+    plant: {
+      for: "O = alike, d in domain, F = fresh(d), c in cells where not known(c) and d in cand(c) and |through(c, F)| < d and not (exists a in cells where value(a) = d: holding(a, c, O) < d)",
+    },
+  },
   // A square of two values where one would break a rule at once holds the
   // other. `holds` is what must stay true of the group, and `scope` the
   // squares that could break it. A position that breaks it makes the marks
