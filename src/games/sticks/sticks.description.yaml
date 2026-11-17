@@ -125,14 +125,13 @@ techniques:
   #
   # A block's number of lines already run into it leaves no room for one
   # more. One with more makes the marks inconsistent.
-  - id: overConnected
+  - kind: fit.flip
+    as: overConnected
     tier: Easy
-    for: "b in cells, n = clue(joins, b) where n >= 0"
-    conclude: >-
-      count(p in adj4(b) where meets(p, b)) <= n
-      and (forall c in adj4(b) where blank(c), a in cand(c)
-      where (with place(c, a): count(p in adj4(b) where meets(p, b)) > n):
-      place(c, 3 - a))
+    with:
+      group: "b in cells, n = clue(joins, b) where n >= 0"
+      holds: "count(p in adj4(b) where meets(p, b)) <= n"
+      scope: "adj4(b)"
     # The hint names the block and outlines the lines that would run into it
     # with the square's supposed line among them.
     says:
@@ -154,14 +153,13 @@ techniques:
             again: "{outline clue: the {value} block} already has {outline: its {value: 1 line | {value} lines}}, and a {if hor: vertical | horizontal} line would add another"
   # A line would carry two numbers. Before a line too long, which such a
   # line usually is too, since joining the numbers is the rule it breaks.
-  - id: twoClues
+  - kind: fit.flip
+    as: twoClues
     tier: Easy
-    for: "k in cells where numbered(k)"
-    conclude: >-
-      count(j in stick(k) where numbered(j)) <= 1
-      and (forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
-      where (with place(c, a): count(j in stick(k) where numbered(j)) > 1):
-      place(c, 3 - a))
+    with:
+      group: "k in cells where numbered(k)"
+      holds: "count(j in stick(k) where numbered(j)) <= 1"
+      scope: "cells(row(k)) + cells(col(k))"
     # The hint names the numbers the supposed line would join, and outlines it.
     says:
       shown: legs
@@ -188,14 +186,13 @@ techniques:
             look: "a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would join {outline clues: two {first}s} along {outline run}"
           - look: "a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would join {outline clues: the {first} and the {second}} along {outline run}"
   # A number's line would run longer than it.
-  - id: tooLong
+  - kind: fit.flip
+    as: tooLong
     tier: Easy
-    for: "k in cells, v = clue(length, k) where v >= 0"
-    conclude: >-
-      |stick(k)| <= v
-      and (forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
-      where (with place(c, a): |stick(k)| > v):
-      place(c, 3 - a))
+    with:
+      group: "k in cells, v = clue(length, k) where v >= 0"
+      holds: "|stick(k)| <= v"
+      scope: "cells(row(k)) + cells(col(k))"
     # The hint names the number and outlines the line it would run to.
     says:
       shown: legs
@@ -213,14 +210,13 @@ techniques:
         again: "a {if hor: vertical | horizontal} line would run {outline clue: the {value}}'s line to {outline run: {size} squares}"
   # A block would be left fewer sides a line could run into it from than its
   # number.
-  - id: starved
+  - kind: fit.flip
+    as: starved
     tier: Easy
-    for: "b in cells, n = clue(joins, b) where n >= 0"
-    conclude: >-
-      sides(b) >= n
-      and (forall c in adj4(b) where blank(c), a in cand(c)
-      where (with place(c, a): sides(b) < n):
-      place(c, 3 - a))
+    with:
+      group: "b in cells, n = clue(joins, b) where n >= 0"
+      holds: "sides(b) >= n"
+      scope: "adj4(b)"
     # The hint names the block and outlines the sides a line could still reach
     # it from.
     says:
@@ -240,14 +236,13 @@ techniques:
             look: "{outline clue: the {value} block} needs {outline: both outlined sides}, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} shuts one"
           - look: "{outline clue: the {value} block} needs {outline: {value} outlined sides}, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} shuts one"
   # A number's line would be left no room to reach its length.
-  - id: unreachable
+  - kind: fit.flip
+    as: unreachable
     tier: Easy
-    for: "k in cells, v = clue(length, k) where v >= 0"
-    conclude: >-
-      (not known(k) or reach(k) >= v)
-      and (forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
-      where (with place(c, a): known(k) and reach(k) < v):
-      place(c, 3 - a))
+    with:
+      group: "k in cells, v = clue(length, k) where v >= 0"
+      holds: "not known(k) or reach(k) >= v"
+      scope: "cells(row(k)) + cells(col(k))"
     # The hint names the number and outlines the squares its line could still
     # reach, with the square's supposed line.
     says:

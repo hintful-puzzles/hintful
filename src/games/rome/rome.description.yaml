@@ -85,12 +85,10 @@ techniques:
       c in cells where known(c), d = value(c),
       p in cells(area(c)) where p != c
     conclude: "strike(p, d)"
-  # A square down to one arrow holds it. One with none left makes the marks
-  # inconsistent.
-  - id: lone
+  # A square down to one arrow holds it.
+  - kind: one.cell
+    as: lone
     tier: Easy
-    for: "c in cells where not known(c) and |cand(c)| < 2"
-    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
   # An arrow pointing at a square whose arrows lead back here would go round
   # in a loop and never reach a goal.
   - id: loop

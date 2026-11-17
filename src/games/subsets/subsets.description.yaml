@@ -137,12 +137,10 @@ techniques:
     conclude: >-
       forall d in cand(c) where letters(d) subset letters(x)
       or letters(x) subset letters(d): strike(c, d)
-  # A square down to one set holds it. One with none left makes the marks
-  # inconsistent.
-  - id: lone
+  # A square down to one set holds it.
+  - kind: one.cell
+    as: lone
     tier: Easy
-    for: "c in cells where not known(c) and |cand(c)| < 2"
-    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
   # A set only one square can hold goes there. One no square can hold makes
   # the marks inconsistent.
   - id: onlyCell

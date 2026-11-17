@@ -71,10 +71,30 @@ boundaries are judgment, and the counts carry that.
   **The words pay from the third placement on, and the kinds that follow
   (ONE, PEER, FIT) are where the count of placements is.** Same tests, same
   snapshots. Next: 2.1 on Seismic/Map (ONE/PEER), which needs those kinds.
-- [ ] 2.1 Restate three games on the library (proposal § "Before it starts"
-  2): one CNT-heavy (Starbattle or Norinori), one ONE/PEER-heavy (Seismic or
-  Map), one FIT-heavy (Sticks). Deal-compare, walk the hints, report what
-  moved.
+- [x] 2.1 (2026-11-17) Restate three games on the library (proposal §
+  "Before it starts" 2). Done: CNT (Norinori, Starbattle, 2.4-2.5), ONE/PEER
+  (Seismic, Map; `one.cell` also in Rome and Subsets, whose `lone` is the same
+  formula) and FIT (Sticks, all five techniques, `fit.flip`). **What moved:
+  nothing a player sees.** Every snapshot, ladder and tier test passes
+  unchanged, and `test:hint-sweeps` is green: the statements are the same, in
+  the same order. Map's `placed` differs from before by the binding
+  `n = value(c)`, so it was re-checked sound (the one recorded verdict that
+  moved). **What it cost, in lines of the games' descriptions and plants:
+  +50/-87.** `one.cell` is the clear win (the same four lines in four games,
+  and no plant to write: 5 plants files shed theirs, Sticks' went whole, so
+  the checker no longer needs a plants file). `peer.placed` saves little: the
+  game's `peer` binder is the whole rule. **`fit.flip` finds the family kind
+  holds only in part.** Sticks' five Checks share a shape, with `breaks` the
+  negation of `holds`, so a placement is three lines for a six-line
+  statement; but the five `says` blocks (the words, which are 80% of the
+  technique) stay the game's, and the kind's plant is coarse (a value that
+  keeps `holds` struck, caught at once) where the game's were off-by-one
+  boundaries that test the technique's own edge. That is a weaker plant for the
+  same technique: a game that wants the boundary plant states the technique.
+  Not tried: ONE's second form (a value with one cell, `areaSingle`,
+  `onlyCell`), whose scope differs per game, and PEER's other forms (`once`,
+  `cull` over a unit); both need the same `peer`-style binder and would save
+  as little.
 - [x] 2.2 The owner's answer (2026-11-17): **aim strongly at all nine
   kinds, with the option to adjust course if what the work finds changes.**
   A game stating under 50% of its techniques itself is the bar they are happy
@@ -84,5 +104,13 @@ boundaries are judgment, and the counts carry that.
   coverage that falls to about half, or a family kind that cannot be made
   to hold, is the sign to look again.
 - [ ] 2.3 The first restatements are the evidence for whether the family
-  kinds hold (FIT above all): do 2.1 before the catalog moves, and record
-  here what moved.
+  kinds hold (FIT above all). 2.1's finding, 2026-11-17: the formula part of
+  a kind holds and is cheap (`one.cell`, `fit.flip`), and the words do not
+  shrink, because they are the game's. So the saving the change promised is
+  the formula, the plant and the soundness check, **not the sentences**; at
+  a hundred games the three of those are what it buys, and the words stay
+  per game. Next: the catalog's one-formula kinds that remain (REL, LOOP,
+  GRP, CMP, SUM, and the value-in-one-cell form of ONE), each placed on the
+  games that state it, judged by the same two numbers (lines saved, plants
+  kept or lost), and the ask to the owner of the proposal's § "Before it
+  starts" 3 with this evidence once two more kinds are in.

@@ -25,9 +25,6 @@ techniques:
     for: >-
       e in edges, k in ends(e) where |cand(k)| = 1, c = other(e, k), x =
       first(cand(k))
-  lone:
-    for: c in cells where not known(c) and |cand(c)| < 3
-    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))"
   onlyCell:
     for: >-
       d in domain, C = {c in cells where d in cand(c)} where |C| < 3 and (|C| =

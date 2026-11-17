@@ -20,9 +20,12 @@ export interface Kind {
   /** The parameters a game must give. */
   params: readonly string[];
   technique: {
+    on?: string;
     for: string;
     conclude: string;
-    says: {
+    /** Absent where the words are the game's own, which it gives as `says`
+     * beside the placement. */
+    says?: {
       terms: Record<string, string>;
       marks: Record<string, string>;
       look: string;
@@ -72,6 +75,48 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       conclude: "forall c in O: place(c, $fill)",
     },
   },
+  // A square down to one value holds it. One with none left makes the marks
+  // inconsistent.
+  "one.cell": {
+    params: [],
+    technique: {
+      for: "c in cells where not known(c) and |cand(c)| < 2",
+      conclude: "|cand(c)| = 1 and place(c, first(cand(c)))",
+    },
+    plant: {
+      for: "c in cells where not known(c) and |cand(c)| < 3",
+      conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))",
+    },
+  },
+  // A placed value leaves every square `peer` names, a binder that reads the
+  // placed square `c` and its value `n` and binds `p`.
+  "peer.placed": {
+    params: ["peer"],
+    technique: {
+      on: "place",
+      for: "c in cells where known(c), n = value(c), $peer",
+      conclude: "strike(p, n)",
+    },
+    plant: {
+      conclude: "strike(p, n + 1)",
+    },
+  },
+  // A square of two values where one would break a rule at once holds the
+  // other. `holds` is what must stay true of the group, and `scope` the
+  // squares that could break it. A position that breaks it makes the marks
+  // inconsistent.
+  "fit.flip": {
+    params: ["group", "holds", "scope"],
+    technique: {
+      for: "$group",
+      conclude:
+        "($holds) and (forall c in $scope where blank(c), a in cand(c) where (with place(c, a): not ($holds)): place(c, 3 - a))",
+    },
+    plant: {
+      conclude:
+        "($holds) and (forall c in $scope where blank(c), a in cand(c) where (with place(c, a): $holds): place(c, 3 - a))",
+    },
+  },
 };
 
 export class KindError extends Error {}
@@ -96,7 +141,7 @@ export function expandKind(
   placed: {
     kind: string;
     as: string;
-    with: Readonly<Record<string, unknown>>;
+    with?: Readonly<Record<string, unknown>>;
   } & Record<string, unknown>,
   path: string,
   words: Readonly<Record<string, unknown>> = {},
@@ -104,7 +149,7 @@ export function expandKind(
   const kind = KINDS[placed.kind];
   if (kind === undefined)
     throw new KindError(`${path}: ${placed.as}: no kind ${placed.kind}`);
-  const { terms, ...own } = placed.with;
+  const { terms, ...own } = placed.with ?? {};
   const shared = Object.fromEntries(
     Object.entries(words).filter(([p]) => kind.params.includes(p)),
   );
@@ -123,10 +168,17 @@ export function expandKind(
     id: as,
     ...placing,
     ...t,
-    says: {
-      ...t.says,
-      terms: { ...t.says.terms, ...(terms as Record<string, string> | undefined) },
-    },
+    ...(t.says === undefined
+      ? {}
+      : {
+          says: {
+            ...t.says,
+            terms: {
+              ...t.says.terms,
+              ...(terms as Record<string, string> | undefined),
+            },
+          },
+        }),
     plant: fill(kind.plant, args),
   };
 }

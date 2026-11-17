@@ -118,17 +118,15 @@ deal:
 tiers: [Easy, Normal, Tricky, Unreasonable]
 techniques:
   # A colored region's color leaves every region it borders.
-  - id: placed
-    on: place
+  - kind: peer.placed
+    as: placed
     tier: Easy
-    for: "c in cells where known(c), k in borders(c) where not known(k)"
-    conclude: "strike(k, value(c))"
-  # A region down to one color is that color. One with none left makes the
-  # marks inconsistent.
-  - id: lone
+    with:
+      peer: "p in borders(c) where not known(p)"
+  # A region down to one color is that color.
+  - kind: one.cell
+    as: lone
     tier: Easy
-    for: "c in cells where not known(c) and |cand(c)| < 2"
-    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
     says:
       terms: { c: c }
       marks: {}

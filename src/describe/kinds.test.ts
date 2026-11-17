@@ -62,6 +62,33 @@ describe("a kind of rule expands to the technique it stands for", () => {
       ).toBe(true);
   });
 
+  it("takes no `with` where a kind has no parameters, and the game's own words", () => {
+    const says = { terms: { c: "c" }, marks: {} };
+    const t = expandKind({ kind: "one.cell", as: "lone", tier: "Easy", says }, "x");
+    expect(t).toMatchObject({
+      id: "lone",
+      says,
+      for: expect.stringContaining("cand(c)"),
+    });
+    expect(
+      expandKind({ kind: "one.cell", as: "lone", tier: "Easy" }, "x"),
+    ).not.toHaveProperty("says");
+  });
+
+  it("wraps a `holds` so that an `or` in it binds inside the kind", () => {
+    const t = expandKind(
+      {
+        kind: "fit.flip",
+        as: "f",
+        tier: "Easy",
+        with: { group: "k in cells", holds: "a or b", scope: "cells" },
+      },
+      "x",
+    );
+    expect(t["conclude"]).toMatch(/^\(a or b\) and /);
+    expect(t["conclude"]).toContain("not (a or b)");
+  });
+
   it("is read by the loader where a description places one", () => {
     const text = `
 game: probe

@@ -3,7 +3,7 @@
  * rules (`describe-check.ts`), and a planted defect in each that must come
  * out unsound. Writes `results-describe.txt`.
  */
-import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { globSync } from "tinyglobby";
 import { expect, it } from "vitest";
@@ -295,7 +295,13 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
     if (only !== null && !only.includes(name)) continue;
     const plantsAt = plantsPath(source);
     const plants = (): Plants => {
-      const own = parsePlants(readFileSync(`${ROOT}${plantsAt}`, "utf8"), plantsAt);
+      // A game whose every technique is a kind's has no plants file.
+      const own = parsePlants(
+        existsSync(`${ROOT}${plantsAt}`)
+          ? readFileSync(`${ROOT}${plantsAt}`, "utf8")
+          : "techniques: {}",
+        plantsAt,
+      );
       // A technique a kind of rule expanded to brings its own plant.
       if (!isFormal(file)) return own;
       for (const t of withEveryVariation(file).techniques ?? [])

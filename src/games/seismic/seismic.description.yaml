@@ -63,19 +63,15 @@ deal:
 tiers: [Easy, Normal]
 techniques:
   # A placed number leaves the rest of its area and every square it is near.
-  - id: cull
-    on: place
+  - kind: peer.placed
+    as: cull
     tier: Easy
-    for: >-
-      c in cells where known(c), n = value(c),
-      p in cells where p != c and (area(p) = area(c) or near(c, p, n))
-    conclude: "strike(p, n)"
-  # A square down to one number holds it. One with none left makes the marks
-  # inconsistent.
-  - id: lone
+    with:
+      peer: "p in cells where p != c and (area(p) = area(c) or near(c, p, n))"
+  # A square down to one number holds it.
+  - kind: one.cell
+    as: lone
     tier: Easy
-    for: "c in cells where not known(c) and |cand(c)| < 2"
-    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
   # A number with one place left in its area goes there. With none left, the
   # marks are inconsistent.
   - id: areaSingle

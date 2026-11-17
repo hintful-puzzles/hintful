@@ -4,14 +4,6 @@
 # unsound.
 
 techniques:
-  # A placed number struck one square past its reach.
-  cull:
-    for: >-
-      c in cells where known(c), n = value(c), p in cells where p != c and
-      (area(p) = area(c) or near(c, p, n + 1))
-  lone:
-    for: c in cells where not known(c) and |cand(c)| < 3
-    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))"
   areaSingle:
     for: >-
       r in area, n in range(1, |cells(r)|) where not (exists c in cells(r):

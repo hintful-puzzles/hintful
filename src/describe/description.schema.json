@@ -249,7 +249,7 @@
         {
           "type": "object",
           "description": "A kind of rule's technique (`src/describe/kinds.ts`), filled in with this game's nouns.",
-          "required": ["kind", "as", "with", "tier"],
+          "required": ["kind", "as", "tier"],
           "additionalProperties": false,
           "properties": {
             "kind": { "type": "string", "pattern": "^[a-z]+\\.[A-Za-z]+$" },
@@ -258,6 +258,10 @@
               "description": "The technique's id in this game."
             },
             "with": { "type": "object" },
+            "says": {
+              "$ref": "#/$defs/statement/properties/says",
+              "description": "The game's own words, for a kind that brings none."
+            },
             "tier": { "type": "string" },
             "from": { "$ref": "#/$defs/from" },
             "until": { "$ref": "#/$defs/until" },
