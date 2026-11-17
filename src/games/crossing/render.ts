@@ -82,7 +82,7 @@ import {
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
-import { LISTED } from "./hint-text.ts";
+import { LISTED } from "./hint-marks.ts";
 import type { CrossingMistake } from "./solver.ts";
 import {
   type CrossingMove,

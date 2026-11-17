@@ -29,7 +29,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newCrossingDesc } from "./generator.ts";
-import { narrateCrossing } from "./hint-text.ts";
+import { narrateCrossing } from "./hint.ts";
 import { crossingGame } from "./index.ts";
 import {
   COL_ACROSS,

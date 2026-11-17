@@ -225,7 +225,15 @@ Logic games:
   against the old strings, word for word. `noSpareRoom` has one wording:
   one tent needed never decides a square that way. Read in the app: a
   line with no spare room, a tree's only square with its link.
-- [ ] Crossing
+- [x] Crossing (2026-11-17): dump byte-identical, marks included. Each
+  firing is a `steps` kind spoken through the voice in the new `hint.ts`
+  (`hint-marks.ts` holds the listed number's kind); a whole run's reason
+  is four steps, a run's way and a crossing's far run word terms, and a
+  listed number a number term (at most nine digits, `MAX_NUMBER_LENGTH`).
+  A note strike's move is its `closing`, a strike reference, since a
+  clause references no strike. The notes reason, which no dumped walk
+  meets, was checked against the old words; the articles test now speaks
+  through `narrateCrossing`. Read in the app: a run's digits, a crossing.
 - [ ] Mines
 - [ ] Slant
 - [ ] Net

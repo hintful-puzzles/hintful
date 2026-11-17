@@ -193,3 +193,90 @@ techniques:
     tier: Easy
     for: "k in clues(numbers)"
     conclude: "count(L in lines, c in cells(L) where head(L, c) and reads(k, run(L, c))) < 2"
+# Crossing's sentences, spoken through the hint's voice (`hint.ts`): one
+# firing, one sentence. A step rings what it writes, the squares and, for a
+# whole run, the listed number it writes in; it stripes the run it names
+# (`way`, across or down, the two words the board's own color wash teaches),
+# outlines the listed numbers that still fit it and the squares that rule a
+# number out, and strikes the notes it rules out. A value is a digit, and a
+# listed number (`num`) is said as its digits.
+phrases:
+  run: "{stripes run: this {way} run}"
+  mustBe: "{ring square: the ringed square | the ringed squares} must be {ring number: {num}}"
+steps:
+  # A run (`len` squares) that only one listed number can fill, told by why:
+  # its length alone, every other number of that length placed, its notes
+  # (and digits, `partial`), or the digits already in it.
+  onlyByLength:
+    ring: [square, number]
+    terms: { len: number, num: number }
+    marks: { stripes: [run] }
+    look: "{stripes run: this run} is {len} squares long, and only one number in the list is {len} digits"
+    move: "{mustBe}"
+  onlyUnused:
+    ring: [square, number]
+    terms: { len: number, num: number }
+    marks: { stripes: [run] }
+    look: "every other {len}-digit number is already on the board"
+    follows: "none can go in {stripes run: this run}"
+    move: "{mustBe}"
+  onlyByNotes:
+    ring: [square, number]
+    terms: { len: number, num: number, partial: flag }
+    marks: { stripes: [run] }
+    look: >-
+      only one {len}-digit number left fits the {if partial: digits and notes | notes}
+      in {stripes run: this run}
+    move: "{mustBe}"
+  onlyByDigits:
+    ring: [square, number]
+    terms: { len: number, num: number }
+    marks: { stripes: [run] }
+    look: "only one {len}-digit number left matches the digits already in {stripes run: this run}"
+    move: "{mustBe}"
+  # A listed number that still fits one run only; the squares it disagrees
+  # with in the others (`many` where there are several) are the evidence, so
+  # the sentence names no cause: a digit and a note both show in a square.
+  onlyRun:
+    ring: [square, number]
+    terms: { num: number, many: flag }
+    marks: { stripes: [run], outline: [against] }
+    look: >-
+      {ring number: {num}} still fits only {stripes run: this run}:
+      {if many: the other runs clash | the other run clashes} with
+      {outline against: the outlined square | the outlined squares}
+    move: "it must go in {ring square: the ringed square | the ringed squares}"
+  sharedDigit:
+    ring: cell
+    terms: { way: [across, down], d: number }
+    marks: { stripes: [run], outline: [fitting] }
+    look: "{outline fitting: every outlined number} still fitting {run} has {a d} in {ring: this square}"
+    move: "it must be {d}"
+  # Two runs through the square, the tighter led with (`way`, its `small`
+  # digits for the square), the other (`far`) knocking all but `d` out.
+  crossRuns:
+    ring: cell
+    terms: { way: [across, down], far: [across, down], d: number, small: values }
+    marks: { stripes: [run, other], outline: [fitting, otherFitting] }
+    look: >-
+      {run}'s {outline fitting: outlined numbers} give {ring: this square} {either small};
+      {stripes other: this {far} run}'s {outline otherFitting: outlined ones} only {d}
+    move: "it must be {d}"
+  # Always two digits or more: a run leaving one would pin the square.
+  noteDigits:
+    ring: cell
+    terms: { way: [across, down], ds: values }
+    marks: { stripes: [run], outline: [fitting] }
+    look: "{outline fitting: every outlined number} still fitting {run} puts {either ds} in {ring: this square}"
+    move: "note them"
+  # The notes the move strikes, by value (`one` where it is one), and its
+  # words the planner's: a strike is drawn on the notes, which a clause does
+  # not reference.
+  noteStrike:
+    ring: cell
+    terms: { way: [across, down], one: flag }
+    marks: { stripes: [run], outline: [fitting] }
+    wordings:
+      - when: one
+        look: "{outline fitting: no outlined number} still fitting {run} puts {struckA} in {ring: this square}"
+      - look: "{outline fitting: no outlined number} still fitting {run} puts {struckOr} in {ring: this square}"

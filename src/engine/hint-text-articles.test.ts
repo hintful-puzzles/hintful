@@ -6,19 +6,15 @@
  */
 
 import { describe, expect, it } from "vitest";
-import {
-  type Marked as CrossingMarked,
-  say as crossing,
-} from "../games/crossing/hint-text.ts";
+import { narrateCrossing } from "../games/crossing/hint.ts";
+import type { CrossingFiring } from "../games/crossing/solver.ts";
+import type { CrossingPuzzle } from "../games/crossing/state.ts";
 import { SPOT } from "../games/dominosa/kinds.ts";
 import { STATED as DOMINOSA } from "../generated/games/dominosa/dominosa.compiled.ts";
 import { STATED as KEEN } from "../generated/games/keen/keen.compiled.ts";
 import { indefinite } from "./hint-text.ts";
 import { CELL } from "./hint-words.ts";
 import { statedParts, statedSentence } from "./stated.ts";
-
-type SharedDigit = Parameters<typeof crossing.sharedDigit>[0];
-type NoteStrike = Parameters<typeof crossing.noteStrike>[0];
 
 describe("a number after an article gets the article it is pronounced with", () => {
   it("indefinite picks by pronunciation, and capitalizes on request", () => {
@@ -53,31 +49,28 @@ describe("a number after an article gets the article it is pronounced with", () 
   });
 
   it("Crossing's shared digit and single note strike", () => {
-    const at = { x: 0, y: 0 };
-    const marked = (digits: number[]): CrossingMarked => ({
-      targets: [at],
-      notes: digits.map((n) => ({ ...at, n })),
-      run: [at],
-      otherRun: [],
-      fitting: [1, 2],
-      otherFitting: [],
-      number: null,
-      against: [],
-    });
+    // A one-square board with one run through it: all a sentence reads.
+    const puzzle = {
+      w: 1,
+      h: 1,
+      runs: [{ cells: [0], horizontal: true }],
+      numbers: [],
+    } as unknown as CrossingPuzzle;
+    const firing = { run: 0, cell: 0, fitting: [1, 2] };
     const shared = (digit: number) =>
-      crossing.sharedDigit(
-        { technique: "sharedDigit", digit } as SharedDigit,
-        true,
-        marked([]),
-      ).text;
+      narrateCrossing(puzzle, {
+        ...firing,
+        technique: "sharedDigit",
+        digit,
+      } as CrossingFiring).text;
     expect(shared(8)).toContain("has an 8 in this square");
     expect(shared(3)).toContain("has a 3 in this square");
     const strike = (digits: number[]) =>
-      crossing.noteStrike(
-        { technique: "noteStrike", digits } as NoteStrike,
-        false,
-        marked(digits),
-      ).text;
+      narrateCrossing(puzzle, {
+        ...firing,
+        technique: "noteStrike",
+        digits,
+      } as CrossingFiring).text;
     expect(strike([8])).toContain("puts an 8 in this square");
     expect(strike([3])).toContain("puts a 3 in this square");
   });
