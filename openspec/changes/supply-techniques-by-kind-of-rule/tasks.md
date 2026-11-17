@@ -193,6 +193,22 @@ boundaries are judgment, and the counts carry that.
     game whose ring is drawn on edges said "this square" (the game's noun);
     the engine now refuses a bare ring of another sort with no noun of its
     own (`ringNoun`), planted and seen to fail.
+  - [ ] `rel.support` (found 2026-11-17, not started): Adjacent speaks its
+    `adjacentSet` through `says` wordings on `bar` ("A bar joins this cell
+    to its neighbor with nothing open one away from 1"); Subsets speaks
+    `smaller`/`bigger` through its own walk (`hint-text.ts` `ruleOut`, sets
+    drawn as tallies: "No outlined set is a smaller set inside {A,B}, so the
+    horseshoe to the outlined cell rules {A,B} out of this cell"). A
+    candidate shared frame: "{link} joins {ring} to {outline partner: its
+    neighbor}, and none of its {valueNoun}s {rel words} {struck}", the kind
+    carrying it as `loop.early` does and Subsets' walk speaking it through
+    a `placedRulesOut`-style helper over the compiled `STATED`. Subsets'
+    marks (ringed set, striped cell) differ from Adjacent's, so look in the
+    app before settling.
+  - [ ] `fit.flip` (Sticks only): its five `says` are the rule's own words.
+    Find what a family sentence could share ("Suppose ...: it would break
+    ...") and whether Sticks' boundary plants should come back as
+    sharpened plants (now allowed).
 - [ ] 2.12 Plan step (2), the count contract: `need(S)`/`open(S)` over a set
   for Loopy, Tracks, Boats, then `count.met`/`count.exact` placed there.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
