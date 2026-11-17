@@ -83,8 +83,10 @@ define:
   near(d, b): "abs(x(d) - x(b)) <= 1 and abs(y(d) - y(b)) <= 1"
   # The empty squares of c's block outside b's.
   only(c, b): "{d in block(c) where not known(d) and not near(d, b)}"
+  # The empty squares of a set.
+  open(S): "{d in S where not known(d)}"
   # Whether the block of c has an empty square.
-  open(c): "exists d in block(c): not known(d)"
+  blockOpen(c): "exists d in block(c): not known(d)"
 clues:
   count: { at: cell, value: "range(0, 9)", means: "count(d in block(at) where value(d) = 1) = v" }
 freedom: { kind: fill }
@@ -92,42 +94,34 @@ deal:
   clues: which squares show their number, fewer at higher tiers
   tier: one of the tiers
 tiers: [Easy, Normal, Unreasonable]
+# A number's count over its block, which the hint names by the number and
+# reads whole: the group a count kind reads.
+kindWords:
+  group: "k in clues(count), c = at(k)"
+  set: "block(c)"
+  need: "need(c)"
+  rest: 2
+  fill: 1
+  zero: "v(k) = 0"
+  mark: outline clue
+  marks: { reads: "block(c)" }
+  unit: "this {value}"
+  has: "its {value} {shaded} {value: square | squares}"
+  items: "{shaded} {n: square | squares}"
+  restWord: "must be {unshaded}"
+  fillWord: "must be {shaded}"
+  terms: { clue: c, value: v(k) }
 techniques:
   # One number alone, n the shaded squares it still needs: with none, the
   # rest of its block is clear; with only as many squares left that are not
-  # clear, r, as it needs, they are all shaded. One with more shaded than
-  # it says, or fewer squares left, makes the marks inconsistent. One with
-  # none to need and none to spare has no empty square, and decides nothing.
-  - id: alone
+  # clear as it needs, they are all shaded. Each number's two readings come
+  # before the next number's, since an Easy deal hides the numbers the
+  # deduction never read.
+  - kind: count.both
+    as: alone
     tier: Easy
-    for: >-
-      k in clues(count), c = at(k), n = need(c),
-      r = count(d in block(c) where value(d) != 2)
-      where (n <= 0 or r <= v(k)) and (n != 0 or r != v(k))
-    conclude: >-
-      n >= 0 and r >= v(k)
-      and (n = 0 implies (forall d in block(c) where not known(d): place(d, 2)))
-      and (n = 0 or (forall d in block(c) where not known(d): place(d, 1)))
-    # The hint names the number, what it says and the size of its block, and
-    # reads that block.
-    says:
-      terms: { clue: c, value: v(k), size: "|block(c)|" }
-      marks: { reads: "block(c)" }
-      move: "{ring} must be {unshaded}"
-      arms:
-        met:
-          when: "n = 0"
-          wordings:
-            - when: "v(k) = 0"
-              look: "{outline clue: this {value}} allows no {shaded} squares"
-            - look: "{outline clue: this {value}} already has its {value} {shaded} {value: square | squares}"
-        needsAll:
-          when: "n > 0"
-          move: "{ring} must be {shaded}"
-          wordings:
-            - when: "v(k) = |block(c)|"
-              look: "{outline clue: this {value}} needs all {size} of its squares {shaded}"
-            - look: "{outline clue: this {value}} needs {value} {shaded} {value: square | squares}, and only {value} of its squares are not {unshaded}"
+    with:
+      terms: { placed: "n < v(k)" }
   # Two numbers whose blocks overlap both count the squares they share, so
   # they differ by the squares only one counts. One that needs more than the
   # other, by as many as it has empty squares outside the other's block, O,
@@ -138,8 +132,8 @@ techniques:
   - id: compared
     tier: Normal
     for: >-
-      k in clues(count), c = at(k) where open(c),
-      b in within(c, 2) where b != c and clue(count, b) != none and open(b),
+      k in clues(count), c = at(k) where blockOpen(c),
+      b in within(c, 2) where b != c and clue(count, b) != none and blockOpen(b),
       n = need(c), by = n - need(b), O = only(c, b)
       where by >= |O| and (by > 0 or |only(b, c)| > 0)
     conclude: >-

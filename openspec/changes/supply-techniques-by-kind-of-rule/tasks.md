@@ -255,6 +255,38 @@ boundaries are judgment, and the counts carry that.
   value-in-one-cell form, PEER's unit form (`once`, `cull`), REL's bounds
   form (Unequal `sign`), GRP, CMP, SUM. Each placed game is deal-compared
   and walked, and seen in the app.
+  - [x] (2026-11-17) Unruly `lastGap`, `quota` on `count.met` (a line's
+    quota is half its squares, `need` per piece d; `lastGap` is the same
+    kind with its group narrowed to a line one short of the other piece).
+    Found on the way: the cell-walk hint (`described-hint.ts`, Unruly's)
+    always spoke a technique's first wording, and had no noun, so a kind's
+    `{noun}` said "square"; it now speaks the firing's wording and takes
+    `noun` (`WORDS.cell`). Words only moved: "This row already has all its
+    blocks (outlined), so the ringed cell must hold a disc" (was "has all
+    its blocks …, so this cell and the row's other empty cells must hold
+    discs").
+  - [x] (2026-11-17) Mosaic `alone` on a new `count.both`: met and exact
+    as one technique, each number's two readings before the next's.
+    Splitting it into `count.met` and `count.exact` moved its boards
+    (`easyClues` hides the numbers the deduction never read, and which it
+    reads follows the firing order; the tier test's kept-numbers margin
+    failed). Five more games state the same interleaved shape (Mines
+    `alone`, Magnets `count`, Undead `total`, Palisade `numberExhausted`,
+    Light Up `square`'s clue arms), so the shape is the kind's. Moved:
+    words ("This 4 needs 4 shaded squares and has only 4 open squares", was
+    "needs all 4 of its squares shaded"; "This 0 takes no shaded squares",
+    was "allows no") and the arm `needsAll`, now `exact`.
+  - [ ] Not placed yet, and why: **Mines** `alone` and **Magnets** `count`
+    are narrated by their own `hint.ts` (rungs `satisfied`/`full`,
+    `count.full`), so a kind's sentence goes unspoken there until their
+    hints speak the description; **Undead** `total` counts over candidates
+    (`cand(c) = {d}`), not a set's open squares; **Palisade**
+    `numberExhausted` counts edges round a clue reached through `edge(c,
+    y)`, so `open($set)` would need to be a set of edges; **Light Up**
+    `square` is upstream's column scan, a dark square and a number
+    interleaved, which splitting reorders; **Spokes** `saturation`/
+    `exhaustion` carry `again`/`later` words the kinds lack; **Boats**
+    `total` is a count over the whole board, with no group to bind.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

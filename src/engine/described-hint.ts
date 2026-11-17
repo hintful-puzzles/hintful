@@ -46,6 +46,8 @@ export interface Spoken<T> {
 /** What a technique says, as the compiled module types it. */
 interface SaysOf {
   terms: object;
+  /** Which of the technique's stated wordings held, where it states several. */
+  wording?: number;
   marks: {
     outline?: readonly number[];
     stripes?: readonly number[];
@@ -88,6 +90,9 @@ export interface DescribedHintSpec<
   /** The member of the two-state pair a number term names, for a stated
    * clause's `{piece term}`. */
   piece?(n: number): PairIndex;
+  /** What a stated clause's `{noun}` calls a cell: the compiled module's
+   * `WORDS.cell`, "square" where the game gives none. */
+  noun?: string;
   /** The sentences the description cannot state, one per technique that
    * `stated` has none of. */
   say: { [K in keyof Says & string]?: (spoken: Spoken<Says[K]["terms"]>) => Sentence };
@@ -192,7 +197,7 @@ export function describedHint<
     const steps: HintStep<Move, CellHint, Kind>[] = [];
     for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next()) {
       const kind = f.entry.id as Kind;
-      const { terms, marks } = spoken(f).says;
+      const { terms, marks, wording } = spoken(f).says;
       const fills = filled(f);
       const outline = (marks.outline ?? []).filter((c) => !fills.includes(c));
       for (let i = 0, leg = 0; i < f.facts.length; i += 3) {
@@ -200,7 +205,7 @@ export function describedHint<
         const target = pointOf(f.facts[i + 1]);
         const value = f.facts[i + 2];
         const stripes = (marks.stripes ?? []).map(pointOf);
-        const clauses = stated[kind]?.step?.[0];
+        const clauses = stated[kind]?.step?.[wording ?? 0];
         const override = say[kind];
         if (clauses === undefined && override === undefined)
           throw new Error(`${spec.name}: ${kind} is neither stated nor overridden`);
@@ -214,6 +219,7 @@ export function describedHint<
                 terms: terms as Record<string, unknown>,
                 value: String,
                 ...(spec.piece === undefined ? {} : { piece: spec.piece }),
+                ...(spec.noun === undefined ? {} : { noun: spec.noun }),
                 unit: (els) => (els[0]?.y === els[1]?.y ? "row" : "column"),
               })
             : (override as NonNullable<typeof override>)({

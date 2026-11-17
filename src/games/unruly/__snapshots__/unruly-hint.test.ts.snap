@@ -3,9 +3,9 @@
 exports[`unruly: pinned hint positions > says, at each pin 1`] = `
 {
   "groupedPlan": "The outlined cells already hold discs, so this cell would make three in a row: it must hold a block.",
-  "lastGap": "This row has all its blocks (outlined), so this cell and the row's other empty cells must hold discs.",
+  "lastGap": "This row already has all its blocks (outlined), so the ringed cell must hold a disc.",
   "lastOne": "The last block in this column fits only in an outlined cell without making three discs, so this cell must hold a disc.",
-  "quota": "This row has all its blocks (outlined), so this cell and the row's other empty cells must hold discs.",
+  "quota": "This row already has all its blocks (outlined), so the ringed cell must hold a disc.",
   "threes": "The outlined cells already hold discs, so this cell would make three in a row: it must hold a block.",
   "unique": "This column's blocks all sit where the outlined column's do, so a block in this cell would copy it: it must hold a disc.",
 }

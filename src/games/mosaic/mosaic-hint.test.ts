@@ -43,7 +43,7 @@ const pinned = describeHintPins({
     "alone.met":
       "10x10:0c4a5c2a3456b5a25a655b3b55a5a20a22a44b11c4a232c14a3c5f5c8d44d4b3d5c",
     /** Held on 698 of 738 positions walked. */
-    "alone.needsAll":
+    "alone.exact":
       "10x10:c3c4442a4a5a44b3a4a4d53b3a133b23a3b4a7a1a2a5b3c323g212a5b5a0b32a2e02e2",
     /** Held on 193 of 738 positions walked. */
     "compared.needsMore":
@@ -107,8 +107,8 @@ describe("Mosaic's hint", () => {
   });
 
   it.each([
-    ["clear", "alone.met", STATE_BLANK, /already has its|allows no/],
-    ["shaded", "alone.needsAll", STATE_MARKED, /needs/],
+    ["clear", "alone.met", STATE_BLANK, /already has its|takes no/],
+    ["shaded", "alone.exact", STATE_MARKED, /needs/],
   ] as const)("a step that makes squares %s is drawn and said", (_, rung, mark, words) => {
     const { recording, hint } = renderPinnedHint(mosaicGame, pinned(rung));
     const hl = decides(hint ?? {});

@@ -72,7 +72,7 @@ describe("one number alone", () => {
   it("a number that fills its block shades all of it", () => {
     expect(walked(3, "d9d")).toEqual({
       verdict: "solved",
-      fired: [{ rung: "needsAll", clue: 4, cells: [0, 1, 2, 3, 4, 5, 6, 7, 8] }],
+      fired: [{ rung: "exact", clue: 4, cells: [0, 1, 2, 3, 4, 5, 6, 7, 8] }],
     });
   });
 
@@ -137,7 +137,7 @@ describe("the comparison of two numbers", () => {
     // Every square shaded: each number needs all it has.
     expect(deductionTier(boardOf(3, "464696464"))).toBe(DIFF_EASY);
     const rungs = walked(3, "464696464").fired.map((f) => f.rung);
-    expect(new Set(rungs)).toEqual(new Set(["needsAll"]));
+    expect(new Set(rungs)).toEqual(new Set(["exact"]));
   });
 });
 

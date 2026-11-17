@@ -50,6 +50,8 @@ help:
     them one at a time as a single step.
 name: Unruly
 family: shading
+words:
+  cell: cell
 sizes:
   w: { min: 6, max: 30 }
   h: { min: 6, max: 30 }
@@ -68,6 +70,10 @@ define:
   window(L, i): "{sq(L, i), sq(L, i + 1), sq(L, i + 2)}"
   # A line's i-th square.
   sq(L, i): "nth(cells(L), i)"
+  # How many of a line's squares hold d.
+  holds(L, d): "count(c in cells(L) where value(c) = d)"
+  # The squares of a set not yet filled.
+  open(S): "{c in S where not known(c)}"
 shape:
   - >-
     forall L in lines, i in range(0, |cells(L)| - 3):
@@ -106,6 +112,22 @@ variations:
             follows: "a {piece kept} in {ring: this cell} would copy it"
             move: "it must hold a {piece fill}"
 tiers: [Easy, Normal, Tricky]
+# A line's quota of each piece, half its squares: the group a count kind
+# reads, d the piece it counts.
+kindWords:
+  group: "L in lines, d in domain"
+  set: "cells(L)"
+  need: "|cells(L)| / 2 - holds(L, d)"
+  restMove: "place(c, flip(d))"
+  marks:
+    stripes: "cells(L)"
+    reads: "cells(L)"
+    outline: "{c in cells(L) where value(c) = d}"
+  unit: "this {if horizontal: row | column}"
+  has: "{outline: all its {piece full}s (outlined)}"
+  items: "{piece full}s"
+  restWord: "must hold a {piece fill}"
+  terms: { horizontal: "L in rows", full: d, fill: flip(d) }
 techniques:
   # Two of three squares in a row of a line hold one piece, so the third holds
   # the other.
@@ -124,37 +146,15 @@ techniques:
       move: "it must hold a {piece fill}"
   # A line holding all its d and all but one of the other piece: its one empty
   # square holds the other piece.
-  - id: lastGap
+  - kind: count.met
+    as: lastGap
     tier: Easy
-    for: >-
-      L in lines, n = |cells(L)| / 2,
-      d in domain where count(c in cells(L) where value(c) = d) = n
-      and count(c in cells(L) where value(c) = flip(d)) = n - 1
-    conclude: "forall c in cells(L) where not known(c): place(c, flip(d))"
-    says:
-      terms: { horizontal: "L in rows", full: d, fill: flip(d) }
-      marks:
-        stripes: "cells(L)"
-        reads: "cells(L)"
-        outline: "{c in cells(L) where value(c) = d}"
-      look: "{stripes} has {outline: all its {piece full}s (outlined)}"
-      move: "{ring: this cell} and the {if horizontal: row | column}'s other empty cells must hold {piece fill}s"
+    with:
+      group: "L in lines, d in domain where holds(L, flip(d)) = |cells(L)| / 2 - 1"
   # A line holding all its d: every empty square holds the other piece.
-  - id: quota
+  - kind: count.met
+    as: quota
     tier: Normal
-    for: >-
-      L in lines, n = |cells(L)| / 2,
-      d in domain where count(c in cells(L) where value(c) = d) = n
-      and count(c in cells(L) where value(c) = flip(d)) < n
-    conclude: "forall c in cells(L) where not known(c): place(c, flip(d))"
-    says:
-      terms: { horizontal: "L in rows", full: d, fill: flip(d) }
-      marks:
-        stripes: "cells(L)"
-        reads: "cells(L)"
-        outline: "{c in cells(L) where value(c) = d}"
-      look: "{stripes} has {outline: all its {piece full}s (outlined)}"
-      move: "{ring: this cell} and the {if horizontal: row | column}'s other empty cells must hold {piece fill}s"
   # A line with one d left to place and at least two of the other piece: three
   # squares in a row holding no d, two of them empty, would be three of the
   # other piece unless the last d goes among them, so it does, and every

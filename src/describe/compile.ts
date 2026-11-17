@@ -1086,6 +1086,23 @@ function compileNode(e: Expr, scope: Scope, env: Env, out: Out): Val {
     case "set":
       return setLiteral(e.elems, scope, env, out);
     case "size": {
+      // The size of `{x in S where P}` over one binder is a count, its
+      // elements as distinct as S's: counted, never gathered.
+      const of = inlined(e.of, scope, env);
+      if (
+        of.k === "agg" &&
+        of.fn === "set" &&
+        of.binders.length === 1 &&
+        of.where === null &&
+        of.term?.k === "name" &&
+        of.term.name === of.binders[0].name
+      )
+        return compileNode(
+          { k: "agg", fn: "count", binders: of.binders, where: null, term: null },
+          scope,
+          env,
+          out,
+        );
       if (keptChain(e.of, env)) {
         const c = compileExpr(
           (e.of as Extract<Expr, { k: "call" }>).args[0],

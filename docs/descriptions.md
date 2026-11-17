@@ -1044,7 +1044,14 @@ reads only the parameters the game gave. The count kinds carry their
 sentence: "{unit} already has {has}", "{unit} takes no {items}" where its
 number may be 0 (`zero`), and "{unit} needs {n} {items} and has only {n}
 {slots}"; the game gives the nouns, how its group is drawn (`mark`, `marks`)
-and the move's predicate (`restWord`: "can't be a line"). A kind is checked sound per game, as a
+and the move's predicate (`restWord`: "can't be a line"). **`count.both` is
+the two as one technique**, each group's two readings before the next
+group's, with the same sentences as its arms `met` and `exact`: placed where
+the game's order rests on the interleaving (Mosaic's Easy deal hides the
+numbers its deduction never read, so splitting `alone` in two moved its
+boards). A game whose squares are cells says so in `words: { cell: cell }`
+and passes `WORDS.cell` as its hint's `noun`, or a kind's `{noun}` says
+"square". A kind is checked sound per game, as a
 stated technique is. A kind with no words of its own (`one.cell`,
 `peer.placed`, `fit.flip`) takes the game's `says:` beside the placement,
 and one with no parameters takes no `with`. `one.cell`'s sentence is the

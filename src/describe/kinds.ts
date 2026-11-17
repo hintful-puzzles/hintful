@@ -38,6 +38,15 @@ export interface Kind {
       /** Absent where the game's walk says the move (a strike's "must go"). */
       move?: string;
       wordings?: readonly { when?: string; look: string }[];
+      arms?: Record<
+        string,
+        {
+          when: string;
+          look?: string;
+          move?: string;
+          wordings?: readonly { when?: string; look: string }[];
+        }
+      >;
     };
   };
   /** What every game's `says` beside the placement shares, which the game's
@@ -114,6 +123,57 @@ export const KINDS: Readonly<Record<string, Kind>> = {
     plant: {
       for: "$group, n = $need, O = open($set) where n > 0 and n >= |O| - 1",
       conclude: "forall c in O: $fillMove",
+    },
+  },
+  // `count.met` and `count.exact` read as one technique, each group's both
+  // readings before the next group's, as a game whose order rests on it
+  // states them (Mosaic, whose generator hides the numbers its deduction
+  // never read). The arms are the two kinds' sentences; the parameters are
+  // both kinds'.
+  "count.both": {
+    params: ["group", "set", "unit", "has", "items", "restWord", "fillWord"],
+    defaults: {
+      rest: null,
+      fill: null,
+      need: "need($set)",
+      restMove: "place(c, $rest)",
+      fillMove: "place(c, $fill)",
+      zero: "false",
+      slots: "open {n: square | squares}",
+      mark: "stripes",
+      marks: { stripes: "$set", reads: "$set" },
+    },
+    // The open squares are counted, and walked only by the conclusion that
+    // decides them: bound as a set, they are gathered for every group on
+    // every pass, which made Mosaic's Easy deals 1.4 times as slow.
+    technique: {
+      for: "$group, n = $need, m = |open($set)| where (n <= 0 or n >= m) and (n != 0 or m > 0)",
+      conclude:
+        "n >= 0 and n <= m and (n = 0 implies (forall c in open($set): $restMove)) and (n = 0 or (forall c in open($set): $fillMove))",
+      says: {
+        terms: { n: "n" },
+        marks: "$marks",
+        arms: {
+          met: {
+            when: "n = 0",
+            move: "{ring: the ringed {noun} | each ringed {noun}} $restWord",
+            wordings: [
+              { when: "$zero", look: "{$mark: $unit} takes no $items" },
+              { look: "{$mark: $unit} already has $has" },
+            ],
+          },
+          exact: {
+            when: "n > 0",
+            look: "{$mark: $unit} needs {if placed: {n} more | {n}} $items and has only {n} $slots",
+            move: "{ring: the ringed {noun} | each ringed {noun}} $fillWord",
+          },
+        },
+      },
+    },
+    plant: {
+      for: "$group, n = $need, m = |open($set)| where (n <= 1 or n >= m) and (n != 0 or m > 0)",
+      conclude:
+        "(n <= 1 implies (forall c in open($set): $restMove)) and (n <= 1 or (forall c in open($set): $fillMove))",
     },
   },
   // A square down to one value holds it. One with none left makes the marks

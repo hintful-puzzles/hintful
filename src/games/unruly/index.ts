@@ -24,7 +24,11 @@ import {
   verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
-import { type SaysById, STATED } from "../../generated/games/unruly/unruly.compiled.ts";
+import {
+  type SaysById,
+  STATED,
+  WORDS,
+} from "../../generated/games/unruly/unruly.compiled.ts";
 import { type Cell, EMPTY, ONE, pairIndex, ZERO } from "./constants.ts";
 import { newDesc, solvableAt } from "./generator.ts";
 import {
@@ -134,6 +138,7 @@ const described = describedHint<UnrulyState, UnrulyMove, SaysById>({
   move: ({ x, y }, value) => ({ type: "place", x, y, value: value as Cell }),
   stated: STATED,
   piece: pairIndex,
+  noun: WORDS.cell,
   say: {},
 });
 

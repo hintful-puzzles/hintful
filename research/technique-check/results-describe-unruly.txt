@@ -3,14 +3,19 @@
 ok  unruly     threes                         4  sound    (want sound   )     8 queries    0.1s
 ok  unruly     threes (planted)               4  unsound  (want unsound )     1 queries    0.0s   at line 0
 ok  unruly +unique threes                         4  sound    (want sound   )     8 queries    0.0s
+ok  src/games/unruly/unruly.description.yaml#threes: recorded sound, proved whole on all 2 boards
 ok  unruly     lastGap                        4  sound    (want sound   )     8 queries    0.1s
 ok  unruly     lastGap (planted)              4  unsound  (want unsound )     1 queries    0.0s   at line 0
 ok  unruly +unique lastGap                        4  sound    (want sound   )     8 queries    0.1s
+ok  src/games/unruly/unruly.description.yaml#lastGap: recorded sound, proved whole on all 2 boards
 ok  unruly     quota                          4  sound    (want sound   )     8 queries    0.1s
 ok  unruly     quota (planted)                4  unsound  (want unsound )     1 queries    0.0s   at line 0
 ok  unruly +unique quota                          4  sound    (want sound   )     8 queries    0.1s
-ok  unruly     lastOne                        4  sound    (want sound   )     8 queries    0.0s
+ok  src/games/unruly/unruly.description.yaml#quota: recorded sound, proved whole on all 2 boards
+ok  unruly     lastOne                        4  sound    (want sound   )     8 queries    0.1s
 ok  unruly     lastOne (planted)              4  unsound  (want unsound )     1 queries    0.0s   at line 0
 ok  unruly +unique lastOne                        4  sound    (want sound   )     8 queries    0.0s
+ok  src/games/unruly/unruly.description.yaml#lastOne: recorded sound, proved whole on all 2 boards
 ok  unruly +unique unique                         4  sound    (want sound   )     8 queries    0.5s
 ok  unruly +unique unique (planted)               4  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/unruly/unruly.description.yaml#unique: recorded sound, proved whole on all 1 boards

@@ -53,7 +53,7 @@ import {
 
 /** The kinds of step a hint can be, simplest first: two readings of one
  * number (`met`: it has its shaded squares, so the rest of its block is clear;
- * `needsAll`: it needs every square it has left), then two of a pair
+ * `exact`: it needs every square it has left), then two of a pair
  * (`needsMore`, `sameNeed`), which the description's `says` names. */
 export const MOSAIC_RUNGS = mosaic.SAYS_KINDS;
 export type MosaicRung = (typeof MOSAIC_RUNGS)[number];

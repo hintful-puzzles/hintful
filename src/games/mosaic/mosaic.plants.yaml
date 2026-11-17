@@ -4,15 +4,6 @@
 # unsound.
 
 techniques:
-  # A number one short of its shaded squares read as met.
-  alone:
-    for: >-
-      k in clues(count), c = at(k), n = need(c), r = count(d in block(c) where
-      value(d) != 2) where n <= 1 or r <= v(k)
-    conclude: >-
-      n >= 0 and r >= v(k) and (n <= 1 implies (forall d in block(c) where not
-      known(d): place(d, 2))) and (n <= 1 or (forall d in block(c) where not
-      known(d): place(d, 1)))
   # One square more outside the other's block than the difference.
   compared:
     for: >-
