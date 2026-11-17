@@ -151,17 +151,21 @@ techniques:
     conclude: "|C| = 1 and place(first(C), d)"
   # The open end of a horseshoe holds a set only where the closed end can
   # hold a smaller one inside it.
-  - id: smaller
+  - kind: rel.support
+    as: smaller
     tier: Easy
-    for: "e in edges, a in ends(e) where opens(e, a), b = other(e, a)"
-    conclude: >-
-      forall d in cand(a) where not (exists u in cand(b): holds(d, u)):
-      strike(a, d)
+    with:
+      group: "e in edges, a in ends(e) where opens(e, a), b = other(e, a)"
+      end: a
+      partner: b
+      rel: "holds(d, u)"
   # The closed end of a horseshoe holds a set only where the open end can
   # hold a bigger one holding it.
-  - id: bigger
+  - kind: rel.support
+    as: bigger
     tier: Normal
-    for: "e in edges, a in ends(e) where opens(e, a), b = other(e, a)"
-    conclude: >-
-      forall d in cand(b) where not (exists u in cand(a): holds(u, d)):
-      strike(b, d)
+    with:
+      group: "e in edges, a in ends(e) where opens(e, a), b = other(e, a)"
+      end: b
+      partner: a
+      rel: "holds(u, d)"

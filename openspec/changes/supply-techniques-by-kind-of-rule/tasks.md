@@ -103,6 +103,19 @@ boundaries are judgment, and the counts carry that.
   library and its words. Adjusting course is mine to do and record; a
   coverage that falls to about half, or a family kind that cannot be made
   to hold, is the sign to look again.
+- [x] 2.6 (2026-11-17) REL, the support form: `rel.support` (a value of one
+  end with no value at the other end it can stand beside is struck; `rel` is
+  the relation over `d` and `u`). Placed on Subsets' `smaller`/`bigger` and
+  Adjacent's `adjacentSet`: same snapshots and tests (the compiled sample
+  differs by one renamed variable); Adjacent's verdict re-recorded. **Lines:
+  games' descriptions and plants +36/-38, the kind +15: a net loss in lines**,
+  with three plants files entries gone. Unequal's `sign` is not this form (it
+  bounds by min/max, not by a pairing relation), so REL as counted is two
+  forms, and the support form fits three techniques of 14. The plants are
+  coarser (supported value struck) than the games' own boundary plants. This
+  is 2.3's evidence again: the formula is cheap to supply, the saving is in
+  plants and soundness, not in lines. Next: the bounds form of REL (Unequal
+  `sign`) only if a second game states it; then GRP/LOOP/CMP/SUM, and the ask.
 - [ ] 2.3 The first restatements are the evidence for whether the family
   kinds hold (FIT above all). 2.1's finding, 2026-11-17: the formula part of
   a kind holds and is cheap (`one.cell`, `fit.flip`), and the words do not

@@ -30,13 +30,3 @@ techniques:
       d in domain, C = {c in cells where d in cand(c)} where |C| < 3 and (|C| =
       0 or not known(first(C)))
     conclude: "|C| >= 1 and place(first(C), d)"
-  # A smaller set one letter short read as no smaller set.
-  smaller:
-    conclude: >-
-      forall d in cand(a) where not (exists u in cand(b): holds(d, u) and
-      |letters(u)| < |letters(d)| - 1): strike(a, d)
-  # A bigger set one letter more read as no bigger set.
-  bigger:
-    conclude: >-
-      forall d in cand(b) where not (exists u in cand(a): holds(u, d) and
-      |letters(u)| > |letters(d)| + 1): strike(b, d)

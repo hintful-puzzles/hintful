@@ -101,6 +101,21 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       conclude: "strike(p, n + 1)",
     },
   },
+  // A value of one end of a pair that no value at the other end can stand
+  // beside is struck. `rel` reads the struck end's value `d` and the partner's
+  // `u`. An end left with no value makes the marks inconsistent.
+  "rel.support": {
+    params: ["group", "end", "partner", "rel"],
+    technique: {
+      for: "$group",
+      conclude:
+        "forall d in cand($end) where not (exists u in cand($partner): $rel): strike($end, d)",
+    },
+    plant: {
+      conclude:
+        "forall d in cand($end) where (exists u in cand($partner): $rel): strike($end, d)",
+    },
+  },
   // A square of two values where one would break a rule at once holds the
   // other. `holds` is what must stay true of the group, and `scope` the
   // squares that could break it. A position that breaks it makes the marks

@@ -117,13 +117,15 @@ techniques:
         - look: "{outline pair: no bar} joins {ring} to {outline a: the {v} beside it}: they can't differ by 1"
   # A number is struck across an edge when none of the other end's candidates
   # fits it, in the same order over every cell.
-  - id: adjacentSet
+  - kind: rel.support
+    as: adjacentSet
     tier: Tricky
     rung: adjacentSet
-    for: "L in cols, a in cells(L), b in adj4(a), e = edge(a, b)"
-    conclude: >-
-      forall d in cand(b) where not (exists d2 in cand(a): d2 != d and fits(e, d2, d)):
-      strike(b, d)
+    with:
+      group: "L in cols, a in cells(L), b in adj4(a), e = edge(a, b)"
+      end: b
+      partner: a
+      rel: "u != d and fits(e, u, d)"
     # The hint names the neighbor and whether a bar joins them.
     says:
       terms: { a: a, bar: "clue(bar, e)", pair: "{b, a}" }

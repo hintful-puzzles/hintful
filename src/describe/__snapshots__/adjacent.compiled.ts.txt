@@ -245,8 +245,8 @@ export function adjacentSet(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjac
             let _q16 = false;
             Q17: {
               for (let _m18 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m18 !== 0; _m18 &= _m18 - 1) {
-                const v_d2 = 31 - Math.clz32(_m18 & -_m18);
-                if (((v_d2 !== v_d) && (_h20 === (Math.abs((v_d2 - v_d)) === 1)))) {
+                const v_u = 31 - Math.clz32(_m18 & -_m18);
+                if (((v_u !== v_d) && (_h20 === (Math.abs((v_u - v_d)) === 1)))) {
                   _q16 = true;
                   break Q17;
                 }

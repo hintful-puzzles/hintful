@@ -1031,7 +1031,7 @@ overrides. A `kindWords` name a kind does not take is ignored for it, so one
 block serves every kind placed. On contract: a kind that reads another name
 says so in `params` or its text. A kind is checked sound per game, as a
 stated technique is. A kind with no words of its own (`one.cell`,
-`peer.placed`, `fit.flip`) takes the game's `says:` beside the placement,
+`peer.placed`, `fit.flip`, `rel.support`) takes the game's `says:` beside the placement,
 and one with no parameters takes no `with`. `fit.flip` is the Check of a
 two-valued square (`holds`, `scope`): its plant is the coarse one, a value that
 keeps `holds` struck, so a game that wants the off-by-one plant of its
