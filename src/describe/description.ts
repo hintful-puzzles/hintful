@@ -129,14 +129,16 @@ export interface GameWords {
  * as it is (a tile's shape, a heading); or a `clause`, the move of one of the
  * steps it names, which the planner names with what that step is told by and
  * the voice speaks in place, its references with it (a reason a sentence
- * joins to another). */
+ * joins to another); or `clauses`, several such moves said as a list ("a, b
+ * and c"), where how many a sentence joins is the board's. */
 export type StepTermKind =
   | "number"
   | "flag"
   | "unit"
   | "values"
   | readonly string[]
-  | { readonly clause: readonly string[] };
+  | { readonly clause: readonly string[] }
+  | { readonly clauses: readonly string[] };
 
 /** A kind of hint step a planner emits: what its sentence reads, which the
  * planner supplies, and its clauses. */

@@ -299,7 +299,27 @@ Logic games:
   by a throwaway test seen to fail on a planted word and a dropped
   reference. Read in the app (Wrapping 5x5 Easy): a seal, the dead end
   ringed and the sealed squares striped.
-- [ ] Ascent
+- [x] Ascent (2026-11-17): dump byte-identical, marks included
+  (`DUMP_DEALS=150`, 516,032 lines in 115 s), and so is a wider walk over every
+  preset, Edges Hard and 6x6 Edges included (25,607 firings, 206 of them
+  pointers, which no gate preset reaches). Its sentences are `steps` spoken
+  through the voice in `hint.ts`, a run named by the clause steps `run` and
+  `span`; its marks are `hint-marks.ts`. The engine gained a step term of
+  kind `clauses` (`{ clauses: [steps] }`), several clause steps said as a
+  list, for what a sentence joins as many of as the board has (the premises
+  a lines step names, the rivals a pointers step rules out). Which form of a
+  pointers, fill or whole-run sentence fits at a glance stays the hint's
+  choice by length, as before. The dead end's two long forms carry `long:`,
+  and the pointers forms that name every rival do, so their ledger entry in
+  `hint-quality.test.ts` went. The forms no walk meets (a lines step with no
+  arrow of its own, arrowless rivals, no rival at all, the last empty
+  square) were checked against the old module, words and marks, by a
+  throwaway test seen to fail on a planted word and a dropped stripe.
+  **One change, in forms no walk meets:** a list of three is said with
+  commas, "within a step of 20, 11's row and 13's column", was "20 and
+  11's row and 13's column". Read in the app (5x5 Edges Hard, 5x5 Classic
+  Normal): a pointers step with its four arrows, a touch on an arrow's
+  column, a whole run's drawn route.
 
 ## 3. Revisited in the app as their words are touched
 

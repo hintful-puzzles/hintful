@@ -26,7 +26,7 @@ import {
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import type { AscentRung } from "./hint.ts";
-import { PATH, SQUARE } from "./hint-text.ts";
+import { PATH, SQUARE } from "./hint-marks.ts";
 import { ascentGame } from "./index.ts";
 import {
   COL_ARROW,

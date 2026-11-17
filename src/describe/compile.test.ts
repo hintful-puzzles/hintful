@@ -578,6 +578,28 @@ describe("a stated clause names only what its technique states", () => {
         expect(code).toContain('spoken: ["why"]');
       });
 
+      it("is typed as a list where it is several, and spoken as one", () => {
+        if (loopy === undefined || !isFormal(loopy)) throw new Error("no Loopy");
+        const code = compileGame(
+          {
+            ...loopy,
+            steps: {
+              reason: { ring: "edge", move: "no other way fits" },
+              probe: step({
+                terms: { why: { clauses: ["reason"] } },
+                look: "{ring} must be a line, as {why}",
+                move: "it must be",
+              }),
+            },
+          } as never,
+          [...sources.values()].filter(isLibrary),
+          "src/games/loopy/loopy.description.yaml",
+          "../../engine/describe-runtime.ts",
+        );
+        expect(code).toContain('why: readonly StepClause<StepsById<E>, "reason", E>[]');
+        expect(code).toContain('spoken: ["why"]');
+      });
+
       it("and refuses one naming a step with no move", () => {
         expect(() => clauseSteps({ ring: "edge", look: "no other way fits" })).toThrow(
           /names reason, which states no move/,

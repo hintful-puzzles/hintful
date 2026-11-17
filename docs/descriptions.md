@@ -1421,7 +1421,11 @@ Write one where a sentence joins reasons of several kinds, each a step of
 its own (Slant's pair that can't both `{first}`, or both `{second}`), rather
 than a wording for every combination; a clause step may hold clause terms
 in turn. The lint reads it at the length of the steps it names, and a `when`
-cannot read it. **A step's `aim`** is what its move works
+cannot read it. **A term of kind `clauses`** (`{ clauses: [steps] }`) is
+several of them, said as a list ("a, b and c"), where how many a sentence
+joins is the board's (Ascent's premises a number must be near, and the
+rivals a pointers step rules out); the planner gives an array, and the lint
+reads it at one member and at three. **A step's `aim`** is what its move works
 toward, said first ("Working on tile 3: slide it into place", Fifteen's);
 unless an `effect` or a judged `relation` says more, the move serves it, and
 a look after it is not capitalized. **A step's `answers`** is how its move

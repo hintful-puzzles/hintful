@@ -519,3 +519,60 @@ describe("a step's clause term", () => {
     expect([...markKeys(s.refs)].sort()).toEqual(["outline|cell|2,0", "ring|cell|1,1"]);
   });
 });
+
+describe("a step's clauses term", () => {
+  const steps = {
+    reason: {
+      ring: "cell",
+      clauses: [{ move: "{outline clue: the {n}}" }],
+      when: [null],
+    },
+    main: {
+      ring: "cell",
+      spoken: ["near"],
+      clauses: [{ look: "{ring} must touch {near}", move: "it must go" }],
+      when: [null],
+    },
+  } as const;
+  type S = {
+    reason: {
+      ring: "cell";
+      terms: { n: number };
+      marks: { outline: { clue: readonly Point[] } };
+    };
+    main: {
+      ring: "cell";
+      terms: { near: readonly StepClause<S, "reason", Point>[] };
+      marks: Record<string, never>;
+    };
+  };
+  const speak = stepVoice<S, Point>(steps, { kind: CELL, value: String });
+  const reason = (n: number, x: number): StepClause<S, "reason", Point> => ({
+    step: "reason",
+    said: { terms: { n }, marks: { outline: { clue: [at(x)] } } },
+  });
+
+  it("says each named step's move as a list, with its references", () => {
+    const s = speak.sentence("main", {
+      ring: [at(5)],
+      terms: { near: [reason(1, 0), reason(2, 1), reason(3, 2)] },
+    });
+    expect(s.text).toBe(
+      "This square must touch the 1, the 2 and the 3, so it must go.",
+    );
+    expect([...markKeys(s.refs)].sort()).toEqual([
+      "outline|cell|0,0",
+      "outline|cell|1,0",
+      "outline|cell|2,0",
+      "ring|cell|1,1",
+    ]);
+  });
+
+  it("says one alone", () => {
+    const s = speak.sentence("main", {
+      ring: [at(5)],
+      terms: { near: [reason(4, 0)] },
+    });
+    expect(s.text).toBe("This square must touch the 4, so it must go.");
+  });
+});

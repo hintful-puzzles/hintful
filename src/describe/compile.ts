@@ -4815,16 +4815,25 @@ function statedTable(own: readonly Technique[]): string[] {
 const saidPlainly = (kind: StepTermKind): boolean =>
   kind === "unit" || typeof kind !== "string";
 
-/** The steps a `clause` term may speak, or null for any other term. */
+/** The steps a `clause` or `clauses` term may speak, or null for any other
+ * term. */
 const clauseOf = (kind: StepTermKind): readonly string[] | null =>
-  typeof kind === "object" && "clause" in kind ? kind.clause : null;
+  typeof kind !== "object" || Array.isArray(kind)
+    ? null
+    : "clause" in kind
+      ? kind.clause
+      : "clauses" in kind
+        ? kind.clauses
+        : null;
 
 /** A step's term as `StepsById` types it. */
 const stepTermType = (kind: StepTermKind): string =>
   typeof kind !== "string"
     ? "clause" in kind
       ? `StepClause<StepsById<E>, ${kind.clause.map((w) => JSON.stringify(w)).join(" | ")}, E>`
-      : kind.map((w) => JSON.stringify(w)).join(" | ")
+      : "clauses" in kind
+        ? `readonly StepClause<StepsById<E>, ${kind.clauses.map((w) => JSON.stringify(w)).join(" | ")}, E>[]`
+        : kind.map((w) => JSON.stringify(w)).join(" | ")
     : kind === "flag"
       ? "boolean"
       : kind === "unit"

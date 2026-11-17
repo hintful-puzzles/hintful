@@ -33,7 +33,7 @@ import { ringContentBox, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
 import type { AscentHighlights } from "./hint.ts";
-import { PATH, SQUARE } from "./hint-text.ts";
+import { PATH, SQUARE } from "./hint-marks.ts";
 import {
   type AscentMistake,
   type AscentMove,

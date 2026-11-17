@@ -7,6 +7,7 @@
  */
 import type { ColorWord } from "./color/color-word.ts";
 import {
+  listOf,
   type MarkKind,
   MOVE,
   type Narration,
@@ -132,7 +133,9 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
   ): { clauses: Clauses; cx: StatedContext<E> } => {
     const step = steps[id];
     const given = (said.terms ?? {}) as Readonly<Record<string, unknown>>;
-    // A clause term is the named step's move, spoken here with its references.
+    // A clause term is the named step's move, spoken here with its references;
+    // a `clauses` term is several, said as a list.
+    type Named = { step: keyof S & string; said: Said<StepType, E> };
     const terms = (
       step.spoken === undefined
         ? given
@@ -140,11 +143,13 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
             ...given,
             ...Object.fromEntries(
               step.spoken.map((name) => {
-                const c = given[name] as {
-                  step: keyof S & string;
-                  said: Said<StepType, E>;
-                };
-                return [name, part(c.step, "move", c.said)];
+                const c = given[name] as Named | readonly Named[];
+                return [
+                  name,
+                  Array.isArray(c)
+                    ? listOf(c.map((x: Named) => part(x.step, "move", x.said)))
+                    : part((c as Named).step, "move", (c as Named).said),
+                ];
               }),
             ),
           }

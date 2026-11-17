@@ -474,8 +474,8 @@ player can check it in, and measure that the unit carries the claim.**
   step places (`hints.md` § "Name elements by what the player can see").
 - **Name a run by its placed ends**; its members follow from them.
 
-Exemplar: [`ascent/hint.ts`](../src/games/ascent/hint.ts) and its
-`hint-text.ts`, with requirement "Ascent's hint names only numbers the player
+Exemplar: [`ascent/hint.ts`](../src/games/ascent/hint.ts) and the steps of
+its description, with requirement "Ascent's hint names only numbers the player
 can see" in its spec; `ascent-hint.test.ts` holds a named rival to being the
 only close one and scans every sentence for a number that is neither on the
 board nor placed by the step.

@@ -165,19 +165,6 @@ const LONG_NARRATIONS: {
         "15x15Sde:7b6a1b1a4a1b7a1b1a4b1a7a1a5a1a1a1a2a1a1a3a2a1a7a1b4a2b1a2a2a1b2a4b1a7a1a2a3a1a1a2a1a1a1a5a1a7a1b4a1b1a7b1a4a1b1a6b7,25,27,28,45,47,62,71,73,77,79,84,87,89,92,95,99,142,143,197,247,317,345,365,411,413,425,498,499,513,557,671,765,814,815,869,927,947,949,975,984,2311,2472,4478,5194,7183,7212,7926,9659,22499,33464,79354,82855,87427,88392,456457,575287,749691,754341,3814167,4483998,8789149,8857768,42828377,49641451",
     },
   },
-  {
-    games: ["ascent"],
-    rungs: ["pointers"],
-    why:
-      "Edges: the step names every missing number that could stand on the " +
-      "square, so the player can check each is ruled out, and the ringed " +
-      "square they point at (name-every-reference-by-its-mark). Where three " +
-      "or more rivals point there, no form that names them all fits.",
-    spokenOn: {
-      ascent:
-        "5x5mEEdh:18_22_15_16_3_1_9_14e10_11e13_2e12_19e6_5a24c25_8_23_21_20_7_4_17",
-    },
-  },
 ];
 
 /** The shared necessity vocabulary a deductive conclusion draws from.

@@ -317,8 +317,13 @@ function spokenOf(steps: readonly Step[]): Map<string, Spoken> {
     const shortest: Record<string, string> = {};
     const longest: Record<string, string> = {};
     for (const t of s.terms) {
-      if (typeof t.kind !== "object" || !("clause" in t.kind)) continue;
-      const moves = t.kind.clause.flatMap((id) => {
+      if (typeof t.kind !== "object" || Array.isArray(t.kind)) continue;
+      const kind = t.kind as {
+        clause?: readonly string[];
+        clauses?: readonly string[];
+      };
+      const ids = kind.clause ?? kind.clauses ?? [];
+      const moves = ids.flatMap((id) => {
         const named = byId.get(id);
         if (named === undefined) return [];
         const inner = of(named, new Set([...seen, s.id]));
@@ -338,7 +343,10 @@ function spokenOf(steps: readonly Step[]): Map<string, Spoken> {
       });
       if (moves.length === 0) continue;
       shortest[t.name] = moves.map((m) => m.short).reduce(shorter);
-      longest[t.name] = moves.map((m) => m.long).reduce(longer);
+      const long = moves.map((m) => m.long).reduce(longer);
+      // A list is read at one member and at three, as a `values` term is.
+      longest[t.name] =
+        kind.clauses === undefined ? long : `${long}, ${long} and ${long}`;
     }
     const spoken = { shortest, longest };
     out.set(s.id, spoken);

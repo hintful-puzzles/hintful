@@ -38,7 +38,7 @@ import {
   stepOf,
   whyNotEnd,
 } from "./hint.ts";
-import { PATH, SQUARE } from "./hint-text.ts";
+import { PATH, SQUARE } from "./hint-marks.ts";
 import { ascentGame } from "./index.ts";
 import { executeAscentMove } from "./moves.ts";
 import { type Placed, readBoard, squaresMeeting } from "./premises.ts";

@@ -182,6 +182,315 @@ techniques:
     tier: Hard
     with:
       square: "not known(c) and open(c)"
+# Ascent's sentences, spoken through the hint's voice (`hint.ts`). A number
+# term is a number as the board shows it, counting from 1. A step rings the
+# square it fills, or a whole run's route; a placed number it names, an arrow
+# it reads and a square it reasons from are outlined, and the line an arrow
+# points along, a run's reach and the squares no other run reaches are
+# striped. The words are the help page's: a step is one move to a
+# neighboring square, a run the missing numbers between two placed ones, and
+# a square a dead end when the path can reach it from one neighbor only.
+phrases:
+  # How near a placed number must be, `d` places from it in the sequence.
+  near1: "{d1: next to | within {d1} steps of} {outline at1: {m1}}"
+  near2: "{d2: next to | within {d2} steps of} {outline at2: {m2}}"
+  # Two placed numbers both farther than a step: "within 2 steps of 23 and
+  # 4 of 29".
+  nearFar: "within {d1} steps of {outline at1: {m1}} and {d2} of {outline at2: {m2}}"
+  # The placed numbers a number must sit next to: one, or both either side.
+  beside: "next to {if pair: both {outline at1: {m1}} and {outline at2: {m2}} | {outline at1: {m1}}}"
+  # The number's own arrow, its line striped: "its column".
+  its: "{outline arrow: its} {stripes line: {shape}}"
+  # Where a run reaches the square: through empty squares, or by a straight
+  # count of steps.
+  reaches: >-
+    {if byRoute: steps to {ring: the ringed square} by {stripes reach: the striped squares}
+    | can reach {ring: the ringed square} ({stripes reach: its area, striped})}
+  # How the missing numbers a pointers step lists stand to the square.
+  pointed: "{if loose: could go | point}"
+steps:
+  # A run of missing numbers, named by the placed numbers at its ends: the
+  # numbers in between follow from them, so naming those too is only noise
+  # (owner, 2026-09-27). Either end may be absent, at an end of the path, and
+  # is then 0.
+  run:
+    ring: square
+    terms: { lo: number, hi: number }
+    marks: { outline: [ends] }
+    wordings:
+      - when: "lo = 0"
+        move: "{outline ends: the run before {hi}}"
+      - when: "hi = 0"
+        move: "{outline ends: the run after {lo}}"
+      - move: "{outline ends: the run between {lo} and {hi}}"
+  # The same, where the run is one number named for itself: "Only 3, between
+  # 2 and 4, …".
+  span:
+    ring: square
+    terms: { lo: number, hi: number }
+    marks: { outline: [ends] }
+    wordings:
+      - when: "lo = 0"
+        move: "{outline ends: before {hi}}"
+      - when: "hi = 0"
+        move: "{outline ends: after {lo}}"
+      - move: "{outline ends: between {lo} and {hi}}"
+  # A number must sit next to its placed neighbors in the sequence (`m1` at
+  # `at1`, and `m2` at `at2` where both are placed: `pair`); `arrow` and
+  # `line` are its arrow's, where that is needed to single the square out.
+  touch:
+    ring: square
+    terms: { n: number, m1: number, m2: number, pair: flag, shape: [row, column, diagonal] }
+    marks: { outline: [at1, at2, arrow], stripes: [line] }
+    move: "it must be {n}"
+    wordings:
+      - when: "|outlineArrow| = 0 and |outlineAt1| = 0"
+        look: "{ring: the ringed square} is the last empty one"
+      - when: "|outlineArrow| = 0"
+        look: "{n} must sit {beside}, and {ring: the ringed square} is the only empty one that does"
+      - when: "|outlineAt1| = 0"
+        look: "{n} must be on {its}, and {ring: the ringed square} is its only empty one"
+      - look: "{n} must sit {beside}, on {its}. Only {ring: this square} does"
+  # A number must be within reach of each placed number either side, `d1`
+  # and `d2` places away (the second where both are placed).
+  reach:
+    ring: square
+    terms:
+      n: number
+      m1: number
+      d1: number
+      m2: number
+      d2: number
+      shape: [row, column, diagonal]
+    marks: { outline: [at1, at2, arrow], stripes: [line] }
+    move: "it must be {n}"
+    wordings:
+      - when: "|outlineArrow| = 0 and |outlineAt2| = 0"
+        look: "{n} must be {near1}, and only {ring: this empty square} is"
+      - when: "|outlineArrow| = 0 and d1 > 1 and d2 > 1"
+        look: "{n} must be {nearFar}, and only {ring: this empty square} is"
+      - when: "|outlineArrow| = 0"
+        look: "{n} must be {near1} and {near2}, and only {ring: this empty square} is"
+      - when: "|outlineAt2| = 0"
+        look: "{n} must be {near1}, on {its}. Only {ring: this square} is"
+      - when: "d1 > 1 and d2 > 1"
+        look: "{n} must be {nearFar}, on {its}. Only {ring: this square} is"
+      - look: "{n} must be {near1} and {near2}, on {its}. Only {ring: this square} is"
+  # The path can reach the square from one neighbor only (`open`), so it ends
+  # there; `other` is the path's other end, and `why` it cannot be here: 0
+  # placed, 1 out of reach (`last` where that is the path's last number), 2
+  # its arrow pointing elsewhere.
+  deadEnd:
+    ring: square
+    terms: { n: number, other: number, why: number, last: flag }
+    marks: { outline: [open] }
+    look: "Only {outline open: the outlined square} leads into {ring: the ringed one}"
+    follows: "the path must end on it"
+    wordings:
+      - when: "why = 0"
+        move: "with {other} placed, it must be {n}"
+      - when: "why = 1"
+        move: "with the path's {if last: last | first} number out of reach, it must be {n}"
+        long: &deadEndLong >-
+          it gives two reasons, each needed: the dead end makes the square an
+          end of the path, and the other end ruled out says which end
+      - move: "with {other}'s arrow pointing elsewhere, it must be {n}"
+        long: *deadEndLong
+  # Why no other run fills a square: none comes within two steps of it, none
+  # can reach it (several come close, too many to name at a glance), the one
+  # that comes close is too far, or it is one number that must touch both
+  # its ends and misses `need`.
+  noneClose:
+    ring: square
+    move: "no other run comes close to {ring: this square}"
+  noneReach:
+    ring: square
+    move: "no other run can reach {ring: this square}"
+  runFar:
+    ring: square
+    terms: { run: { clause: [run] } }
+    move: "{run} is too far from {ring: this square}"
+  oneMisses:
+    ring: square
+    terms: { run: { clause: [run] }, need: values }
+    move: "{run} can't fill {ring: this square}, which doesn't touch {either need}"
+  # No other run can fill the square (`others`), and the step counts to the
+  # run's own ends rule out the rest of it: none (`n` is its run's only
+  # number), one (`d1` steps from `m1`, ruling out the numbers to `side`), or
+  # both.
+  fill:
+    ring: square
+    terms:
+      n: number
+      others: { clause: [noneClose, noneReach, runFar, oneMisses] }
+      counts: number
+      m1: number
+      d1: number
+      m2: number
+      d2: number
+      side: [lower, higher]
+    marks: { outline: [c1, c2] }
+    move: "it must be {n}"
+    wordings:
+      - when: "counts = 0"
+        look: "{others}"
+      - when: "counts = 1"
+        look: "{others}, and {d1} steps from {outline c1: {m1}} leaves nothing {side}"
+      - look: >-
+          {others}, and {d1} steps from {outline c1: {m1}} and {d2} from {outline c2: {m2}}
+          leave no other number
+  # Of all the runs, only `run` reaches the square (its reach striped), and
+  # of its numbers only `n` does; `byRoute` where reach is counted through
+  # empty squares.
+  onlyRun:
+    ring: square
+    terms: { n: number, run: { clause: [run] }, byRoute: flag }
+    marks: { stripes: [reach] }
+    look: "Only {run} {reaches}, and {fit: of its numbers only {n} can | only its {n} can}"
+    move: "it must be {n}"
+  # The same, where `n` is its run's only number.
+  onlyOne:
+    ring: square
+    terms: { n: number, span: { clause: [span] }, byRoute: flag }
+    marks: { stripes: [reach] }
+    look: "Only {n}, {span}, {reaches}"
+    move: "it must be {n}"
+  # The run must step through the outlined squares, one square per number,
+  # and `n` has only this square on any such route.
+  route:
+    ring: square
+    terms: { n: number, run: { clause: [run] } }
+    marks: { outline: [through] }
+    look: "{run} must step through {outline through: the outlined squares}"
+    move: "{n} can only go in {ring: the ringed square}"
+  # What a number must be near, in Edges mode: `d` steps of each of
+  # `targets`, a placed number or the line of a missing one.
+  near:
+    ring: square
+    terms: { d: number, targets: { clauses: [nearPlaced, nearLine] } }
+    move: "{d: a step | {d} steps} of {targets}"
+  nearPlaced:
+    ring: square
+    terms: { m: number }
+    marks: { outline: [at] }
+    move: "{outline at: {m}}"
+  nearLine:
+    ring: square
+    terms: { m: number, shape: [row, column, diagonal] }
+    marks: { outline: [arrow], stripes: [line] }
+    move: "{outline arrow: {m}'s} {stripes line: {shape}}"
+  # Edges: `n` is on its arrow's line (outlined; none where it has no arrow)
+  # and within reach of each of `near`, and only this square is.
+  lines:
+    ring: square
+    terms: { n: number, shape: [row, column, diagonal], near: { clauses: [near] } }
+    marks: { outline: [arrow] }
+    move: "it must be {n}"
+    wordings:
+      - when: "|outlineArrow| = 0"
+        look: "{n} has no arrow, but must be within {near}. Only {ring: this square} is"
+      - look: "{n} must be on {outline arrow: its {shape}}, within {near}. Only {ring: this square} is"
+  # A missing number pointing at the square, by its outlined arrow, or one
+  # with no arrow, which could go anywhere.
+  pointer:
+    ring: square
+    terms: { m: number }
+    marks: { outline: [arrow] }
+    move: "{outline arrow: {m}}"
+  loose:
+    ring: square
+    terms: { m: number }
+    move: "{m} (no arrow)"
+  # A missing number named plainly, where the sentence named its arrow
+  # before.
+  named:
+    ring: square
+    terms: { m: number }
+    move: "{m}"
+  # Why a rival is ruled out: too far from what it must be near. The first
+  # of a list says it whole, the others leave it implied.
+  tooFar:
+    ring: square
+    terms: { who: { clause: [named, pointer, loose] }, to: { clause: [nearPlaced, nearLine] } }
+    move: "{who} is too far from {to}"
+  alsoFar:
+    ring: square
+    terms: { who: { clause: [named, pointer, loose] }, to: { clause: [nearPlaced, nearLine] } }
+    move: "{who} from {to}"
+  # Edges: of the missing numbers, only `n` and the rivals can stand here
+  # (their arrows point here, or they have none: `loose`), and each rival is
+  # too far from what it must be near. `form` is how much the sentence can
+  # name at a glance: 0 every number and each rival's reason; 1 each rival
+  # with its reason, the number left to the conclusion; 2 every number, the
+  # reasons drawn (`lines` and `placed`) and pointed at together.
+  pointers:
+    ring: square
+    terms:
+      n: number
+      rivals: number
+      form: number
+      loose: flag
+      all: { clauses: [pointer, loose] }
+      why: { clauses: [tooFar, alsoFar] }
+    marks: { outline: [own, placed], stripes: [lines] }
+    move: "it must be {n}"
+    wordings:
+      - when: "rivals = 0 and |outlineOwn| > 0"
+        look: "Of the missing numbers, only {outline own: {n}'s arrow} points {ring: here (ringed)}"
+      - when: "rivals = 0"
+        look: "No missing number's arrow points {ring: here (ringed)}, and only {n} has none"
+      - when: "form = 0"
+        look: "Of the missing numbers, only {all} {pointed} {ring: here (ringed)}. {why}"
+      - when: "form = 1 and |outlineOwn| > 0"
+        look: "Of the missing numbers {if loose: that could go | pointing} {ring: here (ringed)}, {why}"
+        move: "it must be {outline own: {n}}"
+      - when: "form = 1"
+        look: "Of the missing numbers {if loose: that could go | pointing} {ring: here (ringed)}, {why}"
+      # "All but one": the conclusion names the number left, so saying it
+      # here too would name it twice.
+      - when: "|outlinePlaced| = 0"
+        look: >-
+          Of the missing numbers, only {all} {pointed} {ring: here (ringed)},
+          and {stripes lines: the striped lines} leave only one
+        long: >-
+          it names every missing number that could stand on the square, so the
+          player can check each is ruled out; where three or more rivals point
+          there, no form that names them all fits
+      - look: >-
+          Of the missing numbers, only {all} {pointed} {ring: here (ringed)},
+          and {stripes lines: the striped lines} and {outline placed: outlined numbers} leave only one
+        long: >-
+          it names every missing number that could stand on the square, so the
+          player can check each is ruled out; where three or more rivals point
+          there, no form that names them all fits
+  # The whole run has one route, drawn as a line: through the empty squares
+  # at all, or through every striped square no other run can reach
+  # (`must`). In Edges mode, `arrows` are the run's numbers' arrows where
+  # they are what leave only that route; with `must`, the hint drops them
+  # where the sentence would not fit at a glance.
+  wholeRun:
+    ring: path
+    terms: { run: { clause: [run] } }
+    marks: { outline: [arrows], stripes: [must] }
+    wordings:
+      - when: "|stripesMust| = 0 and |outlineArrows| > 0"
+        look: "With each number on {outline arrows: its arrow's} line, {run} has only one route"
+        move: "it must take {ring: the drawn route}"
+      - when: "|stripesMust| = 0"
+        look: "{run} has only one route through the empty squares"
+        move: "it must go along {ring: the drawn route}"
+      - when: "|outlineArrows| > 0"
+        look: "No other run reaches {stripes must: the striped squares}"
+        move: "{run} must take them, on {ring: the drawn route} {outline arrows: its arrows} allow"
+      - look: "No other run reaches {stripes must: the striped squares}"
+        move: "{run} must take them all, along {ring: the drawn route}"
+  # Only one route for the run leaves `other`, the run beside it, a way
+  # through what is left.
+  roomRun:
+    ring: path
+    terms: { run: { clause: [run] }, other: { clause: [run] } }
+    look: "Only one route for {run} lets {other} through"
+    move: "it must take {ring: the drawn route}"
 help:
   rules: |-
     Place each number once, so they form a path from 1 to the highest, each in a square neighboring the one before. Some are given. Which squares are neighbors depends on the game mode:
