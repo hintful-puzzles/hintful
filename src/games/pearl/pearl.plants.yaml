@@ -43,11 +43,6 @@ techniques:
       c) where runs(k, f), F = {x in edges(k) where not known(x)} where |F| > 0,
       W = {x in F where turnFits(k, f, x, 1)}, N = {x in F where turnFits(k, f,
       x, 2)} where (exists x in F: x not in W or x not in N)
-  # The lines read as closed while one still has a loose end.
-  closed:
-    for: >-
-      L = {e in edges where value(e) = 1}, g = first(L) where g != none and
-      (exists e in edges: not known(e)), G = through(end1(g), L)
   # Every square read as left out of the loop a way through would close.
   earlyThrough:
     for: >-

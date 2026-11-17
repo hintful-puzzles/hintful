@@ -1,0 +1,8 @@
+ok  loopy square 2x2 closed                         3  sound    (want sound   )     1 queries    0.2s
+ok  loopy square 2x2 closed (planted)               3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  loopy triangular 2x1 closed                         3  sound    (want sound   )     1 queries    0.1s
+ok  loopy honeycomb 2x1 closed                         3  sound    (want sound   )     1 queries    0.1s
+ok  src/games/loopy/loopy.description.yaml#closed: recorded sound, proved whole on all 3 boards
+ok  pearl square 2x2 closed                         3  sound    (want sound   )     1 queries    0.1s
+ok  pearl square 2x2 closed (planted)               3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  src/games/pearl/pearl.description.yaml#closed: recorded sound, proved whole on all 1 boards

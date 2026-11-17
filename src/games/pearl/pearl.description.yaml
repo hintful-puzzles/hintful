@@ -425,17 +425,12 @@ techniques:
   # The lines are closed, each square with one line or none: they are the
   # loop, and every other edge is empty. One that leaves a line or a pearl
   # off it is inconsistent.
-  - id: closed
+  - kind: loop.closed
+    as: closed
     tier: Easy
-    for: >-
-      L = {e in edges where value(e) = 1}, g = first(L)
-      where g != none and (exists e in edges: not known(e))
-      and (forall c in cells: drawn(c) != 1),
-      G = through(end1(g), L)
-    conclude: >-
-      (forall x in L: end1(x) in G)
-      and (forall c in cells where clue(pearl, c) != none: c in G)
-      and (forall e in edges where not known(e): place(e, 2))
+    with:
+      lines: drawn
+      more: " and (forall c in cells where clue(pearl, c) != none: c in G)"
     says:
       terms: {}
       marks: {}

@@ -618,6 +618,25 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       for: "L = {e in edges where value(e) = 1}, e in edges where not known(e), G = through(end1(e), L) where end2(e) in G",
     },
   },
+  // Lines with no loose end, while an edge is still open, are the loop: every
+  // other edge is empty. `lines(c)` counts the lines at a point (the game's
+  // `dotLines`, `drawn`). Lines in more than one group, or leaving out what
+  // must be on the loop (`more`: " and …" reading the loop's points `G`,
+  // Pearl's pearls), make the marks inconsistent. A line is 1 and an empty
+  // edge 2. It carries no words: the loop closing is the end of a walk.
+  "loop.closed": {
+    params: ["lines"],
+    defaults: { more: "" },
+    technique: {
+      for: "L = {e in edges where value(e) = 1}, g = first(L) where g != none and (exists e in edges: not known(e)) and (forall c in cells: $lines(c) != 1), G = through(end1(g), L)",
+      conclude:
+        "(forall x in L: end1(x) in G)$more and (forall e in edges where not known(e): place(e, 2))",
+    },
+    // Lines with a loose end read as closed.
+    plant: {
+      for: "L = {e in edges where value(e) = 1}, g = first(L) where g != none and (exists e in edges: not known(e)), G = through(end1(g), L)",
+    },
+  },
   // The region kinds read a board divided by walls on its edges, a wall
   // `wall` and none `gap`, whose regions are the groups the game's `joined`
   // (its edges known to be no wall) runs `through`.

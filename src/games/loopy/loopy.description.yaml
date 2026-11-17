@@ -338,15 +338,12 @@ techniques:
       line: outline edge
       off: "|outlineFace| > 0"
       offWords: "leaves {outline face: the outlined clue | the outlined clues} unmet"
-  # The lines are one closed loop: every other edge is empty.
-  - id: closed
+  # The lines are closed: they are the loop, and every other edge is empty.
+  # Lines closed into more than one loop are inconsistent.
+  - kind: loop.closed
+    as: closed
     tier: Easy
-    for: >-
-      L = {e in edges where value(e) = 1}, g = first(L)
-      where g != none and (exists e in edges: not known(e))
-      and (forall c in cells: dotLines(c) != 1)
-      and (forall x in L: end1(x) in through(end1(g), L))
-    conclude: "forall e in edges where not known(e): place(e, 2)"
+    with: { lines: dotLines }
   # An open edge related to a settled one: it is the same, or the other
   # way. Easy, as reading a pair note is: only Hard techniques relate two
   # edges, so it changes no board's tier, and a hint uses a pair the player

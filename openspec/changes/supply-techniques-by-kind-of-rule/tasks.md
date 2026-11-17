@@ -657,9 +657,23 @@ boundaries are judgment, and the counts carry that.
     characters, and dropping "around it" failed Range's test that every step
     ties its outline to the ring, so the group goes unnamed. Seen in the app
     in both, the ring and outlines where the sentence says.
+  - [x] (2026-11-17) LOOP's closed form, `loop.closed`: Loopy and Pearl
+    `closed`, one formula but for how a point's lines are counted (`lines`)
+    and Pearl's pearls on the loop (`more`). Pearl's form taken, connection
+    in the conclusion, so Loopy now reads lines closed into several loops as
+    a contradiction where it fired nothing. Pearl's module is byte-identical;
+    Loopy re-checked sound, the kind's plant (a loose end read as closed)
+    caught in both, both plants files shed theirs. Deal-compare, Loopy at 3
+    seeds a preset: same boards and verdicts, 1.01×. No words (neither game
+    speaks it); Loopy's and Pearl's tests and `test:hint-sweeps` pass
+    unchanged.
   - [ ] Next: the CNT techniques not placed yet (the item above says why
-    each waits), then LOOP's remaining formulas (Tracks `closeLoop`, Loopy/Pearl `closed`, Slant and
-    Rome `loop`).
+    each waits), then LOOP's remaining formulas: Tracks `closeLoop` (a
+    track never closes, so `loop.early` with `elsewhere: "true"`; it needs a
+    filter on the edge's ends, Tracks' `on(…)` and `not shut(…)`, and a
+    wording for no `elsewhere`, "would close the outlined track into a
+    loop", since "leaves other lines out" is false there), Slant and Rome `loop` (each its own notion of a
+    loop: a kind only if one formula fits both).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

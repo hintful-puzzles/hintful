@@ -1104,6 +1104,11 @@ game whose hint is its own renders the compiled step (Tents' `hint-text.ts`).
 outlined line into a loop that leaves other lines out"); a game gives its marks,
 which mark draws the line (`line`), and what else the loop may miss (`off`,
 `offWords`: Pearl's pearl, Loopy's unmet clues).
+`loop.closed` is the loop finished: lines with no loose end, while an edge is
+open, are the loop, and every other edge is empty; lines in more than one
+group are a contradiction. The game names how it counts a point's lines
+(`lines`: Loopy's `dotLines`, Pearl's `drawn`) and, in `more`, what else must
+lie on the loop `G` (Pearl's pearls). It carries no words.
 `rel.support` carries its look, "{link} joins {cell} to its neighbor with
 {none} {fits} {struckOr}", and the walk says the strike: Adjacent gives its bar
 (`{if bar: …}` inside the words), Subsets its horseshoe and the tally's sets.

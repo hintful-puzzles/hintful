@@ -23,12 +23,6 @@ techniques:
     for: >-
       f in faces where clue(number, f) != none and need(f) = faceOpen(f) - 1 and
       faceOpen(f) > 2, a in angles(f) where bare(a)
-  # One path of lines, not yet closed, read as the loop.
-  closed:
-    for: >-
-      L = {e in edges where value(e) = 1}, g = first(L) where g != none and
-      (exists e in edges: not known(e)) and (forall x in L: end1(x) in
-      through(end1(g), L))
   # A pair read the other way round.
   related:
     conclude: >-
