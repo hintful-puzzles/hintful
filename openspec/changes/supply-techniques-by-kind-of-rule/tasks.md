@@ -142,6 +142,24 @@ boundaries are judgment, and the counts carry that.
   remaining forms of each kind added until its techniques are placed.
   Wording and a step's order may move; each game moved is deal-compared and
   walked.
+- [ ] 2.10 Plan step (1), a kind carries its sentence, starting with
+  `one.cell`. Found 2026-11-17: the sentence exists. `latin.description.yaml`
+  `steps.single` ("Every other {valueNoun} has been ruled out in {ring}" /
+  "it can only be {d}") and `regionsFull` are the candidate walk's words, and
+  Seismic's hints already say them (its snapshot `single`). Map words the
+  same deduction in its own `hint.ts` (`case "lone"`: three variants,
+  `touchesTheRest`/`lastDot`/`deadDots`, shaped by an owner playtest
+  2026-09-25); Rome and Subsets through their `hint-text.ts`. So the work is:
+  find who consumes `steps.single` (`git grep -l valueNoun -- 'src/**/*.ts'`),
+  make `one.cell` place those steps' words for any game (nouns from
+  `kindWords`), and move Map, Rome and Subsets onto them, keeping what Map's
+  variants say that the shared sentence does not (the neighbors that ruled
+  the rest out) as a variant of the shared step, not as Map's own. Run the
+  app on each game moved (`docs/testing.md`), the hint wording included.
+- [ ] 2.11 Then `peer.placed`, `rel.support`, `loop.early`, `fit.flip` the
+  same way, each kind's sentence written once from the games' best wording.
+- [ ] 2.12 Plan step (2), the count contract: `need(S)`/`open(S)` over a set
+  for Loopy, Tracks, Boats, then `count.met`/`count.exact` placed there.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried
