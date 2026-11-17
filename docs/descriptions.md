@@ -1052,9 +1052,12 @@ A walk that speaks a kind's step itself (Subsets') renders the compiled
 `{fit: …}` there is never tried, for only `statedSentence` sees the whole
 sentence, so keep such words short.
 `fit.flip` is the Check of a
-two-valued square (`holds`, `scope`): its plant is the coarse one, a value that
-keeps `holds` struck, so a game that wants the off-by-one plant of its
-boundary states the technique.
+two-valued square (`holds`, `scope`). How the tried value breaks the rule is
+the game's to say, so the game's `says:` holds the look; the kind lays it over
+its frame (`saysBeneath`): legs, and the move "{flipCell} must be {flipped}"
+with the leg's `flipTerms`, which a game names once in `kindWords` (Sticks:
+`hor`, `own`). Its plant is the coarse one, a value that keeps `holds`
+struck; Sticks plants each technique's boundary in its plants file instead.
 
 ## What a placement rules out
 

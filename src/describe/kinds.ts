@@ -35,6 +35,11 @@ export interface Kind {
       wordings?: readonly { when?: string; look: string }[];
     };
   };
+  /** What every game's `says` beside the placement shares, which the game's
+   * own words are laid over (an object merged key by key, anything else
+   * replaced): for a kind whose sentence is the game's but whose frame is
+   * the kind's. */
+  saysBeneath?: Record<string, unknown>;
   /** The defect planted in it, the same under any game's nouns. */
   plant: TechniquePlant;
 }
@@ -163,13 +168,20 @@ export const KINDS: Readonly<Record<string, Kind>> = {
   // A square of two values where one would break a rule at once holds the
   // other. `holds` is what must stay true of the group, and `scope` the
   // squares that could break it. A position that breaks it makes the marks
-  // inconsistent.
+  // inconsistent. Its sentence says, square by square, how the tried value
+  // `a` breaks the rule, which is the game's; the kind says the move, that
+  // the square `flipCell` must be the other value (`flipped`), reading the
+  // game's `flipTerms` of the leg.
   "fit.flip": {
-    params: ["group", "holds", "scope"],
+    params: ["group", "holds", "scope", "flipTerms", "flipCell", "flipped"],
     technique: {
       for: "$group",
       conclude:
         "($holds) and (forall c in $scope where blank(c), a in cand(c) where (with place(c, a): not ($holds)): place(c, 3 - a))",
+    },
+    saysBeneath: {
+      shown: "legs",
+      fact: { terms: "$flipTerms", move: "$flipCell must be $flipped" },
     },
     plant: {
       conclude:
@@ -192,6 +204,18 @@ function fill(v: unknown, args: Readonly<Record<string, unknown>>): unknown {
   if (Array.isArray(v)) return v.map((x) => fill(x, args));
   if (v === null || typeof v !== "object") return v;
   return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fill(x, args)]));
+}
+
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  v !== null && typeof v === "object" && !Array.isArray(v);
+
+/** `top` laid over `under`: objects merged key by key, anything else `top`'s. */
+function laidOver(under: unknown, top: unknown): unknown {
+  if (!isRecord(under) || !isRecord(top)) return top;
+  const out: Record<string, unknown> = { ...under };
+  for (const [k, v] of Object.entries(top))
+    out[k] = k in under ? laidOver(under[k], v) : v;
+  return out;
 }
 
 /** The technique a placed kind stands for: `id`, its placing, the statement
@@ -221,11 +245,16 @@ export function expandKind(
         `${missing.length > 0 ? `; missing ${missing.join(", ")}` : ""}` +
         `${extra.length > 0 ? `; no ${extra.join(", ")}` : ""}`,
     );
-  const { kind: _k, as, with: _w, ...placing } = placed;
+  const { kind: _k, as, with: _w, says: gameSays, ...placing } = placed;
   const t = fill(kind.technique, args) as Kind["technique"];
+  const says =
+    kind.saysBeneath === undefined
+      ? gameSays
+      : laidOver(fill(kind.saysBeneath, args), gameSays ?? {});
   return {
     id: as,
     ...placing,
+    ...(says === undefined ? {} : { says }),
     ...t,
     ...(t.says === undefined
       ? {}

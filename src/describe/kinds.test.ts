@@ -75,18 +75,50 @@ describe("a kind of rule expands to the technique it stands for", () => {
     ).not.toHaveProperty("says");
   });
 
+  /** What a game names once for every flip-check it places. */
+  const FLIP_WORDS = {
+    flipTerms: { hor: "a = 2", own: "true" },
+    flipCell: "{ring}",
+    flipped: "{if hor: across | down}",
+  };
+
   it("wraps a `holds` so that an `or` in it binds inside the kind", () => {
     const t = expandKind(
       {
         kind: "fit.flip",
         as: "f",
         tier: "Easy",
-        with: { group: "k in cells", holds: "a or b", scope: "cells" },
+        with: { group: "k in cells", holds: "a or b", scope: "cells", ...FLIP_WORDS },
       },
       "x",
     );
     expect(t["conclude"]).toMatch(/^\(a or b\) and /);
     expect(t["conclude"]).toContain("not (a or b)");
+  });
+
+  it("lays a game's says over the kind's frame, the game's words winning", () => {
+    const t = expandKind(
+      {
+        kind: "fit.flip",
+        as: "f",
+        tier: "Easy",
+        with: { group: "k in cells", holds: "h", scope: "cells", ...FLIP_WORDS },
+        says: {
+          terms: { clue: "k" },
+          fact: { terms: { size: "1", hor: "a = 1" }, look: "it breaks" },
+        },
+      },
+      "x",
+    );
+    expect(t["says"]).toEqual({
+      shown: "legs",
+      terms: { clue: "k" },
+      fact: {
+        terms: { hor: "a = 1", own: "true", size: "1" },
+        move: "{ring} must be {if hor: across | down}",
+        look: "it breaks",
+      },
+    });
   });
 
   it("is read by the loader where a description places one", () => {

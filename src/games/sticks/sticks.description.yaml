@@ -119,6 +119,17 @@ deal:
   joins: a number on each block, or as many hidden as the board stays at its tier
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
+# Every step tries a line one way in a square (`hor`: across) and finds it
+# breaks a rule, so the line runs the other way.
+kindWords:
+  flipTerms: { hor: "a = 2", own: "numbered(c)" }
+  flipCell: "{here}"
+  flipped: "{if hor: horizontal | vertical}"
+phrases:
+  # The line a step tries, and the square it tries it in, named by its number
+  # where it has one.
+  tried: "a {if hor: vertical | horizontal} line"
+  here: "{ring: {if own: this {each} | this square}}"
 techniques:
   # Each technique supposes a line in a square and finds a number it would
   # break at once, so the square's line runs the other way.
@@ -135,22 +146,19 @@ techniques:
     # The hint names the block and outlines the lines that would run into it
     # with the square's supposed line among them.
     says:
-      shown: legs
       terms: { clue: b, value: n }
       marks: { reads: "{b}" }
       fact:
-        terms: { hor: "a = 2", own: "numbered(c)" }
         marks: { outline: "with place(c, a): {p in adj4(b) where meets(p, b)}" }
-        move: "{ring: {if own: this {each} | this square}} must be {if hor: horizontal | vertical}"
         # A black 0 has no line yet for a later leg to name, and nothing
         # runs into it yet, so "another" would be false exactly where the rule
         # is starkest (docs/hints.md § "Sanity-read at the degenerate extremes").
         wordings:
           - when: "n = 0"
-            look: "{outline clue: the {value} block} takes no lines, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would run into it"
-            again: "a {if hor: vertical | horizontal} line would run into {outline clue: the {value} block}"
-          - look: "{outline clue: the {value} block} has {outline: its {value: 1 line | {value} lines}}, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would add another"
-            again: "{outline clue: the {value} block} already has {outline: its {value: 1 line | {value} lines}}, and a {if hor: vertical | horizontal} line would add another"
+            look: "{outline clue: the {value} block} takes no lines, and {tried} on {here} would run into it"
+            again: "{tried} would run into {outline clue: the {value} block}"
+          - look: "{outline clue: the {value} block} has {outline: its {value: 1 line | {value} lines}}, and {tried} on {here} would add another"
+            again: "{outline clue: the {value} block} already has {outline: its {value: 1 line | {value} lines}}, and {tried} would add another"
   # A line would carry two numbers. Before a line too long, which such a
   # line usually is too, since joining the numbers is the rule it breaks.
   - kind: fit.flip
@@ -162,29 +170,25 @@ techniques:
       scope: "cells(row(k)) + cells(col(k))"
     # The hint names the numbers the supposed line would join, and outlines it.
     says:
-      shown: legs
       terms: { clue: k }
       marks: { reads: "{k}" }
       fact:
         terms:
-          hor: "a = 2"
-          own: "numbered(c)"
           clues: "with place(c, a): joined(k)"
           run: "with place(c, a): stick(k)"
           n: "with place(c, a): |joined(k)|"
           first: "with place(c, a): clue(length, nth(joined(k), 0))"
           second: "with place(c, a): clue(length, nth(joined(k), 1))"
         marks: { outline: "with place(c, a): stick(k)" }
-        move: "{ring: {if own: this {each} | this square}} must be {if hor: horizontal | vertical}"
         # One number per line is the rule, and the help teaches it
         # (docs/hints.md § "Rules belong in the help").
-        again: "a {if hor: vertical | horizontal} line would join {outline clues: the same numbers} into one line, {outline run}"
+        again: "{tried} would join {outline clues: the same numbers} into one line, {outline run}"
         wordings:
           - when: "with place(c, a): |joined(k)| != 2"
-            look: "a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would put {outline clues: {n} numbers} on one line, {outline run}"
+            look: "{tried} on {here} would put {outline clues: {n} numbers} on one line, {outline run}"
           - when: "with place(c, a): clue(length, nth(joined(k), 0)) = clue(length, nth(joined(k), 1))"
-            look: "a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would join {outline clues: two {first}s} along {outline run}"
-          - look: "a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would join {outline clues: the {first} and the {second}} along {outline run}"
+            look: "{tried} on {here} would join {outline clues: two {first}s} along {outline run}"
+          - look: "{tried} on {here} would join {outline clues: the {first} and the {second}} along {outline run}"
   # A number's line would run longer than it.
   - kind: fit.flip
     as: tooLong
@@ -195,19 +199,15 @@ techniques:
       scope: "cells(row(k)) + cells(col(k))"
     # The hint names the number and outlines the line it would run to.
     says:
-      shown: legs
       terms: { clue: k, value: v }
       marks: { reads: "{k}" }
       fact:
         terms:
-          hor: "a = 2"
-          own: "numbered(c)"
           size: "with place(c, a): |stick(k)|"
           run: "with place(c, a): stick(k)"
         marks: { outline: "with place(c, a): stick(k)" }
-        look: "a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would run {outline clue: the {value}}'s line to {outline run: {size} squares}, too long for it"
-        move: "{ring: {if own: this {each} | this square}} must be {if hor: horizontal | vertical}"
-        again: "a {if hor: vertical | horizontal} line would run {outline clue: the {value}}'s line to {outline run: {size} squares}"
+        look: "{tried} on {here} would run {outline clue: the {value}}'s line to {outline run: {size} squares}, too long for it"
+        again: "{tried} would run {outline clue: the {value}}'s line to {outline run: {size} squares}"
   # A block would be left fewer sides a line could run into it from than its
   # number.
   - kind: fit.flip
@@ -220,21 +220,18 @@ techniques:
     # The hint names the block and outlines the sides a line could still reach
     # it from.
     says:
-      shown: legs
       terms: { clue: b, value: n }
       marks:
         reads: "{b}"
         outline: "{p in adj4(b) where clue(block, p) < 0 and (not known(p) or meets(p, b))}"
       fact:
-        terms: { hor: "a = 2", own: "numbered(c)" }
-        move: "{ring: {if own: this {each} | this square}} must be {if hor: horizontal | vertical}"
-        again: "a {if hor: vertical | horizontal} line would close a side {outline clue: the {value} block} needs, like {outline: the outlined one | the outlined ones}"
+        again: "{tried} would close a side {outline clue: the {value} block} needs, like {outline: the outlined one | the outlined ones}"
         wordings:
           - when: "n = 1"
-            look: "{outline clue: the {value} block} has one open side, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would close it"
+            look: "{outline clue: the {value} block} has one open side, and {tried} on {here} would close it"
           - when: "n = 2"
-            look: "{outline clue: the {value} block} needs {outline: both outlined sides}, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} shuts one"
-          - look: "{outline clue: the {value} block} needs {outline: {value} outlined sides}, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} shuts one"
+            look: "{outline clue: the {value} block} needs {outline: both outlined sides}, and {tried} on {here} shuts one"
+          - look: "{outline clue: the {value} block} needs {outline: {value} outlined sides}, and {tried} on {here} shuts one"
   # A number's line would be left no room to reach its length.
   - kind: fit.flip
     as: unreachable
@@ -246,20 +243,16 @@ techniques:
     # The hint names the number and outlines the squares its line could still
     # reach, with the square's supposed line.
     says:
-      shown: legs
       terms: { clue: k, value: v }
       marks: { reads: "{k}" }
       fact:
         terms:
-          hor: "a = 2"
-          own: "numbered(c)"
           max: "with place(c, a): reach(k)"
         # Leads with the clue, not with the ruled-out move: the signal a player
         # has to learn to look for here is a number running out of room, which
         # they will not spot from the square being acted on.
-        look: "{outline clue: the {value}} needs more room, and a {if hor: vertical | horizontal} line on {ring: {if own: this {each} | this square}} would leave it {outline: {max: 1 square | {max} squares}}"
-        move: "{ring: {if own: this {each} | this square}} must be {if hor: horizontal | vertical}"
-        again: "a {if hor: vertical | horizontal} line would leave {outline clue: the {value}} only {outline: {max: 1 square | {max} squares}}"
+        look: "{outline clue: the {value}} needs more room, and {tried} on {here} would leave it {outline: {max: 1 square | {max} squares}}"
+        again: "{tried} would leave {outline clue: the {value}} only {outline: {max: 1 square | {max} squares}}"
         marks:
           outline: >-
             with place(c, a):

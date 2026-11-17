@@ -166,7 +166,7 @@ boundaries are judgment, and the counts carry that.
   the kind's sentence is the library step the walks share, not a `says` on
   the kind. Before writing a kind's sentence, find what speaks its firings
   (`describedFiringHint` reads `says`; a walk names a step).
-- [ ] 2.11 Then `peer.placed`, `rel.support`, `loop.early`, `fit.flip` the
+- [x] 2.11 Then `peer.placed`, `rel.support`, `loop.early`, `fit.flip` the
   same way, each kind's sentence written once from the games' best wording.
   - [x] `peer.placed` (2026-11-17): its sentence is the library's `placed`
     ("The 2 just placed can't repeat in its {regions}", `placedRulesOut`),
@@ -208,12 +208,23 @@ boundaries are judgment, and the counts carry that.
     whole sentence), so the no-bar form was shortened to stay under the
     limit; recorded in `docs/descriptions.md`. No verdict moved (the
     formulas are the same).
-  - [ ] `fit.flip` (Sticks only): its five `says` are the rule's own words.
-    Find what a family sentence could share ("Suppose ...: it would break
-    ...") and whether Sticks' boundary plants should come back as
-    sharpened plants (now allowed).
+  - [x] `fit.flip` (2026-11-17): what the five share is the frame, not the
+    look. The kind lays the game's `says` over `saysBeneath` (legs, and the
+    move "{flipCell} must be {flipped}" with `flipTerms`), which Sticks names
+    once in `kindWords`; each technique keeps only how the tried line breaks
+    its rule, the part a family sentence cannot say for it ("Suppose …: it
+    would break …" would drop the clue each look leads with, which is the
+    point of Sticks' `unreachable` wording). Sticks' repeated clause pieces
+    became phrases (`tried`, `here`). The compiled module is byte-identical
+    to before, so nothing a player sees moved. Sticks' five boundary plants
+    are back as sharpened plants, each caught at order 3.
 - [ ] 2.12 Plan step (2), the count contract: `need(S)`/`open(S)` over a set
   for Loopy, Tracks, Boats, then `count.met`/`count.exact` placed there.
+  Found 2026-11-17: Boats already defines `open(S)` (with `ships(S)` for
+  what is held); Tracks defines `open(c)` as a square's open sides, another
+  meaning under the contract's name, so it is renamed first (with
+  `laid(L)`/`undecided(L)` restated as `need`/`open`); Loopy's
+  `need(f)`/`faceOpen(f)` count over a face, not a set.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried
