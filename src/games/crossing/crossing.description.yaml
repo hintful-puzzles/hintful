@@ -269,9 +269,8 @@ steps:
     marks: { stripes: [run], outline: [fitting] }
     look: "{outline fitting: every outlined number} still fitting {run} puts {either ds} in {ring: this square}"
     move: "note them"
-  # The notes the move strikes, by value (`one` where it is one), and its
-  # words the planner's: a strike is drawn on the notes, which a clause does
-  # not reference.
+  # The notes the move strikes, by value (`one` where it is one); the step
+  # closes on them by itself, its move the engine's strike.
   noteStrike:
     ring: cell
     terms: { way: [across, down], one: flag }

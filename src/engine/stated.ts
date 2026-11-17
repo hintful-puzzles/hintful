@@ -13,6 +13,7 @@
 
 import type { ColorWord } from "./color/color-word.ts";
 import {
+  CELL,
   derived,
   indefinite,
   joinNums,
@@ -24,6 +25,8 @@ import {
   mark,
   NARRATION_LIMIT,
   Narration,
+  NOTE,
+  type Note,
   type Noun,
   phrase,
   type Relation,
@@ -40,6 +43,7 @@ import {
   ringNames,
   STATED_WORDS,
 } from "./stated-clauses.ts";
+import type { Point } from "./types.ts";
 
 /** A step's parts as a description states them. */
 export interface Clauses {
@@ -145,6 +149,12 @@ export interface StatedContext<E, R = E> {
   /** The values a strike step removes, for `{struck}` and `{struckOr}`: the order is the
    * solver's, and each is named once, smallest first. */
   readonly struck?: readonly number[];
+  /** The notes a strike step crosses out, as the player presses them: where
+   * the clauses state no move, the step closes on them ({@link strikeClosing}). */
+  readonly strikes?: readonly Note[];
+  /** The value a note's `n` is, where it is not the value itself (Undead's
+   * monster bits). */
+  noteValue?(n: number): number;
   /** The kinds of region a value may not repeat in, for `{regions}`. */
   readonly regions?: string;
   /** How many parallel lines the step names, for `{tally}`. */
@@ -524,6 +534,47 @@ function fitForms(pieces: readonly Piece[]): number {
   );
 }
 
+/**
+ * A strike step's move where its clauses state none, in the words a firing's
+ * strike closes on (`hint-text.ts`'s `candidateConclusions`): the struck
+ * notes, named by value, "must go". Where they are is said, striped, unless a
+ * reference the sentence already says names their squares and no others; a
+ * later leg adds "too".
+ */
+function strikeClosing<E>(
+  cx: StatedContext<E>,
+  strikes: readonly Note[],
+  said: readonly Narration[],
+): Narration {
+  const struck = mark.as("strike", NOTE, strikes, (els) => {
+    const vs = [...new Set(els.map((e) => cx.noteValue?.(e.n) ?? e.n))]
+      .sort((a, b) => a - b)
+      .map((n) => text(cx.value(n)));
+    // Numerals list bare, as a firing's do ("3 and 5"). A word names a thing
+    // the board also shows placed, so it says which mark it is ("the struck
+    // ghost"), in its plural where struck from several squares.
+    if (vs.every((v) => /^\d+$/.test(v)))
+      return vs.length > 1 ? joinWith(vs) : `the ${vs[0]}`;
+    const many = new Set(els.map((e) => CELL.key(e))).size > 1;
+    return `the struck ${joinWith(many ? vs.map((v) => `${v}s`) : vs)}`;
+  });
+  const cells = [
+    ...new Map(strikes.map((k) => [CELL.key(k), { x: k.x, y: k.y }])).values(),
+  ];
+  const keys = new Set(cells.map((c) => CELL.key(c)));
+  const named = said.some((n) =>
+    n.refs.some((r) => {
+      if (r.kind.name !== CELL.name) return false;
+      const ks = new Set((r.elements as readonly Point[]).map((e) => CELL.key(e)));
+      return ks.size === keys.size && [...ks].every((k) => keys.has(k));
+    }),
+  );
+  const too = cx.later === true ? " too" : "";
+  if (named) return phrase`${struck} must go${too}`;
+  const where = mark.this("stripes", CELL, cells, cx.noun ?? "square");
+  return phrase`${struck} in ${where} must go${too}`;
+}
+
 function statedOnce<E>(
   c: Clauses,
   cx: StatedContext<E>,
@@ -535,7 +586,21 @@ function statedOnce<E>(
     cx,
     !(relation?.kind === "sequence" && relation.at !== "first"),
   );
-  const move = parts.move ?? closing;
+  const againSaid = cx.later === true && again !== undefined;
+  const move =
+    parts.move ??
+    closing ??
+    (cx.strikes === undefined
+      ? null
+      : strikeClosing(
+          cx,
+          cx.strikes,
+          againSaid
+            ? [again]
+            : [parts.aim, parts.look, parts.follows, effect].filter(
+                (n): n is Narration => n !== undefined,
+              ),
+        ));
   // A wording that states only its look leaves the move to the ringed squares
   // and the board (Filling's region that fits exactly into them).
   if (
@@ -549,7 +614,7 @@ function statedOnce<E>(
     return unshaped(phrase`${parts.look}.`, "evident");
   if (move === null)
     throw new Error("stated clause: no move, and no closing from the fact");
-  if (cx.later === true && again !== undefined)
+  if (againSaid)
     return sentence({
       move: later ?? move,
       relation: { kind: "again", basis: again },

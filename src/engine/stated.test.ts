@@ -584,3 +584,94 @@ describe("a step's clauses term", () => {
     expect(s.text).toBe("This square must touch the 4, so it must go.");
   });
 });
+
+describe("a step that strikes notes and states no move", () => {
+  const steps = {
+    ringed: {
+      ring: "cell",
+      clauses: [{ look: "{outline} leaves no room for {struckOr} in {ring}" }],
+      when: [null],
+    },
+    leg: {
+      ring: "cell",
+      clauses: [
+        {
+          look: "{outline: this clue} leaves no room for {struckOr} in {stripes: this {noun}}",
+          again: "{outline: the same clue}",
+        },
+      ],
+      when: [null],
+    },
+    bare: { ring: "cell", clauses: [{ look: "None are left" }], when: [null] },
+  } as const;
+  type Step = {
+    ring: "cell";
+    terms: Record<string, never>;
+    marks: { outline?: readonly Point[]; stripes?: readonly Point[] };
+  };
+  type S = { ringed: Step; leg: Step; bare: Step };
+  const NAMES = ["", "ghost", "vampire"];
+  const digits = stepVoice<S, Point>(steps, { kind: CELL, value: String });
+  const monsters = stepVoice<S, Point>(steps, {
+    kind: CELL,
+    value: (n) => NAMES[n],
+    // A note's `n` is a bit, as Undead's are.
+    noteValue: (bit) => (bit === 1 ? 1 : 2),
+  });
+  const notes = (p: Point, ns: readonly number[]) => ns.map((n) => ({ ...p, n }));
+
+  it("closes on the struck notes by value, a list of numerals bare", () => {
+    const one = digits.sentence("ringed", {
+      ring: [at(5)],
+      marks: { outline: [at(1)] },
+      strikes: notes(at(5), [3]),
+    });
+    expect(one.text).toBe(
+      "The outlined square leaves no room for 3 in this square, so the 3 must go.",
+    );
+    expect([...markKeys(one.refs)]).toContain("strike|note|1,1:3");
+    const two = digits.sentence("ringed", {
+      ring: [at(5)],
+      strikes: notes(at(5), [5, 3]),
+    });
+    expect(two.text).toContain("so 3 and 5 must go.");
+  });
+
+  it("names words as the struck marks, and the values by the voice's noteValue", () => {
+    const s = monsters.sentence("ringed", {
+      ring: [at(5)],
+      strikes: notes(at(5), [1, 4]),
+    });
+    expect(s.text).toContain("no room for ghost or vampire");
+    expect(s.text).toContain("so the struck ghost and vampire must go.");
+  });
+
+  it("says where the notes are when no reference names their squares alone", () => {
+    const s = monsters.sentence("bare", {
+      ring: [at(5)],
+      strikes: [...notes(at(5), [1]), ...notes(at(6), [1])],
+    });
+    expect(s.text).toBe(
+      "None are left, so the struck ghosts in these squares must go.",
+    );
+    expect([...markKeys(s.refs)]).toEqual(
+      expect.arrayContaining(["stripes|cell|1,1", "stripes|cell|2,1"]),
+    );
+  });
+
+  it("does not say where after a reference to their square, and says it with 'too' on a later leg", () => {
+    const said = {
+      ring: [at(5)],
+      // The outline covers the struck square among others, which names it
+      // no more than the board around it does.
+      marks: { outline: [at(1), at(5)], stripes: [at(5)] },
+      strikes: notes(at(5), [1]),
+    };
+    expect(monsters.sentence("leg", said).text).toBe(
+      "This clue leaves no room for ghost in this square, so the struck ghost must go.",
+    );
+    expect(monsters.sentence("leg", { ...said, later: true }).text).toBe(
+      "…and the struck ghost in this square must go too, for the same clue.",
+    );
+  });
+});

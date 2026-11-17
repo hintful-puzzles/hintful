@@ -1402,7 +1402,12 @@ sorts; then `speak.sentence(id, { ring, terms, marks })` says a step,
 `speak.premise(id, …)` the look a strike's conclusion joins, and
 `speak.part(id, "move", …)` a fragment another sentence joins. `later`,
 `struck` and `closing` (the move's words where the step states none) go in the
-same object. Terms and marks are required where the step declares any, so a
+same object. **A step that crosses out notes is given them as `strikes`**, the
+notes as the player presses them, and its `{struck}` values are theirs (the
+voice's `noteValue` reads a note's `n` where it is not the value); stating no
+`move`, it closes on them in a firing's strike words, "the 3 must go", saying
+where they are unless a reference already names their squares alone, and
+"too" on a later leg. Terms and marks are required where the step declares any, so a
 term left out is a type error; a game whose words vary by the board (Salad's
 mode) makes a voice for them. **A term of kind `unit`** is a row, column, block
 or diagonal, said as its name (`{axis}`, `{axis}s`); `StepsById` types it as

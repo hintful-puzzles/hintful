@@ -11,6 +11,7 @@ import {
   type MarkKind,
   MOVE,
   type Narration,
+  type Note,
   type Noun,
   type Relation,
   type Sentence,
@@ -68,6 +69,9 @@ export interface Voice<E> {
   readonly nouns?: Readonly<Record<string, Noun>>;
   /** A value as the board draws it. */
   value(n: number): string | ColorWord;
+  /** The value a note's `n` is, where it is not the value itself (Undead's
+   * monster bits). */
+  noteValue?(n: number): number;
   readonly noun?: Noun;
   readonly alongside?: string;
   readonly valueNoun?: string;
@@ -102,10 +106,22 @@ export type Said<S extends StepType, E> = Given<"terms", S["terms"]> &
       ? { readonly [K in T]: readonly E[] }
       : readonly E[];
     readonly later?: boolean;
-    readonly struck?: readonly number[];
     readonly closing?: Narration;
     readonly relation?: Relation;
-  };
+  } & (
+    | {
+        /** The notes the step crosses out, which it closes on where its
+         * clauses state no move; its `{struck}` values are theirs. */
+        readonly strikes?: readonly Note[];
+        readonly struck?: never;
+      }
+    | {
+        /** The values a strike removes, where the step crosses out no
+         * notes of its own (a premise a firing's strike closes). */
+        readonly struck?: readonly number[];
+        readonly strikes?: never;
+      }
+  );
 
 export interface StepVoice<S extends { readonly [K in keyof S]: StepType }, E> {
   /** The step's sentence: the first wording whose condition holds. */
@@ -186,7 +202,14 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
           : { ringNoun: nouns?.[sort] ?? voice.noun }),
         ring,
         ...(said.later === undefined ? {} : { later: said.later }),
-        ...(said.struck === undefined ? {} : { struck: said.struck }),
+        ...(said.strikes !== undefined
+          ? {
+              strikes: said.strikes,
+              struck: said.strikes.map((k) => voice.noteValue?.(k.n) ?? k.n),
+            }
+          : said.struck !== undefined
+            ? { struck: said.struck }
+            : {}),
         terms: terms as Readonly<Record<string, unknown>>,
         marks: (bySort === null
           ? marks

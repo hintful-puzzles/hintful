@@ -255,3 +255,9 @@ steps:
       - look: >-
           only {outline sets: the outlined set | the outlined sets} {if plural: fit | fits} {thisCell}, and
           {if known: {if plural: they all contain | it contains} {letter} | {if plural: none of them has | it has no} {letter}}
+  # The move a rule-out closes on, after its horseshoe's `smaller` or `bigger`
+  # look: the set it rules out, ringed in the tally, where the player presses.
+  ruledOut:
+    ring: sets
+    terms: { set: number }
+    move: "{ring: {set}} must go"

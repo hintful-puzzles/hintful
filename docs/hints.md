@@ -633,10 +633,10 @@ guard refuses one. Exemplars: Ascent's and Sokoban's `steps`.
 - **Where no `when` can choose, the code chooses by name**: a form picked by
   its length (Ascent's pointers) is two steps or two `wordings` the code
   picks between, never a string it builds.
-- **One exception, owed by the engine:** a clause cannot yet reference
-  struck notes, so a strike's closing ("the 3 must go") is a `phrase` the
-  game builds from a reference and passes as the step's `closing`
-  (Crossing, Undead; Subsets builds its move the same way).
+- **A step that strikes notes states no move**: given its `strikes`, it
+  closes on them in the engine's strike words (`docs/descriptions.md`
+  § "A firing's reason is built from its binding"; Crossing's `noteStrike`,
+  Undead's `sightline`).
 - **A refusal is not hint text.** It is a `HintRefusal`, and a game's own dead
   end goes through `puzzleDeadEnd` or `markedDeadEnd`, whose test reads the
   call.

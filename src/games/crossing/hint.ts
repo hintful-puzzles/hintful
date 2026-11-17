@@ -4,15 +4,7 @@
  * reads the runs and numbers the sentence names off the puzzle.
  */
 
-import { joinWith } from "../../engine/hint-text.ts";
-import {
-  CELL,
-  type MarkKind,
-  mark,
-  NOTE,
-  phrase,
-  type Sentence,
-} from "../../engine/hint-words.ts";
+import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import * as crossing from "../../generated/games/crossing/crossing.compiled.ts";
 import { LISTED } from "./hint-marks.ts";
@@ -125,21 +117,12 @@ export function narrateCrossing(puzzle: CrossingPuzzle, f: CrossingFiring): Sent
         terms: { way: way(puzzle.runs[f.run].horizontal), ds: f.digits },
         marks: { stripes: { run: runCells(f.run) }, outline: { fitting: f.fitting } },
       });
-    case "noteStrike": {
-      const notes = f.digits.map((n) => ({ ...at(f.cell), n }));
-      // Named by value though the premise just did: "it" is no thing on the
-      // board.
-      const struck = mark.as("strike", NOTE, notes, (els) => {
-        const ns = [...new Set(els.map((e) => e.n))].sort((a, b) => a - b);
-        return ns.length === 1 ? `the ${ns[0]}` : joinWith(ns.map(String));
-      });
+    case "noteStrike":
       return speak.sentence("noteStrike", {
         ring: [at(f.cell)],
         terms: { way: way(puzzle.runs[f.run].horizontal), one: f.digits.length === 1 },
         marks: { stripes: { run: runCells(f.run) }, outline: { fitting: f.fitting } },
-        struck: f.digits,
-        closing: phrase`${struck} must go`,
+        strikes: f.digits.map((n) => ({ ...at(f.cell), n })),
       });
-    }
   }
 }

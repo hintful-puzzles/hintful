@@ -195,10 +195,9 @@ techniques:
       marks: {}
 # The steps the planner emits that no firing is: the opener, and the sentences
 # a firing or a note spoken as one is told in. A monster is named by its number
-# (1 a ghost, 2 a vampire, 3 a zombie), said by the game's value words. The
-# struck pencil marks a move names are drawn by the planner, which supplies the
-# move as the step's closing: a strike's reference is the thing the player
-# presses, and follows the step as it shrinks.
+# (1 a ghost, 2 a vampire, 3 a zombie), said by the game's value words. A step
+# that strikes pencil marks states no move: it closes on the struck marks in
+# the engine's words.
 steps:
   populate:
     ring: cell

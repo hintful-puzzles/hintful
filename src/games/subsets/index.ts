@@ -38,14 +38,7 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import {
-  CELL,
-  type MarkKind,
-  mark,
-  phrase,
-  type Sentence,
-  so,
-} from "../../engine/hint-words.ts";
+import { CELL, type MarkKind, type Sentence, so } from "../../engine/hint-words.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -597,7 +590,10 @@ function ruleOutStep(board: SubsetsState, rule: RuleOutMark): Step {
   if (look === undefined) throw new Error("rel.support states no look");
   const words = so({
     look,
-    move: phrase`${mark.as("ring", TALLY_SET, [rule.value], setLabel(rule.value, n))} must go`,
+    move: speak(n).part("ruledOut", "move", {
+      ring: [rule.value],
+      terms: { set: rule.value },
+    }),
   });
   return {
     move: { kind: "rule", pos: rule.pos, value: rule.value, on: true },

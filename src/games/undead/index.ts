@@ -505,7 +505,7 @@ function narrate(
   switch (reason.kind) {
     case "sightline": {
       const path = common.paths[reason.path];
-      return say.sightline(path.sightingsStart, path.sightingsEnd, bits, m, continues);
+      return say.sightline(path.sightingsStart, path.sightingsEnd, m, continues);
     }
     case "total":
       return say.total(reason.monster, m);

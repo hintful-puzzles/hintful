@@ -41,7 +41,7 @@ import type { Point } from "./types.ts";
 
 // --- lists and articles ------------------------------------------------------
 
-export { indefinite, joinNums, joinOr, joinWith };
+export { indefinite, joinNums, joinOr };
 
 /** Each value once, in order. */
 const distinct = (ns: number[]): number[] => [...new Set(ns)].sort((a, b) => a - b);
