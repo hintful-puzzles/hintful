@@ -98,6 +98,9 @@ interface Val {
   pos?: { arr: string; i: string };
   /** For a name bound by `=`: the code of the term it names. */
   names?: string;
+  /** For a name bound to each member of a mask or a cell's candidates: a
+   * number a mask can hold, read in one with no guard ({@link maskHas}). */
+  bit?: true;
   /** For a name bound to each subset of an array: the array's code, the
    * loop's counter, whose bits name the members, and the slot ahead of the
    * loop. */
@@ -816,12 +819,22 @@ function marksRead(fn: "known" | "value" | "cand", c: string, env?: Env): string
   return env === undefined ? code : tapped(c, code, env);
 }
 
+/** Whether the number `x` is in the bitmask `m`. A shift counts mod 32, so
+ * a number outside 0 to 31 (a total less what is placed, a value read as -1
+ * where unknown) would read another bit: it is in no mask. A small literal,
+ * or a name drawn from a mask's members (`inRange`), needs no guard: the
+ * guard on a candidate read cost Towers' and Unequal's solves a tenth. */
+export const maskHas = (m: string, x: string, inRange = false): string =>
+  inRange || (/^\d+$/.test(x) && Number(x) < 32)
+    ? `((${m} >> ${x}) & 1) !== 0`
+    : `(${x}) >>> 0 < 32 && ((${m} >> ${x}) & 1) !== 0`;
+
 /** Whether cell `c` may still hold `d`, read in place as {@link marksRead},
  * or of a wide domain's words. */
-const hasRead = (c: string, d: string, env: Env): string =>
+const hasRead = (c: string, d: string, env: Env, inRange: boolean): string =>
   tapped(
     c,
-    env.wide ? `b.has(${c}, ${d})` : `(((b.cands[${c}] >> ${d}) & 1) !== 0)`,
+    env.wide ? `b.has(${c}, ${d})` : `(${maskHas(`b.cands[${c}]`, d, inRange)})`,
     env,
   );
 
@@ -1484,7 +1497,7 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
       x,
       env,
       (s) => `${at} === ${s.value}`,
-      hasRead(x, at, env),
+      hasRead(x, at, env, d.bit === true),
     );
     return { code: op === "in" ? has : `!${has}`, sort: BOOL };
   }
@@ -1581,7 +1594,7 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
       }
       const marks = memberTable(b, env);
       const has = isMask(b.sort)
-        ? `((${b.code} >> ${a.code}) & 1) !== 0`
+        ? maskHas(b.code, a.code, a.bit === true)
         : marks !== null
           ? `${marks}[${a.code} + 1] === 1`
           : `${b.code}.includes(${a.code})`;
@@ -1746,6 +1759,7 @@ function bindingLoops(
     let members: Val["members"];
     let names: string | null = null;
     let edgeSet: Val["edgeSet"] | null = null;
+    let bit = false;
     let where = bnd.where;
     if (bnd === env.visitBinder && env.visitAt !== undefined)
       env.visitAt.slot = out.slot(env.hoist?.loops ?? 0);
@@ -1984,6 +1998,7 @@ function bindingLoops(
         const m = Out.fresh("_m");
         out.open(`for (let ${m} = ${s.code}; ${m} !== 0; ${m} &= ${m} - 1) {`);
         out.emit(`const ${v} = 31 - Math.clz32(${m} & -${m});`);
+        bit = true;
       } else if (s.sort.k === "cands") {
         // Listed before the loop, so a strike the loop makes moves nothing
         // it walks.
@@ -1993,6 +2008,7 @@ function bindingLoops(
         out.emit(`const ${a} = b.candList(${s.code});`);
         out.open(`for (let ${ix} = 0; ${ix} < ${a}.length; ${ix}++) {`);
         out.emit(`const ${v} = ${a}[${ix}];`);
+        bit = true;
       } else if (isArray(s.sort) && s.sort.k === "set") {
         sort = s.sort.of;
         const a = Out.fresh("_a");
@@ -2017,6 +2033,7 @@ function bindingLoops(
       ...(members === undefined ? {} : { members }),
       ...(names === null ? {} : { names }),
       ...(edgeSet === null ? {} : { edgeSet }),
+      ...(bit ? { bit } : {}),
     };
     inner.set(bnd.name, bound);
     if (bnd === env.visitBinder) {
@@ -4881,13 +4898,15 @@ function wordingIndex(
 function factWithSays(
   fn: "strike" | "place",
   c: string,
-  d: string,
+  dv: Val,
   site: NonNullable<Env["factSays"]>,
   scope: Scope,
   env: Env,
   out: Out,
 ): void {
-  const cond = fn === "strike" ? hasRead(c, d, env) : `!${marksRead("known", c)}`;
+  const d = dv.code;
+  const cond =
+    fn === "strike" ? hasRead(c, d, env, dv.bit === true) : `!${marksRead("known", c)}`;
   out.open(`if (${cond}) {`);
   out.emit(`if (fire === null) { b.${fn}At(${c}, ${d}); changed = true; }`);
   out.open("if (fire !== null) {");
@@ -5377,12 +5396,12 @@ function call(
       // A fact that changes nothing is left out, so a binding fires only
       // where its conclusion changes the marks.
       if (env.factSays !== undefined) {
-        factWithSays(fn, c.code, d.code, env.factSays, scope, env, out);
+        factWithSays(fn, c.code, d, env.factSays, scope, env, out);
         return { code: "true", sort: BOOL };
       }
       out.emit(
         fn === "strike"
-          ? `if (${hasRead(c.code, d.code, env)}) { if (fire === null) { b.strikeAt(${c.code}, ${d.code}); changed = true; } else facts.push(STRIKE, ${c.code}, ${d.code}); }`
+          ? `if (${hasRead(c.code, d.code, env, d.bit === true)}) { if (fire === null) { b.strikeAt(${c.code}, ${d.code}); changed = true; } else facts.push(STRIKE, ${c.code}, ${d.code}); }`
           : `if (!${marksRead("known", c.code)}) { if (fire === null) { b.placeAt(${c.code}, ${d.code}); changed = true; } else facts.push(PLACE, ${c.code}, ${d.code}); }`,
       );
       env.used.add(fn === "strike" ? "STRIKE" : "PLACE");

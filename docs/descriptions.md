@@ -1162,6 +1162,14 @@ filling `f` keeps as `fits`, which the kind sets in the filling's `where`
 beside `f(c) = d`, so the compiler prunes a part-filling by it; `each` is the
 squares one firing reads where it is not the whole set (Towers' one square a
 firing, `{q}`). It carries no words: each game's walk names its own rule.
+The sum kinds read a set of open squares and the `total` their values make
+(Solo's cage, its total less what is placed; or the part of a cage a unit's
+sum leaves): `sum.last` places what the total leaves in the one open square
+left, `sum.bounds` strikes a value the others' least and greatest cannot
+bring to the total, and `sum.sets` one in no set of different values that
+makes it and that each square can take one of (upstream's reading, weaker
+than `fill.support`). The game binds the set and total in `group` and gives
+the sizes it reads in a `where` there (Solo reads sets of two to four).
 `fit.flip` is the Check of a
 two-valued square (`holds`, `scope`). How the tried value breaks the rule is
 the game's to say, so the game's `says:` holds the look; the kind lays it over

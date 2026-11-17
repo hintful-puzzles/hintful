@@ -504,6 +504,59 @@ export const KINDS: Readonly<Record<string, Kind>> = {
         "forall c in $each, d in cand(c) where (exists fill f of $set from cand where f(c) = d and ($fits): true): strike(c, d)",
     },
   },
+  // The sum kinds read a set of open squares, `set`, whose values add up to
+  // `total` (a cage's total less its filled squares, Solo's); `group` binds
+  // both. Each reads the squares' candidates and the sum alone.
+  //
+  // One open square left holds what the total leaves, where the board has
+  // that value and the square may still take it; otherwise the marks are
+  // inconsistent.
+  "sum.last": {
+    params: ["group", "set", "total"],
+    technique: {
+      for: "$group, n = |$set| where n = 1, c = first($set)",
+      conclude: "$total in domain and $total in cand(c) and place(c, $total)",
+    },
+    // What the total leaves read one short.
+    plant: {
+      conclude:
+        "($total) - 1 in domain and ($total) - 1 in cand(c) and place(c, ($total) - 1)",
+    },
+  },
+  // A value too small to reach the total with the greatest each other square
+  // can take, or too large to stay within it with the least, is struck: the
+  // bounds alone, read square by square.
+  "sum.bounds": {
+    params: ["group", "set", "total"],
+    technique: {
+      for: "$group",
+      conclude:
+        "forall c in $set, d in cand(c) where d + sum(x in $set where x != c of max(e in cand(x))) < ($total) or d + sum(x in $set where x != c of min(e in cand(x))) > ($total): strike(c, d)",
+    },
+    // A value struck that the others' greatest only just reaches.
+    plant: {
+      conclude:
+        "forall c in $set, d in cand(c) where d + sum(x in $set where x != c of max(e in cand(x))) <= ($total): strike(c, d)",
+    },
+  },
+  // A value in no set of different values that makes the total, as many as
+  // the squares and each square able to take one of them, is struck. With no
+  // such set the marks are inconsistent. Upstream's Solo reading, which does
+  // not ask that each square take a different one of the set: weaker than
+  // `fill.support` and cheaper, a sum of the board's values.
+  "sum.sets": {
+    params: ["group", "set", "total"],
+    technique: {
+      for: "$group",
+      conclude:
+        "forall P = set(a over T in subsets(domain) where |T| = |$set| and sum(e in T of e) = ($total) and (forall x in $set: exists e in T: e in cand(x)), a in T): |P| > 0 and (forall c in $set, d in cand(c) where d not in P: strike(c, d))",
+    },
+    // The sets read as making one less than the total.
+    plant: {
+      conclude:
+        "forall P = set(a over T in subsets(domain) where |T| = |$set| and sum(e in T of e) = ($total) - 1 and (forall x in $set: exists e in T: e in cand(x)), a in T): |P| > 0 and (forall c in $set, d in cand(c) where d not in P: strike(c, d))",
+    },
+  },
   // An open edge whose ends the lines already join would close a loop, which
   // is the answer only once nothing else needs it: `elsewhere` says what
   // still does, reading the lines `L`, the edge `e` and the lines' group `G`

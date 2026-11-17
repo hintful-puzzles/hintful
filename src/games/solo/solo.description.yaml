@@ -125,18 +125,6 @@ define:
   inside(r, u): >-
     (exists c in cells(r): not known(c))
     and (forall c in cells(r) where not known(c): c in cells(u))
-  # The values a set of open cells K could make t from, as different values:
-  # a set of |K| of them each cell of K can take one of. Upstream's reading,
-  # which does not ask that the cells take different ones, but over the
-  # board's values, where upstream's counted 1 to 9 at every size.
-  sums(K, t): >-
-    set(d over T in subsets(domain) where |T| = |K| and sum(e in T of e) = t
-    and (forall x in K: exists e in T: e in cand(x)), d in T)
-  # Whether value d of cell c of K is out of reach of t, given only the least
-  # and greatest the other cells of K can take.
-  beyond(K, t, c, d): >-
-    d + sum(x in K where x != c of max(e in cand(x))) < t
-    or d + sum(x in K where x != c of min(e in cand(x))) > t
 tiers: [Easy, Normal, Tricky, Hard, Extreme, Unreasonable]
 # Killer's cage readings grade on a scale of their own, as upstream's do: a
 # board's grade is a tier on each.
@@ -155,13 +143,13 @@ techniques:
       set: cells(u)
       value: d
   # A cage with one open cell holds what its total leaves there.
-  - id: cageSingle
+  - kind: sum.last
+    as: cageSingle
     tier: Single
-    for: >-
-      r in cage,
-      K = {c in cells(r) where not known(c)} where |K| = 1,
-      c = first(K), t = owed(r)
-    conclude: "t >= 1 and t <= w and t in cand(c) and place(c, t)"
+    with:
+      group: "r in cage, K = {c in cells(r) where not known(c)}, t = owed(r)"
+      set: K
+      total: t
     # The hint names the cage and the sum its open cell makes.
     says:
       terms: { r: r, c: c, t: t }
@@ -194,15 +182,15 @@ techniques:
     says:
       terms: { u: u, W: W, L: L, s: s, t: t }
       marks: {}
-  # Cage by cage: a value too small or too large for its cell, with the least
-  # or the greatest each other open cell can take, to make what the cage's
-  # total leaves, is struck. One cage a firing.
-  - id: cageMinMax
+  # Cage by cage, the bounds of what the cage's total leaves. One cage a
+  # firing.
+  - kind: sum.bounds
+    as: cageMinMax
     tier: MinMax
-    for: >-
-      r in cage, K = {c in cells(r) where not known(c)}, t = owed(r)
-      where t != 0
-    conclude: "forall c in K, d in cand(c) where beyond(K, t, c, d): strike(c, d)"
+    with:
+      group: "r in cage, K = {c in cells(r) where not known(c)}, t = owed(r) where t != 0"
+      set: K
+      total: t
     # The hint names the cage, its open cells and what they make.
     says:
       terms: { r: r, K: K, t: t }
@@ -212,42 +200,44 @@ techniques:
   # one cage, that cage's other open cells, R (i = 1), K either. One partial
   # cage a firing. It grades as the cages' reading, and runs where the region
   # rule is in reach.
-  - id: partMinMax
+  - kind: sum.bounds
+    as: partMinMax
     tier: MinMax
     from: Region
-    for: >-
-      u in rows + cols + box,
-      W = {r in cage where inside(r, u)},
-      L = set(c over r in cage where r not in W, c in cells(r)
-      where not known(c) and c in cells(u))
-      where |L| > 1 and |L| < w,
-      s = sum(d in domain of d) - sum(c in cells(u) where known(c) of value(c))
-      - sum(r in W of owed(r)) where s > 0,
-      R = {c in cells(cage(first(L))) where not known(c) and c not in L},
-      t = owed(cage(first(L))) - s,
-      i in range(0, 1),
-      K = {c in L + R where (i = 0) = (c in L)},
-      v = s * (1 - i) + t * i
-      where |K| > 1 and v != 0
-      and (i = 0 or (forall c in L: cage(c) = cage(first(L))))
-    conclude: "forall c in K, d in cand(c) where beyond(K, v, c, d): strike(c, d)"
+    with:
+      group: >-
+        u in rows + cols + box,
+        W = {r in cage where inside(r, u)},
+        L = set(c over r in cage where r not in W, c in cells(r)
+        where not known(c) and c in cells(u))
+        where |L| > 1 and |L| < w,
+        s = sum(d in domain of d) - sum(c in cells(u) where known(c) of value(c))
+        - sum(r in W of owed(r)) where s > 0,
+        R = {c in cells(cage(first(L))) where not known(c) and c not in L},
+        t = owed(cage(first(L))) - s,
+        i in range(0, 1),
+        K = {c in L + R where (i = 0) = (c in L)},
+        v = s * (1 - i) + t * i
+        where |K| > 1 and v != 0
+        and (i = 0 or (forall c in L: cage(c) = cage(first(L))))
+      set: K
+      total: v
     # The hint names the unit, the cages counted inside it, what it leaves
     # and its sum, the rest of their cage and its sum, and which it reads.
     says:
       terms: { u: u, W: W, L: L, s: s, R: R, t: t, i: i }
       marks: {}
-  # Cage by cage, of two to four open cells: a value in no set of different
-  # values that makes what the cage's total leaves, and that each open cell
-  # can take one of, is struck. With none, or a cage filled short of its
-  # total, the marks are inconsistent. One cage a firing.
-  - id: cageSums
+  # Cage by cage, of two to four open cells, or none, which is a cage filled
+  # short of its total. One cage a firing.
+  - kind: sum.sets
+    as: cageSums
     tier: Sums
-    for: >-
-      r in cage, K = {c in cells(r) where not known(c)}, t = owed(r)
-      where t != 0
-    conclude: >-
-      |K| > 0 and (|K| < 2 or |K| > 4 or (forall P = sums(K, t):
-      |P| > 0 and (forall c in K, d in cand(c) where d not in P: strike(c, d))))
+    with:
+      group: >-
+        r in cage, K = {c in cells(r) where not known(c)}, t = owed(r)
+        where t != 0 and |K| != 1 and |K| <= 4
+      set: K
+      total: t
     # The hint names the cage, its open cells and what they make.
     says:
       terms: { r: r, K: K, t: t }
@@ -255,27 +245,28 @@ techniques:
   # The same reading of each partial cage of two to four cells, as
   # `partMinMax` binds them. With no set of values left, the marks are
   # inconsistent.
-  - id: partSums
+  - kind: sum.sets
+    as: partSums
     tier: Sums
     from: Region
-    for: >-
-      u in rows + cols + box,
-      W = {r in cage where inside(r, u)},
-      L = set(c over r in cage where r not in W, c in cells(r)
-      where not known(c) and c in cells(u))
-      where |L| > 1 and |L| < w,
-      s = sum(d in domain of d) - sum(c in cells(u) where known(c) of value(c))
-      - sum(r in W of owed(r)) where s > 0,
-      R = {c in cells(cage(first(L))) where not known(c) and c not in L},
-      t = owed(cage(first(L))) - s,
-      i in range(0, 1),
-      K = {c in L + R where (i = 0) = (c in L)},
-      v = s * (1 - i) + t * i
-      where |K| > 1 and |K| <= 4 and v != 0
-      and (i = 0 or (forall c in L: cage(c) = cage(first(L))))
-    conclude: >-
-      forall P = sums(K, v): |P| > 0
-      and (forall c in K, d in cand(c) where d not in P: strike(c, d))
+    with:
+      group: >-
+        u in rows + cols + box,
+        W = {r in cage where inside(r, u)},
+        L = set(c over r in cage where r not in W, c in cells(r)
+        where not known(c) and c in cells(u))
+        where |L| > 1 and |L| < w,
+        s = sum(d in domain of d) - sum(c in cells(u) where known(c) of value(c))
+        - sum(r in W of owed(r)) where s > 0,
+        R = {c in cells(cage(first(L))) where not known(c) and c not in L},
+        t = owed(cage(first(L))) - s,
+        i in range(0, 1),
+        K = {c in L + R where (i = 0) = (c in L)},
+        v = s * (1 - i) + t * i
+        where |K| > 1 and |K| <= 4 and v != 0
+        and (i = 0 or (forall c in L: cage(c) = cage(first(L))))
+      set: K
+      total: v
     # As `partMinMax` says.
     says:
       terms: { u: u, W: W, L: L, s: s, R: R, t: t, i: i }

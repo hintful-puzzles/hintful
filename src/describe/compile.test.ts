@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CompileError, compileGame, compileLibrary } from "./compile.ts";
+import { CompileError, compileGame, compileLibrary, maskHas } from "./compile.ts";
 import { isFormal, isLibrary, parseTechnique } from "./description.ts";
 import { lintDescription } from "./lint.ts";
 import { loadDescriptionFile } from "./load.ts";
@@ -176,6 +176,19 @@ describe("a wide domain's numbers are never a mask", () => {
         "forall p in cells where m in cand(p) and not near(p, c, 1): strike(p, m)",
       ),
     ).not.toMatch(/1 << /);
+  });
+});
+
+describe("a number outside a mask's 32 bits is in no mask", () => {
+  // A shift counts mod 32, so 33 would read bit 1 and -31 bit 1 too: a
+  // cage's total less what is placed is such a number.
+  const has = (x: string): boolean =>
+    new Function("m", `return ${maskHas("m", x)};`)(0b10) as boolean;
+  it.each(["33", "-31", "(32 + 1)"])("%s", (x) => {
+    expect(has(x)).toBe(false);
+  });
+  it("and one inside reads its bit", () => {
+    expect([has("1"), has("(0 + 1)"), has("0")]).toEqual([true, true, false]);
   });
 });
 

@@ -4,11 +4,6 @@
 # unsound.
 
 techniques:
-  # A cage's last cell given one less than its total leaves.
-  cageSingle:
-    for: >-
-      r in cage, K = {c in cells(r) where not known(c)} where |K| = 1, c =
-      first(K), t = owed(r) - 1
   # A unit's sum left with its whole cages' totals not taken out.
   regionRule:
     for: >-
@@ -17,21 +12,6 @@ techniques:
       cells(u)) where |L| > 0 and |L| < w, s = sum(d in domain of d) - sum(c in
       cells(u) where known(c) of value(c)), R = {c in cells(cage(first(L)))
       where not known(c) and c not in L}, t = owed(cage(first(L))) - s
-  # A value struck that the others' extreme only just reaches.
-  cageMinMax:
-    conclude: >-
-      forall c in K, d in cand(c) where d + sum(x in K where x != c of max(e in
-      cand(x))) <= t: strike(c, d)
-  partMinMax:
-    conclude: "forall c in K, d in cand(c) where beyond(K, v + 1, c, d): strike(c, d)"
-  cageSums:
-    conclude: >-
-      |K| > 0 and (|K| < 2 or |K| > 4 or (forall P = sums(K, t - 1): |P| > 0 and
-      (forall c in K, d in cand(c) where d not in P: strike(c, d))))
-  partSums:
-    conclude: >-
-      forall P = sums(K, v - 1): |P| > 0 and (forall c in K, d in cand(c) where
-      d not in P: strike(c, d))
   # A line's value struck from the rest of a box it merely meets.
   intersect:
     conclude: >-

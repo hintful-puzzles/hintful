@@ -186,7 +186,8 @@ export class CellMarks implements Marks {
     return this.cands[c];
   }
   has(c: number, d: number): boolean {
-    return ((this.cands[c] >> d) & 1) !== 0;
+    // A shift counts mod 32: a value outside 0 to 31 would read another bit.
+    return d >>> 0 < 32 && ((this.cands[c] >> d) & 1) !== 0;
   }
   candCount(c: number): number {
     let n = 0;

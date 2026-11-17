@@ -563,10 +563,40 @@ boundaries are judgment, and the counts carry that.
     least 3, so this cell can only be 4 or 5"), then the smaller end's step
     on the same sign. Its plant restated over `c`/`p`, caught; re-checked
     sound.
+  - [x] (2026-11-17) SUM, three kinds over a set of open squares and the
+    `total` they make: `sum.last` (the one open square left holds what the
+    total leaves), `sum.bounds` (a value the others' least and greatest
+    cannot bring to the total is struck), `sum.sets` (a value in no set of
+    different values that makes it is struck; upstream's reading). Placed
+    on all five of Solo's cage readings, `cageSingle`, `cageMinMax`,
+    `partMinMax`, `cageSums`, `partSums`; its `sums` and `beyond` defines
+    went into the kinds, and all five plants were the kinds' and went.
+    `cageSums` reads its sizes (none, or two to four) in its group's `where`.
+    Solo's hint narrates its own steps, so the kinds carry no words and
+    nothing a player reads moved. **Found on the way, a compiler defect:**
+    `x in S` over a bitmask compiled to `(S >> x) & 1`, and a shift counts
+    mod 32, so a number outside 0 to 31 read another bit (a cage's total
+    less what is placed, 33, read as 1). The kind's `total in domain` had
+    it where Solo's `t >= 1 and t <= w` had not. `maskHas` now guards it,
+    in the compiler and the runtime's `has`; a test planted unguarded fails.
+    A name drawn from a mask's members or a cell's candidates carries `bit`
+    and takes no guard, so only derived numbers pay for it (17 modules
+    differ from HEAD, each at such a read: a size, a value read as -1, a
+    row index). **Measured:** deal-compare against HEAD gives the same
+    boards and verdicts in Solo, Keen, Towers, Unequal, Map, Signpost,
+    Crossing, Magnets and Salad; Unequal's solves first read 1.22×, then at
+    8 seeds twice 1.01× and 0.97× (noise; its own module is unchanged).
+    Every Solo technique re-checked sound (a define went), each kind's plant
+    caught at order 3. `test:hint-sweeps` green. Seen in the app, 3x3
+    Killer Easy: `cageSingle` ("its last cell must be 9"), `cageMinMax`
+    ("its other cells leave no room for 7 or 9") and `cageSums` ("No way to
+    make this killer cage total 6 uses 3 in this cell") speak and apply as
+    before. **SUM is placed**: five of § 1's six; `regionRule` (a unit's
+    sum less its whole cages, read across two rules) stays Solo's own.
   - [ ] Next: Clusters on `count.compare` (above), PEER's other forms
     (Dominosa's `placed` reads two rules, a spot's neighbors and its
     domino's other spots), GRP over
-    numbered squares (Filling), SUM, and the CNT techniques not placed yet
+    numbered squares (Filling), and the CNT techniques not placed yet
     (the item above says why each waits).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
