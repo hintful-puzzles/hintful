@@ -546,7 +546,13 @@ boundaries are judgment, and the counts carry that.
     `count.compare` included).
   - [ ] Next: Clusters on `count.compare` (above), PEER's other forms
     (Dominosa's `placed` reads two rules, a spot's neighbors and its
-    domino's other spots), REL's bounds form (Unequal `sign`), GRP over
+    domino's other spots), REL's bounds form (Unequal `sign`: found
+    2026-11-17 to be `rel.support` under `>`, a value with no smaller
+    candidate across the sign, so no new kind is needed; but `sign` strikes
+    both ends in one firing, and `rel.support` fires an end at a time, so
+    the smaller end's firing would read the larger's strikes and a pass may
+    strike more: deal-compare and walk it, and keep its bound wordings as
+    the game's `says`), GRP over
     numbered squares (Filling), SUM, and the CNT techniques not placed yet
     (the item above says why each waits).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
