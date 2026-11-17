@@ -45,14 +45,16 @@ Planning games (a `steps` block, Slide's form):
 - [x] Numgame (2026-11-17): dump byte-identical. The engine gained a ring
   of several sorts (two numbers and a sign), and a judged relation passed
   by the planner (`relation`, the rival judging's).
-- [x] Cube (2026-11-17). **Changed, one sentence:** come-round, "Working on
-  the outlined square: the roll onto it would land a painted face on it, so
-  roll onto the ringed square." (was "…on it. Instead: roll onto the ringed
-  square."): the stated form has no "Instead" relation, and "so" says the
-  same reason. Every other line of the dump is the same.
+- [x] Cube (2026-11-17): dump byte-identical. Come-round's "Instead:" is
+  the step's `answers` clause, added with Same Game; until then it had
+  said "so" there.
 - [ ] Twiddle
-- [ ] Inertia
-- [ ] Samegame
+- [x] Inertia (2026-11-17): dump byte-identical. The slide's compass point
+  is a word-list term, "One safe way" is `answers`, and a forced slide
+  passes the rival judging's relation. A step with an aim and no judged
+  relation serves the aim; with neither, its look forces the move.
+- [x] Samegame (2026-11-17): dump byte-identical. "One way to avoid it" is
+  the new `answers` clause; the judged relations come from `judgeRivals`.
 - [ ] Untangle
 - [ ] Pegs
 - [ ] Sokoban

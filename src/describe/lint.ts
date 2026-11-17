@@ -195,6 +195,7 @@ function fitTurns(pieces: readonly Piece[]): number {
 type Part = keyof StatedClauses;
 const PARTS: readonly Part[] = [
   "aim",
+  "answers",
   "look",
   "follows",
   "move",
@@ -235,6 +236,7 @@ function joined(n: Partial<Record<Part, string>>, closing: string): string[] {
   let first: string;
   if (n.effect !== undefined)
     first = `${premise === null ? "" : `${premise}. `}${move}: ${n.effect}.`;
+  else if (n.answers !== undefined) first = `${premise}. ${n.answers}: ${move}.`;
   else if (n.follows !== undefined) first = `${premise}: ${move}.`;
   else if (premise !== null) first = `${premise}, so ${move}.`;
   else first = `${move}.`;

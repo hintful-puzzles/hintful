@@ -32,10 +32,11 @@ import {
   NO_MOVE_WORTH_MAKING,
   puzzleDeadEnd,
 } from "../../engine/hint-refusal.ts";
-import { mark, phrase, type Sentence } from "../../engine/hint-words.ts";
+import { mark, phrase, type Relation, type Sentence } from "../../engine/hint-words.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
-import { GEM, type Only, say } from "./hint-text.ts";
+import { voice } from "../../generated/games/inertia/inertia.compiled.ts";
+import { ARROW, GEM } from "./kinds.ts";
 import { solveRoute, unreachableGems } from "./solver.ts";
 import {
   type InertiaMove,
@@ -58,6 +59,27 @@ export type InertiaRung = (typeof INERTIA_RUNGS)[number];
 
 type Step = HintStep<InertiaMove, unknown, InertiaRung>;
 type Said = { rung: InertiaRung; words: Sentence };
+
+/** Why a slide is the ball's only one, and what the rival judging made of
+ * the other directions, which says "so". */
+interface Only {
+  readonly why: "mines" | "walls";
+  readonly relation: Relation;
+}
+
+/** The compass points, by direction, as the description's `way` says them. */
+const WAYS = [
+  "north",
+  "north-east",
+  "east",
+  "south-east",
+  "south",
+  "south-west",
+  "west",
+  "north-west",
+] as const;
+
+const speak = voice<number>({ kind: ARROW, kinds: { gem: GEM }, value: String });
 
 // --- the claims we are allowed to make -------------------------------
 
@@ -129,31 +151,59 @@ function narrate(
   toGoal: number,
 ): Said {
   const only = onlyMove(before, dir);
-  const m = { dir, goal };
+  const ring = [dir];
+  const way = WAYS[dir];
+  const marks = { outline: { gem: [goal] } };
 
   // The leg's payoff. The goal is the *last* gem on the path, so any others are
   // swept up on the way to it.
   if (path.gems.length > 0) {
+    const terms = {
+      way,
+      extras: path.gems.length - 1,
+      only: only !== null,
+      mines: only?.why === "mines",
+    };
     return {
       rung: "collect",
-      words: say.collect(m, path.gems.length - 1, only),
+      words: speak.sentence("collect", { ring, terms, marks }),
     };
   }
-  if (only) return { rung: "forced", words: say.forced(m, only) };
+  if (only) {
+    const terms = { way, mines: only.why === "mines" };
+    const words = speak.sentence("forced", {
+      ring,
+      terms,
+      marks,
+      relation: only.relation,
+    });
+    return { rung: "forced", words };
+  }
 
   const grab = oneSlideGrab(before, goal);
   if (grab !== null) {
     const stranded = unreachableGems(slide(before, grab));
-    return stranded.length > 0
-      ? { rung: "strands", words: say.strands(m, grab, stranded.length) }
-      : { rung: "declined", words: say.declined(m) };
+    if (stranded.length === 0)
+      return {
+        rung: "declined",
+        words: speak.sentence("declined", { ring, terms: { way }, marks }),
+      };
+    const terms = { way, grab: WAYS[grab], stranded: stranded.length };
+    return {
+      rung: "strands",
+      words: speak.sentence("strands", { ring, terms, marks }),
+    };
   }
 
   // "One more slide" is a promise about the *plan's own next move*, not about
   // some slide existing: the route may reach the gem from a side no single
   // slide from here can, and a promise it then breaks reads as a hint that has
   // lost the plot.
-  return { rung: "positioning", words: say.positioning(m, toGoal === 2) };
+  const terms = { way, oneMore: toGoal === 2 };
+  return {
+    rung: "positioning",
+    words: speak.sentence("positioning", { ring, terms, marks }),
+  };
 }
 
 // --- planning: the nearest gem the ball can safely take ---------------

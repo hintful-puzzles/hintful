@@ -261,6 +261,24 @@ describe("a stated clause", () => {
     ).toThrow(/no count term/);
   });
 
+  it("says how a move answers its look, a bare move alone, and an aim served unless judged", () => {
+    expect(
+      statedSentence(
+        { look: "{outline} is in danger", answers: "One way to avoid it", move: "go" },
+        cx(),
+      ).text,
+    ).toBe("The outlined square is in danger. One way to avoid it: go.");
+    expect(statedSentence({ move: "go" }, cx()).text).toBe("Go.");
+    expect(
+      statedSentence({ aim: "{outline}", look: "it is far", move: "go" }, cx()).text,
+    ).toBe("Working on the outlined square: it is far. Go.");
+    expect(
+      statedSentence({ aim: "{outline}", look: "it is far", move: "go" }, cx(), null, {
+        kind: "forced",
+      }).text,
+    ).toBe("Working on the outlined square: it is far, so go.");
+  });
+
   it("says a later leg's `again` after its move in place of look and follows, and a first leg ignores it", () => {
     const clauses = {
       look: "{outline} is shaded",

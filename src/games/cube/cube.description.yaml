@@ -145,6 +145,7 @@ steps:
     marks: { outline: [square] }
     aim: *goal
     look: "the roll onto it would land a painted face on it"
+    answers: "Instead"
     move: *roll
   # No square can be picked up from here without putting paint down first,
   # and this roll puts some down.

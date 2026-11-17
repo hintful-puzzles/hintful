@@ -299,6 +299,9 @@ export interface StatedClauses {
   /** What the move works toward, said first ("Working on tile 3:"); with no
    * `look`, the move only serves it. */
   aim?: string;
+  /** How the move answers a danger its `look` names, said before it ("One
+   * way to avoid it"): its `answers` relation. */
+  answers?: string;
   /** A later leg's reasoning, said after its move in place of `look` and
    * `follows`: its `again` relation. */
   again?: string;
@@ -848,9 +851,10 @@ export function parseTechnique(
 
 /** The clauses a part of a `says` states; `null` where it states none. */
 function clausesOf(part: StatedClauses): StatedClauses | null {
-  const { aim, look, follows, move, effect, again, later } = part;
+  const { aim, answers, look, follows, move, effect, again, later } = part;
   if (
     aim === undefined &&
+    answers === undefined &&
     look === undefined &&
     follows === undefined &&
     move === undefined &&
@@ -861,6 +865,7 @@ function clausesOf(part: StatedClauses): StatedClauses | null {
     return null;
   return {
     ...(aim === undefined ? {} : { aim }),
+    ...(answers === undefined ? {} : { answers }),
     ...(look === undefined ? {} : { look }),
     ...(follows === undefined ? {} : { follows }),
     ...(move === undefined ? {} : { move }),

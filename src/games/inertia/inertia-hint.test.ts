@@ -14,8 +14,8 @@ import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newInertiaDesc } from "./generator.ts";
 import { hasNoSolution, hint } from "./hint.ts";
-import { GEM as GEM_MARK } from "./hint-text.ts";
 import { inertiaGame } from "./index.ts";
+import { GEM as GEM_MARK } from "./kinds.ts";
 import { COL_HINT_GOAL } from "./render.ts";
 import {
   GEM,

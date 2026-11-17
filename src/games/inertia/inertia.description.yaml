@@ -112,6 +112,65 @@ deadEnds:
   # No slide the ball can ever make passes over the gem, so it is never
   # collected.
   stranded: "not dead and exists g in cells where kind(g) = 1: not swept(g)"
+steps:
+  # One slide of the planner's route to the gem its leg is going for
+  # (outlined), the way to slide ringed by its arrow and said as a compass
+  # point. Every branch says what `hint.ts` checked: where a slide is the
+  # only one (walls block the rest, or every other runs onto a mine), the
+  # rival judging says whether "so" may follow.
+  # The slide sweeps up the goal gem, after `extras` others on the way.
+  collect:
+    ring: arrow
+    terms: { way: &way [north, north-east, east, south-east, south, south-west, west, north-west], extras: number, only: flag, mines: flag }
+    marks: { outline: [gem] }
+    wordings:
+      - when: "only and extras = 0"
+        look: &why "{if mines: every other way you can go runs you onto a mine | walls block every other direction}"
+        move: &slide "slide {ring: {way}}"
+        effect: &sweep "it sweeps up {outline gem: the outlined gem}"
+      - when: "only"
+        look: *why
+        move: *slide
+        effect: &sweeps "it sweeps up {extras: a gem | {spelled extras} gems} and then {outline gem: the outlined gem}"
+      - when: "extras = 0"
+        move: *slide
+        effect: *sweep
+      - move: *slide
+        effect: *sweeps
+  # The only move the ball has, collecting nothing.
+  forced:
+    ring: arrow
+    terms: { way: *way, mines: flag }
+    marks: { outline: [gem] }
+    aim: &gem "{outline gem: the outlined gem}"
+    look: *why
+    move: *slide
+  # Sliding `grab` would take the gem but strand `stranded` others.
+  strands:
+    ring: arrow
+    terms: { way: *way, grab: *way, stranded: number }
+    marks: { outline: [gem] }
+    look: "sliding {grab} grabs {outline gem: the outlined gem} but strands {stranded: a gem | {spelled stranded} gems}"
+    answers: "One safe way"
+    move: *slide
+  # A grab the route declines for a reason the hint cannot prove: it says
+  # only that the route comes at the gem from another side, which is true.
+  declined:
+    ring: arrow
+    terms: { way: *way }
+    marks: { outline: [gem] }
+    aim: *gem
+    look: "you could grab it now, but the route comes at it from another side"
+    move: *slide
+  # No slide reaches the gem yet; `oneMore` when the plan's next slide does.
+  positioning:
+    ring: arrow
+    terms: { way: *way, oneMore: flag }
+    marks: { outline: [gem] }
+    aim: *gem
+    look: "no slide reaches it yet"
+    move: *slide
+    effect: "{if oneMore: one more slide sweeps it up | it works the ball round toward it}"
 deal:
   start: >-
     about a fifth each of walls, stop squares and mines, as many gems as

@@ -4977,7 +4977,7 @@ export function stepsBlock(
     "export const STEPS: {",
     "  readonly [K in keyof StepsById<unknown>]: {",
     '    readonly ring: StepsById<unknown>[K]["ring"];',
-    "    readonly clauses: readonly { aim?: string; look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string; long?: string }[];",
+    "    readonly clauses: readonly { aim?: string; answers?: string; look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string; long?: string }[];",
     "    readonly when: readonly (",
     "      | null",
     "      | ((",

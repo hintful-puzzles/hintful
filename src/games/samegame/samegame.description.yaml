@@ -93,6 +93,79 @@ deadEnds:
   # A removal takes two or more squares of one color, and no square changes
   # color, so a square the last of its color can never go.
   last: "exists c in cells where tile(c) != 0: forall d in cells where d != c: tile(d) != tile(c)"
+steps:
+  # A step removes the group the planner's line takes first (ringed). What it
+  # says is what the search settled about the other groups, a trap the player
+  # can see first; whether "so" may be said is the rival judging's. `color`
+  # is said by the palette's name for it.
+  # The removal that empties the board.
+  last:
+    ring: group
+    move: &remove "remove {ring: this group}"
+    effect: "that clears the board"
+  # The only group on the board.
+  none:
+    ring: group
+    look: "there is no other group"
+    move: *remove
+  # Removing the striped group would leave the outlined square the last of
+  # its color.
+  lastOfColor:
+    ring: group
+    terms: { color: number }
+    marks: { outline: [square], stripes: [rival] }
+    look: "removing {stripes rival: the striped group} would leave {outline square: the outlined square} the last {color} one"
+    answers: &avoid "One way to avoid it"
+    move: *remove
+  # Removing the striped group would leave no two squares of one color side
+  # by side.
+  stuck:
+    ring: group
+    marks: { stripes: [rival] }
+    look: "removing {stripes rival: the striped group} would leave no two touching squares of one color"
+    answers: *avoid
+    move: *remove
+  # Every rival was searched to the end, and none leaves a board that can be
+  # cleared.
+  only:
+    ring: group
+    look: "removing any other group would leave a board that can never be cleared"
+    move: *remove
+  # Every rival was settled: the outlined groups leave a board that can be
+  # cleared, the rest do not.
+  onlyThese:
+    ring: group
+    terms: { groups: number }
+    marks: { outline: [groups] }
+    look: "only {ring: this group} and {outline groups: {groups: the outlined group | the outlined groups}} keep the board clearable"
+    move: *remove
+  # The outlined groups leave a board that can be cleared, at least one rival
+  # does not, and some were not settled.
+  alsoThese:
+    ring: group
+    terms: { groups: number }
+    marks: { outline: [groups] }
+    look: "{ring: this group} and {outline groups: {groups: the outlined group | the outlined groups}} keep the board clearable; some others do not"
+    move: *remove
+  # Every rival leaves a board that can still be cleared.
+  anyGroup:
+    ring: group
+    look: "removing any group now keeps the board clearable"
+    move: *remove
+  # The outlined square has no square of its color beside it, and removing
+  # the group brings one beside it.
+  joins:
+    ring: group
+    terms: { color: number }
+    marks: { outline: [square] }
+    look: "{outline square: the outlined square} has no {color} square beside it"
+    answers: "One way to bring one beside it"
+    move: *remove
+  # Nothing settled worth saying. That the board can still be cleared after
+  # it goes without saying: the hint offers no other kind of removal.
+  plain:
+    ring: group
+    move: *remove
 deal:
   start: >-
     a board built backward from empty, groups dropped in so that it can be

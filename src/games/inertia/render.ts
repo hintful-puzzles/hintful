@@ -38,7 +38,7 @@ import {
   type WinTone,
   winSlot,
 } from "../../engine/win-wave.ts";
-import { ARROW, GEM as GEM_MARK } from "./hint-text.ts";
+import { ARROW, GEM as GEM_MARK } from "./kinds.ts";
 import {
   BLANK,
   DIRECTIONS,
@@ -100,8 +100,8 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_GEM] = GOAL;
   ret[COL_WALL] = wallFill(defaultBackground);
   ret[COL_AIM] = DRAG_ADD;
-  // The subgoal is an outline in role (`theGem`, hint-text.ts), so it takes
-  // the color an outline has in every game.
+  // The subgoal is an outline in role, so it takes the color an outline has in
+  // every game.
   ret[COL_HINT_GOAL] = HINT_OUTLINE;
   ret[COL_FLASH] = FLASH;
   ret[COL_FLASH_LEAD] = FLASH_LEAD;

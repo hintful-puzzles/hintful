@@ -21,13 +21,21 @@
  * plan recomputed after each move cannot cycle (§ "Recompute-stable plans").
  */
 
+import { FREE_NAMES } from "../../engine/color/colors.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
-import { CELL, mark, phrase, type Sentence } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  mark,
+  phrase,
+  type Relation,
+  type Sentence,
+  whole,
+} from "../../engine/hint-words.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
 import { searchRefusal } from "../../engine/search-outcome.ts";
 import type { Point } from "../../engine/types.ts";
-import { say } from "./hint-text.ts";
+import { voice } from "../../generated/games/samegame/samegame.compiled.ts";
 import {
   findClearing,
   type Group,
@@ -55,6 +63,13 @@ export type SamegameRung = (typeof SAMEGAME_RUNGS)[number];
 
 type Step = HintStep<SamegameMove, unknown, SamegameRung>;
 type Said = { rung: SamegameRung; words: Sentence };
+
+/** A color is said by the palette's name for it. */
+const speak = voice<Point>({
+  kind: CELL,
+  kinds: { group: whole(CELL) },
+  value: (c) => FREE_NAMES[c - 1],
+});
 
 /** Positions the searches of one request may expand between them, and one
  * rival's search alone. Past either a rival is unsettled and the step claims
@@ -160,9 +175,12 @@ export function hint(
   const clearing = findClearing(state);
   if (clearing.kind !== "found") return searchRefusal(clearing);
   const [g] = clearing.line;
-  const at = pointsOf(state, g);
+  const ring = pointsOf(state, g);
   if (clearing.line.length === 1)
-    return { ok: true, steps: [step(g, { rung: "last", words: say.last(at) })] };
+    return {
+      ok: true,
+      steps: [step(g, { rung: "last", words: speak.sentence("last", { ring }) })],
+    };
 
   const rivals = groupsOf(state.tiles, state.w, state.h).filter(
     (r) => !sameGroup(r, g),
@@ -184,48 +202,63 @@ export function hint(
     const rival = pointsOf(state, first.r);
     if (first.trap.kind === "lastOfColor") {
       const v = first.trap.victim;
-      const words = say.lastOfColor(at, rival, pointOf(state, v), state.tiles[v]);
+      const words = speak.sentence("lastOfColor", {
+        ring,
+        terms: { color: state.tiles[v] },
+        marks: { outline: { square: [pointOf(state, v)] }, stripes: { rival } },
+      });
       return { ok: true, steps: [step(g, { rung: "lastOfColor", words })] };
     }
-    return {
-      ok: true,
-      steps: [step(g, { rung: "stuck", words: say.stuck(at, rival) })],
-    };
+    const words = speak.sentence("stuck", { ring, marks: { stripes: { rival } } });
+    return { ok: true, steps: [step(g, { rung: "stuck", words })] };
   }
 
   const { claim } = judgeRivals(rivals, ALLOWANCE, (r, allowance) =>
     judge(state, removed(state.tiles, state.w, state.h, r), allowance, RIVAL_PROOF),
   );
-  const goods = (gs: readonly Group[]) => gs.map((r) => pointsOf(state, r));
+  // The other groups that keep the board clearable, outlined together.
+  const goods = (
+    kind: "onlyThese" | "alsoThese",
+    gs: readonly Group[],
+    relation: Relation,
+  ): Said => ({
+    rung: kind,
+    words: speak.sentence(kind, {
+      ring,
+      terms: { groups: gs.length },
+      marks: { outline: { groups: gs.flatMap((r) => pointsOf(state, r)) } },
+      relation,
+    }),
+  });
   // With nothing settled to contrast, a fact the player can see instead, which
   // claims nothing about clearing.
   const plain = (): Said => {
     const lone = joinedBy(state, g);
     return lone === null
-      ? { rung: "plain", words: say.plain(at) }
+      ? { rung: "plain", words: speak.sentence("plain", { ring }) }
       : {
           rung: "joins",
-          words: say.joins(at, pointOf(state, lone), state.tiles[lone]),
+          words: speak.sentence("joins", {
+            ring,
+            terms: { color: state.tiles[lone] },
+            marks: { outline: { square: [pointOf(state, lone)] } },
+          }),
         };
   };
+  const judged = (rung: "none" | "anyGroup" | "only", relation: Relation): Said => ({
+    rung,
+    words: speak.sentence(rung, { ring, relation }),
+  });
   const said: Said =
     claim.kind === "none"
-      ? { rung: "none", words: say.none(at, claim.relation) }
+      ? judged("none", claim.relation)
       : claim.kind === "every"
-        ? { rung: "anyGroup", words: say.anyGroup(at, claim.relation) }
+        ? judged("anyGroup", claim.relation)
         : claim.kind === "only"
-          ? { rung: "only", words: say.only(at, claim.relation) }
-          : claim.kind === "onlyThese"
-            ? {
-                rung: "onlyThese",
-                words: say.onlyThese(at, goods(claim.goods), claim.relation),
-              }
-            : claim.kind === "alsoThese"
-              ? {
-                  rung: "alsoThese",
-                  words: say.alsoThese(at, goods(claim.goods), claim.relation),
-                }
-              : plain();
+          ? judged("only", claim.relation)
+          : claim.kind === "onlyThese" || claim.kind === "alsoThese"
+            ? goods(claim.kind, claim.goods, claim.relation)
+            : plain();
   return { ok: true, steps: [step(g, said)] };
 }
 

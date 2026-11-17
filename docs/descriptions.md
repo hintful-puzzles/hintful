@@ -1407,8 +1407,10 @@ corner, T-piece, cross]`) is one of them, typed as their union and said as it
 is; write one where the planner picks a word the board shows (a shape, a
 heading) rather than a number. **A step's `aim`** is what its move works
 toward, said first ("Working on tile 3: slide it into place", Fifteen's);
-with no `look` and no `effect` the move serves it, and a look after it is
-not capitalized. **A step that decides elements of several kinds** declares
+unless an `effect` or a judged `relation` says more, the move serves it, and
+a look after it is not capitalized. **A step's `answers`** is how its move
+meets a danger the look names ("One way to avoid it", Same Game's), said
+between them. **A step that decides elements of several kinds** declares
 its `ring` as a list of sorts (Numgame's `[high, sign, low]`); the planner
 gives the ring by sort, each reference names one (`{ring sign: {op}}`), the
 voice's `kinds` draws each, and a wording reads one sort's size as

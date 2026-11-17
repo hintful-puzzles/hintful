@@ -73,6 +73,7 @@
         "properties": {
           "when": { "$ref": "#/$defs/formula" },
           "aim": { "$ref": "#/$defs/clause" },
+          "answers": { "$ref": "#/$defs/clause" },
           "look": { "$ref": "#/$defs/clause" },
           "follows": { "$ref": "#/$defs/clause" },
           "move": { "$ref": "#/$defs/clause" },
@@ -821,6 +822,10 @@
               "aim": {
                 "$ref": "#/$defs/clause",
                 "description": "What the move works toward, said first as \"Working on …:\" (Fifteen's \"tile 3\"); with no `look` and no `effect`, the move serves it."
+              },
+              "answers": {
+                "$ref": "#/$defs/clause",
+                "description": "How the move answers a danger the `look` names, said before it: \"L. One way to avoid it: M.\" (Same Game's)."
               },
               "look": { "$ref": "#/$defs/clause" },
               "follows": { "$ref": "#/$defs/clause" },

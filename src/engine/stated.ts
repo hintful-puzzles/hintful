@@ -50,6 +50,9 @@ export interface Clauses {
   /** What the move works toward, said first ("Working on tile 3:"); with no
    * `look` and no `effect`, the move only serves it. */
   readonly aim?: string;
+  /** How the move answers a danger the `look` names ("One way to avoid it"),
+   * said before the move: an `answers` relation. */
+  readonly answers?: string;
   /** What a later leg of a journey says after its move, in place of `look` and
    * `follows`: the reasoning its first leg gave, as this square adds to it (an
    * `again` relation). A first leg ignores it. */
@@ -63,7 +66,7 @@ export interface Clauses {
 }
 
 /** A part of a step's sentence a description states. */
-export type ClausePart = Exclude<keyof Clauses, "long">;
+export type ClausePart = Exclude<keyof Clauses, "long" | "answers">;
 
 /** The role each slot role is drawn in: `strand` is outlined apart. */
 const DRAWN: Readonly<Record<string, MarkRole>> = {
@@ -464,12 +467,14 @@ export function statedParts<E, R = E>(
 }
 
 /** A step's words, from its stated parts; `closing` is the move's words where
- * the clauses state none, the engine's from the fact. */
+ * the clauses state none, the engine's from the fact, and `relation` how the
+ * move stands to its look where a search judged it (else the clauses say:
+ * forced, or serving an aim). */
 export function statedSentence<E, R = E>(
   c: Clauses,
   context: StatedContext<E, R>,
   closing: Narration | null = null,
-  relation: Relation = { kind: "forced" },
+  relation: Relation | null = null,
 ): Sentence {
   const cx = context as unknown as StatedContext<E>;
   const { long: _, ...parts } = c;
@@ -502,7 +507,7 @@ function statedOnce<E>(
   c: Clauses,
   cx: StatedContext<E>,
   closing: Narration | null,
-  relation: Relation,
+  relation: Relation | null,
 ): Sentence {
   const { effect, again, later, ...parts } = statedParts(c, cx);
   const move = parts.move ?? closing;
@@ -514,24 +519,28 @@ function statedOnce<E>(
       relation: { kind: "again", basis: again },
       ...(c.long === undefined ? {} : { long: c.long }),
     });
-  const alone =
+  // A wording that states only its move has nothing to say but the move
+  // (Flood's fill that joins no square).
+  if (
     effect === undefined &&
     parts.look === undefined &&
     parts.follows === undefined &&
-    relation.kind === "forced";
-  // A wording that states only its move has nothing to say but the move
-  // (Flood's fill that joins no square); with an aim, the move serves it.
-  if (alone && parts.aim === undefined)
+    parts.aim === undefined &&
+    relation === null
+  )
     return unshaped(phrase`${move}.`.capitalized(), "bare");
   return sentence({
     ...parts,
     move,
+    // A move with an aim serves it unless a search proved more: an aimed
+    // planner's step claims no "so" of its own.
     relation:
       effect !== undefined
         ? { kind: "effect", effect }
-        : alone
-          ? { kind: "serves" }
-          : relation,
+        : c.answers !== undefined
+          ? { kind: "answers", how: render(c.answers, cx).text }
+          : (relation ??
+            (parts.aim === undefined ? { kind: "forced" } : { kind: "serves" })),
     ...(c.long === undefined ? {} : { long: c.long }),
   });
 }
