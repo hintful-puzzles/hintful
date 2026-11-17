@@ -128,6 +128,28 @@ boundaries are judgment, and the counts carry that.
   `closed`, Slant's and Rome's `loop` (each its own formula over its own
   notion of a loop). So LOOP as counted (12) is about four formulas, and
   this one covers two techniques.
+- [ ] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
+  evidence; this change waits on the answer.** 22 techniques are placed by
+  kind, out of the 185 the clustering put in nine kinds. Each kind tried
+  splits into several formulas: REL's support form fits 3 of 14, LOOP's
+  early-close form 2 of 12. CNT (35) fits only where a game defines
+  `need(S)` and `open(S)` over a set, which Norinori and Starbattle do (as of
+  2026-11-17); Loopy (`need(f)`, `faceOpen(f)`), Tracks (`laid`,
+  `undecided`) and Boats (`ships`) would have their defines restated first,
+  which changes their other techniques too. The words stayed each game's in
+  every kind. Measured: no player-visible change (no snapshot, ladder or
+  order moved), the lines roughly even, and the plants the same or coarser.
+  So coverage is heading well under the 61% counted and below the "about
+  half" named in 2.2 as the sign to look again. What a kind buys is the
+  formula, the plant and the soundness check written once. The question:
+  (a) go on, restating each game's defines onto a shared contract so the
+  kinds fit, for that saving at a hundred games; (b) stop here, keep the
+  seven kinds for new games and archive, folding the rest into
+  `move-each-remaining-game-once` with no restatement of old games; or
+  (c) something else the owner sees. Recommendation: (b), because a new
+  game written against the kinds gets the saving, while an old game's
+  restatement buys no player-visible change and costs a soundness re-check
+  each.
 - [ ] 2.3 The first restatements are the evidence for whether the family
   kinds hold (FIT above all). 2.1's finding, 2026-11-17: the formula part of
   a kind holds and is cheap (`one.cell`, `fit.flip`), and the words do not
