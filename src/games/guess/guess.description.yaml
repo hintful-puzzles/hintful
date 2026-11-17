@@ -194,3 +194,98 @@ techniques:
     conclude: >-
       forall d in colors(k) where pegs(k, d) > |settled(d)|,
       s in cells where s not in settled(d): strike(s, d)
+# A step's words use three references and nothing else: the striped row is
+# the scored guess it reads, an outlined slot one whose marks it leans on,
+# and the framed colors the blocks in the answer row it acts on (its ring).
+# They are framed, not ringed, because the mark follows the block's square
+# shape (`render.ts`, `drawAnswerSlot`). Colors have no names in this game
+# and positions no numbers, so neither is spoken. A deduction ends on the
+# colors it rules out, "out" of the answer, which no mark of the player's
+# is; whether "so" may be said is the rival judging's (`hint.ts`), passed as
+# the relation. A probe is chosen by what it leaves, and ends on that.
+phrases:
+  # The colors the step rules out; `several` is fixed when the step is
+  # made, so a step the player has partly made keeps its words.
+  out: "{if several: {ring: the framed colors} are out | {ring: the framed color} is out}"
+  row: "{stripes row: the striped row}"
+  slots: "{outline slots: the outlined slot | the outlined slots}"
+steps:
+  scoredNothing:
+    ring: color
+    terms: { several: flag }
+    marks: { stripes: [row] }
+    look: "{row} scored nothing"
+    follows: "none of its colors can be in the answer"
+    move: "{out}"
+  noBlack:
+    ring: color
+    terms: { several: flag }
+    marks: { stripes: [row] }
+    look: "{row} scored no black pegs"
+    follows: "none of its colors can be where it was guessed"
+    move: "{out}"
+  everyPegScored:
+    ring: color
+    terms: { several: flag }
+    marks: { stripes: [row] }
+    look: "every peg of {row} scored"
+    follows: "the answer can only use its colors"
+    move: "{out}"
+  noRepeats:
+    ring: color
+    terms: { several: flag }
+    marks: { outline: [slots] }
+    look: "{slots} can only be one color, and no color repeats"
+    follows: "no other slot can hold it"
+    move: "{out}"
+  # `black` is the row's black pegs.
+  blacksForced:
+    ring: color
+    terms: { several: flag, black: number }
+    marks: { stripes: [row], outline: [slots] }
+    look: "{row}'s {black: 1 black | {black} blacks} can only be in {slots}"
+    follows: "{black: that peg is right | those pegs are right}"
+    move: "{out}"
+  blacksAccounted:
+    ring: color
+    terms: { several: flag, black: number }
+    marks: { stripes: [row], outline: [slots] }
+    follows: "its other pegs are misplaced"
+    move: "{out}"
+    wordings:
+      - when: "black = 1"
+        look: "{slots} accounts for {row}'s black peg"
+      - look: "{slots} account for {row}'s {black} blacks"
+  # `total` is every peg the row scored.
+  totalAccounted:
+    ring: color
+    terms: { several: flag, total: number }
+    marks: { stripes: [row], outline: [slots] }
+    move: "{out}"
+    wordings:
+      - when: "|outlineSlots| = 1"
+        look: "{slots} accounts for {total: the 1 peg | all {total} pegs} {row} scored"
+      - look: "{slots} account for {total: the 1 peg | all {total} pegs} {row} scored"
+  onlyAnswer:
+    ring: color
+    look: "only one answer fits every score so far"
+    move: "guess {ring: the framed colors}"
+  # `fitting` answers fit every score; `worst` is the most this guess can
+  # leave, whatever it scores.
+  opening:
+    ring: color
+    terms: { fitting: number, worst: number }
+    look: "nothing is scored yet"
+    move: "guess {ring: the framed colors}"
+    effect: "whatever they score, at most {worst} of the {fitting} answers will be left"
+  probe:
+    ring: color
+    terms: { fitting: number, worst: number }
+    look: "{fitting} answers fit every score so far, and {ring: the framed colors} are one"
+    move: "guess them"
+    effect: "at most {worst} will be left"
+  # Past the enumeration budget: one of the guesses that fit.
+  probeFits:
+    ring: color
+    look: "only guesses that fit every score so far can win"
+    move: "guess {ring: the framed colors}"

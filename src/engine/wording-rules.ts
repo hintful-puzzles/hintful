@@ -89,3 +89,6 @@ export const RETIRED_PHRASE =
  * Mastermind's framed colors keep it: the color is out of the answer, and no
  * mark of the player's is. */
 export const IS_OUT = /\b(?:is|are) out\b/i;
+
+/** The games that keep "is out" as their own closing, by id. */
+export const KEEPS_IS_OUT: ReadonlySet<string> = new Set(["guess"]);

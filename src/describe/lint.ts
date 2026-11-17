@@ -19,6 +19,7 @@ import { judge } from "../engine/testing/hint-reference.ts";
 import {
   adjectiveDefect,
   IS_OUT,
+  KEEPS_IS_OUT,
   type MarkRole,
   NARRATION_LIMIT,
   RETIRED_PHRASE,
@@ -273,7 +274,8 @@ function bounds(c: StatedClauses): { shortest: string; longest: string } {
 }
 
 /** What is wrong with a wording's words, one line each. */
-function wordDefects(c: StatedClauses, moveRing = false): string[] {
+function wordDefects(c: StatedClauses, moveRing = false, keepsIsOut = false): string[] {
+  const retired = keepsIsOut ? [RETIRED_PHRASE] : [RETIRED_PHRASE, IS_OUT];
   const out = new Set<string>();
   for (let turn = 0; turn < turnsOf(c); turn++)
     for (const part of PARTS) {
@@ -281,7 +283,7 @@ function wordDefects(c: StatedClauses, moveRing = false): string[] {
       if (src === undefined) continue;
       for (const items of forms(parseClause(src), turn, LONGEST)) {
         const whole = said(items);
-        for (const rule of [RETIRED_PHRASE, IS_OUT]) {
+        for (const rule of retired) {
           const m = rule.exec(whole);
           if (m !== null)
             out.add(`${part} says "${m[0]}", a retired phrase: "${whole}"`);
@@ -359,9 +361,10 @@ function wordingsIn(
 function wordingFindings(file: DescriptionFile): Finding[] {
   const out: Finding[] = [];
   const needed = new Map<string, boolean>();
+  const keepsIsOut = "game" in file && KEEPS_IS_OUT.has(file.game);
   for (const { where: id, w, moveRing } of wordingsIn(file)) {
     const where = id === "" ? w.label : `${id} ${w.label}`;
-    for (const message of wordDefects(w.clauses, moveRing === true))
+    for (const message of wordDefects(w.clauses, moveRing === true, keepsIsOut))
       out.push({ where, error: true, message });
     const { shortest, longest } = bounds(w.clauses);
     const at = w.long === null ? null : id === "" ? w.long.at : `${id} ${w.long.at}`;

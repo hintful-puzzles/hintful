@@ -15,14 +15,11 @@ import {
 } from "./testing/engine-source.ts";
 import { codeLinesMatching, SCANNED_SOURCE_FILES } from "./testing/enrollment.ts";
 import { HINT_GAMES } from "./testing/hint-games.ts";
-import { IS_OUT, RETIRED_PHRASE as RETIRED } from "./wording-rules.ts";
+import { IS_OUT, KEEPS_IS_OUT, RETIRED_PHRASE as RETIRED } from "./wording-rules.ts";
 
 /** Loopy's preference label, which names a setting and not a hint step; a
  * label is the player's to be asked about, so it is left as it is. */
 const SETTING_LABEL = /^name: "Rule out edges that counting has already settled",?$/;
-
-/** The game that keeps "is out" as its own closing. */
-const KEEPS_IS_OUT = new Set(["guess"]);
 
 describe("no hint says a retired phrase", () => {
   it("scanned a populated source tree", () => {

@@ -19,6 +19,7 @@
 import { describedSpace, type GridSpace } from "../../engine/describe-runtime.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { GAME_OVER, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import type { MarkKind, Relation, Sentence } from "../../engine/hint-words.ts";
 import {
   CellMarks,
   compiledRung,
@@ -32,7 +33,7 @@ import {
 import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import * as guess from "../../generated/games/guess/guess.compiled.ts";
-import { COLOR, type Reason, say } from "./hint-text.ts";
+import { COLOR, ROW, SLOT } from "./hint-marks.ts";
 import {
   FEEDBACK_CORRECTPLACE,
   type GuessMove,
@@ -41,6 +42,86 @@ import {
   outcome,
   type SlotMark,
 } from "./state.ts";
+
+/** Why a step's colors are out, or which probe it is: the step of
+ * `guess.description.yaml` that says it, with its numbers. */
+type Reason =
+  | { kind: "scoredNothing" }
+  | { kind: "noBlack" }
+  | { kind: "everyPegScored" }
+  | { kind: "noRepeats" }
+  | { kind: "blacksForced"; black: number }
+  | { kind: "blacksAccounted"; black: number }
+  | { kind: "totalAccounted"; total: number }
+  | { kind: "onlyAnswer" }
+  | { kind: "opening"; fitting: number; worst: number }
+  | { kind: "probe"; fitting: number; worst: number }
+  | { kind: "probeFits" };
+
+const speak = guess.voice<number | SlotMark>({
+  kind: COLOR as MarkKind<number | SlotMark>,
+  kinds: {
+    row: ROW as MarkKind<number | SlotMark>,
+    slots: SLOT as MarkKind<number | SlotMark>,
+  },
+  value: String,
+});
+
+/** A step's sentence. Guess's hint searches, so "so" claims every rival
+ * lost, and only the judging that found them lost (`judged`) may say it; a
+ * probe is not forced, and says what it leaves. */
+function say(r: Reason, m: GuessHighlights, judged: Relation | null = null): Sentence {
+  const ring = m.marked;
+  const several = m.marked.length > 1;
+  const marks = { stripes: { row: m.line }, outline: { slots: m.slots } };
+  const proved = (): Relation => {
+    if (judged === null) throw new Error(`guess: a ${r.kind} step with no judging`);
+    return judged;
+  };
+  switch (r.kind) {
+    case "scoredNothing":
+    case "noBlack":
+    case "everyPegScored":
+      return speak.sentence(r.kind, {
+        ring,
+        terms: { several },
+        marks: { stripes: marks.stripes },
+        relation: proved(),
+      });
+    case "noRepeats":
+      return speak.sentence(r.kind, {
+        ring,
+        terms: { several },
+        marks: { outline: marks.outline },
+        relation: proved(),
+      });
+    case "blacksForced":
+    case "blacksAccounted":
+      return speak.sentence(r.kind, {
+        ring,
+        terms: { several, black: r.black },
+        marks,
+        relation: proved(),
+      });
+    case "totalAccounted":
+      return speak.sentence(r.kind, {
+        ring,
+        terms: { several, total: r.total },
+        marks,
+        relation: proved(),
+      });
+    case "onlyAnswer":
+      return speak.sentence(r.kind, { ring, relation: proved() });
+    case "opening":
+    case "probe":
+      return speak.sentence(r.kind, {
+        ring,
+        terms: { fitting: r.fitting, worst: r.worst },
+      });
+    case "probeFits":
+      return speak.sentence(r.kind, { ring, relation: { kind: "oneOf" } });
+  }
+}
 
 /** What a step rests on: its {@link Reason}'s kind. */
 export const GUESS_RUNGS = [

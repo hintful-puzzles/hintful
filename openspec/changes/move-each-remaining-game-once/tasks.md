@@ -158,7 +158,13 @@ Logic games:
   re-reads as before; a claim's ring is by sort (`focus`, `partner`,
   `dot`), and a dot's color and where it sits are word terms. Read in the
   app: a sole owner, a separation, a dot's own squares.
-- [ ] Guess
+- [x] Guess (2026-11-17): dump byte-identical, every rung reached. Its
+  deductions and probes are `steps` spoken through the voice in `hint.ts`,
+  the judged relation passed as before; its mark kinds are `hint-marks.ts`.
+  Its "is out" closing, an owner's exception, is `KEEPS_IS_OUT` in
+  `wording-rules.ts`, which the describe lint now reads as the
+  retired-phrase test does. Read in the app: an opening, a no-black
+  deduction (row striped, colors framed), two probes.
 - [ ] Blackbox
 - [ ] Bridges
 - [ ] ABCD

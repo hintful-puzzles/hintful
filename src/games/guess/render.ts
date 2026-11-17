@@ -44,7 +44,7 @@ import {
   type WinTone,
   winSlot,
 } from "../../engine/win-wave.ts";
-import { COLOR, ROW, SLOT } from "./hint-text.ts";
+import { COLOR, ROW, SLOT } from "./hint-marks.ts";
 import {
   FEEDBACK_CORRECTCOLOR,
   FEEDBACK_CORRECTPLACE,
