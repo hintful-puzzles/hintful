@@ -1407,6 +1407,9 @@ term left out is a type error; a game whose words vary by the board (Salad's
 mode) makes a voice for them. **A term of kind `unit`** is a row, column, block
 or diagonal, said as its name (`{axis}`, `{axis}s`); `StepsById` types it as
 `Unit`, and `lineUnit` turns a Latin reason's `"row" | "col"` into one. **A
+term of kind `values`** is several numbers, said by the value words as a list
+("1, 2 and 4") and counted by a count form (`{vs: isn't | aren't}`): the
+notes a step pencils (Seismic's `note`). **A
 term declared as a list of words** (Netslide's `shape: [loose end, straight,
 corner, T-piece, cross]`) is one of them, typed as their union and said as it
 is; write one where the planner picks a word the board shows (a shape, a

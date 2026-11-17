@@ -164,7 +164,9 @@ function expand<E>(pieces: readonly Piece[], cx: StatedContext<E>): Piece[] {
   return pieces.flatMap((p): Piece[] => {
     if (!("name" in p)) return [p];
     if (p.role === "count") {
-      const n = cx.terms[p.name];
+      // A step's list of values counts as how many it holds.
+      const t = cx.terms[p.name];
+      const n = Array.isArray(t) ? t.length : t;
       if (typeof n !== "number")
         throw new Error(`stated clause: {${p.name}: …} is no count term`);
       return expand((p.words as readonly (readonly Piece[])[])[n === 1 ? 0 : 1], cx);
@@ -277,7 +279,9 @@ function colored<E>(name: string, cx: StatedContext<E>): string | Narration {
       ? [...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value)
       : typeof t === "number" && !STATED_WORDS.has(name)
         ? [cx.value(t)]
-        : [];
+        : Array.isArray(t)
+          ? (t as readonly number[]).map(cx.value)
+          : [];
   if (values.every((v) => typeof v === "string")) return word(name, cx, null);
   return listOf(
     values.map((v) => (typeof v === "string" ? phrase`${v}` : v)),
@@ -352,6 +356,8 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
   if (typeof t === "number") return value(t);
   // A unit term holds the unit's name.
   if (typeof t === "string") return t;
+  // A step's values, in the order the planner gives them.
+  if (Array.isArray(t)) return joinWith((t as readonly number[]).map(value));
   throw new Error(`stated clause: {${name}} is no word, no number and no unit term`);
 }
 

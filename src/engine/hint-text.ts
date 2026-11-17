@@ -91,10 +91,12 @@ export function cleanObviousText(
 ): (marks: readonly Note[]) => Sentence {
   // Says nothing about the "fill all pencil marks" button doing this same
   // cleanup: help/features.md says so once (docs/hints.md § "Rules belong
-  // in the help"). The notes it names are the ones it strikes.
+  // in the help"). The notes it names are the ones it strikes. A game whose
+  // values are only "in" a region, never placed or standing, gives no verb.
+  const already = placedVerb === "" ? "already" : `already ${placedVerb}`;
   return (marks) =>
     unshaped(
-      phrase`Now clear the easy ones: cross out ${mark.as("strike", NOTE, marks, `any ${noun} already ${placedVerb} in its ${cell}'s ${regions}`)}.`,
+      phrase`Now clear the easy ones: cross out ${mark.as("strike", NOTE, marks, `any ${noun} ${already} in its ${cell}'s ${regions}`)}.`,
       "setup",
     );
 }

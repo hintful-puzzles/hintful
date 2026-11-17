@@ -123,10 +123,11 @@ export interface GameWords {
 
 /** What a step's term is: a `number`, said by the game's value words; a
  * `flag`, which an `if` and a `when` read; a `unit`, said as its name
- * ("row", "column", "block", "diagonal"); or a list of words, one of which
- * the planner supplies and the clause says as it is (a tile's shape, a
- * heading). */
-export type StepTermKind = "number" | "flag" | "unit" | readonly string[];
+ * ("row", "column", "block", "diagonal"); `values`, several numbers said by
+ * the value words as a list ("1, 2 and 4"), whose count form reads how many;
+ * or a list of words, one of which the planner supplies and the clause says
+ * as it is (a tile's shape, a heading). */
+export type StepTermKind = "number" | "flag" | "unit" | "values" | readonly string[];
 
 /** A kind of hint step a planner emits: what its sentence reads, which the
  * planner supplies, and its clauses. */

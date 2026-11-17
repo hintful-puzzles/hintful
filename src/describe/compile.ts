@@ -4823,10 +4823,13 @@ const stepTermType = (kind: StepTermKind): string =>
       ? "boolean"
       : kind === "unit"
         ? "Unit"
-        : "number";
+        : kind === "values"
+          ? "readonly number[]"
+          : "number";
 
 /** A planner's kind of step checks as a technique's `says` does, over the
- * terms and marks it declares: a number term is a number, a flag a truth. */
+ * terms and marks it declares: a number term is a number, a flag a truth, and
+ * a list of values checks as a number, being said and counted as one is. */
 function checkStep(step: Step): void {
   const sorts = new Map<string, Sort>(
     step.terms.flatMap((t): [string, Sort][] =>

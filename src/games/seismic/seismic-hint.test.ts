@@ -22,9 +22,9 @@ import {
   refreshHintStep,
   type SeismicHint,
   type SeismicRung,
+  say,
   workingBoard,
 } from "./hint.ts";
-import { say } from "./hint-text.ts";
 import { seismicGame } from "./index.ts";
 import { COL_HINT_CELL, COL_NUM_PENCIL } from "./render.ts";
 import { dealtOf, marksOf, seismicLadder } from "./solver.ts";

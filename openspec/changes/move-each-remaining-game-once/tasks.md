@@ -112,7 +112,18 @@ Logic games:
   (`taken`, `chain`, `number`: `{or why: …}`, supplied) whose verbs agree
   with the rivals' count, so an `{or}` inside a count form; and the
   wordings with no rivals ("points only at", "Only this arrow points at").
-- [ ] Seismic
+- [x] Seismic (2026-11-17): its own sentences are `steps` spoken through
+  the voice in `hint.ts`; the Latin library's (a lone note, an area's one
+  place, the cull) stay the engine's, and its opening clean is the engine's
+  `cleanObviousText` (which now takes no verb: a number is "already in" an
+  area). The engine gained a `values` step term, a list said by the value
+  words and counted by a count form ("Only 1 and 2 aren't …, so pencil
+  them in"). **One sentence changed**, a starve whose struck cell has the
+  note: "…, so this cell's 3 must go" is now "…, so its 3 must go" (152
+  dump lines, all one-cell starves): the lint refuses an unmarked "this
+  cell", and the cell is the one just named. Every rung reached in both
+  modes; marks unchanged. Read in the app: the starve's area striped and
+  cell ringed, a note step's cell ringed.
 - [ ] Rome
 - [ ] Rect
 - [ ] Galaxies

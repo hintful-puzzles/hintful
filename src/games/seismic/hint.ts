@@ -36,14 +36,26 @@ import {
 import { describedSpace, rangeMask } from "../../engine/describe-runtime.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
-import { candidateConclusions } from "../../engine/hint-text.ts";
+import {
+  candidateConclusions,
+  cleanObviousText,
+  narrateLatinReason,
+  placedRulesOut,
+  populateText,
+} from "../../engine/hint-text.ts";
+import {
+  CELL,
+  type Narration,
+  type Note,
+  type Sentence,
+  whole,
+} from "../../engine/hint-words.ts";
 import { digitKeyCode } from "../../engine/key-labels.ts";
 import { CellMarks, type Said, TIERS } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
 import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
-import { say } from "./hint-text.ts";
 import { dealtOf, seismicLadder } from "./solver.ts";
 import {
   areaBits,
@@ -80,6 +92,96 @@ export const SEISMIC_RUNGS = [
   "starve",
 ] as const;
 export type SeismicRung = (typeof SEISMIC_RUNGS)[number];
+
+/** A step's marks are cells; the starved area is striped whole. */
+const speak = seismic.voice<Point>({
+  kind: CELL,
+  kinds: { area: whole(CELL) },
+  value: String,
+  noun: "cell",
+});
+
+/** The library's words in Seismic's: a number in a cell. */
+const LATIN = { noun: "number", cell: "cell", value: String };
+
+/**
+ * Every sentence Seismic's hint speaks: its own are the steps
+ * `seismic.description.yaml` states, the Latin library's (a lone note, an
+ * area's one place, the cull after a placement) are the engine's, said where
+ * a number may not repeat. `tectonic` chooses the keep-apart rule the words
+ * state. A strike's words are a premise, which the walk ends with its move.
+ */
+export const say = {
+  populate: populateText("number", "cell"),
+
+  /** The one-off setup strike: "within N cells" is the rule's own reach, a
+   * distance of N or less between two Ns being a clash. */
+  clean: (tectonic: boolean): ((marks: readonly Note[]) => Sentence) =>
+    cleanObviousText(
+      tectonic ? "number" : "N",
+      "",
+      speak.part("clean", "move", { terms: { tectonic } }).text,
+      "cell",
+    ),
+
+  /** A note-less cell's candidates, written because a deduction rests on them. */
+  note: (
+    at: Point,
+    vs: readonly number[],
+    unruled: boolean,
+    tectonic: boolean,
+  ): Sentence =>
+    speak.sentence("note", { ring: [at], terms: { tectonic, unruled, vs } }),
+
+  singleton: (at: Point): Sentence => speak.sentence("singleton", { ring: [at] }),
+
+  naked: (at: Note, w: number): Sentence =>
+    narrateLatinReason({ kind: "single" }, at, w, LATIN),
+
+  regionsFull: (at: Point, n: number, tectonic: boolean): Sentence =>
+    speak.sentence("regionsFull", { ring: [at], terms: { tectonic, n } }),
+
+  /** A number with one cell of its area left: the `one.place` kind's
+   * sentence, the Latin library's `hiddenSingle`. */
+  hidden: (area: readonly Point[], at: Note, w: number): Sentence =>
+    narrateLatinReason(
+      { kind: "hiddenSingle", n: at.n, unit: { name: "area", cells: area } },
+      at,
+      w,
+      LATIN,
+    ),
+
+  /** A placement's own strikes, as the leg after it: the `peer.placed` kind's
+   * sentence, every game's, with Seismic's reach. */
+  cull: (at: Point, n: number, tectonic: boolean): Narration =>
+    placedRulesOut(
+      { px: at.x, py: at.y, n },
+      String,
+      speak.part("cull", "move", { terms: { tectonic, n } }).text,
+    ),
+
+  starve: (
+    area: readonly Point[],
+    n: number,
+    targets: readonly Point[],
+    tectonic: boolean,
+  ): Narration =>
+    speak.premise("starve", {
+      ring: targets,
+      terms: { tectonic, n, one: targets.length === 1 },
+      marks: { stripes: { area } },
+    }),
+
+  /** What a starve strikes, named by whose notes they are. */
+  starved: (n: number, targets: number): string =>
+    speak.part("starve", "move", {
+      terms: { tectonic: false, n, one: targets === 1 },
+      marks: { stripes: { area: [] } },
+    }).text,
+
+  /** What a cull strikes. */
+  culled: (n: number): string => speak.part("culled", "move", { terms: { n } }).text,
+};
 
 /** Seismic's moves already carry the shared names; only the note bit differs, and
  * a placement bakes in no auto-pencil, which Seismic does not have. */

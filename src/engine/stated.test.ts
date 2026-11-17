@@ -261,6 +261,16 @@ describe("a stated clause", () => {
     ).toThrow(/no count term/);
   });
 
+  it("says a step's values as a list, and counts them in a count form", () => {
+    const say = (vs: readonly number[]): string =>
+      statedSentence(
+        { look: "only {vs} {vs: is | are} left", move: "pencil {vs: it | them} in" },
+        cx({ terms: { vs } }),
+      ).text;
+    expect(say([2])).toBe("Only v2 is left, so pencil it in.");
+    expect(say([1, 2, 4])).toBe("Only v1, v2 and v4 are left, so pencil them in.");
+  });
+
   it("says how a move answers its look, a bare move or an evident look alone, and an aim served unless judged", () => {
     expect(
       statedSentence(

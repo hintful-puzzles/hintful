@@ -95,3 +95,67 @@ techniques:
     says:
       terms: { r: r, n: n }
       marks: {}
+phrases:
+  # Where a number already in place rules itself out of the ringed cell, by
+  # the keep-apart rule of the mode (`tectonic`). "Within reach" is the N
+  # cells a number N keeps clear, which a sentence about every number at once
+  # cannot write as a count.
+  reach: "{ring}'s area or {if tectonic: in a cell touching it | within reach along its row or column}"
+  # The cells a starved area strikes from, ringed.
+  struckCells: "{ring: this cell | each of these cells}"
+steps:
+  # A note-less cell's candidates, written because a deduction rests on them;
+  # `unruled` where nothing near rules any out yet.
+  note:
+    ring: cell
+    terms: { tectonic: flag, unruled: flag, vs: values }
+    wordings:
+      - when: unruled
+        look: "No number stands near enough to rule one out of {ring} yet"
+        move: "pencil in every one"
+      - look: "Only {vs} {vs: isn't | aren't} already in {reach}"
+        move: "pencil {vs: it | them} in"
+  # An area of one cell owes only a 1, and needs no notes to say so. That the
+  # area is one cell holds in every position, so it is said, not striped: the
+  # first beat shows the ring (`docs/hints-marks.md` § "Hatch the line the
+  # sentence names").
+  singleton:
+    ring: cell
+    look: "{ring} is an area by itself"
+    move: "it can only be 1"
+  # A note-less cell every other number is ruled out of.
+  regionsFull:
+    ring: cell
+    terms: { tectonic: flag, n: number }
+    look: "Every other number is already in {reach}"
+    move: "it can only be {n}"
+  # An area whose every remaining home for `n` clashes with the struck cells.
+  # Worded as where the area can put its `n`, because that is what the notes
+  # in the striped area show; the clash is the reach the player measures from
+  # there. Its move is what the walk crosses out, by whose notes they are
+  # (`one`: a single cell's).
+  starve:
+    ring: cell
+    terms: { tectonic: flag, n: number, one: flag }
+    marks: { stripes: [area] }
+    look: >-
+      {stripes area: The striped area}'s {n} can only go {if tectonic: in a
+      cell touching {struckCells} | within {n} {n: cell | cells} of
+      {struckCells}, in line with it}
+    move: "{if one: its {n} | their {n}s}"
+  # Where a number just placed rules itself out, after "its" (the
+  # `peer.placed` kind's sentence).
+  cull:
+    ring: cell
+    terms: { tectonic: flag, n: number }
+    move: "{if tectonic: area or in the cells touching it | area or within {n} {n: cell | cells} of it in its row and column}"
+  # What a cull strikes.
+  culled:
+    ring: cell
+    terms: { n: number }
+    move: "those {n}s"
+  # The opening clean's reach, after "in its cell's" (the engine's clean).
+  clean:
+    ring: cell
+    terms: { tectonic: flag }
+    move: "{if tectonic: area or in a cell touching it | area or within N cells of it in its row or column}"
