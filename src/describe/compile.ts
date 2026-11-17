@@ -613,9 +613,8 @@ interface Env {
   /** The mark the description keeps on each cell naming a clue of `kind`,
    * read `name(c)` and made by `mark(c, q)`, or `null` where it keeps none. */
   cellMark: { name: string; kind: string } | null;
-  /** The suppositions of the `with`s the code is inside, innermost first:
-   * the names of the cell and of the value it is supposed to hold. */
-  supposed: readonly { cell: string; value: string }[];
+  /** The suppositions of the `with`s the code is inside, innermost first. */
+  supposed: readonly Supposed[];
   /** The definitions a game's techniques keep for each argument, by name,
    * each compiled once as an exported function of the module
    * (`keptDefinition`); `null` where nothing is kept. */
@@ -1184,10 +1183,19 @@ function compileNode(e: Expr, scope: Scope, env: Env, out: Out): Val {
   }
 }
 
+/** A `with`'s supposition: the names of the cell, or of the set of cells
+ * (`many`), and of the value it is supposed to hold. */
+interface Supposed {
+  cell: string;
+  value: string;
+  many: boolean;
+}
+
 /**
- * `with place(c, d): P`: `P` read on the marks with `c` holding `d`. Its
- * reads of the marks see the supposition (`env.supposed`), so none of them
- * is computed outside it, and nothing in it concludes.
+ * `with place(c, d): P`: `P` read on the marks with `c` holding `d`, or each
+ * member of `c` where it is a set of cells. Its reads of the marks see the
+ * supposition (`env.supposed`), so none of them is computed outside it, and
+ * nothing in it concludes.
  */
 function supposing(
   e: Extract<Expr, { k: "with" }>,
@@ -1205,13 +1213,14 @@ function suppose(
   scope: Scope,
   env: Env,
   out: Out,
-): { env: Env; cell: string; value: string } {
+): { env: Env } & Supposed {
   if (env.answer !== null || env.position !== null)
     throw new CompileError(
       "with supposes a value on the marks, which only a technique reads",
     );
   const c = compileExpr(e.cell, scope, env, out);
-  expectElem(c, env.answerSort, "with");
+  const many = isSetOf(c.sort, env.answerSort);
+  if (!many) expectElem(c, env.answerSort, "with");
   const d = compileExpr(e.value, scope, env, out);
   expect(d, "num", "with");
   const cell = Out.fresh("_wc");
@@ -1221,12 +1230,12 @@ function suppose(
   const inner: Env = {
     ...env,
     concluding: false,
-    supposed: [{ cell, value }, ...env.supposed],
+    supposed: [{ cell, value, many }, ...env.supposed],
     hoist: env.hoist === null ? null : { ...env.hoist, marks: false },
   };
   // A truth in a premise, and a set where a `says` reads one under a
   // supposition; whoever reads it checks its sort.
-  return { env: inner, cell, value };
+  return { env: inner, cell, value, many };
 }
 
 /**
@@ -1304,7 +1313,8 @@ function witnessOf(e: Expr, scope: Scope, env: Env, out: Out): string | null {
   if (e.k === "with") {
     const s = suppose(e, scope, env, out);
     const inner = witnessOf(e.body, scope, s.env, out);
-    return `{ held: "supposing", cell: ${s.cell}, value: ${s.value}, of: ${of(inner)} }`;
+    const cell = s.many ? `${s.cell}.slice()` : s.cell;
+    return `{ held: "supposing", cell: ${cell}, value: ${s.value}, of: ${of(inner)} }`;
   }
   if (e.k === "quant" && e.q === "exists") {
     const r = Out.fresh("_wm");
@@ -1376,11 +1386,12 @@ function markRead(fn: "known" | "value" | "cand", c: Val, env: Env, out: Out): V
 function supposedRead(
   x: string,
   env: Env,
-  held: (s: { cell: string; value: string }) => string,
+  held: (s: Supposed) => string,
   plain: string,
 ): string {
   return env.supposed.reduceRight(
-    (acc, s) => `(${x} === ${s.cell} ? ${held(s)} : ${acc})`,
+    (acc, s) =>
+      `(${s.many ? `${s.cell}.includes(${x})` : `${x} === ${s.cell}`} ? ${held(s)} : ${acc})`,
     plain,
   );
 }

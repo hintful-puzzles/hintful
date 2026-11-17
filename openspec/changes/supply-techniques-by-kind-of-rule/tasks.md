@@ -863,9 +863,40 @@ boundaries are judgment, and the counts carry that.
     fingerprint re-recorded (same steps and rung counts). Deal-compare at 3
     seeds a preset: same boards and verdicts, 0.96× deals, 1.03× solves.
     Re-checked sound, the same verdicts (`spareBreaks` held, as it was).
-  - [ ] Step 3, `with place(S, v)` over a set, so Spokes' `H` copies
+  - [x] (2026-11-17) Step 3, `with place(S, v)` over a set, so Spokes' `H` copies
     (`drawn`, `linesH`, `spareH`) go and its breaks are the count and
-    connect rules' own, read under the supposition.
+    connect rules' own, read under the supposition. The compiler reads a
+    supposed set's members by `includes` (a `Supposed` carries `many`), the
+    checker takes a set's member guards as the supposed cells', and a
+    witness's `supposing` node holds the set. Spokes' breaks are now
+    `short(c)` (`|free(c)| < n`, the rules' `free`, `lines`, `spare` read
+    under the supposition) and `stranded(c)` over a new `group(c)`;
+    `lineBreaks` and `spareBreaks` read `with place(e, 1)` and `with
+    place(H, 1)`. **Moved: nothing.** Spokes' tests and snapshots pass
+    unchanged; deal-compare at 3 then 5 seeds a preset gives the same boards
+    and verdicts (deals 1.11× then 0.65×, solves 1.03× then 1.05×: noise).
+    A compile test (a set supposed, a number refused); planting "only a
+    set's first member is supposed" failed six Spokes hint tests. Re-checked
+    sound whole (defines changed): the same verdicts, `spareBreaks` held as
+    it was, but on 24 sampled boards in its two minutes where it was 64 (a
+    supposed set is a guard per member in the checker's reads). Seen in the app (4x4 Normal): "Drawing
+    this line would leave the outlined 4 too few spokes" and "Ruling this
+    spoke out would fill the outlined 2 and strand the outlined hubs", the
+    outlines on the hubs said. **Not moved, and why:** Bridges supposes at
+    least `j` bridges on a line (`needAt(c, H, j)`), which leaves the line
+    room for more and is no one value (`docs/descriptions.md` § "The formula
+    syntax"). Step 4 (a trial kind) waits for a second game whose breaks
+    read the same way.
+  - [ ] Boats' trials on nested `with`s (`with place(H, 1): with place(W,
+    2)`), so `sh(x, H)` and the `x not in W` copies go; `H` and `W` stay
+    binders, for `breaks` reads `H + W` for where to look. Re-check Boats
+    sound and deal-compare. Traps read beforehand: H must be the inner
+    `with` (a corner water square that is also in H is a collision, which
+    the outer W would hide); `done(m)` and `ships` read the marks and would
+    see the supposed boats, so the fleet count `|C| > boatsOf(m) - done(m)`
+    is restated, not swapped. Then its supplied `collision`/`count`/…
+    flags, which `solver.ts` finds again, are Boats' `breaks:` (step 2's
+    third game), which is step 4's evidence.
   - [ ] Then REL (10 left) and PEER (6).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by

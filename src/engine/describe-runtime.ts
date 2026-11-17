@@ -304,7 +304,8 @@ export class EdgeRelation {
  *
  * - `arm`: which side of an `or` held, the left (0) tried first.
  * - `member`: the binders' values of the first member an `exists` held for.
- * - `supposing`: the cell and value a `with` placed, and what held under it.
+ * - `supposing`: the cell, or the cells, and the value a `with` placed, and
+ *   what held under it.
  * - `def`: a definition read, and what held in its body; a break clause's
  *   (`breaks`) carries the terms its words read, read where it held.
  * - `all`: the parts of an `and` that have any.
@@ -316,7 +317,12 @@ export type Witness =
       member: Readonly<Record<string, number | readonly number[]>>;
       of: Witness | null;
     }
-  | { held: "supposing"; cell: number; value: number; of: Witness | null }
+  | {
+      held: "supposing";
+      cell: number | readonly number[];
+      value: number;
+      of: Witness | null;
+    }
   | {
       held: "def";
       name: string;

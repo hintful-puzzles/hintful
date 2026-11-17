@@ -12,8 +12,8 @@ techniques:
   # A line read as breaking the board where it leaves a hub still short.
   lineBreaks:
     for: >-
-      e in edges, a = end1(e), b = end2(e), H = {e} where live(a, b) and
-      (brokenH(a, H) or spareH(b, H))
+      e in edges, a = end1(e), b = end2(e) where live(a, b) and with
+      place(e, 1): broken(a) or spare(b)
   # The edge whose crossing out breaks the board crossed out rather than
   # lined.
   spareBreaks:

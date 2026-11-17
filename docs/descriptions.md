@@ -193,7 +193,7 @@ precedence first:
 | Form | Meaning |
 | --- | --- |
 | `forall B: P`, `exists B: P` | over every binding of the binders `B` |
-| `with place(c, d): P` | `P` read on the marks with `c` holding `d`, nothing propagated |
+| `with place(c, d): P` | `P` read on the marks with `c` (or each member of a set `c`) holding `d`, nothing propagated |
 | `P iff Q`, `P implies Q` | `implies` is right-associative |
 | `P or Q`, `P and Q`, `not P` | short-circuiting, so a premise can guard what it reads |
 | `a = b`, `!=`, `<`, `<=`, `>`, `>=` | `=` compares numbers, elements, truths and sets |
@@ -425,14 +425,14 @@ description author acts on:
   supposition (Sticks' `stick` and `reach`). A technique states what the
   supposed value would break, and concludes the other value. A `with` reads
   no beam, and no rule may hold one.
-- **A supposition of many squares is a definition's parameters**: Boats'
-  trials suppose the rest of a line one value, so `broken(H, W, T)` reads
-  every rule with the squares `H` segments (`x in H or value(x) = 1`) and
-  `W` water. Nothing propagates, so what follows at once from the
-  supposition is stated in it: the water at a supposed segment's corners,
-  and every boat the supposition closes, counted against what the fleet has
-  left. A set of edges supposed lines is the same: Spokes' `spareBreaks`
-  supposes a hub's other links all lines as `H`, read through `drawn(e, H)`.
+- **A supposition of many squares is a `with` over a set**: Spokes'
+  `spareBreaks` supposes a hub's other spokes all lines with `with place(H,
+  1)`, so its breaks are the rules' own definitions (`lines`, `free`,
+  `spare`) read under it, with no copy of each that takes `H`. Nothing
+  propagates, so what follows at once from the supposition is stated in it.
+  Bridges passes its supposition as a definition's parameters (`needAt(c,
+  H, j)`), because it supposes at least `j` bridges on a line, which leaves
+  the line room for more, and no one value says that.
 - **A size the grid is not measured in** (Salad's `nums`) is read from what
   the board deals.
 - **`bits(n)` is the positions of `n`'s one bits, as a set**, so a value
@@ -1555,13 +1555,13 @@ reads them where the witness holds the break (its node carries them,
 square's ways are counted with the tried lines drawn. Path's `lineBreaks` and
 `pairBreaks` say a loop closed, two numbers joined or a square left short
 this way (`closes`, `joins`, `stuck`), and Spokes' a hub left short or a
-group sealed off, under lines supposed on a set (`shortH(c, H)`); a break under
+group sealed off, under lines supposed on a set (`short(c)`); a break under
 a `not`, a `forall` or an aggregate is not witnessed, and the compiler refuses
 a technique whose `{broke}` it never holds. A break's terms are the
 technique's, so a wording's `when` reads them where the break's words would
 say the wrong thing beside the technique's own: Spokes' `spareBreaks` says
 "one outlined 3 … the other 3" where the hub left short has the filled hub's
-number (`brokeShortH and bn = fn`). Exemplar: `path-witness.test.ts`.
+number (`brokeShort and bn = fn`). Exemplar: `path-witness.test.ts`.
 
 **The witness is read where the sentence is built, by the name of what it
 holds**, not written into a term: `witnessOfDef(w, "shortNear")` finds the

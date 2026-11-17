@@ -107,6 +107,17 @@ describe("the compiler refuses an ill-sorted technique", () => {
       "export function x(",
     );
   });
+
+  it("supposes a value in each member of a set of cells, and in no number", () => {
+    const code = lib(
+      "strike(c, 1)",
+      "c in cells where with place(adj4(c), 1): exists y in adj4(c): value(y) = 1",
+    );
+    expect(code).toMatch(/\(_wc\d+\.includes\(\w+\) \? _wd\d+ :/);
+    expect(() =>
+      lib("strike(c, 1)", "c in cells where with place(cand(c), 1): known(c)"),
+    ).toThrow(CompileError);
+  });
 });
 
 describe("a function's fresh names are its own", () => {

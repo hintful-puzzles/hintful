@@ -4,13 +4,13 @@ ok  src/games/spokes/spokes.description.yaml#saturation: recorded sound, proved 
 ok  spokes     twoOnes                        3  sound    (want sound   )     1 queries    0.2s
 ok  spokes     twoOnes (planted)              3  unsound  (want unsound )     1 queries    0.1s   at ?
 ok  src/games/spokes/spokes.description.yaml#twoOnes: recorded sound, proved whole on all 1 boards
-ok  spokes     exhaustion                     3  sound    (want sound   )     9 queries    0.4s
+ok  spokes     exhaustion                     3  sound    (want sound   )     9 queries    0.6s
 ok  spokes     exhaustion (planted)           3  unsound  (want unsound )     1 queries    0.1s   at cell 0
 ok  src/games/spokes/spokes.description.yaml#exhaustion: recorded sound, proved whole on all 1 boards
-ok  spokes     lineBreaks                     3  sound    (want sound   )    20 queries   77.1s
+ok  spokes     lineBreaks                     3  sound    (want sound   )    20 queries   69.2s
 ok  spokes     lineBreaks (planted)           3  unsound  (want unsound )     1 queries    0.2s   at edge 0
 ok  src/games/spokes/spokes.description.yaml#lineBreaks: recorded sound, proved whole on all 1 boards
-..  spokes     spareBreaks: not proved whole in time, asked on 64 boards: no defect
-ok  spokes     spareBreaks                    3  held     (want sound   )   576 queries  120.1s
-ok  spokes     spareBreaks (planted)          3  unsound  (want unsound )     1 queries    0.2s   at cell 0
+..  spokes     spareBreaks: not proved whole in time, asked on 24 boards: no defect
+ok  spokes     spareBreaks                    3  held     (want sound   )   216 queries  120.0s
+ok  spokes     spareBreaks (planted)          3  unsound  (want unsound )     1 queries    0.4s   at cell 0
 ok  src/games/spokes/spokes.description.yaml#spareBreaks: recorded held, proved whole on 0 of 1 boards and asked on sampled answers on the rest

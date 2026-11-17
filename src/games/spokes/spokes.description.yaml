@@ -93,40 +93,27 @@ define:
     {y in adj8(c) where not known(edge(c, y)) and spare(y) and not crossed(edge(c, y))}
   # The edges of S not yet decided.
   open(S): "{e in S where not known(e)}"
-  # The same, read with lines supposed on the edges H.
-  drawn(e, H): "value(e) = 1 or e in H"
-  linesH(c, H): "count(y in adj8(c) where drawn(edge(c, y), H))"
-  spareH(c, H): "linesH(c, H) < takes(c)"
+  # The hubs the lines join square c to.
+  group(c): "{k in through(c, {e in edges where value(e) = 1}) where hub(k)}"
   # How many hubs the board has.
   hubs: "count(y in cells where hub(y))"
-  # Whether lines on H break the board at once near square c, whose lines
-  # they changed: it or a square beside it left short, or its group closed
-  # off.
-  brokenH(c, H): >-
-    shortH(c, H) or (exists s in adj8(c): shortH(s, H)) or sealedH(c, H)
-# How lines supposed on H are seen to break the board, each said where it is
-# what broke ({broke}).
+  # Whether the board is broken near square c, whose lines a supposition
+  # changed: it or a square beside it left short, or its group closed off.
+  broken(c): "short(c) or (exists s in adj8(c): short(s)) or stranded(c)"
+# How the board is seen to break under lines supposed (`with`), each said
+# where it is what broke ({broke}).
 breaks:
-  # Square c, with lines on H, is left too few edges that may still take a
-  # line for the lines it still takes. Its own lines are counted once, so
-  # each edge asks only the square across it.
-  shortH(c, H):
-    when: >-
-      exists n = takes(c) - linesH(c, H) where n > 0:
-      count(y in adj8(c) where not known(edge(c, y)) and edge(c, y) not in H
-      and spareH(y, H)
-      and not (crossedBy(edge(c, y)) != none and drawn(crossedBy(edge(c, y)), H))) < n
+  # Square c is left too few spokes for the lines it still takes.
+  short(c):
+    when: "exists n = takes(c) - lines(c) where n > 0: |free(c)| < n"
     terms: { starved: "{c}", bn: "takes(c)" }
     look: "leave {outline starved: the outlined {bn}} too few spokes"
-  # The hubs the lines join to square c, with lines on H, all have their
-  # lines while some hub is not among them: a group closed off.
-  sealedH(c, H):
+  # The hubs the lines join to square c all have their lines while some hub
+  # is not among them: a group closed off.
+  stranded(c):
     when: >-
-      not spareH(c, H)
-      and (forall k in through(c, {e in edges where drawn(e, H)}): not spareH(k, H))
-      and count(k in through(c, {e in edges where drawn(e, H)}) where hub(k)) < hubs
-    terms:
-      sealed: "{k in through(c, {e in edges where drawn(e, H)}) where hub(k)}"
+      not spare(c) and (forall k in group(c): not spare(k)) and |group(c)| < hubs
+    terms: { sealed: "group(c)" }
     look: "strand {outline sealed: the outlined hubs}"
 rules:
   # No two diagonals that cross are both lines.
@@ -209,8 +196,8 @@ techniques:
   - id: lineBreaks
     tier: Normal
     for: >-
-      e in edges, a = end1(e), b = end2(e), H = {e}
-      where live(a, b) and (brokenH(a, H) or brokenH(b, H))
+      e in edges, a = end1(e), b = end2(e)
+      where live(a, b) and with place(e, 1): broken(a) or broken(b)
     conclude: "place(e, 2)"
     says:
       terms: { e: e }
@@ -227,7 +214,7 @@ techniques:
       c in cells, U = ways(c) where spare(c) and |U| = takes(c) - lines(c) + 1,
       y in U, H = set(edge(c, x) over x in U where x != y)
       where not known(edge(c, y))
-      and (brokenH(c, H) or (exists x in U where x != y: brokenH(x, H)))
+      and with place(H, 1): broken(c) or (exists x in U where x != y: broken(x))
     conclude: "place(edge(c, y), 1)"
     says:
       # The hub the rule-out fills (leaves no spare spoke), and its number.
@@ -237,7 +224,7 @@ techniques:
       marks: { reads: "{c, y}" }
       wordings:
         # A hub left short with the filled hub's number is told apart from it.
-        - when: "brokeShortH and bn = fn"
+        - when: "brokeShort and bn = fn"
           look: >-
             Ruling {ring: this spoke | these spokes} out would fill
             {outline filled: one outlined {fn}} and leave

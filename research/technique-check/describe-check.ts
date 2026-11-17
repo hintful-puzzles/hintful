@@ -763,8 +763,8 @@ interface Ctx {
   supposed: readonly Supposition[];
 }
 
-/** `with place(c, v)`: the cell, its alternatives under their guards, and
- * the value it is supposed to hold. */
+/** `with place(c, v)`: the cell, its alternatives under their guards (or a
+ * set's members under theirs), and the value it is supposed to hold. */
 interface Supposition {
   at: readonly Alt[];
   v: Nx;
@@ -1374,7 +1374,9 @@ function evaluate(e: Expr, env: Env, ctx: Ctx): V {
       return call(e.fn, e.args, env, ctx);
     case "with": {
       if (ctx.mode !== "technique") throw new TypeError("with in a rule");
-      const at = alts(evaluate(e.cell, env, ctx), "with");
+      // A set supposes each member, so its members' guards are the cells'.
+      const supposed = evaluate(e.cell, env, ctx);
+      const at = supposed.k === "eset" ? supposed.mem : alts(supposed, "with");
       const v = num(evaluate(e.value, env, ctx), "with");
       return evaluate(e.body, env, {
         ...ctx,
