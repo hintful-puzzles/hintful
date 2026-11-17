@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ColorWord } from "./color/color-word.ts";
 import { CELL, type MarkKind, stepMarks } from "./hint-words.ts";
 import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
 import { type StatedContext, statedParts, statedSentence } from "./stated.ts";
@@ -194,6 +195,34 @@ describe("a stated clause", () => {
       ).text;
     expect(say()).toBe("No other number is left in these squares, so go.");
     expect(say("letter")).toBe("No other letter is left in these squares, so go.");
+  });
+
+  it("says the verb a square takes a value by, and be otherwise", () => {
+    const say = (be?: string): string =>
+      statedSentence({ look: "{ring} can only {be} {n}", move: "go" }, cx({ be })).text;
+    expect(say()).toBe("These squares can only be v3, so go.");
+    expect(say("point")).toBe("These squares can only point v3, so go.");
+  });
+
+  it("keeps a value that is a color word one, so each scheme names it", () => {
+    const words = [new ColorWord("sand", "slate"), new ColorWord("teal")];
+    const s = statedSentence(
+      { look: "{ring} hold {struck}", move: "{ring} must be {n}" },
+      cx({ value: (n) => words[n % 2], struck: [3, 2], terms: { n: 2 } }),
+    );
+    expect(s.textIn("light")).toBe(
+      "These squares hold sand and teal, so these squares must be sand.",
+    );
+    expect(s.textIn("dark")).toBe(
+      "These squares hold slate and teal, so these squares must be slate.",
+    );
+    // Inside a word a color cannot change by scheme, so it is refused.
+    expect(() =>
+      statedSentence(
+        { look: "{ring} hold {a n}", move: "go" },
+        cx({ value: (n) => words[n % 2], terms: { n: 2 } }),
+      ),
+    ).toThrow(/slot of its own/);
   });
 
   it("takes the form a flag term holds, in a clause and inside a reference's words", () => {

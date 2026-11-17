@@ -4792,6 +4792,6 @@ exports[`rome: pinned hint positions > says, at each pin 1`] = `
   "populate": "Start by penciling every candidate arrow into each empty square.",
   "reach": "Every square needs a goal, and only one mark in this square leads to the striped group, so its other marks must go.",
   "regionsFull": "Every other way this square can point is already used in its area, so it must point left.",
-  "single": "Every other arrow has been ruled out in this square, so it must point down.",
+  "single": "Every other arrow has been ruled out in this square, so it can only point down.",
 }
 `;

@@ -12,12 +12,10 @@
  * and *none* wants the glyph — an arrow drawn in prose is smaller than the one
  * on the board and says nothing the word does not.
  *
- * So `LatinVocab`'s `{ noun, value }` is not widened. It could not have helped
- * here anyway: Rome's generic-looking arms name an **area**, where
- * `narrateLatinReason` names a row and a column, so Rome writes its own
- * `narrate` for the same reason Solo and Towers do. The two shared setup
- * sentences *are* taken from `hint-text.ts`, because they are about penciling
- * rather than about rows.
+ * So `LatinVocab` takes the word as the value and "point" as its verb (`be`),
+ * and the naked single is the shared sentence in those words. The area-bound
+ * singles stay Rome's, each for the reason its doc gives. The two setup
+ * sentences are the shared ones too.
  */
 
 import {
@@ -25,6 +23,8 @@ import {
   cleanObviousText,
   joinOr,
   joinWith,
+  type LatinVocab,
+  narrateLatinReason,
   populateText,
   thisCell,
 } from "../../engine/hint-text.ts";
@@ -62,6 +62,9 @@ export const arrow = (n: number): string => WORD[n];
  * holding it. */
 export const neighbor = (n: number): string => NEIGHBOR[n];
 
+/** Rome's words for the shared candidate steps. */
+const VOCAB: LatinVocab = { noun: "arrow", value: arrow, cell: SQUARE, be: "point" };
+
 /** "this square", ringed. */
 const here = (at: Point): Narration => thisCell(at, SQUARE);
 
@@ -92,15 +95,15 @@ export const say = {
     });
   },
 
-  /** A naked single: the square's own notes have come down to one. */
+  /** A naked single: the square's own notes have come down to one. Every
+   * candidate game's words, in Rome's. */
   single: (at: Point, n: number): Sentence =>
-    so({
-      look: phrase`Every other arrow has been ruled out in ${here(at)}`,
-      move: phrase`it must point ${arrow(n)}`,
-    }),
+    narrateLatinReason({ kind: "single" }, { ...at, n }, 0, VOCAB),
 
   /** A single in a square with no marks: its area already uses every other way
-   * it can point. */
+   * it can point. Rome's own, not the shared `regionsFull`: a square at the
+   * edge can point fewer ways, so "every other arrow" would claim the area
+   * holds one it never could. */
   regionsFull: (at: Point, n: number): Sentence =>
     so({
       look: phrase`Every other way ${here(at)} can point is already used in its area`,
@@ -108,7 +111,9 @@ export const say = {
     }),
 
   /** A hidden single: a four-square area, `region`, holds all four arrows, and
-   * one of them has a single home left. Synthesized by the plan rather than
+   * one of them has a single home left. Rome's own, not the shared
+   * `hiddenSingle`: only an area of four must hold every arrow, so the
+   * sentence says that it is one. Synthesized by the plan rather than
    * recorded — the solver only ever *places* a naked single, but the plan may
    * reach the square before it has taken every strike the solver did. */
   hiddenSingle: (region: readonly Point[], at: Point, n: number): Sentence =>

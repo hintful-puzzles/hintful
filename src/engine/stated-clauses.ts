@@ -48,11 +48,13 @@
  * many parallel lines a step names (`tally`, in digits: a count is not a value
  * a game prints), and the kinds of region a value may not repeat in
  * (`regions`, "row and column" unless the game names more), and what a value
- * is called (`valueNoun`: "number", "letter"; a game's mode may decide it). */
+ * is called (`valueNoun`: "number", "letter"; a game's mode may decide it), and
+ * the verb a square takes one by (`be`: "be", Rome's arrows "point"). */
 export const STATED_WORDS: ReadonlySet<string> = new Set([
   "noun",
   "nouns",
   "valueNoun",
+  "be",
   "alongside",
   "struck",
   "struckOr",

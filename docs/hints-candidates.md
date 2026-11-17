@@ -262,7 +262,14 @@ reasoning over other regions cannot take the preset".
   `set`; a game narrates its own arms and falls through to it.
   Exemplar: `narrate` in [`unequal/index.ts`](../src/games/unequal/index.ts).
 - **The value vocabulary is a parameter**: `LatinVocab { noun, value(n),
-  cell? }`. Omit it for plain numbers. The shared `dup` arm picks "a"/"an" by
+  cell?, be? }`. Omit it for plain numbers; `be` is the verb a square takes a
+  value by (Rome's arrows "point"). **The one-value-left steps are every
+  candidate game's words**, grid or not: the Latin library's `steps`
+  (`single`, `regionsFull`, `hiddenSingle`), spoken through
+  `narrateLatinReason`, or through its `voice` where the game's marks are not
+  squares (Map's regions, whose color values are `ColorWord`s, said whole). A
+  game that supplies the other values as `struck` with `named` has them
+  named ("its neighbors already hold pink, teal and violet"). The shared `dup` arm picks "a"/"an" by
   the rendered value; check a letter value `a` after "There's already…",
   which reads as the article.
 - **Use the shared narrator when the only difference is the vocabulary, and
@@ -792,9 +799,9 @@ a lookup, `values` the count) and never passes its bits as values:
 
 - **Name a candidate by its word and its relation, not its glyph**: "up",
   "the square above", "point straight back". A glyph is smaller in prose
-  than on the board. `LatinVocab` is not widened for it; a game whose arms
-  name an area where the shared narrator names a row and column writes its
-  own.
+  than on the board. The word is the value and the relation's verb is `be`;
+  a game whose arm must say why an area holds every value (Rome's area of
+  four) writes that arm's sentence itself, and says why beside it.
 - **Project a packed cell onto "`0` means undecided" only with the argument
   that an undecided cell is exactly `0`**, written beside the projection.
 

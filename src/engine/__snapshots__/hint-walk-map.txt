@@ -1,4 +1,4 @@
-15x20 Easy, 30 regions #0: 16 steps, solved, f23fd8c11797f4ab [lone:16]
-15x20 Normal, 30 regions #0: 20 steps, solved, bf3d97684ece0aa8 [lone:12 pair:8]
-15x20 Tricky, 30 regions #0: 27 steps, solved, 17d91e4d391b02eb [lone:14 pair:9 weigh:4]
-15x20 Unreasonable, 30 regions #0: 10 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 1f44f8cd40978dd9 [lone:4 pair:3 weigh:3]
+15x20 Easy, 30 regions #0: 16 steps, solved, 8c22808f5fe0165f [lone:16]
+15x20 Normal, 30 regions #0: 20 steps, solved, 1eec1496495bfdf4 [lone:12 pair:8]
+15x20 Tricky, 30 regions #0: 27 steps, solved, ea70d86492dca3d8 [lone:14 pair:9 weigh:4]
+15x20 Unreasonable, 30 regions #0: 10 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 61f6a7413672c929 [lone:4 pair:3 weigh:3]

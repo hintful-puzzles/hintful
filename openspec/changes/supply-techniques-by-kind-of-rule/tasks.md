@@ -142,20 +142,30 @@ boundaries are judgment, and the counts carry that.
   remaining forms of each kind added until its techniques are placed.
   Wording and a step's order may move; each game moved is deal-compared and
   walked.
-- [ ] 2.10 Plan step (1), a kind carries its sentence, starting with
-  `one.cell`. Found 2026-11-17: the sentence exists. `latin.description.yaml`
-  `steps.single` ("Every other {valueNoun} has been ruled out in {ring}" /
-  "it can only be {d}") and `regionsFull` are the candidate walk's words, and
-  Seismic's hints already say them (its snapshot `single`). Map words the
-  same deduction in its own `hint.ts` (`case "lone"`: three variants,
-  `touchesTheRest`/`lastDot`/`deadDots`, shaped by an owner playtest
-  2026-09-25); Rome and Subsets through their `hint-text.ts`. So the work is:
-  find who consumes `steps.single` (`git grep -l valueNoun -- 'src/**/*.ts'`),
-  make `one.cell` place those steps' words for any game (nouns from
-  `kindWords`), and move Map, Rome and Subsets onto them, keeping what Map's
-  variants say that the shared sentence does not (the neighbors that ruled
-  the rest out) as a variant of the shared step, not as Map's own. Run the
-  app on each game moved (`docs/testing.md`), the hint wording included.
+- [x] 2.10 (2026-11-17) Done for `one.cell`: its sentence is the Latin
+  library's `single`/`regionsFull` steps, now every candidate game's. Added
+  `{be}` (the verb a value is taken by: Rome's "point") and a `regionsFull`
+  wording that names the other values (`named`, the values as `struck`); the
+  clause renderer takes a value that is a `ColorWord`, said whole, so Map's
+  colors keep their per-scheme names. **Moved:** Rome's naked single ("…so it
+  can only point right", was "must point"); Map's `lastDot` is the shared
+  `single` ("Every other color has been ruled out in this region"), its
+  `touchesTheRest` the named `regionsFull` ("This region's neighbors already
+  hold pink, teal and violet, so it can only be yellow", was "touches"), and
+  `deadDots` keeps its own look with the shared move. Both games run in the
+  app, the sentences on the right regions. **Kept the game's own, with the
+  reason beside it:** Rome's `regionsFull` (an edge square points fewer ways,
+  so "every other arrow" would be false) and `hiddenSingle` (only an area of
+  four holds every arrow, which the sentence must say); Map's `deadDots` look
+  (the candidate walk strikes stale notes in a step of their own; Map's walk
+  folds them in); **Subsets**, whose single is a set spoken letter by letter
+  (each leg marks one letter), so no one-value sentence fits its step.
+  Seismic already spoke the shared steps. Latin games' sentences unchanged.
+  **Found for 2.11:** no game speaks a `lone` firing's `says`; every
+  single is spoken by the game's walk (the candidate walk, Map's own), so
+  the kind's sentence is the library step the walks share, not a `says` on
+  the kind. Before writing a kind's sentence, find what speaks its firings
+  (`describedFiringHint` reads `says`; a walk names a step).
 - [ ] 2.11 Then `peer.placed`, `rel.support`, `loop.early`, `fit.flip` the
   same way, each kind's sentence written once from the games' best wording.
 - [ ] 2.12 Plan step (2), the count contract: `need(S)`/`open(S)` over a set

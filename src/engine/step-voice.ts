@@ -5,6 +5,7 @@
  * drawn on and how its values print, and then names a step and supplies what
  * `StepsById` says it is told by.
  */
+import type { ColorWord } from "./color/color-word.ts";
 import type { MarkKind, Narration, Noun, Sentence } from "./hint-words.ts";
 import {
   type ClausePart,
@@ -51,10 +52,11 @@ export interface Voice<E> {
    * a corner). */
   readonly nouns?: Readonly<Record<string, Noun>>;
   /** A value as the board draws it. */
-  value(n: number): string;
+  value(n: number): string | ColorWord;
   readonly noun?: Noun;
   readonly alongside?: string;
   readonly valueNoun?: string;
+  readonly be?: string;
   readonly regions?: string;
   unit?(els: readonly E[]): string;
 }

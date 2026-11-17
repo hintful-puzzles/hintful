@@ -291,7 +291,7 @@ function spoken(state: MapState): { s: MapState; step: MapHintStep; arms: Arm[] 
 
 /** The words of the arms no dealt board speaks, which no pin's snapshot holds. */
 const BUILT_WORDS: Record<Exclude<Arm, DealtArm>, RegExp> = {
-  lastDot: /^This region has a single dot/,
+  lastDot: /^Every other color has been ruled out in this region/,
   pairStrike: /^This region touches the outlined pair, .* must go\.$/,
   weighTrim: /^This region's other dots match .* can only be /,
   pairTrim: /^This region's other dots match .* can only be /,

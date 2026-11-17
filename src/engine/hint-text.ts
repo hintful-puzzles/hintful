@@ -279,6 +279,9 @@ export interface LatinVocab {
   /** How a wing's ends share a unit with the struck cell, in the game's
    * units. Default "in line with". */
   beside?: string;
+  /** The verb a square takes a value by. Default "be"; Rome's arrows
+   * "point". */
+  be?: string;
 }
 
 const NUMBER_VOCAB: LatinVocab = { noun: "number", value: (n) => String(n) };
@@ -305,6 +308,7 @@ export function narrateLatinReason(
     value: vocab.value,
     valueNoun: vocab.noun,
     noun: vocab.cell,
+    be: vocab.be,
   };
   const ring = [at];
   const terms = { d: at.n };
@@ -315,7 +319,7 @@ export function narrateLatinReason(
       return latinVoice<Point>({
         ...words,
         ...("regions" in reason ? { regions: joinWith([...reason.regions]) } : {}),
-      }).sentence("regionsFull", { ring, terms });
+      }).sentence("regionsFull", { ring, terms: { ...terms, named: false } });
     case "hiddenSingle": {
       const unit =
         "unit" in reason

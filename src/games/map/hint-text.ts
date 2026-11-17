@@ -40,6 +40,7 @@ import {
   so,
   unshaped,
 } from "../../engine/hint-words.ts";
+import { voice as latinVoice } from "../../generated/engine/latin.compiled.ts";
 
 /** A region of the map, as a mark: its band or its dashed line. */
 export interface RegionMark {
@@ -57,6 +58,15 @@ const thisRegion = (r: number): Narration =>
 
 /** A color index as its word. */
 export const colorName = (c: number): ColorWord => FOUR_NAMES[c];
+
+/** The one-color-left steps every candidate game speaks, in Map's words. */
+const singles = latinVoice<RegionMark>({
+  kind: REGION,
+  value: colorName,
+  valueNoun: "color",
+  noun: "region",
+  regions: "neighbors",
+});
 
 /** The colors in a four-bit mask, lowest first. */
 export function colorsOf(mask: number): number[] {
@@ -117,26 +127,25 @@ export const say = {
   ),
 
   /** A region whose neighbors show every color but one, and which has no dots
-   * to consult. `others` is the three colors its neighbors show. */
+   * to consult. `others` is the three colors its neighbors show, named. */
   touchesTheRest: (r: number, color: number, others: number): Sentence =>
-    so({
-      look: phrase`${thisRegion(r)} touches ${all(others)}`,
-      move: phrase`it must be ${colorName(color)}`,
+    singles.sentence("regionsFull", {
+      ring: [{ region: r }],
+      terms: { d: color, named: true },
+      struck: colorsOf(others),
     }),
 
-  /** A region the player has dotted with one color only. The dot shows its
-   * color, so the sentence names it once, in the conclusion. */
+  /** A region the player has dotted with one color only. */
   lastDot: (r: number, color: number): Sentence =>
-    so({
-      look: phrase`${thisRegion(r)} has a single dot`,
-      move: phrase`it must be ${colorName(color)}`,
-    }),
+    singles.sentence("single", { ring: [{ region: r }], terms: { d: color } }),
 
-  /** A region whose other dots are all colors a neighbor already has. */
+  /** A region whose other dots are all colors a neighbor already has. Map's
+   * own look: the candidate walk strikes such dots in a step of their own
+   * before its single, where Map's walk folds them into it. */
   deadDots: (r: number, color: number): Sentence =>
     so({
       look: phrase`${thisRegion(r)}'s other dots match its neighbors' colors`,
-      move: phrase`it must be ${colorName(color)}`,
+      move: singles.part("single", "move", { terms: { d: color } }),
     }),
 
   /**

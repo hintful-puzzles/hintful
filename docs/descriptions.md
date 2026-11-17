@@ -1032,7 +1032,9 @@ block serves every kind placed. On contract: a kind that reads another name
 says so in `params` or its text. A kind is checked sound per game, as a
 stated technique is. A kind with no words of its own (`one.cell`,
 `peer.placed`, `fit.flip`, `rel.support`, `loop.early`) takes the game's `says:` beside the placement,
-and one with no parameters takes no `with`. `fit.flip` is the Check of a
+and one with no parameters takes no `with`. `one.cell`'s sentence is the
+Latin library's `single` step, which every game that places it speaks (`docs/hints-candidates.md` § "The row/column preset"), so its `says:` holds only terms.
+`fit.flip` is the Check of a
 two-valued square (`holds`, `scope`): its plant is the coarse one, a value that
 keeps `holds` struck, so a game that wants the off-by-one plant of its
 boundary states the technique.

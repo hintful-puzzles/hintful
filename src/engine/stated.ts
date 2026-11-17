@@ -10,12 +10,15 @@
  * terms when the description is compiled, so a clause cannot name what its
  * technique does not state.
  */
+
+import type { ColorWord } from "./color/color-word.ts";
 import {
   derived,
   indefinite,
   joinNums,
   joinOr,
   joinWith,
+  listOf,
   type MarkKind,
   type MarkRole,
   mark,
@@ -29,7 +32,13 @@ import {
   whole,
 } from "./hint-words.ts";
 import { PAIR_NAMES, type PairIndex, SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
-import { DEFAULT_FORMS, type Piece, parseClause, ringNames } from "./stated-clauses.ts";
+import {
+  DEFAULT_FORMS,
+  type Piece,
+  parseClause,
+  ringNames,
+  STATED_WORDS,
+} from "./stated-clauses.ts";
 
 /** A step's parts as a description states them. */
 export interface Clauses {
@@ -99,8 +108,9 @@ export interface StatedContext<E, R = E> {
   /** The technique's terms, by name: numbers, and element indices or sets of
    * them. */
   readonly terms: Readonly<Record<string, unknown>>;
-  /** A value as the board draws it. */
-  value(n: number): string;
+  /** A value as the board draws it: a color word where the value is a color
+   * whose name differs by scheme (Map's), said only as a whole slot. */
+  value(n: number): string | ColorWord;
   /** The member of the two-state pair a number term names, for `{piece term}`. */
   piece?(n: number): PairIndex;
   /** Whether the step is a later leg of its firing, which says its `again`
@@ -117,6 +127,9 @@ export interface StatedContext<E, R = E> {
   /** What a value is called, for `{valueNoun}`: "number" unless the game's
    * values are letters, elements or heights. */
   readonly valueNoun?: string;
+  /** The verb a square takes a value by, for `{be}` ("it can only {be} 3"):
+   * "be" unless the game's values are ways, as Rome's arrows "point". */
+  readonly be?: string;
   /** The values a strike step removes, for `{struck}` and `{struckOr}`: the order is the
    * solver's, and each is named once, smallest first. */
   readonly struck?: readonly number[];
@@ -179,8 +192,14 @@ function render<E>(src: string, cx: StatedContext<E>): Narration {
   const vals: Narration[] = [];
   for (const p of expand(parseClause(src), cx)) {
     if ("text" in p) lits[lits.length - 1] += p.text;
-    else if (p.role === null) lits[lits.length - 1] += word(p.name, cx, null);
-    else if (p.role === "numeral") lits[lits.length - 1] += numeral(p.name, cx);
+    else if (p.role === null) {
+      const w = colored(p.name, cx);
+      if (typeof w === "string") lits[lits.length - 1] += w;
+      else {
+        vals.push(w);
+        lits.push("");
+      }
+    } else if (p.role === "numeral") lits[lits.length - 1] += numeral(p.name, cx);
     else if (p.role === "a") lits[lits.length - 1] += article(p.name, cx);
     else if (p.role === "piece") lits[lits.length - 1] += pieceOf(p.name, cx);
     else if (p.role === "spelled") lits[lits.length - 1] += spelled(p.name, cx);
@@ -236,9 +255,35 @@ function pieceOf<E>(term: string, cx: StatedContext<E>): string {
   return PAIR_NAMES[cx.piece(n)];
 }
 
+/** A whole slot outside a reference: a value term, or the struck values,
+ * stays a color word where the game's values are colors, so the scheme picks
+ * its name; any other is {@link word}'s. */
+function colored<E>(name: string, cx: StatedContext<E>): string | Narration {
+  const t = cx.terms[name];
+  const values =
+    (name === "struck" || name === "struckOr") && cx.struck
+      ? [...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value)
+      : typeof t === "number" && !STATED_WORDS.has(name)
+        ? [cx.value(t)]
+        : [];
+  if (values.every((v) => typeof v === "string")) return word(name, cx, null);
+  return listOf(
+    values.map((v) => (typeof v === "string" ? phrase`${v}` : v)),
+    name === "struckOr" ? "or" : "and",
+  );
+}
+
+/** A value as words, where a color word cannot stand (inside a word, after
+ * an article). */
+function text(v: string | ColorWord): string {
+  if (typeof v === "string") return v;
+  throw new Error(`stated clause: the color ${v.light} can only be a slot of its own`);
+}
+
 /** A word or a number term, said outside a reference, or inside one's words
  * about its live elements `els`. */
 function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): string {
+  const value = (n: number): string => text(cx.value(n));
   const noun = cx.noun ?? "square";
   switch (name) {
     case "noun":
@@ -249,23 +294,25 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
       return cx.alongside ?? "in line with";
     case "valueNoun":
       return cx.valueNoun ?? "number";
+    case "be":
+      return cx.be ?? "be";
     case "struck":
       if (!cx.struck)
         throw new Error("stated clause: {struck} needs the step's strikes");
-      return joinWith([...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value));
+      return joinWith([...new Set(cx.struck)].sort((a, b) => a - b).map(value));
     case "struckA":
       if (!cx.struck)
         throw new Error("stated clause: {struckA} needs the step's strikes");
       return joinWith(
         [...new Set(cx.struck)]
           .sort((a, b) => a - b)
-          .map(cx.value)
+          .map(value)
           .map((v) => `${indefinite(v)} ${v}`),
       );
     case "struckOr":
       if (!cx.struck)
         throw new Error("stated clause: {struckOr} needs the step's strikes");
-      return joinOr([...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value));
+      return joinOr([...new Set(cx.struck)].sort((a, b) => a - b).map(value));
     case "regions":
       return cx.regions ?? "row and column";
     case "tally":
@@ -290,7 +337,7 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
       return cx.unit(els);
   }
   const t = cx.terms[name];
-  if (typeof t === "number") return cx.value(t);
+  if (typeof t === "number") return value(t);
   // A unit term holds the unit's name.
   if (typeof t === "string") return t;
   throw new Error(`stated clause: {${name}} is no word, no number and no unit term`);
