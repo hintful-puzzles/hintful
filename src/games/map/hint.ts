@@ -39,11 +39,13 @@
  */
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
+import type { ColorWord } from "../../engine/color/color-word.ts";
+import { FOUR_NAMES } from "../../engine/color/colors.ts";
 import { popcount } from "../../engine/describe-runtime.ts";
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import { Narration, type Sentence, unshaped } from "../../engine/hint-words.ts";
 import type {
   CellMarks,
   Firing,
@@ -52,12 +54,122 @@ import type {
   Taken,
 } from "../../engine/ladder-runtime.ts";
 import { techniqueFirings } from "../../engine/ladder-runtime.ts";
+import { voice as latinVoice } from "../../generated/engine/latin.compiled.ts";
 import * as map from "../../generated/games/map/map.compiled.ts";
-import { type Conclusion, colorsOf, say } from "./hint-text.ts";
+import { REGION, type RegionMark } from "./hint-marks.ts";
 import { dealtOf, gridOf, mapLadder, mapMarks } from "./solver.ts";
 import type { MapMove, MapOp, MapState } from "./state.ts";
 
 const ALL = 0xf;
+
+/** A color index as its word: the palette's, beside the fills, so the word
+ * and the color cannot drift apart. */
+export const colorName = (c: number): ColorWord => FOUR_NAMES[c];
+
+/** The colors in a four-bit mask, lowest first. */
+export function colorsOf(mask: number): number[] {
+  const out: number[] = [];
+  for (let c = 0; c < 4; c++) if (mask & (1 << c)) out.push(c);
+  return out;
+}
+
+/** The one-color-left steps every candidate game speaks, in Map's words. */
+const singles = latinVoice<RegionMark>({
+  kind: REGION,
+  value: colorName,
+  valueNoun: "color",
+  noun: "region",
+  regions: "neighbors",
+});
+
+/** Map's own steps, `map.description.yaml`'s. */
+const steps = map.voice<RegionMark>({ kind: REGION, value: colorName, noun: "region" });
+
+/** What a narrowing step does to its region, and so how its sentence ends:
+ * - `place` — one color is left, and the step colors the region with it;
+ * - `strike` — the region carries dots, and the step removes `struck`;
+ * - `mark` — the region carries none, and the step dots the colors `left`. */
+type Conclusion =
+  | { kind: "place"; color: number }
+  | { kind: "strike"; struck: number }
+  | { kind: "mark"; left: number };
+
+/** A conclusion as the narrowing steps' terms. */
+const concluded = (c: Conclusion) => ({
+  place: c.kind === "place",
+  strike: c.kind === "strike",
+  color: c.kind === "place" ? c.color : 0,
+  vs: colorsOf(c.kind === "strike" ? c.struck : c.kind === "mark" ? c.left : 0),
+});
+
+const ring = (r: number): RegionMark[] => [{ region: r }];
+
+/** Every sentence Map's hint speaks. */
+const say = {
+  /** The populate reading's opening, the Mark-all press's fill: Map's
+   * notation is dots, which the shared opening's "penciling" would miss. */
+  fillAll: unshaped(
+    Narration.plain("Start by dotting all four colors into each blank region."),
+    "setup",
+  ),
+
+  /** The press's second half, which follows the fill in one journey. */
+  cleanNeighbors: unshaped(
+    Narration.plain(
+      "Now clear the easy ones: remove from each blank region the dot of every color a neighbor already shows.",
+    ),
+    "setup",
+  ),
+
+  /** A region whose neighbors show every color but one, and which has no
+   * dots to consult. `others` is the three colors its neighbors show. */
+  touchesTheRest: (r: number, color: number, others: number): Sentence =>
+    singles.sentence("regionsFull", {
+      ring: ring(r),
+      terms: { d: color, named: true },
+      struck: colorsOf(others),
+    }),
+
+  /** A region the player has dotted with one color only. */
+  lastDot: (r: number, color: number): Sentence =>
+    singles.sentence("single", { ring: ring(r), terms: { d: color } }),
+
+  deadDots: (r: number, color: number): Sentence =>
+    steps.sentence("deadDots", {
+      ring: ring(r),
+      closing: singles.part("single", "move", { terms: { d: color } }),
+    }),
+
+  pair: (r: number, regions: readonly RegionMark[], pair: number, c: Conclusion) =>
+    steps.sentence("pair", {
+      ring: ring(r),
+      terms: { pair: colorsOf(pair), ...concluded(c) },
+      marks: { outline: { pair: regions } },
+    }),
+
+  weigh: (
+    r: number,
+    middle: RegionMark,
+    ends: readonly RegionMark[],
+    color: number,
+    self: boolean,
+    c: Conclusion,
+  ): Sentence =>
+    steps.sentence("weigh", {
+      ring: ring(r),
+      terms: { hue: color, self, ...concluded(c) },
+      marks: { outline: { middle: [middle], ends } },
+    }),
+
+  premiseDot: (r: number, touched: number, two: number): Sentence =>
+    steps.sentence("premiseDot", {
+      ring: ring(r),
+      terms: { touched: colorsOf(touched), two: colorsOf(two) },
+    }),
+
+  premiseTrim: (r: number, two: number): Sentence =>
+    steps.sentence("premiseTrim", { ring: ring(r), terms: { two: colorsOf(two) } }),
+};
 
 /** One region's dots as a setup step leaves them. */
 interface RegionDots {

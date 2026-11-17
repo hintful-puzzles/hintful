@@ -163,3 +163,71 @@ techniques:
     says:
       terms: { m: m, x: x, E: E, self: "x in cand(m)" }
       marks: {}
+# Map's own sentences, spoken through the hint's voice (`hint.ts`); a region
+# left one color is every candidate game's. A color is named by its word,
+# Map's values being its colors. A region has no coordinates a player can
+# read, so a sentence names one only by its mark: "this region" is the one
+# the hint rings, "the outlined pair" the two it outlines, and a weighing
+# names its regions by their places in it. A step that narrows a region ends
+# on what its move does, by `place` and `strike`: colors it with the one
+# color left (`color`), removes the dots `vs`, or, on a region with no dots,
+# dots the colors `vs` left.
+steps:
+  # A region whose other dots are all colors a neighbor already shows: the
+  # candidate walk strikes such dots in a step of their own before its
+  # single, where Map's folds them in. Its move is the single's.
+  deadDots:
+    ring: region
+    look: "{ring}'s other dots match its neighbors' colors"
+  # Two touching regions down to the same two colors (`pair`), which they
+  # must then use between them, both beside this region. "Use both" is the
+  # premise the conclusion rests on, so it is stated; why they use both is
+  # left to the board, which draws both.
+  pair:
+    ring: region
+    terms: { pair: values, place: flag, strike: flag, color: number, vs: values }
+    marks: { outline: [pair] }
+    look: "{ring} touches {outline pair: the outlined pair}, which use both {pair}"
+    wordings:
+      - when: place
+        move: "it can't be either and must be {color}"
+      - when: strike
+        follows: "it can't be either"
+        move: "its {vs} {vs: dot | dots} must go"
+      - follows: "it can't be either"
+        move: "dot {vs}"
+  # A weighed region, the middle one: each color it can take leaves one of
+  # the ends with `hue` alone, or, where `self`, is `hue` itself, and this
+  # region touches every one of them. Every way is read off the dots the
+  # premise legs have put on the regions, so the words leave the ways to them.
+  weigh:
+    ring: region
+    terms: { hue: number, self: flag, place: flag, strike: flag, color: number, vs: values }
+    marks: { outline: [middle, ends] }
+    look: >-
+      whatever goes in {outline middle: the middle region},
+      {if self: it or {outline ends: an outlined region} | {outline ends: an outlined region}}
+      {fit: beside | by} {ring} must have {hue}
+    wordings:
+      - when: place
+        move: "it can't be {hue} and must be {color}"
+      - when: strike
+        follows: "it can't be {hue}"
+        move: "its {vs} {vs: dot | dots} must go"
+      - follows: "it can't be {hue}"
+        move: "dot {vs}"
+  # One of a pair's or a weighing's regions, dotted with its colors (`two`)
+  # before the pair or weighing is stated, so "can only be yellow or teal"
+  # is on the board. Nothing else is marked: the pair or weighing is what the
+  # leg is writing, not what it reasons from.
+  premiseDot:
+    ring: region
+    terms: { touched: values, two: values }
+    look: "{ring}'s neighbors show {touched}"
+    follows: "it can only be {either two}"
+    move: "dot those"
+  premiseTrim:
+    ring: region
+    terms: { two: values }
+    look: "{ring}'s other dots match its neighbors' colors"
+    move: "it can only be {either two}"

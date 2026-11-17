@@ -125,7 +125,7 @@ function premiseOf(
   const strikes = effect === "strike";
   if (board.width === null) {
     const h = step.highlights as { targets: number[] };
-    // Map's outlined regions are its words' (`map/hint-text.ts`'s REGION).
+    // Map's outlined regions are its words' (`map/hint-marks.ts`'s REGION).
     const outlined = (step.words?.refs ?? [])
       .filter((r) => r.role === "outline" && r.kind.name === "region")
       .flatMap((r) =>

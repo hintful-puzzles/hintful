@@ -206,8 +206,8 @@ function render<E>(src: string, cx: StatedContext<E>): Narration {
   const vals: Narration[] = [];
   for (const p of expand(parseClause(src), cx)) {
     if ("text" in p) lits[lits.length - 1] += p.text;
-    else if (p.role === null) {
-      const w = colored(p.name, cx);
+    else if (p.role === null || p.role === "either") {
+      const w = colored(p.name, cx, p.role === "either");
       if (typeof w === "string") lits[lits.length - 1] += w;
       else {
         vals.push(w);
@@ -271,8 +271,13 @@ function pieceOf<E>(term: string, cx: StatedContext<E>): string {
 
 /** A whole slot outside a reference: a value term, or the struck values,
  * stays a color word where the game's values are colors, so the scheme picks
- * its name; any other is {@link word}'s. */
-function colored<E>(name: string, cx: StatedContext<E>): string | Narration {
+ * its name; any other is {@link word}'s. `either` lists a values term as
+ * alternatives. */
+function colored<E>(
+  name: string,
+  cx: StatedContext<E>,
+  either = false,
+): string | Narration {
   const t = cx.terms[name];
   const values =
     (name === "struck" || name === "struckOr") && cx.struck
@@ -282,10 +287,13 @@ function colored<E>(name: string, cx: StatedContext<E>): string | Narration {
         : Array.isArray(t)
           ? (t as readonly number[]).map(cx.value)
           : [];
-  if (values.every((v) => typeof v === "string")) return word(name, cx, null);
+  if (either && !Array.isArray(t))
+    throw new Error(`stated clause: {either ${name}} is no values term`);
+  if (values.every((v) => typeof v === "string"))
+    return either ? joinOr(values as string[]) : word(name, cx, null);
   return listOf(
     values.map((v) => (typeof v === "string" ? phrase`${v}` : v)),
-    name === "struckOr" ? "or" : "and",
+    either || name === "struckOr" ? "or" : "and",
   );
 }
 

@@ -271,6 +271,17 @@ describe("a stated clause", () => {
     expect(say([1, 2, 4])).toBe("Only v1, v2 and v4 are left, so pencil them in.");
   });
 
+  it("says a step's values as alternatives with {either}", () => {
+    const say = (vs: readonly number[]): string =>
+      statedSentence({ move: "it can only be {either vs}" }, cx({ terms: { vs } }))
+        .text;
+    expect(say([2])).toBe("It can only be v2.");
+    expect(say([1, 2, 4])).toBe("It can only be v1, v2 or v4.");
+    expect(() =>
+      statedSentence({ move: "{either n}" }, cx({ terms: { n: 1 } })),
+    ).toThrow(/no values term/);
+  });
+
   it("says how a move answers its look, a bare move or an evident look alone, and an aim served unless judged", () => {
     expect(
       statedSentence(

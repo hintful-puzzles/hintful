@@ -37,7 +37,7 @@ import {
 import { type RingClear, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepRanks, WIN_LEAD } from "../../engine/win-wave.ts";
-import { REGION } from "./hint-text.ts";
+import { REGION } from "./hint-marks.ts";
 import { BE, LE, type MapData, RE, TE } from "./map-data.ts";
 import type { MapMistake, MapMove, MapParams, MapState, MapUi } from "./state.ts";
 

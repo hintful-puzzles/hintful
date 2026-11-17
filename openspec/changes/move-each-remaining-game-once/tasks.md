@@ -189,7 +189,15 @@ Logic games:
   they were ringed. Every other line is byte-identical. Read in the app: a
   zero line, a packed run and its later cell, the clean (neighbors' notes
   struck).
-- [ ] Map
+- [x] Map (2026-11-17): dump byte-identical, every rung and every
+  conclusion form reached. Its pair, weighing, dead dots and premise dots
+  are `steps` spoken through the voice in `hint.ts`, the three conclusions
+  (color it, remove dots, dot what is left) wordings by flags; the
+  weighing's "beside"/"by" is a `{fit}`, and a lone color stays the Latin
+  library's. The engine gained `{either vs}`, a values term said as
+  alternatives. Its two setup sentences stay in `hint.ts`, Map's notation
+  being dots where the shared opening says "penciling". Read in the app
+  (15x20 Tricky): premise dots, then a pair (region ringed, pair outlined).
 - [ ] Subsets
 - [ ] Solo (after 0.3)
 - [ ] Tents

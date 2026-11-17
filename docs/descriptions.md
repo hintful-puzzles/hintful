@@ -1409,7 +1409,8 @@ or diagonal, said as its name (`{axis}`, `{axis}s`); `StepsById` types it as
 `Unit`, and `lineUnit` turns a Latin reason's `"row" | "col"` into one. **A
 term of kind `values`** is several numbers, said by the value words as a list
 ("1, 2 and 4") and counted by a count form (`{vs: isn't | aren't}`): the
-notes a step pencils (Seismic's `note`). **A
+notes a step pencils (Seismic's `note`); `{either vs}` says them as
+alternatives ("yellow or teal", Map's premise dots). **A
 term declared as a list of words** (Netslide's `shape: [loose end, straight,
 corner, T-piece, cross]`) is one of them, typed as their union and said as it
 is; write one where the planner picks a word the board shows (a shape, a

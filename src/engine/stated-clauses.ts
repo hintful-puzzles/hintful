@@ -27,6 +27,8 @@
  *   would print it as the board draws a value (a letter, say).
  * - `{a term}`: the number term as the board draws it, with its indefinite
  *   article ("an A", "a D").
+ * - `{either term}`: a values term as alternatives, "pink, teal or yellow",
+ *   where `{term}` lists them with "and".
  * - `{count: one | several}`: the first form where the number term `count` is 1,
  *   the second otherwise; its forms hold what an `if`'s do.
  * - `{if flag: yes | no}`: the form the step's flag term holds, whole; its forms
@@ -89,6 +91,7 @@ const SLOT_ROLES: ReadonlySet<string> = new Set([
   "spelled",
   "numeral",
   "a",
+  "either",
   "has",
   "fit",
   "or",
@@ -180,7 +183,8 @@ function slot(body: string, src: string): Piece {
     (head[0] === "piece" ||
       head[0] === "spelled" ||
       head[0] === "numeral" ||
-      head[0] === "a") &&
+      head[0] === "a" ||
+      head[0] === "either") &&
     (head.length !== 2 || words !== null)
   )
     throw new Error(`"{${body}}" is no word of a term, in "${src}"`);
@@ -266,6 +270,7 @@ const NUMBER_ROLES: ReadonlySet<string> = new Set([
   "spelled",
   "numeral",
   "a",
+  "either",
   "or",
 ]);
 

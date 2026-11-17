@@ -86,7 +86,13 @@ const SHORTEST: Prints = {
     unit: "row",
   },
   number: "1",
-  roles: { numeral: "1", spelled: "one", a: "a 1", piece: byLength(PAIR_NAMES)[0] },
+  roles: {
+    numeral: "1",
+    spelled: "one",
+    a: "a 1",
+    piece: byLength(PAIR_NAMES)[0],
+    either: "1",
+  },
   closing: "",
 };
 
@@ -109,7 +115,13 @@ const LONGEST: Prints = {
     unit: "column",
   },
   number: "10",
-  roles: { numeral: "10", spelled: "seven", a: "an 8", piece: byLength(PAIR_NAMES)[1] },
+  roles: {
+    numeral: "10",
+    spelled: "seven",
+    a: "an 8",
+    piece: byLength(PAIR_NAMES)[1],
+    either: "1, 2 or 3",
+  },
   closing: "this square must be clear",
 };
 
@@ -154,6 +166,7 @@ function pieceForms(p: Piece, turn: number, prints: Prints): Item[][] {
     case "spelled":
     case "a":
     case "piece":
+    case "either":
       return [text(prints.roles[p.role])];
     case "count":
     case "if":
