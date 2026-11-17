@@ -247,9 +247,28 @@ Logic games:
   clause references no strike. The notes reason, which no dumped walk
   meets, was checked against the old words; the articles test now speaks
   through `narrateCrossing`. Read in the app: a run's digits, a crossing.
-- [ ] Mines
-- [ ] Slant
-- [ ] Net
+- [ ] Mines. Read 2026-11-17: its sentences are built of parts (a premise,
+  then a conclusion by how many squares are ringed and whether they are
+  mines; a pair's two sides, each a number or a region, striped or named
+  through its two numbers; region sentences said before the pair), and
+  two numbers of one value are told apart by position (`apartByPosition`,
+  which only Mines calls: a per-sentence voice whose `value` prints a
+  clue's index as "outlined 3" or "upper 3", as Rect's prints a clue,
+  carries it). Mines' dump has one preset, so take it at
+  `DUMP_DEALS=400` (379k lines, under a minute); even so it never reaches
+  a region side ("whose others", "squares beyond") nor "allow at most",
+  "that puts", or the counts with no members' plural forms: check those
+  against the old module by a throwaway test, as Solo's were.
+- [ ] Slant. Read 2026-11-17: a v-shape step joins two reasons ("can't
+  both {a}, or both {b}"), each one of five clause kinds, the "across a 2"
+  one nested. Twenty-five combined wordings is the wrong shape: give the
+  engine a step term of kind `clause`, a `Narration` the planner supplies
+  (another step's `speak.part`), said in place with its references
+  (`stated.ts`'s `colored`/`word` returning it; `stepTermType` typing it
+  `Narration`; the lint printing it as a reference's shortest and longest
+  words). Mines' region prefixes and sides want the same term.
+- [ ] Net. Its baseline at 8 deals is 38,540 lines once the harness skips
+  mistaken positions (2026-11-17).
 - [ ] Ascent
 
 ## 3. Revisited in the app as their words are touched
