@@ -125,7 +125,6 @@ kindWords:
   slots: "open {n: edge | edges}"
   restWord: "can't be a wall"
   fillWord: "must be a wall"
-  terms: { clue: "v(q)" }
 techniques:
   # Two numbers side by side, c and d: open, the edge between them would
   # join their squares, each with its other open sides leading further into
@@ -167,51 +166,22 @@ techniques:
     tier: Easy
     with:
       # `anchor`: the square the hint names the firing's edges from.
-      terms: { anchor: "{a}", placed: "n < v(q)" }
+      terms: { anchor: "{a}", placed: "n < v(q)", clue: "v(q)" }
   # Two groups whose squares together outnumber a region are different
-  # regions: wall the edge between them.
-  - id: notTooBig
+  # regions.
+  - kind: region.apart
+    as: notTooBig
     tier: Easy
-    for: >-
-      O = joined, e in edges where not known(e),
-      A = through(end1(e), O), b = end2(e) where b not in A,
-      B = through(b, O) where |A| + |B| > k
-    conclude: "place(e, 1)"
+    with: { apart: "|A| + |B| > k" }
     says:
-      terms: { anchor: A, joined: "|A| + |B|", size: k }
+      terms: { joined: "|A| + |B|" }
       marks: { outline: A + B }
       look: "Joining {outline: these two regions} would make {joined} squares"
-      move: "{ring: this edge} must be a wall"
       again: "{outline: the same outlined region | the same outlined regions}"
-  # A group short of k squares grows across an edge still to decide. Where
-  # every such edge leads into one other group, it joins that group: every
-  # edge between them is open. With no edge to grow across, or past k
-  # squares, the marks are inconsistent.
-  - id: notTooSmall
+  - kind: region.grow
+    as: notTooSmall
     tier: Easy
-    for: >-
-      O = joined, c in cells, A = through(c, O) where c = nth(A, 0) and |A| != k,
-      S = set(s over x in A, s in ways(x))
-    conclude: >-
-      |A| < k and |S| > 0
-      and (forall B = through(nth(S, 0), O):
-      (forall s in S: s in B) implies
-      forall x in A, y in adj4(x) where y in B: place(edge(x, y), 2))
-    says:
-      terms:
-        anchor: A
-        have: "|A|"
-        size: k
-        # Whether the firing sets several edges, which the engine says.
-        multi: { supplied: several }
-      marks: { stripes: A, reads: A }
-      look: >-
-        {stripes: this region} has {have} of its {size} squares and
-        {if multi: only one region left to grow into | just one way left to grow}
-      move: >-
-        {if multi: {ring: these edges} can't be walls |
-        {ring: this edge} can't be a wall}
-      again: "{stripes: the same striped region}"
+    with: { size: k }
   # A wall cannot stop at a corner where four squares meet: of the four
   # edges there, never exactly one is a wall. With one wall and one edge
   # left, that edge is a wall.

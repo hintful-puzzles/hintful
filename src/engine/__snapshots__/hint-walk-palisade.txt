@@ -1,2 +1,2 @@
-5x5 Easy, regions of size 5 #0: 35 steps, solved, bdfea56a4e3b094a [equivalentEdges:4 noDanglingEdges:1 notTooBig:12 notTooSmall:5 numberExhausted.exact:3 numberExhausted.met:10]
-5x5 Unreasonable, regions of size 5 #0: 9 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 87692167da3e12a7 [equivalentEdges:2 notTooBig:1 notTooSmall:1 numberExhausted.met:5]
+5x5 Easy, regions of size 5 #0: 35 steps, solved, dcbb2ea7c9d34235 [equivalentEdges:4 noDanglingEdges:1 notTooBig:12 notTooSmall:5 numberExhausted.exact:3 numberExhausted.met:10]
+5x5 Unreasonable, regions of size 5 #0: 9 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 1b7a446cb76bfb5a [equivalentEdges:2 notTooBig:1 notTooSmall:1 numberExhausted.met:5]

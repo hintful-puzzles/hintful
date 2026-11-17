@@ -54,13 +54,13 @@ describe("separate hint — the wordings no walk reaches", () => {
 
   it("says a firing that sets several edges", () => {
     const [lone, one, regions] = STATED.sharedLetter.step;
-    expect(said(lone, { letter: 1, side: [0] }, edges, [0, 1], [])).toBe(
+    expect(said(lone, { letter: 1, anchor: [0] }, edges, [0, 1], [])).toBe(
       "These two Bs can't share a region, so every edge between them must be a wall.",
     );
-    expect(said(one, { letter: 0, side: [4, 5] }, edges, [0], [4, 5])).toBe(
+    expect(said(one, { letter: 0, anchor: [4, 5] }, edges, [0], [4, 5])).toBe(
       "The striped region already holds an A, so the outlined A can't join it: every edge between them must be a wall.",
     );
-    expect(said(regions, { letter: 3, side: [4, 5] }, edges, [0, 1], [4, 5])).toBe(
+    expect(said(regions, { letter: 3, anchor: [4, 5] }, edges, [0, 1], [4, 5])).toBe(
       "The striped and outlined regions both hold a D, so they can't join: every edge between them must be a wall.",
     );
     const [apart] = STATED.walledApart.step;
@@ -68,15 +68,21 @@ describe("separate hint — the wordings no walk reaches", () => {
       "A wall already separates the striped and outlined regions, so every other edge between them must be a wall too.",
     );
     const [alone, wide] = STATED.onlyWay.step;
-    expect(
-      said(alone, { letter: 2, size: 4, have: 1 }, [open(0, 0), open(1, 0)], [], [0]),
-    ).toBe(
-      "This C is walled in on every side but one, so these edges can't be a wall.",
+    const grow = (have: number, ways: number) => ({
+      letter: 2,
+      size: 4,
+      have,
+      ways,
+      multi: ways > 1,
+    });
+    expect(said(alone, grow(1, 1), [open(0, 0)], [], [0])).toBe(
+      "This C is walled in on every side but one, so this edge can't be a wall.",
     );
-    expect(
-      said(wide, { letter: 2, size: 4, have: 3 }, [open(0, 0)], [], [0, 1, 2]),
-    ).toBe(
-      "The striped region has 3 of its 4 squares and one square left to grow into, so this edge can't be a wall.",
+    expect(said(wide, grow(3, 1), [open(0, 0)], [], [0, 1, 2])).toBe(
+      "This region has 3 of its 4 squares and just one way left to grow, so this edge can't be a wall.",
+    );
+    expect(said(wide, grow(2, 2), [open(0, 0), open(1, 0)], [], [0, 1])).toBe(
+      "This region has 2 of its 4 squares and only one region left to grow into, so these edges can't be walls.",
     );
   });
 
@@ -102,13 +108,13 @@ describe("separate hint — the wordings no walk reaches", () => {
 
   it("says what a later leg points back at", () => {
     const [lone, one, regions] = STATED.sharedLetter.step;
-    expect(basis(lone, { letter: 1, side: [0] }, edges, [0, 1], [])).toBe(
+    expect(basis(lone, { letter: 1, anchor: [0] }, edges, [0, 1], [])).toBe(
       "the same two Bs",
     );
-    expect(basis(one, { letter: 0, side: [4, 5] }, edges, [0], [4, 5])).toBe(
+    expect(basis(one, { letter: 0, anchor: [4, 5] }, edges, [0], [4, 5])).toBe(
       "the same striped region and the outlined square",
     );
-    expect(basis(regions, { letter: 0, side: [4, 5] }, edges, [0, 1], [4, 5])).toBe(
+    expect(basis(regions, { letter: 0, anchor: [4, 5] }, edges, [0, 1], [4, 5])).toBe(
       "the same striped and outlined regions",
     );
     const [apart] = STATED.walledApart.step;
@@ -119,7 +125,13 @@ describe("separate hint — the wordings no walk reaches", () => {
     expect(pair(1, 2)).toBe("the same striped square and the outlined region");
     expect(pair(2, 1)).toBe("the same striped region and the outlined square");
     expect(
-      basis(STATED.onlyWay.step[1], { letter: 0, size: 4, have: 2 }, edges, [], [0, 1]),
+      basis(
+        STATED.onlyWay.step[1],
+        { letter: 0, size: 4, have: 2, ways: 2, multi: true },
+        edges,
+        [],
+        [0, 1],
+      ),
     ).toBe("the same striped region");
   });
 });

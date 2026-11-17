@@ -1102,6 +1102,19 @@ A walk that speaks a kind's step itself (Subsets') renders the compiled
 `STATED` step with `statedParts`, as `placedRulesOut` does the library's; a
 `{fit: …}` there is never tried, for only `statedSentence` sees the whole
 sentence, so keep such words short.
+The region kinds read a board divided by walls on its edges, whose regions
+are what the game's `joined` runs `through` (Palisade, Separate).
+`region.apart` walls every edge between two groups side by side that `apart`
+says can never be one region (Palisade's too many squares, Separate's shared
+letter or wall already between); the game says why, the kind the move, and
+`more` binds what else the game reads of the two (Separate's letter and the
+squares holding it, which its generator records as read). `region.grow` is a
+group short of `size` whose every way out leads into one other group, and
+carries its sentence ("this region has 3 of its 4 squares and just one way left
+to grow", or a lone square "walled in on every side but one", named by `lone`).
+Both name their edges from the term `anchor`, the first group. `kindWords`'
+`terms` are added to every placement, so a term reading one kind's binding
+(Palisade's clue, `v(q)`) goes in that placement's `with.terms`.
 `fit.flip` is the Check of a
 two-valued square (`holds`, `scope`). How the tried value breaks the rule is
 the game's to say, so the game's `says:` holds the look; the kind lays it over

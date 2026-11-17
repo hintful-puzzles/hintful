@@ -31,7 +31,8 @@ export interface Kind {
     /** Absent where the words are the game's own, which it gives as `says`
      * beside the placement. */
     says?: {
-      terms: Record<string, string>;
+      /** An expression a term reads, or one the engine supplies a leg. */
+      terms: Record<string, string | { supplied: string }>;
       /** The marks, or `$name` where the game gives them whole. */
       marks: Record<string, string> | string;
       look?: string;
@@ -343,6 +344,79 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       for: "L = {e in edges where value(e) = 1}, e in edges where not known(e), G = through(end1(e), L) where end2(e) in G",
     },
   },
+  // The region kinds read a board divided by walls on its edges, a wall
+  // `wall` and none `gap`, whose regions are the groups the game's `joined`
+  // (its edges known to be no wall) runs `through`.
+  //
+  // Two groups side by side across an undecided edge that `apart` says can
+  // never be one region (it reads the groups `A` and `B`) have a wall on every
+  // edge between them. The look, why they are apart, is the game's. `more`
+  // binds what else the game reads of the two, after them (", d = …").
+  "region.apart": {
+    params: ["apart"],
+    defaults: { wall: 1, wallNoun: "wall", more: "" },
+    technique: {
+      for: "O = joined, e in edges where not known(e), A = through(end1(e), O), b = end2(e) where b not in A, B = through(b, O) where $apart$more",
+      conclude: "forall x in A, y in adj4(x) where y in B: place(edge(x, y), $wall)",
+    },
+    saysBeneath: {
+      terms: { anchor: "A" },
+      move: "{ring: the edge between them | every edge between them} must be a $wallNoun",
+    },
+    // Any two groups side by side read as apart.
+    plant: {
+      for: "O = joined, e in edges where not known(e), A = through(end1(e), O), b = end2(e) where b not in A, B = through(b, O)",
+    },
+  },
+  // A group short of `size` squares grows across an edge still to decide.
+  // Where every such edge leads into one other group, it joins that group:
+  // every edge between them is open. With no edge to grow across, or past
+  // `size`, the marks are inconsistent. A lone square with one way out is
+  // named as the game names a square (`lone`). Its counts are said as
+  // numerals: a game's values may be said as letters (Separate's).
+  "region.grow": {
+    params: ["size"],
+    defaults: {
+      wall: 1,
+      gap: 2,
+      wallNoun: "wall",
+      wallNouns: "walls",
+      lone: "this square",
+    },
+    technique: {
+      for: "O = joined, c in cells, A = through(c, O) where c = nth(A, 0) and |A| != $size, S = set(s over x in A, s in adj4(x) where not known(edge(x, s)))",
+      conclude:
+        "|A| < $size and |S| > 0 and (forall B = through(nth(S, 0), O): (forall s in S: s in B) implies forall x in A, y in adj4(x) where y in B: place(edge(x, y), $gap))",
+      says: {
+        terms: {
+          anchor: "A",
+          have: "|A|",
+          size: "$size",
+          ways: "|S|",
+          // Whether the firing sets several edges, which the engine says.
+          multi: { supplied: "several" },
+        },
+        marks: { stripes: "A", reads: "A" },
+        wordings: [
+          {
+            when: "have = 1 and ways = 1",
+            look: "{stripes: $lone} is walled in on every side but one",
+          },
+          {
+            look: "{stripes: this region} has {numeral have} of its {numeral size} squares and {if multi: only one region left to grow into | just one way left to grow}",
+          },
+        ],
+        again: "{stripes: the same striped region}",
+        move: "{if multi: {ring: these edges} can't be $wallNouns | {ring: this edge} can't be a $wallNoun}",
+      },
+    },
+    // A group read as joining the first group it can grow into, whatever the
+    // others.
+    plant: {
+      conclude:
+        "|A| < $size and |S| > 0 and (forall B = through(nth(S, 0), O): forall x in A, y in adj4(x) where y in B: place(edge(x, y), $gap))",
+    },
+  },
   // A square of two values where one would break a rule at once holds the
   // other. `holds` is what must stay true of the group, and `scope` the
   // squares that could break it. A position that breaks it makes the marks
@@ -444,7 +518,7 @@ export function expandKind(
   // shows its touch a square at a time), or over its frame.
   const beneath =
     t.says !== undefined
-      ? { ...t.says, terms: { ...t.says.terms, ...(terms as Record<string, string>) } }
+      ? { ...t.says, terms: { ...t.says.terms, ...(terms as Record<string, unknown>) } }
       : kind.saysBeneath === undefined
         ? undefined
         : fill(kind.saysBeneath, args);

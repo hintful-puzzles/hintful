@@ -403,10 +403,44 @@ boundaries are judgment, and the counts carry that.
     statement re-checked sound (Signpost's `onlyBefore` held, as it was),
     each kind's plant caught. Seen in the app: Dominosa's and Signpost's
     walks. `test:hint-sweeps` green.
+  - [x] (2026-11-17) GRP's wall-region forms, for a board divided by walls
+    on its edges (Palisade, Separate). `region.apart`: two groups side by
+    side that `apart` says can never be one region are walled on every edge
+    between them; placed on Palisade `notTooBig` (too many squares),
+    Separate `sharedLetter` and `walledApart`. `region.grow`: a group short
+    of `size` whose every way out leads into one other group joins it,
+    carrying its sentence; placed on Palisade `notTooSmall` and Separate
+    `onlyWay`. Separate's `onlyWay` took only a group with one square left
+    to grow into; it is now Palisade's wider rule, so **Separate's ladder
+    reaches further**: deal-compare at 3 seeds a preset gives the same
+    boards in Palisade and every Separate Easy preset, and 4 of 24 boards
+    differ at Separate's Unreasonable presets (6x7, 6x8), verdicts the same
+    on shared boards; totals 1.05× and 1.11× (noise). Separate's generator
+    records which squares' letters a deduction read, so `region.apart` takes
+    `more`, binders after the groups' (the shared letter `d` and its squares
+    `x`, `y`). Separate's hint names its edges from `anchor`, as Palisade's
+    does (was `side` or the stripes). **Moved, words only:** Palisade "…so
+    the edge between them must be a wall" (was "this edge"; a firing now
+    walls every edge between the two, which the later firings each walled);
+    Separate "This region has 3 of its 4 squares and just one way left to
+    grow" (was "The striped region … and one square left to grow into"),
+    "…so these edges can't be walls" where it joins a region by several.
+    Walk fingerprints: Palisade's same steps and rung counts; Separate's 4x4
+    Easy the same 22 steps, one told as `walledApart` where it was
+    `sharedLetter` (both fire there). Separate's help said the hint stops
+    when no region has one square left; it now says one way left to grow.
+    Found: a count in a kind's sentence is a `{numeral}`, for Separate says
+    its values as letters ("has D of its E squares"). Re-checked sound, each
+    kind's plant caught at order 3; Palisade keeps its `notTooBig` boundary
+    plant, Separate its `sharedLetter` one restated over the kind. Seen in
+    the app in both. Not placed, and why: Filling's `tooBig`/`noRoom`/
+    `tooFar`/`onlyWay` are the same ideas over numbered squares, not walls,
+    each its own formula; Galaxies' `separate` reads its arrows; Range's
+    `cut` is connection, not size.
   - [ ] Next: PEER's other forms (Dominosa's `placed` reads two rules, a
     spot's neighbors and its domino's other spots), REL's bounds form
-    (Unequal `sign`), GRP, CMP, SUM, and the CNT techniques not placed yet
-    (the item above says why each waits).
+    (Unequal `sign`), GRP over numbered squares (Filling), CMP, SUM, and the
+    CNT techniques not placed yet (the item above says why each waits).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

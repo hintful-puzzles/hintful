@@ -1,0 +1,20 @@
+ok  palisade   cluesVersusRegionSize          current: recorded src/games/palisade/palisade.description.yaml#cluesVersusRegionSize 61a9456ff7e29db9
+ok  palisade   numberExhausted                current: recorded src/games/palisade/palisade.description.yaml#numberExhausted 48e6a3ba88e2d3de
+ok  palisade   notTooBig                      3  sound    (want sound   )     1 queries    0.7s
+ok  palisade   notTooBig (planted)            3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  src/games/palisade/palisade.description.yaml#notTooBig: recorded sound, proved whole on all 1 boards
+ok  palisade   notTooSmall                    3  sound    (want sound   )     1 queries    1.1s
+ok  palisade   notTooSmall (planted)          3  unsound  (want unsound )     1 queries    0.4s   at eset
+ok  src/games/palisade/palisade.description.yaml#notTooSmall: recorded sound, proved whole on all 1 boards
+ok  palisade   noDanglingEdges                current: recorded src/games/palisade/palisade.description.yaml#noDanglingEdges 3a1f7d57306ea5db
+ok  palisade   equivalentEdges                current: recorded src/games/palisade/palisade.description.yaml#equivalentEdges 9316bda534003155
+ok  palisade   inside                         current: recorded src/games/palisade/palisade.description.yaml#inside 05569ac888e9020c
+ok  separate   sharedLetter                   3  sound    (want sound   )     1 queries    2.3s
+ok  separate   sharedLetter (planted)         3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  src/games/separate/separate.description.yaml#sharedLetter: recorded sound, proved whole on all 1 boards
+ok  separate   walledApart                    3  sound    (want sound   )     1 queries    0.2s
+ok  separate   walledApart (planted)          3  unsound  (want unsound )     1 queries    0.2s   at eset
+ok  src/games/separate/separate.description.yaml#walledApart: recorded sound, proved whole on all 1 boards
+ok  separate   onlyWay                        3  sound    (want sound   )     1 queries    1.1s
+ok  separate   onlyWay (planted)              3  unsound  (want unsound )     1 queries    0.2s   at eset
+ok  src/games/separate/separate.description.yaml#onlyWay: recorded sound, proved whole on all 1 boards

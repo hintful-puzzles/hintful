@@ -1,2 +1,2 @@
-4x4 Easy, 4 letters #0: 22 steps, solved, 75b13e1d264bd893 [onlyWay:10 sharedLetter:9 walledApart:3]
+4x4 Easy, 4 letters #0: 22 steps, solved, db17d11a2dd8a040 [onlyWay:10 sharedLetter:8 walledApart:4]
 4x4 Unreasonable, 4 letters #0: 2 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 3c9081a3510e3caf [sharedLetter:2]

@@ -45,11 +45,10 @@ function stepOf(
   fired: Fired<SeparateSays[keyof SeparateSays], SeparateWalkContext>,
 ): { move: SeparateMove; highlights: BorderHint; marked: Leg }[] {
   // The edges are named from the firing's first group.
-  const { terms, marks } = fired.says;
   const edges = forcedEdgesOf(
     fired.ctx.sp,
     fired.taken.facts,
-    "side" in terms ? terms.side : marks.stripes,
+    fired.says.terms.anchor,
     WALL,
   );
   return edges.map((edge, leg) => ({

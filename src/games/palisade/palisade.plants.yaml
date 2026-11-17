@@ -15,11 +15,6 @@ techniques:
     for: >-
       O = joined, e in edges where not known(e), A = through(end1(e), O), b =
       end2(e) where b not in A, B = through(b, O) where |A| + |B| >= k
-  # A group read as joining the first group it can grow into, whatever the others.
-  notTooSmall:
-    conclude: >-
-      |A| < k and |S| > 0 and (forall B = through(nth(S, 0), O): forall x in A,
-      y in adj4(x) where y in B: place(edge(x, y), 2))
   # Two walls at a corner read as needing a third.
   noDanglingEdges:
     for: >-

@@ -34,8 +34,8 @@ help:
     striped square and the outlined region"), never a region.
 
     On an Unreasonable board there comes a point where no two neighbors share a
-    letter that is not already walled, and no region has only one square left to
-    take. The hint then says that nothing further follows by deduction instead of
+    letter that is not already walled, and no region has only one way left to
+    grow, into one square or one other region. The hint then says that nothing further follows by deduction instead of
     choosing for you. Save your position and try joining a small region to one of
     the squares it could still take, starting with a region that has few of them:
     if it is wrong, before long some region is left short with every square around
@@ -61,10 +61,6 @@ define:
   joined: "{e in edges where value(e) = 2}"
   # Whether a wall already stands between a square of A and one of B.
   apart(A, B): "exists x in A, y in adj4(x) where y in B: value(edge(x, y)) = 1"
-  # Every edge between a square of A and one of B.
-  between(A, B): >-
-    {e in edges where (end1(e) in A and end2(e) in B)
-    or (end1(e) in B and end2(e) in A)}
 shape:
   # A wall stands between two squares side by side exactly where they are in
   # different regions.
@@ -87,22 +83,22 @@ tiers: [Easy, Unreasonable]
 techniques:
   # Two groups side by side that hold a letter in common are different
   # regions: wall every edge between them. The letter is the first they share.
-  - id: sharedLetter
+  - kind: region.apart
+    as: sharedLetter
     tier: Easy
-    for: >-
-      O = joined, e in edges where not known(e),
-      A = through(end1(e), O), b = end2(e) where b not in A,
-      B = through(b, O), L = set(clue(letter, y) over y in B),
-      d in set(clue(letter, x) over x in A) where d in L and not apart(A, B),
-      x in A where clue(letter, x) = d, y in B where clue(letter, y) = d
-    conclude: "forall f in between(A, B): place(f, 1)"
+    with:
+      # d is the first letter they share, held by x and y; the generator
+      # reads which squares' letters a deduction read.
+      apart: "not apart(A, B)"
+      more: >-
+        , d = min(x in A where exists y in B: clue(letter, y) = clue(letter, x)
+        of clue(letter, x)) where d != none,
+        x in A where clue(letter, x) = d, y in B where clue(letter, y) = d
     # A lone square is named by its letter, so a pair with one lone square
     # stripes the region and outlines the square, and two lone squares are
     # both outlined and nothing is striped.
     says:
-      # `side` is the group its edges are named from, which the marks do not
-      # say: they swap by which group is the lone square.
-      terms: { letter: d, side: A }
+      terms: { letter: d }
       marks:
         stripes: "{x in A where |A| > 1} + {x in B where |A| = 1 and |B| > 1}"
         outline: "{x in A where |A| = 1} + {x in B where |A| > 1 or |B| = 1}"
@@ -118,16 +114,12 @@ techniques:
         - look: "The {stripes: striped} and {outline: outlined regions} both hold {a letter}"
           follows: "they can't join"
           again: "the same {stripes: striped} and {outline: outlined regions}"
-      move: "{ring: the edge between them | every edge between them} must be a wall"
   # Two groups with a wall between them already are different regions: wall
   # the rest of the edges between them.
-  - id: walledApart
+  - kind: region.apart
+    as: walledApart
     tier: Easy
-    for: >-
-      O = joined, e in edges where not known(e),
-      A = through(end1(e), O), b = end2(e) where b not in A,
-      B = through(b, O) where apart(A, B)
-    conclude: "forall f in between(A, B): place(f, 1)"
+    with: { apart: "apart(A, B)" }
     # Two lone squares, or two regions, are named together ("the striped and
     # outlined regions"); one of each by its own noun.
     says:
@@ -147,27 +139,11 @@ techniques:
         the same {stripes: striped {na: square | region}} and the
         {outline: outlined {nb: square | region}}}
       move: "{ring: this edge between them | every other edge between them} must be a wall too"
-  # A group short of k squares grows into a square beside it that no wall
-  # keeps from it. Where only one such square is left, it takes that one;
-  # where none is, the marks are inconsistent. Run once the rungs above have
-  # walled every pair of groups they can, a square walled from the group is
-  # one whose own group is.
-  - id: onlyWay
+  # A lone square is named by its letter.
+  - kind: region.grow
+    as: onlyWay
     tier: Easy
-    for: >-
-      O = joined, c in cells, A = through(c, O) where c = nth(A, 0) and |A| < k,
-      S = set(s over x in A, s in adj4(x) where s not in A and value(edge(x, s)) != 1)
-    conclude: >-
-      |S| > 0 and (|S| = 1 implies
-      forall x in A, y in adj4(x) where y in S: place(edge(x, y), 2))
-    says:
-      terms: { letter: "clue(letter, nth(A, 0))", size: k, have: "|A|" }
-      marks: { stripes: A, reads: A + S }
-      wordings:
-        - when: "|stripes| = 1"
-          look: "{stripes: This {letter}} is walled in on every side but one"
-        - look: >-
-            {stripes: the striped region} has {numeral have} of its
-            {numeral size} squares and one square left to grow into
-      again: "{stripes: the same striped region}"
-      move: "{ring: this edge | these edges} can't be a wall"
+    with:
+      size: k
+      lone: "this {letter}"
+      terms: { letter: "clue(letter, nth(A, 0))" }
