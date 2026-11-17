@@ -38,7 +38,7 @@ import {
   type WinTone,
   winSlot,
 } from "../../engine/win-wave.ts";
-import { TILE } from "./hint-text.ts";
+import { TILE } from "./kinds.ts";
 import type { FifteenMove, FifteenParams, FifteenState, FifteenUi } from "./state.ts";
 
 // --- constants --------------------------------------------------------

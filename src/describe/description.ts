@@ -122,9 +122,11 @@ export interface GameWords {
 }
 
 /** What a step's term is: a `number`, said by the game's value words; a
- * `flag`, which an `if` and a `when` read; or a `unit`, said as its name
- * ("row", "column", "block", "diagonal"). */
-export type StepTermKind = "number" | "flag" | "unit";
+ * `flag`, which an `if` and a `when` read; a `unit`, said as its name
+ * ("row", "column", "block", "diagonal"); or a list of words, one of which
+ * the planner supplies and the clause says as it is (a tile's shape, a
+ * heading). */
+export type StepTermKind = "number" | "flag" | "unit" | readonly string[];
 
 /** A kind of hint step a planner emits: what its sentence reads, which the
  * planner supplies, and its clauses. */
@@ -293,6 +295,9 @@ export interface StatedClauses {
   move?: string;
   /** What a move that no rule forces does: its `effect` relation. */
   effect?: string;
+  /** What the move works toward, said first ("Working on tile 3:"); with no
+   * `look`, the move only serves it. */
+  aim?: string;
   /** A later leg's reasoning, said after its move in place of `look` and
    * `follows`: its `again` relation. */
   again?: string;
@@ -842,8 +847,9 @@ export function parseTechnique(
 
 /** The clauses a part of a `says` states; `null` where it states none. */
 function clausesOf(part: StatedClauses): StatedClauses | null {
-  const { look, follows, move, effect, again, later } = part;
+  const { aim, look, follows, move, effect, again, later } = part;
   if (
+    aim === undefined &&
     look === undefined &&
     follows === undefined &&
     move === undefined &&
@@ -853,6 +859,7 @@ function clausesOf(part: StatedClauses): StatedClauses | null {
   )
     return null;
   return {
+    ...(aim === undefined ? {} : { aim }),
     ...(look === undefined ? {} : { look }),
     ...(follows === undefined ? {} : { follows }),
     ...(move === undefined ? {} : { move }),

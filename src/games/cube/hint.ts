@@ -22,7 +22,8 @@
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import { searchRefusal } from "../../engine/search-outcome.ts";
-import { say } from "./hint-text.ts";
+import { voice } from "../../generated/games/cube/cube.compiled.ts";
+import { SQUARE } from "./kinds.ts";
 import { DIR_CHARS, dealtOf, executeMove, rollDest } from "./roll.ts";
 import { canCollectWithoutDropping, planRolls, type Roll } from "./solver.ts";
 import type { CubeMove, CubeState } from "./state.ts";
@@ -81,19 +82,28 @@ function narrate(
   // square still plain, which no outline can call the painted one; and a roll
   // onto the goal itself would ring and outline one square.
   const aim = before.blue[goal] && dest !== goal ? goal : null;
+  const ring = [dest];
+  const marks = { outline: { square: aim === null ? [] : [aim] } };
   if (before.blue[dest] && !after.blue[dest]) {
-    return { rung: "collect", words: say.collect(dest, paintedCount(after)) };
+    const terms = { left: paintedCount(after) };
+    return { rung: "collect", words: speak.sentence("collect", { ring, terms }) };
   }
   if (!before.blue[dest] && after.blue[dest]) {
-    return canCollectWithoutDropping(before)
-      ? { rung: "drop", words: say.drop(dest, aim, then) }
-      : { rung: "forced-drop", words: say.forcedDrop(dest, aim) };
+    if (!canCollectWithoutDropping(before))
+      return {
+        rung: "forced-drop",
+        words: speak.sentence("forcedDrop", { ring, marks }),
+      };
+    const terms = { another: then === "another", later: then === "later" };
+    return { rung: "drop", words: speak.sentence("drop", { ring, terms, marks }) };
   }
   if (aim !== null && landsPainted(before, aim)) {
-    return { rung: "come-round", words: say.comeRound(dest, aim) };
+    return { rung: "come-round", words: speak.sentence("comeRound", { ring, marks }) };
   }
-  return { rung: "travel", words: say.travel(dest, aim) };
+  return { rung: "travel", words: speak.sentence("travel", { ring, marks }) };
 }
+
+const speak = voice<number>({ kind: SQUARE, value: String });
 
 export function hint(state: CubeState): HintResult<CubeMove, unknown, CubeRung> {
   const planned = planRolls(state);

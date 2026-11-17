@@ -115,6 +115,65 @@ deadEnds:
   # A roll moves paint between a square and a face and never makes or loses
   # any, so a board with too little paint to cover the solid never finishes.
   short: "count(c in cells where blue(c) = 1) + count(f in faces where paint(f) = 1) < |faces|"
+steps:
+  # No roll is forced: each is the planner's, said by what it does. The
+  # square it lands on is what it decides (ringed); the painted square the
+  # leg works toward is outlined, where one can be named (none where the leg
+  # paints the square it then picks up). That a roll swaps paint between the
+  # square and the face that lands on it is the help's rule, so no step says
+  # it.
+  # The roll picks up the paint of the square it lands on.
+  collect:
+    ring: square
+    terms: { left: number }
+    wordings:
+      - when: "left = 0"
+        move: "roll onto {ring: the ringed square}, leaving no painted squares"
+      - move: "roll onto {ring: the ringed square}, leaving {left: 1 painted square | {left} painted squares}"
+  # The roll changes no paint on its way to the goal.
+  travel:
+    ring: square
+    marks: { outline: [square] }
+    wordings:
+      - when: "|outlineSquare| = 0"
+        move: &roll "roll onto {ring: the ringed square}"
+      - aim: &goal "{outline square: the outlined square}"
+        move: *roll
+  # The goal is one roll away, and that roll would land a painted face on it.
+  comeRound:
+    ring: square
+    marks: { outline: [square] }
+    aim: *goal
+    look: "the roll onto it would land a painted face on it"
+    move: *roll
+  # No square can be picked up from here without putting paint down first,
+  # and this roll puts some down.
+  forcedDrop:
+    ring: square
+    marks: { outline: [square] }
+    wordings:
+      - when: "|outlineSquare| = 0"
+        look: &first "paint must go down before any comes up"
+        move: *roll
+        effect: &leaves "it leaves paint"
+      - aim: *goal
+        look: *first
+        move: *roll
+        effect: *leaves
+  # The roll puts paint down on its way, though some square could be picked
+  # up without doing so; what the plan does with that paint: picks it up with
+  # another face, picks it up again, or leaves it past the plan's end.
+  drop:
+    ring: square
+    terms: { another: flag, later: flag }
+    marks: { outline: [square] }
+    wordings:
+      - when: "|outlineSquare| = 0"
+        move: *roll
+        effect: &paint "it leaves paint{if another: , for another face to pick up | {if later: , to pick up again later | }}"
+      - aim: *goal
+        move: *roll
+        effect: *paint
 deal:
   start: >-
     as many painted squares as the solid has faces, spread evenly over the

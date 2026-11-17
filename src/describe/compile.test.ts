@@ -489,6 +489,27 @@ describe("a stated clause names only what its technique states", () => {
       ).toThrow(error);
     });
 
+    describe("a term listing its words", () => {
+      const wordStep = (look: string): string =>
+        compileStep(
+          step({
+            terms: { n: "number", shape: ["corner", "cross"] },
+            look,
+            move: "{ring} must be a line",
+          }),
+        );
+
+      it("is said as it is, and typed as their union", () => {
+        expect(wordStep("this {shape}")).toContain('shape: "corner" | "cross"');
+      });
+
+      it("and refuses one read by an if", () => {
+        expect(() => wordStep("{if shape: a | b}")).toThrow(
+          /\{if shape\}, which is no flag/,
+        );
+      });
+    });
+
     describe("a unit term", () => {
       const unitStep = (look: string): string =>
         compileStep(

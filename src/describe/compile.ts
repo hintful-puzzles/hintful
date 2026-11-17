@@ -37,6 +37,7 @@ import {
   type Says,
   type StatedClauses,
   type Step,
+  type StepTermKind,
   type SuppliedKind,
   stepsOf,
   type Technique,
@@ -4801,16 +4802,33 @@ function statedTable(own: readonly Technique[]): string[] {
   ];
 }
 
+/** Whether a step's term is a word the clause says as it is: a unit's name, or
+ * one of the words the term lists. */
+const saidPlainly = (kind: StepTermKind): boolean =>
+  kind === "unit" || typeof kind !== "string";
+
+/** A step's term as `StepsById` types it. */
+const stepTermType = (kind: StepTermKind): string =>
+  typeof kind !== "string"
+    ? kind.map((w) => JSON.stringify(w)).join(" | ")
+    : kind === "flag"
+      ? "boolean"
+      : kind === "unit"
+        ? "Unit"
+        : "number";
+
 /** A planner's kind of step checks as a technique's `says` does, over the
  * terms and marks it declares: a number term is a number, a flag a truth. */
 function checkStep(step: Step): void {
   const sorts = new Map<string, Sort>(
     step.terms.flatMap((t): [string, Sort][] =>
-      t.kind === "unit" ? [] : [[t.name, t.kind === "flag" ? BOOL : NUM]],
+      saidPlainly(t.kind) ? [] : [[t.name, t.kind === "flag" ? BOOL : NUM]],
     ),
   );
-  // A unit term is a word, said plainly and read by nothing else.
-  const units = new Set(step.terms.filter((t) => t.kind === "unit").map((t) => t.name));
+  // A unit or word term is a word, said plainly and read by nothing else.
+  const units = new Set(
+    step.terms.filter((t) => saidPlainly(t.kind)).map((t) => t.name),
+  );
   for (const u of units)
     if (STATED_WORDS.has(u))
       throw new CompileError(
@@ -4926,10 +4944,7 @@ export function stepsBlock(
         s.terms.length === 0
           ? "Record<string, never>"
           : `{ ${s.terms
-              .map(
-                (t) =>
-                  `${t.name}: ${t.kind === "flag" ? "boolean" : t.kind === "unit" ? "Unit" : "number"}`,
-              )
+              .map((t) => `${t.name}: ${stepTermType(t.kind)}`)
               .join("; ")} }`;
       return `  ${s.id}: { ring: ${JSON.stringify(s.ring)}; terms: ${terms}; marks: { ${marks} } };`;
     }),
@@ -4940,7 +4955,7 @@ export function stepsBlock(
     "export const STEPS: {",
     "  readonly [K in keyof StepsById<unknown>]: {",
     '    readonly ring: StepsById<unknown>[K]["ring"];',
-    "    readonly clauses: readonly { look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string; long?: string }[];",
+    "    readonly clauses: readonly { aim?: string; look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string; long?: string }[];",
     "    readonly when: readonly (",
     "      | null",
     "      | ((",

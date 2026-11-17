@@ -215,6 +215,7 @@ function withKinds(data: DescriptionFile, path: string): DescriptionFile {
 
 /** The keys whose strings are clauses. */
 const CLAUSE_KEYS: ReadonlySet<string> = new Set([
+  "aim",
   "look",
   "follows",
   "move",

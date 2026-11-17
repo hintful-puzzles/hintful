@@ -104,6 +104,51 @@ deadEnds:
   # Joining every tile into one network takes one join fewer than the tiles,
   # each using up an arm on both its tiles, and a slide changes no arm.
   short: "sum(c in cells of arms(c)) < 2 * (|cells| - 1)"
+steps:
+  # No slide is forced: Netslide is a movement game, so a step says the piece
+  # (by its shape, ringed with the arrow to click), the way it slides (a
+  # word, so the sentence is whole without the arrow) and what that does for
+  # it. That a line never slides is a rule of the game, which the help says
+  # and the board shows (no arrows beside the source's lines), so no step
+  # says it. Every piece is named by its shape, the one thing about it the
+  # player can see: there is no "tile 8" in Netslide. `home` is whether the
+  # slide brings the tile where the finished board wants it.
+  # A later leg of a journey: its first leg said why, and is still on screen.
+  next:
+    ring: tile
+    terms: &tile
+      shape: [loose end, straight, corner, T-piece, cross]
+      heading: [left, right, up, down]
+      home: flag
+    wordings:
+      - when: home
+        aim: "{ring: this {shape}}"
+        move: "slide it {heading}, where it belongs"
+      - aim: "{ring: this {shape}}"
+        move: "slide it {heading}"
+  # The tile belongs beside the source. That is itself its arrival, so the
+  # arriving leg closes on it, and a leg on its way says it as its look.
+  besideSource:
+    ring: tile
+    terms: *tile
+    wordings:
+      - when: home
+        move: "slide {ring: this {shape}} {heading}"
+        effect: "it belongs beside the source"
+      - look: "{ring: this {shape}} belongs beside the source"
+        move: "slide it {heading}"
+        effect: "that sets it up"
+  # The piece, the way it goes and what that does, a tile on a line that
+  # never slides included: the line is not evidence for the move.
+  working:
+    ring: tile
+    terms: *tile
+    wordings:
+      - when: home
+        move: "slide {ring: this {shape}} {heading}"
+        effect: "that's where it belongs"
+      - move: "slide {ring: this {shape}} {heading}"
+        effect: "that sets it up"
 deal:
   start: >-
     a spanning tree grown from the source, barriers drawn on the walls it

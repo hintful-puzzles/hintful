@@ -24,7 +24,6 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import {
   planSlides,
   type SlideMove,
@@ -32,7 +31,9 @@ import {
   toroidalDist,
 } from "../../engine/slide-planner.ts";
 import { SOLUTION_UNKNOWN } from "../../engine/solve-failure.ts";
-import { type Marked, say } from "./hint-text.ts";
+import { D, dirCount, L, R, U } from "../../engine/square-edges.ts";
+import { voice } from "../../generated/games/netslide/netslide.compiled.ts";
+import { TILE } from "./kinds.ts";
 import { reconstructSolution } from "./reconstruct.ts";
 import { type NetslideMove, type NetslideState, positionOf, rulesOf } from "./state.ts";
 
@@ -596,8 +597,7 @@ function less(a: [number, number, number], b: [number, number, number]): boolean
 /**
  * One step's sentence: which one, and with what values. Every clause is a
  * claim, so every clause is checked here before it is said; the words, and why
- * each clause earns its width on the hint bar, are
- * [`hint-text.ts`](./hint-text.ts)'s.
+ * each clause earns its width on the hint bar, are the description's `steps`.
  */
 function narrateStep(
   s: NetslideState,
@@ -609,7 +609,6 @@ function narrateStep(
   const continuesPrevious = journey !== null;
   const { w, cx, cy } = s;
   const move = toNetslideMove(m);
-  const mask = s.tiles[focus.label];
   const highlights: NetslideHint = {
     tile: focus.from,
     landing: focus.landing,
@@ -631,26 +630,28 @@ function narrateStep(
   // never slides, so the only line that can move it is its column — and the other
   // way about. That is the rung, and the words are the working ones: the line is
   // a rule, not evidence for the move.
-  let words: (m: Marked) => Sentence;
   let rung: NetslideRung;
+  let kind: "next" | "besideSource" | "working" = "working";
   if (journey !== null) {
     rung = journey;
-    words = (m) => say.next(m, arrivesHome);
-  } else if (row === cy && m.axis === "col") {
+    kind = "next";
+  } else if ((row === cy && m.axis === "col") || (col === cx && m.axis === "row"))
     rung = "frozenLine";
-    words = (m) => say.working(m, arrivesHome);
-  } else if (col === cx && m.axis === "row") {
-    rung = "frozenLine";
-    words = (m) => say.working(m, arrivesHome);
-  } else if (focus.belongs && isBesideSource(focus.destination, w, cx, cy)) {
+  else if (focus.belongs && isBesideSource(focus.destination, w, cx, cy)) {
     rung = "besideSource";
-    words = (m) => say.besideSource(m, arrivesHome);
-  } else {
-    rung = "working";
-    words = (m) => say.working(m, arrivesHome);
-  }
+    kind = "besideSource";
+  } else rung = "working";
 
-  const said = words({ ...markedOf(highlights, m), mask });
+  const forward = m.delta === 1;
+  const said = speak.sentence(kind, {
+    ring: [highlights.tile],
+    terms: {
+      shape: shapeOf(s.tiles[focus.label]),
+      heading:
+        m.axis === "row" ? (forward ? "right" : "left") : forward ? "down" : "up",
+      home: arrivesHome,
+    },
+  });
   return {
     move,
     rung,
@@ -661,14 +662,19 @@ function narrateStep(
   };
 }
 
-/** A step's highlights as the marks its words name, less the tile's shape. */
-function markedOf(hl: NetslideHint, m: SlideMove): Omit<Marked, "mask"> {
-  const forward = m.delta === 1;
-  return {
-    tile: hl.tile,
-    heading: m.axis === "row" ? (forward ? "right" : "left") : forward ? "down" : "up",
-  };
+/** A tile's shape, the one thing about it the player can see, so the shape
+ * names the kind of piece and the board's ring says which one. */
+function shapeOf(
+  mask: number,
+): "loose end" | "straight" | "corner" | "T-piece" | "cross" {
+  const wires = dirCount(mask);
+  if (wires === 1) return "loose end";
+  if (wires === 3) return "T-piece";
+  if (wires === 4) return "cross";
+  return mask === (L | R) || mask === (U | D) ? "straight" : "corner";
 }
+
+const speak = voice<number>({ kind: TILE, value: String });
 
 /** Is `cell` orthogonally adjacent to the source — the tile power flows from, whose
  * row and column are both frozen? (Not toroidally: the claim is about the picture

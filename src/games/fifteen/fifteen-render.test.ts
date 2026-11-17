@@ -11,8 +11,8 @@ import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-draw
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
-import { TILE } from "./hint-text.ts";
 import { executeMove, fifteenGame } from "./index.ts";
+import { TILE } from "./kinds.ts";
 import { COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
 import { type FifteenState, newState } from "./state.ts";
 

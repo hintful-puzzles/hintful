@@ -193,7 +193,15 @@ function fitTurns(pieces: readonly Piece[]): number {
 }
 
 type Part = keyof StatedClauses;
-const PARTS: readonly Part[] = ["look", "follows", "move", "effect", "again", "later"];
+const PARTS: readonly Part[] = [
+  "aim",
+  "look",
+  "follows",
+  "move",
+  "effect",
+  "again",
+  "later",
+];
 
 /** Each part's shortest or longest reading, with every `fit` at `turn`. */
 function readings(
@@ -230,6 +238,8 @@ function joined(n: Partial<Record<Part, string>>, closing: string): string[] {
   else if (n.follows !== undefined) first = `${premise}: ${move}.`;
   else if (premise !== null) first = `${premise}, so ${move}.`;
   else first = `${move}.`;
+  // "Working on A: " or "Working on A, ": the same length either way.
+  if (n.aim !== undefined) first = `Working on ${n.aim}: ${first}`;
   return n.again === undefined
     ? [first]
     : [first, `…and ${n.later ?? move}, for ${n.again}.`];

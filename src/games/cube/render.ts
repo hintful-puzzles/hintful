@@ -26,7 +26,7 @@ import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { type Bbox, enumGridSquares, findBbox } from "./grid.ts";
-import { SQUARE } from "./hint-text.ts";
+import { SQUARE } from "./kinds.ts";
 import { SOLIDS, transformPoly } from "./solids.ts";
 import type { CubeMove, CubeParams, CubeState, KeyPair } from "./state.ts";
 

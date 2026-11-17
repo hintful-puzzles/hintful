@@ -37,7 +37,7 @@ import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import { wireDistance } from "../../engine/wires.ts";
 import type { NetslideHint } from "./hint.ts";
-import { TILE } from "./hint-text.ts";
+import { TILE } from "./kinds.ts";
 import {
   ACTIVE,
   computeActive,

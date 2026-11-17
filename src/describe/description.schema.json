@@ -72,6 +72,7 @@
         "additionalProperties": false,
         "properties": {
           "when": { "$ref": "#/$defs/formula" },
+          "aim": { "$ref": "#/$defs/clause" },
           "look": { "$ref": "#/$defs/clause" },
           "follows": { "$ref": "#/$defs/clause" },
           "move": { "$ref": "#/$defs/clause" },
@@ -796,8 +797,13 @@
               },
               "terms": {
                 "type": "object",
-                "description": "Named values the planner supplies: `number`, said by the game's value words; `flag`, which an `{if flag: yes | no}` and a wording's `when` read; or `unit`, a row, column, block or diagonal, said as its name by `{term}`.",
-                "additionalProperties": { "enum": ["number", "flag", "unit"] }
+                "description": "Named values the planner supplies: `number`, said by the game's value words; `flag`, which an `{if flag: yes | no}` and a wording's `when` read; `unit`, a row, column, block or diagonal, said as its name by `{term}`; or a list of words, one of which the planner supplies and `{term}` says as it is (Netslide's tile shapes).",
+                "additionalProperties": {
+                  "oneOf": [
+                    { "enum": ["number", "flag", "unit"] },
+                    { "type": "array", "items": { "type": "string" }, "minItems": 2 }
+                  ]
+                }
               },
               "marks": {
                 "type": "object",
@@ -808,6 +814,10 @@
                   "stripes": { "type": "array", "items": { "type": "string" } },
                   "strand": { "type": "array", "items": { "type": "string" } }
                 }
+              },
+              "aim": {
+                "$ref": "#/$defs/clause",
+                "description": "What the move works toward, said first as \"Working on …:\" (Fifteen's \"tile 3\"); with no `look` and no `effect`, the move serves it."
               },
               "look": { "$ref": "#/$defs/clause" },
               "follows": { "$ref": "#/$defs/clause" },

@@ -47,6 +47,9 @@ export interface Clauses {
   readonly follows?: string;
   readonly move?: string;
   readonly effect?: string;
+  /** What the move works toward, said first ("Working on tile 3:"); with no
+   * `look` and no `effect`, the move only serves it. */
+  readonly aim?: string;
   /** What a later leg of a journey says after its move, in place of `look` and
    * `follows`: the reasoning its first leg gave, as this square adds to it (an
    * `again` relation). A first leg ignores it. */
@@ -433,6 +436,7 @@ export function statedParts<E, R = E>(
   c: Clauses,
   context: StatedContext<E, R>,
 ): {
+  aim?: Narration;
   look?: Narration;
   follows?: Narration;
   move?: Narration;
@@ -443,10 +447,14 @@ export function statedParts<E, R = E>(
   // The ring's elements are of the kind `ringKind` names, which only a ring
   // reference reads.
   const cx = context as unknown as StatedContext<E>;
+  // A look opens the sentence unless an aim goes before it.
+  const look = (src: string): Narration =>
+    c.aim === undefined ? render(src, cx).capitalized() : render(src, cx);
   return {
+    ...(c.aim === undefined ? {} : { aim: render(c.aim, cx) }),
     ...(c.again === undefined ? {} : { again: render(c.again, cx) }),
     ...(c.later === undefined ? {} : { later: render(c.later, cx) }),
-    ...(c.look === undefined ? {} : { look: render(c.look, cx).capitalized() }),
+    ...(c.look === undefined ? {} : { look: look(c.look) }),
     ...(c.follows === undefined ? {} : { follows: render(c.follows, cx) }),
     ...(c.move === undefined ? {} : { move: render(c.move, cx) }),
     ...(c.effect === undefined ? {} : { effect: render(c.effect, cx) }),
@@ -504,19 +512,24 @@ function statedOnce<E>(
       relation: { kind: "again", basis: again },
       ...(c.long === undefined ? {} : { long: c.long }),
     });
-  // A wording that states only its move has nothing to say but the move
-  // (Flood's fill that joins no square).
-  if (
+  const alone =
     effect === undefined &&
     parts.look === undefined &&
     parts.follows === undefined &&
-    relation.kind === "forced"
-  )
+    relation.kind === "forced";
+  // A wording that states only its move has nothing to say but the move
+  // (Flood's fill that joins no square); with an aim, the move serves it.
+  if (alone && parts.aim === undefined)
     return unshaped(phrase`${move}.`.capitalized(), "bare");
   return sentence({
     ...parts,
     move,
-    relation: effect === undefined ? relation : { kind: "effect", effect },
+    relation:
+      effect !== undefined
+        ? { kind: "effect", effect }
+        : alone
+          ? { kind: "serves" }
+          : relation,
     ...(c.long === undefined ? {} : { long: c.long }),
   });
 }

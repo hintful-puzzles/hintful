@@ -1401,7 +1401,14 @@ same object. Terms and marks are required where the step declares any, so a
 term left out is a type error; a game whose words vary by the board (Salad's
 mode) makes a voice for them. **A term of kind `unit`** is a row, column, block
 or diagonal, said as its name (`{axis}`, `{axis}s`); `StepsById` types it as
-`Unit`, and `lineUnit` turns a Latin reason's `"row" | "col"` into one. Write
+`Unit`, and `lineUnit` turns a Latin reason's `"row" | "col"` into one. **A
+term declared as a list of words** (Netslide's `shape: [loose end, straight,
+corner, T-piece, cross]`) is one of them, typed as their union and said as it
+is; write one where the planner picks a word the board shows (a shape, a
+heading) rather than a number. **A step's `aim`** is what its move works
+toward, said first ("Working on tile 3: slide it into place", Fifteen's);
+with no `look` and no `effect` the move serves it, and a look after it is
+not capitalized. Write
 one where a clause would choose a unit's name by flags, and a second (Magnets'
 `across`) where a sentence names the other way too. **A description's
 `phrases`** name clause source a clause says as `{name}`: the loader

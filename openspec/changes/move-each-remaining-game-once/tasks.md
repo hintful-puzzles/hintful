@@ -10,8 +10,10 @@
 - [x] 0.2 `add-norinori` § 2.2: every place the engine made Norinori say
   what it should not have was mended or filed there, and the filed changes
   are archived.
-- [ ] 0.3 Solo's baseline dump (exited 1 at `7a1223d3f`): found out before
-  Solo moves.
+- [x] 0.3 Solo's baseline dump (exited 1 at `7a1223d3f`): at `4dd180d09`
+  it runs, and is long: 718,763 lines in the 15 minutes `timeout 900`
+  allowed at `DUMP_DEALS=8`, which killed it (exit 124). Take Solo's at
+  fewer deals, under a time limit that fits.
 
 ## 1. Method, each game
 
@@ -27,13 +29,21 @@ game here; the game is read in the running app.
 
 Planning games (a `steps` block, Slide's form):
 
-- [ ] Flood
-- [ ] Fifteen
+- [x] Flood (2026-11-17): dump byte-identical. The engine gained `|ring|` in
+  a step's `when`, and a wording of a move alone said `bare` (the fill that
+  joins no square, pinned by a test: no dumped walk meets it).
+- [x] Fifteen (2026-11-17): dump byte-identical. The engine gained `aim`, a
+  step's clause said first ("Working on tile 3:"), with the move serving it.
 - [ ] Sixteen
 - [ ] Flip
-- [ ] Netslide
+- [x] Netslide (2026-11-17): dump byte-identical. The engine gained a term
+  declared as a list of words (the tile's shape, the heading).
 - [ ] Numgame
-- [ ] Cube
+- [x] Cube (2026-11-17). **Changed, one sentence:** come-round, "Working on
+  the outlined square: the roll onto it would land a painted face on it, so
+  roll onto the ringed square." (was "…on it. Instead: roll onto the ringed
+  square."): the stated form has no "Instead" relation, and "so" says the
+  same reason. Every other line of the dump is the same.
 - [ ] Twiddle
 - [ ] Inertia
 - [ ] Samegame

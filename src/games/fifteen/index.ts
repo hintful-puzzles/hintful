@@ -23,7 +23,8 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
-import { say } from "./hint-text.ts";
+import { voice } from "../../generated/games/fifteen/fifteen.compiled.ts";
+import { TILE } from "./kinds.ts";
 import {
   ANIM_TIME,
   cellCenter,
@@ -181,24 +182,28 @@ function narrateFifteenStep(
 ): { rung: FifteenRung; words: Sentence } {
   const w = board.w;
   const landsAtOwnHome = board.gapPos === tile - 1;
+  const ring = [tile];
 
   if (tile === goal) {
-    if (landsAtOwnHome) return { rung: "goalHome", words: say.goalHome(goal) };
+    const said = { ring, terms: { goal } };
+    if (landsAtOwnHome)
+      return { rung: "goalHome", words: speak.sentence("goalHome", said) };
     // The goal sits at `dest` before the slide and at the old gap after it.
     const hx = (goal - 1) % w;
     const hy = Math.floor((goal - 1) / w);
     const distBefore = Math.abs(dest.x - hx) + Math.abs(dest.y - hy);
     const distAfter =
       Math.abs((board.gapPos % w) - hx) + Math.abs(Math.floor(board.gapPos / w) - hy);
-    return distAfter < distBefore
-      ? { rung: "goalCloser", words: say.goalCloser(goal) }
-      : { rung: "goalReposition", words: say.goalReposition(goal) };
+    const rung = distAfter < distBefore ? "goalCloser" : "goalReposition";
+    return { rung, words: speak.sentence(rung, said) };
   }
 
-  if (landsAtOwnHome && stays)
-    return { rung: "tileHome", words: say.tileHome(goal, tile) };
-  return { rung: "outOfWay", words: say.outOfWay(goal, tile) };
+  const rung = landsAtOwnHome && stays ? "tileHome" : "outOfWay";
+  return { rung, words: speak.sentence(rung, { ring, terms: { goal, tile } }) };
 }
+
+/** A tile is said by its number. */
+const speak = voice<number>({ kind: TILE, value: String });
 
 /** The *whole* greedy solution as one plan, one narrated gap slide per
  * step, so the banner stays populated through an auto-hint run instead of

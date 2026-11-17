@@ -69,5 +69,40 @@ deadEnds:
     (count(a in cells, b in cells where index(a, cells) < index(b, cells)
     and value(a) > value(b)) + (w - 1 - x(g)) + (h - 1 - y(g))) mod 2
     != (|cells| - 1) mod 2
+steps:
+  # No slide is forced: each names the tile its plan is working toward home
+  # (the aim) and what this slide does for it. The tile to slide is what the
+  # step decides; it is ringed, though drawn filled.
+  # The goal tile lands in its solved cell.
+  goalHome:
+    ring: tile
+    terms: { goal: number }
+    aim: &goal "{ring: tile {goal}}"
+    move: "slide it into place"
+  # The goal tile slides nearer its home.
+  goalCloser:
+    ring: tile
+    terms: { goal: number }
+    aim: *goal
+    move: "slide it closer"
+  # The goal tile slides one cell further from home. It lands where the hole
+  # was, so the hole is left one cell nearer home than the tile.
+  goalReposition:
+    ring: tile
+    terms: { goal: number }
+    aim: *goal
+    move: "slide it back a step, leaving the hole between it and its home"
+  # Another tile, displaced earlier in the rotation, lands in its own home.
+  tileHome:
+    ring: tile
+    terms: { goal: number, tile: number }
+    aim: &other "tile {goal}"
+    move: "slide {ring: tile {tile}} into place"
+  # Any other slide clears the way.
+  outOfWay:
+    ring: tile
+    terms: { goal: number, tile: number }
+    aim: *other
+    move: "slide {ring: tile {tile}} out of the way"
 deal:
   start: a random arrangement the slides can finish
