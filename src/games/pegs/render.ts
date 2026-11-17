@@ -33,7 +33,7 @@ import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
-import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
+import { HOLE, JUMP, type Marked, PEG } from "./kinds.ts";
 import {
   GRID_HOLE,
   GRID_OBST,

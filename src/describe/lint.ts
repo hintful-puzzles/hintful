@@ -273,7 +273,7 @@ function bounds(c: StatedClauses): { shortest: string; longest: string } {
 }
 
 /** What is wrong with a wording's words, one line each. */
-function wordDefects(c: StatedClauses): string[] {
+function wordDefects(c: StatedClauses, moveRing = false): string[] {
   const out = new Set<string>();
   for (let turn = 0; turn < turnsOf(c); turn++)
     for (const part of PARTS) {
@@ -315,8 +315,10 @@ function wordDefects(c: StatedClauses): string[] {
           const role = DRAWN[r.role];
           const adj = adjectiveDefect(role, r.words);
           if (adj !== null) out.add(`${part}: ${adj}`);
+          // A ring of sort `move` is the move itself, as the voice draws it.
+          const kind = moveRing && r.role === "ring" ? "move" : "cell";
           const why = judge(
-            { kind: { name: "cell", key: String } },
+            { kind: { name: kind, key: String } },
             r.words,
             null,
             (noun) => (deictic.get(noun)?.size ?? 0) > 1,
@@ -330,8 +332,10 @@ function wordDefects(c: StatedClauses): string[] {
 }
 
 /** Every wording a description states, each named by where. */
-function wordingsIn(file: DescriptionFile): { where: string; w: Wording }[] {
-  const out: { where: string; w: Wording }[] = [];
+function wordingsIn(
+  file: DescriptionFile,
+): { where: string; w: Wording; moveRing?: boolean }[] {
+  const out: { where: string; w: Wording; moveRing?: boolean }[] = [];
   const technique = (id: string, t: StatedTechnique): void => {
     const says = parseTechnique("", id, t).says;
     if (says === null) return;
@@ -345,7 +349,7 @@ function wordingsIn(file: DescriptionFile): { where: string; w: Wording }[] {
       if (!("use" in t)) technique(t.id, t);
   const steps = "steps" in file ? (file.steps ?? {}) : {};
   for (const s of stepsOf(steps, (_, src) => parse(src)))
-    for (const w of s.words) out.push({ where: "", w });
+    for (const w of s.words) out.push({ where: "", w, moveRing: s.ring === "move" });
   return out;
 }
 
@@ -355,9 +359,9 @@ function wordingsIn(file: DescriptionFile): { where: string; w: Wording }[] {
 function wordingFindings(file: DescriptionFile): Finding[] {
   const out: Finding[] = [];
   const needed = new Map<string, boolean>();
-  for (const { where: id, w } of wordingsIn(file)) {
+  for (const { where: id, w, moveRing } of wordingsIn(file)) {
     const where = id === "" ? w.label : `${id} ${w.label}`;
-    for (const message of wordDefects(w.clauses))
+    for (const message of wordDefects(w.clauses, moveRing === true))
       out.push({ where, error: true, message });
     const { shortest, longest } = bounds(w.clauses);
     const at = w.long === null ? null : id === "" ? w.long.at : `${id} ${w.long.at}`;

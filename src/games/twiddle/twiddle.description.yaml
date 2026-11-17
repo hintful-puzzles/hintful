@@ -176,5 +176,158 @@ variations:
           != homes(lo, hi, k)
         # A block of even side turns a multiple of four tiles at once.
         turnSum: "n mod 2 = 0 and sum(c in cells of turn(c)) mod 4 != 0"
+phrases:
+  dir: "{if clockwise: clockwise | anticlockwise}"
+  turn: "turn {ring:the ringed block} {dir}"
+  # Finished tiles the turn first takes out of place.
+  lift: "{if lifting: , lifting {stripes lifted: {lifts: the striped tile | the striped tiles}} | }"
+  comeBack: "{stripes returned: {returns: the striped tile | the striped tiles}} {returns: returns | return}"
+  # What the turn completes: finished tiles back for the rest of the run, the
+  # goal tile in place. Where that does not fit a glance, `hint.ts` says it
+  # again without the returning tiles.
+  done: >-
+    {if returning: {if lands: : {comeBack} and it is in place | : {comeBack}} |
+    {if lands: : it is in place | }}
+steps:
+  # Each step names the tile it is putting in place (outlined; on a
+  # rows-only board, where a row's tiles share its number, by its outline),
+  # then the turn of the block it rings, the ring on the block's top-left
+  # cell. A free turn, one that moves no finished tile, says what it does for
+  # the tile. A turn of a run says its part in the technique the run plays,
+  # as the help page names them, and beside it what the board will show:
+  # finished tiles it lifts out, those that come back (striped), the tile
+  # landing. No turn says which turn of the run it is: the hint's counter
+  # shows that. Which part and which effects, `hint.ts` decides.
+  # A free turn that puts the tile in place.
+  home:
+    ring: block
+    terms: &free { n: number, rowsOnly: flag, clockwise: flag }
+    marks: { outline: [tile] }
+    aim: &aim "{if rowsOnly: {outline tile: the outlined {n}} | {outline tile: tile {n}}}"
+    move: "{turn} to put it in place"
+  # A free turn that carries the tile one turn nearer its place.
+  carry:
+    ring: block
+    terms: *free
+    marks: { outline: [tile] }
+    aim: *aim
+    move: "{turn} to carry it toward {if rowsOnly: its row | its place}"
+  # Turns that bring the tiles into place for the technique `inner`, undone
+  # at the end where `undone`.
+  lineUp:
+    ring: block
+    terms: { n: number, rowsOnly: flag, clockwise: flag, lifting: flag, lifts: number, returning: flag, returns: number, lands: flag, inner: [tuck, cycle, small cycles, twist, swap], undone: flag }
+    marks: &run { outline: [tile], stripes: [lifted, returned] }
+    wordings:
+      - when: "undone and not lifting"
+        aim: *aim
+        move: "{turn} to line up the {inner}; it turns back at the end{done}"
+      - aim: *aim
+        move: "{turn} to line up the {inner}{lift}{done}"
+  lineBack:
+    ring: block
+    terms: &fx { n: number, rowsOnly: flag, clockwise: flag, lifting: flag, lifts: number, returning: flag, returns: number, lands: flag }
+    marks: *run
+    aim: *aim
+    move: "turn {ring:the ringed block} back {dir} to undo the lining up{done}"
+  # A tuck: turn a block, turn another, turn the first back.
+  tuckLift:
+    ring: block
+    terms: *fx
+    marks: *run
+    aim: *aim
+    move: "{turn} to start a tuck{lift}{done}"
+  tuckMiddle:
+    ring: block
+    terms: { n: number, rowsOnly: flag, clockwise: flag, lifting: flag, lifts: number, returning: flag, returns: number, lands: flag, bringsIn: flag }
+    marks: *run
+    aim: *aim
+    move: "{if bringsIn: {turn}, so turning the first block back brings it in | {turn} before the first block turns back}{done}"
+  tuckBack:
+    ring: block
+    terms: *fx
+    marks: *run
+    aim: *aim
+    move: "turn {ring:the first block (ringed)} back {dir} to finish the tuck{done}"
+  # A cycle: turn a block, an overlapping one, the first back, the second back.
+  cycleFirst:
+    ring: block
+    terms: *fx
+    marks: *run
+    aim: *aim
+    move: "start a cycle: {turn}{lift}{done}"
+  cycleSecond:
+    ring: block
+    terms: *fx
+    marks: *run
+    aim: *aim
+    move: "{turn}, which overlaps the first block{lift}{done}"
+  # What returns, where the board shows it, says more than the rule.
+  firstBack:
+    ring: block
+    terms: *fx
+    marks: *run
+    wordings:
+      - when: "returning or lands"
+        aim: *aim
+        move: "turn {ring:the first block (ringed)} back {dir}{done}"
+      - aim: *aim
+        move: "turn {ring:the first block (ringed)} back {dir}: the tiles only it moved go home{done}"
+  secondBack:
+    ring: block
+    terms: *fx
+    marks: *run
+    aim: *aim
+    move: "turn {ring:the second block (ringed)} back {dir} to finish the cycle{done}"
+  # A swap's single turn, which the small sequences after it undo all but two
+  # tiles of.
+  swapStart:
+    ring: block
+    terms: *fx
+    marks: *run
+    aim: *aim
+    move: "start a swap: {turn}{lift}{done}"
+  # A turn of the first or second of two small cycles.
+  small:
+    ring: block
+    terms: { n: number, rowsOnly: flag, clockwise: flag, lifting: flag, lifts: number, returning: flag, returns: number, lands: flag, which: [first, second], back: flag }
+    marks: *run
+    aim: *aim
+    move: "{turn}, {if back: undoing | part of} the {which} small cycle{lift}{done}"
+  twist:
+    ring: block
+    terms: { n: number, rowsOnly: flag, clockwise: flag, lifting: flag, lifts: number, returning: flag, returns: number, lands: flag, back: flag }
+    marks: *run
+    aim: *aim
+    move: "{if back: {turn}, back the other way round the twist | {turn}, one way round a twist{lift}}{done}"
+  # The second quarter of a half turn: the same turn as the one before.
+  again:
+    ring: block
+    terms: *fx
+    marks: *run
+    aim: *aim
+    move: "{turn} again, a half turn in all{lift}{done}"
+  # No technique to name (a searched run, or the rest of one the player
+  # started, whose first turns the hint did not see): what the turn does is
+  # all there is to say.
+  plain:
+    ring: block
+    terms: { n: number, rowsOnly: flag, clockwise: flag, lifting: flag, lifts: number, returning: flag, returns: number, lands: flag, carries: flag, searched: flag }
+    marks: *run
+    wordings:
+      - when: "lifting"
+        aim: *aim
+        move: "{turn} to lift {stripes lifted: {lifts: the striped tile | the striped tiles}} out for now{done}"
+      - when: "carries"
+        aim: *aim
+        move: "{turn} to carry it on{done}"
+      - when: "lands and not returning"
+        aim: *aim
+        move: "{turn} to put it in place"
+      - when: "searched"
+        aim: *aim
+        move: "{turn}, a turn of a run found by search{done}"
+      - aim: *aim
+        move: "{turn}{done}"
 deal:
   start: m random turns from the finished board, or a long shuffle at m = 0

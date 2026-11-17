@@ -42,7 +42,7 @@ import {
   PEGS_RUNGS,
   type PegsRung,
 } from "./hint.ts";
-import { HINT_MARKS } from "./hint-text.ts";
+import { HINT_MARKS } from "./kinds.ts";
 import {
   colors,
   computeSize,

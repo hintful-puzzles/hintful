@@ -23,10 +23,11 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
-import { mark, phrase, type Sentence } from "../../engine/hint-words.ts";
+import { mark, phrase, type Relation, type Sentence } from "../../engine/hint-words.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
 import { searchRefusal } from "../../engine/search-outcome.ts";
-import { type Marked, type Package, PEG, say } from "./hint-text.ts";
+import { voice } from "../../generated/games/pegs/pegs.compiled.ts";
+import { HOLE, JUMP, type Marked, PEG, SHAPE } from "./kinds.ts";
 import {
   asMove,
   findFinish,
@@ -62,6 +63,56 @@ export type PegsRung = (typeof PEGS_RUNGS)[number];
 
 type Step = HintStep<PegsMove, unknown, PegsRung>;
 type Said = { rung: PegsRung; words: Sentence };
+
+/** A shape a run of jumps clears, leaving every other peg where it began:
+ * three in a line, by a peg that jumps in beside them and back out, or a block
+ * of two by three. */
+interface Package {
+  readonly pegs: readonly number[];
+  readonly shape: "row" | "column" | "block";
+  readonly jumps: number;
+}
+
+const speak = voice<number | Marked | "move">({
+  kind: PEG,
+  kinds: { hole: HOLE, jump: JUMP, jumps: JUMP, shape: SHAPE },
+  value: String,
+});
+
+/** The step's jump, ringed by its peg and the hole it lands in. */
+const ringOf = (m: Marked) => ({ peg: [m.from], hole: [m.to] });
+
+/** A rival `r` that would cut off or strand `victim`, and this jump as one
+ * way to answer it. */
+const answering = (
+  rung: "trap" | "trapSoon" | "leavesAlone",
+  m: Marked,
+  r: Marked,
+  victim: number,
+): Sentence =>
+  speak.sentence(rung, {
+    ring: ringOf(m),
+    terms: { samePeg: m.from === r.from },
+    marks: { outline: { victim: [victim] }, stripes: { jump: [r] } },
+  });
+
+/** A step whose look the rival judging settled, and so its relation. */
+const judged = (rung: "only" | "anyJump", m: Marked, relation: Relation): Sentence =>
+  speak.sentence(rung, { ring: ringOf(m), relation });
+
+/** The jumps that can still finish, this one among them, given arrows. */
+const withArrows = (
+  rung: "onlyThese" | "alsoThese",
+  m: Marked,
+  goods: readonly Marked[],
+  relation: Relation,
+): Sentence =>
+  speak.sentence(rung, {
+    ring: ringOf(m),
+    terms: { arrows: goods.length + 1 },
+    marks: { outline: { jumps: [m, ...goods] } },
+    relation,
+  });
 
 /** Positions the searches of one request may visit between them, and one
  * rival's proof of loss alone. Past either a rival is unsettled and the step
@@ -167,7 +218,15 @@ export function hint(state: PegsState): HintResult<PegsMove, unknown, PegsRung> 
   const plan = finish.line;
   const j = plan[0];
   if (plan.length === 1)
-    return { ok: true, steps: [step(state, j, { rung: "last", words: say.last(j) })] };
+    return {
+      ok: true,
+      steps: [
+        step(state, j, {
+          rung: "last",
+          words: speak.sentence("last", { ring: ringOf(j) }),
+        }),
+      ],
+    };
   const rivals = legalJumps(state).filter((r) => !same(r, j));
 
   // A trap the player can see leads: a cut-off at once before one a move
@@ -182,7 +241,7 @@ export function hint(state: PegsState): HintResult<PegsMove, unknown, PegsRung> 
   const trap = traps[0];
   if (trap?.cut) {
     const rung = trap.cut.soon ? "trapSoon" : "trap";
-    const words = say[rung](j, trap.r, trap.cut.victim);
+    const words = answering(rung, j, trap.r, trap.cut.victim);
     return { ok: true, steps: [step(state, j, { rung, words })] };
   }
 
@@ -191,12 +250,17 @@ export function hint(state: PegsState): HintResult<PegsMove, unknown, PegsRung> 
     const steps: Step[] = [];
     let s = state;
     plan.slice(0, pkg.jumps).forEach((pj, i) => {
-      const words =
-        i === 0
-          ? say.packageStart(pj, pkg)
-          : i === pkg.jumps - 1
-            ? say.packageEnd(pj, pkg)
-            : say.packageNext(pj, pkg);
+      // The hint's counter shows how many jumps the run takes, so the words
+      // say only where in it this one stands.
+      const words = speak.sentence(i === 0 ? "packageStart" : "package", {
+        ring: ringOf(pj),
+        terms: { shape: pkg.shape },
+        marks: { stripes: { shape: pkg.pegs } },
+        relation: {
+          kind: "sequence",
+          at: i === 0 ? "first" : i === pkg.jumps - 1 ? "last" : "next",
+        },
+      });
       steps.push(step(s, pj, { rung: "package", words }, i > 0));
       s = jumped(s, pj);
     });
@@ -214,7 +278,14 @@ export function hint(state: PegsState): HintResult<PegsMove, unknown, PegsRung> 
     const now = new Set(alone(state));
     const mine = new Set(alone(jumped(state, j)));
     const joined = [...now].find((p) => !mine.has(p) && p !== j.from && p !== j.over);
-    if (joined !== undefined) return { rung: "joins", words: say.joins(j, joined) };
+    if (joined !== undefined)
+      return {
+        rung: "joins",
+        words: speak.sentence("joins", {
+          ring: ["move"],
+          marks: { outline: { victim: [joined] } },
+        }),
+      };
     const lone = rivals
       .map((r) => ({
         r,
@@ -226,22 +297,20 @@ export function hint(state: PegsState): HintResult<PegsMove, unknown, PegsRung> 
       .filter((x) => x.p !== undefined)
       .sort((a, b) => dist(a.r) - dist(b.r))[0];
     return lone?.p !== undefined
-      ? { rung: "leavesAlone", words: say.leavesAlone(j, lone.r, lone.p) }
-      : { rung: "plain", words: say.plain(j) };
+      ? { rung: "leavesAlone", words: answering("leavesAlone", j, lone.r, lone.p) }
+      : { rung: "plain", words: speak.sentence("plain", { ring: ringOf(j) }) };
   };
   const said: Said =
     claim.kind === "every"
-      ? { rung: "anyJump", words: say.anyJump(j, claim.relation) }
+      ? { rung: "anyJump", words: judged("anyJump", j, claim.relation) }
       : claim.kind === "only"
-        ? { rung: "only", words: say.only(j, claim.relation) }
-        : claim.kind === "onlyThese"
-          ? { rung: "onlyThese", words: say.onlyThese(j, claim.goods, claim.relation) }
-          : claim.kind === "alsoThese"
-            ? {
-                rung: "alsoThese",
-                words: say.alsoThese(j, claim.goods, claim.relation),
-              }
-            : plain();
+        ? { rung: "only", words: judged("only", j, claim.relation) }
+        : claim.kind === "onlyThese" || claim.kind === "alsoThese"
+          ? {
+              rung: claim.kind,
+              words: withArrows(claim.kind, j, claim.goods, claim.relation),
+            }
+          : plain();
   return { ok: true, steps: [step(state, j, said)] };
 }
 

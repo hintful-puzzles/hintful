@@ -1410,7 +1410,9 @@ toward, said first ("Working on tile 3: slide it into place", Fifteen's);
 unless an `effect` or a judged `relation` says more, the move serves it, and
 a look after it is not capitalized. **A step's `answers`** is how its move
 meets a danger the look names ("One way to avoid it", Same Game's), said
-between them. **A step that decides elements of several kinds** declares
+between them. **A ring of sort `move`** is the move itself, drawn as the
+engine's `MOVE`, so its words may be a clause (Pegs' "go back for it"); the
+planner gives it as `["move"]`. **A step that decides elements of several kinds** declares
 its `ring` as a list of sorts (Numgame's `[high, sign, low]`); the planner
 gives the ring by sort, each reference names one (`{ring sign: {op}}`), the
 voice's `kinds` draws each, and a wording reads one sort's size as

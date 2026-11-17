@@ -32,7 +32,7 @@ import {
 } from "../../engine/ring.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
-import { BLOCK, LIFTED, TILE } from "./hint-text.ts";
+import { BLOCK, LIFTED, TILE } from "./kinds.ts";
 import type { TwiddleMove, TwiddleState, TwiddleUi } from "./state.ts";
 
 // --- constants --------------------------------------------------------
@@ -436,7 +436,9 @@ export function redraw(
   const hw = highlightWidth(ts);
 
   const hinted = stepMarks(activeHint);
-  const ringed = hinted.of("ring", BLOCK)[0] ?? null;
+  const ringCell = hinted.of("ring", BLOCK)[0];
+  const ringed =
+    ringCell === undefined ? null : { x: ringCell % w, y: Math.floor(ringCell / w) };
   const outlined = new Set(hinted.of("outline", TILE));
   const stripedCells = new Set(hinted.of("stripes", LIFTED));
   // The ring sits on the block's pivot, and may lie on the tiles round it:

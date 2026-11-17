@@ -48,7 +48,14 @@ Planning games (a `steps` block, Slide's form):
 - [x] Cube (2026-11-17): dump byte-identical. Come-round's "Instead:" is
   the step's `answers` clause, added with Same Game; until then it had
   said "so" there.
-- [ ] Twiddle
+- [x] Twiddle (2026-11-17): every sentence is the same. Each part of a
+  run is a step; the lift and landing tails are description `phrases`.
+  Where a sentence runs past 120 characters, `hint.ts` says it again
+  without the returning tiles, as before: a `fit` cannot hold references.
+  **One mark key changed form, not place:** the ring's block is keyed by
+  the cell of its top-left square ("3", was "0,1"), so that one voice
+  serves blocks and tiles. Render maps it back, and a ring-stripped diff of
+  the dump is empty.
 - [x] Inertia (2026-11-17): dump byte-identical. The slide's compass point
   is a word-list term, "One safe way" is `answers`, and a forced slide
   passes the rival judging's relation. A step with an aim and no judged
@@ -56,7 +63,12 @@ Planning games (a `steps` block, Slide's form):
 - [x] Samegame (2026-11-17): dump byte-identical. "One way to avoid it" is
   the new `answers` clause; the judged relations come from `judgeRivals`.
 - [ ] Untangle
-- [ ] Pegs
+- [x] Pegs (2026-11-17): dump byte-identical. One voice serves pegs,
+  holes and whole jumps (`MarkKind`'s key is a method, so a kind of
+  indices is a kind of the union). A ring of sort `move` is the move
+  itself, the engine's MOVE kind ("go back for it"), and the lint lets its
+  words be a clause. A sequence's later leg no longer capitalizes the look
+  after its "Next,".
 - [ ] Sokoban
 
 Logic games:

@@ -33,8 +33,8 @@ import {
   PEGS_RUNGS,
   type PegsRung,
 } from "./hint.ts";
-import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import { pegsGame } from "./index.ts";
+import { HOLE, JUMP, type Marked, PEG } from "./kinds.ts";
 import { COL_HINT_EVIDENCE } from "./render.ts";
 import { findFinish, frozenPegs, legalJumps, provedLost } from "./solver.ts";
 import { GRID_HOLE, GRID_PEG, type PegsMove, type PegsState, status } from "./state.ts";

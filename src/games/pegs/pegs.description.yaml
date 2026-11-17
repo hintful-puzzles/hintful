@@ -114,6 +114,106 @@ deadEnds:
   frozen: >-
     count(c in cells where grid(c) = 1) > 1 and
     exists p in cells where grid(p) = 1: forall q in adj4(p): not arrive(q)
+phrases:
+  # The step's jump, mid-sentence, ringed on its peg and the hole it lands in.
+  jump: "jump {ring peg: this peg} into {ring hole: the ringed hole}"
+  # The rival jump, named as this peg's own when the same peg jumps
+  # (`samePeg`); the move then names only the hole, the peg being named.
+  rival: "{if samePeg: {ring peg: this peg}'s {stripes jump: striped jump} | {stripes jump: the striped jump}}"
+  answer: "{if samePeg: jump into {ring hole: the ringed hole} | {jump}}"
+  victim: "{outline victim: the outlined peg}"
+  withArrows: "{outline jumps: {arrows: the jump with an arrow | the jumps with arrows}}"
+steps:
+  # A step offers the first jump of a line the search found that finishes
+  # with one peg. What it says is what the search settled about the other
+  # jumps, a trap the player can see first; whether "so" may be said is the
+  # rival judging's, passed as the relation.
+  # The jump that leaves one peg.
+  last:
+    ring: [peg, hole]
+    move: "{jump}"
+    effect: "that finishes with one peg"
+  # A rival jump leaves the outlined peg frozen at once; after this jump it
+  # is not, since a line that finishes starts with it.
+  trap:
+    ring: [peg, hole]
+    terms: { samePeg: flag }
+    marks: { outline: [victim], stripes: [jump] }
+    look: "{rival} would cut off {victim}"
+    answers: "One way to save it"
+    move: "{answer}"
+  # After a rival jump, every next jump leaves the outlined peg frozen.
+  trapSoon:
+    ring: [peg, hole]
+    terms: { samePeg: flag }
+    marks: { outline: [victim], stripes: [jump] }
+    look: "after {rival}, any next jump cuts off {victim}"
+    answers: "One way to save it"
+    move: "{answer}"
+  # A run of jumps clears the striped shape and leaves every other peg where
+  # it began. The hint's counter shows how many jumps it takes, so the words
+  # do not; the planner passes where in the run the jump stands.
+  packageStart:
+    ring: [peg, hole]
+    terms: { shape: &shape [row, column, block] }
+    marks: { stripes: [shape] }
+    look: "a run of jumps clears {stripes shape: the striped {shape}} and changes nothing else"
+    move: "{jump}"
+  package:
+    ring: [peg, hole]
+    terms: { shape: *shape }
+    marks: { stripes: [shape] }
+    look: "to clear {stripes shape: the striped {shape}}"
+    move: "{jump}"
+  # Every rival was searched to the end and none can finish.
+  only:
+    ring: [peg, hole]
+    look: "no other jump can still finish"
+    move: "{jump}"
+  # Every rival was settled: the jumps with arrows can finish, the rest
+  # cannot. The offered jump carries an arrow too, being one of them.
+  onlyThese:
+    ring: [peg, hole]
+    terms: { arrows: number }
+    marks: { outline: [jumps] }
+    look: "only {withArrows} can still finish"
+    move: "{jump}"
+  # The jumps with arrows can finish, at least one rival cannot, and some
+  # were not settled.
+  alsoThese:
+    ring: [peg, hole]
+    terms: { arrows: number }
+    marks: { outline: [jumps] }
+    look: "{withArrows} can still finish; some others cannot"
+    move: "{jump}"
+  # Every jump from here can still finish.
+  anyJump:
+    ring: [peg, hole]
+    look: "every jump can still finish with one peg"
+    move: "{jump}"
+  # The outlined peg has no peg beside it now, and this jump lands beside
+  # it; the board shows which jump that is, so the words leave the move to
+  # its ring.
+  joins:
+    ring: move
+    marks: { outline: [victim] }
+    look: "{victim} is stranded, with no peg beside it"
+    answers: "One way to save it"
+    move: "{ring: go back for it}"
+  # A rival would strand the outlined peg, where this jump keeps a peg
+  # beside it.
+  leavesAlone:
+    ring: [peg, hole]
+    terms: { samePeg: flag }
+    marks: { outline: [victim], stripes: [jump] }
+    look: "{rival} would strand {victim}"
+    answers: "One way to keep a peg beside it"
+    move: "{answer}"
+  # Nothing settled about the rivals worth saying. That this jump can still
+  # finish goes without saying: the hint offers no other kind.
+  plain:
+    ring: [peg, hole]
+    move: "{jump}"
 deal:
   start: >-
     Cross and Octagon: every hole a peg but one; Random: jumps played

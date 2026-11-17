@@ -6,7 +6,14 @@
  * `StepsById` says it is told by.
  */
 import type { ColorWord } from "./color/color-word.ts";
-import type { MarkKind, Narration, Noun, Relation, Sentence } from "./hint-words.ts";
+import {
+  type MarkKind,
+  MOVE,
+  type Narration,
+  type Noun,
+  type Relation,
+  type Sentence,
+} from "./hint-words.ts";
 import {
   type ClausePart,
   type Clauses,
@@ -134,7 +141,11 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
       cx: {
         ...words,
         ...(kinds === undefined ? {} : { kinds }),
-        ringKind: kinds?.[sort] ?? voice.kind,
+        // A ring of sort `move` is the move itself, which the board shows
+        // (Pegs' "go back for it"): its words may be a clause.
+        ringKind:
+          kinds?.[sort] ??
+          (sort === "move" ? (MOVE as MarkKind<unknown> as MarkKind<E>) : voice.kind),
         noun: nouns?.[sort] ?? voice.noun,
         ...((nouns?.[sort] ?? voice.noun) === undefined
           ? {}

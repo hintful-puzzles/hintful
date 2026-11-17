@@ -277,6 +277,12 @@ describe("a stated clause", () => {
         kind: "forced",
       }).text,
     ).toBe("Working on the outlined square: it is far, so go.");
+    expect(
+      statedSentence({ look: "to clear {outline}", move: "go" }, cx(), null, {
+        kind: "sequence",
+        at: "next",
+      }).text,
+    ).toBe("Next, to clear the outlined square, go.");
   });
 
   it("says a later leg's `again` after its move in place of look and follows, and a first leg ignores it", () => {

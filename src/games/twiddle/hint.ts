@@ -14,7 +14,9 @@ import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.t
 import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
 import type { Role, Segment } from "../../engine/permutation-planner.ts";
-import { type Goal, type Inner, type Part, say, type Turned } from "./hint-text.ts";
+import { NARRATION_LIMIT } from "../../engine/wording-rules.ts";
+import { voice } from "../../generated/games/twiddle/twiddle.compiled.ts";
+import { BLOCK, LIFTED, TILE } from "./kinds.ts";
 import { planTwiddle, playTurn, type Turn, turnMove } from "./solver.ts";
 import { positionOf, type TwiddleMove, type TwiddleState } from "./state.ts";
 
@@ -33,6 +35,138 @@ export const TWIDDLE_RUNGS = [
 export type TwiddleRung = (typeof TWIDDLE_RUNGS)[number];
 
 type Step = HintStep<TwiddleMove, unknown, TwiddleRung>;
+
+/** The goal a step serves. */
+interface Goal {
+  /** The cell the tile stands on now. */
+  readonly at: number;
+  /** The tile's number. */
+  readonly number: number;
+  /** Rows-only: every tile of a row carries its number, so the tile is named
+   * by its outline, and it goes toward its row. */
+  readonly rowsOnly: boolean;
+}
+
+/** The turn a step makes: its block by the cell of its top-left square. */
+interface Turned {
+  readonly block: number;
+  readonly clockwise: boolean;
+}
+
+/** The technique a run's lining up serves. */
+type Inner = "tuck" | "cycle" | "small cycles" | "twist" | "swap";
+
+/** A run turn's part in its technique, the description's step it says;
+ * `plain` where the run has no technique to name (a searched run, or the rest
+ * of one the player started, whose first turns the hint did not see). */
+type Part =
+  | { readonly kind: "lineUp"; readonly inner: Inner; readonly undone: boolean }
+  | { readonly kind: "lineBack" }
+  | { readonly kind: "tuckLift" }
+  | { readonly kind: "tuckMiddle"; readonly bringsIn: boolean }
+  | { readonly kind: "tuckBack" }
+  | { readonly kind: "cycleFirst" }
+  | { readonly kind: "cycleSecond" }
+  | { readonly kind: "firstBack" }
+  | { readonly kind: "secondBack" }
+  | { readonly kind: "small"; readonly which: 1 | 2; readonly back: boolean }
+  | { readonly kind: "twist"; readonly back: boolean }
+  /** The second quarter of a half turn: the same turn as the one before. */
+  | { readonly kind: "again" }
+  /** A swap's single turn, which the small sequences after it undo all but
+   * two tiles of. */
+  | { readonly kind: "swapStart" }
+  | { readonly kind: "plain"; readonly searched: boolean };
+
+/** What the turn does that the board will show, by the cells the tiles stand
+ * on before it. */
+interface Effects {
+  /** Finished tiles the turn first takes out of place. */
+  readonly lifts: readonly number[];
+  /** Finished tiles it puts back for the rest of the run. */
+  readonly returns: readonly number[];
+  /** The goal tile lands in place, for the rest of the run. */
+  readonly lands: boolean;
+  /** The goal tile moves without landing. */
+  readonly carries: boolean;
+}
+
+const speak = voice<number>({
+  kind: BLOCK,
+  kinds: { tile: TILE, lifted: LIFTED, returned: LIFTED },
+  value: String,
+});
+
+/** A free turn: it lands the tile, or carries it nearer. */
+function freeWords(g: Goal, t: Turned, lands: boolean): Sentence {
+  return speak.sentence(lands ? "home" : "carry", {
+    ring: [t.block],
+    terms: { n: g.number, rowsOnly: g.rowsOnly, clockwise: t.clockwise },
+    marks: { outline: { tile: [g.at] } },
+  });
+}
+
+/** A turn of a run, by its part in the run's technique and what it does.
+ * Where the part, the tiles coming back and the landing do not fit in a
+ * glance, the landing is the one kept: the returning tiles are on the board
+ * to see, and are not striped unless the words name them. */
+function runWords(g: Goal, t: Turned, p: Part, fx: Effects): Sentence {
+  const said = (e: Effects): Sentence => {
+    const ring = [t.block];
+    const marks = {
+      outline: { tile: [g.at] },
+      stripes: { lifted: e.lifts, returned: e.returns },
+    };
+    const terms = {
+      n: g.number,
+      rowsOnly: g.rowsOnly,
+      clockwise: t.clockwise,
+      lifting: e.lifts.length > 0,
+      lifts: e.lifts.length,
+      returning: e.returns.length > 0,
+      returns: e.returns.length,
+      lands: e.lands,
+    };
+    switch (p.kind) {
+      case "lineUp":
+        return speak.sentence(p.kind, {
+          ring,
+          marks,
+          terms: { ...terms, inner: p.inner, undone: p.undone },
+        });
+      case "tuckMiddle":
+        return speak.sentence(p.kind, {
+          ring,
+          marks,
+          terms: { ...terms, bringsIn: p.bringsIn },
+        });
+      case "small":
+        return speak.sentence(p.kind, {
+          ring,
+          marks,
+          terms: { ...terms, which: p.which === 1 ? "first" : "second", back: p.back },
+        });
+      case "twist":
+        return speak.sentence(p.kind, {
+          ring,
+          marks,
+          terms: { ...terms, back: p.back },
+        });
+      case "plain":
+        return speak.sentence(p.kind, {
+          ring,
+          marks,
+          terms: { ...terms, carries: e.carries, searched: p.searched },
+        });
+      default:
+        return speak.sentence(p.kind, { ring, marks, terms });
+    }
+  };
+  const full = said(fx);
+  return full.text.length <= NARRATION_LIMIT || fx.returns.length === 0
+    ? full
+    : said({ ...fx, returns: [] });
+}
 
 export function hint(
   state: TwiddleState,
@@ -130,20 +264,20 @@ export function hint(
       play(where, t);
       const from = at;
       at = where.indexOf(at);
-      const turned: Turned = { block: { x: m.x, y: m.y }, clockwise: m.dir === -1 };
+      const turned: Turned = { block: m.y * w + m.x, clockwise: m.dir === -1 };
       let rung: TwiddleRung;
       let words: Sentence;
       if (free) {
         const lands = at === stage && right(stage);
         rung = lands ? "home" : "carry";
-        words = lands ? say.home(g, turned) : say.carry(g, turned);
+        words = freeWords(g, turned, lands);
       } else {
         rung = fixedFrom >= 0 ? "fill" : "run";
         const before = Array.from({ length: stage }, (_, c) => c);
         const lands = landsOn[k];
         // Striped where the tiles stand as the step is shown: a lifted tile on
         // its own cell, a returning one on the cell it comes back from.
-        words = say.runTurn(g, turned, told[k], {
+        words = runWords(g, turned, told[k], {
           lands,
           carries: !lands && at !== from,
           lifts: before.filter((c) => firstLift(c) === k + 1),

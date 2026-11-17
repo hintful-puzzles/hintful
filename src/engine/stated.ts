@@ -440,6 +440,8 @@ function reference<E>(
 export function statedParts<E, R = E>(
   c: Clauses,
   context: StatedContext<E, R>,
+  /** Whether the look may open the sentence: not after a sequence's "Next,". */
+  lookOpens = true,
 ): {
   aim?: Narration;
   look?: Narration;
@@ -454,7 +456,7 @@ export function statedParts<E, R = E>(
   const cx = context as unknown as StatedContext<E>;
   // A look opens the sentence unless an aim goes before it.
   const look = (src: string): Narration =>
-    c.aim === undefined ? render(src, cx).capitalized() : render(src, cx);
+    c.aim === undefined && lookOpens ? render(src, cx).capitalized() : render(src, cx);
   return {
     ...(c.aim === undefined ? {} : { aim: render(c.aim, cx) }),
     ...(c.again === undefined ? {} : { again: render(c.again, cx) }),
@@ -509,7 +511,11 @@ function statedOnce<E>(
   closing: Narration | null,
   relation: Relation | null,
 ): Sentence {
-  const { effect, again, later, ...parts } = statedParts(c, cx);
+  const { effect, again, later, ...parts } = statedParts(
+    c,
+    cx,
+    !(relation?.kind === "sequence" && relation.at !== "first"),
+  );
   const move = parts.move ?? closing;
   if (move === null)
     throw new Error("stated clause: no move, and no closing from the fact");
