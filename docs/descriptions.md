@@ -1386,7 +1386,9 @@ each role, and its clauses and `wordings` as a technique's. **The planner
 supplies the terms and the marks by sort** and names the kind, so which step is
 taken stays its code; the compiler checks every slot against the declaration
 and writes `STEPS` (the clauses, and each wording's `when` as code over the
-terms and `|outlineAngle|`-style sizes) and `StepsById<E>` (what the planner
+terms, `|outlineAngle|`-style sizes and `|ring|`, the count of what the step
+decides; a wording of a `move` alone is said as the move, `bare`: Flood's fill
+that joins no square) and `StepsById<E>` (what the planner
 supplies), and **`voice`, the one call a game speaks a step through**
 (`engine/step-voice.ts`): the game declares once what its marks are drawn on
 (`kind`, and `kinds` for the sorts drawn on another), how a value prints and,

@@ -8,7 +8,8 @@
 import { describe, expect, it } from "vitest";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { floodGame } from "./index.ts";
+import { floodGame, speak } from "./index.ts";
+import { COLOR_NAMES } from "./render.ts";
 
 const G = floodGame;
 
@@ -26,5 +27,13 @@ describe("Flood hint sentences", () => {
   it("fill: draws what it says", () => {
     const { state, step } = pinned("fill");
     expect(bindingDefects(G, state, G.newUi(state), step)).toEqual([]);
+  });
+
+  // No dumped walk meets a fill that joins nothing, so its wording is pinned
+  // here.
+  it("fill: a fill that joins no square says only the fill", () => {
+    const words = speak.sentence("fill", { ring: [], terms: { color: 1 } });
+    expect(words.text).toBe(`Fill with ${COLOR_NAMES[1]?.light ?? ""}.`);
+    expect(words.form).toEqual({ unshaped: "bare" });
   });
 });

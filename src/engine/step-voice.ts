@@ -37,7 +37,7 @@ export type StepTable<S extends { readonly [K in keyof S]: StepType }> = {
     readonly clauses: readonly Clauses[];
     readonly when: readonly (
       | null
-      | ((t: S[K]["terms"], m: S[K]["marks"]) => boolean)
+      | ((t: S[K]["terms"], m: S[K]["marks"], r: readonly unknown[]) => boolean)
     )[];
   };
 };
@@ -104,7 +104,8 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
     const step = steps[id];
     const terms = (said.terms ?? {}) as S[typeof id]["terms"];
     const marks = (said.marks ?? {}) as S[typeof id]["marks"];
-    const i = step.when.findIndex((w) => w === null || w(terms, marks));
+    const ring = said.ring ?? [];
+    const i = step.when.findIndex((w) => w === null || w(terms, marks, ring));
     if (i < 0) throw new Error(`step ${id}: no wording holds`);
     return {
       clauses: step.clauses[i],
@@ -116,7 +117,7 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
         ...((nouns?.[step.ring] ?? voice.noun) === undefined
           ? {}
           : { ringNoun: nouns?.[step.ring] ?? voice.noun }),
-        ring: said.ring ?? [],
+        ring,
         ...(said.later === undefined ? {} : { later: said.later }),
         ...(said.struck === undefined ? {} : { struck: said.struck }),
         terms: terms as Readonly<Record<string, unknown>>,

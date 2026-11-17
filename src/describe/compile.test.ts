@@ -450,6 +450,18 @@ describe("a stated clause names only what its technique states", () => {
       expect(code).toContain("(t, m) => ((m.outline.angle.length === 0) && t.line)");
     });
 
+    it("reads the size of what it decides as |ring|", () => {
+      const code = compileStep(
+        step({
+          wordings: [
+            { when: "|ring| = 0", move: "nothing" },
+            { move: "{ring} must be a line" },
+          ],
+        }),
+      );
+      expect(code).toContain("(_t, _m, r) => (r.length === 0)");
+    });
+
     it.each([
       ["a term it does not declare", { look: "{m} is it" }, /says \{m\}/],
       ["an if over a number", { look: "{if n: a | b}" }, /\{if n\}, which is no flag/],

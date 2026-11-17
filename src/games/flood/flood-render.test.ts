@@ -10,8 +10,7 @@ import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-draw
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { NO_FLASH, ownFlash } from "../../engine/win-wave.ts";
-import { say } from "./hint-text.ts";
-import { floodGame } from "./index.ts";
+import { floodGame, speak } from "./index.ts";
 import { COL_LIT, COL_LIT_LEAD, type FloodDrawState, redraw } from "./render.ts";
 import { type FloodMove, type FloodState, newState } from "./state.ts";
 
@@ -83,7 +82,10 @@ describe("Flood redraw", () => {
     const state = newState({ w: 3, h: 1, colors: 3, leniency: 0 }, "010,9");
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    const words = say.fill(1, [{ x: 1, y: 0 }]);
+    const words = speak.sentence("fill", {
+      ring: [{ x: 1, y: 0 }],
+      terms: { color: 1 },
+    });
     const hint: HintStep<FloodMove> = {
       move: { type: "fill", color: 1 },
       rung: "fill",

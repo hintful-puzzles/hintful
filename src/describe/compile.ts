@@ -4839,7 +4839,8 @@ function checkStep(step: Step): void {
 
 /** A wording's `when` of a planner's step as code over its terms (`t`) and
  * marks (`m`): a term, a size `|outlineAngle|` of the marks of one role and
- * sort, a number, and the connectives. */
+ * sort or `|ring|` of what the step decides (`r`), a number, and the
+ * connectives. */
 function stepWhen(step: Step, e: Expr, where: string): string {
   const fail = (what: string): never => {
     throw new CompileError(`${step.id}: ${where} reads ${what}`);
@@ -4854,6 +4855,8 @@ function stepWhen(step: Step, e: Expr, where: string): string {
     }
     if (x.k === "size" && x.of.k === "name") {
       const { name } = x.of;
+      // What the step decides: none where a move gains nothing to point at.
+      if (name === "ring") return "r.length";
       const mark = step.marks.find(
         (m) => m.role + m.sort[0].toUpperCase() + m.sort.slice(1) === name,
       );
@@ -4878,7 +4881,8 @@ function stepWhen(step: Step, e: Expr, where: string): string {
   };
   const body = bool(e);
   // A parameter the condition does not read is named `_`, as `noUnusedParameters` asks.
-  return `(${body.includes("t.") ? "t" : "_t"}, ${body.includes("m.") ? "m" : "_m"}) => ${body}`;
+  const ring = body.includes("r.") ? ", r" : "";
+  return `(${body.includes("t.") ? "t" : "_t"}, ${body.includes("m.") ? "m" : "_m"}${ring}) => ${body}`;
 }
 
 /** The module's planner steps: each kind's clauses in `STATED`'s form, what
@@ -4906,7 +4910,8 @@ export function stepsBlock(
   return [
     "/** What the planner supplies for each kind of step it emits, over the",
     " * elements `E` it marks: its terms, and the elements marked by role and sort. */",
-    "export interface StepsById<E> {",
+    // A game whose steps mark nothing (Flood's) reads no element type.
+    `export interface StepsById<${steps.some((s) => s.marks.length > 0) ? "E" : "_E"}> {`,
     ...steps.map((s) => {
       const roles = [...new Set(s.marks.map((m) => m.role))];
       const marks = roles
@@ -4941,6 +4946,7 @@ export function stepsBlock(
     "      | ((",
     '          t: StepsById<unknown>[K]["terms"],',
     '          m: StepsById<unknown>[K]["marks"],',
+    "          r: readonly unknown[],",
     "        ) => boolean)",
     "    )[];",
     "  };",

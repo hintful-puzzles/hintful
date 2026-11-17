@@ -68,6 +68,21 @@ deadEnds:
   short: >-
     moves + count(k in range(0, colors - 1)
     where exists c in cells where not flooded(c): color(c) = k) > limit
+steps:
+  # No fill is forced: the hint replays the solver's fills, a heuristic
+  # choice its rivals were not proved worse than, so a step says what the
+  # fill does and claims no more. The squares it joins to the region are
+  # what it decides.
+  fill:
+    ring: cell
+    terms: { color: number }
+    marks: {}
+    wordings:
+      # A fill that joins nothing gains no square to point at.
+      - when: "|ring| = 0"
+        move: "fill with {color}"
+      - move: "fill with {color}"
+        effect: "it joins {ring: the ringed square | the ringed squares} to your region"
 deal:
   start: >-
     each square a color at random, dealt again where all are one, the limit

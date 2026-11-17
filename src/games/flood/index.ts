@@ -8,6 +8,7 @@ import type {
 } from "../../engine/game.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { GAME_OVER, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
+import { CELL } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
   numberItem,
@@ -23,8 +24,9 @@ import {
   verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
-import { say } from "./hint-text.ts";
+import { voice } from "../../generated/games/flood/flood.compiled.ts";
 import {
+  COLOR_NAMES,
   colors,
   computeSize,
   DEFEAT_FLASH_FRAME,
@@ -124,13 +126,20 @@ function statusbarText(state: FloodState, _ui: FloodUi): string {
 
 // --- hint -------------------------------------------------------------
 
-/** The solver's whole remaining fill sequence, one narrated step per fill.
- * Returning the full plan rather than one step keeps the hint banner
- * populated through an auto-hint run. */
+/** A fill's color is said by the palette's own name for it, so the word and
+ * the tile come from one place. */
+export const speak = voice<Point>({
+  kind: CELL,
+  value: (n) => COLOR_NAMES[n] ?? `color ${n}`,
+});
+
 /** The hint has one branch: the solver's next fill. */
 export const FLOOD_RUNGS = ["fill"] as const;
 export type FloodRung = (typeof FLOOD_RUNGS)[number];
 
+/** The solver's whole remaining fill sequence, one narrated step per fill.
+ * Returning the full plan rather than one step keeps the hint banner
+ * populated through an auto-hint run. */
 function hint(state: FloodState): HintResult<FloodMove, unknown, FloodRung> {
   // Flooded past the move limit: the status is lost, and no fill is legal.
   if (rulesOf(state).moves(positionOf(state)).length === 0)
@@ -146,7 +155,7 @@ function hint(state: FloodState): HintResult<FloodMove, unknown, FloodRung> {
       x: i % w,
       y: Math.floor(i / w),
     }));
-    const words = say.fill(color, joined);
+    const words = speak.sentence("fill", { ring: joined, terms: { color } });
     board = applyFills(board, [color]);
     return {
       move: { type: "fill", color },

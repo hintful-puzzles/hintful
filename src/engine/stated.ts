@@ -29,6 +29,7 @@ import {
   type Relation,
   type Sentence,
   sentence,
+  unshaped,
   whole,
 } from "./hint-words.ts";
 import { PAIR_NAMES, type PairIndex, SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
@@ -503,6 +504,15 @@ function statedOnce<E>(
       relation: { kind: "again", basis: again },
       ...(c.long === undefined ? {} : { long: c.long }),
     });
+  // A wording that states only its move has nothing to say but the move
+  // (Flood's fill that joins no square).
+  if (
+    effect === undefined &&
+    parts.look === undefined &&
+    parts.follows === undefined &&
+    relation.kind === "forced"
+  )
+    return unshaped(phrase`${move}.`.capitalized(), "bare");
   return sentence({
     ...parts,
     move,
