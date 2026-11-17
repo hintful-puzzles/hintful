@@ -1,0 +1,16 @@
+--  dominosa: no board of order 3 has an answer, so nothing is checked there
+ok  dominosa   placed                         4  sound    (want sound   )    24 queries    0.6s
+ok  dominosa   placed (planted)               4  unsound  (want unsound )     1 queries    0.1s   at edge 0
+ok  src/games/dominosa/dominosa.description.yaml#placed: recorded sound, proved whole on all 1 boards
+ok  dominosa   onlySpot                       4  sound    (want sound   )     5 queries  112.8s
+ok  dominosa   onlySpot (planted)             4  unsound  (want unsound )     1 queries    0.1s   at 0
+ok  src/games/dominosa/dominosa.description.yaml#onlySpot: recorded sound, proved whole on all 1 boards
+ok  magnets    single                         3  sound    (want sound   )     9 queries    0.2s
+ok  magnets    single (planted)               3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/games/magnets/magnets.description.yaml#single: recorded sound, proved whole on all 1 boards
+ok  subsets    placed                         3  sound    (want sound   )    16 queries    0.3s
+ok  subsets    placed (planted)               3  unsound  (want unsound )     1 queries    0.4s   at cell 0
+ok  src/games/subsets/subsets.description.yaml#placed: recorded sound, proved whole on all 1 boards
+ok  undead     single                         3  sound    (want sound   )     9 queries    0.2s
+ok  undead     single (planted)               3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/games/undead/undead.description.yaml#single: recorded sound, proved whole on all 1 boards

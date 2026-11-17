@@ -195,38 +195,51 @@ export const KINDS: Readonly<Record<string, Kind>> = {
         "(n <= 1 implies (forall c in open($set): $restMove)) and (n <= 1 or (forall c in open($set): $fillMove))",
     },
   },
-  // A square down to one value holds it. One with none left makes the marks
-  // inconsistent. `square` says which squares `c` are read, where a game
-  // leaves some out (Ascent's walls and arrows, which hold no number).
+  // A thing down to one option takes it. One with none left makes the marks
+  // inconsistent. By default the thing is a square `c` and its options its
+  // values; a game names another (`group`: Crossing's run, with the numbers
+  // that still fit it as `options`), and `move` takes the one option left of
+  // them, bound as `U`. `square` says which are read, where a game leaves
+  // some out (Ascent's walls and arrows, which hold no number).
   "one.cell": {
     params: [],
-    defaults: { square: "not known(c)" },
+    defaults: {
+      group: "c in cells",
+      square: "not known(c)",
+      options: "cand(c)",
+      move: "place(c, first(U))",
+    },
     technique: {
-      for: "c in cells where $square and |cand(c)| < 2",
-      conclude: "|cand(c)| = 1 and place(c, first(cand(c)))",
+      for: "$group where $square, U = $options where |U| < 2",
+      conclude: "|U| = 1 and $move",
     },
     plant: {
-      for: "c in cells where $square and |cand(c)| < 3",
-      conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))",
+      for: "$group where $square, U = $options where |U| < 3",
+      conclude: "|U| >= 1 and $move",
     },
   },
   // A value a unit still owes with one open square of the unit left that may
   // hold it goes there. One with none left makes the marks inconsistent.
   // `group` binds the unit and the value, `value`, leaving out a value the
-  // unit already holds; `set` is the unit's squares. `move` gives the open
-  // square `c` the value, where a game does so by striking the others (Rome,
-  // whose solver places only a square down to one value).
+  // unit already holds; `set` is the unit's squares. `may` says whether the
+  // square `c` of the set may still take it, where that is more than its
+  // candidates (Signpost's arrow into a square, Dominosa's spot), and `move`
+  // gives it, where a game does so by striking the others (Rome, whose solver
+  // places only a square down to one value).
   "one.place": {
-    params: ["group", "set", "value"],
-    defaults: { move: "place(c, $value)" },
+    params: ["group", "set"],
+    defaults: {
+      value: null,
+      may: "not known(c) and $value in cand(c)",
+      move: "place(c, $value)",
+    },
     technique: {
-      for: "$group, k = count(c in $set where not known(c) and $value in cand(c)) where k < 2",
-      conclude:
-        "k = 1 and (forall c in $set where not known(c) and $value in cand(c): $move)",
+      for: "$group, k = count(c in $set where $may) where k < 2",
+      conclude: "k = 1 and (forall c in $set where $may: $move)",
     },
     plant: {
-      for: "$group, k = count(c in $set where not known(c) and $value in cand(c)) where k < 3",
-      conclude: "forall c in $set where not known(c) and $value in cand(c): $move",
+      for: "$group, k = count(c in $set where $may) where k < 3",
+      conclude: "forall c in $set where $may: $move",
     },
   },
   // A placed value leaves every square `peer` names, a binder that reads the

@@ -4,10 +4,6 @@
 # unsound.
 
 techniques:
-  # A square with two monsters left read as down to one.
-  single:
-    for: c in cells where |cand(c)| < 3
-    conclude: "|cand(c)| >= 1 and (known(c) or place(c, first(cand(c))))"
   # A monster one short of its count read as all placed.
   total:
     conclude: >-

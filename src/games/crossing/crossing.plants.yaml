@@ -4,15 +4,6 @@
 # unsound.
 
 techniques:
-  # A run two numbers still fit read as taking the first.
-  onlyNumber:
-    for: >-
-      L in lines, c in cells(L) where head(L, c), R = run(L, c) where (exists x
-      in R: not known(x)), K = {k in clues(numbers) where free(k, R)} where |K|
-      < 3
-    conclude: >-
-      |K| >= 1 and (forall x in R where not known(x): place(x, digit(first(K),
-      x, R)))
   # A number two runs still fit read as going in either.
   onlyRun:
     for: >-

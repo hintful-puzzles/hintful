@@ -101,11 +101,11 @@ kindWords:
   cell: "{stripes: this cell}"
 techniques:
   # A placed set goes in no other square.
-  - id: placed
-    on: place
+  - kind: peer.placed
+    as: placed
     tier: Easy
-    for: "c in cells where known(c), k in cells where k != c and not known(k)"
-    conclude: "strike(k, value(c))"
+    with:
+      peer: "p in cells where p != c and not known(p)"
   # Every letter that every set the closed end of a horseshoe can hold has,
   # the set at its open end has too.
   - id: carryIn

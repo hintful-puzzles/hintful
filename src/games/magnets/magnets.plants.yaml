@@ -14,10 +14,6 @@ techniques:
   # A value struck from one end read as striking the same from the other.
   tile:
     conclude: "forall d in range(1, 3) where d not in cand(c): strike(p, d)"
-  # A square with two values left read as down to one.
-  single:
-    for: c in cells where |cand(c)| < 3
-    conclude: "|cand(c)| >= 1 and (known(c) or place(c, first(cand(c))))"
   # A line one short of its count read as full.
   count:
     conclude: >-

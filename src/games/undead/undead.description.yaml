@@ -140,10 +140,12 @@ tiers: [Easy, Normal, Unreasonable]
 techniques:
   # A square down to one monster holds it. One with none left, placed or
   # not, makes the marks inconsistent.
-  - id: single
+  - kind: one.cell
+    as: single
     tier: Easy
-    for: "c in cells where |cand(c)| < 2"
-    conclude: "|cand(c)| = 1 and (known(c) or place(c, first(cand(c))))"
+    with:
+      square: "true"
+      move: "(known(c) or place(c, first(U)))"
   # Monster by monster: where the squares down to it alone are all the board
   # holds, no other square holds it; where just as many squares can hold it
   # as the board holds, each does. More of it, or too few squares for it,

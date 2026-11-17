@@ -123,13 +123,17 @@ techniques:
       (forall x in {end1(e), end2(e)}, y in adj4(x) where edge(x, y) != e:
       place(edge(x, y), 2))
       and (forall f in edges where f != e and same(e, f): place(f, 2))
-  # A domino with one spot left goes there.
-  - id: onlySpot
+  # A domino with one spot left goes there. One with none is not read: its
+  # rules allow it, for the soundness check finds a board where a domino has
+  # no spot and the marks are consistent.
+  - kind: one.place
+    as: onlySpot
     tier: Easy
-    for: >-
-      a in range(0, n), b in range(a, n), P = spotsOf(a, b) where |P| = 1,
-      e = nth(P, 0) where not known(e)
-    conclude: "place(e, 1)"
+    with:
+      group: "a in range(0, n), b in range(a, n), P = spotsOf(a, b) where |P| > 0 and not (exists f in P: known(f))"
+      set: P
+      may: not known(c)
+      move: place(c, 1)
     says:
       # The domino a leg decides, lower number first: no firing's binding
       # holds it for every leg of a firing that rules out spots of several
@@ -142,12 +146,13 @@ techniques:
       move: "it must go on {ring: the ringed spot}"
   # A square with one spot left round it is covered there; with none, the
   # marks are inconsistent.
-  - id: squareOnly
+  - kind: one.cell
+    as: squareOnly
     tier: Easy
-    for: >-
-      c in cells, S = spots(c)
-      where |S| <= 1 and not (exists f in S: known(f))
-    conclude: "|S| = 1 and place(nth(S, 0), 1)"
+    with:
+      square: "not (exists f in spots(c): known(f))"
+      options: spots(c)
+      move: place(nth(U, 0), 1)
     says:
       terms:
         lo: { supplied: number }

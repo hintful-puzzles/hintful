@@ -139,13 +139,12 @@ techniques:
   # already has a square before it, leads round to the arrow, or holds a
   # number that cannot follow. The arrow links to it. One with none left
   # makes the marks inconsistent. The last square links to none.
-  - id: onlyNext
+  - kind: one.cell
+    as: onlyNext
     tier: Easy
-    for: >-
-      c in cells where not known(c) and 1 not in cand(c),
-      U = {d in cand(c) where may(c, compass(c, clue(arrow, c), d - 1))}
-      where |U| < 2
-    conclude: "|U| = 1 and place(c, first(U))"
+    with:
+      square: "not known(c) and 1 not in cand(c)"
+      options: "{d in cand(c) where may(c, compass(c, clue(arrow, c), d - 1))}"
     says:
       terms: {}
       marks: {}
@@ -153,15 +152,14 @@ techniques:
   # others ruled out the same way, or already linking elsewhere. It links
   # into it. Every square but the first has one, so one with none left
   # makes the marks inconsistent.
-  - id: onlyBefore
+  - kind: one.place
+    as: onlyBefore
     tier: Easy
-    for: >-
-      j in cells where clue(number, j) != 1 and not entered(j),
-      P = {p in aims(j) where not known(p) and 1 not in cand(p) and may(p, j)}
-      where |P| < 2
-    conclude: >-
-      |P| = 1 and (forall p in P, d in cand(p)
-      where compass(p, clue(arrow, p), d - 1) = j: place(p, d))
+    with:
+      group: "j in cells where clue(number, j) != 1 and not entered(j)"
+      set: aims(j)
+      may: "not known(c) and 1 not in cand(c) and may(c, j)"
+      move: "(forall d in cand(c) where compass(c, clue(arrow, c), d - 1) = j: place(c, d))"
     says:
       terms: {}
       marks: {}

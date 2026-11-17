@@ -6,7 +6,7 @@
 techniques:
   # A placed set struck with the set one more.
   placed:
-    conclude: strike(k, value(c)) and (value(c) = 16 or strike(k, value(c) + 1))
+    conclude: strike(p, n) and (n = 16 or strike(p, n + 1))
   # A letter some set at the closed end has read as one every set has.
   carryIn:
     for: >-

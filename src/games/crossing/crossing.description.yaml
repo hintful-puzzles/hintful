@@ -114,15 +114,16 @@ tiers: [Easy, Unreasonable]
 techniques:
   # A run that only one number still fits is that number. One no number fits
   # makes the marks inconsistent.
-  - id: onlyNumber
+  - kind: one.cell
+    as: onlyNumber
     tier: Easy
-    for: >-
-      L in lines, c in cells(L) where head(L, c), R = run(L, c)
-      where (exists x in R: not known(x)),
-      K = {k in clues(numbers) where free(k, R)} where |K| < 2
-    conclude: "|K| = 1 and (forall x in R where not known(x): place(x, digit(first(K), x, R)))"
+    with:
+      group: "L in lines, c in cells(L) where head(L, c), R = run(L, c)"
+      square: "(exists x in R: not known(x))"
+      options: "{k in clues(numbers) where free(k, R)}"
+      move: "(forall x in R where not known(x): place(x, digit(first(U), x, R)))"
     says:
-      terms: { L: L, c: c, K: K }
+      terms: { L: L, c: c, K: U }
       marks: {}
   # A number that still fits only one run goes there, whatever else the run
   # could take.

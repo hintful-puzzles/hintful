@@ -1067,12 +1067,21 @@ stated technique is. A kind with no words of its own (`one.cell`,
 and one with no parameters takes no `with`. `one.cell`'s sentence is the
 Latin library's `single` step, which every game that places it speaks (`docs/hints-candidates.md` § "The row/column preset"), so its `says:` holds only terms; its `square` narrows the squares it reads
 (Ascent's `not known(c) and open(c)`, leaving out walls and arrows).
+`one.cell` is any thing down to one option, which it binds as `U`: a game
+whose options are not a square's values names them (`options`: Signpost's
+squares an arrow may lead on to, Dominosa's spots round a square), the thing
+where it is not a square (`group`: Crossing's run, its `options` the numbers
+that still fit), and the `move` that takes `U`'s one member. A game whose
+walk speaks the firing in its own words keeps them (Signpost's, Crossing's).
 `one.place`, a value its unit owes with one open square left for it, is the
 library's `hiddenSingle` step, "No other cell in this {unit} can be 3", which a
 walk speaks through `narrateLatinReason` with the unit's name and squares
 (Seismic's area); the game gives the unit and value as `group` (leaving out a
 value the unit holds), its squares as `set`, and `move` where it gives the
-value by striking the rest (Rome's `onlyHome`).
+value by striking the rest (Rome's `onlyHome`). `may` says when a square of the
+set may still take it, where that is more than its candidates: Signpost's
+arrow that may still lead into a square, Dominosa's spot not yet ruled out
+(whose `group` leaves out a domino already placed).
 `peer.placed`'s is the library's `placed` ("the 2 just placed can't repeat in
 its {regions}"), which a walk speaks through `placedRulesOut` with the game's
 `{regions}`. `peer.touch`, no two squares holding `fill` touch, carries its

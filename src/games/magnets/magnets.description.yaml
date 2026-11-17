@@ -122,10 +122,12 @@ techniques:
     conclude: "forall d in range(1, 3) where d not in cand(c): strike(p, 4 - d)"
   # A square down to one value holds it. One with none left, placed or not,
   # makes the marks inconsistent.
-  - id: single
+  - kind: one.cell
+    as: single
     tier: Easy
-    for: "c in cells where |cand(c)| < 2"
-    conclude: "|cand(c)| = 1 and (known(c) or place(c, first(cand(c))))"
+    with:
+      square: "true"
+      move: "(known(c) or place(c, first(U)))"
     says:
       terms: { c: c }
       marks: { reads: "cells(tile(c))" }

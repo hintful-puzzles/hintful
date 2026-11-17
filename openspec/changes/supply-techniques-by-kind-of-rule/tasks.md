@@ -377,13 +377,36 @@ boundaries are judgment, and the counts carry that.
     (a neighbor's neighbor) caught on Star Battle, whose own plant it equals
     and which went; Range (diagonal) and Tents (two along a row) keep their
     sharper boundary plants, restated over the kind's `t`.
-  - [ ] Next: the ONE, PEER, REL, GRP, CMP, SUM forms listed above, and the
-    CNT techniques not placed yet (the item above says why each waits).
-    ONE left: `one.cell` with a narrower square set (Ascent `onlyNumber`
-    reads `open(c)`; Magnets and Undead `single` read known squares too, so
-    a placed square with no value left is a contradiction there), Dominosa
-    `onlySpot` and `squareOnly`, Crossing `onlyNumber`, Signpost
-    `onlyNext`/`onlyBefore`.
+  - [x] (2026-11-17) ONE's remaining forms. `one.cell` is any thing down to
+    one option, bound as `U`: it takes `group` (Crossing's run), `options`
+    (Signpost's squares an arrow may lead on to, Dominosa's spots round a
+    square, Crossing's numbers that fit) and `move`. `one.place` takes
+    `may`, when a square may still take the value (Signpost's arrow into a
+    square, Dominosa's open spot), its `value` now needed only where `may`
+    or `move` reads it. **Placed:** Filling `onlyNumber`, Signpost
+    `onlyNext` (compiled identically, no re-check) and `onlyBefore`,
+    Crossing `onlyNumber` (its walk reads `K: U`), Dominosa `squareOnly`
+    and `onlySpot`, Magnets and Undead `single` (`square: "true"`, `move`
+    allowing a known square); Subsets `placed` on `peer.placed` in passing.
+    Every game's own words stay (their walks speak these firings); five
+    plants files shed the kind's plant; Signpost and Subsets keep their
+    sharper ones, restated over the kind's names. **Found:** Dominosa's
+    `onlySpot` read a domino with no spot left as a contradiction and was
+    unsound (a checked board has such a domino with consistent marks), so
+    its group reads only a domino with a spot left, as the stated one did;
+    and its `spotsOf` is bound once in the group, which a second gather had
+    doubled. **Moved: nothing.** Every game's tests and snapshots pass
+    unchanged; deal-compare against HEAD at 3 to 5 seeds a preset gives the
+    same boards and verdicts in all ten games, totals 0.94× to 1.06×
+    (Subsets 1.15× on millisecond times). The binding `U` in the six games
+    already on `one.cell` compiles to the same reads. Every changed
+    statement re-checked sound (Signpost's `onlyBefore` held, as it was),
+    each kind's plant caught. Seen in the app: Dominosa's and Signpost's
+    walks. `test:hint-sweeps` green.
+  - [ ] Next: PEER's other forms (Dominosa's `placed` reads two rules, a
+    spot's neighbors and its domino's other spots), REL's bounds form
+    (Unequal `sign`), GRP, CMP, SUM, and the CNT techniques not placed yet
+    (the item above says why each waits).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

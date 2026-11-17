@@ -145,7 +145,6 @@ techniques:
     conclude: "strike(c, d)"
   # An empty square with one number left takes it; with none, the marks are
   # inconsistent.
-  - id: onlyNumber
+  - kind: one.cell
+    as: onlyNumber
     tier: Easy
-    for: "c in cells where not known(c) and |cand(c)| <= 1"
-    conclude: "|cand(c)| = 1 and place(c, the(d in cand(c)))"

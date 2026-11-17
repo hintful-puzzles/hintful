@@ -33,7 +33,3 @@ techniques:
       O = alike, d in domain, F = fresh(d), c in cells where not known(c) and d
       in cand(c) and |through(c, F)| < d and not (exists a in cells where
       value(a) = d: holding(a, c, O) < d)
-  # A square with two numbers left read as taking the smaller.
-  onlyNumber:
-    for: c in cells where not known(c) and |cand(c)| <= 2
-    conclude: "|cand(c)| >= 1 and place(c, min(d in cand(c)))"

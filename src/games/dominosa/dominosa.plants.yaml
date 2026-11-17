@@ -11,16 +11,6 @@ techniques:
       place(edge(x, y), 2)) and (forall f in edges where f != e and not touch(e,
       f) and (num(end1(f)) = num(end1(e)) or num(end2(f)) = num(end1(e))):
       place(f, 2))
-  # A domino with two spots left read as going in the first.
-  onlySpot:
-    for: >-
-      a in range(0, n), b in range(a, n), P = spotsOf(a, b) where |P| = 1 or |P|
-      = 2, e = nth(P, 0) where not known(e)
-  # A square with two spots left read as covered by the first.
-  squareOnly:
-    for: >-
-      c in cells, S = spots(c) where |S| <= 2 and not (exists f in S: known(f))
-    conclude: "|S| >= 1 and place(nth(S, 0), 1)"
   # A square read as taking its first spot's domino, whatever its others.
   squareSingleDomino:
     for: c in cells, S = spots(c) where |S| >= 2, s = nth(S, 0)

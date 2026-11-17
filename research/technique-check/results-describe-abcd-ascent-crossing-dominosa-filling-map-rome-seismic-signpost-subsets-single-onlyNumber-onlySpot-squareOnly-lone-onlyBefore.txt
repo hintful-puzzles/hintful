@@ -1,0 +1,42 @@
+--  abcd +no diagonal n=3: no board of order 3 has an answer, so nothing is checked there
+--  abcd +no diagonal n=3: no board of order 4 has an answer, so nothing is checked there
+ok  abcd n=3   single                         3  sound    (want sound   )     9 queries    0.1s
+ok  abcd n=3   single (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  abcd n=4   single                         3  sound    (want sound   )     9 queries    0.1s
+ok  abcd +no diagonal n=4 single                         3  sound    (want sound   )     9 queries    0.1s
+ok  src/games/abcd/abcd.description.yaml#single: recorded sound, proved whole on all 3 boards
+ok  ascent +Edges moves=0 onlyNumber                     3  sound    (want sound   )     9 queries    0.5s
+ok  ascent +Edges moves=0 onlyNumber (planted)           3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  ascent +Edges moves=1 onlyNumber                     3  sound    (want sound   )     9 queries    0.6s
+ok  ascent +Edges moves=2 onlyNumber                     3  sound    (want sound   )     9 queries    0.5s
+ok  src/games/ascent/ascent.description.yaml#onlyNumber: recorded sound, proved whole on all 3 boards
+ok  crossing   onlyNumber                     3  sound    (want sound   )     6 queries    2.7s
+ok  crossing   onlyNumber (planted)           3  unsound  (want unsound )     1 queries    0.3s   at line 0
+ok  src/games/crossing/crossing.description.yaml#onlyNumber: recorded sound, proved whole on all 1 boards
+--  dominosa: no board of order 3 has an answer, so nothing is checked there
+BAD dominosa   onlySpot                       4  unsound  (want sound   )     1 queries    0.2s   at 0
+ok  dominosa   onlySpot (planted)             4  unsound  (want unsound )     1 queries    0.2s   at 0
+ok  dominosa   squareOnly                     4  sound    (want sound   )    16 queries    0.7s
+ok  dominosa   squareOnly (planted)           4  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/games/dominosa/dominosa.description.yaml#squareOnly: recorded sound, proved whole on all 1 boards
+ok  filling largest=3 onlyNumber                     3  sound    (want sound   )     9 queries    0.3s
+ok  filling largest=3 onlyNumber (planted)           3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  filling largest=4 onlyNumber                     3  sound    (want sound   )     9 queries    0.3s
+ok  src/games/filling/filling.description.yaml#onlyNumber: recorded sound, proved whole on all 2 boards
+ok  map        lone                           3  sound    (want sound   )     9 queries    0.0s
+ok  map        lone (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/map/map.description.yaml#lone: recorded sound, proved whole on all 1 boards
+ok  rome       lone                           3  sound    (want sound   )     9 queries    0.3s
+ok  rome       lone (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/games/rome/rome.description.yaml#lone: recorded sound, proved whole on all 1 boards
+ok  seismic mode=0 lone                           3  sound    (want sound   )     9 queries    0.5s
+ok  seismic mode=0 lone (planted)                 3  unsound  (want unsound )     1 queries    0.2s   at cell 0
+ok  seismic mode=1 lone                           3  sound    (want sound   )     9 queries    0.7s
+ok  src/games/seismic/seismic.description.yaml#lone: recorded sound, proved whole on all 2 boards
+..  signpost   onlyBefore: not proved whole in time, asked on 64 boards: no defect
+ok  signpost   onlyBefore                     3  held     (want sound   )   512 queries  120.0s
+ok  signpost   onlyBefore (planted)           3  unsound  (want unsound )     1 queries    2.3s   at cell 0
+ok  src/games/signpost/signpost.description.yaml#onlyBefore: recorded held, proved whole on 0 of 1 boards and asked on sampled answers on the rest
+ok  subsets    lone                           3  sound    (want sound   )    16 queries    3.0s
+ok  subsets    lone (planted)                 3  unsound  (want unsound )     1 queries    2.7s   at cell 0
+ok  src/games/subsets/subsets.description.yaml#lone: recorded sound, proved whole on all 1 boards

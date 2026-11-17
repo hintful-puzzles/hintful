@@ -15,6 +15,10 @@ techniques:
   # An arrow from a numbered square read as unable to lead in.
   onlyBefore:
     for: >-
-      j in cells where clue(number, j) != 1 and not entered(j), P = {p in
-      aims(j) where not known(p) and 1 not in cand(p) and may(p, j) and
-      clue(number, p) = none} where |P| < 2
+      j in cells where clue(number, j) != 1 and not entered(j), k = count(c in
+      aims(j) where not known(c) and 1 not in cand(c) and may(c, j) and
+      clue(number, c) = none) where k < 2
+    conclude: >-
+      k = 1 and (forall c in aims(j) where not known(c) and 1 not in cand(c)
+      and may(c, j) and clue(number, c) = none, d in cand(c) where compass(c,
+      clue(arrow, c), d - 1) = j: place(c, d))

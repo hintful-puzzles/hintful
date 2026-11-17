@@ -78,6 +78,21 @@ describe("a kind of rule expands to the technique it stands for", () => {
     });
   });
 
+  it("fills a default from a parameter whose own default is null, or refuses", () => {
+    const place = { kind: "one.place", as: "p", tier: "Easy" };
+    const t = expandKind(
+      { ...place, with: { group: "d in domain", set: "cells", value: "d" } },
+      "x",
+    );
+    expect(t["for"]).toBe(
+      "d in domain, k = count(c in cells where not known(c) and d in cand(c)) where k < 2",
+    );
+    expect(t["conclude"]).toContain(": place(c, d))");
+    expect(() =>
+      expandKind({ ...place, with: { group: "d in domain", set: "cells" } }, "x"),
+    ).toThrow(/missing value/);
+  });
+
   it("refuses a parameter missing, or one the kind does not have", () => {
     const { rest: _r, ...short } = met.with;
     expect(() => expandKind({ ...met, with: short }, "x")).toThrow(/missing rest/);
