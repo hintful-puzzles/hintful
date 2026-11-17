@@ -24,8 +24,7 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import { tentsHint, tentsKeepTrack } from "./hint.ts";
-import { say } from "./hint-text.ts";
+import { say, tentsHint, tentsKeepTrack } from "./hint.ts";
 import { tentsGame } from "./index.ts";
 import {
   firesOn,

@@ -246,3 +246,134 @@ techniques:
     says:
       terms: { L: L }
       marks: {}
+# Tents' own sentences, spoken through the hint's voice (`hint.ts`) from what
+# the firing's reading finds on the board before it; a tent's touch is the
+# `peer.touch` kind's. A step rings what it decides, squares or a link with
+# the squares it joins; it outlines the squares it reasons from and a line's
+# number, and stripes the line it counts along (`axis`).
+phrases:
+  # The ringed squares, in a premise, and again in its conclusion, which
+  # agrees with one square or several.
+  these: "{ring: the ringed square | the ringed squares}"
+  eachMust: "{ring: the ringed square | every ringed square} must be"
+  line: "{stripes line: this {axis}}"
+  # The link a step asks for, by the legend's word for it.
+  link: "draw {ring link: the link}"
+steps:
+  noTree:
+    ring: cell
+    look: "no tree is beside {these}"
+    move: "{eachMust} grass"
+  # Squares every tree beside which already has its tent (`tents`, with
+  # those trees, where the player has not drawn the links).
+  treesDone:
+    ring: cell
+    marks: { outline: [tents] }
+    move: "{eachMust} grass"
+    wordings:
+      - when: "|outlineTents| = 0"
+        look: "every tree beside {these} already has its tent"
+      - look: "every tree beside {these} already has {outline tents: its tent (outlined)}"
+  # A tree whose two squares left sit round a corner from each other: the
+  # square at that corner touches either.
+  treeDiagonal:
+    ring: cell
+    marks: { outline: [tree, pair] }
+    look: >-
+      {outline tree: this tree}'s tent must go in one of {outline pair: the two outlined squares};
+      either touches {ring: the ringed one}
+    move: "it must be grass"
+  # A tree with one open square left; `taken` the tents beside it that
+  # already belong to other trees.
+  treeSingle:
+    ring: [square, link]
+    marks: { outline: [tree, taken] }
+    wordings:
+      - when: "|outlineTaken| = 0"
+        look: "{outline tree: this tree}'s only open square is {ring square: the ringed one}"
+        move: "its tent must go in it, with {ring link: the link}"
+      - look: >-
+          {outline taken: the outlined tent belongs to another tree | the outlined tents belong to other trees}
+        move: >-
+          {outline tree: this tree}'s tent must go in {ring square: its only open square},
+          with {ring link: the link}
+  # A tent every other tree beside which already has its tent (`area`, with
+  # their links' tents); `to` is where its own tree is.
+  tentLink:
+    ring: [tent, tree, link]
+    terms: { to: [above it, below it, to its left, to its right] }
+    marks: { outline: [area] }
+    follows: "it must belong to {ring tree: the tree {to}}"
+    move: "{link}"
+    wordings:
+      - when: "|outlineArea| = 0"
+        look: "every other tree by {ring tent: the ringed tent} already has its tent"
+      - look: "every other tree by {ring tent: the ringed tent} has {outline area: its tent (outlined)}"
+  # A tree with no open square, and one tent beside it not already another
+  # tree's; `area` the tents beside it that are (`many` where there are
+  # several), with their trees.
+  treeLink:
+    ring: [tree, tent, link]
+    terms: { to: [above it, below it, to its left, to its right], many: flag }
+    marks: { outline: [area] }
+    move: "{link}"
+    wordings:
+      - when: "|outlineArea| = 0"
+        look: "{ring tree: the ringed tree} has no open square beside it"
+        follows: "its tent must be {ring tent: the one {to}}"
+      - look: >-
+          {outline area: {if many: the outlined tents belong to other trees | the outlined tent belongs to another tree}}
+        follows: "{ring tree: the ringed tree}'s tent must be {ring tent: the one {to}}"
+  # A line whose count of `clue` tents is already met.
+  countMet:
+    ring: cell
+    terms: { axis: unit, clue: number }
+    marks: { stripes: [line], outline: [number] }
+    move: "{ring: its open square | its open squares} must be grass"
+    wordings:
+      - when: "clue = 0"
+        look: "{line}'s {outline number: number} is 0"
+      - when: "clue = 1"
+        look: "{line} already has {outline number: its 1 tent}"
+      - look: "{line} already has {outline number: its {clue} tents}"
+  # A line needing `need` tents with exactly `need` open squares.
+  allOpen:
+    ring: cell
+    terms: { axis: unit, need: number }
+    marks: { stripes: [line], outline: [number] }
+    move: "{eachMust} a tent"
+    wordings:
+      - when: "need = 1"
+        look: "{line} needs {outline number: 1 more tent} and has only 1 open square"
+      - look: "{line} needs {outline number: {need} more tents} and has only {need} open squares"
+  # A line whose open squares have room for exactly the `need` tents it
+  # needs, none touching: each odd run is filled alternately. One tent
+  # needed never decides a square this way, its room being one run of two.
+  noSpareRoom:
+    ring: cell
+    terms: { axis: unit, need: number }
+    marks: { stripes: [line], outline: [number] }
+    look: "{line} needs {outline number: {need} more tents}, and its open squares fit only {need} that don't touch"
+    move: "{eachMust} a tent"
+  # The same firing's other leg: squares between those tents, by the rule
+  # the first leg's count did not need.
+  betweenThem:
+    ring: cell
+    terms: { axis: unit }
+    marks: { stripes: [line], outline: [number] }
+    again: "tents never touch"
+    later: "{these} between the tents that {line}'s {outline number: number} needs must be grass"
+    move: "{these} between the tents that {line}'s {outline number: number} needs must be grass"
+  # Every way to place the line's `need` tents touches the ringed squares in
+  # the lines alongside.
+  touchesBeside:
+    ring: cell
+    terms: { axis: unit, need: number }
+    marks: { stripes: [line], outline: [number] }
+    move: "{eachMust} grass"
+    wordings:
+      - when: "need = 1"
+        look: "wherever {line}'s {outline number: 1 remaining tent} goes, it touches {these}"
+      - look: >-
+          wherever {line}'s {outline number: {need} remaining tents} go, one touches
+          {ring: the ringed square | each ringed square}

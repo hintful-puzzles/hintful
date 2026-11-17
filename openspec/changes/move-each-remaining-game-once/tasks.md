@@ -215,7 +215,16 @@ Logic games:
   marks included. Read in the app (Easy): that step, the set outlined in
   the tally, the cell striped, B ringed, the placed cell outlined.
 - [ ] Solo (after 0.3)
-- [ ] Tents
+- [x] Tents (2026-11-17): dump byte-identical, marks included. Its
+  sentences are `steps` spoken through the voice in `hint.ts`, a tent's
+  touch staying the `peer.touch` kind's; a link step rings by sort (the
+  squares and the link), the tree's side is a word term (`to`), a line is
+  striped whole with its number outlined, and the count wordings are
+  `when`s. The forms no dumped walk meets (a tree with no open square, the
+  grass between a full line's tents, no outlined tents) were checked
+  against the old strings, word for word. `noSpareRoom` has one wording:
+  one tent needed never decides a square that way. Read in the app: a
+  line with no spare room, a tree's only square with its link.
 - [ ] Crossing
 - [ ] Mines
 - [ ] Slant

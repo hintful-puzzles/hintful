@@ -16,10 +16,17 @@ import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.
 import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { keepTrackBy } from "../../engine/hint-track.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Sentence,
+  so,
+  whole,
+} from "../../engine/hint-words.ts";
+import { statedParts } from "../../engine/stated.ts";
+import type { Point } from "../../engine/types.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
-import { lineSquares, pointOf } from "./hint-marks.ts";
-import { type Counted, type Dir, type LineKind, say } from "./hint-text.ts";
+import { type HintLink, LINK, lineSquares, NUMBER, pointOf } from "./hint-marks.ts";
 import {
   boardBefore,
   decidedBy,
@@ -52,6 +59,162 @@ import {
 } from "./state.ts";
 
 export type { TentsRung } from "./solver.ts";
+
+// --- the words ---------------------------------------------------------------
+
+/** Which kind of line a count is read along. */
+type LineKind = "row" | "column";
+
+/** A direction from a tent to its tree, as the steps' `to` says it. */
+type Dir = "above it" | "below it" | "to its left" | "to its right";
+
+/** The line a count is read along, and the number it is read against. */
+interface Counted {
+  kind: LineKind;
+  squares: readonly Point[];
+  line: number;
+}
+
+/** What a step marks: a square, a link, or a line's number. */
+type Marked = Point | HintLink | number;
+
+/** The steps of `tents.description.yaml`, spoken: a mark is drawn on a square
+ * unless its sort says otherwise, and a line is striped whole. */
+const speak = tents.voice<Marked>({
+  kind: CELL as MarkKind<Marked>,
+  kinds: {
+    link: LINK as MarkKind<Marked>,
+    number: NUMBER as MarkKind<Marked>,
+    line: whole(CELL) as MarkKind<Marked>,
+  },
+  value: String,
+});
+
+/** A line's marks: the line striped, its number outlined. */
+const lineMarks = (c: Counted) => ({
+  stripes: { line: c.squares },
+  outline: { number: [c.line] },
+});
+
+/** Every sentence Tents' hint speaks, from what its firing's reading found. */
+export const say = {
+  noTree: (cells: readonly Point[]): Sentence =>
+    speak.sentence("noTree", { ring: cells }),
+
+  /** Squares every tree beside which already has its tent, shown in `area`. */
+  treesDone: (cells: readonly Point[], area: readonly Point[]): Sentence =>
+    speak.sentence("treesDone", { ring: cells, marks: { outline: { tents: area } } }),
+
+  /** The open squares round one tent, in `peer.touch`'s sentence. */
+  nextToTent: (cells: readonly Point[], tent: Point): Sentence => {
+    const { look, move } = statedParts(tents.STATED.nextToTent.step[0], {
+      kind: CELL,
+      at: (): Point => {
+        throw new Error("a tent's touch names no element term");
+      },
+      ring: cells,
+      marks: { outline: [tent] },
+      terms: {},
+      value: String,
+    });
+    if (look === undefined || move === undefined)
+      throw new Error("peer.touch states a look and a move");
+    return so({ look, move });
+  },
+
+  treeDiagonal: (cell: Point, tree: Point, pair: readonly Point[]): Sentence =>
+    speak.sentence("treeDiagonal", {
+      ring: [cell],
+      marks: { outline: { tree: [tree], pair } },
+    }),
+
+  /** A tree with one open square left; `taken` the tents beside it that
+   * already belong to other trees. */
+  treeSingle: (
+    square: Point,
+    tree: Point,
+    taken: readonly Point[],
+    link: HintLink,
+  ): Sentence =>
+    speak.sentence("treeSingle", {
+      ring: { square: [square], link: [link] },
+      marks: { outline: { tree: [tree], taken } },
+    }),
+
+  /** A tent every other tree beside which already has its tent (shown in
+   * `area`). */
+  tentLink: (
+    tent: Point,
+    tree: Point,
+    to: Dir,
+    area: readonly Point[],
+    link: HintLink,
+  ): Sentence =>
+    speak.sentence("tentLink", {
+      ring: { tent: [tent], tree: [tree], link: [link] },
+      terms: { to },
+      marks: { outline: { area } },
+    }),
+
+  /** A tree with no open square, and one tent beside it not already another
+   * tree's; `area` the tents beside it that are, with their trees, of which
+   * `others` are tents. */
+  treeLink: (
+    tree: Point,
+    tent: Point,
+    to: Dir,
+    area: readonly Point[],
+    others: number,
+    link: HintLink,
+  ): Sentence =>
+    speak.sentence("treeLink", {
+      ring: { tree: [tree], tent: [tent], link: [link] },
+      terms: { to, many: others > 1 },
+      marks: { outline: { area } },
+    }),
+
+  /** A line whose count of `clue` is already met. */
+  countMet: (c: Counted, clue: number, cells: readonly Point[]): Sentence =>
+    speak.sentence("countMet", {
+      ring: cells,
+      terms: { axis: c.kind, clue },
+      marks: lineMarks(c),
+    }),
+
+  /** A line needing `need` tents with exactly `need` open squares. */
+  allOpen: (c: Counted, need: number, cells: readonly Point[]): Sentence =>
+    speak.sentence("allOpen", {
+      ring: cells,
+      terms: { axis: c.kind, need },
+      marks: lineMarks(c),
+    }),
+
+  /** A line whose open squares have room for exactly `need` tents that do not
+   * touch, so the ringed squares must hold one each. */
+  noSpareRoom: (c: Counted, need: number, cells: readonly Point[]): Sentence =>
+    speak.sentence("noSpareRoom", {
+      ring: cells,
+      terms: { axis: c.kind, need },
+      marks: lineMarks(c),
+    }),
+
+  /** The same firing's other leg: squares between those tents. */
+  betweenThem: (c: Counted, cells: readonly Point[]): Sentence =>
+    speak.sentence("betweenThem", {
+      ring: cells,
+      terms: { axis: c.kind },
+      marks: lineMarks(c),
+      later: true,
+    }),
+
+  /** Every placement touches the ringed squares in the lines alongside. */
+  touchesBeside: (c: Counted, need: number, cells: readonly Point[]): Sentence =>
+    speak.sentence("touchesBeside", {
+      ring: cells,
+      terms: { axis: c.kind, need },
+      marks: lineMarks(c),
+    }),
+};
 
 /** One firing as its sentences read it. */
 interface TentsFiring {
@@ -130,10 +293,10 @@ export const tentsHint = describedEdgeHint<
 const DIRS = [U, L, R, D];
 
 const DIR_NAME: Record<number, Dir> = {
-  [U]: "up",
-  [L]: "left",
-  [R]: "right",
-  [D]: "down",
+  [U]: "above it",
+  [L]: "to its left",
+  [R]: "to its right",
+  [D]: "below it",
 };
 
 function neighbors(w: number, h: number, i: number): number[] {
