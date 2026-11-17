@@ -62,10 +62,13 @@ describe("the walk carries on from its last step", () => {
   it("takes the walled-in square's bulb, then the 1 beside it", () => {
     // Fourth row: 2, open, 1, open, 4, open, wall.
     const steps = planSteps(lightupGame.newState(EASY, "c2mBc2a1a4aBc2m1c"));
-    expect(steps[0].rung).toBe("square.forcedLight");
-    expect(steps[0].move.ops).toEqual([{ kind: "light", x: 3, y: 3 }]);
-    expect(steps[1].rung).toBe("square.clueSatisfied");
-    expect(steps[1].highlights?.clue).toEqual({ x: 2, y: 3 });
+    // The 4 beside it takes its bulbs first, the walled-in square's among them.
+    const at = steps.findIndex((s) =>
+      s.move.ops.some((o) => o.kind === "light" && o.x === 3 && o.y === 3),
+    );
+    expect(at).toBeGreaterThanOrEqual(0);
+    expect(steps[at + 1].rung).toBe("clueFull");
+    expect(steps[at + 1].highlights?.clue).toEqual({ x: 2, y: 3 });
   });
 });
 
@@ -83,7 +86,7 @@ describe("bleed rule: a step's marks stay inside its narrated evidence", () => {
         const hl = step.highlights;
         if (!hl) throw new Error("step without highlights");
         switch (step.rung) {
-          case "square.forcedLight": {
+          case "square": {
             // The forced bulb is one of the dark square's candidates: the
             // square itself, or one in its row or column.
             expect(hl.targets).toHaveLength(1);
@@ -91,8 +94,8 @@ describe("bleed rule: a step's marks stay inside its narrated evidence", () => {
             expect(!hl.dark || t.x === hl.dark.x || t.y === hl.dark.y).toBe(true);
             break;
           }
-          case "square.clueSatisfied":
-          case "square.clueSaturated": {
+          case "clueFull":
+          case "clueExact": {
             // Every marked cell is a neighbor of the narrated clue.
             const clue = hl.clue;
             if (!clue) throw new Error("a number's step without its clue");
@@ -148,7 +151,10 @@ describe("narration", () => {
         expect(step.explanation.includes("outlined dark square")).toBe(
           hl.dark !== undefined,
         );
-        expect(step.explanation.includes("outlined clue")).toBe(hl.clue !== undefined);
+        // A number is named as the outlined clue, or by its value ("This 3").
+        expect(/outlined clue|\b[Tt]his \d\b/.test(step.explanation)).toBe(
+          hl.clue !== undefined,
+        );
         if (hl.dark !== undefined || hl.clue !== undefined) checked++;
       }
     }
@@ -198,13 +204,7 @@ describe("narration — a second mark on the board is named", () => {
     // discount rules, would pass while measuring nothing.
     expect(checked).toBeGreaterThan(50);
     expect(withMark).toBeGreaterThan(50);
-    for (const kind of [
-      "square.forcedLight",
-      "square.clueSatisfied",
-      "square.clueSaturated",
-      "darkSet",
-      "clueSet",
-    ]) {
+    for (const kind of ["square", "clueFull", "clueExact", "darkSet", "clueSet"]) {
       expect([...kinds]).toContain(kind);
     }
   });
@@ -266,21 +266,21 @@ const pinned = describeHintPins({
     multiCell: (step) => (step.highlights?.targets.length ?? 0) > 1,
   },
   pins: {
-    /** Held on 82 of 282 positions walked. */
+    /** Held on 86 of 271 positions walked. */
     multiCell: "7x7b20s4d0:bBe2c3c3aBaBgBaBaBcBc2e3b",
-    /** Held on 281 of 282 positions walked. */
-    "square.forcedLight": "7x7b20s4d0:c1a1a1cBc1eBe2e4c2cBaBaBc",
-    /** Held on 161 of 282 positions walked. */
-    "square.clueSatisfied": "7x7b20s4d0:i21hBbBaBa1b0h13i",
-    /** Held on 214 of 282 positions walked. */
-    "square.clueSaturated": "7x7b20s4d0:bBe2c3c3aBaBgBaBaBcBc2e3b",
-    /** Held on 101 of 282 positions walked. */
+    /** Held on 139 of 271 positions walked. */
+    clueFull: "7x7b20s4d0:i21hBbBaBa1b0h13i",
+    /** Held on 166 of 271 positions walked. */
+    clueExact: "7x7b20s4d0:bBe2c3c3aBaBgBaBaBcBc2e3b",
+    /** Held on 271 of 271 positions walked. */
+    square: "7x7b20s4d0:c1a1a1cBc1eBe2e4c2cBaBaBc",
+    /** Held on 101 of 271 positions walked. */
     darkSet: {
       id: "7x7b20s4d1:b1h3cBd1g0d3c2hBb",
       moves:
         '[{"ops":[{"kind":"impossible","x":1,"y":4},{"kind":"impossible","x":0,"y":3},{"kind":"impossible","x":0,"y":5}]}]',
     },
-    /** Held on 44 of 282 positions walked. */
+    /** Held on 28 of 271 positions walked. */
     clueSet: "7x7b20s4d1:c1lBaBbBb2b2b3aBl2c",
   },
 });

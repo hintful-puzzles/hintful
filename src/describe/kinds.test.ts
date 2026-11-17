@@ -197,6 +197,31 @@ describe("a kind of rule expands to the technique it stands for", () => {
     expect(expandKind(compare, "x")).not.toHaveProperty("says");
   });
 
+  it("places a worded kind silent on says: false, wanting only what its formula reads", () => {
+    const both = {
+      kind: "count.both",
+      as: "alone",
+      tier: "Normal",
+      with: {
+        group: "k in clues(count), c = at(k)",
+        set: "adj8(c)",
+        need: "need(c)",
+        rest: 2,
+        fill: 1,
+      },
+    };
+    expect(() => expandKind(both, "x")).toThrow(/missing unit, has, items/);
+    const t = expandKind({ ...both, says: false }, "x");
+    expect(t).not.toHaveProperty("says");
+    expect(t["for"]).toContain("|open(adj8(c))|");
+    expect(() =>
+      expandKind(
+        { ...both, with: { group: "c in cells", rest: 2, fill: 1 }, says: false },
+        "x",
+      ),
+    ).toThrow(/missing set$/);
+  });
+
   it("refuses a frame's word the game left unfilled", () => {
     const says = { arms: { more: { look: "a" }, same: { look: "b" } } };
     expect(() => expandKind({ ...compare, says }, "x")).toThrow(/missing .*outsideB/);

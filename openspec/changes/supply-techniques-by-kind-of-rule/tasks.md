@@ -276,7 +276,7 @@ boundaries are judgment, and the counts carry that.
     words ("This 4 needs 4 shaded squares and has only 4 open squares", was
     "needs all 4 of its squares shaded"; "This 0 takes no shaded squares",
     was "allows no") and the arm `needsAll`, now `exact`.
-  - [ ] Not placed yet, and why: **Mines** `alone` is narrated by its own
+  - [x] Not placed yet (both placed since, below), and why: **Mines** `alone` is narrated by its own
     `hint.ts` (rungs `satisfied`/`full`), so a count kind's sentence goes
     unspoken there, and its `open(c)` is over a square, not a set: restating
     it re-checks every Mines technique, whose `count` and `regions` take
@@ -690,11 +690,63 @@ boundaries are judgment, and the counts carry that.
     no verdict moved; each game keeps its boundary plant. LOOP now places 7
     techniques in 5 games (`git grep "kind: loop\." -- 'src/games/*.yaml'`);
     the rest § 1 counted there are read again in the recount below.
-  - [ ] Next: the CNT techniques not placed yet (the item above the
-    `count.exact` entry says why each waits: Mines `alone`, Light Up
-    `square`), then a recount of § 1's table against the placements, to
-    say the share of stated techniques now placed by kind against the 50%
-    bar of 2.2.
+  - [x] (2026-11-17) Mines `alone` on `count.both`, its set `adj8(c)`.
+    **The blocker was stale:** a check now stops at the order where its
+    plants are caught (3 for every Mines technique), so restating Mines'
+    defines re-checked all five in 54 s, not the sharded hours of order 4.
+    Mines' `open(S)` is now over a set, as the count contract asks, and its
+    number's squares `unopened(c)` = `open(adj8(c))`. Mines' hint narrates
+    the firing, so the kind's sentence would be an unspoken second copy:
+    **a placement's `says: false` places a worded kind without its words**,
+    wanting only the parameters its formula and plant read (a kinds test;
+    schema). The solver reads the squares from its group, not the binding
+    `U`. Its plant was the kind's and went. Deal-compare at 3 seeds a
+    preset: same boards and verdicts (Mines lays its board at the first
+    open). Tests and snapshots unchanged; seen in the app ("The outlined 2
+    already touches both its mines (outlined), so the ringed squares must be
+    safe", on the right squares).
+  - [x] (2026-11-17) Light Up `square` split as upstream's scan never was:
+    `clueFull` (`count.met`), `clueExact` (`count.exact`) and `square`
+    (`one.cell`, a dark square whose options are `open(lights(c))`). Its
+    bulb-sees-bulb check went: the marks' seed refuses two bulbs that light
+    each other, and `shine` strikes the rest. **Order:** read after the dark
+    squares, the numbers fired on too few for the generator (it keeps only
+    the numbers a reading fired on) to deal a 3x3 turned half round at
+    Normal (none in 5M tries); read first, every tier cell deals. Recorded in
+    `docs/descriptions.md` § "A statement's order is behavior". **Moved:**
+    13 of 27 boards differ in deal-compare (3 seeds a preset), every verdict
+    the same, totals 1.05× deals, 0.99× solves; the numbers a board shows are
+    the same within noise (40 boards a preset: 7x7 Easy 5.70 to 5.72,
+    10x10 Normal 12.75 to 13.03). Rungs `clueFull`/`clueExact`/`square`
+    (were `square.clueSatisfied`/`.clueSaturated`/`.forcedLight`), the
+    numbers before the dark squares in a walk (10x10 Easy #0 19 steps to 18),
+    pins re-scanned. Words: "This 4 needs 4 bulbs and has only 4 free
+    neighbors, so each ringed square must hold a bulb" (was "The outlined
+    clue still needs 4 more bulbs and has exactly 4 free neighbors left, so
+    each ringed one must be a bulb"), "This 1 already has its bulb, so each
+    ringed square can't hold a bulb", "This 0 takes no bulbs" (was "The
+    outlined clue is 0, so no bulb may sit beside it"). **In passing:** with
+    `clueFull` its own technique, Light Up states `rulesOut` and its
+    hand-written `ruledOut` went (its comment said it was hand-written only
+    because the rule was an arm of `square`); seen in the app, a bulb crossing
+    the other squares of the 1 and the 2 it completes. Re-checked sound
+    whole, each plant caught. Seen in the app.
+  - [x] (2026-11-17) **The recount.** Placements by kind (`git grep -hE
+    "^[[:space:]]*- kind: " -- 'src/games/*/*.description.yaml'`) against
+    § 1's labels: CNT 25 of 35, ONE 26 of 28, PEER 13 of 19, REL 4 of 14,
+    LOOP 7 of 12, GRP 12 of 19, FIT 15 of 45, CMP 5 of 7, SUM 5 of 6: **112
+    of the 185**. Of every game's 360 techniques, games state 201 (56%), the
+    kinds place 112 and the Latin library 47; 20 of 48 games state under
+    half of theirs. **The bar of 2.2 is not met yet**, and FIT is where the
+    rest is: 30 left (Net's eight, Pearl's seven, Norinori's `crowded` and
+    `blocked`, Keen's and Mathrax's clue checks), which placed would bring
+    the stated share to about 48%. That is the proposal's § "A rule states
+    how it breaks": the Check written once from each kind of rule's break
+    clause.
+  - [ ] Next: FIT from a rule's break clause (proposal § "A rule states how
+    it breaks"): read the 30 FIT techniques left, say which rule each
+    supposes broken, and design the clause on the rules `shape:` and the
+    count kinds already state; then REL (10 left) and PEER (6).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

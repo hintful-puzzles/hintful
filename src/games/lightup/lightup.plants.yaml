@@ -9,12 +9,6 @@ techniques:
     for: >-
       c in cells where value(c) = 1, p in cells(row(c)) + cells(col(c)) where p
       != c and not known(p)
-  # A dark square with two free squares to light it read as having one.
-  square:
-    conclude: >-
-      (not floor(c) or lit(c) or count(p in L where not known(p)) > 2 or (forall
-      p in L where not known(p): place(p, 1))) and (n < 0 or bulbs(c) + free(c)
-      > n or (forall p in adj4(c) where not known(p): place(p, 1)))
   # A square read as spoiling itself, so the one square that could light a
   # dark square may be ruled out.
   darkSet:

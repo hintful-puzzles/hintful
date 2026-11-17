@@ -4,32 +4,24 @@
 # unsound.
 
 techniques:
-  # A number one mine short read as having all its mines.
-  alone:
-    for: >-
-      k in clues(count), c = at(k), U = open(c), n = need(c) where |U| > 0 and
-      (n <= 1 or n >= |U|)
-    conclude: >-
-      n >= 0 and n <= |U| and (n <= 1 implies (forall d in U: place(d, 2))) and
-      (n <= 1 or (forall d in U: place(d, 1)))
   # A region read off a number whose squares do not all touch the outer one.
   region:
     for: >-
-      k in clues(count), o = at(k) where |open(o)| > 0, i in within(o, 2) where
-      i != o and clue(count, i) != none and |open(i)| > 0 and |open(i)| <
-      |open(o)|, b in within(o, 3) where b != o and b != i and clue(count, b) !=
-      none, R = open(o) - open(i), B = open(b) where (exists d in R: d in B), r
+      k in clues(count), o = at(k) where |unopened(o)| > 0, i in within(o, 2) where
+      i != o and clue(count, i) != none and |unopened(i)| > 0 and |unopened(i)| <
+      |unopened(o)|, b in within(o, 3) where b != o and b != i and clue(count, b) !=
+      none, R = unopened(o) - unopened(i), B = unopened(b) where (exists d in R: d in B), r
       = need(o) - need(i), nb = need(b), heavy = (r - nb >= |R - B|) where
       (heavy or nb - r >= |B - R|) and |R - B| + |B - R| > 0
   # A second region read off a number whose squares do not all touch its outer one.
   regions:
     for: >-
-      k in clues(count), o = at(k) where |open(o)| > 0, i in within(o, 2) where
-      i != o and clue(count, i) != none and |open(i)| > 0 and open(i) subset
-      open(o) and |open(i)| < |open(o)|, R = open(o) - open(i), r = need(o) -
+      k in clues(count), o = at(k) where |unopened(o)| > 0, i in within(o, 2) where
+      i != o and clue(count, i) != none and |unopened(i)| > 0 and unopened(i) subset
+      unopened(o) and |unopened(i)| < |unopened(o)|, R = unopened(o) - unopened(i), r = need(o) -
       need(i), p in within(o, 2) where p != o and clue(count, p) != none and
-      |open(p)| > 0, q in within(p, 2) where q != p and clue(count, q) != none
-      and |open(q)| > 0 and |open(q)| < |open(p)|, S = open(p) - open(q) where
+      |unopened(p)| > 0, q in within(p, 2) where q != p and clue(count, q) != none
+      and |unopened(q)| > 0 and |unopened(q)| < |unopened(p)|, S = unopened(p) - unopened(q) where
       (exists d in R: d in S), RA = R - S, RB = S - R, by = r - (need(p) -
       need(q)) where by >= |RA| and |RA| + |RB| > 0
   # Numbers whose squares meet counted as though they did not.
@@ -38,5 +30,5 @@ techniques:
       C = {k in clues(count) where exists d in adj8(at(k)): not known(d)} where
       |C| <= 10, L = left, u = count(c in cells where not known(c)), size in
       range(0, 5), T in subsets(C) where |T| = size, n = sum(x in T of
-      need(at(x))), X = set(d over x in T, d in open(at(x))) where u > |X| and
+      need(at(x))), X = set(d over x in T, d in unopened(at(x))) where u > |X| and
       (n = L or L - n = u - |X|)

@@ -912,7 +912,21 @@ export function expandKind(
     Object.entries(words).filter(([p]) => takes.includes(p)),
   );
   const args: Record<string, unknown> = { ...shared, ...own };
-  const missing = kind.params.filter((p) => !(p in args));
+  // `says: false` places the kind without its sentence, for a game whose
+  // hint narrates the firing itself (Mines'), so only the parameters the
+  // statement and plant read, through the defaults they read, are wanted.
+  const silent = placed["says"] === false;
+  const { says: _ks, ...formula } = kind.technique;
+  const read = new Set<string>();
+  const readIn = (v: unknown): void => {
+    for (const [, p] of JSON.stringify(v).matchAll(/\$(\w+)/g))
+      if (!read.has(p)) {
+        read.add(p);
+        if (!(p in args) && p in defaults) readIn(defaults[p]);
+      }
+  };
+  readIn([formula, kind.plant]);
+  const missing = kind.params.filter((p) => !(p in args) && (!silent || read.has(p)));
   const extra = Object.keys(args).filter((p) => !takes.includes(p));
   const refuse = (missing: readonly string[]): KindError =>
     new KindError(
@@ -929,8 +943,9 @@ export function expandKind(
     (p) => !(p in args) && JSON.stringify(Object.values(args)).includes(`$${p}`),
   );
   if (unfilled.length > 0) throw refuse(unfilled);
-  const { kind: _k, as, with: _w, says: gameSays, ...placing } = placed;
-  const t = fill(kind.technique, args) as Kind["technique"];
+  const { kind: _k, as, with: _w, says: placedSays, ...placing } = placed;
+  const gameSays = silent ? undefined : placedSays;
+  const t = fill(silent ? formula : kind.technique, args) as Kind["technique"];
   // A clause of the kind's sentence reading words the game did not give is
   // left out, the game's own `says` wording the step (Unequal's sign).
   const unsaid = (v: unknown): boolean =>

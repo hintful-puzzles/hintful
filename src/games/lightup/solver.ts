@@ -4,7 +4,7 @@
  * check its rules compile to, and the search beneath the ladder.
  *
  * Easy is upstream's cheap scan, a column at a time: a dark square with one
- * free square left that could light it, and a number whose count leaves its
+ * free square left that could light it, then a number whose count leaves its
  * free neighbors no choice. Normal adds upstream's discount sets: a square
  * whose bulb would spoil every square of a set one of which must hold a bulb
  * holds none.
@@ -149,10 +149,11 @@ export function deductionFinishes(
   if (m === null) return false;
   if (used) {
     m.recorder = (rec) => {
-      // A number's reading is the arm of `square` that is about a number.
-      const r = rec.reason as Said<lightup.SquareBinding, lightup.SquareSays> | null;
-      if (r?.says?.arm === "clueSatisfied" || r?.says?.arm === "clueSaturated")
-        used(r.binding.c);
+      // A number is read by `clueFull` and `clueExact`, whose `c` is the
+      // numbered wall; every other technique's `c` is a square.
+      const reason = rec.reason as Partial<Said<{ c?: number }, unknown>> | null;
+      const c = reason?.binding?.c;
+      if (c !== undefined && clueAt(dl.number, c) >= 0) used(c);
     };
     m.budget = stepBudget("lightup deduction");
     m.wholePasses = true;

@@ -50,9 +50,10 @@ define:
   lights(c): "stretch(row(c), c, floors(row(c))) + stretch(col(c), c, floors(col(c)))"
   # Whether a bulb lights c.
   lit(c): "exists p in lights(c): value(p) = 1"
-  # The bulbs beside k, and the squares beside it still free.
+  # The bulbs beside k.
   bulbs(k): "count(p in adj4(k) where value(p) = 1)"
-  free(k): "count(p in adj4(k) where not known(p))"
+  # The squares of S still free.
+  open(S): "{p in S where not known(p)}"
   # Whether a bulb in d, lighting D, would leave s unable to hold one: d
   # lights s, or d gives a number beside s its last bulb.
   spoils(d, D, s): >-
@@ -84,6 +85,30 @@ deal:
   number: on each wall, then as many hidden as the board stays at its tier
   tier: one of the tiers
 tiers: [Easy, Normal, Unreasonable]
+# What a bulb rules out at a glance: the other squares round a numbered wall
+# it gives all its lights.
+rulesOut:
+  name: Cross out the other squares round a numbered wall once it has all its lights
+  placing: 1
+  techniques: [clueFull]
+kindWords:
+  # A number counts the bulbs beside it. A step reads the squares beside it
+  # whether or not it outlines them.
+  group: "X in cols, c in cells(X) where clue(number, c) >= 0"
+  set: adj4(c)
+  need: "clue(number, c) - bulbs(c)"
+  rest: 2
+  fill: 1
+  zero: "clue(number, c) = 0"
+  mark: strand
+  marks: { strand: "{c}", outline: "{p in adj4(c) where value(p) = 1}", reads: "adj4(c)" }
+  unit: "this {clue}"
+  has: "{outline: its bulb | its {clue} bulbs}"
+  items: "{n: bulb | bulbs}"
+  slots: "free {n: neighbor | neighbors}"
+  restWord: "can't hold a bulb"
+  fillWord: "must hold a bulb"
+  terms: { clue: "clue(number, c)", placed: "bulbs(c) > 0" }
 techniques:
   # A bulb lights its row and its column up to a wall, so no other bulb
   # stands there.
@@ -92,77 +117,47 @@ techniques:
     tier: Easy
     for: "c in cells where value(c) = 1, p in lights(c) where p != c and not known(p)"
     conclude: "place(p, 2)"
-  # Upstream's scan, a column at a time: a dark square with one free square
-  # left that could light it takes a bulb there, and a number takes a bulb
-  # in every free square beside it, or none, where its count leaves no
-  # choice. Each also holds its rule on the marks as they stand, so a broken
-  # position is a contradiction.
-  - id: square
+  # A number with all its bulbs has none in its other free neighbors, and
+  # one needing as many as it has free neighbors has one in each. Read
+  # before the dark squares: the generator keeps only the numbers a reading
+  # fired on, and read after, they fire on too few to deal a 3x3 turned half
+  # round at Normal.
+  - kind: count.met
+    as: clueFull
     tier: Easy
-    for: "X in cols, c in cells(X), n = clue(number, c), L = lights(c)"
-    conclude: >-
-      (not floor(c)
-      or ((value(c) != 1 or (forall p in L where p != c: value(p) != 1))
-      and ((exists p in L: value(p) = 1)
-      or (count(p in L where not known(p)) >= 1
-      and (count(p in L where not known(p)) > 1
-      or (forall p in L where not known(p): place(p, 1)))))))
-      and (n < 0
-      or (bulbs(c) <= n and bulbs(c) + free(c) >= n
-      and (bulbs(c) < n or (forall p in adj4(c) where not known(p): place(p, 2)))
-      and (bulbs(c) + free(c) > n or (forall p in adj4(c) where not known(p): place(p, 1)))))
-    # The strand is the square or the number the step is about, drawn apart
-    # from the squares it reasons from. A step reads the squares beside a
-    # number whether or not it outlines them.
+  - kind: count.exact
+    as: clueExact
+    tier: Easy
+  # A dark square with one free square left that could light it, perhaps
+  # itself, takes a bulb there. Read a column at a time, as upstream's scan
+  # is. The strand is the square or the number a step is about, drawn apart
+  # from the squares it reasons from.
+  - kind: one.cell
+    as: square
+    tier: Easy
+    with:
+      group: "X in cols, c in cells(X)"
+      square: "floor(c) and not lit(c)"
+      options: "open(lights(c))"
+      move: "place(first(U), 1)"
     says:
-      marks: { strand: "{c}" }
-      arms:
-        # A dark square with one way left to light it.
-        forcedLight:
-          when: "n < 0"
-          terms: { dark: c }
-          marks: { outline: L }
-          move: "it must hold a bulb"
-          # The one square left is the dark square itself or another. The
-          # outline holds the squares that could light it less that one and
-          # the dark square, so a corridor of just those shows no second mark,
-          # and then the bare deictic is right.
-          wordings:
-            - when: "not known(c) and |L| > 1"
-              look: "{outline: each outlined square} is ruled out or already lit"
-              follows: "nothing else can light {ring: this dark square | these dark squares}"
-            - when: "not known(c)"
-              look: "every other square that could light {ring: this dark square | these dark squares} is ruled out or already lit"
-            - when: "|L| > 2"
-              look: "{outline: the other outlined square | the other outlined squares} can't light {strand: the outlined dark square}"
-              follows: "only {ring} can"
-            - look: "only {ring} can still light {strand: the outlined dark square}"
-        # A number whose bulbs are all placed. At the small counts "all 2 of"
-        # reads wrong, so 0, 1 and 2 are said apart.
-        clueSatisfied:
-          when: "bulbs(c) = n"
-          terms: { n: n }
-          marks: { outline: "{p in adj4(c) where value(p) = 1}", reads: "adj4(c)" }
-          wordings:
-            - when: "n = 0"
-              look: "{strand: the outlined clue} is 0"
-              follows: "no bulb may sit beside it"
-              move: "{ring: its ringed free neighbor | its ringed free neighbors} can't hold a bulb"
-            - when: "n = 1"
-              look: "{strand: the outlined clue} already has {outline: its bulb (outlined)}"
-              move: "{ring: its other ringed free neighbor | its other ringed free neighbors} can't hold a bulb"
-            - when: "n = 2"
-              look: "{strand: the outlined clue} already has {outline: both its bulbs (outlined)}"
-              move: "{ring: its other ringed free neighbor | its other ringed free neighbors} can't hold a bulb"
-            - look: "{strand: the outlined clue} already has {outline: all {n} of its bulbs (outlined)}"
-              move: "{ring: its other ringed free neighbor | its other ringed free neighbors} can't hold a bulb"
-        # A number with a bulb for each free square beside it. Both counts
-        # are of the ringed squares, so a step followed in part re-counts.
-        clueSaturated:
-          when: "n >= 0"
-          marks: { reads: "adj4(c)" }
-          look: "{strand: the outlined clue} still needs {ring: 1 more bulb | {live} more bulbs} and has exactly {ring: 1 free neighbor | {live} free neighbors} left"
-          move: "{ring: the ringed one | each ringed one} must be a bulb"
+      terms: { dark: c }
+      marks: { strand: "{c}", outline: "lights(c)" }
+      move: "it must hold a bulb"
+      # The one square left is the dark square itself or another. The
+      # outline holds the squares that could light it less that one and
+      # the dark square, so a corridor of just those shows no second mark,
+      # and then the bare deictic is right.
+      wordings:
+        - when: "not known(c) and |lights(c)| > 1"
+          look: "{outline: each outlined square} is ruled out or already lit"
+          follows: "nothing else can light {ring: this dark square | these dark squares}"
+        - when: "not known(c)"
+          look: "every other square that could light {ring: this dark square | these dark squares} is ruled out or already lit"
+        - when: "|lights(c)| > 2"
+          look: "{outline: the other outlined square | the other outlined squares} can't light {strand: the outlined dark square}"
+          follows: "only {ring} can"
+        - look: "only {ring} can still light {strand: the outlined dark square}"
   # A dark square is lit from one of the free squares that see it, so a
   # square whose bulb would spoil every one of them holds none.
   - id: darkSet

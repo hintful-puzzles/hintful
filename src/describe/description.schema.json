@@ -260,8 +260,8 @@
             },
             "with": { "type": "object" },
             "says": {
-              "type": "object",
-              "description": "The game's own words, laid over what the kind brings; the technique it expands into is checked against the statement's `says`."
+              "anyOf": [{ "type": "object" }, { "const": false }],
+              "description": "The game's own words, laid over what the kind brings; the technique it expands into is checked against the statement's `says`. `false` places the kind without words, for a game whose hint narrates the firing itself."
             },
             "tier": { "type": "string" },
             "from": { "$ref": "#/$defs/from" },

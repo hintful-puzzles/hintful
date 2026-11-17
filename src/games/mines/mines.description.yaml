@@ -58,15 +58,17 @@ answer:
   # 1 is a mine, 2 a safe square.
   value: { sort: cell, domain: "range(1, 2)" }
 define:
+  # The squares of S nothing has decided yet.
+  open(S): "{d in S where not known(d)}"
   # A number's squares nothing has decided yet.
-  open(c): "{d in adj8(c) where not known(d)}"
+  unopened(c): open(adj8(c))
   # The mines the number at c still needs among them.
   need(c): "clue(count, c) - count(d in adj8(c) where value(d) = 1)"
   # Whether two numbers' undecided squares meet, which takes them within two
   # squares of each other.
   meet(a, b): >-
     abs(x(a) - x(b)) <= 2 and abs(y(a) - y(b)) <= 2
-    and (exists d in open(a): d in open(b))
+    and (exists d in unopened(a): d in unopened(b))
   # The mines still to find.
   left: "mines - count(c in cells where value(c) = 1)"
   # The undecided squares outside X.
@@ -86,19 +88,19 @@ deal:
     so that the techniques finish the board from there
 tiers: [Normal]
 techniques:
-  # One number, n the mines it still needs among its U undecided squares:
-  # with none, they are safe; with as many as there are, they are mines.
-  # One that needs fewer than none, or more than it has, makes the marks
-  # inconsistent.
-  - id: alone
+  # One number with no mines left to find has its unopened squares safe;
+  # one needing as many as it has unopened, mines. Its words are the hint's
+  # (`hint-text.ts`).
+  - kind: count.both
+    as: alone
     tier: Normal
-    for: >-
-      k in clues(count), c = at(k), U = open(c), n = need(c)
-      where |U| > 0 and (n <= 0 or n >= |U|)
-    conclude: >-
-      n >= 0 and n <= |U|
-      and (n = 0 implies (forall d in U: place(d, 2)))
-      and (n = 0 or (forall d in U: place(d, 1)))
+    with:
+      group: "k in clues(count), c = at(k)"
+      set: adj8(c)
+      need: need(c)
+      rest: 2
+      fill: 1
+    says: false
   # Two numbers whose undecided squares meet, compared: the first's own
   # squares are mines where it needs as many more as it has, and the second's
   # own squares are then safe. Its words are the hint's (`hint-text.ts`).
@@ -107,10 +109,10 @@ techniques:
     tier: Normal
     with:
       group: >-
-        k in clues(count), a = at(k) where |open(a)| > 0,
+        k in clues(count), a = at(k) where |unopened(a)| > 0,
         b in within(a, 2) where b != a and clue(count, b) != none and meet(a, b)
-      openA: open(a)
-      openB: open(b)
+      openA: unopened(a)
+      openB: unopened(b)
       least: need(a)
       most: need(b)
       fill: 1
@@ -122,11 +124,11 @@ techniques:
   - id: region
     tier: Normal
     for: >-
-      k in clues(count), o = at(k) where |open(o)| > 0,
-      i in within(o, 2) where i != o and clue(count, i) != none and |open(i)| > 0
-      and open(i) subset open(o) and |open(i)| < |open(o)|,
+      k in clues(count), o = at(k) where |unopened(o)| > 0,
+      i in within(o, 2) where i != o and clue(count, i) != none and |unopened(i)| > 0
+      and unopened(i) subset unopened(o) and |unopened(i)| < |unopened(o)|,
       b in within(o, 3) where b != o and b != i and clue(count, b) != none,
-      R = open(o) - open(i), B = open(b) where (exists d in R: d in B),
+      R = unopened(o) - unopened(i), B = unopened(b) where (exists d in R: d in B),
       r = need(o) - need(i), nb = need(b), heavy = (r - nb >= |R - B|)
       where (heavy or nb - r >= |B - R|) and |R - B| + |B - R| > 0
     conclude: >-
@@ -144,14 +146,14 @@ techniques:
     tier: Normal
     with:
       group: >-
-        k in clues(count), o = at(k) where |open(o)| > 0,
-        i in within(o, 2) where i != o and clue(count, i) != none and |open(i)| > 0
-        and open(i) subset open(o) and |open(i)| < |open(o)|,
-        R = open(o) - open(i), r = need(o) - need(i),
-        p in within(o, 2) where p != o and clue(count, p) != none and |open(p)| > 0,
-        q in within(p, 2) where q != p and clue(count, q) != none and |open(q)| > 0
-        and open(q) subset open(p) and |open(q)| < |open(p)|,
-        S = open(p) - open(q) where (exists d in R: d in S)
+        k in clues(count), o = at(k) where |unopened(o)| > 0,
+        i in within(o, 2) where i != o and clue(count, i) != none and |unopened(i)| > 0
+        and unopened(i) subset unopened(o) and |unopened(i)| < |unopened(o)|,
+        R = unopened(o) - unopened(i), r = need(o) - need(i),
+        p in within(o, 2) where p != o and clue(count, p) != none and |unopened(p)| > 0,
+        q in within(p, 2) where q != p and clue(count, q) != none and |unopened(q)| > 0
+        and unopened(q) subset unopened(p) and |unopened(q)| < |unopened(p)|,
+        S = unopened(p) - unopened(q) where (exists d in R: d in S)
       openA: R
       openB: S
       least: r
@@ -176,7 +178,7 @@ techniques:
       L = left, u = count(c in cells where not known(c)),
       size in range(0, 5), T in subsets(C) where |T| = size
       and (forall x in T, y in T where x != y: not meet(at(x), at(y))),
-      n = sum(x in T of need(at(x))), X = set(d over x in T, d in open(at(x)))
+      n = sum(x in T of need(at(x))), X = set(d over x in T, d in unopened(at(x)))
       where u > |X| and (n = L or L - n = u - |X|)
     conclude: >-
       (n = left implies (forall d in outside(X): place(d, 2)))

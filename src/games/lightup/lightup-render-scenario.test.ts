@@ -33,7 +33,7 @@ const pinned = describeHintKindPins({
       step.highlights.targets.length > 1 &&
       step.highlights.clue !== undefined,
     forcedLight: (step) =>
-      step.rung === "square.forcedLight" &&
+      step.rung === "square" &&
       step.highlights?.dark !== undefined &&
       // an outlined square beside the dark one: the corridor
       stepMarks(step).of("outline", CELL).length > 1,
@@ -47,17 +47,17 @@ const pinned = describeHintKindPins({
       step.highlights.targets.length === 1,
   },
   pins: {
-    /** Held on 41 of 282 positions walked. */
+    /** Held on 45 of 271 positions walked. */
     clueSaturated: "7x7b20s4d0:bBe2c3c3aBaBgBaBaBcBc2e3b",
-    /** Held on 32 of 282 positions walked. */
+    /** Held on 33 of 271 positions walked. */
     forcedLight: {
-      id: "7x7b20s4d0:a2aBi3cBcBaBaBa2cBc0i0aBa",
+      id: "7x7b20s4d1:c2gBc0Ba2b1e2bBaBBcBg0c",
       moves:
-        '[{"ops":[{"kind":"impossible","x":1,"y":5},{"kind":"impossible","x":0,"y":4},{"kind":"impossible","x":0,"y":6}]},{"ops":[{"kind":"light","x":3,"y":3}]},{"ops":[{"kind":"impossible","x":2,"y":6},{"kind":"impossible","x":4,"y":6},{"kind":"impossible","x":3,"y":5}]}]',
+        '[{"ops":[{"kind":"impossible","x":1,"y":1},{"kind":"impossible","x":1,"y":3},{"kind":"impossible","x":0,"y":2}]},{"ops":[{"kind":"impossible","x":3,"y":5},{"kind":"impossible","x":4,"y":6},{"kind":"impossible","x":2,"y":6}]},{"ops":[{"kind":"light","x":0,"y":4}]}]',
     },
-    /** Held on 41 of 282 positions walked. */
+    /** Held on 41 of 271 positions walked. */
     clueSatisfied: "7x7b20s4d0:i21hBbBaBa1b0h13i",
-    /** Held on 15 of 282 positions walked. */
+    /** Held on 15 of 271 positions walked. */
     discount: {
       id: "7x7b20s4d1:b1h3cBd1g0d3c2hBb",
       moves:

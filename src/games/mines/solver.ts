@@ -159,11 +159,11 @@ const meet = (a: readonly number[], b: readonly number[]): number[] =>
 /** The ladder over the numbers `dealt` holds, each firing with its reason. */
 function minesLadder(dealt: mines.Dealt): Ladder {
   return describedLadder(mines, dealt, {
-    alone: compiledRung(mines.alone, dealt, ({ c, U, n }, _c, _n, m): Firing => {
+    alone: compiledRung(mines.alone, dealt, ({ c, n }, _c, _n, m): Firing => {
       const group = groupOf(m, dealt, c);
       return n === 0
-        ? { rung: "satisfied", group, safes: [...U] }
-        : { rung: "full", group, mines: [...U] };
+        ? { rung: "satisfied", group, safes: [...group.cells] }
+        : { rung: "full", group, mines: [...group.cells] };
     }),
     pair: compiledRung(mines.pair, dealt, ({ a, b, RA }, _c, _n, m): Firing => {
       const heavy = groupOf(m, dealt, a);

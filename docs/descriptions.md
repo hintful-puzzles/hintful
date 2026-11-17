@@ -954,7 +954,12 @@ technique only with that comparison, or as a change the owner accepts.
 
 A rung runs its techniques in turn, each over all of its bindings, so two
 readings the scan interleaves (each clue's first reading, then its second,
-then the next clue's) are one technique bound by the clue, its conclusion
+then the next clue's) are one technique bound by the clue, or two
+techniques in an order that keeps the boards a tier needs: **a generator that
+keeps only the clues a reading fired on deals other boards when the order
+moves** (Mosaic's, Light Up's; Light Up's numbers read after its dark squares
+fired on too few to deal a 3x3 turned half round at Normal). One technique
+interleaving them is bound by the clue, its conclusion
 the first reading where that changes the marks and the second otherwise. A
 let binder says which, for the reason: Towers' `bounds` and its `near`.
 
@@ -1176,7 +1181,10 @@ first tile's own piece) gives its arms' `move` itself, shows each square a leg
 (`shown: legs`), and reads which side a square is on from a fact term (`own:
 "c in RA"`). A kind's frame is laid only under a game's
 `says`, so a game whose hint narrates the firing itself (Mines') gives none
-and takes no words. A placement is checked against the schema again once
+and takes no words. **A kind that carries its own sentence is placed without
+it by `says: false`**, for the same kind of game (Mines' `alone` on
+`count.both`, its set `adj8(c)`): only the parameters its formula and plant
+read are then wanted. A placement is checked against the schema again once
 expanded, so a game's words over a frame are checked whole.
 The room kinds read a game's `fits(S, n)`, whether `n` pieces fit in the open
 squares `S` with the game's rule kept, and `most(S, n)`, the most up to `n` that

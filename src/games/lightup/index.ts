@@ -39,6 +39,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import {
+  RULES_OUT,
   SAYS_EACH,
   SAYS_KINDS,
   type SaysById,
@@ -72,7 +73,6 @@ import {
   F_BLACK,
   F_IMPOSSIBLE,
   F_LIGHT,
-  F_NUMBERED,
   idx,
   type LightupMove,
   type LightupOp,
@@ -178,50 +178,6 @@ function executeMove(state: LightupState, move: LightupMove): LightupState {
     }
   }
   return next;
-}
-
-/** The squares orthogonally beside `{ x, y }`. */
-function besides(s: LightupState, x: number, y: number): Point[] {
-  return [
-    { x: x - 1, y },
-    { x: x + 1, y },
-    { x, y: y - 1 },
-    { x, y: y + 1 },
-  ].filter((p) => p.x >= 0 && p.y >= 0 && p.x < s.w && p.y < s.h);
-}
-
-/**
- * The free squares each new bulb rules out at a glance, by a cross: the rest
- * of those round a numbered wall beside it that has all its lights.
- *
- * Written by hand, not stated as the description's `rulesOut`
- * (docs/descriptions.md § "What a placement rules out"): that rule is one arm
- * of `square`, which also places bulbs and checks the rest of the wall's and
- * the dark squares' rules, and `shine` would cross every lit square, which
- * the preference's words do not offer.
- */
-function ruledOut(before: LightupState, after: LightupState): LightupMove | null {
-  const { w, flags } = after;
-  const out = new Map<number, Point>();
-  for (let y = 0; y < after.h; y++)
-    for (let x = 0; x < w; x++) {
-      const i = idx(x, y, w);
-      if (!(flags[i] & F_LIGHT) || before.flags[i] & F_LIGHT) continue;
-      for (const clue of besides(after, x, y)) {
-        const c = idx(clue.x, clue.y, w);
-        if (!(flags[c] & F_NUMBERED)) continue;
-        const round = besides(after, clue.x, clue.y);
-        const lit = round.filter((p) => flags[idx(p.x, p.y, w)] & F_LIGHT);
-        if (lit.length !== after.lights[c]) continue;
-        for (const p of round)
-          if (!(flags[idx(p.x, p.y, w)] & (F_BLACK | F_LIGHT | F_IMPOSSIBLE)))
-            out.set(idx(p.x, p.y, w), p);
-      }
-    }
-  const ops = [...out]
-    .sort(([a], [b]) => a - b)
-    .map(([, p]): LightupOp => ({ kind: "impossible", ...p }));
-  return ops.length === 0 ? null : { ops };
 }
 
 /** The answer's bulbs: one toggled wherever the answer differs, which takes
@@ -341,6 +297,7 @@ const described = describedFiringHint<
 >({
   name: "lightup hint",
   walk: hintWalk,
+  rulesOut: RULES_OUT,
   // The player rarely follows more than a few firings before diverging, and a
   // recompute yields the next batch.
   plan: 60,
@@ -502,10 +459,7 @@ export const lightupGame: Game<
       },
     },
   ],
-  rulesOut: {
-    name: "Cross out the other squares round a numbered wall once it has all its lights",
-    bring: ruledOut,
-  },
+  rulesOut: described.rulesOut,
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

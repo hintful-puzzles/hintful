@@ -1,0 +1,15 @@
+ok  mines      alone                          3  sound    (want sound   )     9 queries    1.3s
+ok  mines      alone (planted)                3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
+ok  src/games/mines/mines.description.yaml#alone: recorded sound, proved whole on all 1 boards
+ok  mines      pair                           3  sound    (want sound   )    72 queries    1.0s
+ok  mines      pair (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
+ok  src/games/mines/mines.description.yaml#pair: recorded sound, proved whole on all 1 boards
+ok  mines      region                         3  sound    (want sound   )    72 queries    9.2s
+ok  mines      region (planted)               3  unsound  (want unsound )     1 queries    0.3s   at clue count 0
+ok  src/games/mines/mines.description.yaml#region: recorded sound, proved whole on all 1 boards
+ok  mines      regions                        3  sound    (want sound   )    72 queries   15.6s
+ok  mines      regions (planted)              3  unsound  (want unsound )     1 queries    0.3s   at clue count 0
+ok  src/games/mines/mines.description.yaml#regions: recorded sound, proved whole on all 1 boards
+ok  mines      count                          3  sound    (want sound   )     1 queries   25.2s
+ok  mines      count (planted)                3  unsound  (want unsound )     1 queries    0.6s   at eset
+ok  src/games/mines/mines.description.yaml#count: recorded sound, proved whole on all 1 boards
