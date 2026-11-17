@@ -246,7 +246,7 @@ boundaries are judgment, and the counts carry that.
   app in Tracks, Loopy, Boats and Star Battle. Loopy and Tracks re-checked
   sound whole (a define changed); the five games' own plants for these
   techniques were the kind's plant restated and are gone.
-- [ ] 2.13 Plan step (3): the remaining forms of each kind, until its
+- [x] 2.13 Plan step (3): the remaining forms of each kind, until its
   techniques are placed. CNT first, the rest of its 35 (§ 1's table: Boats'
   `total`, Magnets', Tents', Light Up's counts, which are hand solvers or
   stated otherwise; find which are described before choosing; Tents'
@@ -808,7 +808,9 @@ boundaries are judgment, and the counts carry that.
     what each game writes twice is not the trial, which is one `with`, but
     **what broke and its words**: each game finds it again in TS from the
     witness or the board.
-  - [ ] The design, in this order (each a commit, each game moved
+  - [x] The design, in this order (steps 1 to 3 done below; step 4 moved
+    to `move-each-remaining-game-once` on 2026-11-17, where the games whose
+    breaks it waits on are moved; each a commit, each game moved
     deal-compared and walked and seen in the app):
     1. **`breaks:`, a rule's break clause with its words**: a named clause
        (`stuck(t)`, `closes(a, b)`) whose `when` is a define the
@@ -986,7 +988,8 @@ boundaries are judgment, and the counts carry that.
   game written against the kinds gets the saving, while an old game's
   restatement buys no player-visible change and costs a soundness re-check
   each.
-- [ ] 2.3 The first restatements are the evidence for whether the family
+- [x] 2.3 (Closed 2026-11-17: answered by 2.9, which made consistency the
+  measure, not lines, and carried out in 2.10 to 2.13.) The first restatements are the evidence for whether the family
   kinds hold (FIT above all). 2.1's finding, 2026-11-17: the formula part of
   a kind holds and is cheap (`one.cell`, `fit.flip`), and the words do not
   shrink, because they are the game's. So the saving the change promised is

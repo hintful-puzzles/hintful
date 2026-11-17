@@ -33,6 +33,12 @@ So a game moves once.
   own.
 - **A sentence that differs from the engine's only in style takes the
   engine's.** A game keeps words of its own for what is its own.
+- **A trial kind, once two games read their breaks the same way**
+  (from `supply-techniques-by-kind-of-rule`, design step 4, 2026-11-17).
+  Path, Spokes and Boats state their Checks with `breaks:` and `{broke}`
+  but suppose three ways (an edge, a set of spokes, nested `with`s), so no
+  shared trial shape yet. A game moved here whose Checks suppose as one of
+  them do is the second, and the kind is written then.
 
 ## Before it starts
 

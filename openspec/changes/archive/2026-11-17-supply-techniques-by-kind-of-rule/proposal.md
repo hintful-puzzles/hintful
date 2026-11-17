@@ -96,7 +96,19 @@ and `docs/descriptions.md` and `docs/new-game.md`.
 
 ## Acceptance
 
-To be written when it starts, from the two measurements. At least: every
-board a game deals still has one answer at its tier, every hint walk still
-finishes, and a new game in a family the library covers states only what is
-its own.
+Written 2026-11-17, from the measurements in `tasks.md`:
+
+- **Every board a game deals still has one answer at its tier**: each game
+  moved was deal-compared against the commit before, with the same verdicts
+  on every board, and where its boards moved (Separate's Unreasonable,
+  Light Up, Clusters) the change says why.
+- **Every hint walk still finishes**: `test:hint-sweeps` and the walk
+  fingerprints, with each moved sentence listed in `tasks.md`, and each game
+  whose words moved seen in the app.
+- **A technique a kind places is checked sound with the kind's plant, or a
+  sharper one of the game's.**
+- **A new game in a family the kinds cover states only what is its own**:
+  `docs/new-game.md` sends a deduction game's porter to `docs/descriptions.md`
+  § "A kind of rule places its techniques". Games state 50% of their
+  techniques (130 placed, 47 by `use`); what stays stated is recorded with
+  why.
