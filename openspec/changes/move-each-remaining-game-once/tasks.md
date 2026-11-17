@@ -129,13 +129,13 @@ Logic games:
   the shared pair) are `steps`; the setup and a lone mark stay every
   candidate game's. Its copy of the conclusions is gone: the engine's
   `candidateConclusions` takes a verb (`be: "point"`) and a word for a
-  struck value (`note: "mark"`). **Two endings changed**, both the
-  engine's form now: "so this square's down mark must go" is "so the down
-  mark must go" (the mark is the marked reference), and "so this square
-  must point left or right" is "so this square can only point left or
-  right". With those two rewrites undone the dump is byte-identical,
-  marks included. Read in the app: an opposite, a loop striking a mark,
-  a reach and a hidden single.
+  struck value (`note: "mark"`, which keeps "this square's down mark":
+  hint-quality refuses "the down mark", an arrow word being no value
+  that says which mark). **One ending changed**, to the engine's form:
+  "so this square must point left or right" is "so this square can only
+  point left or right" (1,708 dump lines). With that rewrite undone the
+  dump is byte-identical, marks included. Read in the app: an opposite, a
+  loop striking a mark, a reach and a hidden single.
 - [ ] Rect
 - [ ] Galaxies
 - [ ] Guess

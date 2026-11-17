@@ -202,7 +202,8 @@ export const thisCellNamed =
  * its value vocabulary. A value struck in several cells is named once. `be`
  * is the verb a cell takes a value by (Rome's arrows "point"), and `note`
  * what a struck value is called where its word alone would not say it is a
- * note ("the up mark"). */
+ * note: "the up marks in it", and with no `where` "this square's up mark",
+ * the cell saying which mark a word that is no value cannot. */
 export function candidateConclusions(vocab: {
   value(n: number): string;
   cell?: string;
@@ -219,7 +220,7 @@ export function candidateConclusions(vocab: {
       const values = (values: readonly number[]): string => {
         const ns = distinct([...values]);
         if (note !== undefined)
-          return `the ${joinWith(ns.map(v))} ${values.length === 1 ? note : `${note}s`}`;
+          return `${where ? "the" : `this ${cell}'s`} ${joinWith(ns.map(v))} ${values.length === 1 ? note : `${note}s`}`;
         return ns.length === 1 ? `the ${v(ns[0])}` : joinWith(ns.map(v));
       };
       // "Must go" is the necessity voice in the fewest words. A where that
