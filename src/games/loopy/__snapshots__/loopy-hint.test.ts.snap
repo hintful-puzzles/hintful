@@ -4412,7 +4412,7 @@ exports[`loopy: pinned hint positions > says, at each pin 1`] = `
   "clueBound": "This 3's other edges can give it only 2, counting the marked corner as one, so this edge must be a line.",
   "clueFull": "This 0 takes no lines, so each ringed edge can't be a line.",
   "clueOneShort": "This 3 can spare one edge and must spare it at the outlined dot, which has a line, so each ringed edge must be a line.",
-  "clueStarved": "Only 3 of this 3's edges aren't ruled out, so each ringed edge must be a line.",
+  "clueStarved": "This 3 needs 3 lines and has only 3 open edges, so each ringed edge must be a line.",
   "corner": "The marked corner needs a line; the outlined dot takes both or neither, so both ringed edges must be lines.",
   "cornerAcross": "The marked corner across the outlined dot needs a line, so this corner can take one line at most.",
   "cornerAtDot": "The line at the outlined dot can only go on through this corner, so it needs a line.",

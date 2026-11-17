@@ -363,7 +363,7 @@ describe("boats hint — narration", () => {
   const REFUTED =
     /^If this square (?:were|held) (?:a |its (?:row|column)'s (?:and (?:row|column)'s )?last )?(?:water|boat segment),/;
   const SATISFIED =
-    /(already has the \d+ boat squares? its number allows|number is 0|can only be \d+, and it has that many)/;
+    /(already has the \d+ boat squares? its number allows|already has (?:its|all \d+ of its) boat squares?|takes no boat squares|number is 0|can only be \d+, and it has that many)/;
   const NARRATIONS: [Parameters<typeof pinnedFiring>[0], RegExp][] = [
     ["given", /boat's (top|bottom|left|right) end|one-square boat/],
     ["near", /Boats never touch, not even at a corner/],
@@ -438,7 +438,7 @@ describe("boats hint — narration", () => {
     // explained again — a rule of the game belongs in the help
     // (docs/hints.md § "Rules belong in the help").
     const { step } = pinnedFiring("lineShips");
-    expect(step.explanation).toMatch(/needs .* more/);
+    expect(step.explanation).toMatch(/needs \d+ /);
     expect(step.explanation).not.toContain("never touch");
   });
 });

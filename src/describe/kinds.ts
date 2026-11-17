@@ -15,10 +15,15 @@ import type { TechniquePlant } from "./plants.ts";
 /** A kind's technique with `$name` where a game's `with` fills in: a string
  * that is exactly `$name` is replaced by the value, whatever its type, and
  * `$name` inside a longer string by the value's text. The `with` key `terms`
- * is not substituted: its entries are added to the step's `says.terms`. */
+ * is not substituted: its entries, over the game's `kindWords` terms, are
+ * added to the step's `says.terms`. */
 export interface Kind {
   /** The parameters a game must give. */
   params: readonly string[];
+  /** The parameters a game may give, each with what it is where the game
+   * gives none (itself filled from the others); one whose default is `null`
+   * is needed only where another default reads it. */
+  defaults?: Readonly<Record<string, unknown>>;
   technique: {
     on?: string;
     for: string;
@@ -46,41 +51,69 @@ export interface Kind {
 
 export const KINDS: Readonly<Record<string, Kind>> = {
   // A group holding as many as it should holds no more, so the rest is the
-  // other value. One holding more makes the marks inconsistent.
+  // other value. One holding more makes the marks inconsistent. `need` is
+  // how many the group still wants, the game's `need` of the set unless its
+  // number is the group's own (a line's clue); `restMove` sets an open
+  // square `c` to the rest, where the game's squares are struck, not placed.
+  // The sentence names the group (`unit`, drawn as `mark`), what it holds
+  // (`has`), and the move (`restWord`); a group whose number may be 0
+  // (`zero`) is said to take none of its `items`.
   "count.met": {
-    params: ["group", "set", "rest", "unit", "has", "restWord"],
+    params: ["group", "set", "unit", "has", "items", "restWord"],
+    defaults: {
+      rest: null,
+      need: "need($set)",
+      restMove: "place(c, $rest)",
+      zero: "false",
+      mark: "stripes",
+      marks: { stripes: "$set", reads: "$set" },
+    },
     technique: {
-      for: "$group, n = need($set) where n <= 0",
-      conclude: "n = 0 and forall c in open($set): place(c, $rest)",
+      for: "$group, n = $need where n <= 0",
+      conclude: "n = 0 and forall c in open($set): $restMove",
       says: {
-        terms: {},
-        marks: { stripes: "$set", reads: "$set" },
-        look: "{stripes: $unit} has $has",
-        move: "{ring} must $restWord",
+        terms: { n: "n" },
+        marks: "$marks",
+        move: "{ring: the ringed {noun} | each ringed {noun}} $restWord",
+        wordings: [
+          { when: "$zero", look: "{$mark: $unit} takes no $items" },
+          { look: "{$mark: $unit} already has $has" },
+        ],
       },
     },
     plant: {
-      for: "$group, n = need($set) where n <= 1",
-      conclude: "forall c in open($set): place(c, $rest)",
+      for: "$group, n = $need where n <= 1",
+      conclude: "forall c in open($set): $restMove",
     },
   },
   // A group with exactly as many open squares as it still needs has them all
-  // hold the value. One with fewer makes the marks inconsistent.
+  // hold the value. One with fewer makes the marks inconsistent. `need`,
+  // `mark` and `marks` as `count.met`'s; `fillMove` sets an open square `c`
+  // to the value, and `slots` names the open squares. The game's term
+  // `placed` says whether the group holds some already.
   "count.exact": {
-    params: ["group", "set", "fill", "unit", "items", "fillWord"],
+    params: ["group", "set", "unit", "items", "fillWord"],
+    defaults: {
+      fill: null,
+      need: "need($set)",
+      fillMove: "place(c, $fill)",
+      slots: "open {n: square | squares}",
+      mark: "stripes",
+      marks: { stripes: "$set", reads: "$set" },
+    },
     technique: {
-      for: "$group, n = need($set), O = open($set) where n > 0 and n >= |O|",
-      conclude: "n = |O| and forall c in O: place(c, $fill)",
+      for: "$group, n = $need, O = open($set) where n > 0 and n >= |O|",
+      conclude: "n = |O| and forall c in O: $fillMove",
       says: {
         terms: { n: "n" },
-        marks: { stripes: "$set", reads: "$set" },
-        look: "{stripes: $unit} needs {if placed: {n} more | {n}} $items and has only {n} open {n: square | squares}",
-        move: "{ring: the ringed square | each ringed square} must $fillWord",
+        marks: "$marks",
+        look: "{$mark: $unit} needs {if placed: {n} more | {n}} $items and has only {n} $slots",
+        move: "{ring: the ringed {noun} | each ringed {noun}} $fillWord",
       },
     },
     plant: {
-      for: "$group, n = need($set), O = open($set) where n > 0 and n >= |O| - 1",
-      conclude: "forall c in O: place(c, $fill)",
+      for: "$group, n = $need, O = open($set) where n > 0 and n >= |O| - 1",
+      conclude: "forall c in O: $fillMove",
     },
   },
   // A square down to one value holds it. One with none left makes the marks
@@ -232,19 +265,34 @@ export function expandKind(
   const kind = KINDS[placed.kind];
   if (kind === undefined)
     throw new KindError(`${path}: ${placed.as}: no kind ${placed.kind}`);
-  const { terms, ...own } = placed.with ?? {};
+  const { terms: ownTerms, ...own } = placed.with ?? {};
+  const terms = {
+    ...(words["terms"] as object | undefined),
+    ...(ownTerms as object | undefined),
+  };
+  const defaults = kind.defaults ?? {};
+  const takes = [...kind.params, ...Object.keys(defaults)];
   const shared = Object.fromEntries(
-    Object.entries(words).filter(([p]) => kind.params.includes(p)),
+    Object.entries(words).filter(([p]) => takes.includes(p)),
   );
-  const args = { ...shared, ...own };
+  const args: Record<string, unknown> = { ...shared, ...own };
   const missing = kind.params.filter((p) => !(p in args));
-  const extra = Object.keys(args).filter((p) => !kind.params.includes(p));
-  if (missing.length > 0 || extra.length > 0)
-    throw new KindError(
+  const extra = Object.keys(args).filter((p) => !takes.includes(p));
+  const refuse = (missing: readonly string[]): KindError =>
+    new KindError(
       `${path}: ${placed.as}: ${placed.kind} wants ${kind.params.join(", ")}` +
         `${missing.length > 0 ? `; missing ${missing.join(", ")}` : ""}` +
         `${extra.length > 0 ? `; no ${extra.join(", ")}` : ""}`,
     );
+  if (missing.length > 0 || extra.length > 0) throw refuse(missing);
+  // A default reads the game's parameters, never another default's.
+  const given = { ...args };
+  for (const [p, d] of Object.entries(defaults))
+    if (!(p in args) && d !== null) args[p] = fill(d, given);
+  const unfilled = Object.keys(defaults).filter(
+    (p) => !(p in args) && JSON.stringify(Object.values(args)).includes(`$${p}`),
+  );
+  if (unfilled.length > 0) throw refuse(unfilled);
   const { kind: _k, as, with: _w, says: gameSays, ...placing } = placed;
   const t = fill(kind.technique, args) as Kind["technique"];
   const says =

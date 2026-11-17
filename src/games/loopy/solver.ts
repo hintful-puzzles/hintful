@@ -835,6 +835,7 @@ function unsaidReason(
   switch (r.id) {
     case "clueFull":
     case "clueStarved":
+      return { kind: r.id, clue: r.says.terms.clue, outline };
     case "clueOneShort":
       return { kind: r.id, clue: r.says.terms.n, outline };
     case "clueBlockedPair":

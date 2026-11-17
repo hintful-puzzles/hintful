@@ -16,11 +16,6 @@ techniques:
       |D| > 0
   touch:
     for: c in cells where value(c) = 1, d in adj4(c) where not known(d)
-  # A line read as needing one more segment than its number leaves.
-  lineShips:
-    for: >-
-      L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0,
-      left = v - ships(cells(L)) + 1
   total:
     for: O = open(cells) where |O| > 0, left = total - ships(cells) + 1
   # A middle segment read as running toward the water beside it.
@@ -33,11 +28,6 @@ techniques:
     for: >-
       F = full(1), c in cells where value(c) = 1 and not (exists x in adj4(c):
       value(x) = 1), O = {x in adj4(c) where not known(x)} where |O| = 1
-  # A line read as needing one segment fewer than its number leaves.
-  lineWater:
-    for: >-
-      L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0,
-      left = v - ships(cells(L)) - 1
   isolated:
     for: >-
       F = full(1), c in cells where not known(c) and (forall x in adj4(c):

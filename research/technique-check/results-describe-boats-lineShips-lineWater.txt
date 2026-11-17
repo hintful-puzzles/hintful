@@ -1,0 +1,6 @@
+ok  boats      lineShips                      3  sound    (want sound   )     6 queries    0.1s
+ok  boats      lineShips (planted)            3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/boats/boats.description.yaml#lineShips: recorded sound, proved whole on all 1 boards
+ok  boats      lineWater                      3  sound    (want sound   )     6 queries    0.0s
+ok  boats      lineWater (planted)            3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/boats/boats.description.yaml#lineWater: recorded sound, proved whole on all 1 boards

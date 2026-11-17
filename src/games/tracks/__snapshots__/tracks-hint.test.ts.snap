@@ -4,8 +4,8 @@ exports[`tracks: pinned hint positions > says, at each pin 1`] = `
 {
   "bothSidesLeft": "The track can't cross the outlined sides, so it must run through the ringed one.",
   "closeLoop": "The outlined track already joins the squares this side separates, so crossing it would close a loop: it must be blocked.",
-  "clueExact": "Clue 8 is the length of this row, so every square in it must carry track.",
-  "clueFull": "By clue 2, this row's track squares are the outlined ones, so every other square in it must be empty.",
+  "clueExact": "This row needs 8 track squares by its clue and has only 8 open squares, so each ringed square must carry track.",
+  "clueFull": "This row already has all 2 track squares its clue asks for, the outlined ones, so each ringed square must be empty.",
   "finishEarly": "Crossing this side would finish the track from A to B short of this column's outlined clue, so the side must be blocked.",
   "looseEnd": "This row has 2 track squares left, and none of the outlined ones can cross it, so the loose end must run on (ringed).",
   "oneWayIn": "The outlined sides leave the ringed square one way in, and track needs two, so it must be empty.",

@@ -109,9 +109,9 @@ kindWords:
   rest: 2
   fill: 1
   has: "{s: its star | its {s} stars}"
-  restWord: be empty
+  restWord: must be empty
   items: "{n: star | stars}"
-  fillWord: hold a star
+  fillWord: must hold a star
 techniques:
   # Nothing touching a star holds another. A star touching one makes the
   # marks inconsistent.

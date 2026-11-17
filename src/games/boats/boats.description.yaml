@@ -206,6 +206,22 @@ deal:
   seg: added at random until Easy is not stuck, then as many removed as the board stays at its tier
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky, Hard]
+# A line's count, by its number shown: the group a count kind reads.
+kindWords:
+  group: "L in lines, v = clue(n, L) where v >= 0"
+  set: "cells(L)"
+  need: "v - ships(cells(L))"
+  rest: 2
+  fill: 1
+  zero: "v = 0"
+  unit: "this {unit}"
+  has: "{number: its boat square | all {number} of its boat squares}"
+  items: "boat {n: square | squares}"
+  slots: "free {n: square | squares}"
+  restWord: must be water
+  # "One": a boat square, which the look has just named.
+  fillWord: "must be one{has then: , with {ring then: its water}}"
+  terms: { line: L, number: v }
 techniques:
   # A given square decides itself, and an end or a boat of one square the
   # squares round it: an end's boat continues away from the side it ends.
@@ -284,21 +300,11 @@ techniques:
     conclude: "place(d, 2)"
   # A line whose open squares are as many as the segments it still needs
   # has a segment in each. One that needs more makes the marks inconsistent.
-  - id: lineShips
+  - kind: count.exact
+    as: lineShips
     tier: Easy
-    says:
-      terms: { line: L, number: v, free: "|O|" }
-      marks: { stripes: "cells(L)", reads: "cells(L)" }
-      wordings:
-        - when: "|O| = 1"
-          look: "{stripes} needs one more boat square and has one free square"
-          move: "{ring: that square} must hold a boat segment{has then: , with {ring then: its water}}"
-        - look: "{stripes} needs {free} more boat squares and has {ring: {free} free squares (ringed)}"
-          move: "each must hold a boat segment{has then: , with {ring then: its water}}"
-    for: >-
-      L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0,
-      left = v - ships(cells(L))
-    conclude: "left <= |O| and (left = |O| implies forall c in O: place(c, 1))"
+    with:
+      terms: { placed: "n < v" }
   # The whole board's open squares as many as the segments the fleet still
   # needs: each holds one.
   - id: total
@@ -346,28 +352,9 @@ techniques:
     conclude: "forall x in O: place(x, 1)"
   # A line with all the segments its number asks for has water in its open
   # squares. One with more makes the marks inconsistent.
-  - id: lineWater
+  - kind: count.met
+    as: lineWater
     tier: Easy
-    says:
-      terms: { line: L, number: v }
-      marks: { stripes: "cells(L)", reads: "cells(L)" }
-      # Read at both extremes (docs/hints.md § "Sanity-read at the degenerate
-      # extremes"): "shows the 0 ships its number allows" is nonsense, and a 0
-      # line is the common case worth its own sentence.
-      move: "{ring: every remaining square in it} must be water"
-      wordings:
-        - when: "v = 0"
-          look: "{stripes}'s number is 0"
-          move: "{ring: every square in it} must be water"
-        - when: "v = 1"
-          look: "{stripes} already has its one boat square"
-        - when: "v = 2"
-          look: "{stripes} already has both its boat squares"
-        - look: "{stripes} already has all {number} of its boat squares"
-    for: >-
-      L in lines, v = clue(n, L) where v >= 0, O = open(cells(L)) where |O| > 0,
-      left = v - ships(cells(L))
-    conclude: "left >= 0 and (left = 0 implies forall c in O: place(c, 2))"
   # With every boat of one square closed, an open square shut in by water
   # and the edge is water.
   - id: isolated

@@ -11,21 +11,6 @@ techniques:
   lineContinues:
     for: c in cells, o = dotOpen(c) where dotLines(c) = 1 and o <= 2
     conclude: "forall e in edges(c) where not known(e): place(e, 1)"
-  # A dot with one line read as full.
-  dotFull:
-    for: >-
-      c in cells, k = dotLines(c) + 1 where k > 2 or (k = 2 and dotOpen(c) > 0)
-  # A clue one line short read as full.
-  clueFull:
-    for: >-
-      f in faces where clue(number, f) != none, n = need(f) - 1 where n < 0 or
-      (n = 0 and faceOpen(f) > 0)
-  # A clue with one edge open more than it needs read as needing them all.
-  clueStarved:
-    for: >-
-      f in faces where clue(number, f) != none, n = need(f), o = faceOpen(f)
-      where n > 0 and o <= n + 1
-    conclude: "forall e in edges(f) where not known(e): place(e, 1)"
   # An edge blocked at one of its dots read as blocked at both.
   clueBlockedPair:
     for: >-

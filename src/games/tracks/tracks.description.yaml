@@ -82,12 +82,14 @@ define:
     value(edge(c, y)) = 2 or off(c) or off(y)
     or (value(edge(c, y)) != 1 and (drawn(c) = 2 or drawn(y) = 2))
   # The sides of square c the track could still cross and does not yet.
-  open(c): "{y in adj4(c) where value(edge(c, y)) != 1 and not shut(c, y)}"
+  ways(c): "{y in adj4(c) where value(edge(c, y)) != 1 and not shut(c, y)}"
   # The squares of line L known to hold track, and known to hold none.
   laid(L): "count(c in cells(L) where on(c))"
   emptied(L): "count(c in cells(L) where off(c))"
-  # The squares of line L not known either way.
-  undecided(L): "{c in cells(L) where not on(c) and not off(c)}"
+  # The track squares line L's clue still wants.
+  need(L): "clue(count, L) - laid(L)"
+  # The squares of S not known either way.
+  open(S): "{c in S where not on(c) and not off(c)}"
   # Whether square c's end leaves the board along line L.
   endAlong(c, L): "clue(end, c) >= 1 and (clue(end, c) >= 3) = (L in rows)"
   # Whether the track could run straight across line L through square c:
@@ -135,6 +137,25 @@ deal:
     order while it still does
   tier: one of the tiers, the board finished at it and not at the tier below
 tiers: [Easy, Normal, Tricky]
+# A line's clue count: the group a count kind reads. A square's mark is only
+# narrowed, so a count strikes what it rules out: 1 is track, 2 none.
+# `clueAt` is the line's clue in the margin, which the sentence outlines.
+kindWords:
+  group: "L in lines"
+  set: "cells(L)"
+  need: "need(L)"
+  restMove: "strike(c, 1)"
+  fillMove: "strike(c, 2)"
+  zero: "clue(count, L) = 0"
+  mark: stripes L
+  unit: "this {if col: column | row}"
+  has: >-
+    {target: the one track square | all {target} track squares} {outline
+    clueAt: its clue} asks for, {outline: the outlined one | the outlined ones}
+  items: "track {n: square | squares} by {outline clueAt: its clue}"
+  restWord: must be empty
+  fillWord: must carry track
+  terms: { L: L, clueAt: L, target: "clue(count, L)", col: "L in cols" }
 techniques:
   # A square's own sides come first: a firing runs the ladder again from its
   # top, so a rail forced along a run of squares is laid before a clue is
@@ -150,12 +171,12 @@ techniques:
   # track square so is inconsistent.
   - id: oneWayIn
     tier: Easy
-    for: "c in cells where not off(c) and |open(c)| + drawn(c) < 2"
+    for: "c in cells where not off(c) and |ways(c)| + drawn(c) < 2"
     conclude: "not on(c) and strike(c, 1)"
     says:
       terms:
         c: c
-        open: "|open(c)| + drawn(c)"
+        open: "|ways(c)| + drawn(c)"
         sides: "set(edge(c, y) over y in adj4(c) where shut(c, y))"
         # `sides` and the square's sides on the board's rim.
         shut: { supplied: elements }
@@ -177,7 +198,7 @@ techniques:
     tier: Easy
     for: >-
       c in cells where on(c) and drawn(c) < 2,
-      F = open(c) where |F| > 0 and |F| + drawn(c) <= 2
+      F = ways(c) where |F| > 0 and |F| + drawn(c) <= 2
     conclude: "|F| + drawn(c) = 2 and (forall y in F: place(edge(c, y), 1))"
     says:
       # `shut` is `sides` and the square's sides on the board's rim.
@@ -190,56 +211,19 @@ techniques:
       move: "it must run through {ring: the ringed one | the ringed ones}"
   # A row or column with all the track squares its clue allows: the rest
   # hold none. One with more is inconsistent.
-  - id: clueFull
+  - kind: count.met
+    as: clueFull
     tier: Easy
-    for: "L in lines, O = undecided(L) where |O| > 0 and laid(L) >= clue(count, L)"
-    conclude: "laid(L) = clue(count, L) and (forall c in O: strike(c, 1))"
-    says:
-      # `clueAt` is the line's clue in the margin, which the sentence outlines.
-      terms:
-        L: L
-        clueAt: L
-        target: "clue(count, L)"
-        col: "L in cols"
+    with:
       marks: { reads: "cells(L)", outline: "{c in cells(L) where on(c)}" }
-      wordings:
-        - when: "target = 0"
-          look: "{stripes L: This {if col: column | row}} has {outline clueAt: clue 0}"
-          follows: "no track can run along it at all"
-          move: "{ring: every square in it} must be empty"
-        - look: >-
-            By {outline clueAt: clue {target}}, {stripes L: this {if col: column |
-            row}}'s track {target: square is | squares are} {outline: the outlined
-            one | the outlined ones}
-          move: "{ring: every other square in it} must be empty"
-  # A row or column with all the empty squares its clue allows: the rest
-  # hold track. One with more is inconsistent.
-  - id: clueExact
+  # A row or column with as few squares open as its clue still wants: they
+  # hold track. One with fewer is inconsistent.
+  - kind: count.exact
+    as: clueExact
     tier: Easy
-    for: >-
-      L in lines,
-      O = undecided(L) where |O| > 0 and |cells(L)| - emptied(L) <= clue(count, L)
-    conclude: >-
-      |cells(L)| - emptied(L) = clue(count, L) and (forall c in O: strike(c, 2))
-    says:
-      terms:
-        L: L
-        clueAt: L
-        target: "clue(count, L)"
-        room: "|cells(L)| - clue(count, L)"
-        col: "L in cols"
-      marks: { reads: "cells(L)", outline: "{c in cells(L) where off(c)}" }
-      wordings:
-        - when: "room = 0"
-          look: >-
-            {outline clueAt: Clue {target}} is the length of {stripes L: this {if
-            col: column | row}}
-          move: "{ring: every square in it} must carry track"
-        - look: >-
-            By {outline clueAt: clue {target}}, {stripes L: this {if col: column |
-            row}} has {room} empty {room: square | squares}, {outline: the outlined
-            one | the outlined ones}
-          move: "{ring: every other square in it} must carry track"
+    with:
+      marks: { reads: "cells(L)" }
+      terms: { placed: "n < clue(count, L)" }
   # An open side between two track squares the rails already join: crossing
   # it would close a loop.
   - id: closeLoop
@@ -367,9 +351,9 @@ techniques:
   - id: sharedFate
     tier: Normal
     for: >-
-      L in lines where clue(count, L) - laid(L) = 1,
-      p in undecided(L),
-      q in adj4(p) where q in undecided(L)
+      L in lines where need(L) = 1,
+      p in open(cells(L)),
+      q in adj4(p) where q in open(cells(L))
       and count(y in adj4(p) where y != q and not shut(p, y)) < 2
     conclude: "strike(p, 1)"
     says:
@@ -400,8 +384,8 @@ techniques:
     tier: Tricky
     for: >-
       L in lines where |cells(L)| - clue(count, L) - emptied(L) = 1,
-      p in undecided(L),
-      q in adj4(p) where q in undecided(L)
+      p in open(cells(L)),
+      q in adj4(p) where q in open(cells(L))
       and count(y in adj4(p) where y != q and not shut(p, y)) < 2
     conclude: "strike(q, 2)"
     says:

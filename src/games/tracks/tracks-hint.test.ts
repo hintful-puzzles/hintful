@@ -221,14 +221,15 @@ describe("the picture holds exactly the number the sentence states", () => {
           if (step.rung !== "clueFull") continue;
           const hl = outlinedBy(step);
           if (hl.clues.length !== 1) continue;
-          // "By clue N, this row's track squares are the outlined ones" — so the
-          // outline must hold N cells, and each must actually carry track.
+          // "This row already has all N track squares its clue asks for, the
+          // outlined ones" — so the outline must hold N cells, and each must
+          // actually carry track.
           const m = step.explanation.match(
-            /By clue (\d+), this \w+'s track squares? (?:is|are)/,
+            /already has (?:the one track square|all (\d+) track squares) its clue asks for/,
           );
           if (!m) continue;
           checked++;
-          expect(hl.area.length, step.explanation).toBe(Number(m[1]));
+          expect(hl.area.length, step.explanation).toBe(Number(m[1] ?? 1));
           const b = stateToBoard(before);
           for (const c of hl.area) {
             const carries =
@@ -381,8 +382,8 @@ describe("every narratable premise is reached", () => {
     for (const marker of [
       "can't cross the outlined sides, so it must run through the ringed", // bothSidesLeft
       "one way in, and track needs two", // onlyOneSideLeft
-      "track squares are the outlined ones", // clueFull
-      "empty squares, the outlined ones", // clueExact
+      "its clue asks for, the outlined", // clueFull
+      "track squares by its clue and has only", // clueExact
       "would close a loop", // wouldCloseLoop
       // wouldStrandTrack is never a first step on these boards, since the ladder
       // tries closing a loop first; its pin above is the step that says it.
@@ -433,23 +434,28 @@ describe("the wordings at the degenerate extremes", () => {
 
   it("a clue of one is singular, and a clue of zero says so", () => {
     const [zero, some] = STATED.clueFull.step;
-    const terms = (target: number) => ({ L: 0, clueAt: 0, target, col: true });
+    const terms = (target: number) => ({ L: 0, clueAt: 0, target, col: true, n: 0 });
     const at = (target: number, n: number) =>
       rendered(some, terms(target), ring, {
         outline: Array.from({ length: n }, (_, i) => square(i, 1)),
       });
     expect(rendered(zero, terms(0), ring)).toContain(
-      "clue 0, so no track can run along it",
+      "This column takes no track squares by its clue, so the ringed square must be empty",
     );
-    expect(at(1, 1)).toContain("track square is the outlined one,");
-    expect(at(2, 2)).toContain("track squares are the outlined ones,");
+    expect(at(1, 1)).toContain(
+      "the one track square its clue asks for, the outlined one,",
+    );
+    expect(at(2, 2)).toContain(
+      "all 2 track squares its clue asks for, the outlined ones,",
+    );
   });
 
   it("a line with no room to be empty is not asked to leave 0 squares empty", () => {
     const [full] = STATED.clueExact.step;
-    const s = rendered(full, { L: 0, clueAt: 0, target: H, room: 0, col: true }, ring);
+    const terms = { L: 0, clueAt: 0, target: H, col: true, n: H, placed: false };
+    const s = rendered(full, terms, ring);
     expect(s).toContain(
-      "is the length of this column, so every square in it must carry track",
+      `This column needs ${H} track squares by its clue and has only ${H} open squares, so the ringed square must carry track`,
     );
     expect(s).not.toContain("0 empty");
   });

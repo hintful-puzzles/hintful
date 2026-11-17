@@ -218,13 +218,43 @@ boundaries are judgment, and the counts carry that.
     became phrases (`tried`, `here`). The compiled module is byte-identical
     to before, so nothing a player sees moved. Sticks' five boundary plants
     are back as sharpened plants, each caught at order 3.
-- [ ] 2.12 Plan step (2), the count contract: `need(S)`/`open(S)` over a set
-  for Loopy, Tracks, Boats, then `count.met`/`count.exact` placed there.
-  Found 2026-11-17: Boats already defines `open(S)` (with `ships(S)` for
-  what is held); Tracks defines `open(c)` as a square's open sides, another
-  meaning under the contract's name, so it is renamed first (with
-  `laid(L)`/`undecided(L)` restated as `need`/`open`); Loopy's
-  `need(f)`/`faceOpen(f)` count over a face, not a set.
+- [x] 2.12 (2026-11-17) Plan step (2), the count contract, and the count
+  kinds' own sentence. **The contract:** every counting game defines
+  `open(S)` over a set (Loopy and Tracks gained it; Tracks' square-sides
+  `open(c)` is now `ways(c)`, and `undecided(L)` became `open(cells(L))`).
+  `need` cannot stay over a set alone: Boats', Tracks' and Loopy's number is
+  the line's or face's clue, which a set does not carry. So a kind's
+  `need` is a parameter whose default is `need($set)` (Norinori, Star
+  Battle); Tracks defines `need(L)`, Loopy keeps `need(f)`, Boats gives `v -
+  ships(cells(L))` (its hidden numbers are read apart), Loopy's dot `2 -
+  dotLines(c)`. Kinds gained `defaults` (`need`, `restMove`/`fillMove` for a
+  game whose squares are only struck, Tracks', `mark`/`marks`, `zero`,
+  `slots`), and `kindWords` gained `terms`. **Placed:** Boats `lineShips`,
+  `lineWater`; Loopy `dotFull`, `clueFull`, `clueStarved`; Tracks
+  `clueFull`, `clueExact` (CNT now 13 techniques in 5 games). **The
+  sentence is the kind's:** "{unit} already has {has}", "{unit} takes no
+  {items}" for a number of 0, "{unit} needs {n} {items} and has only {n}
+  {slots}", and "{the ringed X | each ringed X} {restWord}". **Moved, words
+  only:** every hint walk has the same steps and rungs, its words' hash
+  alone moved; Norinori/Star Battle "already has", "the ringed square";
+  Boats "takes no boat squares" (was "'s number is 0"); Loopy's clueStarved
+  "This 3 needs 3 lines and has only 3 open edges" (was "Only 3 of this 3's
+  edges aren't ruled out"); Tracks "This row already has all 2 track squares
+  its clue asks for, the outlined ones" (was "By clue 2, this row's track
+  squares are the outlined ones"), "needs 8 track squares by its clue and has
+  only 8 open squares" (was "Clue 8 is the length of this row"). Seen in the
+  app in Tracks, Loopy, Boats and Star Battle. Loopy and Tracks re-checked
+  sound whole (a define changed); the five games' own plants for these
+  techniques were the kind's plant restated and are gone.
+- [ ] 2.13 Plan step (3): the remaining forms of each kind, until its
+  techniques are placed. CNT first, the rest of its 35 (§ 1's table: Boats'
+  `total`, Magnets', Tents', Light Up's counts, which are hand solvers or
+  stated otherwise; find which are described before choosing; Tents'
+  `open(L)` is over a line, not a set, and its `lineCount` a fit, not a
+  count kind; Clusters' `countFull`/`countShort` look like CNT), then ONE's
+  value-in-one-cell form, PEER's unit form (`once`, `cull`), REL's bounds
+  form (Unequal `sign`), GRP, CMP, SUM. Each placed game is deal-compared
+  and walked, and seen in the app.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

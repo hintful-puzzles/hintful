@@ -1,13 +1,34 @@
-ok  tracks     oneWayIn                       current: recorded src/games/tracks/tracks.description.yaml#oneWayIn b0acfb3d652c8f2f
-ok  tracks     bothSidesLeft                  current: recorded src/games/tracks/tracks.description.yaml#bothSidesLeft df36f9894e8192d3
-ok  tracks     clueFull                       current: recorded src/games/tracks/tracks.description.yaml#clueFull a0399bf0aa422c82
-ok  tracks     clueExact                      current: recorded src/games/tracks/tracks.description.yaml#clueExact de9178a17bdc74db
-ok  tracks     closeLoop                      current: recorded src/games/tracks/tracks.description.yaml#closeLoop e475b55d6e99ba6f
-ok  tracks     strand                         current: recorded src/games/tracks/tracks.description.yaml#strand 7614620afe18a9bc
-ok  tracks     finishEarly                    current: recorded src/games/tracks/tracks.description.yaml#finishEarly a6da615d5c1a11ef
-ok  tracks     looseEnd                       current: recorded src/games/tracks/tracks.description.yaml#looseEnd bfa3a67d87e0e753
-ok  tracks     sharedFate                     current: recorded src/games/tracks/tracks.description.yaml#sharedFate 8cea3049aee9754d
-ok  tracks     sharedFateEmpties              current: recorded src/games/tracks/tracks.description.yaml#sharedFateEmpties 8d2a2f8ab3933cde
-..  tracks     parity: not proved whole in time, asked on 240 boards: no defect
-ok  tracks     parity                         3  sound    (want sound   )   240 queries  120.0s
-ok  tracks     parity (planted)               3  unsound  (want unsound )     1 queries    0.2s   at edge 0
+ok  tracks     oneWayIn                       3  sound    (want sound   )     9 queries    0.9s
+ok  tracks     oneWayIn (planted)             3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/games/tracks/tracks.description.yaml#oneWayIn: recorded sound, proved whole on all 1 boards
+ok  tracks     bothSidesLeft                  3  sound    (want sound   )     9 queries    0.8s
+ok  tracks     bothSidesLeft (planted)        3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/games/tracks/tracks.description.yaml#bothSidesLeft: recorded sound, proved whole on all 1 boards
+ok  tracks     clueFull                       3  sound    (want sound   )     6 queries    0.5s
+ok  tracks     clueFull (planted)             3  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  src/games/tracks/tracks.description.yaml#clueFull: recorded sound, proved whole on all 1 boards
+ok  tracks     clueExact                      3  sound    (want sound   )     6 queries    0.4s
+ok  tracks     clueExact (planted)            3  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  src/games/tracks/tracks.description.yaml#clueExact: recorded sound, proved whole on all 1 boards
+ok  tracks     closeLoop                      3  sound    (want sound   )     1 queries    0.2s
+ok  tracks     closeLoop (planted)            3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  src/games/tracks/tracks.description.yaml#closeLoop: recorded sound, proved whole on all 1 boards
+ok  tracks     strand                         3  sound    (want sound   )     1 queries    1.9s
+ok  tracks     strand (planted)               3  unsound  (want unsound )     1 queries    0.2s   at eset
+ok  src/games/tracks/tracks.description.yaml#strand: recorded sound, proved whole on all 1 boards
+ok  tracks     finishEarly                    3  sound    (want sound   )     1 queries    2.2s
+ok  tracks     finishEarly (planted)          3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  src/games/tracks/tracks.description.yaml#finishEarly: recorded sound, proved whole on all 1 boards
+ok  tracks     looseEnd                       3  sound    (want sound   )     6 queries    1.1s
+ok  tracks     looseEnd (planted)             3  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  src/games/tracks/tracks.description.yaml#looseEnd: recorded sound, proved whole on all 1 boards
+ok  tracks     sharedFate                     3  sound    (want sound   )     6 queries    0.9s
+ok  tracks     sharedFate (planted)           3  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  src/games/tracks/tracks.description.yaml#sharedFate: recorded sound, proved whole on all 1 boards
+ok  tracks     sharedFateEmpties              3  sound    (want sound   )     6 queries    1.0s
+ok  tracks     sharedFateEmpties (planted)    3  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  src/games/tracks/tracks.description.yaml#sharedFateEmpties: recorded sound, proved whole on all 1 boards
+..  tracks     parity: not proved whole in time, asked on 152 boards: no defect
+ok  tracks     parity                         3  held     (want sound   )   152 queries  123.1s
+ok  tracks     parity (planted)               3  unsound  (want unsound )     1 queries   20.6s   at edge 0
+ok  src/games/tracks/tracks.description.yaml#parity: recorded held, proved whole on 0 of 1 boards and asked on sampled answers on the rest

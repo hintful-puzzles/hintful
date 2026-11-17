@@ -1027,13 +1027,24 @@ A variation's added techniques may be placed the same way (ABCD's
 under any game's nouns), so a game's `plants.yaml` need state none for it; a
 plant it does state replaces the kind's, for a game whose rule has a boundary
 the coarse plant misses (ABCD's and Magnets' placed square, planted as
-reaching the diagonal too). A game's `define`d
-`need` and `open` are the kind's contract. **What a game calls things is said
-once**, in `kindWords:` (the rest value, the words for what is held); a
-placement's `with` gives only what differs (`group`, `set`, `unit`) and
-overrides. A `kindWords` name a kind does not take is ignored for it, so one
-block serves every kind placed. On contract: a kind that reads another name
-says so in `params` or its text. A kind is checked sound per game, as a
+reaching the diagonal too). **A counting game defines `open(S)`, the
+squares of a set not yet decided, and `need`**, what a group still wants:
+`need(S)` over the set where every group wants the same (Norinori, Star
+Battle), or over the group where its number is its own (`need(L)`, a line's
+clue less what it holds: Tracks, Loopy's `need(f)`), which the placement names
+in `need:` (Boats', which reads a hidden number apart, is its `need:` alone).
+A game whose squares are only struck gives the move (`restMove: "strike(c,
+1)"`, Tracks'). **What a game calls things is said once**, in `kindWords:`
+(the group a count reads, the rest value, the words for what is held), with
+`terms` added to every placement's; a placement's `with` gives only what
+differs and overrides (Loopy's dot over its clue). A `kindWords` name a kind
+does not take is ignored for it, so one block serves every kind placed. A
+parameter in a kind's `defaults` is the game's to give or leave, and a default
+reads only the parameters the game gave. The count kinds carry their
+sentence: "{unit} already has {has}", "{unit} takes no {items}" where its
+number may be 0 (`zero`), and "{unit} needs {n} {items} and has only {n}
+{slots}"; the game gives the nouns, how its group is drawn (`mark`, `marks`)
+and the move's predicate (`restWord`: "can't be a line"). A kind is checked sound per game, as a
 stated technique is. A kind with no words of its own (`one.cell`,
 `peer.placed`, `fit.flip`) takes the game's `says:` beside the placement,
 and one with no parameters takes no `with`. `one.cell`'s sentence is the

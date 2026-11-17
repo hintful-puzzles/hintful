@@ -13,7 +13,8 @@ const met = {
     rest: 2,
     unit: "this region",
     has: "its two",
-    restWord: "be empty",
+    items: "stars",
+    restWord: "must be empty",
     terms: { s: "stars" },
   },
 };
@@ -27,9 +28,13 @@ describe("a kind of rule expands to the technique it stands for", () => {
       for: "r in region, n = need(cells(r)) where n <= 0",
       conclude: "n = 0 and forall c in open(cells(r)): place(c, 2)",
       says: {
-        terms: { s: "stars" },
-        look: "{stripes: this region} has its two",
-        move: "{ring} must be empty",
+        terms: { n: "n", s: "stars" },
+        marks: { stripes: "cells(r)", reads: "cells(r)" },
+        move: "{ring: the ringed {noun} | each ringed {noun}} must be empty",
+        wordings: [
+          { when: "false", look: "{stripes: this region} takes no stars" },
+          { look: "{stripes: this region} already has its two" },
+        ],
       },
       plant: { for: "r in region, n = need(cells(r)) where n <= 1" },
     });
@@ -40,14 +45,44 @@ describe("a kind of rule expands to the technique it stands for", () => {
     const words = { rest: 2, has: "its two", restWord: "ignored", extra: "not taken" };
     const t = expandKind({ ...met, with: own }, "x", words);
     expect(t).toMatchObject({ conclude: expect.stringContaining("place(c, 2)") });
-    expect(t["says"]).toMatchObject({ look: "{stripes: this region} has its two" });
+    const look = (t: Record<string, unknown>) =>
+      (t["says"] as { wordings: { look: string }[] }).wordings[1].look;
+    expect(look(t)).toBe("{stripes: this region} already has its two");
     const over = expandKind({ ...met, with: { ...own, has: "its pair" } }, "x", words);
-    expect(over["says"]).toMatchObject({ look: "{stripes: this region} has its pair" });
+    expect(look(over)).toBe("{stripes: this region} already has its pair");
+  });
+
+  it("fills a default from the game's parameters, and a game's own wins", () => {
+    expect(expandKind(met, "x")["for"]).toBe(
+      "r in region, n = need(cells(r)) where n <= 0",
+    );
+    const own = { ...met.with, need: "clue(r) - held(r)", restMove: "strike(c, 1)" };
+    const struck = expandKind({ ...met, with: own }, "x");
+    expect(struck["for"]).toBe("r in region, n = clue(r) - held(r) where n <= 0");
+    expect(struck["conclude"]).toBe(
+      "n = 0 and forall c in open(cells(r)): strike(c, 1)",
+    );
+  });
+
+  it("takes terms said once, a placement's own winning", () => {
+    const words = { terms: { s: "one", t: "two" } };
+    const t = expandKind(
+      { ...met, with: { ...met.with, terms: { s: "own" } } },
+      "x",
+      words,
+    );
+    expect((t["says"] as { terms: object }).terms).toEqual({
+      n: "n",
+      s: "own",
+      t: "two",
+    });
   });
 
   it("refuses a parameter missing, or one the kind does not have", () => {
     const { rest: _r, ...short } = met.with;
     expect(() => expandKind({ ...met, with: short }, "x")).toThrow(/missing rest/);
+    const { unit: _u, ...unnamed } = met.with;
+    expect(() => expandKind({ ...met, with: unnamed }, "x")).toThrow(/missing unit/);
     expect(() => expandKind({ ...met, with: { ...met.with, no: "x" } }, "x")).toThrow(
       /no no/,
     );
@@ -137,7 +172,7 @@ techniques:
   - kind: count.met
     as: full
     tier: Easy
-    with: { group: "r in region", set: "cells(r)", rest: 2, unit: this region, has: its two, restWord: be empty }
+    with: { group: "r in region", set: "cells(r)", rest: 2, unit: this region, has: its two, items: stars, restWord: must be empty }
 `;
     const file = loadDescriptionFile(text, "probe");
     const ts = isFormal(file) ? (file.techniques ?? []) : [];

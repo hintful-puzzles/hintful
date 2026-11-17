@@ -147,6 +147,8 @@ define:
   faceLines(f): "count(e in edges(f) where value(e) = 1)"
   faceOpen(f): "count(e in edges(f) where not known(e))"
   need(f): "clue(number, f) - faceLines(f)"
+  # The edges of S still open.
+  open(S): "{e in S where not known(e)}"
   # Whether both of a corner's edges are open.
   bare(a): "forall e in edges(a): not known(e)"
   # Whether the edges S, a face's f, can hold k lines, given what is known
@@ -186,6 +188,22 @@ deal:
     finish it at the tier below
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky, Hard]
+# A clue's count: the group a count kind reads, which a dot's overrides.
+kindWords:
+  group: "f in faces where clue(number, f) != none"
+  set: "edges(f)"
+  need: "need(f)"
+  rest: 2
+  fill: 1
+  zero: "clue(number, f) = 0"
+  unit: "this {clue}"
+  mark: outline face
+  marks: { outline: { face: "{f}" } }
+  has: "{clue: its line | all {clue} of its lines}"
+  items: "{n: line | lines}"
+  slots: "open {n: edge | edges}"
+  restWord: "can't be a line"
+  fillWord: must be a line
 techniques:
   # The dots' techniques come first: they cost a scan of the dots, and a
   # firing runs the ladder again from its top, so a line forced along a
@@ -215,51 +233,33 @@ techniques:
       move: "{ring} must be a line"
   # A dot with two lines: its other edges are empty. One with more is
   # inconsistent.
-  - id: dotFull
+  - kind: count.met
+    as: dotFull
     tier: Easy
-    for: >-
-      c in cells, k = dotLines(c) where k > 2 or (k = 2 and dotOpen(c) > 0)
-    conclude: "k = 2 and (forall e in edges(c) where not known(e): place(e, 2))"
-    says:
-      terms: { c: c }
+    with:
+      group: "c in cells"
+      set: "edges(c)"
+      need: "2 - dotLines(c)"
+      zero: "false"
+      unit: the outlined dot
+      mark: outline cell
       marks: { outline: { cell: "{c}" } }
-      look: "{outline cell: The outlined dot} already has its two lines"
-      move: "{ring: the ringed edge | each ringed edge} can't be a line"
+      has: its two lines
+      terms: { c: c }
   # A clue with all its lines: its other edges are empty. One with more is
   # inconsistent.
-  - id: clueFull
+  - kind: count.met
+    as: clueFull
     tier: Easy
-    for: >-
-      f in faces where clue(number, f) != none, n = need(f)
-      where n < 0 or (n = 0 and faceOpen(f) > 0)
-    conclude: "n = 0 and (forall e in edges(f) where not known(e): place(e, 2))"
-    says:
-      terms: { f: f, n: "clue(number, f)" }
-      marks: { outline: { face: "{f}" } }
-      move: "{ring: the ringed edge | each ringed edge} can't be a line"
-      wordings:
-        - when: "n = 0"
-          look: "{outline face: this {n}} takes no lines"
-        - when: "n = 1"
-          look: "{outline face: this {n}} already has its line"
-        - look: "{outline face: this {n}} already has all {n} of its lines"
+    with:
+      terms: { f: f, clue: "clue(number, f)" }
   # A clue with only as many edges open as it still needs: each is a
   # line. One with fewer is inconsistent.
-  - id: clueStarved
+  - kind: count.exact
+    as: clueStarved
     tier: Easy
-    for: >-
-      f in faces where clue(number, f) != none, n = need(f), o = faceOpen(f)
-      where n > 0 and o <= n
-    conclude: "o = n and (forall e in edges(f) where not known(e): place(e, 1))"
-    says:
-      terms: { f: f, n: "clue(number, f)" }
-      marks: { outline: { face: "{f}" } }
-      wordings:
-        - when: "n = 1"
-          look: "Only one of {outline face: this {n}'s} edges isn't ruled out"
-          move: "{ring: the ringed edge | each ringed edge} must be a line"
-        - look: "Only {n} of {outline face: this {n}'s} edges aren't ruled out"
-          move: "{ring: the ringed edge | each ringed edge} must be a line"
+    with:
+      terms: { f: f, clue: "clue(number, f)", placed: "n < clue(number, f)" }
   # A clue that needs all but one of its open edges, and an open edge
   # whose dots both have a line from outside the face with the face's other
   # edges there open: a line on it would fill both dots, leave the edges

@@ -9,7 +9,7 @@ exports[`norinori: pinned hint positions > says, at each pin 1`] = `
   "crowded": "With this square shaded, this region has no room for 2 shaded squares as dominoes, so this square must be clear.",
   "domino": "These two shaded squares make a domino, and no other shaded square may touch it, so these squares must be clear.",
   "exactRegion": "This region needs 2 shaded squares and has only 2 open squares, so each ringed square must be shaded.",
-  "fullRegion": "This region has its two shaded squares, so this square must be clear.",
+  "fullRegion": "This region already has its two shaded squares, so the ringed square must be clear.",
   "neededRegion": "Without this square, this region has no room for 2 shaded squares as dominoes, given the outlined square, so this square must be shaded.",
   "partner": "This shaded square has no shaded neighbor and only one open one, so the ringed square must be shaded.",
 }

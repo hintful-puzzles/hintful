@@ -6,25 +6,13 @@
 techniques:
   # A square with two sides left read as left one.
   oneWayIn:
-    for: c in cells where not off(c) and |open(c)| + drawn(c) < 3
+    for: c in cells where not off(c) and |ways(c)| + drawn(c) < 3
   # A track square with three sides left read as crossing them all.
   bothSidesLeft:
     for: >-
-      c in cells where on(c) and drawn(c) < 2, F = open(c) where |F| > 0 and |F|
+      c in cells where on(c) and drawn(c) < 2, F = ways(c) where |F| > 0 and |F|
       + drawn(c) <= 3
     conclude: "forall y in F: place(edge(c, y), 1)"
-  # A line one track square short read as full.
-  clueFull:
-    for: >-
-      L in lines, O = undecided(L) where |O| > 0 and laid(L) + 1 >= clue(count,
-      L)
-    conclude: "forall c in O: strike(c, 1)"
-  # A line one empty square short read as having them all.
-  clueExact:
-    for: >-
-      L in lines, O = undecided(L) where |O| > 0 and |cells(L)| - emptied(L) <=
-      clue(count, L) + 1
-    conclude: "forall c in O: strike(c, 2)"
   # Any open side between two track squares read as closing a loop.
   closeLoop:
     for: >-
@@ -58,14 +46,13 @@ techniques:
   # A square with two ways on besides the next read as having one.
   sharedFate:
     for: >-
-      L in lines where clue(count, L) - laid(L) = 1, p in undecided(L), q in
-      adj4(p) where q in undecided(L) and count(y in adj4(p) where y != q and
-      not shut(p, y)) < 3
+      L in lines where need(L) = 1, p in open(cells(L)), q in adj4(p) where q in
+      open(cells(L)) and count(y in adj4(p) where y != q and not shut(p, y)) < 3
   # The same, one empty square short.
   sharedFateEmpties:
     for: >-
       L in lines where |cells(L)| - clue(count, L) - emptied(L) = 1, p in
-      undecided(L), q in adj4(p) where q in undecided(L) and count(y in adj4(p)
+      open(cells(L)), q in adj4(p) where q in open(cells(L)) and count(y in adj4(p)
       where y != q and not shut(p, y)) < 3
   # A side another open side joins the squares of read as the only one.
   parity:
