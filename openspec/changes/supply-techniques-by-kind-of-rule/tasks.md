@@ -842,16 +842,30 @@ boundaries are judgment, and the counts carry that.
     TS clash reading (a set of pairs, no one witness). A new
     `path-witness` test (the square said is the witness's member) seen to
     fail with `sq` planted as a neighbor. Soundness re-checked.
-  - [ ] Spokes on `breaks:` (step 2's second game), found while reading it:
-    its `breakOf` (solver.ts) scans the changed hubs' neighbors in index
-    order across both ends, where `brokenH(a, H) or brokenH(b, H)` reads
-    `a`'s first, so where two hubs starve the outlined one may differ
-    (words move; accept, fingerprint re-recorded). `spareBreaks`' look
-    tells the filled hub from a broken one of the same number ("the other
-    outlined 3", `same`), which a break's words cannot know: give the
-    break the filled hub as a parameter, or drop the "other". The outline
-    (`marks.outline` supplied from `evidenceHubs`) must come from the break's
-    `broken` term once `breakOf` goes. Then step 3 (`with place(S, v)`).
+  - [x] (2026-11-17) Spokes on `breaks:` (step 2's second game). `shortH(c,
+    H)` (a hub left too few spokes, terms `starved`, `bn`) and `sealedH(c,
+    H)` (a group closed off, `sealed`) are breaks; `lineBreaks` says
+    "Drawing this line would {broke}", `spareBreaks` "Ruling this spoke out
+    would fill the outlined 2 and {broke}" (was "leave the outlined 2 no
+    spare spoke and …"; "and leave" ran it to 126 characters, and the help
+    already says a hub is filled). Where the hub left short has the filled
+    hub's number, a wording whose `when` reads the break's terms
+    (`brokeShortH and bn = fn`) says "fill one outlined 4 and leave the other
+    4 too few spokes", seen in the app with the two outlines and chips
+    agreeing. **Gone:** `breakOf`, `SpokesBreakKind`, the firing's
+    `hypothesis`/`filled`/`breakKind`, the hint's `trialBreaks` and
+    `SUPPLIED` and every `supplied` term; the evidence hubs and the walk's
+    `reads` come from the break terms. **Moved:** words (the "fill"
+    sentence), and the hint-walk dump (24 boards, four shares each) has
+    every walk ending the same, 4 boards taking steps in another order (one
+    plan a step shorter): a Check now rests on the hub its witness held, not
+    on the first starved hub in index order that the TS re-scan found. Walk
+    fingerprint re-recorded (same steps and rung counts). Deal-compare at 3
+    seeds a preset: same boards and verdicts, 0.96× deals, 1.03× solves.
+    Re-checked sound, the same verdicts (`spareBreaks` held, as it was).
+  - [ ] Step 3, `with place(S, v)` over a set, so Spokes' `H` copies
+    (`drawn`, `linesH`, `spareH`) go and its breaks are the count and
+    connect rules' own, read under the supposition.
   - [ ] Then REL (10 left) and PEER (6).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by

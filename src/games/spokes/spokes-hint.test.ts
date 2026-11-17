@@ -170,10 +170,7 @@ const pinned = describeHintPins({
     ruleOut: (step) => isRuleOut(lit(step)),
     // Normal's Check concluding a line: a rule-out that leaves a hub no spare
     // spoke, whose other spokes break the board.
-    breaksLine: (step) =>
-      step.rung === "spareBreaks" &&
-      !isRuleOut(lit(step)) &&
-      step.explanation.includes("no spare spoke"),
+    breaksLine: (step) => step.rung === "spareBreaks" && !isRuleOut(lit(step)),
     // Normal's Check ruling a spoke out: a line that breaks the board.
     breaksRuleOut: (step) => step.rung === "lineBreaks" && isRuleOut(lit(step)),
   },

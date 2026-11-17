@@ -97,20 +97,6 @@ define:
   drawn(e, H): "value(e) = 1 or e in H"
   linesH(c, H): "count(y in adj8(c) where drawn(edge(c, y), H))"
   spareH(c, H): "linesH(c, H) < takes(c)"
-  # Whether square c, with lines on H, is left too few edges that may still
-  # take a line for the lines it still takes. Its own lines are counted
-  # once, so each edge asks only the square across it.
-  shortH(c, H): >-
-    exists n = takes(c) - linesH(c, H) where n > 0:
-    count(y in adj8(c) where not known(edge(c, y)) and edge(c, y) not in H
-    and spareH(y, H)
-    and not (crossedBy(edge(c, y)) != none and drawn(crossedBy(edge(c, y)), H))) < n
-  # Whether the hubs the lines join to square c, with lines on H, all have
-  # their lines while some hub is not among them: a group closed off.
-  sealedH(c, H): >-
-    not spareH(c, H)
-    and (forall x in through(c, {e in edges where drawn(e, H)}): not spareH(x, H))
-    and count(x in through(c, {e in edges where drawn(e, H)}) where hub(x)) < hubs
   # How many hubs the board has.
   hubs: "count(y in cells where hub(y))"
   # Whether lines on H break the board at once near square c, whose lines
@@ -118,6 +104,30 @@ define:
   # off.
   brokenH(c, H): >-
     shortH(c, H) or (exists s in adj8(c): shortH(s, H)) or sealedH(c, H)
+# How lines supposed on H are seen to break the board, each said where it is
+# what broke ({broke}).
+breaks:
+  # Square c, with lines on H, is left too few edges that may still take a
+  # line for the lines it still takes. Its own lines are counted once, so
+  # each edge asks only the square across it.
+  shortH(c, H):
+    when: >-
+      exists n = takes(c) - linesH(c, H) where n > 0:
+      count(y in adj8(c) where not known(edge(c, y)) and edge(c, y) not in H
+      and spareH(y, H)
+      and not (crossedBy(edge(c, y)) != none and drawn(crossedBy(edge(c, y)), H))) < n
+    terms: { starved: "{c}", bn: "takes(c)" }
+    look: "leave {outline starved: the outlined {bn}} too few spokes"
+  # The hubs the lines join to square c, with lines on H, all have their
+  # lines while some hub is not among them: a group closed off.
+  sealedH(c, H):
+    when: >-
+      not spareH(c, H)
+      and (forall k in through(c, {e in edges where drawn(e, H)}): not spareH(k, H))
+      and count(k in through(c, {e in edges where drawn(e, H)}) where hub(k)) < hubs
+    terms:
+      sealed: "{k in through(c, {e in edges where drawn(e, H)}) where hub(k)}"
+    look: "strand {outline sealed: the outlined hubs}"
 rules:
   # No two diagonals that cross are both lines.
   uncrossed: >-
@@ -203,24 +213,10 @@ techniques:
       where live(a, b) and (brokenH(a, H) or brokenH(b, H))
     conclude: "place(e, 2)"
     says:
-      terms:
-        e: e
-        a: a
-        b: b
-        # What the trial breaks is the game's to find: the hubs it breaks, how
-        # many, the number on the first, and whether a hub is left too few
-        # spokes (else the hubs are sealed off from the rest).
-        broken: { supplied: elements }
-        many: { supplied: flag }
-        bn: { supplied: number }
-        starved: { supplied: flag }
+      terms: { e: e }
       # The edge's hubs are read; the hubs its trial breaks are outlined.
-      marks: { outline: { supplied: elements }, reads: "{a, b}" }
-      look: >-
-        Drawing {ring: this line} would
-        {if starved: leave {outline broken: {if many: the outlined hubs |
-        the outlined {bn}}} too few spokes |
-        strand {outline broken: the outlined hubs}}
+      marks: { reads: "{a, b}" }
+      look: "Drawing {ring: this line} would {broke}"
       move: "rule it out"
   # A hub with one edge to spare: crossing one out would leave it lines on
   # all the others. Where those would break the board at once, it takes a
@@ -234,33 +230,19 @@ techniques:
       and (brokenH(c, H) or (exists x in U where x != y: brokenH(x, H)))
     conclude: "place(edge(c, y), 1)"
     says:
-      terms:
-        c: c
-        y: y
-        H: H
-        # What the trial breaks is the game's to find, as in `lineBreaks`; and
-        # the hub the rule-out leaves no spare spoke, with its number, whether
-        # the hub broken has the same number (so the two are told apart by
-        # order), and whether there is one.
-        broken: { supplied: elements }
-        many: { supplied: flag }
-        bn: { supplied: number }
-        starved: { supplied: flag }
-        hasFilled: { supplied: flag }
-        filled: { supplied: element }
-        fn: { supplied: number }
-        same: { supplied: flag }
+      # The hub the rule-out fills (leaves no spare spoke), and its number.
+      terms: { c: c, filled: "{c}", fn: "takes(c)" }
       # The hub and the spoke's other end are read; the hubs the trial fills
       # and breaks are outlined.
-      marks: { outline: { supplied: elements }, reads: "{c, y}" }
-      look: >-
-        Ruling {ring: this spoke | these spokes} out would
-        {if hasFilled: leave {outline filled: {if same: one outlined {fn} |
-        the outlined {fn}}} no spare spoke and
-        {if starved: {outline broken: {if same: the other outlined {bn} |
-        {if many: the outlined hubs | the outlined {bn}}}} too few spokes |
-        strand {outline broken: the outlined hubs}} |
-        {if starved: leave {outline broken: {if many: the outlined hubs |
-        the outlined {bn}}} too few spokes |
-        strand {outline broken: the outlined hubs}}}
+      marks: { reads: "{c, y}" }
+      wordings:
+        # A hub left short with the filled hub's number is told apart from it.
+        - when: "brokeShortH and bn = fn"
+          look: >-
+            Ruling {ring: this spoke | these spokes} out would fill
+            {outline filled: one outlined {fn}} and leave
+            {outline starved: the other {bn}} too few spokes
+        - look: >-
+            Ruling {ring: this spoke | these spokes} out would fill
+            {outline filled: the outlined {fn}} and {broke}
       move: "it must be a line"

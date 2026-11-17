@@ -2,7 +2,7 @@
 
 exports[`spokes: pinned hint positions > says, at each pin 1`] = `
 {
-  "breaksLine": "Ruling this spoke out would leave the outlined 2 no spare spoke and strand the outlined hubs, so it must be a line.",
+  "breaksLine": "Ruling this spoke out would fill the outlined 2 and strand the outlined hubs, so it must be a line.",
   "breaksRuleOut": "Drawing this line would leave the outlined 4 too few spokes, so rule it out.",
   "diagonalLine": "This 5 needs 5 lines and has only 5 free spokes, so each ringed spoke must be a line.",
   "exhaustion": "This 1 already has its line, so the ringed spoke must be unused.",
@@ -10,7 +10,7 @@ exports[`spokes: pinned hint positions > says, at each pin 1`] = `
   "ruleOut": "Connecting the outlined 1-hubs would strand them from the rest, so this spoke must be unused.",
   "saturation": "This 5 needs 5 lines and has only 5 free spokes, so each ringed spoke must be a line.",
   "saturationOfSeveral": "This 5 needs 5 lines and has only 5 free spokes, so each ringed spoke must be a line.",
-  "spareBreaks": "Ruling this spoke out would leave the outlined 2 no spare spoke and strand the outlined hubs, so it must be a line.",
+  "spareBreaks": "Ruling this spoke out would fill the outlined 2 and strand the outlined hubs, so it must be a line.",
   "twoOnes": "Connecting the outlined 1-hubs would strand them from the rest, so this spoke must be unused.",
 }
 `;

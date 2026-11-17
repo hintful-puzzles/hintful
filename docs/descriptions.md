@@ -1492,11 +1492,8 @@ no game `later` hook says a later leg's move as its `later` clause where it
 has one, else its `move` (Dominosa: "this spot can't hold a domino either").
 **A term a leg supplies** is given by the game's `supplied` hook for its
 technique, on the leg's own `marked`: Dominosa's domino (`lo`, `hi`) differs
-by the spot a leg decides, which no firing's binding holds. Spokes' Checks
-supply the hubs their trial breaks the same way (`broken`, `starved`) and the
-outline they are drawn on, with `elements` for a game whose marks are not
-squares (its hubs); a `later` clause may read a supplied count (`rest`, the
-spokes a later leg still decides).
+by the spot a leg decides, which no firing's binding holds. A `later` clause
+may read a supplied count (`rest`, the spokes a later leg still decides).
 
 **A technique whose words need what held says `witness: true`**: the
 compiler then reads, on the same marks as the terms and only on a hint's
@@ -1557,9 +1554,14 @@ reads them where the witness holds the break (its node carries them,
 `brokeAt` finds the innermost), under the suppositions in force there, so a
 square's ways are counted with the tried lines drawn. Path's `lineBreaks` and
 `pairBreaks` say a loop closed, two numbers joined or a square left short
-this way (`closes`, `joins`, `stuck`); a break under a `not`, a `forall` or
-an aggregate is not witnessed, and the compiler refuses a technique whose
-`{broke}` it never holds. Exemplar: `path-witness.test.ts`.
+this way (`closes`, `joins`, `stuck`), and Spokes' a hub left short or a
+group sealed off, under lines supposed on a set (`shortH(c, H)`); a break under
+a `not`, a `forall` or an aggregate is not witnessed, and the compiler refuses
+a technique whose `{broke}` it never holds. A break's terms are the
+technique's, so a wording's `when` reads them where the break's words would
+say the wrong thing beside the technique's own: Spokes' `spareBreaks` says
+"one outlined 3 … the other 3" where the hub left short has the filled hub's
+number (`brokeShortH and bn = fn`). Exemplar: `path-witness.test.ts`.
 
 **The witness is read where the sentence is built, by the name of what it
 holds**, not written into a term: `witnessOfDef(w, "shortNear")` finds the
