@@ -196,16 +196,37 @@ export const KINDS: Readonly<Record<string, Kind>> = {
     },
   },
   // A square down to one value holds it. One with none left makes the marks
-  // inconsistent.
+  // inconsistent. `square` says which squares `c` are read, where a game
+  // leaves some out (Ascent's walls and arrows, which hold no number).
   "one.cell": {
     params: [],
+    defaults: { square: "not known(c)" },
     technique: {
-      for: "c in cells where not known(c) and |cand(c)| < 2",
+      for: "c in cells where $square and |cand(c)| < 2",
       conclude: "|cand(c)| = 1 and place(c, first(cand(c)))",
     },
     plant: {
-      for: "c in cells where not known(c) and |cand(c)| < 3",
+      for: "c in cells where $square and |cand(c)| < 3",
       conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))",
+    },
+  },
+  // A value a unit still owes with one open square of the unit left that may
+  // hold it goes there. One with none left makes the marks inconsistent.
+  // `group` binds the unit and the value, `value`, leaving out a value the
+  // unit already holds; `set` is the unit's squares. `move` gives the open
+  // square `c` the value, where a game does so by striking the others (Rome,
+  // whose solver places only a square down to one value).
+  "one.place": {
+    params: ["group", "set", "value"],
+    defaults: { move: "place(c, $value)" },
+    technique: {
+      for: "$group, k = count(c in $set where not known(c) and $value in cand(c)) where k < 2",
+      conclude:
+        "k = 1 and (forall c in $set where not known(c) and $value in cand(c): $move)",
+    },
+    plant: {
+      for: "$group, k = count(c in $set where not known(c) and $value in cand(c)) where k < 3",
+      conclude: "forall c in $set where not known(c) and $value in cand(c): $move",
     },
   },
   // A placed value leaves every square `peer` names, a binder that reads the

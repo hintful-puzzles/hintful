@@ -1,0 +1,16 @@
+ok  ascent +Edges moves=0 onlySquare                     3  sound    (want sound   )     3 queries    0.6s
+ok  ascent +Edges moves=0 onlySquare (planted)           3  unsound  (want unsound )     1 queries    0.1s   at 1
+ok  ascent +Edges moves=1 onlySquare                     3  sound    (want sound   )     3 queries    0.6s
+ok  ascent +Edges moves=2 onlySquare                     3  sound    (want sound   )     3 queries    0.5s
+ok  src/games/ascent/ascent.description.yaml#onlySquare: recorded sound, proved whole on all 3 boards
+ok  rome       onlyHome                       3  sound    (want sound   )    36 queries    1.2s
+ok  rome       onlyHome (planted)             3  unsound  (want unsound )     1 queries    0.1s   at region area 21
+ok  src/games/rome/rome.description.yaml#onlyHome: recorded sound, proved whole on all 1 boards
+ok  seismic mode=0 areaSingle                     3  sound    (want sound   )    79 queries    6.2s
+ok  seismic mode=0 areaSingle (planted)           3  unsound  (want unsound )    10 queries    0.2s   at region area 9
+ok  seismic mode=1 areaSingle                     3  sound    (want sound   )    79 queries    2.3s
+ok  src/games/seismic/seismic.description.yaml#areaSingle: recorded sound, proved whole on all 2 boards
+..  subsets    onlyCell: not proved whole in time, asked on 40 boards: no defect
+ok  subsets    onlyCell                       3  held     (want sound   )   640 queries  120.0s
+ok  subsets    onlyCell (planted)             3  unsound  (want unsound )     1 queries    0.6s   at 1
+ok  src/games/subsets/subsets.description.yaml#onlyCell: recorded held, proved whole on 0 of 1 boards and asked on sampled answers on the rest

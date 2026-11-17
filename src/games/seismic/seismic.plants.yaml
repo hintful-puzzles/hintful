@@ -4,11 +4,6 @@
 # unsound.
 
 techniques:
-  areaSingle:
-    for: >-
-      r in area, n in range(1, |cells(r)|) where not (exists c in cells(r):
-      value(c) = n), k = count(c in cells(r) where n in cand(c)) where k < 3
-    conclude: k >= 1 and place(first({c in cells(r) where n in cand(c)}), n)
   # A square near only one of the area's homes struck.
   starve:
     conclude: >-

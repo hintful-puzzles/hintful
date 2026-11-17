@@ -148,12 +148,13 @@ techniques:
     tier: Easy
   # A set only one square can hold goes there. One no square can hold makes
   # the marks inconsistent.
-  - id: onlyCell
+  - kind: one.place
+    as: onlyCell
     tier: Easy
-    for: >-
-      d in domain, C = {c in cells where d in cand(c)}
-      where |C| < 2 and (|C| = 0 or not known(first(C)))
-    conclude: "|C| = 1 and place(first(C), d)"
+    with:
+      group: "d in domain where not (exists c in cells: value(c) = d)"
+      set: cells
+      value: d
   # The open end of a horseshoe holds a set only where the closed end can
   # hold a smaller one inside it.
   - kind: rel.support

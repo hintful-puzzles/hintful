@@ -244,7 +244,7 @@ export function buildSteps(
         case "regionsFull":
           return { words: say.regionsFull(m, m.n, tectonic) };
         case "hidden":
-          return { words: say.hidden(cellsOf(reason.area), m, m.n) };
+          return { words: say.hidden(cellsOf(reason.area), m, w) };
         default:
           throw new Error(`seismic: a ${reason.kind} places nothing`);
       }

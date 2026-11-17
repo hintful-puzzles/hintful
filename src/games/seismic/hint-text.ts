@@ -116,11 +116,15 @@ export const say = {
       move: phrase`it can only be ${n}`,
     }),
 
-  hidden: (area: readonly Point[], at: Point, n: number): Sentence =>
-    so({
-      look: phrase`No other cell in ${stripedArea(area)} can be ${n}`,
-      move: phrase`${thisCell(at)} must be ${n}`,
-    }),
+  /** A number with one cell of its area left: the `one.place` kind's
+   * sentence, the Latin library's `hiddenSingle`. */
+  hidden: (area: readonly Point[], at: Note, w: number): Sentence =>
+    narrateLatinReason(
+      { kind: "hiddenSingle", n: at.n, unit: { name: "area", cells: area } },
+      at,
+      w,
+      { noun: "number", cell: "cell", value: String },
+    ),
 
   /** A placement's own strikes, as the leg after it: the number just placed at
    * `at`, outlined: the `peer.placed` kind's sentence, every game's. */

@@ -4,12 +4,6 @@
 # unsound.
 
 techniques:
-  # A number with two squares left read as going in the first.
-  onlySquare:
-    for: >-
-      n in range(1, top) where not held(n), S = {c in cells where not known(c)
-      and n in cand(c)} where |S| < 3
-    conclude: "|S| >= 1 and place(first(S), n)"
   # The numbers next to a placed one read as not beside it.
   nextTo:
     conclude: >-
@@ -37,9 +31,6 @@ techniques:
     for: >-
       c in cells where not known(c) and open(c) and |cand(c)| = 2, n =
       first(cand(c)) where (n > 1 and held(n - 1)) or (n < top and held(n + 1))
-  onlyNumber:
-    for: c in cells where not known(c) and open(c) and |cand(c)| < 3
-    conclude: "|cand(c)| >= 1 and place(c, first(cand(c)))"
   # An arrow's number read as off its line.
   onLine:
     conclude: "forall p in cells where n in cand(p) and online(a, p): strike(p, n)"

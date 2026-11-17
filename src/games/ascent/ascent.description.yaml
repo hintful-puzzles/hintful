@@ -118,12 +118,13 @@ techniques:
       peer: "p in cells where open(c) and p != c and not known(p)"
   # A number with one square left goes there. One with none makes the marks
   # inconsistent.
-  - id: onlySquare
+  - kind: one.place
+    as: onlySquare
     tier: Easy
-    for: >-
-      n in range(1, top) where not held(n),
-      S = {c in cells where not known(c) and n in cand(c)} where |S| < 2
-    conclude: "|S| = 1 and place(first(S), n)"
+    with:
+      group: "n in range(1, top) where not held(n)"
+      set: cells
+      value: n
   # The numbers just before and after a placed one are beside it.
   - id: nextTo
     tier: Easy
@@ -176,10 +177,11 @@ techniques:
     conclude: "place(c, n)"
   # A square with one number left holds it. One with none makes the marks
   # inconsistent.
-  - id: onlyNumber
+  - kind: one.cell
+    as: onlyNumber
     tier: Hard
-    for: "c in cells where not known(c) and open(c) and |cand(c)| < 2"
-    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
+    with:
+      square: "not known(c) and open(c)"
 help:
   rules: |-
     Place each number once, so they form a path from 1 to the highest, each in a square neighboring the one before. Some are given. Which squares are neighbors depends on the game mode:

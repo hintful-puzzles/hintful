@@ -25,8 +25,3 @@ techniques:
     for: >-
       e in edges, k in ends(e) where |cand(k)| = 1, c = other(e, k), x =
       first(cand(k))
-  onlyCell:
-    for: >-
-      d in domain, C = {c in cells where d in cand(c)} where |C| < 3 and (|C| =
-      0 or not known(first(C)))
-    conclude: "|C| >= 1 and place(first(C), d)"

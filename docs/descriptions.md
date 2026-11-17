@@ -1065,7 +1065,14 @@ and passes `WORDS.cell` as its hint's `noun`, or a kind's `{noun}` says
 stated technique is. A kind with no words of its own (`one.cell`,
 `peer.placed`, `fit.flip`) takes the game's `says:` beside the placement,
 and one with no parameters takes no `with`. `one.cell`'s sentence is the
-Latin library's `single` step, which every game that places it speaks (`docs/hints-candidates.md` § "The row/column preset"), so its `says:` holds only terms.
+Latin library's `single` step, which every game that places it speaks (`docs/hints-candidates.md` § "The row/column preset"), so its `says:` holds only terms; its `square` narrows the squares it reads
+(Ascent's `not known(c) and open(c)`, leaving out walls and arrows).
+`one.place`, a value its unit owes with one open square left for it, is the
+library's `hiddenSingle` step, "No other cell in this {unit} can be 3", which a
+walk speaks through `narrateLatinReason` with the unit's name and squares
+(Seismic's area); the game gives the unit and value as `group` (leaving out a
+value the unit holds), its squares as `set`, and `move` where it gives the
+value by striking the rest (Rome's `onlyHome`).
 `peer.placed`'s is the library's `placed` ("the 2 just placed can't repeat in
 its {regions}"), which a walk speaks through `placedRulesOut` with the game's
 `{regions}`. `loop.early` carries its own sentence ("this edge would close the

@@ -330,8 +330,45 @@ boundaries are judgment, and the counts carry that.
     this 5". Seen in the app. Re-checked sound, the kinds' plants caught.
     CNT now 19 techniques in 9 games (`git grep "kind: count\." --
     'src/games/*.yaml'`).
+  - [x] (2026-11-17) ONE's value-in-one-place form, `one.place`: a value
+    its unit still owes with one open square left for it goes there. Placed
+    on Seismic `areaSingle`, Subsets `onlyCell`, Ascent `onlySquare` and
+    Rome `onlyHome` (whose `move` strikes the other arrows: its solver
+    places only a square down to one). The kind counts open squares only
+    (`not known(c)`), which Ascent did and the others left to their value
+    filter; Subsets' "first of C not known" became a filter on the value.
+    Three plants files shed the kind's coarse plant; Rome keeps its boundary
+    plant (an area of three). **Its sentence is the library's
+    `hiddenSingle`**, spoken by Seismic's walk through `narrateLatinReason`
+    with the area as its unit. **Moved, words only** (same steps and rungs in
+    the walk fingerprint): "No other cell in this area can be 5, so this
+    cell must be 5" (was "the striped area"; still striped), seen in the app.
+    Not Seismic's: Subsets' walk says a set's one home in its own words
+    (letters, `hiddenSingle` in `hint-text.ts`), Rome's names the area of
+    four (2.10), Ascent's places by its own route reasons. Deal-compared at 3
+    seeds a preset: same boards and verdicts, totals 0.96× to 1.03×.
+    Re-checked sound. **In passing:** `one.cell` takes `square` (which
+    squares are read, `not known(c)` by default), and Ascent's `onlyNumber`
+    is placed on it (`not known(c) and open(c)`), compiling to the same
+    statement; Rome's `cull` is `peer.placed` (its plant, a placed arrow
+    struck from its neighbors, kept), re-checked sound.
+  - [ ] PEER's "no two touch" form, next: Range `besideShaded` (adj4), Star
+    Battle `around` and Tents `nextToTent` (adj8) are one formula, a square
+    holding `on` puts `off` in each open neighbor and none may hold `on`.
+    What the kind must settle (read 2026-11-17): Range says it a square at
+    a time (`shown: each`, "{ring} touches the outlined shaded square"),
+    Star Battle all at once ("no star may touch the outlined star"), so
+    one sentence moves one game's steps, to be walked; Tents' hint reads
+    the terms `t` and `S` and fires only where `S`, its blank neighbors,
+    is not empty, and its `blank` is not `not known` (trees), so check what
+    a tree square reads as before placing it.
   - [ ] Next: the ONE, PEER, REL, GRP, CMP, SUM forms listed above, and the
     CNT techniques not placed yet (the item above says why each waits).
+    ONE left: `one.cell` with a narrower square set (Ascent `onlyNumber`
+    reads `open(c)`; Magnets and Undead `single` read known squares too, so
+    a placed square with no value left is a contradiction there), Dominosa
+    `onlySpot` and `squareOnly`, Crossing `onlyNumber`, Signpost
+    `onlyNext`/`onlyBefore`.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

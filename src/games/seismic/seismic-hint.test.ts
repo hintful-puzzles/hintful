@@ -628,7 +628,7 @@ describe("the sentences at their extremes", () => {
         const m = { ...at, n };
         all.push(
           say.naked(m, 9).text,
-          say.hidden([at], at, n).text,
+          say.hidden([at], m, 9).text,
           say.regionsFull(at, n, tectonic).text,
         );
         all.push(`${say.cull(at, n, tectonic).text}, so ${say.culled(n)} must go.`);

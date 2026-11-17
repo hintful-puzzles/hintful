@@ -74,12 +74,13 @@ techniques:
     tier: Easy
   # A number with one place left in its area goes there. With none left, the
   # marks are inconsistent.
-  - id: areaSingle
+  - kind: one.place
+    as: areaSingle
     tier: Easy
-    for: >-
-      r in area, n in range(1, |cells(r)|) where not (exists c in cells(r): value(c) = n),
-      k = count(c in cells(r) where n in cand(c)) where k < 2
-    conclude: "k = 1 and place(the(c in cells(r) where n in cand(c)), n)"
+    with:
+      group: "r in area, n in range(1, |cells(r)|) where not (exists c in cells(r): value(c) = n)"
+      set: cells(r)
+      value: n
   # Every place an area has left for its n is near a square outside it, so
   # that square cannot hold n: an n there would leave the area none. Every
   # such square is struck at once, by the one area.
