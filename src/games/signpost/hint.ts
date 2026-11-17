@@ -16,15 +16,17 @@ import {
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
 import type { Point } from "../../engine/types.ts";
 import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
-import { say } from "./hint-text.ts";
+import { ARROW } from "./hint-marks.ts";
 import {
   deduction,
   firingOf,
   linkOf,
   linkValue,
+  type Rival,
   type SignpostFiring,
   type SignpostRung,
 } from "./solver.ts";
@@ -126,6 +128,35 @@ function stepOf(
   ];
 }
 
+/** The steps of `signpost.description.yaml`, spoken: the arrow a link leaves
+ * by is drawn on its own kind, every other mark on a square. */
+const speak = signpost.voice<Point>({
+  kind: CELL,
+  kinds: { arrow: ARROW as MarkKind<Point> },
+  value: String,
+});
+
+/** A reason's bit in a step's `why`, in the order its `{or}` lists them. */
+const WHY_BIT: Record<Rival, number> = { taken: 1, chain: 2, number: 4 };
+
+/** The sentence of the link `f` makes, over the marks `h` draws. */
+function say(f: SignpostFiring, h: SignpostHint): Sentence {
+  const ring = { arrow: [h.arrow], square: [h.target] };
+  const why = f.why.reduce((bits, r) => bits | WHY_BIT[r], 0);
+  return f.kind === "onlyNext"
+    ? speak.sentence("onlyNext", {
+        ring,
+        // A line of one square is the target alone, which has no rivals.
+        terms: { rivals: Math.max(h.line.length - 1, 0), why },
+        marks: { stripes: { line: h.line } },
+      })
+    : speak.sentence("onlyBefore", {
+        ring,
+        terms: { rivals: h.others.length, why },
+        marks: { outline: { others: h.others } },
+      });
+}
+
 /** The ladder over the player's links, or nothing where a link is one no
  * square may hold. */
 function signpostWalk(state: SignpostState): {
@@ -178,7 +209,7 @@ export const signpostHint = describedEdgeHint<
     return [f.from, f.to];
   },
   step: stepOf,
-  say: (_spoken, { firing, highlights }) => say.firing(firing, highlights),
+  say: (_spoken, { firing, highlights }) => say(firing, highlights),
 });
 
 /** The step's link, made by the player, completes it; any other move goes

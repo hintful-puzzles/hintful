@@ -104,14 +104,13 @@ Logic games:
   and no move as `evident`, as it says a move alone `bare`. Its own walk
   stays (a strike is no step where a player keeps no notes) and speaks
   `STATED`. Read in the app: the exact fit, region striped, square ringed.
-- [ ] Signpost. Needs, read 2026-11-17: its techniques say nothing yet
-  (`says: { terms: {}, marks: {} }`) and `describedEdgeHint`'s `say`
-  speaks `hint-text.ts`. The step rings two kinds, the arrow (`ARROW`) and
-  the square it links to, so a ring by sort or the arrow as a supplied
-  term drawn on its own kind (`termKinds`); the rivals' reasons are a set
-  (`taken`, `chain`, `number`: `{or why: …}`, supplied) whose verbs agree
-  with the rivals' count, so an `{or}` inside a count form; and the
-  wordings with no rivals ("points only at", "Only this arrow points at").
+- [x] Signpost (2026-11-17): dump byte-identical, marks included, every
+  wording reached. Its two firings are `steps` spoken through the voice in
+  `hint.ts`, ringing by sort (the arrow on `ARROW`, the square); the
+  rivals' reasons are bits of a `why` term said by `{or why: …}`, and their
+  verbs agree with the rivals' count by `when` (no engine change). Read in
+  the app (4x4 Easy): the arrow ringed, its squares striped, the target
+  ringed, "This arrow's other squares follow others or are in its chain".
 - [x] Seismic (2026-11-17): its own sentences are `steps` spoken through
   the voice in `hint.ts`; the Latin library's (a lone note, an area's one
   place, the cull) stay the engine's, and its opening clean is the engine's

@@ -163,3 +163,49 @@ techniques:
     says:
       terms: {}
       marks: {}
+# Signpost's sentences, spoken through the hint's voice (`hint.ts`): a step
+# rings the arrow its link leaves by and the square it arrives at, stripes the
+# squares an arrow points at and outlines the other arrows into a square. The
+# reasons its `rivals` other squares or arrows are ruled out are the bits of
+# `why`: one already has a link (taken), is in the arrow's own chain, or holds
+# a number that cannot follow (the sentence has no room to tell a wrong number
+# from one that cannot fit the gap).
+steps:
+  # Of the squares an arrow points at, only one can come next. The striped
+  # squares are every square it points at, the ringed one among them.
+  onlyNext:
+    ring: [arrow, square]
+    terms: { rivals: number, why: number }
+    marks: { stripes: [line] }
+    wordings:
+      - when: "rivals = 0"
+        look: "{ring arrow: this arrow} points only at {ring square: the ringed square}"
+        move: "it must come next"
+      - when: "rivals = 1"
+        look: >-
+          {ring arrow: this arrow}'s {stripes line: other square}
+          {or why: follows another | is in its chain | holds the wrong number}
+        move: "only {ring square: the ringed one} can follow"
+      - look: >-
+          {ring arrow: this arrow}'s {stripes line: other squares}
+          {or why: follow others | are in its chain | hold the wrong number}
+        move: "only {ring square: the ringed one} can follow"
+  # Of the arrows pointing at a square, only one can lead into it. A taken
+  # rival's link is drawn, so "already" would add only width.
+  onlyBefore:
+    ring: [arrow, square]
+    terms: { rivals: number, why: number }
+    marks: { outline: [others] }
+    wordings:
+      - when: "rivals = 0"
+        look: "only {ring arrow: this arrow} points at {ring square: the ringed square}"
+        move: "the square must follow it"
+      - when: "rivals = 1"
+        look: >-
+          {outline others: the outlined arrow} into {ring square: the ringed square}
+          {or why: leads elsewhere | is in its chain | holds the wrong number}
+        move: "it must follow {ring arrow: this arrow}"
+      - look: >-
+          {outline others: the outlined arrows} into {ring square: the ringed square}
+          {or why: lead elsewhere | are in its chain | hold the wrong number}
+        move: "it must follow {ring arrow: this arrow}"
