@@ -7,24 +7,6 @@ techniques:
   # A star's neighbors two squares away emptied too.
   around:
     conclude: "forall p in within(c, 2) where p != c and not known(p): place(p, 2)"
-  # A row or column one star short read as full.
-  fullLine:
-    for: L in lines, n = need(cells(L)) where n <= 1
-    conclude: "forall c in open(cells(L)): place(c, 2)"
-  fullRegion:
-    for: r in region, n = need(cells(r)) where n <= 1
-    conclude: "forall c in open(cells(r)): place(c, 2)"
-  # One open square more than the stars needed, all starred.
-  exactLine:
-    for: >-
-      L in lines, n = need(cells(L)), O = open(cells(L)) where n > 0 and n >=
-      |O| - 1
-    conclude: "forall c in O: place(c, 1)"
-  exactRegion:
-    for: >-
-      r in region, n = need(cells(r)), O = open(cells(r)) where n > 0 and n >=
-      |O| - 1
-    conclude: "forall c in O: place(c, 1)"
   # Regions inside one star short of the line's need read as enough.
   confined:
     for: >-

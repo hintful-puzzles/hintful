@@ -31,14 +31,6 @@ techniques:
       in region where (forall d in P: region(d) = g), n = need(cells(g)), O = {c
       in open(cells(g)) where c not in P} where n <= 2 and |O| > 0
     conclude: "forall c in O: place(c, 2)"
-  fullRegion:
-    for: r in region, n = need(cells(r)) where n <= 1
-    conclude: "forall c in open(cells(r)): place(c, 2)"
-  exactRegion:
-    for: >-
-      r in region, n = need(cells(r)), O = open(cells(r)) where n > 0 and n >=
-      |O| - 1
-    conclude: "forall c in O: place(c, 1)"
   # A region read as needing one more than it does.
   neededRegion:
     for: >-

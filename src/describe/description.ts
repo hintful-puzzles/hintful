@@ -236,6 +236,9 @@ export interface StatedTechnique {
   premise?: string;
   conclude: string;
   says?: StatedSays;
+  /** The defect planted in a technique a kind of rule expanded to
+   * (`kinds.ts`), which a game's plants file then does not state. */
+  plant?: { for?: string; conclude?: string };
 }
 
 /** What a technique's hint step speaks of. `arms` splits the step by which

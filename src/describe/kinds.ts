@@ -1,0 +1,127 @@
+/**
+ * The kinds of rule whose techniques a game places by naming its nouns
+ * (`kind: count.met`, `with: {...}`), where it would otherwise state each
+ * technique's formula and words. A loader step, not a library: a kind is
+ * expanded into the technique it stands for as the file is read, so the
+ * compiler, the soundness check and the hint see a technique stated in the
+ * game's own description, and the game's `define`s (`need`, `open`) are the
+ * ones the kind reads.
+ *
+ * Dev/test-only, like the loader that reads it.
+ */
+
+import type { TechniquePlant } from "./plants.ts";
+
+/** A kind's technique with `$name` where a game's `with` fills in: a string
+ * that is exactly `$name` is replaced by the value, whatever its type, and
+ * `$name` inside a longer string by the value's text. The `with` key `terms`
+ * is not substituted: its entries are added to the step's `says.terms`. */
+export interface Kind {
+  /** The parameters a game must give. */
+  params: readonly string[];
+  technique: {
+    for: string;
+    conclude: string;
+    says: {
+      terms: Record<string, string>;
+      marks: Record<string, string>;
+      look: string;
+      move: string;
+    };
+  };
+  /** The defect planted in it, the same under any game's nouns. */
+  plant: TechniquePlant;
+}
+
+export const KINDS: Readonly<Record<string, Kind>> = {
+  // A group holding as many as it should holds no more, so the rest is the
+  // other value. One holding more makes the marks inconsistent.
+  "count.met": {
+    params: ["group", "set", "rest", "unit", "has", "restWord"],
+    technique: {
+      for: "$group, n = need($set) where n <= 0",
+      conclude: "n = 0 and forall c in open($set): place(c, $rest)",
+      says: {
+        terms: {},
+        marks: { stripes: "$set", reads: "$set" },
+        look: "{stripes: $unit} has $has",
+        move: "{ring} must $restWord",
+      },
+    },
+    plant: {
+      for: "$group, n = need($set) where n <= 1",
+      conclude: "forall c in open($set): place(c, $rest)",
+    },
+  },
+  // A group with exactly as many open squares as it still needs has them all
+  // hold the value. One with fewer makes the marks inconsistent.
+  "count.exact": {
+    params: ["group", "set", "fill", "unit", "items", "fillWord"],
+    technique: {
+      for: "$group, n = need($set), O = open($set) where n > 0 and n >= |O|",
+      conclude: "n = |O| and forall c in O: place(c, $fill)",
+      says: {
+        terms: { n: "n" },
+        marks: { stripes: "$set", reads: "$set" },
+        look: "{stripes: $unit} needs {if placed: {n} more | {n}} $items and has only {n} open {n: square | squares}",
+        move: "{ring: the ringed square | each ringed square} must $fillWord",
+      },
+    },
+    plant: {
+      for: "$group, n = need($set), O = open($set) where n > 0 and n >= |O| - 1",
+      conclude: "forall c in O: place(c, $fill)",
+    },
+  },
+};
+
+export class KindError extends Error {}
+
+/** `v` with each `$name` of `with` filled in. */
+function fill(v: unknown, args: Readonly<Record<string, unknown>>): unknown {
+  if (typeof v === "string") {
+    const whole = /^\$(\w+)$/.exec(v);
+    if (whole !== null && whole[1] in args) return args[whole[1]];
+    return v.replace(/\$(\w+)/g, (m, name: string) =>
+      name in args ? String(args[name]) : m,
+    );
+  }
+  if (Array.isArray(v)) return v.map((x) => fill(x, args));
+  if (v === null || typeof v !== "object") return v;
+  return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fill(x, args)]));
+}
+
+/** The technique a placed kind stands for: `id`, its placing, the statement
+ * with the game's nouns, and the plant that stays with it. */
+export function expandKind(
+  placed: {
+    kind: string;
+    as: string;
+    with: Readonly<Record<string, unknown>>;
+  } & Record<string, unknown>,
+  path: string,
+): Record<string, unknown> {
+  const kind = KINDS[placed.kind];
+  if (kind === undefined)
+    throw new KindError(`${path}: ${placed.as}: no kind ${placed.kind}`);
+  const { terms, ...args } = placed.with;
+  const missing = kind.params.filter((p) => !(p in args));
+  const extra = Object.keys(args).filter((p) => !kind.params.includes(p));
+  if (missing.length > 0 || extra.length > 0)
+    throw new KindError(
+      `${path}: ${placed.as}: ${placed.kind} wants ${kind.params.join(", ")}` +
+        `${missing.length > 0 ? `; missing ${missing.join(", ")}` : ""}` +
+        `${extra.length > 0 ? `; no ${extra.join(", ")}` : ""}`,
+    );
+  const { kind: _k, as, with: _w, ...placing } = placed;
+  const t = fill(kind.technique, args) as Kind["technique"];
+  return {
+    id: as,
+    ...placing,
+    ...t,
+    says: {
+      ...t.says,
+      terms: { ...t.says.terms, ...(terms as Record<string, string> | undefined) },
+    },
+    plant: fill(kind.plant, args),
+  };
+}

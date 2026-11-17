@@ -36,7 +36,8 @@ function planted(file: DescriptionFile): Record<keyof Plants, string[]> {
   const techniques =
     isFormal(file) && file.techniques !== undefined
       ? (withEveryVariation(file).techniques ?? []).flatMap((t) =>
-          "use" in t ? [] : [t.id],
+          // A kind's technique carries its plant (`kinds.ts`).
+          "use" in t || t.plant !== undefined ? [] : [t.id],
         )
       : [];
   const deadEnds = isPlanning(file)

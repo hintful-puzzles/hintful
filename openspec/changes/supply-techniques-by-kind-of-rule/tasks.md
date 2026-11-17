@@ -43,6 +43,24 @@ boundaries are judgment, and the counts carry that.
 
 ## 2. Open
 
+- [x] 2.4 (2026-11-17) First slice, CNT only: `src/describe/kinds.ts`, a
+  loader-level template (`kind: count.met` / `count.exact`, `as`, `with`)
+  that expands into a stated technique, with the kind's own plant
+  (`docs/descriptions.md` § "A kind of rule places its techniques").
+  Norinori (`fullRegion`, `exactRegion`) and Starbattle (the line and region
+  pair of each) restated on it. **What moved: nothing a player sees.** The
+  compiled modules differ only in the order of a step's term names, and every
+  hint snapshot and the games' tests pass unchanged, because the expansion is
+  the same statement. **What it cost the description: nothing saved.** Two
+  games' diffs are +57/-71 lines with 26 of the minus in plants files; the
+  `with` blocks run as long as the statements they replace, because the
+  words (`unit`, `has`, `items`, `fillWord`) are most of a statement and are
+  passed per technique. So the formula is supplied, and the words are not yet.
+  Next: a game-level `nouns` block (what a unit, an item and the rest value
+  are called, once) from which a kind builds its sentences, so that `with`
+  shrinks to `group` and `set`; only then is a kind worth restating a game
+  on. 2.1 stays open for ONE/PEER (Seismic or Map) and FIT (Sticks), which
+  need the kinds that do not exist yet.
 - [ ] 2.1 Restate three games on the library (proposal § "Before it starts"
   2): one CNT-heavy (Starbattle or Norinori), one ONE/PEER-heavy (Seismic or
   Map), one FIT-heavy (Sticks). Deal-compare, walk the hints, report what

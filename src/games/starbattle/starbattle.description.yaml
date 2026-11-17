@@ -122,46 +122,54 @@ techniques:
       move: "{ring} must be empty"
   # A row or column that has its stars holds no more. One with more makes
   # the marks inconsistent.
-  - id: fullLine
+  - kind: count.met
+    as: fullLine
     tier: Easy
-    for: "L in lines, n = need(cells(L)) where n <= 0"
-    conclude: "n = 0 and forall c in open(cells(L)): place(c, 2)"
-    says:
+    with:
+      group: "L in lines"
+      set: "cells(L)"
+      rest: 2
+      unit: "this {if row: row | column}"
+      has: "{s: its star | its {s} stars}"
+      restWord: be empty
       # Whether the line is a row: its squares share a row.
       terms: { L: L, row: "forall c in cells(L): y(c) = y(first(cells(L)))", s: stars }
-      marks: { stripes: "cells(L)", reads: "cells(L)" }
-      look: "{stripes: this {if row: row | column}} has {s: its star | its {s} stars}"
-      move: "{ring} must be empty"
-  - id: fullRegion
+  - kind: count.met
+    as: fullRegion
     tier: Easy
-    for: "r in region, n = need(cells(r)) where n <= 0"
-    conclude: "n = 0 and forall c in open(cells(r)): place(c, 2)"
-    says:
+    with:
+      group: "r in region"
+      set: "cells(r)"
+      rest: 2
+      unit: this region
+      has: "{s: its star | its {s} stars}"
+      restWord: be empty
       terms: { r: r, s: stars }
-      marks: { stripes: "cells(r)", reads: "cells(r)" }
-      look: "{stripes: this region} has {s: its star | its {s} stars}"
-      move: "{ring} must be empty"
   # A row or column with exactly as many open squares as it still needs
   # stars has a star in each. One with fewer makes the marks inconsistent.
-  - id: exactLine
+  - kind: count.exact
+    as: exactLine
     tier: Easy
-    for: "L in lines, n = need(cells(L)), O = open(cells(L)) where n > 0 and n >= |O|"
-    conclude: "n = |O| and forall c in O: place(c, 1)"
-    says:
+    with:
+      group: "L in lines"
+      set: "cells(L)"
+      fill: 1
+      unit: "this {if row: row | column}"
+      items: "{n: star | stars}"
+      fillWord: hold a star
       # `placed`: the unit already holds some of its stars.
-      terms: { L: L, n: n, row: "forall c in cells(L): y(c) = y(first(cells(L)))", placed: "n < stars" }
-      marks: { stripes: "cells(L)", reads: "cells(L)" }
-      look: "{stripes: this {if row: row | column}} needs {if placed: {n} more | {n}} {n: star | stars} and has only {n} open {n: square | squares}"
-      move: "{ring: the ringed square | each ringed square} must hold a star"
-  - id: exactRegion
+      terms: { L: L, row: "forall c in cells(L): y(c) = y(first(cells(L)))", placed: "n < stars" }
+  - kind: count.exact
+    as: exactRegion
     tier: Easy
-    for: "r in region, n = need(cells(r)), O = open(cells(r)) where n > 0 and n >= |O|"
-    conclude: "n = |O| and forall c in O: place(c, 1)"
-    says:
-      terms: { r: r, n: n, placed: "n < stars" }
-      marks: { stripes: "cells(r)", reads: "cells(r)" }
-      look: "{stripes: this region} needs {if placed: {n} more | {n}} {n: star | stars} and has only {n} open {n: square | squares}"
-      move: "{ring: the ringed square | each ringed square} must hold a star"
+    with:
+      group: "r in region"
+      set: "cells(r)"
+      fill: 1
+      unit: this region
+      items: "{n: star | stars}"
+      fillWord: hold a star
+      terms: { r: r, placed: "n < stars" }
   # A row or column counted against its regions, two ways, the first where
   # it decides a square (`lines`): where the regions lying wholly inside it
   # need as many stars as it does, its other open squares are empty; where

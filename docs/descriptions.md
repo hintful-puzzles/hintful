@@ -104,6 +104,7 @@ and techniques, and:
 | A statement's order is behavior | you restate a technique, or a hint changes after a description edit |
 | A conclusion that is false is a contradiction | a technique must refuse a board, or a solver reports a false ambiguity |
 | The answer check | you decide whether a board is solved, or write an error overlay |
+| A kind of rule places its techniques | a rule is "this group holds exactly k", and you would state its techniques by hand |
 | What a placement rules out | a placed thing rules out squares the player would cross by hand |
 | A firing's reason is built from its binding | a hint's words need a fact about a firing |
 | What the compiler checks of a wording | you write a wording, or `npm run describe` reports one |
@@ -1010,6 +1011,22 @@ compiles; what a game acts on:
 
 Its comparison with the checks it replaced is in the `report.md` of
 `openspec/changes/archive/*-check-the-answer-from-the-rules`.
+
+## A kind of rule places its techniques
+
+**A technique that follows from one kind of rule alone is placed, not
+stated**: `- kind: count.met`, `as: <id>`, `tier`, `with: {...}` in
+`techniques`, where [`kinds.ts`](../src/describe/kinds.ts) holds the kind
+(Norinori's `fullRegion`, Starbattle's `fullLine`). The loader expands it
+into the technique it stands for, before anything else reads the file, so
+the compiler, the checker and the hint see a stated technique; the kind's
+formula reads the game's own `need(S)` and `open(S)`. `with` names the
+game's nouns (`$name` in the kind); its `terms` are added to the step's.
+**A kind brings its own plant** (the defect is the same under any game's
+nouns), so a game's `plants.yaml` states none for it. A game's `define`d
+`need` and `open` are the kind's contract: a kind that reads another name
+says so in `params` or its text. A kind is checked sound per game, as a
+stated technique is.
 
 ## What a placement rules out
 

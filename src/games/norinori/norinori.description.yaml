@@ -155,25 +155,29 @@ techniques:
       move: "{ring} must be {unshaded}"
   # A region that has its two shaded squares holds no more. One with more
   # makes the marks inconsistent.
-  - id: fullRegion
+  - kind: count.met
+    as: fullRegion
     tier: Easy
-    for: "r in region, n = need(cells(r)) where n <= 0"
-    conclude: "n = 0 and forall c in open(cells(r)): place(c, 2)"
-    says:
-      marks: { stripes: "cells(r)", reads: "cells(r)" }
-      look: "{stripes: this region} has its two {shaded} squares"
-      move: "{ring} must be {unshaded}"
+    with:
+      group: "r in region"
+      set: "cells(r)"
+      rest: 2
+      unit: this region
+      has: its two {shaded} squares
+      restWord: "be {unshaded}"
   # A region with exactly as many open squares as it still needs shaded has
   # them all shaded. One with fewer makes the marks inconsistent.
-  - id: exactRegion
+  - kind: count.exact
+    as: exactRegion
     tier: Easy
-    for: "r in region, n = need(cells(r)), O = open(cells(r)) where n > 0 and n >= |O|"
-    conclude: "n = |O| and forall c in O: place(c, 1)"
-    says:
-      terms: { n: n, placed: "n < 2" }
-      marks: { stripes: "cells(r)", reads: "cells(r)" }
-      look: "{stripes: this region} needs {if placed: {n} more | {n}} {shaded} {n: square | squares} and has only {n} open {n: square | squares}"
-      move: "{ring: the ringed square | each ringed square} must be {shaded}"
+    with:
+      group: "r in region"
+      set: "cells(r)"
+      fill: 1
+      unit: this region
+      items: "{shaded} {n: square | squares}"
+      fillWord: "be {shaded}"
+      terms: { placed: "n < 2" }
   # A region whose other open squares cannot take the shaded squares it needs
   # without one touching two others: the square left out is shaded.
   - id: neededRegion

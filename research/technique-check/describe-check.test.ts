@@ -294,8 +294,14 @@ it("the techniques the app compiles are sound, and each planted defect is not", 
     const name = isLibrary(file) ? file.library : file.game;
     if (only !== null && !only.includes(name)) continue;
     const plantsAt = plantsPath(source);
-    const plants = (): Plants =>
-      parsePlants(readFileSync(`${ROOT}${plantsAt}`, "utf8"), plantsAt);
+    const plants = (): Plants => {
+      const own = parsePlants(readFileSync(`${ROOT}${plantsAt}`, "utf8"), plantsAt);
+      // A technique a kind of rule expanded to brings its own plant.
+      if (!isFormal(file)) return own;
+      for (const t of withEveryVariation(file).techniques ?? [])
+        if (!("use" in t) && t.plant !== undefined) own.techniques[t.id] = t.plant;
+      return own;
+    };
     if (isLibrary(file)) {
       const square = libraryDescription(file);
       const repeated = libraryDescription(file, true);

@@ -245,6 +245,24 @@
             "until": { "$ref": "#/$defs/until" },
             "rung": { "$ref": "#/$defs/rung" }
           }
+        },
+        {
+          "type": "object",
+          "description": "A kind of rule's technique (`src/describe/kinds.ts`), filled in with this game's nouns.",
+          "required": ["kind", "as", "with", "tier"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "type": "string", "pattern": "^[a-z]+\\.[A-Za-z]+$" },
+            "as": {
+              "type": "string",
+              "description": "The technique's id in this game."
+            },
+            "with": { "type": "object" },
+            "tier": { "type": "string" },
+            "from": { "$ref": "#/$defs/from" },
+            "until": { "$ref": "#/$defs/until" },
+            "rung": { "$ref": "#/$defs/rung" }
+          }
         }
       ]
     },

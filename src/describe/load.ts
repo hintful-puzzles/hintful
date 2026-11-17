@@ -8,6 +8,7 @@ import Ajv2020, { type ErrorObject } from "ajv/dist/2020.js";
 import { parse } from "yaml";
 import schema from "./description.schema.json" with { type: "json" };
 import type { DescriptionFile } from "./description.ts";
+import { expandKind, KindError } from "./kinds.ts";
 
 export class DescriptionError extends Error {}
 
@@ -48,7 +49,25 @@ export function loadDescriptionFile(text: string, path: string): DescriptionFile
       `${path}: ${e.instancePath || "/"} ${e.message}${extra}`,
     );
   }
-  return withPhrases(data as DescriptionFile, path);
+  return withPhrases(withKinds(data as DescriptionFile, path), path);
+}
+
+/** `data` with each technique placed as a kind of rule (`kinds.ts`) replaced
+ * by the technique it stands for. */
+function withKinds(data: DescriptionFile, path: string): DescriptionFile {
+  if (!("techniques" in data) || !Array.isArray(data.techniques)) return data;
+  if (!data.techniques.some((t) => "kind" in t)) return data;
+  try {
+    return {
+      ...data,
+      techniques: data.techniques.map((t) =>
+        "kind" in t ? expandKind(t as never, path) : t,
+      ),
+    } as unknown as DescriptionFile;
+  } catch (e) {
+    if (e instanceof KindError) throw new DescriptionError(e.message);
+    throw e;
+  }
 }
 
 /** The keys whose strings are clauses. */
