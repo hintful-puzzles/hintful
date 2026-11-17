@@ -1,0 +1,6 @@
+ok  magnets    count                          3  sound    (want sound   )     6 queries    2.0s
+ok  magnets    count (planted)                3  unsound  (want unsound )     1 queries    0.3s   at line 3
+ok  src/games/magnets/magnets.description.yaml#count: recorded sound, proved whole on all 1 boards
+ok  undead     total                          3  sound    (want sound   )     3 queries   95.0s
+ok  undead     total (planted)                3  unsound  (want unsound )     1 queries    0.5s   at 1
+ok  src/games/undead/undead.description.yaml#total: recorded sound, proved whole on all 1 boards

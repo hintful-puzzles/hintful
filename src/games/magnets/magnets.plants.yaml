@@ -14,10 +14,6 @@ techniques:
   # A value struck from one end read as striking the same from the other.
   tile:
     conclude: "forall d in range(1, 3) where d not in cand(c): strike(p, d)"
-  # A line one short of its count read as full.
-  count:
-    conclude: >-
-      holds(L, d) <= v and (holds(L, d) < v - 1 or (forall c in O: strike(c, d)))
   # A line's open squares read as poles before its neutral squares are all
   # placed.
   oddGap:

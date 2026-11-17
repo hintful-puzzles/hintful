@@ -136,15 +136,14 @@ techniques:
   # another; one with just as many open squares able to take it as it still
   # needs takes it in every one. A line holding more, or with too little
   # room, makes the marks inconsistent.
-  - id: count
+  - kind: count.value
+    as: count
     tier: Easy
-    for: >-
-      L in cols + rows, d in range(1, 3), v = clue(count, L, d) where v >= 0,
-      O = {c in cells(L) where not known(c) and d in cand(c)}
-    conclude: >-
-      holds(L, d) <= v and |O| >= v - holds(L, d)
-      and (holds(L, d) < v or (forall c in O: strike(c, d)))
-      and (holds(L, d) = v or |O| > v - holds(L, d) or (forall c in O: place(c, d)))
+    with:
+      group: "L in cols + rows, d in range(1, 3), v = clue(count, L, d) where v >= 0"
+      set: cells(L)
+      value: d
+      need: v - holds(L, d)
     says:
       terms: { L: L, d: d }
       marks: { reads: "cells(L)" }

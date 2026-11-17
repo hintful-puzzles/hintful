@@ -4,11 +4,6 @@
 # unsound.
 
 techniques:
-  # A monster one short of its count read as all placed.
-  total:
-    conclude: >-
-      |P| <= n and |O| >= n and (|P| < n - 1 or (forall c in O - P: strike(c,
-      d)))
   # A ghost read as showing before the first mirror, as a vampire does.
   sightline:
     conclude: >-

@@ -140,6 +140,28 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       conclude: "forall c in open($set): $fillMove",
     },
   },
+  // `count.both` read of one value by its candidates: a group owing `need`
+  // more of `value` has it struck from its other squares where it owes none,
+  // and placed in them where they are as many as it owes, `open` saying
+  // which squares may still take it (by default, any not decided that has it
+  // among its candidates). For a game whose squares hold several values,
+  // each counted (Magnets' poles in a line, Undead's monsters on the board),
+  // so a set's undecided squares are not the value's. It carries no words:
+  // each game's walk speaks its two readings.
+  "count.value": {
+    params: ["group", "set", "value", "need"],
+    defaults: { open: "not known(c) and $value in cand(c)" },
+    technique: {
+      for: "$group, n = $need, m = count(c in $set where $open) where (n <= 0 or n >= m) and (n != 0 or m > 0)",
+      conclude:
+        "n >= 0 and n <= m and (n = 0 implies (forall c in $set where $open: strike(c, $value))) and (n = 0 or (forall c in $set where $open: place(c, $value)))",
+    },
+    plant: {
+      for: "$group, n = $need, m = count(c in $set where $open) where (n <= 1 or n >= m) and (n != 0 or m > 0)",
+      conclude:
+        "(n <= 1 implies (forall c in $set where $open: strike(c, $value))) and (n <= 1 or (forall c in $set where $open: place(c, $value)))",
+    },
+  },
   // `count.met` and `count.exact` read as one technique, each group's both
   // readings before the next group's, as a game whose order rests on it
   // states them (Mosaic, whose generator hides the numbers its deduction

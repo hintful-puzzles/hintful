@@ -16,8 +16,6 @@ techniques:
       |D| > 0
   touch:
     for: c in cells where value(c) = 1, d in adj4(c) where not known(d)
-  total:
-    for: O = open(cells) where |O| > 0, left = total - ships(cells) + 1
   # A middle segment read as running toward the water beside it.
   center:
     for: >-

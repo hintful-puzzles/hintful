@@ -155,17 +155,19 @@ techniques:
   # a count is used up before a sightline does it again: every square lies on
   # a sightline, whose filling leaves no room for a monster all placed. Easy
   # grades without it, and its order changes no grade above.
-  - id: total
+  - kind: count.value
+    as: total
     tier: Normal
-    for: >-
-      d in range(1, 3), n = holds(d),
-      P = {c in cells where cand(c) = {d}}, O = {c in cells where d in cand(c)}
-    conclude: >-
-      |P| <= n and |O| >= n
-      and (|P| < n or (forall c in O - P: strike(c, d)))
-      and (|O| > n or (forall c in O - P: place(c, d)))
+    with:
+      group: d in range(1, 3)
+      set: cells
+      value: d
+      need: room(d)
+      # A monster is counted where it is the square's one candidate, placed
+      # or not.
+      open: "d in cand(c) and cand(c) != {d}"
     says:
-      terms: { d: d, n: n }
+      terms: { d: d, n: holds(d) }
       marks: {}
   # Sightline by sightline, the fewest squares first, as upstream sorts
   # them, each read from the end that comes first going round the grid: a

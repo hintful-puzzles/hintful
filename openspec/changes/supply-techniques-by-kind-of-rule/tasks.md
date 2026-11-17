@@ -276,17 +276,18 @@ boundaries are judgment, and the counts carry that.
     words ("This 4 needs 4 shaded squares and has only 4 open squares", was
     "needs all 4 of its squares shaded"; "This 0 takes no shaded squares",
     was "allows no") and the arm `needsAll`, now `exact`.
-  - [ ] Not placed yet, and why: **Mines** `alone` and **Magnets** `count`
-    are narrated by their own `hint.ts` (rungs `satisfied`/`full`,
-    `count.full`), so a kind's sentence goes unspoken there until their
-    hints speak the description; **Undead** `total` counts over candidates
-    (`cand(c) = {d}`), not a set's open squares; **Palisade**
+  - [ ] Not placed yet, and why: **Mines** `alone` is narrated by its own
+    `hint.ts` (rungs `satisfied`/`full`), so a count kind's sentence goes
+    unspoken there, and its `open(c)` is over a square, not a set: restating
+    it re-checks every Mines technique, whose `count` and `regions` take
+    sharded hours (Magnets `count` and Undead `total` were placed on
+    `count.value`, below); **Palisade**
     `numberExhausted` counts edges round a clue reached through `edge(c,
     y)`, so `open($set)` would need to be a set of edges; **Light Up**
     `square` is upstream's column scan, a dark square and a number
     interleaved, which splitting reorders; **Spokes** `saturation`/
-    `exhaustion` carry `again`/`later` words the kinds lack; **Boats**
-    `total` is a count over the whole board, with no group to bind.
+    `exhaustion` carry `again`/`later` words the kinds lack (placed since,
+    below, as was Boats `total`, its group the whole board).
   - [x] (2026-11-17) `count.exact` counts its open squares (`m =
     |open($set)|`), as `count.both` does, walking them only in the
     conclusion. Norinori, Star Battle, Boats, Loopy and Tracks re-checked
@@ -524,6 +525,25 @@ boundaries are judgment, and the counts carry that.
     `blocked`, whose room runs out beside the tried square's domino, not
     over what it rules out, so the kind's "would rule out {outline}" would
     name the wrong squares.
+  - [x] (2026-11-17) CNT read of one value by its candidates,
+    `count.value`: Magnets `count` (a line's poles) and Undead `total` (the
+    board's monsters, `open` leaving out a square whose one candidate is the
+    monster, `need` its `room(d)`), each the met and exact readings in one
+    technique, as stated. No words: both games' walks speak them, so the
+    games' `says` stand. The compiled modules count the open squares where
+    they gathered them, and conclude the same; Undead's term `n` is still
+    `holds(d)`. In passing, Boats `total` on `count.exact` (its group the
+    whole board, `S = cells`, `marks: {}` so the board is not striped, its
+    own sentence kept); its line terms (`line`, `number`) moved from
+    `kindWords` into the two line placements, for they read `L`. The one
+    difference: a finished board short of boats is now a contradiction
+    where it fired nothing, as `count.exact` reads it elsewhere. All three
+    plants were the kind's and went. Re-checked sound, each kind's plant
+    caught at order 3. Deal-compare at 3 seeds a preset: same boards and
+    verdicts; totals Magnets 0.81×, Undead 0.87×, Boats 1.06×. Every test and
+    hint snapshot of the three games passes unchanged. CNT now 25
+    placements in 12 games (`git grep "kind: count\." -- 'src/games/*.yaml'`,
+    `count.compare` included).
   - [ ] Next: Clusters on `count.compare` (above), PEER's other forms
     (Dominosa's `placed` reads two rules, a spot's neighbors and its
     domino's other spots), REL's bounds form (Unequal `sign`), GRP over

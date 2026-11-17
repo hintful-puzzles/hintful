@@ -221,7 +221,6 @@ kindWords:
   restWord: must be water
   # "One": a boat square, which the look has just named.
   fillWord: "must be one{has then: , with {ring then: its water}}"
-  terms: { line: L, number: v }
 techniques:
   # A given square decides itself, and an end or a boat of one square the
   # squares round it: an end's boat continues away from the side it ends.
@@ -304,16 +303,22 @@ techniques:
     as: lineShips
     tier: Easy
     with:
-      terms: { placed: "n < v" }
+      terms: { line: L, number: v, placed: "n < v" }
   # The whole board's open squares as many as the segments the fleet still
   # needs: each holds one.
-  - id: total
+  - kind: count.exact
+    as: total
     tier: Easy
+    with:
+      group: S = cells
+      set: S
+      need: total - ships(S)
+      marks: {}
     says:
       look: "every square of water the puzzle has room for is already marked"
+      # The board is not striped, so a later leg names it in words.
+      again: the board
       move: "{ring: every free square (ringed)} must hold a boat segment{has then: , with {ring then: its water}}"
-    for: "O = open(cells) where |O| > 0, left = total - ships(cells)"
-    conclude: "left <= |O| and (left = |O| implies forall c in O: place(c, 1))"
   # A middle segment with water or the edge beside it runs up and down, and
   # with it above or below runs across.
   - id: center
@@ -355,6 +360,8 @@ techniques:
   - kind: count.met
     as: lineWater
     tier: Easy
+    with:
+      terms: { line: L, number: v }
   # With every boat of one square closed, an open square shut in by water
   # and the edge is water.
   - id: isolated

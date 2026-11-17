@@ -1050,7 +1050,13 @@ group's, with the same sentences as its arms `met` and `exact`: placed where
 the game's order rests on the interleaving (Mosaic's Easy deal hides the
 numbers its deduction never read, so splitting `alone` in two moved its
 boards; Palisade's `numberExhausted`, over the edges round a number, a set
-it names in `set:`). The count kinds count a group's open squares, never
+it names in `set:`). **`count.value` is `count.both` read of one value by
+its candidates**, for a game whose squares hold several values each counted
+(Magnets' poles in a line, Undead's monsters on the board): the group binds
+the `value`, `need` is what it still owes, and `open` which squares may
+still take it (by default undecided with the value among its candidates;
+Undead counts a monster that is a square's one candidate as held). It
+carries no words, for each such game's walk speaks its readings. The count kinds count a group's open squares, never
 gather them: a set bound in `for` is made for every group on every pass,
 and only the conclusion that decides them walks them. A later leg of a
 firing walked in legs says the move again with "too" (`restLater`,
