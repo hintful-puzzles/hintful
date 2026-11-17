@@ -1612,7 +1612,9 @@ this way (`closes`, `joins`, `stuck`), and Spokes' a hub left short or a
 group sealed off, under lines supposed on a set (`short(c)`), and Boats'
 three trials two boats touching, a line or the fleet miscounted, a boat too
 long or too many of a length, under boats and water supposed by nested
-`with`s; a break under a `not`, a `forall` or an aggregate is not witnessed,
+`with`s. The three suppose three ways, so no trial kind is shared yet: the
+next game whose Checks suppose as one of them does writes it, and both
+state their trials on it. A break under a `not`, a `forall` or an aggregate is not witnessed,
 the compiler refuses a technique whose `{broke}` it never holds, and a
 firing whose witness holds no break throws on the hint's path rather than
 say the last break's words with none of its terms. A definition is

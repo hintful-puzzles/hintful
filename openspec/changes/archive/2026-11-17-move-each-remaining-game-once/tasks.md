@@ -331,13 +331,22 @@ Logic games:
 
 ## 3. Revisited in the app as their words are touched
 
-- [ ] Towers, Undead, Salad, Mathrax, Keen, Group (moved before the
-  debrief, never read in the running app)
+- [x] Towers, Undead, Salad, Mathrax, Keen, Group (moved before the
+  debrief, never read in the running app). Read 2026-11-17, the first two
+  hints of each on its default preset: Towers' full clue ("Clue 4 sees
+  every tower in this line …"), Undead's penciling and spent zombies,
+  Salad's clue ("This clue sees B first …, so A and C must go"),
+  Mathrax's difference, Keen's cage ratio strike, Group's single. Words,
+  rings, outlines, stripes and strikes agree; "cell" is the Latin family's
+  declared noun (`docs/hints.md` § "One noun, two closings").
 
 ## 4. Engine
 
-- [ ] A trial kind, once a second game's Checks suppose as Path's, Spokes'
-  or Boats' do (proposal § "What Changes").
+- [x] A trial kind, once a second game's Checks suppose as Path's, Spokes'
+  or Boats' do (proposal § "What Changes"). No game moved here states
+  `breaks:` (2026-11-17, `git grep -l "breaks:" -- 'src/games/*.yaml'`:
+  those three alone), so the kind is not written; the trigger now lives in
+  `docs/descriptions.md` beside the three, for whichever game is next.
 - [x] When the last `hint-text.ts` goes, rewrite the `docs/hints.md`
   section that named that file as where a game's sentences live: they are
   its description's `steps` and `says`. Done 2026-11-17 with Untangle: now
