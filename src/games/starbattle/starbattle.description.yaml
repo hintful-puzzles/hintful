@@ -115,18 +115,10 @@ kindWords:
 techniques:
   # Nothing touching a star holds another. A star touching one makes the
   # marks inconsistent.
-  - id: around
+  - kind: peer.touch
+    as: around
     tier: Easy
-    for: "c in cells where value(c) = 1"
-    conclude: >-
-      (forall p in adj8(c): value(p) != 1)
-      and (forall p in adj8(c) where not known(p): place(p, 2))
-    # The hint names the star and outlines it; the squares touching it are its
-    # step's, and the walk reads them all.
-    says:
-      marks: { outline: "{c}", reads: "{c} + adj8(c)" }
-      look: "no star may touch {outline: the outlined star}"
-      move: "{ring} must be empty"
+    with: { adj: adj8, piece: star, pieces: stars, how: ", even diagonally" }
   # A row or column that has its stars holds no more. One with more makes
   # the marks inconsistent.
   - kind: count.met

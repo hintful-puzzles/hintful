@@ -352,16 +352,31 @@ boundaries are judgment, and the counts carry that.
     is placed on it (`not known(c) and open(c)`), compiling to the same
     statement; Rome's `cull` is `peer.placed` (its plant, a placed arrow
     struck from its neighbors, kept), re-checked sound.
-  - [ ] PEER's "no two touch" form, next: Range `besideShaded` (adj4), Star
-    Battle `around` and Tents `nextToTent` (adj8) are one formula, a square
-    holding `on` puts `off` in each open neighbor and none may hold `on`.
-    What the kind must settle (read 2026-11-17): Range says it a square at
-    a time (`shown: each`, "{ring} touches the outlined shaded square"),
-    Star Battle all at once ("no star may touch the outlined star"), so
-    one sentence moves one game's steps, to be walked; Tents' hint reads
-    the terms `t` and `S` and fires only where `S`, its blank neighbors,
-    is not empty, and its `blank` is not `not known` (trees), so check what
-    a tree square reads as before placing it.
+  - [x] (2026-11-17) PEER's "no two touch" form, `peer.touch`: Range
+    `besideShaded` (`adj4`), Star Battle `around` and Tents `nextToTent`
+    (`adj8`, `square: blank(c)` for the trees). Its sentence: "No {piece}
+    may touch the outlined {piece}{how}, so each ringed square {restWord}".
+    A game's `says:` beside a placement is now laid over a kind's own
+    sentence (it was dropped), so Range keeps its step a square (`shown:
+    each`). Tents' own hint renders the compiled step with `statedParts`, so
+    all three speak one sentence. Its `|S| > 0` guard went (a tent with no
+    open neighbor fires nothing new). **Tents' walk moved steps** (8x8 Easy
+    22 to 21, Normal 25 to 26, both solved): its `nextToTent` said `marks:
+    {}`, so its facts had unknown parents in the fact graph; the kind's
+    `reads` (the tent and its neighbors) give them parents, and the plan
+    chooses on that. More accurate evidence, kept. **Moved, words only, in
+    the other two** (same steps and rung counts): Range "No shaded square may touch the outlined shaded
+    square, so the ringed square must be clear" (was "This square touches
+    …, so it must be clear"), Star Battle "…the outlined star, even
+    diagonally, so each ringed square must be empty" (was "these squares"),
+    Tents "No tent may touch the outlined tent, even diagonally, so the
+    ringed square must be grass" (was "Tents never touch, even diagonally,
+    so every ringed square around the outlined tent must be grass"). Seen in
+    the app in all three. Deal-compared at 3 seeds a preset: same boards
+    and verdicts, totals 0.99× to 1.09×. Re-checked sound; the kind's plant
+    (a neighbor's neighbor) caught on Star Battle, whose own plant it equals
+    and which went; Range (diagonal) and Tents (two along a row) keep their
+    sharper boundary plants, restated over the kind's `t`.
   - [ ] Next: the ONE, PEER, REL, GRP, CMP, SUM forms listed above, and the
     CNT techniques not placed yet (the item above says why each waits).
     ONE left: `one.cell` with a narrower square set (Ascent `onlyNumber`

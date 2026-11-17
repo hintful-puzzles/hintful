@@ -1075,7 +1075,14 @@ value the unit holds), its squares as `set`, and `move` where it gives the
 value by striking the rest (Rome's `onlyHome`).
 `peer.placed`'s is the library's `placed` ("the 2 just placed can't repeat in
 its {regions}"), which a walk speaks through `placedRulesOut` with the game's
-`{regions}`. `loop.early` carries its own sentence ("this edge would close the
+`{regions}`. `peer.touch`, no two squares holding `fill` touch, carries its
+sentence, "no {piece} may touch the outlined {piece}{how}, so each ringed
+square {restWord}"; the game gives `adj` (`adj4`, or `adj8` with `how`: ",
+even diagonally"), its nouns, and `square` where its open squares are not
+just the undecided ones (Tents' trees). A game's `says:` beside a placement is
+laid over the kind's own, so Range keeps a step a square (`shown: each`); a
+game whose hint is its own renders the compiled step (Tents' `hint-text.ts`).
+`loop.early` carries its own sentence ("this edge would close the
 outlined line into a loop that leaves other lines out"); a game gives its marks,
 which mark draws the line (`line`), and what else the loop may miss (`off`,
 `offWords`: Pearl's pearl, Loopy's unmet clues).

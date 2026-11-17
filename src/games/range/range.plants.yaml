@@ -6,7 +6,7 @@
 techniques:
   # A shaded square's diagonal neighbors read as beside it.
   besideShaded:
-    conclude: "forall p in adj8(c): value(p) != 1 and place(p, 2)"
+    conclude: "forall c in adj8(t) where not known(c): place(c, 2)"
   # A view's room read as one square shorter than its count leaves it.
   capped:
     for: >-

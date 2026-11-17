@@ -2,7 +2,7 @@
 
 exports[`starbattle: pinned hint positions > says, at each pin 1`] = `
 {
-  "around": "No star may touch the outlined star, so these squares must be empty.",
+  "around": "No star may touch the outlined star, even diagonally, so each ringed square must be empty.",
   "banded.lines": "The 2 outlined regions need 4 stars, all in these 2 rows, which need only 4, so these squares must be empty.",
   "banded.regions": "These 2 rows need 2 stars, all in the 2 outlined regions, which need only 2, so these squares must be empty.",
   "confined.lines": "The outlined region must put its star in this row, which needs only that one, so these squares must be empty.",

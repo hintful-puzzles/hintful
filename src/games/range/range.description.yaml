@@ -112,16 +112,17 @@ tiers: [Easy, Unreasonable]
 techniques:
   # A shaded square's neighbors are clear, and one shaded beside it breaks
   # the rules.
-  - id: besideShaded
+  - kind: peer.touch
+    as: besideShaded
     tier: Easy
-    for: "c in cells where value(c) = 1"
-    conclude: "forall p in adj4(c): value(p) != 1 and place(p, 2)"
-    # The hint outlines the shaded square a neighbor touches.
-    says:
-      shown: each
-      marks: { outline: "{c}" }
-      look: "{ring} touches {outline: the outlined {shaded} square | the outlined {shaded} squares}"
-      move: "it must be {unshaded}"
+    with:
+      adj: adj4
+      fill: 1
+      rest: 2
+      piece: "{shaded} square"
+      pieces: "{shaded} squares"
+      restWord: "must be {unshaded}"
+    says: { shown: each }
   # A number's view along one arm runs at least as far as it is known to and
   # at most as far as the other arms, as short as they can be, leave it
   # room for. Where the two meet, the square past the view is shaded. A

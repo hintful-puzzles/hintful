@@ -21,9 +21,9 @@ techniques:
       |S| > 0
   # A tent read as touching the squares two along its row too.
   nextToTent:
-    for: >-
-      t in cells where value(t) = 1, S = {x in cells where blank(x) and abs(x(x)
-      - x(t)) <= 2 and abs(y(x) - y(t)) <= 1} where |S| > 0
+    conclude: >-
+      forall c in cells where blank(c) and abs(x(c) - x(t)) <= 2 and abs(y(c) -
+      y(t)) <= 1: place(c, 2)
   # A tent linked to no tree read as no room for the tree's own.
   treeSingle:
     for: >-

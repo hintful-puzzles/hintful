@@ -166,13 +166,19 @@ techniques:
       marks: {}
   # The open squares round a tent are grass. A tent touching another makes
   # the marks inconsistent.
-  - id: nextToTent
+  - kind: peer.touch
+    as: nextToTent
     tier: Easy
-    for: "t in cells where value(t) = 1, S = {x in adj8(t) where blank(x)} where |S| > 0"
-    conclude: "(forall x in adj8(t): value(x) != 1) and (forall x in S: place(x, 2))"
-    says:
-      terms: { t: t, S: S }
-      marks: {}
+    with:
+      adj: adj8
+      fill: 1
+      rest: 2
+      square: blank(c)
+      piece: tent
+      pieces: tents
+      how: ", even diagonally"
+      restWord: must be grass
+      terms: { S: "{c in adj8(t) where blank(c)}" }
   # A tree without its tent, with one square left that could hold it, and
   # that square open: the tent is there, and the tree's. One with none left
   # makes the marks inconsistent.

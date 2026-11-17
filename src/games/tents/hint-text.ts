@@ -13,9 +13,9 @@
  * (`engine/hint-words.ts`): the squares a step decides, and a link it asks for,
  * are ringed; the squares it reasons from are outlined, and so is the number it
  * counts with; and the row or column it counts along is striped ("this row").
- * That every tent sits beside a tree of its own and that tents never touch are
- * the rules, and sit in the help (docs/hints.md § "Rules belong in the
- * help").
+ * That every tent sits beside a tree of its own is a rule, and sits in the
+ * help (docs/hints.md § "Rules belong in the help"); that tents never touch
+ * is said only where it is the technique, in the description's words.
  *
  * A step that decides several squares shrinks as the player makes some of them
  * (`tentsKeepTrack`), and its words are narrowed with it, so every word that
@@ -32,7 +32,9 @@ import {
   so,
   whole,
 } from "../../engine/hint-words.ts";
+import { statedParts } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
+import { STATED } from "../../generated/games/tents/tents.compiled.ts";
 import { type HintLink, LINK, NUMBER } from "./hint-marks.ts";
 
 /** Which kind of line a count is read along. */
@@ -111,12 +113,22 @@ export const say = {
     });
   },
 
-  /** The open squares round one tent. */
-  nextToTent: (cells: readonly Point[], tent: Point): Sentence =>
-    so({
-      look: phrase`Tents never touch, even diagonally`,
-      move: phrase`${ringed(cells, "the ringed square", "every ringed square")} around ${mark.the("outline", CELL, [tent], "tent")} must be grass`,
-    }),
+  /** The open squares round one tent, in `peer.touch`'s sentence. */
+  nextToTent: (cells: readonly Point[], tent: Point): Sentence => {
+    const { look, move } = statedParts(STATED.nextToTent.step[0], {
+      kind: CELL,
+      at: (): Point => {
+        throw new Error("a tent's touch names no element term");
+      },
+      ring: cells,
+      marks: { outline: [tent] },
+      terms: {},
+      value: String,
+    });
+    if (look === undefined || move === undefined)
+      throw new Error("peer.touch states a look and a move");
+    return so({ look, move });
+  },
 
   treeDiagonal: (cell: Point, tree: Point, pair: readonly Point[]): Sentence =>
     so({

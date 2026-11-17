@@ -242,6 +242,38 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       conclude: "strike(p, n + 1)",
     },
   },
+  // No two squares holding `fill` touch: every square `adj` names round one
+  // holding it is the rest, and one holding it too makes the marks
+  // inconsistent. `square` says which of them are open (`not known(c)`, or a
+  // game's own: Tents' trees). The sentence names what may not touch (`piece`,
+  // `pieces` where several are outlined) and how (`how`: ", even diagonally"
+  // where `adj` is `adj8`), and the move as the count kinds do.
+  "peer.touch": {
+    params: ["adj", "piece", "pieces", "restWord"],
+    defaults: {
+      fill: null,
+      rest: null,
+      square: "not known(c)",
+      restMove: "place(c, $rest)",
+      how: "",
+    },
+    technique: {
+      for: "t in cells where value(t) = $fill",
+      conclude:
+        "(forall c in $adj(t): value(c) != $fill) and (forall c in $adj(t) where $square: $restMove)",
+      says: {
+        terms: { t: "t" },
+        marks: { outline: "{t}", reads: "{t} + $adj(t)" },
+        look: "no $piece may touch {outline: the outlined $piece | the outlined $pieces}$how",
+        move: "{ring: the ringed {noun} | each ringed {noun}} $restWord",
+      },
+    },
+    // The rest reaching one square further: a neighbor's neighbor.
+    plant: {
+      conclude:
+        "forall q in $adj(t): (forall c in $adj(q) where c != t and $square: $restMove)",
+    },
+  },
   // A value of one end of a pair that no value at the other end can stand
   // beside is struck. `rel` reads the struck end's value `d` and the partner's
   // `u`. An end left with no value makes the marks inconsistent. The sentence
@@ -395,26 +427,21 @@ export function expandKind(
   if (unfilled.length > 0) throw refuse(unfilled);
   const { kind: _k, as, with: _w, says: gameSays, ...placing } = placed;
   const t = fill(kind.technique, args) as Kind["technique"];
-  const says =
-    kind.saysBeneath === undefined
-      ? gameSays
-      : laidOver(fill(kind.saysBeneath, args), gameSays ?? {});
+  // The game's `says` beside the placement is laid over the kind's own (Range
+  // shows its touch a square at a time), or over its frame.
+  const beneath =
+    t.says !== undefined
+      ? { ...t.says, terms: { ...t.says.terms, ...(terms as Record<string, string>) } }
+      : kind.saysBeneath === undefined
+        ? undefined
+        : fill(kind.saysBeneath, args);
+  const says = beneath === undefined ? gameSays : laidOver(beneath, gameSays ?? {});
+  const { says: _s, ...statement } = t;
   return {
     id: as,
     ...placing,
+    ...statement,
     ...(says === undefined ? {} : { says }),
-    ...t,
-    ...(t.says === undefined
-      ? {}
-      : {
-          says: {
-            ...t.says,
-            terms: {
-              ...t.says.terms,
-              ...(terms as Record<string, string> | undefined),
-            },
-          },
-        }),
     plant: fill(kind.plant, args),
   };
 }

@@ -1,0 +1,14 @@
+ok  range      besideShaded                   3  sound    (want sound   )     9 queries    0.1s
+ok  range      besideShaded (planted)         3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/range/range.description.yaml#besideShaded: recorded sound, proved whole on all 1 boards
+--  starbattle stars=1: no board of order 3 has an answer, so nothing is checked there
+--  starbattle stars=2: no board of order 3 has an answer, so nothing is checked there
+--  starbattle stars=3: no board of order 3 has an answer, so nothing is checked there
+--  starbattle stars=2: no board of order 4 has an answer, so nothing is checked there
+--  starbattle stars=3: no board of order 4 has an answer, so nothing is checked there
+ok  starbattle stars=1 around                         4  sound    (want sound   )    16 queries    1.0s
+ok  starbattle stars=1 around (planted)               4  unsound  (want unsound )     2 queries    0.4s   at cell 1
+ok  src/games/starbattle/starbattle.description.yaml#around: recorded sound, proved whole on all 1 boards
+ok  tents      nextToTent                     3  sound    (want sound   )     9 queries    0.1s
+ok  tents      nextToTent (planted)           3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/tents/tents.description.yaml#nextToTent: recorded sound, proved whole on all 1 boards
