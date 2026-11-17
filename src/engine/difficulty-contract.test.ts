@@ -326,6 +326,14 @@ for (const { id, game, contract, tiers } of tiered) {
           ).not.toBeNull();
           if (lowest === null) continue;
 
+          // A dealt board has an answer, so a cap too low to reach it is
+          // stuck, never a proof that the board is inconsistent.
+          for (let cap = 0; cap < lowest; cap++) {
+            expect(
+              solve(cap),
+              `${id}: tier ${tier} seed ${seed} solves at cap ${lowest} but is called impossible at cap ${cap}`,
+            ).toBe("unsolved");
+          }
           for (let cap = lowest; cap < tiers.length; cap++) {
             expect(
               solve(cap),

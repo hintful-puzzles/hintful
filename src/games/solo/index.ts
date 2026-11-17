@@ -659,8 +659,16 @@ function refreshHintStep(
  * left at its default: the tier being varied is the ordinary deduction ladder. */
 const difficulty: DifficultyContract<SoloParams> = {
   solveAtCap: (p, desc, cap) => {
-    const { diff } = solveSolo(givensOnly(newState(p, desc)), cap, DIFF_KINTERSECT);
-    if (diff === DIFF_IMPOSSIBLE) return "impossible";
+    const givens = givensOnly(newState(p, desc));
+    const { diff } = solveSolo(givens, cap, DIFF_KINTERSECT);
+    if (diff === DIFF_IMPOSSIBLE) {
+      // Below the recursive tier the solver says impossible where it is
+      // merely stuck, as upstream's does; only a solve that may search can
+      // tell that from a board with no answer.
+      if (cap >= DIFF_RECURSIVE) return "impossible";
+      const full = solveSolo(givens, DIFF_RECURSIVE, DIFF_KINTERSECT).diff;
+      return full === DIFF_IMPOSSIBLE ? "impossible" : "unsolved";
+    }
     return diff === DIFF_AMBIGUOUS ? "unsolved" : "solved";
   },
 };
