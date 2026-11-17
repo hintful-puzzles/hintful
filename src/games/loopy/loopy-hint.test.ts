@@ -1000,9 +1000,9 @@ describe("Loopy hint: the words and the marks agree", () => {
       } else {
         expect(marks.pairs, at).toEqual([]);
       }
-      if (/the marked lines/.test(text)) {
+      if (/the outlined line\b/.test(text)) {
         expect(marks.edges.length, at).toBeGreaterThan(0);
-        kinds.add("lines");
+        kinds.add("line");
       }
       expect(/this corner/.test(text), at).toBe(step.move.kind === "corner");
       if (step.move.kind === "corner") kinds.add("places a corner");
@@ -1017,7 +1017,7 @@ describe("Loopy hint: the words and the marks agree", () => {
       "clue",
       "corner",
       "dot",
-      "lines",
+      "line",
       "pair",
       "places a corner",
       "places a pair",

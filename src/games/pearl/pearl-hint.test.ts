@@ -237,9 +237,9 @@ describe("every narratable premise the corpus reaches is reached", () => {
       "The outlined black pearl's line runs straight through the next square, so this line must carry on out of its far side.",
       "The white pearl runs straight through the outlined square, so it turns on its other side: these edges must be lines.",
       "The white pearl runs straight through the outlined square, so it turns on its other side: these edges can't be lines.",
-      "Across, this white pearl would close the outlined line into a loop missing other lines, so it must run up and down.",
-      "Up and down, this white pearl would close the outlined line into a loop missing a pearl, so it must run across.",
-      "Any line through this square would close the outlined line into a loop that misses other lines, so it must stay empty.",
+      "Across, this white pearl would close the outlined line into a loop that leaves other lines out, so it must run up and down.",
+      "Up and down, this white pearl would close the outlined line into a loop that misses a pearl, so it must run across.",
+      "Any line through this square would close the outlined line into a loop that leaves other lines out, so it must stay empty.",
     ]);
     for (const text of texts) expect(text.length, text).toBeLessThanOrEqual(125);
   });

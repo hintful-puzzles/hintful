@@ -4424,7 +4424,7 @@ exports[`loopy: pinned hint positions > says, at each pin 1`] = `
   "cornerOppositeExit": "The marked corner takes exactly one of the outlined dot's two lines, so this corner needs the other.",
   "deadEnd": "The outlined dot has no line and no other open edge, so a line on this edge would dead-end: it can't be a line.",
   "dotFull": "The outlined dot already has its two lines, so each ringed edge can't be a line.",
-  "earlyLoop": "This edge would close the marked lines into a loop that leaves other lines out, so it can't be a line.",
+  "earlyLoop": "This edge would close the outlined line into a loop that leaves other lines out, so it can't be a line.",
   "lineContinues": "The line at the outlined dot has no other way to go on, so this edge must be a line.",
   "matchingPair": "The marked pair makes these two edges match, and this 1 has room for one more line, so neither can be one.",
   "oneFace": "This 3's other edges can give it 2 at most, so this corner needs a line.",

@@ -113,6 +113,9 @@ export function stepVoice<S extends { readonly [K in keyof S]: StepType }, E>(
         ...(kinds === undefined ? {} : { kinds }),
         ringKind: kinds?.[step.ring] ?? voice.kind,
         noun: nouns?.[step.ring] ?? voice.noun,
+        ...((nouns?.[step.ring] ?? voice.noun) === undefined
+          ? {}
+          : { ringNoun: nouns?.[step.ring] ?? voice.noun }),
         ring: said.ring ?? [],
         ...(said.later === undefined ? {} : { later: said.later }),
         ...(said.struck === undefined ? {} : { struck: said.struck }),

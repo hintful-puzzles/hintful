@@ -325,10 +325,9 @@ techniques:
         (exists g in L: end1(g) not in G)
         or (exists f in faces where clue(number, f) != none:
         need(f) != count(x in edges(f) where x = e))
-    # The lines the edge would close into a loop, and where no line would
-    # be left out of it, the clues it would leave unmet: so the clues are
-    # none exactly where a line left out is the reason.
-    says:
+      # The lines the edge would close into a loop, and where no line would
+      # be left out of it, the clues it would leave unmet: so the clues are
+      # none exactly where a line left out is the reason.
       marks:
         outline:
           edge: "{g in L where end1(g) in G}"
@@ -336,11 +335,9 @@ techniques:
             {f in faces where not (exists g in L: end1(g) not in G)
             and clue(number, f) != none
             and need(f) != count(x in edges(f) where x = e)}
-      move: "it can't be a line"
-      wordings:
-        - when: "|outlineFace| = 0"
-          look: "{ring} would close {outline edge: the marked lines} into a loop that leaves other lines out"
-        - look: "{ring} would close {outline edge: the marked lines} into a loop with {outline face: the outlined clue | the outlined clues} still unmet"
+      line: outline edge
+      off: "|outlineFace| > 0"
+      offWords: "leaves {outline face: the outlined clue | the outlined clues} unmet"
   # The lines are one closed loop: every other edge is empty.
   - id: closed
     tier: Easy

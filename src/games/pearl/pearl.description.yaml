@@ -446,17 +446,14 @@ techniques:
     tier: Normal
     with:
       elsewhere: "exists c in cells: c not in G and (clue(pearl, c) != none or drawn(c) > 0)"
-    says:
       terms:
         e: e
         # Whether a pearl lies off the lines the edge would close.
         pearlOff: "exists q in cells where q not in G and clue(pearl, q) != none: true"
       marks: { reads: "{end1(e), end2(e)}", outline: "G" }
-      look: >-
-        joining the ends of {outline: the outlined line} with {ring: this edge |
-        these edges} would close a loop that misses {if pearlOff: a pearl | other
-        lines}
-      move: "it can't be a line"
+      line: outline
+      off: pearlOff
+      offWords: misses a pearl
   # A square with no line whose ways through would join two squares the
   # lines already join, while a pearl or a line lies off them: those ways
   # would close a loop that leaves it out, and the rest agree.
@@ -503,16 +500,16 @@ techniques:
         - when: isWhite
           look: >-
             {if blocked: across | up and down}, {ring: this white pearl} would
-            close {outline: the outlined line} into a loop missing {if pearlOff: a
-            pearl | other lines}
+            close {outline: the outlined line} into a loop that {if pearlOff:
+            misses a pearl | leaves other lines out}
           move: >-
             it must run {if blocked: up and down | across}{if runs: , and on
             through {ring through: the next pearl (ringed) | the next pearls
             (ringed)}|}
         - look: >-
             any line through {ring: this square} would close {outline: the
-            outlined line} into a loop that misses {if pearlOff: a pearl | other
-            lines}
+            outlined line} into a loop that {if pearlOff: misses a pearl | leaves
+            other lines out}
           move: >-
             it must stay empty{if runs: , and on through {ring through: the next
             pearl (ringed) | the next pearls (ringed)}|}

@@ -121,6 +121,10 @@ export interface StatedContext<E, R = E> {
   /** The noun for one element of `kind`: the lexicon's "square" unless the
    * game declares its own. */
   readonly noun?: Noun;
+  /** The noun a `ring` reference without words of its own says, where the
+   * ring is drawn on `ringKind`: `noun` names elements of `kind`, so a ring
+   * of another kind with neither its words nor this is refused. */
+  readonly ringNoun?: Noun;
   /** How cells share a unit, in the game's units ("in a line or block
    * with"); "in line with" where the game declares none. */
   readonly alongside?: string;
@@ -382,6 +386,18 @@ function reference<E>(
   } else if (role === "ring") els = cx.ring;
   else els = (ofRole as readonly E[] | undefined) ?? [];
   const forms = p.words ?? DEFAULT_FORMS[role].map(parseClause);
+  // A ring said in the default words is named by its own noun.
+  const bare = role === "ring" && p.words === null;
+  if (
+    bare &&
+    cx.ringNoun === undefined &&
+    cx.ringKind !== undefined &&
+    cx.ringKind.name !== cx.kind.name
+  )
+    throw new Error(
+      `stated clause: {ring} is drawn on ${cx.ringKind.name}s, which the game's noun does not name: give it words`,
+    );
+  const said = bare && cx.ringNoun !== undefined ? { ...cx, noun: cx.ringNoun } : cx;
   const say = (live: readonly E[]): string => {
     const many = role !== "stripes" && new Set(live.map((e) => kind.key(e))).size > 1;
     return forms[many && forms.length > 1 ? 1 : 0]
@@ -389,14 +405,14 @@ function reference<E>(
         "text" in q
           ? q.text
           : q.role === "piece"
-            ? pieceOf(q.name, cx)
+            ? pieceOf(q.name, said)
             : q.role === "spelled"
-              ? spelled(q.name, cx)
+              ? spelled(q.name, said)
               : q.role === "numeral"
-                ? numeral(q.name, cx)
+                ? numeral(q.name, said)
                 : q.role === "a"
-                  ? article(q.name, cx)
-                  : word(q.name, cx, live),
+                  ? article(q.name, said)
+                  : word(q.name, said, live),
       )
       .join("");
   };

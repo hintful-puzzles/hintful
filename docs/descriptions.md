@@ -1035,12 +1035,15 @@ overrides. A `kindWords` name a kind does not take is ignored for it, so one
 block serves every kind placed. On contract: a kind that reads another name
 says so in `params` or its text. A kind is checked sound per game, as a
 stated technique is. A kind with no words of its own (`one.cell`,
-`peer.placed`, `fit.flip`, `rel.support`, `loop.early`) takes the game's `says:` beside the placement,
+`peer.placed`, `fit.flip`, `rel.support`) takes the game's `says:` beside the placement,
 and one with no parameters takes no `with`. `one.cell`'s sentence is the
 Latin library's `single` step, which every game that places it speaks (`docs/hints-candidates.md` § "The row/column preset"), so its `says:` holds only terms.
 `peer.placed`'s is the library's `placed` ("the 2 just placed can't repeat in
 its {regions}"), which a walk speaks through `placedRulesOut` with the game's
-`{regions}`.
+`{regions}`. `loop.early` carries its own sentence ("this edge would close the
+outlined line into a loop that leaves other lines out"); a game gives its marks,
+which mark draws the line (`line`), and what else the loop may miss (`off`,
+`offWords`: Pearl's pearl, Loopy's unmet clues).
 `fit.flip` is the Check of a
 two-valued square (`holds`, `scope`): its plant is the coarse one, a value that
 keeps `holds` struck, so a game that wants the off-by-one plant of its
@@ -1268,7 +1271,10 @@ test while the dump moved 1,349 lines. The game's own `hintKeepTrack`
 stays: a bridge is drawn a drag at a time, which no fact is. **An edge game
 states its words as a cell game does** (Separate): its `STATED` goes to
 `describedEdgeHint` with `ringKind` (what a `{ring}` reference is drawn on, the
-edges), `ring` (what a leg decides), `width` and `value`; a kind that states
+edges), `ring` (what a leg decides), `width` and `value`. A `{ring}` with no
+words says "this {noun}", and the game's noun names its squares, so a bare
+`{ring}` drawn on another sort is refused: give it words (`{ring: this edge |
+these edges}`), or a voice's noun for the sort (`nouns`). A kind that states
 `again` has a later leg say it as the basis of the game's own `later` sentence
 (`edgeContinuation`), so a kind states its first leg's `move` only. That hook
 stays (Palisade, Separate) because the move says "a wall" or "walls" by the

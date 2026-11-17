@@ -27,9 +27,11 @@ export interface Kind {
      * beside the placement. */
     says?: {
       terms: Record<string, string>;
-      marks: Record<string, string>;
-      look: string;
+      /** The marks, or `$name` where the game gives them whole. */
+      marks: Record<string, string> | string;
+      look?: string;
       move: string;
+      wordings?: readonly { when?: string; look: string }[];
     };
   };
   /** The defect planted in it, the same under any game's nouns. */
@@ -120,12 +122,30 @@ export const KINDS: Readonly<Record<string, Kind>> = {
   // is the answer only once nothing else needs it: `elsewhere` says what
   // still does, reading the lines `L`, the edge `e` and the lines' group `G`
   // through it. A line is 1 and an empty edge 2. Closing the last loop is the
-  // defect.
+  // defect. The sentence names the line the edge would close and what the
+  // loop would leave out: other lines, or where `off` holds, `offWords`;
+  // `line` is the mark reference that draws the line (`outline`, or a sort's).
+  // The ring is named an edge outright: a game's own noun for it may be its
+  // square's (Pearl's).
   "loop.early": {
-    params: ["elsewhere"],
+    params: ["elsewhere", "marks", "line", "off", "offWords"],
     technique: {
       for: "L = {e in edges where value(e) = 1}, e in edges where not known(e), G = through(end1(e), L) where end2(e) in G and ($elsewhere)",
       conclude: "place(e, 2)",
+      says: {
+        terms: {},
+        marks: "$marks",
+        move: "it can't be a line",
+        wordings: [
+          {
+            when: "$off",
+            look: "{ring: this edge | these edges} would close {$line: the outlined line} into a loop that $offWords",
+          },
+          {
+            look: "{ring: this edge | these edges} would close {$line: the outlined line} into a loop that leaves other lines out",
+          },
+        ],
+      },
     },
     plant: {
       for: "L = {e in edges where value(e) = 1}, e in edges where not known(e), G = through(end1(e), L) where end2(e) in G",

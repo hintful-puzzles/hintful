@@ -1,2 +1,2 @@
 6x6 Easy #0: 26 steps, solved, d613e738da45fde0 [blackPearl:5 square:20 whiteTurnsOpposite:1]
-6x6 Normal #0: 28 steps, solved, bdd38f9804543984 [blackPearl:6 earlyLoop:1 square:20 whiteTurnsOpposite:1]
+6x6 Normal #0: 28 steps, solved, 4c305726b302cd58 [blackPearl:6 earlyLoop:1 square:20 whiteTurnsOpposite:1]

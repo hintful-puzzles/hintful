@@ -182,6 +182,17 @@ boundaries are judgment, and the counts carry that.
     plant** (it wins over the kind's), so ABCD and Magnets keep the
     diagonal boundary plant; 2.1's "weaker plant" cost for Sticks can now
     be undone the same way.
+  - [x] `loop.early` (2026-11-17): the kind carries its sentence, "This
+    edge would close the outlined line into a loop that leaves other lines
+    out" (or `offWords`: Loopy "leaves the outlined clue unmet", Pearl
+    "misses a pearl"); the games give marks and nouns only. Loopy's "the
+    marked lines" became "the outlined line" (its own word for the dot and
+    clue); Pearl's "Joining the ends of… with this edge would close a loop"
+    became the shared shape, and its `earlyThrough` says the same ending.
+    Seen in the app in both. **Found on the way:** a bare `{ring}` in a
+    game whose ring is drawn on edges said "this square" (the game's noun);
+    the engine now refuses a bare ring of another sort with no noun of its
+    own (`ringNoun`), planted and seen to fail.
 - [ ] 2.12 Plan step (2), the count contract: `need(S)`/`open(S)` over a set
   for Loopy, Tracks, Boats, then `count.met`/`count.exact` placed there.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
