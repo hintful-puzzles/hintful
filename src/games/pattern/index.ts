@@ -54,9 +54,9 @@ import {
   verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
+import { voice } from "../../generated/games/pattern/pattern.compiled.ts";
 import { newPatternDesc } from "./generator.ts";
-import { cellAt } from "./hint-marks.ts";
-import { type Marked, say } from "./hint-text.ts";
+import { CLUE, cellAt, LINE } from "./hint-marks.ts";
 import {
   colors,
   computeSize,
@@ -306,29 +306,53 @@ export interface PatternHint {
   w: number;
 }
 
-/** Narrate *why* the cells are forced, naming the marks the renderer draws for
- * them: the target cells ringed, never pre-filled (the narration says shaded
- * or clear); the row or column hatched and its clue recolored; and the
- * already-placed marks the deduction leans on, outlined. The words are
- * [`hint-text.ts`](./hint-text.ts)'s. */
+/** A step's squares are cells; its line and the line's clue are numbered by
+ * the game's line index, drawn on kinds of their own. */
+const speak = voice<Point | number>({
+  kind: CELL,
+  kinds: { line: LINE, clue: CLUE },
+  value: String,
+});
+
+/** Narrate *why* the cells are forced, in the words
+ * `pattern.description.yaml` states for the reason's kind: the target cells
+ * ringed, never pre-filled (the narration says shaded or clear); the row or
+ * column hatched and its clue recolored; and the already-placed marks an
+ * overlap leans on, outlined. */
 function narrate(m: PatternHintMove, w: number): Sentence {
   const at = (i: number) => cellAt(i, w);
-  const marked: Marked = {
-    cells: m.cells.map(at),
-    refs: [...m.blackRefs, ...m.whiteRefs].map(at),
-    line: m.line,
-    orient: m.line < w ? "column" : "row",
-  };
+  const ring = m.cells.map(at);
+  const axis = m.line < w ? "column" : "row";
+  const line = [m.line];
   const { reason } = m;
   switch (reason.kind) {
     case "overlap":
-      return say.overlap(marked, reason.run, reason.slack);
+      return speak.sentence("overlap", {
+        ring,
+        terms: { axis, run: reason.run, slack: reason.slack },
+        marks: {
+          stripes: { line },
+          outline: { clue: line, cell: [...m.blackRefs, ...m.whiteRefs].map(at) },
+        },
+      });
     case "unreachable":
-      return say.unreachable(marked);
+      return speak.sentence("unreachable", {
+        ring,
+        terms: { axis },
+        marks: { stripes: { line }, outline: { clue: line } },
+      });
     case "lineEmpty":
-      return say.lineEmpty(marked);
+      return speak.sentence("lineEmpty", {
+        ring,
+        terms: { axis },
+        marks: { stripes: { line } },
+      });
     case "intersection":
-      return say.intersection(marked, reason.black);
+      return speak.sentence("intersection", {
+        ring,
+        terms: { axis, covers: reason.black },
+        marks: { stripes: { line }, outline: { clue: line } },
+      });
   }
 }
 

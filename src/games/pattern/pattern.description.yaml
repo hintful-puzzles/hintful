@@ -90,3 +90,47 @@ techniques:
     conclude: >-
       (exists fill f of cells(L) from cand where f(c) = d: fits(f, L, R))
       and (forall x in stretch(L, c, O): place(x, d))
+phrases:
+  # The line a step reasons along, striped.
+  thisLine: "{stripes line: this {axis}}"
+  # Where a step cites placed squares.
+  given: ", given {outline cell}"
+steps:
+  # A firing of `line` is told one of four ways, by what its squares are on
+  # the line, which the planner reads off the runs' packings (`solver.ts`):
+  # no formula states a run's least and greatest start.
+  # A run that covers the same squares in every fit.
+  overlap:
+    ring: cell
+    terms: { axis: unit, run: number, slack: number }
+    marks: { stripes: [line], outline: [clue, cell] }
+    move: "{ring} must be {shaded}"
+    wordings:
+      - when: "slack = 0 and |outlineCell| = 0"
+        look: "{thisLine}'s {outline clue: run of {run}} has nowhere to slide"
+      - when: "slack = 0"
+        look: "{thisLine}'s {outline clue: run of {run}} has nowhere to slide{given}"
+      - when: "|outlineCell| = 0"
+        look: "{thisLine}'s {outline clue: run of {run}} can slide only {slack} {slack: square | squares}"
+      - look: "{thisLine}'s {outline clue: run of {run}} can slide only {slack} {slack: square | squares}{given}"
+  # Squares out of every run's reach.
+  unreachable:
+    ring: cell
+    terms: { axis: unit }
+    marks: { stripes: [line], outline: [clue] }
+    look: "No run of {thisLine}'s {outline clue: outlined clue} can reach {ring: the ringed square | the ringed squares}"
+    move: "{ring: that square | those squares} must be {unshaded}"
+  # A line with no runs.
+  lineEmpty:
+    ring: cell
+    terms: { axis: unit }
+    marks: { stripes: [line] }
+    look: "{thisLine} has no clues"
+    move: "{ring} must be {unshaded}"
+  # None of those: every fit of the runs agrees.
+  intersection:
+    ring: cell
+    terms: { axis: unit, covers: flag }
+    marks: { stripes: [line], outline: [clue] }
+    look: "Every way {thisLine}'s {outline clue: outlined runs} can fit {if covers: covers | leaves out} {ring: the ringed square | the ringed squares}"
+    move: "{ring: that square | those squares} must be {if covers: {shaded} | {unshaded}}"

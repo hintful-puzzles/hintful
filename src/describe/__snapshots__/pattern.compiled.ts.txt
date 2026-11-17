@@ -18,6 +18,61 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "line";
 
+/** What the planner supplies for each kind of step it emits, over the
+ * elements `E` it marks: its terms, and the elements marked by role and sort. */
+export interface StepsById<E> {
+  overlap: { ring: "cell"; terms: { axis: Unit; run: number; slack: number }; marks: { stripes: { line: readonly E[] }; outline: { clue: readonly E[]; cell: readonly E[] } } };
+  unreachable: { ring: "cell"; terms: { axis: Unit }; marks: { stripes: { line: readonly E[] }; outline: { clue: readonly E[] } } };
+  lineEmpty: { ring: "cell"; terms: { axis: Unit }; marks: { stripes: { line: readonly E[] } } };
+  intersection: { ring: "cell"; terms: { axis: Unit; covers: boolean }; marks: { stripes: { line: readonly E[] }; outline: { clue: readonly E[] } } };
+}
+
+/** Each kind of step the planner emits: its clauses by wording, and the
+ * condition under which each wording is the one said (`null`: always). */
+export const STEPS: {
+  readonly [K in keyof StepsById<unknown>]: {
+    readonly ring: StepsById<unknown>[K]["ring"];
+    readonly clauses: readonly { aim?: string; answers?: string; look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string; long?: string }[];
+    readonly when: readonly (
+      | null
+      | ((
+          t: StepsById<unknown>[K]["terms"],
+          m: StepsById<unknown>[K]["marks"],
+          r: readonly unknown[],
+          s: Readonly<Record<string, readonly unknown[]>>,
+        ) => boolean)
+    )[];
+  };
+} = {
+  overlap: {
+    ring: "cell",
+    clauses: [{"move":"{ring} must be {shaded}","look":"{stripes line: this {axis}}'s {outline clue: run of {run}} has nowhere to slide"},{"move":"{ring} must be {shaded}","look":"{stripes line: this {axis}}'s {outline clue: run of {run}} has nowhere to slide, given {outline cell}"},{"move":"{ring} must be {shaded}","look":"{stripes line: this {axis}}'s {outline clue: run of {run}} can slide only {slack} {slack: square | squares}"},{"move":"{ring} must be {shaded}","look":"{stripes line: this {axis}}'s {outline clue: run of {run}} can slide only {slack} {slack: square | squares}, given {outline cell}"}],
+    when: [(t, m) => ((t.slack === 0) && (m.outline.cell.length === 0)), (t, _m) => (t.slack === 0), (_t, m) => (m.outline.cell.length === 0), null],
+  },
+  unreachable: {
+    ring: "cell",
+    clauses: [{"look":"No run of {stripes line: this {axis}}'s {outline clue: outlined clue} can reach {ring: the ringed square | the ringed squares}","move":"{ring: that square | those squares} must be {unshaded}"}],
+    when: [null],
+  },
+  lineEmpty: {
+    ring: "cell",
+    clauses: [{"look":"{stripes line: this {axis}} has no clues","move":"{ring} must be {unshaded}"}],
+    when: [null],
+  },
+  intersection: {
+    ring: "cell",
+    clauses: [{"look":"Every way {stripes line: this {axis}}'s {outline clue: outlined runs} can fit {if covers: covers | leaves out} {ring: the ringed square | the ringed squares}","move":"{ring: that square | those squares} must be {if covers: {shaded} | {unshaded}}"}],
+    when: [null],
+  },
+};
+
+import { stepVoice, type StepVoice, type Unit, type Voice } from "../../../engine/step-voice.ts";
+
+/** The steps, spoken: a game declares once what its marks are drawn on and
+ * how its values print, the description's nouns filled in. */
+export const voice = <E>(v: Voice<E>): StepVoice<StepsById<E>, E> =>
+  stepVoice<StepsById<E>, E>(STEPS, { ...v });
+
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
 

@@ -91,7 +91,11 @@ Planning games (a `steps` block, Slide's form):
 
 Logic games:
 
-- [ ] Pattern
+- [x] Pattern (2026-11-17): dump byte-identical. Its one technique is told
+  four ways by what the runs' packings show, which no formula states, so
+  the four are declared `steps` its planner names (Magnets' shape: the
+  line a `unit` term, the line and clue sorts of their own). Read in the
+  app: an overlap, row striped, clue outlined, squares ringed.
 - [x] Filling (2026-11-17): every sentence is the same, and its marks; the
   rungs are the description's kinds (growth → `mustGrow`, blocked →
   `onlyWay`, lonely and bitmap → `onlyNumber.lonely` and `.bitmap`), and
@@ -100,7 +104,14 @@ Logic games:
   and no move as `evident`, as it says a move alone `bare`. Its own walk
   stays (a strike is no step where a player keeps no notes) and speaks
   `STATED`. Read in the app: the exact fit, region striped, square ringed.
-- [ ] Signpost
+- [ ] Signpost. Needs, read 2026-11-17: its techniques say nothing yet
+  (`says: { terms: {}, marks: {} }`) and `describedEdgeHint`'s `say`
+  speaks `hint-text.ts`. The step rings two kinds, the arrow (`ARROW`) and
+  the square it links to, so a ring by sort or the arrow as a supplied
+  term drawn on its own kind (`termKinds`); the rivals' reasons are a set
+  (`taken`, `chain`, `number`: `{or why: …}`, supplied) whose verbs agree
+  with the rivals' count, so an `{or}` inside a count form; and the
+  wordings with no rivals ("points only at", "Only this arrow points at").
 - [ ] Seismic
 - [ ] Rome
 - [ ] Rect
