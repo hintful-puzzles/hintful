@@ -131,6 +131,9 @@ guides is for a game that is not yours.
   "Mistake checking is part of done".
 - `hints.md` § "Cognitive load: one step per hint"; `hints-marks.md` § "Group
   one firing into one step".
+- `descriptions.md` § "A kind of rule places its techniques": a technique
+  that follows from one rule alone is placed on a kind, not stated; state
+  only what is the game's own.
 - It skips [`hints-search.md`](./hints-search.md) whole.
 
 **Cells with notes** adds:

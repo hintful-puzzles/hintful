@@ -101,11 +101,16 @@ techniques:
   # A placed number leaves its neighbor across an edge only the numbers the
   # edge's clue allows: column by column, each placed cell's neighbors up,
   # right, down, left.
-  - id: adjacent
+  - kind: rel.support
+    as: adjacent
     tier: Normal
     rung: adjacent
-    for: "L in cols, a in cells(L) where known(a), b in adj4(a), e = edge(a, b)"
-    conclude: "forall d in cand(b) where not fits(e, value(a), d): strike(b, d)"
+    with:
+      group: "L in cols, a in cells(L) where known(a), b in adj4(a), e = edge(a, b)"
+      end: b
+      partner: a
+      rel: "fits(e, u, d)"
+      marks: {}
     # The hint names the placed neighbor, its number, and whether a bar joins
     # them.
     says:

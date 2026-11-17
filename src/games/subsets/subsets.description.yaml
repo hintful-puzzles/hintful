@@ -134,14 +134,19 @@ techniques:
       strike(c, d)
   # Beside a square down to one set, with no horseshoe between them, a square
   # holds no set that holds that one or lies inside it.
-  - id: noShoeBeside
+  - kind: rel.support
+    as: noShoeBeside
     tier: Easy
-    for: >-
-      e in edges where clue(shoe, e) = 0, k in ends(e) where |cand(k)| = 1,
-      c = other(e, k), x = first(cand(k))
-    conclude: >-
-      forall d in cand(c) where letters(d) subset letters(x)
-      or letters(x) subset letters(d): strike(c, d)
+    says: false
+    with:
+      group: >-
+        e in edges where clue(shoe, e) = 0, k in ends(e) where |cand(k)| = 1,
+        c = other(e, k)
+      end: c
+      partner: k
+      rel: >-
+        not (letters(d) subset letters(u) or letters(u) subset letters(d))
+      marks: {}
   # A square down to one set holds it.
   - kind: one.cell
     as: lone

@@ -1098,7 +1098,8 @@ its {regions}"), which a walk speaks through `placedRulesOut` with the game's
 `{regions}`. A game whose placed thing is not a square's value names it in
 `group` and how it leaves a peer in `move`, and plants its own defect, for the
 kind's reads the value (Dominosa's spot holding a domino, whose peers are the
-spots sharing a square with it and those of the same domino, left empty).
+spots sharing a square with it and those of the same domino, left empty;
+Light Up's bulb, the squares it lights left without one).
 `peer.pair` is two open squares down to the same two values, each a peer of
 the other: every square that sees both loses the two. The game binds `a` in
 `pair`, gives the squares `b` read beside it in `partners` (each pair once:
@@ -1139,6 +1140,9 @@ itself gives its own `says` and none of the kind's words (`link`, `cell`,
 `none`, `fits`), and a clause of the kind's sentence reading a word the game
 did not give is left out (Unequal names the bound the other end holds it to,
 "the outlined smaller side of this greater-than sign is at least 3").
+A partner already decided is the same kind, its group asking that it be
+(Adjacent's `adjacent`, a placed number, a tier below `adjacentSet`; Subsets'
+`noShoeBeside`): its one candidate is its value.
 A walk that speaks a kind's step itself (Subsets') renders the compiled
 `STATED` step with `statedParts`, as `placedRulesOut` does the library's; a
 `{fit: …}` there is never tried, for only `statedSentence` sees the whole

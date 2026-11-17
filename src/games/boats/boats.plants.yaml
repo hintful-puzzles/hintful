@@ -15,7 +15,7 @@ techniques:
       c in cells where value(c) = 1, D = {d in adj4(c) where not known(d)} where
       |D| > 0
   touch:
-    for: c in cells where value(c) = 1, d in adj4(c) where not known(d)
+    for: c in cells where value(c) = 1, p in adj4(c) where not known(p)
   # A middle segment read as running toward the water beside it.
   center:
     for: >-

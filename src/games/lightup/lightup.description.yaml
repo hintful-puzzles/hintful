@@ -112,11 +112,13 @@ kindWords:
 techniques:
   # A bulb lights its row and its column up to a wall, so no other bulb
   # stands there.
-  - id: shine
-    on: place
+  - kind: peer.placed
+    as: shine
     tier: Easy
-    for: "c in cells where value(c) = 1, p in lights(c) where p != c and not known(p)"
-    conclude: "place(p, 2)"
+    with:
+      group: "c in cells where value(c) = 1"
+      peer: "p in lights(c) where p != c and not known(p)"
+      move: "place(p, 2)"
   # A number with all its bulbs has none in its other free neighbors, and
   # one needing as many as it has free neighbors has one in each. Read
   # before the dark squares: the generator keeps only the numbers a reading

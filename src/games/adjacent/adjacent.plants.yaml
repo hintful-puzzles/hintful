@@ -1,8 +1,0 @@
-# A defect planted in each of the techniques the description states, keyed by
-# its id: the statement with a condition loosened, or a quantity read too
-# finely, which the soundness checks under research/technique-check must find
-# unsound.
-
-techniques:
-  adjacent:
-    conclude: "forall d in cand(b) where fits(e, value(a), d): strike(b, d)"

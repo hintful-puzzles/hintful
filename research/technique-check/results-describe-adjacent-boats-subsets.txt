@@ -1,0 +1,37 @@
+ok  adjacent   adjacent                       3  sound    (want sound   )     3 queries    0.1s
+ok  adjacent   adjacent (planted)             3  unsound  (want unsound )     1 queries    0.0s   at line 3
+ok  src/games/adjacent/adjacent.description.yaml#adjacent: recorded sound, proved whole on all 1 boards
+ok  adjacent   adjacentSet                    current: recorded src/games/adjacent/adjacent.description.yaml#adjacentSet 26bd38711d31c9b3
+ok  boats      given                          current: recorded src/games/boats/boats.description.yaml#given 2ca7ee73302de133
+ok  boats      near                           current: recorded src/games/boats/boats.description.yaml#near 2fd778e54c004bd3
+ok  boats      touch                          3  sound    (want sound   )     9 queries    0.0s
+ok  boats      touch (planted)                3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/boats/boats.description.yaml#touch: recorded sound, proved whole on all 1 boards
+ok  boats      lineShips                      current: recorded src/games/boats/boats.description.yaml#lineShips d268ba8385637613
+ok  boats      total                          current: recorded src/games/boats/boats.description.yaml#total 2ca5bd1e5ec0b0f6
+ok  boats      center                         current: recorded src/games/boats/boats.description.yaml#center fc7e145858b732cc
+ok  boats      extend                         current: recorded src/games/boats/boats.description.yaml#extend 0a73bdb792419ccd
+ok  boats      lineWater                      current: recorded src/games/boats/boats.description.yaml#lineWater 80d5150eb64045c4
+ok  boats      isolated                       current: recorded src/games/boats/boats.description.yaml#isolated 2ad78ba6c12c97ee
+ok  boats      grow                           current: recorded src/games/boats/boats.description.yaml#grow e09ddd862fcd080e
+ok  boats      onlyFit                        current: recorded src/games/boats/boats.description.yaml#onlyFit 9fc8205b5cad9b85
+ok  boats      centerRoom                     current: recorded src/games/boats/boats.description.yaml#centerRoom ae946c6d86caf5c3
+ok  boats      tooLong                        current: recorded src/games/boats/boats.description.yaml#tooLong 457bb17513487efd
+ok  boats      shortRun                       current: recorded src/games/boats/boats.description.yaml#shortRun 92c697410a776b21
+ok  boats      hidden                         current: recorded src/games/boats/boats.description.yaml#hidden c4c310ba218b2270
+ok  boats      onlyRuns                       current: recorded src/games/boats/boats.description.yaml#onlyRuns fcdbad949f8ca2de
+ok  boats      shared                         current: recorded src/games/boats/boats.description.yaml#shared 616c8989c8ecacfd
+ok  boats      lastWater                      current: recorded src/games/boats/boats.description.yaml#lastWater aa4df5e0280399de
+ok  boats      lastShip                       current: recorded src/games/boats/boats.description.yaml#lastShip a04cf0db13a2610d
+ok  boats      centerTrial                    current: recorded src/games/boats/boats.description.yaml#centerTrial 3449f8a11c963e0b
+ok  subsets    placed                         current: recorded src/games/subsets/subsets.description.yaml#placed d84f0d98ed561e7c
+ok  subsets    carryIn                        current: recorded src/games/subsets/subsets.description.yaml#carryIn 3ffeb14057154748
+ok  subsets    carryOut                       current: recorded src/games/subsets/subsets.description.yaml#carryOut cb9cdaa7a752bb57
+ok  subsets    noShoe                         current: recorded src/games/subsets/subsets.description.yaml#noShoe 014697d015af9554
+ok  subsets    noShoeBeside                   3  sound    (want sound   )    24 queries    2.6s
+ok  subsets    noShoeBeside (planted)         3  unsound  (want unsound )     1 queries    3.1s   at edge 0
+ok  src/games/subsets/subsets.description.yaml#noShoeBeside: recorded sound, proved whole on all 1 boards
+ok  subsets    lone                           current: recorded src/games/subsets/subsets.description.yaml#lone c5dbf6c5ed2ed89b
+ok  subsets    onlyCell                       current: recorded src/games/subsets/subsets.description.yaml#onlyCell 4009216507025477 held
+ok  subsets    smaller                        current: recorded src/games/subsets/subsets.description.yaml#smaller c72a0f402d1a8430
+ok  subsets    bigger                         current: recorded src/games/subsets/subsets.description.yaml#bigger d8a814791a5d60bf

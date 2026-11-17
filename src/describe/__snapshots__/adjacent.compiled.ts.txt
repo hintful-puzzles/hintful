@@ -122,7 +122,7 @@ export interface AdjacentBinding {
 
 /** What a step for a firing of it speaks of: its terms, and the elements it marks by role. */
 export interface AdjacentSays {
-  terms: { a: number; v: number; bar: number; pair: readonly number[]; };
+  terms: { partner: number; a: number; v: number; bar: number; pair: readonly number[]; };
   marks: {  };
   /** The index of the wording that held (`STATED`). */
   wording: number;
@@ -146,17 +146,17 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
     R2:
     for (let _i10 = 0; _i10 < _a9.length; _i10++) {
       const v_a = _a9[_i10];
-      const _m20_0 = b.made[0];
+      const _m23_0 = b.made[0];
       const _h11 = (b.grid[v_a] !== 0);
       if (!(_h11)) continue;
-      const _h17 = (b.grid[v_a] || -1);
+      const _h22 = (b.grid[v_a] || -1);
       const _a12 = sp.adj4[v_a];
       for (let _i13 = 0; _i13 < _a12.length; _i13++) {
         const v_b = _a12[_i13];
         const v_e = sp.adj4Edges[v_a][_i13];
-        const _h18 = clueAt(cl.bar, v_e);
-        const _h19 = (_h18 === 1);
-        if (b.made[0] !== _m20_0) {
+        const _h20 = clueAt(cl.bar, v_e);
+        const _h21 = (_h20 === 1);
+        if (b.made[0] !== _m23_0) {
           if (!((b.grid[v_a] !== 0))) { continue R2; }
         }
         if (DEV && staleChecking) {
@@ -168,7 +168,17 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
         Q15: {
           for (let _m16 = (cands[v_b] >= 0 ? cands[v_b] : (cands[v_b] = b.cands[v_b])); _m16 !== 0; _m16 &= _m16 - 1) {
             const v_d = 31 - Math.clz32(_m16 & -_m16);
-            if (!(!((_h19 === (Math.abs((_h17 - v_d)) === 1))))) continue;
+            let _q17 = false;
+            Q18: {
+              for (let _m19 = (cands[v_a] >= 0 ? cands[v_a] : (cands[v_a] = b.cands[v_a])); _m19 !== 0; _m19 &= _m19 - 1) {
+                const v_u = 31 - Math.clz32(_m19 & -_m19);
+                if ((_h21 === (Math.abs((v_u - v_d)) === 1))) {
+                  _q17 = true;
+                  break Q18;
+                }
+              }
+            }
+            if (!(!(_q17))) continue;
             if ((((b.cands[v_b] >> v_d) & 1) !== 0)) { if (fire === null) { b.strikeAt(v_b, v_d); changed = true; } else facts.push(STRIKE, v_b, v_d); }
             if (!(true)) {
               _q14 = false;
@@ -180,11 +190,12 @@ export function adjacent(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<Adjacent
         if (changed || facts.length > 0) {
           fired = 1;
           if (fire !== null) {
+            const _sw_partner = v_a;
             const _sw_a = v_a;
-            const _sw_v = _h17;
-            const _sw_bar = _h18;
+            const _sw_v = _h22;
+            const _sw_bar = _h20;
             const _sw_pair = setOf(v_b, v_a).slice();
-            const _says = { terms: { a: _sw_a, v: _sw_v, bar: _sw_bar, pair: _sw_pair }, marks: {  }, wording: ((_sw_bar === 1) ? 0 : 1) };
+            const _says = { terms: { partner: _sw_partner, a: _sw_a, v: _sw_v, bar: _sw_bar, pair: _sw_pair }, marks: {  }, wording: ((_sw_bar === 1) ? 0 : 1) };
             if (!fire({ L: v_L, a: v_a, b: v_b, e: v_e }, facts, _says)) return 1;
           }
           cands.fill(-1);

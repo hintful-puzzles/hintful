@@ -935,7 +935,35 @@ boundaries are judgment, and the counts carry that.
     Path, Spokes and Boats read their breaks three ways (an edge tried, a
     set of spokes, boats and water by nested `with`s), so no shared trial
     shape yet.
-  - [ ] Then REL (10 left) and PEER (6).
+  - [x] (2026-11-17) REL and PEER, what was left. **Placed, no new kind:**
+    Light Up `shine` and Boats `touch` on `peer.placed` (group a placed
+    bulb or segment, peer the squares it lights or touches diagonally, move
+    `place(p, 2)`); Adjacent `adjacent` and Subsets `noShoeBeside` on
+    `rel.support` with the partner known (`known(a)`, `|cand(k)| = 1`), whose
+    one candidate is then the partner's value. Light Up's module is
+    byte-identical; Boats' differs by its binder renamed `p`; Adjacent's and
+    Subsets' loop over the known partner's one candidate where they read its
+    value. Adjacent's plants file went (its plant was the kind's); Boats'
+    and Subsets' sharper plants restated over the kind's names. Re-checked
+    sound, every plant caught. Deal-compare at 3 seeds a preset: same boards
+    and verdicts, totals Adjacent 0.99×, Boats 1.01×, Subsets 0.91×. Tests
+    and snapshots unchanged; seen in the app (Adjacent 5x5 Normal: "No bar
+    joins this cell to the 1 beside it: they can't differ by 1, so this cell
+    can only be 3 or 5", outlines and ring where it says, applied as 3 and
+    5). **Read and left the game's own, with why:** Singles `sameLine` is
+    `peer.placed`'s formula, but a firing is a clear number with every copy
+    (its hint rings them together and stripes the line), where the kind
+    fires a peer, and Singles runs it as a rung, not on placing: placing it
+    would split its hint steps. Singles `pair` and `sandwich` read two rules
+    (all different and no two shaded touching). Magnets `pair` and `tile`
+    are a domino's two ends read on placing and on striking, where
+    `rel.support` is a rung reading every candidate, and `pair` places where
+    the kind strikes. Subsets `carryIn` and `carryOut` are Easy letter-level
+    projections of `smaller` and `bigger`, weaker and read first, and
+    `noShoe` reads the clue alone. Rome `opposite` is a two-square cycle
+    read through a pair. **Recount** (as before): 130 placed, 178 stated,
+    47 by `use`, so games state 50% of their techniques; 24 of 48 games
+    state under half.
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried

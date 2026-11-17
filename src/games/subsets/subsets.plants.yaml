@@ -22,6 +22,4 @@ techniques:
     for: e in edges, c in ends(e)
   # Sets that hold one another struck across a horseshoe too.
   noShoeBeside:
-    for: >-
-      e in edges, k in ends(e) where |cand(k)| = 1, c = other(e, k), x =
-      first(cand(k))
+    for: e in edges, k in ends(e) where |cand(k)| = 1, c = other(e, k)
