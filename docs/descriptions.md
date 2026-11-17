@@ -1052,8 +1052,13 @@ numbers its deduction never read, so splitting `alone` in two moved its
 boards; Palisade's `numberExhausted`, over the edges round a number, a set
 it names in `set:`). The count kinds count a group's open squares, never
 gather them: a set bound in `for` is made for every group on every pass,
-and only the conclusion that decides them walks them. Each says `again`,
-"{unit}", for a later leg of a firing walked in legs ("…, for this 0").
+and only the conclusion that decides them walks them. A later leg of a
+firing walked in legs says the move again with "too" (`restLater`,
+`fillLater`, which a game whose move is a "can't" gives as "… either") and
+`again`, "{unit}": "…and each ringed spoke must be a line too, for this 5".
+A game's open squares need not be just the undecided ones: Spokes' set is
+the edges to squares that may still take a line (`free(c)`), and its
+`open(S)` the undecided edges of it.
 A game whose squares are cells says so in `words: { cell: cell }`
 and passes `WORDS.cell` as its hint's `noun`, or a kind's `{noun}` says
 "square". A kind is checked sound per game, as a

@@ -87,6 +87,12 @@ define:
     not known(edge(a, b)) and spare(a) and spare(b) and not crossed(edge(a, b))
   # The squares square c may still draw a line to.
   ways(c): "{y in adj8(c) where live(c, y)}"
+  # The same, whether or not c has all its lines: the squares that may still
+  # take a line from c.
+  free(c): >-
+    {y in adj8(c) where not known(edge(c, y)) and spare(y) and not crossed(edge(c, y))}
+  # The edges of S not yet decided.
+  open(S): "{e in S where not known(e)}"
   # The same, read with lines supposed on the edges H.
   drawn(e, H): "value(e) = 1 or e in H"
   linesH(c, H): "count(y in adj8(c) where drawn(edge(c, y), H))"
@@ -147,32 +153,29 @@ deal:
   block: none; a board's ID may hold one, as an X
   tier: one of the tiers
 tiers: [Easy, Normal, Unreasonable]
+kindWords:
+  # A hub counts the lines from it, over its free spokes: one to a hub with
+  # all its lines, or across a line, counts as closed.
+  group: "c in cells where hub(c)"
+  set: "set(edge(c, y) over y in free(c))"
+  need: "takes(c) - lines(c)"
+  rest: 2
+  fill: 1
+  mark: outline
+  marks: { outline: "{c}", reads: "{c} + free(c)" }
+  unit: "this {clue}"
+  has: "{clue: its line | all {clue} of its lines}"
+  items: "{n: line | lines}"
+  slots: "free {n: spoke | spokes}"
+  restWord: "must be unused"
+  fillWord: "must be a line"
+  terms: { c: c, clue: "takes(c)", placed: "n < takes(c)" }
 techniques:
-  # A hub with only as many edges left as it still needs lines takes a line
-  # on each. One with more lines than its number, or fewer edges left than
-  # it needs, makes the marks inconsistent.
-  - id: saturation
+  # A hub with only as many free spokes left as it still needs lines takes a
+  # line on each. One with fewer makes the marks inconsistent.
+  - kind: count.exact
+    as: saturation
     tier: Easy
-    for: >-
-      c in cells, n = takes(c) - lines(c), U = ways(c)
-      where n < 0 or (n > 0 and |U| <= n)
-    conclude: "n >= 0 and |U| = n and (forall y in U: place(edge(c, y), 1))"
-    says:
-      terms:
-        c: c
-        # The spokes it takes, which is how many it decides.
-        n: n
-        # The spokes a leg still has to decide.
-        rest: { supplied: number }
-      marks: { outline: "{c}", reads: "{c} + U" }
-      wordings:
-        - when: "n = 1"
-          look: "{outline: the outlined hub} has only one free spoke left for its count"
-          move: "{ring: this spoke | these spokes} must be a line"
-        - look: "{outline: the outlined hub} has just enough free spokes left for its count"
-          move: "{ring: this spoke | these spokes} must all be lines"
-      again: "{outline: the outlined hub}"
-      later: "{ring: this spoke | these spokes} must be {rest: a line | lines} too"
   # A line between two 1-hubs would close the pair off from the other hubs.
   - id: twoOnes
     tier: Easy
@@ -185,24 +188,12 @@ techniques:
       marks: { outline: "{a, b}", reads: "{a, b}" }
       look: "Connecting {outline: the outlined 1-hubs} would strand them from the rest"
       move: "{ring: this spoke | these spokes} must be unused"
-  # A hub with all its lines takes none on its other edges: those to a hub
-  # still short of lines are crossed out.
-  - id: exhaustion
+  # A hub with all its lines takes none on its other free spokes: they are
+  # crossed out. One with more lines than its number makes the marks
+  # inconsistent.
+  - kind: count.met
+    as: exhaustion
     tier: Easy
-    for: >-
-      c in cells where hub(c) and lines(c) = takes(c),
-      U = {y in adj8(c) where not known(edge(c, y)) and spare(y)
-      and not crossed(edge(c, y))}
-      where |U| > 0
-    conclude: "forall y in U: place(edge(c, y), 2)"
-    says:
-      terms: { c: c }
-      marks: { outline: "{c}", reads: "{c} + U" }
-      look: "{outline: the outlined hub} already has all its lines"
-      follows: "none of its other spokes can be one"
-      move: "{ring: this spoke | these spokes} must be unused"
-      again: "{outline: the outlined hub}"
-      later: "rule {ring: this spoke | these spokes} out too"
   # A line on an edge would break the board at once, the hubs it fills
   # taking no more lines: the edge is crossed out.
   - id: lineBreaks

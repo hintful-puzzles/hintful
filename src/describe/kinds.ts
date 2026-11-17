@@ -39,6 +39,8 @@ export interface Kind {
       move?: string;
       /** What a later leg of the firing (`shown: legs`) says its move is for. */
       again?: string;
+      /** What a later leg says as its move, where it differs from `move`. */
+      later?: string;
       wordings?: readonly { when?: string; look: string }[];
       arms?: Record<
         string,
@@ -46,6 +48,7 @@ export interface Kind {
           when: string;
           look?: string;
           move?: string;
+          later?: string;
           wordings?: readonly { when?: string; look: string }[];
         }
       >;
@@ -68,13 +71,16 @@ export const KINDS: Readonly<Record<string, Kind>> = {
   // square `c` to the rest, where the game's squares are struck, not placed.
   // The sentence names the group (`unit`, drawn as `mark`), what it holds
   // (`has`), and the move (`restWord`); a group whose number may be 0
-  // (`zero`) is said to take none of its `items`.
+  // (`zero`) is said to take none of its `items`. A later leg of a firing
+  // walked in legs says the move again (`restLater`: "can't be one either"
+  // where "too" would not read) for this `unit`.
   "count.met": {
     params: ["group", "set", "unit", "has", "items", "restWord"],
     defaults: {
       rest: null,
       need: "need($set)",
       restMove: "place(c, $rest)",
+      restLater: "$restWord too",
       zero: "false",
       mark: "stripes",
       marks: { stripes: "$set", reads: "$set" },
@@ -87,6 +93,7 @@ export const KINDS: Readonly<Record<string, Kind>> = {
         marks: "$marks",
         again: "{$mark: $unit}",
         move: "{ring: the ringed {noun} | each ringed {noun}} $restWord",
+        later: "{ring: the ringed {noun} | each ringed {noun}} $restLater",
         wordings: [
           { when: "$zero", look: "{$mark: $unit} takes no $items" },
           { look: "{$mark: $unit} already has $has" },
@@ -103,13 +110,14 @@ export const KINDS: Readonly<Record<string, Kind>> = {
   // `mark` and `marks` as `count.met`'s; `fillMove` sets an open square `c`
   // to the value, and `slots` names the open squares. The game's term
   // `placed` says whether the group holds some already. The open squares are
-  // counted, not bound, as `count.both`'s are.
+  // counted, not bound, as `count.both`'s are. `fillLater` as `restLater`.
   "count.exact": {
     params: ["group", "set", "unit", "items", "fillWord"],
     defaults: {
       fill: null,
       need: "need($set)",
       fillMove: "place(c, $fill)",
+      fillLater: "$fillWord too",
       slots: "open {n: square | squares}",
       mark: "stripes",
       marks: { stripes: "$set", reads: "$set" },
@@ -123,6 +131,7 @@ export const KINDS: Readonly<Record<string, Kind>> = {
         again: "{$mark: $unit}",
         look: "{$mark: $unit} needs {if placed: {n} more | {n}} $items and has only {n} $slots",
         move: "{ring: the ringed {noun} | each ringed {noun}} $fillWord",
+        later: "{ring: the ringed {noun} | each ringed {noun}} $fillLater",
       },
     },
     plant: {
@@ -143,6 +152,8 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       need: "need($set)",
       restMove: "place(c, $rest)",
       fillMove: "place(c, $fill)",
+      restLater: "$restWord too",
+      fillLater: "$fillWord too",
       zero: "false",
       slots: "open {n: square | squares}",
       mark: "stripes",
@@ -163,6 +174,7 @@ export const KINDS: Readonly<Record<string, Kind>> = {
           met: {
             when: "n = 0",
             move: "{ring: the ringed {noun} | each ringed {noun}} $restWord",
+            later: "{ring: the ringed {noun} | each ringed {noun}} $restLater",
             wordings: [
               { when: "$zero", look: "{$mark: $unit} takes no $items" },
               { look: "{$mark: $unit} already has $has" },
@@ -172,6 +184,7 @@ export const KINDS: Readonly<Record<string, Kind>> = {
             when: "n > 0",
             look: "{$mark: $unit} needs {if placed: {n} more | {n}} $items and has only {n} $slots",
             move: "{ring: the ringed {noun} | each ringed {noun}} $fillWord",
+            later: "{ring: the ringed {noun} | each ringed {noun}} $fillLater",
           },
         },
       },

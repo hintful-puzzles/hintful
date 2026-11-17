@@ -267,8 +267,8 @@ describe("narration states the premise, in the necessity voice", () => {
 
   it("exhaustion says the hub is done and rules out the rest", () => {
     const text = pinned("exhaustion").step.explanation;
-    expect(text).toMatch(/already has all its lines/);
-    expect(text).toMatch(/: (?:this spoke|these spokes) must be unused\.$/);
+    expect(text).toMatch(/already has (?:its line|all \d of its lines)/);
+    expect(text).toMatch(/(?:the ringed spoke|each ringed spoke) must be unused\.$/);
     expect(text.length).toBeLessThan(120);
   });
 
@@ -388,7 +388,7 @@ describe("a saturated hub is one multi-leg journey, one color", () => {
       expect(hl.evidence).toEqual(first.evidence);
     });
     expect(legs[k - 1].explanation).toBe(
-      "…and this spoke must be a line too, for the outlined hub.",
+      "…and the ringed spoke must be a line too, for this 5.",
     );
 
     // Each leg draws a distinct spoke.

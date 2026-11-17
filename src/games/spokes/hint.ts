@@ -88,7 +88,6 @@ function trialBreaks(
 /** What a leg supplies that no firing's binding holds: the spokes a later leg
  * still decides, and what a Check's trial breaks. */
 const SUPPLIED: SuppliedHooks<SuppliedById, Leg, SpokesState> = {
-  saturation: ({ highlights }) => ({ terms: { rest: highlights.spokes.length } }),
   lineBreaks: (leg, state) => {
     const { terms, marks } = trialBreaks(leg, state);
     const { broken, many, bn, starved } = terms;
@@ -143,6 +142,7 @@ const spokesPlan = describedEdgeHint<
   // decides, which a leg still has to settle.
   elements: { kind: HUB, at: (index) => index },
   ringKind: SPOKE,
+  ringNoun: "spoke",
   ring: ({ highlights: hl }) => hl.spokes.map((sp) => spokeOf(sp, hl.w)),
   supplied: SUPPLIED,
 });

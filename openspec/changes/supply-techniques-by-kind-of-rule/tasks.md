@@ -313,15 +313,25 @@ boundaries are judgment, and the counts carry that.
     0" (was "for clue 0"). Seen in the app. The rung is now
     `numberExhausted.met`/`.exact`; pins re-scanned. Palisade re-checked
     sound whole (a define was renamed).
-  - [ ] Next, in this order. (3) Spokes `saturation` (`count.exact`) and
-    `exhaustion` (`count.met`), kept two techniques for `twoOnes` between
-    them. Its open edges are not just the undecided ones (an edge to a full
-    hub or across a line counts as closed), so its set is `set(edge(c, y)
-    over y in adj8(c) where spare(y) and not crossed(edge(c, y)))` and
-    `open(S)` the undecided edges of it; its own `ways(c)` stays. It needs
-    `ringNoun: "spoke"`, and its `later` and the `rest` supplied hook go
-    (the kind's `move` says a later leg). (4) Then the ONE, PEER, REL, GRP,
-    CMP, SUM forms listed above.
+  - [x] (2026-11-17) Spokes `saturation` (`count.exact`) and `exhaustion`
+    (`count.met`), kept two techniques for `twoOnes` between them. Its open
+    edges are not just the undecided ones (an edge to a full hub or across
+    a line counts as closed), so its set is the edges to `free(c)`, a new
+    define, and `open(S)` the undecided edges of it; `ways(c)` stays for
+    its other techniques. `ringNoun: "spoke"`; the `rest` supplied hook and
+    its own `later` went. The count kinds gained a `later` clause ("{the
+    move} too", `restLater`/`fillLater` defaults a game may reword). **Moved,
+    words only** (same steps and rung counts in the walk fingerprint, same
+    boards in deal-compare): "This 5 needs 5 lines and has only 5 free
+    spokes, so each ringed spoke must be a line" (was "The outlined hub has
+    just enough free spokes left for its count, so these spokes must all be
+    lines"), "This 1 already has its line, so the ringed spoke must be
+    unused", a later leg "…and each ringed spoke must be a line too, for
+    this 5". Seen in the app. Re-checked sound, the kinds' plants caught.
+    CNT now 19 techniques in 9 games (`git grep "kind: count\." --
+    'src/games/*.yaml'`).
+  - [ ] Next: the ONE, PEER, REL, GRP, CMP, SUM forms listed above, and the
+    CNT techniques not placed yet (the item above says why each waits).
 - [x] 2.8 (2026-11-17) **Asked of the owner, with 2.4-2.7 as the
   evidence; answered in 2.9.** 22 techniques are placed by
   kind, out of the 185 the clustering put in nine kinds. Each kind tried
