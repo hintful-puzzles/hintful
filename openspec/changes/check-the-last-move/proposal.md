@@ -1,35 +1,7 @@
 # check-the-last-move
 
-**Status: filed on the owner's word (2026-11-07)**, "to see if we could":
-an exploration. **The owner wants to consider this before it is built, and
-it waits until the description work (`describe-the-whole-catalog`) is
-done.** The session that takes it up brings them what it measured and the
-answers it proposes to the questions below, before writing a design.
-
-**It waits for the explained verdict (the owner, 2026-11-10)**: a verdict
-with no reason was weighed and not wanted first. The explanation is the
-engine's answer to "what does this fact rest on?", which
-`explain-a-firing-by-its-witness-and-parents` builds, spoken in the words
-its description gives a technique (`move-each-remaining-game-once` finishes
-the catalog). This is the
-last of the plan in
-[`derive-hint-steps-from-the-description/report.md`](../archive/2026-11-10-derive-hint-steps-from-the-description/report.md).
-
-**What that plan already answers** (2026-11-10), for the session to check
-and bring to the owner as proposed answers:
-
-- *Uniqueness*: a described technique is checked sound against the rules
-  alone, so a known deduction never assumes the board has one answer, and
-  the search that says "forced" need not either.
-- *Which marks count*: a mark whose description gives it a meaning can be
-  judged as a placed value is; a play aid with none (Unequal's `done`)
-  cannot.
-- *What the last move is*: the facts by which the marks differ before and
-  after it, read through the adapter `build-hint-steps-in-the-engine`
-  gives each game, each fact judged.
-- *A caution*: where a game's candidates cannot be written (Magnets,
-  Ascent, Filling), a move can be a known deduction that rests on facts the
-  player never saw. The verdict holds; its explanation has to say them.
+**Status: decided with the owner (2026-11-18)**, after the measurements
+below, "something useful, without trying to make it perfect".
 
 ## Why
 
@@ -40,156 +12,91 @@ how the player got there. A move that is right by luck passes exactly as one
 that was reasoned, and the hint, which explains why a move is forced, is the
 only place the fork teaches that.
 
-The owner asks whether Check & save could also say whether the **last move
-was logically valid**: whether the board as it stood before the move forced
-it.
+A player reaches for Check & save after a move they are unsure of. That move
+is the one worth judging: whether the board as it stood before it forced it,
+and if so, by what.
 
 ## What Changes
 
-Check & save, beside its answer check, gives a verdict on the player's last
-move, judged against the position before it:
+- **Check & save judges the last move**, beside its answer check, against
+  the position before it: did the game's own deductions reach it from there?
+  It never gates the save; a mistake or a dead end gates it as today.
+- **A move that followed is told what it followed from**, in the words of
+  the deduction that makes it: that step's stated sentence, behind a lead-in,
+  with the hint's marks. Where only a chain of deductions reaches it, the
+  chain's first step is quoted (the one that reads only what is on the
+  board), and the words say the move follows on from there.
+- **A move no deduction reached is told so**, its square marked: it was
+  right, but nothing on the board forced it yet.
+- **What counts as a move**: the facts the player's marks differ by, before
+  and after: a value placed, a cross, a candidate struck. A move that decides
+  several squares followed only if every one did, and the first that did not
+  is the one marked. A note added (mark-all's included), undo and redo, and a
+  play aid with no meaning in the description (Unequal's `done`) are not
+  judged.
+- **Where it shows**: in the words area under the board, where the hint's
+  explanation sits, styled as the hint with a "Check" lead so a verdict is not
+  read as advice. **Check & save's refusals move there too**, out of the
+  modal alert, kept red and plain: the count of mistakes, or the dead end's
+  sentence, with nothing saved.
+- **Which games**: the games whose hint is the engine's walk over a compiled
+  ladder. The others say nothing new (below).
 
-- **A known deduction**: one of the game's techniques, or a combination of
-  them, makes the move from that position.
-- **Forced, beyond the known deductions**: no technique reaches it, but no
-  answer consistent with the rules and with what was on the board before the
-  move disagrees with it. Nothing the player could see allowed another way.
-- **Not forced**: some answer consistent with that position disagrees with
-  the move. The move may still be right; it was not yet decided.
+## Decided (owner, 2026-11-18)
 
-The answer check stays as it is: a move that is wrong is a mistake whatever
-its verdict, and saving is gated as today.
+- **In Check & save, and no new control or preference**: the button is what
+  a player reaches for after a move they are unsure of.
+- **The last move only.** "I don't see that much of a benefit about telling
+  them that they've made an unsound deduction 5 minutes ago in a move they
+  already forgot."
+- **Crosses and pencil notes count**, as far as they can: a struck candidate
+  is a deduction; a note added asserts nothing a board can force.
+- **Say which deduction it was**, reusing its sentence, with what syntactic
+  change the lead-in needs.
+- **Shown where the hint is**; the earlier rule against showing a successful
+  check stood because it covered the board, which the hint's place does not.
+- **Refusals move to the same place**, "red and obvious".
 
-## Questions for the owner
+## Measured (2026-11-17)
 
-- **Does uniqueness count?** Every board is dealt with one answer, so against
-  the answer alone every right move is forced. The second verdict is only
-  meaningful judged by the rules and the marks, without assuming the board
-  has one answer, as the hint reasons. Which reading is wanted?
-- **What is "the last move"?** One stroke can decide many cells or edges and
-  can mix forced and unforced parts (a Path drag, a Loopy line). Is it judged
-  whole, or each mark it made?
-- **Which marks count?** A struck candidate or a cross is information too. Is
-  a pencil mark, a cross or a note judged as a placed value is, or not at all?
-- **How far does "a combination" reach?** Is a move several of the ladder's
-  firings deep a known deduction, and up to which tier: the board's own, or
-  the whole ladder?
-- **Only the last move, or any?** Undo history holds the positions before
-  each move.
-- **Unreasonable boards**: where a board's tier allows trial and error, is a
-  move not yet forced reported at all?
-- **What the player sees**: the wording of each verdict, whether it sits in
-  the same alert as the answer check, whether it gates the save (today
-  nothing but a mistake or a dead end does), and whether a hint-style
-  explanation of the deduction follows.
-- **Whether it is Check & save at all**, or a check of its own beside it.
+Each game's largest preset, at its hardest tier on the menu, two boards,
+played by following the hint and timed at every position; the deduction to
+its fixpoint from the board as dealt, three boards; the search for answers
+on an Unreasonable board of the same size. A scratch probe on this machine
+under its usual load.
+
+- **A "forced" search decides nothing on a board with one answer.** Every
+  board the app deals has exactly one answer, so for a correct move no answer
+  agreeing with the rules and the position before it can disagree with it:
+  "forced" is "correct". The verdict that tells a player something is whether
+  the game's deductions reached the move, and it needs no search.
+- **That costs one deduction fixpoint** from the position before the move: at
+  most 43 ms from the board as dealt on any game (Crossing 15×15), under
+  10 ms on most. The hint's walk, which gives the sentence, took a median of
+  20 ms or less at every position in every game that marks cells but Loopy
+  (54 ms); the slowest single position was Mines' at 208 ms.
+- **The search**, for comparison: 113 ms or less on an Unreasonable board
+  of the largest size, but Group's 2.1 s and 7.7 s at 12×12.
+- **The games it cannot serve**: moves that are not marks (Cube, Fifteen,
+  Flip, Flood, Inertia, Netslide, Numgame, Pegs, Same Game, Sixteen, Slide,
+  Sokoban, Twiddle, Untangle), where any legal move is allowed and the
+  dead-end check already says whether the puzzle stays winnable; an answer
+  the player cannot see (Guess, Black Box), where a probe is never forced;
+  and a hint that is not the engine's walk (Ascent, Undead, Mines), which
+  needs its own solver's reach first.
+- **Found in passing, fixed** (`c582e4f41`): Solo's difficulty contract
+  called a stuck board "impossible" below the recursive tier.
 
 ## What it touches
 
-- `quick-save` and `app-shell`: what Check & save says, and possibly whether
-  it saves.
-- `engine-hints`, `engine-difficulty`, `described-ladder`: the ladder a known
-  deduction is judged by, and the search that says whether a move was forced.
-  It is a capability of the engine, consumed from what each game already
-  declares (its ladder, its answer check, its search), never written per game.
-
-## Constraints to measure before designing
-
-- **Cost.** The second verdict is a search over answers from a position with
-  less on it than the player's, where the answer cache does not help. Measure
-  it on each game's largest presets against the time a button press can wait,
-  and say what the check says where the search cannot settle in time (as
-  Check & save already does for the hint's dead-end search).
-- **What the engine already offers** (2026-11-07, `describe-lines-and-loops`):
-  a described game's search (`searchAnswers`) counts answers to two from
-  marks, so "forced" may be one search from the position before the move
-  with the move's opposite seeded: no answer means forced. A known deduction
-  is best asked of the hint's walk (`ladderWalk`), one firing at a time: a
-  fixpoint run fires every binding in a pass, and a binding that reads a set
-  bound before an earlier firing reads it stale (Path's `pairBreaks` did).
-- **Every game.** A game with no ladder or no search, and the games whose
-  moves are not marks on cells (Untangle, Sokoban, Fifteen), need a stated
-  verdict or none.
-- **Offline**, and touch, keyboard and mouse alike.
-
-## What was measured (2026-11-17)
-
-Each game's largest preset, at its hardest tier on the menu, two boards,
-played by following the hint, and timed at every position. Also timed: the
-game's deduction to its fixpoint from the board as dealt, three boards; and
-its search for answers on an Unreasonable board of the same size, where it
-has one. Taken from a scratch probe on this machine under its usual load.
-
-- **The "forced" search decides nothing on a board with one answer.** Every
-  board the app deals has exactly one answer. So for a correct move, no
-  answer that agrees with the rules and the position before it can disagree
-  with it, and "forced" is simply "correct". "Not forced" is never the
-  verdict of a correct move, and a wrong move is already a mistake. The
-  three verdicts collapse to the answer check plus one question: **did the
-  game's own deductions reach the move from the position before it?** That
-  holds however the second verdict is judged, and it needs no search.
-  Exceptions: the games whose answer the player cannot see, below.
-- **That question costs one deduction fixpoint**, from the position before
-  the move. The fixpoint from the board as dealt, where the deductions have
-  the most to do, took at most 43 ms on any game (Crossing 15×15), and under
-  10 ms on most. The hint's walk, which also builds the explanation, took a
-  median of 20 ms or less at every position in every game that marks cells,
-  except Loopy (54 ms); the slowest single position was Mines' at 208 ms.
-  Both fit a button press without a worker.
-- **For comparison, the search**: on an Unreasonable board at the largest
-  size it took 113 ms or less in every game but Group, where it took 2.1 s
-  and 7.7 s on 12×12. A design that searches would have to answer for
-  Group.
-- **The games it cannot serve as stated:**
-  - *Moves that are not marks* (Cube, Fifteen, Flip, Flood, Inertia,
-    Netslide, Numgame, Pegs, Same Game, Sixteen, Slide, Sokoban, Twiddle,
-    Untangle): any legal move is allowed, so "forced" has no meaning. Whether
-    a move keeps the puzzle winnable is what Check & save's dead-end check
-    already says. Their hints plan by search, at up to 3.6 s a position
-    (Sixteen).
-  - *An answer the player cannot see* (Guess, Black Box): a probe is never
-    forced. In Mines the question is real (is this square safe in every
-    layout the shown numbers allow?), and its deductions answer it as they
-    do everywhere else.
-  - *Marks, but a hint that is not the engine's walk* (Ascent, Undead,
-    Mines, Black Box): each needs its own solver's reach, or a move onto
-    the walk, before the engine can judge a move there. The other 44 games
-    walk the engine's ladder, so the engine judges them from what they
-    already declare.
-- **Found in passing, fixed**: Solo's difficulty contract called a stuck
-  board "impossible" below the recursive tier (every Unreasonable Jigsaw
-  board). The monotone-in-cap guard now refuses that for every game.
-
-## Proposed answers
-
-- **Uniqueness**: judge by the rules and the marks, as the hint does. Then
-  the verdicts for a correct move are *a known deduction*, with the walk's
-  explanation; *one try away* (assuming the opposite and deducing breaks
-  the board: what an Unreasonable board asks, one fixpoint per value
-  assumed); and *not reached by the game's reasoning* (right, but nothing
-  the hint could show forced it yet).
-- **The last move**: the facts the marks differ by, before and after, each
-  judged. The move takes the weakest verdict of its facts, and the words
-  name the fact that set it.
-- **Which marks count**: a mark the description gives a meaning (a cross, a
-  struck candidate) counts as a placed value does. A play aid with none
-  does not.
-- **How far a combination reaches**: any chain of firings, at every tier
-  the hint walks, not only the board's own. The hint would teach it.
-- **Only the last move, or any**: every move since the previous Check &
-  save, reporting the first that was not a known deduction. Judging only
-  the last move is arbitrary when a player saves after twenty. The cost is
-  one fixpoint a move: under a second for thirty moves on the slowest game.
-- **Unreasonable boards**: reported. "One try away" is that tier's
-  reasoning.
-- **What the player sees**: one sentence in Check & save's confirmation.
-  It never gates the save, since a correct move is never refused, and a
-  "Why?" opens the walk's explanation as a hint step. Draft wording: "Every
-  move since your last save followed from the board." / "This move was
-  right, but nothing on the board forced it yet."
-- **Whether it is Check & save**: yes, since that is where a player asks
-  "am I right?". The games it cannot serve say nothing new there.
+- `quick-save` and `app-shell`: what Check & save says, and where.
+- `engine-hints`, `described-ladder`: the walk from the position before the
+  move, and a step's sentence spoken as a verdict. A capability of the
+  engine, consumed from what each game already declares, never written per
+  game.
 
 ## Acceptance
 
-Written once the owner has answered the questions above.
+The owner plays a move that follows, one that is a guess, a cross and a
+struck candidate, and a mistake, in a few games, and reads what Check & save
+says and where.
