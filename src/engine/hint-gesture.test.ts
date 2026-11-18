@@ -12,6 +12,7 @@
 import { describe, expect, it } from "vitest";
 import { Midend } from "./midend.ts";
 import { beginDealt } from "./testing/dealt.ts";
+import { observeMidend } from "./testing/drive-midend.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 
 /** Far above any plan a gate preset's board needs, so only a loop trips it. */
@@ -29,10 +30,19 @@ describe("every hint step is one the pointer makes", () => {
       let played = 0;
       for (const { title, params } of presets) {
         const midend = new Midend(game);
+        const seen = observeMidend(midend);
         expect(beginDealt(midend, game, params), title).toBeNull();
         for (let steps = 0; steps < MAX_STEPS; steps++) {
           if (midend.executeHint() !== null) break;
           played++;
+          // The app is told the mode a gesture leaves (Marks switched on for
+          // a press and off after, or Guess's row choosing it): its Marks
+          // key shows it. The midend keeps its `Ui` private, so it is read
+          // here as the field it is.
+          const { ui } = midend as unknown as { ui: { pencilMode?: boolean } };
+          expect(seen.last("game-state-change")?.pencilMode, title).toBe(
+            ui.pencilMode === true,
+          );
         }
       }
       // A game whose every board is refused from the start would pass having

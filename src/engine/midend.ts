@@ -2040,8 +2040,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     }
     if (!completed) fail("does not complete its step");
     // A release that only tidied the `Ui` after the move landed still has to
-    // be seen; an animating move repaints every frame anyway.
-    if (repaint && !this.animating) this.requestRedraw();
+    // be seen; an animating move repaints every frame anyway. A key pressed
+    // after it (Marks switched back off) is told to the app too, whose
+    // controls show the `Ui`'s modes.
+    if (repaint) {
+      this.emitStateChange();
+      if (!this.animating) this.requestRedraw();
+    }
   }
 
   currentAnimationMs(): number {
