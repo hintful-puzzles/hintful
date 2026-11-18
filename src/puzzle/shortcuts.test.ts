@@ -136,6 +136,11 @@ const BINDS_A_SHORTCUT_LETTER: Record<string, string> = {
     "while the keyboard cursor is visible — which is exactly when a player " +
     "means the cell and not a new game. With the cursor hidden it declines 'n' " +
     "and New game runs, so the letter is never simply lost.",
+  wordguess:
+    "types words, so every letter is a letter of the word while a game is in " +
+    "play: an N or a U typed past the end of a word would otherwise deal a new " +
+    "game or undo a guess. Undo and redo keep their Ctrl chords, and once the " +
+    "game is won or lost every letter reaches the app again.",
 };
 
 describe("a bare shortcut letter reaches the app in every game", () => {

@@ -70,6 +70,7 @@ instructions. The last column names puzzles you may know it as elsewhere.
 | [Unequal](../unequal)    | [help](unequal)  | Futoshiki (ふと指揮)                                                              |
 | [Unruly](../unruly)      | [help](unruly)   | Tohu-Wa-Vohu, Binairo, Tic-Tac-Logic                                            |
 | [Untangle](../untangle)  | [help](untangle) | Planarity                                                                       |
+| [Wordguess](../wordguess) | [help](wordguess) | Wordle®, Lingo                                                                 |
 
 {.puzzles-list}
 
@@ -83,4 +84,5 @@ BATTLESHIP® and MASTERMIND® are registered trademarks of HASBRO INC.;
 HIDATO® is a registered trademark of DOO-BEE TOYS & GAMES LTD;
 KENKEN® is a registered trademark of KENKEN PUZZLE LLC;
 PICROSS® is a registered trademark of Nintendo of America Inc.; 
-and SUDOKU X® is a registered trademark of Happy Hippos Developments LLC.</small>
+SUDOKU X® is a registered trademark of Happy Hippos Developments LLC;
+and WORDLE® is a registered trademark of The New York Times Company.</small>

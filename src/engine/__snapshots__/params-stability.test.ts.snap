@@ -958,3 +958,11 @@ preset:20 points  full=20
 preset:25 points  full=25
 bump:n  full=11"
 `;
+
+exports[`encoded params are byte-stable > wordguess 1`] = `
+"default  full=5g6
+preset:4 letters, 6 guesses  full=4g6
+preset:5 letters, 6 guesses, hard  full=5g6h
+preset:6 letters, 6 guesses  full=6g6
+bump:nguesses  full=5g7"
+`;

@@ -152,6 +152,11 @@ const KEYPAD_WITHOUT_PENCIL: Record<string, string> = {
     "Moving the square the network is lit from and jumbling the unlocked squares " +
     "are keys on the keyboard (Ctrl+arrow, J); the Source and Jumble keys are the " +
     "pointer's only way to either.",
+  wordguess:
+    "A word is typed: a tap chooses which square the next letter goes into, " +
+    "never the letter, so on touch the keypad is the only way to write one. " +
+    "Its notes rule letters out of the answer row rather than living in a " +
+    "per-cell pencil array.",
 };
 
 describe("a game does not claim a button it did not act on", () => {

@@ -197,6 +197,11 @@ const WRONG: Readonly<Record<string, { board: string; moves: readonly unknown[] 
     board: "4x4dn:1,2,7,dLLbRRcLLa,2,3,4,3,4,3,2,3,3,2,1,1,1,0,0,4",
     moves: [{ type: "set", cell: 0, monster: 1 }],
   },
+  // CIGAR, with its I ruled out of the second slot.
+  wordguess: {
+    board: "5g6:f17e0471a6",
+    moves: [{ type: "mark", marks: [{ pos: 1, letter: 9 }], ruledOut: true }],
+  },
 };
 
 /**

@@ -80,6 +80,7 @@ const UNBREAKABLE: Record<string, string> = {
   net: "Solve locks every tile, a locked tile does not turn, and unlocking is a notes-mode tap",
   pegs: "a solved board has one peg left, and one peg has nothing to jump over",
   samegame: "a solved board is empty, and an empty board has no group to remove",
+  wordguess: "a won game takes no more guesses, and a mark on the answer row is a note",
 };
 
 function games(): [string, AnyGame][] {

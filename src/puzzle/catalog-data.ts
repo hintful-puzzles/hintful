@@ -567,6 +567,14 @@ export const puzzleCatalog = {
     collection: "original",
     family: "rearranging",
   },
+  wordguess: {
+    name: "Wordguess",
+    aliases: [],
+    description: "Word-guessing puzzle",
+    objective: "Find the hidden word in a few guesses.",
+    collection: "own",
+    family: "hidden",
+  },
 } as const satisfies Record<string, PuzzleData>;
 
 /** Catalog ids, sorted — the display order the home screen and menus use. */

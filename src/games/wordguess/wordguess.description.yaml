@@ -1,0 +1,100 @@
+# yaml-language-server: $schema=../../describe/description.schema.json
+
+game: wordguess
+help:
+  rules: |-
+    Find the hidden word in a few guesses. Each guess must be a word, as
+    long as the hidden one, and each letter is scored: on a filled square
+    where the hidden word has it in that place, on a disc where it has it
+    elsewhere, and in faint ink where it does not.
+
+    {{modifiers}}
+  controls: |-
+    Type a word with the keyboard, or with the letter buttons below the
+    board. Each letter goes into the first empty square of the row you are
+    filling, and the frame shows where the next one will land. Press
+    **Submit** once the row is full. A row that isn't a word of the list
+    isn't sent: it gets a red frame, and the line below the board says why.
+
+    Tap a square of the row you are filling to choose where the next letter
+    goes instead, which is how you change one letter. **Clear**, or
+    Backspace, empties the square you chose, or rubs out the last letter
+    you typed if you have not chosen one.
+
+    ### The keyboard
+
+    Left and right move the frame along the row. Enter submits the guess,
+    and in Marks mode takes you back to typing.
+  sections:
+    - heading: How a guess is scored
+      body: |-
+        Each letter of a guess gets one of three scores:
+
+        - **In place**, on a filled square: the hidden word has this letter
+          here.
+        - **Elsewhere**, on a round disc: the hidden word has this letter,
+          but not here.
+        - **Not there**, in faint ink: the hidden word has no more of this
+          letter than the rest of the guess has already been told about.
+
+        A letter you guess twice is scored twice, in place first and then
+        from the left: if the hidden word has it once, only one of your two
+        scores. You win when a guess is the word, and the word is shown if
+        you run out of guesses.
+    - heading: The answer row
+      body: |-
+        Below the guesses is the answer row: one slot for each letter of the
+        hidden word, each showing every letter that could still be there. It
+        is where you keep track of what you have worked out: when you rule a
+        letter out of a slot it goes, and each letter always sits in the
+        same place, so you can tell at a glance which ones are left.
+
+        To rule letters out of a slot, tap the slot. The frame moves there,
+        and the letter buttons and keys now rule their letter out of that
+        slot, or put it back if it is already out; **Clear** puts every
+        letter back. Tapping a square of the row you are filling takes you
+        back to typing. **Marks** switches between the two as well.
+
+        **Check & save** checks the answer row against the hidden word, as
+        it checks your answers in every other puzzle. A slot where you have
+        ruled out the letter that is really there gets a red frame. It says
+        which slot, not which letter, and it never judges your guesses: a
+        guess that isn't the word is how you learn more.
+    - heading: The words
+      body: |-
+        A guess may be any of about 100,000 English words, from Kevin
+        Atkinson's SCOWL lists. The hidden word is always a common one,
+        drawn from the words that both SCOWL's commoner lists and Alan
+        Beale's 12dicts call ordinary: no plurals, no past tenses and
+        nothing offensive.
+name: Wordguess
+family: code
+sizes:
+  len: { min: 3, max: 8 }
+space:
+  # The answer: a letter a slot.
+  grid: { w: "len", h: "1" }
+  units: []
+answer:
+  # A letter a slot, a = 1 to z = 26.
+  value: { sort: cell, domain: "range(1, 26)" }
+clues:
+  # A scored guess: its letter in each slot and that slot's mark, 2 where
+  # the answer has the letter there, 1 where the answer has it elsewhere
+  # and not every copy of it is already marked, earlier slots first, and 0
+  # otherwise.
+  score:
+    at: board
+    fields:
+      peg: { at: cell, value: "range(1, 26)" }
+      mark: { at: cell, value: "range(0, 2)" }
+    means: >-
+      forall s in cells:
+        (mark(k, s) = 2 iff value(s) = peg(k, s))
+        and (mark(k, s) = 1 iff value(s) != peg(k, s)
+          and count(t in cells where index(t, cells) < index(s, cells)
+            and peg(k, t) = peg(k, s) and value(t) != peg(k, t))
+          < count(u in cells where value(u) = peg(k, s) and peg(k, u) != value(u)))
+freedom: { kind: query }
+deal:
+  answer: a word of the list, at random

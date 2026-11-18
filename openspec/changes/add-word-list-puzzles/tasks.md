@@ -20,10 +20,11 @@ The findings and the decisions behind these are `design.md`.
 ## 3. Wordguess (Guess's kind: moves and search, answer hidden)
 
 - [x] 3.0 Decided: an engine module, `src/engine/code-rows.ts`, with Guess moved onto it first (`design.md` § "What Wordguess shares with Guess"). Decide, before scaffolding, what Wordguess shares with Guess. Both have rows of guesses submitted one at a time, a working row in the `Ui`, an answer row of per-slot rule-outs that Check & save judges, a Submit key, and a hint that rules out of the answer row (`src/games/guess/index.ts`, `state.ts`). They differ in the score (per slot here, counts there), the keys (26 letters, better laid out as a keyboard, and the keypad itself could carry each letter's known status), the answer row's picture (26 candidates a slot against Guess's ten colors), a guess refused when it is not a word, and no holds. Doctrine: where two games would write the same thing, the engine owns it. Weigh an engine piece for the row-and-answer-row mechanic against a Wordguess written beside Guess, and record the choice and its reason in `design.md`
-- [ ] 3.1 Scaffold (`scripts/new-game.sh`), first verdict (`npm run game`); its description from `candidates/wordguess.description.yaml`
-- [ ] 3.2 Params (`paramConfig`): word length, the guess bound as the owner decides, a hard-mode variation if wanted (every revealed letter reused); presets and Custom
-- [ ] 3.3 State and moves: guesses typed on a letter keypad and the keyboard, a guess not in the guess list refused with its reason, the answer row of candidate letters, Check & save over it
-- [ ] 3.4 Rendering on Guess's shape, the collection's palette; marks for in place, elsewhere and absent that do not lean on color alone
+- [x] 3.1 Scaffold (`scripts/new-game.sh`), first verdict (`npm run game`); its description from `candidates/wordguess.description.yaml`
+- [x] 3.2 Params (`paramConfig`): word length, the guess bound as the owner decides, a hard-mode variation if wanted (every revealed letter reused); presets and Custom
+- [x] 3.3 State and moves: guesses typed on a letter keypad and the keyboard, a guess not in the guess list refused with its reason, the answer row of candidate letters, Check & save over it
+- [x] 3.4 Rendering on Guess's shape, the collection's palette; marks for in place, elsewhere and absent that do not lean on color alone
+- [ ] 3.4a The keypad as a keyboard: the panel lays keys out by count (`game-controls.ts`, `keys.ts`), so QWERTY rows need a panel extension a game can ask for; and whether each letter key may show its known status, which `requestKeys` (params only) cannot carry. Also decide whether a letter typed on a full row that is no word should overwrite its last letter, as `code-rows.ts`'s cursor fallback does now, or be ignored, as Wordle does
 - [ ] 3.5 Hint: the per-slot rungs (`design.md` § "What each inherits"), Guess's six inherited techniques where they add a step, then the probe over the answers that still fit; checked sound
 - [ ] 3.6 Help page, spec, icons; play it in the app with pointer, keyboard and touch, and a hint at every stage; a fresh subagent reads the hints against the board
 

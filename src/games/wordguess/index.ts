@@ -1,0 +1,342 @@
+/**
+ * Wordguess: find a hidden word in a few guesses, each a word of the list,
+ * scored a letter at a time: in place, elsewhere in the word, or not there.
+ *
+ * Guess's shape (`code-rows.ts`): the working row lives in the `Ui` and is
+ * edited through the shared mechanic, and the answer row's rule-outs are moves.
+ * This file is the `Game` object and the routing of taps and keys onto it; the
+ * board and the score are [`state.ts`](./state.ts).
+ */
+
+import { assertNever } from "../../engine/assert-never.ts";
+import {
+  enterValue,
+  isRuledOut,
+  restCursor,
+  rubOut,
+  ruledOutAt,
+  selectedSlot,
+  withRuleOuts,
+} from "../../engine/code-rows.ts";
+import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { nothingToDeduce } from "../../engine/hint-finishes.ts";
+import { clearKey } from "../../engine/key-labels.ts";
+import {
+  CURSOR_SELECT,
+  isCursorMove,
+  isEraseKey,
+  isMouseDrag,
+  isMouseRelease,
+  LEFT_BUTTON,
+  moveCursor,
+  newCursor,
+  PENCIL_MODE_BUTTON,
+} from "../../engine/pointer.ts";
+import { registerGame } from "../../engine/registry.ts";
+import type { KeyLabel, Point } from "../../engine/types.ts";
+import {
+  answerSlotAt,
+  colors,
+  computeSize,
+  newDrawState,
+  PREFERRED_TILE_SIZE,
+  redraw,
+  type WordguessDrawState,
+  workingSlotAt,
+} from "./render.ts";
+import {
+  decodeParams,
+  defaultParams,
+  encodeParams,
+  findMistakes,
+  letterOf,
+  menu,
+  NLETTERS,
+  newDesc,
+  newState,
+  outcome,
+  paramConfig,
+  refusal,
+  score,
+  status,
+  validateParams,
+  type WordguessMistake,
+  type WordguessMove,
+  type WordguessParams,
+  type WordguessState,
+  type WordguessUi,
+  wordOf,
+} from "./state.ts";
+
+// --- UI ---------------------------------------------------------------------
+
+function newUi(state: WordguessState): WordguessUi {
+  return {
+    params: state.params,
+    entries: new Array(state.params.len).fill(0),
+    cursor: newCursor(),
+    ready: false,
+    pencilMode: false,
+    refused: false,
+  };
+}
+
+/** Whether a row may go: the state's refusal, read for the row it is about. */
+const readyIn =
+  (s: WordguessState) =>
+  (letters: readonly number[]): boolean =>
+    refusal(s, letters) === null;
+
+/** A fresh, empty working row whenever a guess is scored or taken back. A mark
+ * leaves the row alone, so ruling a letter out does not throw away the word
+ * the player was writing. */
+function changedState(
+  ui: WordguessUi,
+  prev: WordguessState | null,
+  next: WordguessState,
+): void {
+  if (prev && prev.rows.length === next.rows.length) return;
+  ui.entries.fill(0);
+  ui.ready = false;
+  ui.refused = false;
+  restCursor(ui);
+}
+
+// --- keys -------------------------------------------------------------------
+
+/** ASCII carriage return, the Submit key's own code: a physical Enter arrives
+ * as `CURSOR_SELECT`, so this code comes from the panel alone. */
+const SUBMIT_BUTTON = 13;
+/** The letter a button types, `1..26`, either case, or `null`. */
+function letterFrom(button: number): number | null {
+  if (button >= 0x61 && button <= 0x7a) return button - 0x60;
+  if (button >= 0x41 && button <= 0x5a) return button - 0x40;
+  return null;
+}
+
+/**
+ * A key a letter, then Clear and Submit. Submit is a key rather than the
+ * consequence of filling the last slot, because a row that goes cannot be
+ * undone back to the word typed; a row that cannot go is declined, and the
+ * status line says why.
+ */
+function requestKeys(_p: WordguessParams): KeyLabel[] {
+  const letters = Array.from({ length: NLETTERS }, (_, i) => ({
+    button: 0x41 + i,
+    label: letterOf(i + 1).toUpperCase(),
+  }));
+  return [...letters, clearKey, { button: SUBMIT_BUTTON, label: "Submit" }];
+}
+
+// --- input ------------------------------------------------------------------
+
+function guessMove(ui: WordguessUi): WordguessMove {
+  return { type: "guess", letters: ui.entries.slice() };
+}
+
+/**
+ * Submit, from the panel or Enter: the guess when the row may go. A full row
+ * that may not is refused where the player is looking, with a frame round the
+ * row until it is edited, while the status bar says why; a key that seemed to
+ * do nothing would read as broken. A row with a gap is declined.
+ */
+function send(ui: WordguessUi): WordguessMove | UiUpdate | null {
+  if (ui.ready) return guessMove(ui);
+  if (ui.entries.includes(0) || ui.refused) return null;
+  ui.refused = true;
+  return UI_UPDATE;
+}
+
+function toggleMark(s: WordguessState, pos: number, letter: number): WordguessMove {
+  const out = isRuledOut(s.ruledOut, pos, letter);
+  return { type: "mark", marks: [{ pos, letter }], ruledOut: !out };
+}
+
+function clearMarks(s: WordguessState, pos: number): WordguessMove | null {
+  const marks = ruledOutAt(s.ruledOut, pos, NLETTERS).map((letter) => ({
+    pos,
+    letter,
+  }));
+  return marks.length > 0 ? { type: "mark", marks, ruledOut: false } : null;
+}
+
+function interpretMove(
+  from: WordguessState,
+  ui: WordguessUi,
+  ds: WordguessDrawState,
+  p: Point,
+  button: number,
+): WordguessMove | null | UiUpdate {
+  if (outcome(from) !== 0) return null;
+  const { len } = from.params;
+  const ready = readyIn(from);
+
+  // A press selects a slot of the working row or of the answer row, and the row
+  // it is in decides what a letter does. The selection is all a tap does, so it
+  // is made on the press, and the drag and release that follow do nothing.
+  if (button === LEFT_BUTTON) {
+    const working = workingSlotAt(from, ds.tileSize, p.x, p.y);
+    const answer = answerSlotAt(from.params, ds.tileSize, p.x, p.y);
+    const slot = working >= 0 ? working : answer;
+    if (slot < 0) return null;
+    const notes = working < 0;
+    if (ui.cursor.visible && ui.cursor.x === slot && ui.pencilMode === notes)
+      return null;
+    ui.cursor.x = slot;
+    ui.cursor.visible = true;
+    ui.pencilMode = notes;
+    return UI_UPDATE;
+  }
+  if (isMouseDrag(button) || isMouseRelease(button)) return null;
+
+  if (button === PENCIL_MODE_BUTTON) {
+    ui.pencilMode = !ui.pencilMode;
+    if (ui.pencilMode && ui.cursor.x >= len) ui.cursor.x = len - 1;
+    return UI_UPDATE;
+  }
+  if (isCursorMove(button)) {
+    const maxcur = len + (ui.ready && !ui.pencilMode ? 1 : 0);
+    return moveCursor(ui.cursor, button, maxcur, 1) ? UI_UPDATE : null;
+  }
+  if (button === SUBMIT_BUTTON) return send(ui);
+  if (button === CURSOR_SELECT) {
+    // Enter after a word sends it, wherever the frame is: a player types a
+    // word and presses Enter. Unlike Guess's Enter on a slot, it never switches
+    // Marks on, which would turn the next word typed into rule-outs; in Marks
+    // mode it goes back to typing.
+    if (ui.pencilMode) {
+      ui.pencilMode = false;
+      restCursor(ui);
+      return UI_UPDATE;
+    }
+    return send(ui);
+  }
+
+  const letter = letterFrom(button);
+  if (letter !== null) {
+    if (ui.pencilMode) {
+      const slot = selectedSlot(ui);
+      return slot >= 0 ? toggleMark(from, slot, letter) : UI_UPDATE;
+    }
+    // A letter is the game's even where the row has no room for it: declined,
+    // it would fall through to the app's one-letter shortcuts, and an N typed
+    // past the end of a word would deal a new game.
+    if (enterValue(ui, letter, ready)) ui.refused = false;
+    return UI_UPDATE;
+  }
+  if (isEraseKey(button)) {
+    if (ui.pencilMode) {
+      const slot = selectedSlot(ui);
+      return slot >= 0 ? clearMarks(from, slot) : null;
+    }
+    if (!rubOut(ui, ready)) return null;
+    ui.refused = false;
+    return UI_UPDATE;
+  }
+  return null;
+}
+
+// --- moves ------------------------------------------------------------------
+
+function executeMove(s: WordguessState, m: WordguessMove): WordguessState {
+  if (m.type === "mark") {
+    const marks = m.marks.map(({ pos, letter }) => ({ pos, value: letter }));
+    return { ...s, ruledOut: withRuleOuts(s.ruledOut, marks, m.ruledOut, NLETTERS) };
+  }
+  if (m.type !== "guess") return assertNever(m, "wordguess: executeMove");
+  if (outcome(s) !== 0) throw new Error("No guesses once the game is over");
+  const why = refusal(s, m.letters);
+  if (why !== null) throw new Error(`Illegal guess ${wordOf(m.letters)}: ${why}`);
+  const row = { letters: m.letters.slice(), marks: score(m.letters, s.answer) };
+  return { ...s, rows: [...s.rows, row] };
+}
+
+// --- the Ui that outlives a save --------------------------------------------
+
+/** The word being written, a letter a slot and `.` for an empty one. It is in
+ * no move until it is submitted, so without this a reload would lose it. */
+function encodeUi(ui: WordguessUi): string {
+  return ui.entries.map((v) => (v > 0 ? letterOf(v) : ".")).join("");
+}
+
+function decodeUi(ui: WordguessUi, encoded: string): void {
+  // A save is not a trusted input: anything but a letter is an empty slot.
+  for (let i = 0; i < ui.entries.length; i++) {
+    ui.entries[i] = letterFrom(encoded.charCodeAt(i)) ?? 0;
+  }
+  restCursor(ui);
+}
+
+// --- status line ------------------------------------------------------------
+
+/** Why a row the player has finished cannot be sent, which a declined Submit
+ * would otherwise leave unsaid; and the count of guesses. */
+function statusbarText(s: WordguessState, ui: WordguessUi): string {
+  const o = outcome(s);
+  if (o > 0) {
+    const used = s.rows.length;
+    return `Solved in ${used} ${used === 1 ? "guess" : "guesses"}.`;
+  }
+  if (o < 0) return `Out of guesses: the word was ${wordOf(s.answer).toUpperCase()}.`;
+  const where = `Guess ${s.rows.length + 1} of ${s.params.nguesses}`;
+  if (ui.entries.includes(0)) return where;
+  const why = refusal(s, ui.entries);
+  return why === null ? `${where}: ready to submit.` : `${where}: ${why}.`;
+}
+
+// --- Game object ------------------------------------------------------------
+
+export const wordguessGame: Game<
+  WordguessParams,
+  WordguessState,
+  WordguessMove,
+  WordguessUi,
+  WordguessDrawState,
+  WordguessMistake
+> = {
+  id: "wordguess",
+
+  defaultParams,
+  menu,
+  encodeParams,
+  decodeParams,
+  validateParams,
+  paramConfig,
+  notApplicable: {
+    transposeParams:
+      "Your guesses run down the board in the order you made them, so there is no grid to turn.",
+  },
+
+  newDesc,
+  newState,
+  newUi,
+  changedState,
+  encodeUi,
+  decodeUi,
+
+  interpretMove,
+  // A tap only selects; there is no second action to hold a finger for.
+  ignoresSecondaryButton: true,
+  executeMove,
+  finishesByDeduction: nothingToDeduce,
+  status,
+  findMistakes,
+  // Every letter of a wrong slot comes back, so the clearing does not say
+  // which rule-out was the answer's letter, as the check does not.
+  clearMistakes: (state, mistakes) =>
+    mistakes.flatMap(({ pos }) => clearMarks(state, pos) ?? []),
+  requestKeys,
+  statusbarText,
+
+  solve(_orig, curr) {
+    return { ok: true, move: { type: "guess", letters: curr.answer.slice() } };
+  },
+
+  colors,
+  preferredTileSize: PREFERRED_TILE_SIZE,
+  computeSize,
+  newDrawState,
+  redraw,
+};
+
+registerGame(wordguessGame);

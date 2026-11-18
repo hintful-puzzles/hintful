@@ -650,7 +650,7 @@ export default defineConfig(async ({ command, mode }) => {
           // build fails rather than ship that. It is no size budget: the game
           // worker holds every game, and when it outgrows the limit the limit
           // is raised.
-          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
           manifestTransforms: [precacheSizes("dist")],
         },
       }),
