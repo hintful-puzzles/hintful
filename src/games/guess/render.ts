@@ -821,7 +821,7 @@ export function redraw(
       dr,
       ds,
       s.nextGo,
-      { pegs: ui.currPegs, feedback: [] },
+      { pegs: ui.entries, feedback: [] },
       ui.holds,
       cursorHere ? ui.cursor.x : -1,
       forceRows,
@@ -834,7 +834,7 @@ export function redraw(
       null,
       true,
       cursorHere && ui.cursor.x === s.params.npegs,
-      ui.markable,
+      ui.ready,
     );
   }
   for (const gi of hintRows) dr.drawUpdate(rowBox(ds, gi));

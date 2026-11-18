@@ -41,6 +41,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `ui-snapshot.ts` — a `Ui` kept to be put back |
 | – `same-value.ts` — whether two values hold the same thing |
 | – `note-taking-cell.ts` — the shared highlight-and-type mechanic |
+| – `code-rows.ts` — the code-breaking mechanic |
 | – `grid/index.ts` — planar-grid geometry (upstream `grid.c`) |
 | – `geometry.ts` — cell ↔ pixel |
 | – `findloop.ts` — loop/bridge finding |
@@ -352,6 +353,15 @@ own `Move`. Exemplar: `keen/index.ts`.
 - **Lay notes out with `noteGrid`**, in the cell's `ringTextBox`, so a hint's
   ring goes round them; `sizedBy` gives cells whose note areas differ one
   size.
+
+### `code-rows.ts` — the code-breaking mechanic
+
+Reach for it when a hidden answer is guessed a row at a time and the player
+rules values out of an answer row. The answer row's rule-outs are state
+(`withRuleOuts`, `ruleOutMistakes` for Check & save); the working row is the
+`Ui`'s `WorkingRow`, edited by `enterValue` and `rubOut`. The game keeps its
+score, keys, picture, hint and the routing of taps and keys onto these.
+Exemplar: `guess/index.ts`.
 
 ### `grid/index.ts` — planar-grid geometry (upstream `grid.c`)
 

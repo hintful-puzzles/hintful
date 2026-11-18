@@ -7,6 +7,11 @@
  * rule-out marks in the answer row.
  */
 
+import {
+  type RuleOutMistake,
+  ruleOutMistakes,
+  type WorkingRow,
+} from "../../engine/code-rows.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -18,7 +23,6 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetBoards } from "../../engine/game.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { unreadParams } from "../../engine/params.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
@@ -61,17 +65,11 @@ export interface GuessState {
   /** `0..nguesses`; `nextGo === nguesses` means the rows are exhausted. */
   readonly nextGo: number;
   /**
-   * The answer row's marks, one bitmask per slot: bit `c` set means the player
-   * has ruled color `c` out of that slot of the answer.
-   *
-   * **Rule-outs, not candidates**, so it is not called `pencil`: a slot with no
-   * marks is one where every color is still possible, and nothing is written
-   * there until a row proves otherwise. Mastermind's one-row readings are all of
-   * the form "not this color, here" (`openspec/changes/add-guess-hint`'s
-   * proposal has the table), which is the fact a player needs somewhere to keep.
-   *
-   * State rather than `Ui`, so a mark is a move: it undoes, it replays from the
-   * log, and a hint can place one.
+   * The answer row's rule-outs, one bitmask a slot (`code-rows.ts`). Not called
+   * `pencil`, because they are rule-outs and not candidates: Mastermind's
+   * one-row readings are all of the form "not this color, here"
+   * (`openspec/changes/add-guess-hint`'s proposal has the table), which is the
+   * fact a player needs somewhere to keep.
    */
   readonly ruledOut: Int32Array;
 }
@@ -91,23 +89,12 @@ export type GuessMove =
   | { type: "guess"; pegs: number[]; holds: boolean[] }
   | { type: "mark"; marks: SlotMark[]; ruledOut: boolean };
 
-export interface GuessUi {
+/** The working row's pegs are `entries`, edited through `code-rows.ts`. */
+export interface GuessUi extends WorkingRow {
   params: GuessParams;
-  /** Working (half-finished) row, length `npegs`, `0` = empty. */
-  currPegs: number[];
   /** Live holds, length `npegs`. */
   holds: boolean[];
-  /** Where the next color will land: `x` is the peg position, `0..npegs`
-   * (`npegs` = the submit position). One-dimensional — `y` stays `0` — because
-   * a color is named by its own key rather than picked out of a list; the
-   * shared `GridCursor` shape is kept so the collection's cursor vocabulary
-   * holds, and `moveCursor` is given a height of one. */
-  cursor: GridCursor;
-  markable: boolean;
   showLabels: boolean;
-  /** Notes mode: a color key rules that color out of the cursor's slot of the
-   * answer row instead of placing it in the working row. */
-  pencilMode: boolean;
 }
 
 // --- pegrow helpers ---------------------------------------------------
@@ -316,26 +303,10 @@ export function outcome(s: GuessState): number {
   return s.nextGo >= nguesses ? -1 : 0;
 }
 
-/** An answer slot whose marks rule out the color the code has there. */
-export interface GuessMistake {
-  readonly pos: number;
-}
+export type GuessMistake = RuleOutMistake;
 
-/**
- * The answer slots whose rule-outs include the code's color there: the one
- * mark a player can get wrong, since a guess is a probe rather than a claim.
- * The slot is what is reported, never the color, so the check says that a
- * rule-out here is wrong without saying which. Rule-outs are the complement of
- * the candidate masks `entryMistakes` reads, and a slot with every color ruled
- * out would read there as unmarked, so the test is written out here.
- */
 export function findMistakes(s: GuessState): readonly GuessMistake[] {
-  if (outcome(s) !== 0) return [];
-  const out: GuessMistake[] = [];
-  s.solution.forEach((color, pos) => {
-    if (s.ruledOut[pos] & (1 << color)) out.push({ pos });
-  });
-  return out;
+  return outcome(s) !== 0 ? [] : ruleOutMistakes(s.ruledOut, s.solution);
 }
 
 export function status(s: GuessState): GameStatus {

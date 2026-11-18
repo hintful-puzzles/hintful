@@ -125,8 +125,8 @@ describe("changedState (hold-carry)", () => {
     const holds = [true, false, false, false];
     const next = guessGame.executeMove(state, submit(guess, holds));
     guessGame.changedState?.(ui, state, next);
-    expect(ui.currPegs[0]).toBe(guess[0]); // held
-    expect(ui.currPegs.slice(1)).toEqual([0, 0, 0]); // cleared
+    expect(ui.entries[0]).toBe(guess[0]); // held
+    expect(ui.entries.slice(1)).toEqual([0, 0, 0]); // cleared
     expect(ui.holds[0]).toBe(true);
   });
 
@@ -138,7 +138,7 @@ describe("changedState (hold-carry)", () => {
       submit(state.solution.slice(), [true, false, false, false]),
     );
     guessGame.changedState?.(ui, state, next);
-    expect(ui.currPegs).toEqual([0, 0, 0, 0]);
+    expect(ui.entries).toEqual([0, 0, 0, 0]);
     expect(ui.holds.every((h) => !h)).toBe(true);
   });
 
@@ -146,16 +146,16 @@ describe("changedState (hold-carry)", () => {
     // A mark is a move, and the row is not in it: rebuilding after every
     // transition would throw the row away while the player marks against it.
     const { state, ui } = freshGame();
-    ui.currPegs.splice(0, 2, 3, 5);
+    ui.entries.splice(0, 2, 3, 5);
     const marked = guessGame.executeMove(state, {
       type: "mark",
       marks: [{ pos: 0, color: 2 }],
       ruledOut: true,
     });
     guessGame.changedState?.(ui, state, marked);
-    expect(ui.currPegs).toEqual([3, 5, 0, 0]);
+    expect(ui.entries).toEqual([3, 5, 0, 0]);
     guessGame.changedState?.(ui, marked, state); // the undo
-    expect(ui.currPegs).toEqual([3, 5, 0, 0]);
+    expect(ui.entries).toEqual([3, 5, 0, 0]);
   });
 
   it("still rebuilds the row when an undo takes a guess back", () => {
@@ -163,9 +163,9 @@ describe("changedState (hold-carry)", () => {
     const wrong = state.solution.slice();
     wrong[0] = (wrong[0] % state.params.ncolors) + 1;
     const next = guessGame.executeMove(state, submit(wrong));
-    ui.currPegs.splice(0, 1, 4);
+    ui.entries.splice(0, 1, 4);
     guessGame.changedState?.(ui, next, state); // undo: nextGo 1 -> 0
-    expect(ui.currPegs).toEqual([0, 0, 0, 0]);
+    expect(ui.entries).toEqual([0, 0, 0, 0]);
   });
 });
 
@@ -193,15 +193,15 @@ describe("interpretMove keyboard", () => {
       0x33 /* '3' */,
     );
     expect(r).toBeTruthy();
-    expect(ui.currPegs[0]).toBe(3);
+    expect(ui.entries[0]).toBe(3);
     expect(ui.cursor.x).toBe(1);
   });
 
   it("submit is offered only for a markable row", () => {
     const { state, ui } = freshGame();
     // Fill all pegs → markable; move cursor to submit position.
-    for (let i = 0; i < state.params.npegs; i++) ui.currPegs[i] = 1;
-    ui.markable = true;
+    for (let i = 0; i < state.params.npegs; i++) ui.entries[i] = 1;
+    ui.ready = true;
     ui.cursor.x = state.params.npegs;
     ui.cursor.visible = true;
     const r = guessGame.interpretMove(
@@ -217,7 +217,7 @@ describe("interpretMove keyboard", () => {
   it("clearing on the submit position backspaces, and never lengthens the row", () => {
     // Every other keyboard arm bounds the cursor against `npegs`; the erase arm
     // did not, and `cursor.x` *is* `npegs` the moment a row is full. Unguarded
-    // it writes `currPegs[npegs]` — lengthening the row while `isMarkable`
+    // it writes `entries[npegs]` — lengthening the row while `isMarkable`
     // (reading only the first `npegs`) still says yes — and `executeMove` then
     // rejects the guess. Upstream has the same hole; the Clear key on the panel
     // sends this very button.
@@ -231,17 +231,17 @@ describe("interpretMove keyboard", () => {
     for (const key of colorButtons(state.params).slice(0, npegs))
       guessGame.interpretMove(state, ui, ds, ZERO, key);
     expect(ui.cursor.x).toBe(npegs);
-    expect(ui.markable).toBe(true);
+    expect(ui.ready).toBe(true);
 
     expect(guessGame.interpretMove(state, ui, ds, ZERO, CLEAR_BUTTON)).toBe(UI_UPDATE);
-    expect(ui.currPegs).toHaveLength(npegs);
-    expect(ui.currPegs[npegs - 1]).toBe(0);
-    expect(ui.markable).toBe(false);
+    expect(ui.entries).toHaveLength(npegs);
+    expect(ui.entries[npegs - 1]).toBe(0);
+    expect(ui.ready).toBe(false);
 
     // Again, and it walks back a second slot rather than sticking on the empty
     // one it just made.
     guessGame.interpretMove(state, ui, ds, ZERO, CLEAR_BUTTON);
-    expect(ui.currPegs.slice(npegs - 2)).toEqual([0, 0]);
+    expect(ui.entries.slice(npegs - 2)).toEqual([0, 0]);
 
     // And the guess that follows still plays.
     for (const key of colorButtons(state.params).slice(0, 2))
@@ -257,17 +257,17 @@ describe("interpretMove keyboard", () => {
     // different gesture entirely.
     const { state, ui } = freshGame("backspace-holds");
     const ds = preferredDrawState(guessGame, state);
-    ui.currPegs[0] = 4;
+    ui.entries[0] = 4;
     ui.holds[0] = true;
     guessGame.interpretMove(state, ui, ds, ZERO, colorButtons(state.params)[1]);
-    expect(ui.currPegs.slice(0, 2)).toEqual([4, 2]);
+    expect(ui.entries.slice(0, 2)).toEqual([4, 2]);
 
     guessGame.interpretMove(state, ui, ds, ZERO, CLEAR_BUTTON);
-    expect(ui.currPegs.slice(0, 2)).toEqual([4, 0]);
+    expect(ui.entries.slice(0, 2)).toEqual([4, 0]);
     // Nothing left that the player typed: the key is declined rather than
     // eating the hold.
     expect(guessGame.interpretMove(state, ui, ds, ZERO, CLEAR_BUTTON)).toBeNull();
-    expect(ui.currPegs[0]).toBe(4);
+    expect(ui.entries[0]).toBe(4);
   });
 
   it("the label toggle works even after the game ends", () => {
@@ -375,8 +375,8 @@ describe("guess keypad", () => {
     for (const color of [0, 1, 2, 2])
       guessGame.interpretMove(state, ui, ds, ZERO, keys[color]);
 
-    expect(ui.currPegs).toEqual([1, 2, 3, 3]);
-    expect(ui.markable).toBe(false);
+    expect(ui.entries).toEqual([1, 2, 3, 3]);
+    expect(ui.ready).toBe(false);
     expect(
       guessGame.interpretMove(state, ui, ds, ZERO, submitButton(params)),
     ).toBeNull();
@@ -384,7 +384,7 @@ describe("guess keypad", () => {
 
     // The cursor stayed on the peg that caused it, so one key fixes the row.
     guessGame.interpretMove(state, ui, ds, ZERO, keys[3]);
-    expect(ui.currPegs).toEqual([1, 2, 3, 4]);
+    expect(ui.entries).toEqual([1, 2, 3, 4]);
     expect(guessGame.statusbarText?.(state, ui)).not.toContain("repeated");
     expect(
       guessGame.interpretMove(state, ui, ds, ZERO, submitButton(params)),
@@ -422,7 +422,7 @@ describe("guess tap selection", () => {
 
     const ds = preferredDrawState(guessGame, state);
     guessGame.interpretMove(state, ui, ds, ZERO, colorButtons(state.params)[4]);
-    expect(ui.currPegs[target]).toBe(5);
+    expect(ui.entries[target]).toBe(5);
   });
 
   it("a tap on a filled slot selects it rather than hiding the cursor", () => {
@@ -431,10 +431,10 @@ describe("guess tap selection", () => {
     // which is the one thing a panel player must not have happen.
     const { state, ui } = freshGame("tap-filled");
     const target = 1;
-    ui.currPegs[target] = 3;
+    ui.entries[target] = 3;
     const { x, y } = slot(state, target);
     expect(tap(state, ui, x, y)).toBeTruthy();
-    expect(ui.currPegs[target]).toBe(3);
+    expect(ui.entries[target]).toBe(3);
     expect(ui.cursor.visible).toBe(true);
     expect(ui.cursor.x).toBe(target);
   });
@@ -447,11 +447,11 @@ describe("guess tap selection", () => {
     const { state, ui } = freshGame("no-palette");
     const ds = preferredDrawState(guessGame, state);
     expect(ds.guessx).toBe(ds.border);
-    const before = ui.currPegs.slice();
+    const before = ui.entries.slice();
     for (const y of [ds.guessy, ds.guessy + ds.h / 2, ds.h - 1]) {
       expect(tap(state, ui, 1, Math.floor(y))).toBeNull();
     }
-    expect(ui.currPegs).toEqual(before);
+    expect(ui.entries).toEqual(before);
   });
 
   it("a held finger over the feedback pegs still submits", () => {
@@ -459,7 +459,7 @@ describe("guess tap selection", () => {
     const ds = preferredDrawState(guessGame, state);
     for (const key of colorButtons(state.params).slice(0, state.params.npegs))
       guessGame.interpretMove(state, ui, ds, ZERO, key);
-    expect(ui.markable).toBe(true);
+    expect(ui.ready).toBe(true);
 
     const off = pegOff(ds);
     const at = {
@@ -486,7 +486,7 @@ describe("guess next-empty entry", () => {
     // Panel keys only, as a touch player has: compose 1,5,3,5 …
     for (const color of [0, 4, 2, 4])
       guessGame.interpretMove(state, ui, ds, ZERO, keys[color]);
-    expect(ui.currPegs).toEqual([1, 5, 3, 5]);
+    expect(ui.entries).toEqual([1, 5, 3, 5]);
     // … hold pegs 0 and 2 (the long press the frontend delivers as the right
     // button), and submit.
     for (const peg of [0, 2])
@@ -502,7 +502,7 @@ describe("guess next-empty entry", () => {
     const next = guessGame.executeMove(state, move as GuessMove);
     expect(outcome(next)).toBe(0);
     guessGame.changedState?.(ui, state, next);
-    expect(ui.currPegs).toEqual([1, 0, 3, 0]);
+    expect(ui.entries).toEqual([1, 0, 3, 0]);
     // The player has been pressing keys, so the cursor is on screen — which is
     // what made this destructive rather than merely confusing.
     expect(ui.cursor.visible).toBe(true);
@@ -510,9 +510,9 @@ describe("guess next-empty entry", () => {
     // The cursor is parked on the first slot the holds left open, not on peg 0.
     expect(ui.cursor.x).toBe(1);
     guessGame.interpretMove(next, ui, ds, ZERO, keys[3]);
-    expect(ui.currPegs).toEqual([1, 4, 3, 0]);
+    expect(ui.entries).toEqual([1, 4, 3, 0]);
     guessGame.interpretMove(next, ui, ds, ZERO, keys[5]);
-    expect(ui.currPegs).toEqual([1, 4, 3, 6]);
+    expect(ui.entries).toEqual([1, 4, 3, 6]);
   });
 
   it("a selected slot wins over the first empty one, which is how a blank is placed", () => {
@@ -527,8 +527,8 @@ describe("guess next-empty entry", () => {
     const { x, y } = slot(state, 3);
     guessGame.interpretMove(state, ui, ds, { x, y }, LEFT_RELEASE);
     guessGame.interpretMove(state, ui, ds, ZERO, colorButtons(params)[0]);
-    expect(ui.currPegs).toEqual([0, 0, 0, 1]);
-    expect(ui.markable).toBe(true);
+    expect(ui.entries).toEqual([0, 0, 0, 1]);
+    expect(ui.ready).toBe(true);
   });
 
   it("a color key is declined when the row is full and nothing is selected", () => {
@@ -536,12 +536,12 @@ describe("guess next-empty entry", () => {
     const ds = preferredDrawState(guessGame, state);
     for (const key of colorButtons(state.params).slice(0, state.params.npegs))
       guessGame.interpretMove(state, ui, ds, ZERO, key);
-    const filled = ui.currPegs.slice();
+    const filled = ui.entries.slice();
     ui.cursor.visible = false;
     expect(
       guessGame.interpretMove(state, ui, ds, ZERO, colorButtons(state.params)[5]),
     ).toBeNull();
-    expect(ui.currPegs).toEqual(filled);
+    expect(ui.entries).toEqual(filled);
   });
 });
 
@@ -556,13 +556,13 @@ describe("guess encodeUi / decodeUi", () => {
     guessGame.interpretMove(state, ui, ds, ZERO, colorButtons(state.params)[2]);
     guessGame.interpretMove(state, ui, ds, slot(state, 0), LEFT_RELEASE);
     guessGame.interpretMove(state, ui, ds, slot(state, 0), RIGHT_BUTTON);
-    expect(ui.currPegs).toEqual([3, 0, 0, 0]);
+    expect(ui.entries).toEqual([3, 0, 0, 0]);
     expect(ui.holds).toEqual([true, false, false, false]);
 
     const restored = guessGame.newUi(state);
     guessGame.changedState?.(restored, null, state);
     guessGame.decodeUi?.(restored, guessGame.encodeUi?.(ui) ?? "");
-    expect(restored.currPegs).toEqual(ui.currPegs);
+    expect(restored.entries).toEqual(ui.entries);
     expect(restored.holds).toEqual(ui.holds);
     // And the restored cursor is where the next color goes, not wherever it
     // was when `newUi` built it.
@@ -572,7 +572,7 @@ describe("guess encodeUi / decodeUi", () => {
   it("drops a peg a save claims that this game has no color for", () => {
     const { ui } = freshGame("decode-ui-junk");
     guessGame.decodeUi?.(ui, "3,99,-1,2_");
-    expect(ui.currPegs).toEqual([3, 0, 0, 2]);
+    expect(ui.entries).toEqual([3, 0, 0, 2]);
     expect(ui.holds).toEqual([false, false, false, true]);
   });
 });

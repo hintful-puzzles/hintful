@@ -10,6 +10,15 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import {
+  enterValue,
+  isRuledOut,
+  restCursor,
+  rubOut,
+  ruledOutAt,
+  selectedSlot,
+  withRuleOuts,
+} from "../../engine/code-rows.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
@@ -80,14 +89,19 @@ function newUi(state: GuessState): GuessUi {
   const p = state.params;
   return {
     params: p,
-    currPegs: new Array(p.npegs).fill(0),
+    entries: new Array(p.npegs).fill(0),
     holds: new Array(p.npegs).fill(false),
     cursor: newCursor(),
-    markable: false,
+    ready: false,
     showLabels: false,
     pencilMode: false,
   };
 }
+
+const readyFor =
+  (params: GuessParams) =>
+  (pegs: readonly number[]): boolean =>
+    isMarkable(params, pegs);
 
 /**
  * Upstream `game_changed_state`: rebuild the working row from the state's holds
@@ -106,105 +120,31 @@ function changedState(ui: GuessUi, prev: GuessState | null, next: GuessState): v
   const lastRow = next.nextGo > 0 ? next.guesses[next.nextGo - 1] : null;
   for (let i = 0; i < npegs; i++) {
     ui.holds[i] = !over && next.holds[i];
-    ui.currPegs[i] = ui.holds[i] && lastRow ? lastRow.pegs[i] : 0;
+    ui.entries[i] = ui.holds[i] && lastRow ? lastRow.pegs[i] : 0;
   }
-  ui.markable = isMarkable(next.params, ui.currPegs);
-  restCursor(ui, npegs);
-}
-
-function setPeg(params: GuessParams, ui: GuessUi, peg: number, col: number): void {
-  ui.currPegs[peg] = col;
-  ui.markable = isMarkable(params, ui.currPegs);
-}
-
-// --- where a color lands -----------------------------------------------
-
-/** The first slot of the working row with no color in it, or `-1`. */
-function firstEmpty(ui: GuessUi, npegs: number): number {
-  for (let i = 0; i < npegs; i++) {
-    if (ui.currPegs[i] === 0) return i;
-  }
-  return -1;
-}
-
-/**
- * Park the cursor where the next color will go: the first empty slot, else the
- * submit position.
- *
- * **This is the fix for a defect a keyboard used to hide.** The cursor used to
- * be reset to peg 0 after every transition, and a color key used to advance it
- * by one index — so a player holding pegs 0 and 2 got a row pre-filled out of
- * order and the very first color they pressed overwrote a peg they had asked to
- * keep. Filling the first *open* slot handles a row pre-filled in any pattern,
- * which advancing by index structurally cannot.
- *
- * `fallback` is where to rest when the row is full but cannot be submitted (a
- * repeated color under `allowMultiple: false`): the submit position would draw
- * the submit box around a row that will not go.
- *
- * In notes mode the cursor names the answer slot the next mark goes in, and the
- * submit position is not one: a full row there rests on its last slot, where
- * the Marks key puts a cursor it finds on the submit position.
- */
-function restCursor(ui: GuessUi, npegs: number, fallback = 0): void {
-  const open = firstEmpty(ui, npegs);
-  const full = ui.pencilMode ? npegs - 1 : ui.markable ? npegs : fallback;
-  ui.cursor.x = open >= 0 ? open : full;
-}
-
-/**
- * Enter `color` where the player is pointing: the slot they selected, else the
- * first empty one. Declines when the row is full and nothing is selected, as
- * a Wordle row does — there is nowhere for the color to go, and overwriting
- * a slot the player did not name would be a guess about which.
- */
-function enterColor(params: GuessParams, ui: GuessUi, color: number): UiUpdate | null {
-  const { npegs } = params;
-  const chosen = markSlot(ui, npegs);
-  const slot = chosen >= 0 ? chosen : firstEmpty(ui, npegs);
-  if (slot < 0) return null;
-  setPeg(params, ui, slot, color);
-  // The ring is the "where does the next one land" marker, so it is shown
-  // whether or not the player has ever moved a cursor.
-  ui.cursor.visible = true;
-  restCursor(ui, npegs, slot);
-  return UI_UPDATE;
-}
-
-/** The last color the player *typed*: the rightmost filled slot they are not
- * holding. A held slot was carried over from the previous row rather than
- * entered, so Backspace walks past it rather than undoing a hold. */
-function lastTyped(ui: GuessUi, npegs: number): number {
-  for (let i = npegs - 1; i >= 0; i--) {
-    if (ui.currPegs[i] !== 0 && !ui.holds[i]) return i;
-  }
-  return -1;
+  ui.ready = isMarkable(next.params, ui.entries);
+  restCursor(ui);
 }
 
 function buildGuessMove(ui: GuessUi): GuessMove {
-  return { type: "guess", pegs: ui.currPegs.slice(), holds: ui.holds.slice() };
+  return { type: "guess", pegs: ui.entries.slice(), holds: ui.holds.slice() };
 }
 
 // --- answer-row marks -------------------------------------------------
 
 /** Rule `color` out of answer slot `pos`, or back in if it is already out. */
 function toggleMark(state: GuessState, pos: number, color: number): GuessMove {
-  const out = (state.ruledOut[pos] & (1 << color)) !== 0;
+  const out = isRuledOut(state.ruledOut, pos, color);
   return { type: "mark", marks: [{ pos, color }], ruledOut: !out };
 }
 
 /** Put every color of answer slot `pos` back, or decline if none is out. */
 function clearMarks(state: GuessState, pos: number): GuessMove | null {
-  const marks = [];
-  for (let c = 1; c <= state.params.ncolors; c++) {
-    if (state.ruledOut[pos] & (1 << c)) marks.push({ pos, color: c });
-  }
+  const marks = ruledOutAt(state.ruledOut, pos, state.params.ncolors).map((color) => ({
+    pos,
+    color,
+  }));
   return marks.length > 0 ? { type: "mark", marks, ruledOut: false } : null;
-}
-
-/** The slot a mark from the keyboard goes in: the cursor's, when it is on one. */
-function markSlot(ui: GuessUi, npegs: number): number {
-  return ui.cursor.visible && ui.cursor.x < npegs ? ui.cursor.x : -1;
 }
 
 // --- input ------------------------------------------------------------
@@ -320,7 +260,7 @@ function interpretMove(
       ui.pencilMode = true;
       return UI_UPDATE;
     }
-    if (overHint && ui.markable) return buildGuessMove(ui);
+    if (overHint && ui.ready) return buildGuessMove(ui);
     return null;
   }
   if (button === RIGHT_BUTTON) {
@@ -342,10 +282,10 @@ function interpretMove(
     // One axis: the slot the next color fills, or — in notes mode — the answer
     // slot the next mark goes in, which is why the submit position drops out
     // there.
-    const maxcur = npegs + (ui.markable && !ui.pencilMode ? 1 : 0);
+    const maxcur = npegs + (ui.ready && !ui.pencilMode ? 1 : 0);
     return moveCursor(ui.cursor, button, maxcur, 1) ? UI_UPDATE : null;
   }
-  if (button === SUBMIT_BUTTON) return ui.markable ? buildGuessMove(ui) : null;
+  if (button === SUBMIT_BUTTON) return ui.ready ? buildGuessMove(ui) : null;
   if (button === CURSOR_SELECT) {
     // On the submit position Enter submits; on a slot it toggles notes mode,
     // which is what Enter on the highlight does in every note-taking game.
@@ -355,43 +295,29 @@ function interpretMove(
       ui.pencilMode = !ui.pencilMode;
       return UI_UPDATE;
     }
-    return ui.markable ? buildGuessMove(ui) : null;
+    return ui.ready ? buildGuessMove(ui) : null;
   }
   // A digit picks a color; `0` is the tenth, which only a ten-color game has.
   const digit = digitOf(button);
   const color = digit === 0 ? 10 : digit;
   if (color !== null && color <= ncolors) {
-    if (!ui.pencilMode) return enterColor(params, ui, color);
-    const slot = markSlot(ui, npegs);
+    if (!ui.pencilMode)
+      return enterValue(ui, color, readyFor(params)) ? UI_UPDATE : null;
+    const slot = selectedSlot(ui);
     return slot >= 0 ? toggleMark(from, slot, color) : null;
   }
   // `D` and `d` are the erase key's letter aliases, so they follow it into
   // whichever row the frame is on.
-  const rubOut = isEraseKey(button) || button === 0x44 || button === 0x64;
-  if (rubOut && ui.pencilMode) {
+  const erase = isEraseKey(button) || button === 0x44 || button === 0x64;
+  if (erase && ui.pencilMode) {
     // Clear, in notes mode, puts the cursor's answer slot back to every color.
-    const slot = markSlot(ui, npegs);
+    const slot = selectedSlot(ui);
     return slot >= 0 ? clearMarks(from, slot) : null;
   }
-  if (rubOut) {
-    // Rub out the selected slot, or — with nothing selected, or a selection
-    // sitting on a slot that is already empty — the last color the player
-    // typed. Backspacing is what makes the key work on a *full* row, where the
-    // cursor rests on the submit position and this used to decline: that is
-    // the moment a typo is most likely and most worth correcting.
-    //
-    // Both branches take a slot from a bounded scan or a cursor checked against
-    // `npegs`, so this can no longer write `currPegs[npegs]`. Unguarded — as
-    // upstream leaves it — that lengthens the row while `isMarkable` (reading
-    // only the first `npegs`) still says yes, and `executeMove` then rejects
-    // the guess with an illegal peg.
-    const at = ui.cursor.visible && ui.cursor.x < npegs ? ui.cursor.x : -1;
-    const slot = at >= 0 && ui.currPegs[at] !== 0 ? at : lastTyped(ui, npegs);
-    if (slot < 0) return null;
-    setPeg(params, ui, slot, 0);
-    ui.cursor.x = slot;
-    ui.cursor.visible = true;
-    return UI_UPDATE;
+  if (erase) {
+    // A held slot was carried over from the previous row rather than typed, so
+    // Backspace walks past it rather than undoing a hold.
+    return rubOut(ui, readyFor(params), (slot) => !ui.holds[slot]) ? UI_UPDATE : null;
   }
   if (button === CURSOR_SELECT2) {
     if (ui.cursor.x === npegs) return null;
@@ -406,16 +332,10 @@ function interpretMove(
 
 function executeMove(s: GuessState, m: GuessMove): GuessState {
   if (m.type === "mark") {
-    const { npegs, ncolors } = s.params;
-    const ret = cloneState(s);
-    for (const { pos, color } of m.marks) {
-      if (pos < 0 || pos >= npegs || color < 1 || color > ncolors) {
-        throw new Error(`Illegal answer-row mark ${color} at ${pos}`);
-      }
-      if (m.ruledOut) ret.ruledOut[pos] |= 1 << color;
-      else ret.ruledOut[pos] &= ~(1 << color);
-    }
-    return ret;
+    // A save's mark names its value `color`, so the move keeps that field.
+    const marks = m.marks.map(({ pos, color }) => ({ pos, value: color }));
+    const ruledOut = withRuleOuts(s.ruledOut, marks, m.ruledOut, s.params.ncolors);
+    return { ...cloneState(s), ruledOut };
   }
   if (m.type !== "guess") return assertNever(m, "guess: executeMove");
   if (outcome(s) !== 0) throw new Error("No guesses allowed once the game is over");
@@ -453,7 +373,7 @@ function executeMove(s: GuessState, m: GuessMove): GuessState {
  * than one of two ways in.
  */
 function encodeUi(ui: GuessUi): string {
-  return ui.currPegs.map((peg, i) => `${peg}${ui.holds[i] ? "_" : ""}`).join(",");
+  return ui.entries.map((peg, i) => `${peg}${ui.holds[i] ? "_" : ""}`).join(",");
 }
 
 function decodeUi(ui: GuessUi, encoded: string): void {
@@ -464,11 +384,11 @@ function decodeUi(ui: GuessUi, encoded: string): void {
     const { value } = parseLeadingInt(field, 0);
     // A save is not a trusted input: a color this game does not have becomes an
     // empty slot, as upstream's decode_ui does.
-    ui.currPegs[i] = value >= 1 && value <= ncolors ? value : 0;
+    ui.entries[i] = value >= 1 && value <= ncolors ? value : 0;
     ui.holds[i] = field.endsWith("_");
   }
-  ui.markable = isMarkable(ui.params, ui.currPegs);
-  restCursor(ui, npegs);
+  ui.ready = isMarkable(ui.params, ui.entries);
+  restCursor(ui);
 }
 
 // --- status line ------------------------------------------------------
@@ -501,8 +421,8 @@ function statusbarText(s: GuessState, ui: GuessUi): string {
   }
   if (over < 0) return "Out of guesses: the answer is revealed.";
   const where = `Guess ${s.nextGo + 1} of ${nguesses}`;
-  if (ui.markable) return `${where}: ready to submit.`;
-  if (!s.params.allowMultiple && hasRepeat(ui.currPegs)) {
+  if (ui.ready) return `${where}: ready to submit.`;
+  if (!s.params.allowMultiple && hasRepeat(ui.entries)) {
     return `${where}: this game allows no repeated colors.`;
   }
   return where;
@@ -626,7 +546,7 @@ export const guessGame: Game<
     }
     if (m.type !== "guess") return [];
     const typed = m.pegs.flatMap((color, pos) =>
-      ui.currPegs[pos] === color
+      ui.entries[pos] === color
         ? []
         : [click(guessSlotPoint(ds, state.nextGo, pos)), colorKey(color)],
     );

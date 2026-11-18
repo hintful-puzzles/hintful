@@ -135,6 +135,35 @@ It now carries the source's names, and a library's id stands in.
   `edges` skeleton, with Separate on Palisade's wall model as the exemplar.
   Blocked squares are part of the board.
 
+## What Wordguess shares with Guess (task 3.0)
+
+Decided 2026-11-18. **The row-and-answer-row mechanic is an engine module,
+`src/engine/code-rows.ts`, and Guess moves onto it before Wordguess is
+written.** The test from `docs/engine-catalog.md` § "What decides whether
+something is shared": a change to how a rule-out is toggled, cleared,
+judged by Check & save or undone, or to where the next entry lands, which
+slot Backspace rubs out and where the cursor rests, would have to happen in
+both games at once. None of it is about colors or letters. A code-breaking
+game is a family (Bulls and Cows and an equation guesser have the same
+shape), so it is weighed at more than two.
+
+What the module owns: the answer row's rule-out bitmasks, their move, its
+application, toggle and clear, and the slots Check & save names; the
+working row's editing, entering a value at the selected or first open slot,
+rubbing one out, and resting the cursor where the next goes.
+
+What stays each game's, because a game would want it different: the score
+and its picture, the keys (Guess's color swatches, Wordguess's letters), the
+answer row's picture (ten color blocks against 26 letters), holds (Guess
+only), a guess refused as no word (Wordguess only), the hint's ladder, and
+`interpretMove`'s routing of taps and keys onto the module's operations,
+which hit-tests each game's own layout.
+
+Extracted from Guess first, so Guess's own tests show the extraction keeps
+its behavior; Wordguess is then the module's second consumer. Where writing
+Wordguess's `interpretMove` repeats Guess's routing line for line, that
+part is lifted too, from the two copies.
+
 ## Asked of the owner
 
 Asked together on 2026-11-18, and answered the same day:
