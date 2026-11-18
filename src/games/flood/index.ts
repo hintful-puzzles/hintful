@@ -223,7 +223,7 @@ export const floodGame: Game<
     }),
     numberItem<FloodParams>("colors", "Colors", "colors", {
       doc: "How many different colors the grid is filled with.",
-      bounds: { min: 3, max: MAXCOLORS },
+      bounds: { min: 3, max: MAXCOLORS, maxShown: true },
       label: { slot: "tail", words: (p) => `${p.colors} colors` },
     }),
     numberItem<FloodParams>(

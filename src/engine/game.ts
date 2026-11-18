@@ -272,6 +272,19 @@ interface ParamItemCommon<Params> {
 export interface ParamBounds {
   min?: number;
   max?: number;
+  /** The max is a limit of the game a player meets, such as the colors it
+   * has, rather than a cap no sensible board reaches: the Custom dialog's
+   * label says it, "Colors (up to 10)", from `max` itself. */
+  maxShown?: boolean;
+}
+
+/** The Custom dialog's label for `item`: its name, and its max where the
+ * field says to show it. A refusal names the field by `name` alone. */
+export function fieldLabel(item: { name: string; bounds?: ParamBounds }): string {
+  const b = item.bounds;
+  return b?.maxShown && b.max !== undefined
+    ? `${item.name} (up to ${b.max})`
+    : item.name;
 }
 
 /**

@@ -21,6 +21,7 @@ import {
   GRID_DARK,
   HELD,
 } from "../../engine/color/palette.ts";
+import { easeOut } from "../../engine/easing.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
@@ -48,8 +49,10 @@ import {
 
 export const PREFERRED_TILE_SIZE = 36;
 
-/** How long a pour flies, in seconds. */
-export const POUR_SECONDS = 0.24;
+/** How long a pour flies, in seconds: a move made dozens of times a board
+ * sits at the short end of the 150–300 ms that interface motion guidelines
+ * give a small element's move (Material Design 3, "Easing and duration"). */
+export const POUR_SECONDS = 0.2;
 
 // --- palette ----------------------------------------------------------------
 
@@ -552,7 +555,7 @@ export function redraw(
       const end = { x: toTop.x, y: toTop.y + (pour.count - 1 - k) * ts };
       return along(
         flightPath(start, end, hoverFrom, hoverTo, ts, size.w / 2),
-        f * span - k * POUR_LAG,
+        easeOut(f * span - k * POUR_LAG),
       );
     });
     flight = { color, balls };

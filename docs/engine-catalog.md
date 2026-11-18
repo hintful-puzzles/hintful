@@ -136,6 +136,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `draw.ts` — shared drawing primitives |
 | – `completion-status.ts` — the status bar's completion words |
 | – `win-wave.ts` — the win flash |
+| – `easing.ts` — the curve a move animates along |
 | – `pencil-indicator.ts` — the pencil-mode indicator |
 | – `pencil-prefs.ts` — shared pencil `GamePref` declarations |
 | – `rules-out.ts` — the key and help words of `Game.rulesOut`'s preference |
@@ -1476,6 +1477,10 @@ Reach for it when you declare `paramConfig` or validate params.
   `bounds` and choice list, then the game's optional `validateParams`.
 - `dimensionParamConfig`, `numberItem`, `squareSize` and `parseConfigInt`
   are the declarative helpers behind `Game.paramConfig`.
+- **Set `maxShown` on a `bounds` whose max is a limit a player meets**, the
+  colors a game has: the Custom dialog's label then says it, "Colors (up to
+  10)" (`fieldLabel`). Leave it off a cap no sensible board reaches, which
+  would only clutter the label.
 - `parseDimensions` reads a leading `WxH` or a bare square size.
 - **Write a float param with `formatG` and read it with `atof`.** A
   full-precision float reads back as a different number, and the game ID
@@ -1618,6 +1623,12 @@ a board with no grid, `loopSteps` for a closed route, and `walkLoop` puts
 unordered links in route order first. The rules and the table of routes:
 `rendering.md` § "Animation and flash". Exemplar:
 `src/skeleton/grid/render.ts`.
+
+### `easing.ts` — the curve a move animates along
+
+Take a move animation's time through `easeOut` in `redraw`: a piece that
+answers the player starts fast and settles into place, where a constant
+speed reads as mechanical. Exemplar: the pour in `ballsort/render.ts`.
 
 ### `pencil-indicator.ts` — the pencil-mode indicator
 

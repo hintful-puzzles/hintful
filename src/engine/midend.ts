@@ -30,6 +30,7 @@ import {
 } from "./difficulty.ts";
 import {
   type ActiveHint,
+  fieldLabel,
   type Game,
   type GameDrawing,
   type HintResult,
@@ -2278,7 +2279,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
           ? { type: "boolean", name: item.name }
           : item.type === "choices"
             ? { type: "choices", name: item.name, choicenames: item.choices }
-            : { type: "string", name: item.name };
+            : { type: "string", name: fieldLabel(item) };
     }
     const narrowing = configNarrowing(this.game.paramConfig ?? []);
     return narrowing.length > 0 ? { items, narrowing } : { items };

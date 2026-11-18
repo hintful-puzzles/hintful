@@ -61,11 +61,23 @@ ends tracks how often a player gets stuck best on two-empty boards
 0.57, and none at all on most five- and seven-color deals). But the spread
 between sizes and empty tubes is far wider than within one, and a tier on
 the dead share would need its own thresholds at every size. **So the
-difficulty is the board, not a tier**: the menu runs from four colors with
-two empty tubes to seven colors with one, in order of how often a player is
-stuck, and the game declares no difficulty contract
+difficulty is the board, not a tier**: the menu gives the boards with two
+empty tubes by size, from four colors to ten colors of five (twelve tubes,
+as experienced players meet in other ball-sorting apps), then those with
+one, from five colors to nine, and the game declares no difficulty contract
 (`finishesByDeduction: nothingToDeduce`, as Pegs and Same Game). A deal is
 any shuffle the search can sort.
+
+**The harder presets (owner, 2026-11-18)**, measured the same day with eight
+deals a board and forty random players a deal: past nine colors nearly
+every random player is stuck (10 of 4 with two empty: 95% median; 9 of 4
+with one: 100%), so that measure cannot rank them, and the menu orders by
+size within each count of empty tubes instead. A deal of 10 colors of 5
+takes 0.3 s (0.6 s at worst), of 9 of 4 with one empty 20 ms; 10 of 6 takes
+over a second and stays a custom board. Twelve colors of five, a common
+hard board elsewhere, reach 30,000 to 170,000 positions, inside the search's
+budget: past ten colors the limit is the palette's ten free colors, not the
+search.
 
 ## D4. The search
 

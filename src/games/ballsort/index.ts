@@ -173,8 +173,20 @@ function interpretMove(
     }
     // A press could be a tap or a drag, so it decides on the release
     // (`docs/input.md` § "A button with two meanings resolves on the release").
+    // With nothing picked up, both pick up this tube's run, so the press
+    // lifts it at once and the finger going down is answered.
     pressTarget(verbs, ui, t);
-    ui.drag = { from: t, pressX: p.x, pressY: p.y, x: p.x, y: p.y, moved: false };
+    const lifted = ui.held === null && heightOf(s, t) > 0;
+    if (lifted) ui.held = t;
+    ui.drag = {
+      from: t,
+      pressX: p.x,
+      pressY: p.y,
+      x: p.x,
+      y: p.y,
+      moved: false,
+      lifted,
+    };
     return UI_UPDATE;
   }
   if (isMouseDrag(button) && ui.drag) {
@@ -192,7 +204,10 @@ function interpretMove(
   if (isMouseRelease(button) && ui.drag) {
     const d = ui.drag;
     ui.drag = null;
-    if (!d.moved) return verbs.primary.apply(s, d.from, ui) ?? UI_UPDATE;
+    if (!d.moved) {
+      if (d.lifted) return UI_UPDATE;
+      return verbs.primary.apply(s, d.from, ui) ?? UI_UPDATE;
+    }
     const t = tubeUnder(s, ts, p);
     if (t === null || t === d.from) return UI_UPDATE;
     const m: BallsortPour = { type: "pour", from: d.from, to: t };

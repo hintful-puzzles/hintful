@@ -205,6 +205,17 @@ describe("Ball Sort's input", () => {
     expect(tap(ui, 2)).toEqual({ type: "pour", from: 0, to: 2 });
   });
 
+  it("lifts the run as the finger goes down, with nothing picked up, and keeps it up on the release", () => {
+    const ui = newUi(s);
+    expect(G.interpretMove(s, ui, ds, at(0), LEFT_BUTTON)).toBe(UI_UPDATE);
+    expect(ui.held).toBe(0);
+    G.interpretMove(s, ui, ds, at(0), LEFT_RELEASE);
+    expect(ui.held).toBe(0);
+    // With a run up, a press decides nothing until its release.
+    G.interpretMove(s, ui, ds, at(1), LEFT_BUTTON);
+    expect(ui.held).toBe(0);
+  });
+
   it("puts the run down with a second tap on its tube, and picks another up where it cannot pour", () => {
     const ui = newUi(s);
     tap(ui, 0);

@@ -103,6 +103,24 @@ describe("Midend custom-params round-trip", () => {
     });
   });
 
+  it("says a field's max in its label where the field shows it, and names the bare field in a refusal", () => {
+    const game = makeGame();
+    const [width] = game.paramConfig ?? [];
+    if (width?.type !== "string") throw new Error("the double's first field is Width");
+    const shown = { ...width, bounds: { min: 1, max: 12, maxShown: true } };
+    const m = new Midend({
+      ...game,
+      paramConfig: [shown, ...(game.paramConfig ?? []).slice(1)],
+    });
+    expect(m.getCustomParamsConfig().items["width"]).toEqual({
+      type: "string",
+      name: "Width (up to 12)",
+    });
+    expect(m.setCustomParams({ ...m.getCustomParams(), width: "13" })).toBe(
+      "Width must be at most 12.",
+    );
+  });
+
   it("reads the current params as initial values", () => {
     const m = new Midend(makeGame());
     expect(m.getCustomParams()).toEqual({ width: "5", flag: false, mode: 1 });

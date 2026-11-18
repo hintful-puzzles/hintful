@@ -530,7 +530,7 @@ export const guessGame: Game<
   paramConfig: [
     numberItem<GuessParams>("colors", "Colors", "ncolors", {
       doc: "How many colors the answer is chosen from.",
-      bounds: { min: 2, max: MAXCOLORS },
+      bounds: { min: 2, max: MAXCOLORS, maxShown: true },
       // A blank is one more thing a peg can be, so it is said with the colors.
       label: {
         slot: "tail",

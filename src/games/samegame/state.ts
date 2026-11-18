@@ -76,7 +76,7 @@ export const paramConfig: ParamConfigItem<SamegameParams>[] = [
   }),
   numberItem<SamegameParams>("no-of-colors", "No. of colors", "ncols", {
     doc: "How many different colors the squares come in; at least 3. Fewer colors make bigger groups.",
-    bounds: { max: 9 },
+    bounds: { max: 9, maxShown: true },
     label: { slot: "tail", words: (p) => `${p.ncols} colors` },
   }),
   {

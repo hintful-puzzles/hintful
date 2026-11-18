@@ -55,8 +55,8 @@ export interface BallsortUi {
   /** The keyboard cursor: `x` is the tube it is on, `y` always 0. */
   cursor: GridCursor;
   /** A press in progress: the tube it began on, where it was pressed, where
-   * the pointer is, and whether it has moved off as a drag; null between
-   * presses. */
+   * the pointer is, whether it has moved off as a drag, and whether the press
+   * itself picked the run up; null between presses. */
   drag: {
     from: number;
     pressX: number;
@@ -64,6 +64,7 @@ export interface BallsortUi {
     x: number;
     y: number;
     moved: boolean;
+    lifted: boolean;
   } | null;
 }
 
@@ -77,7 +78,7 @@ export const MAX_COLORS = 10;
 export const paramConfig: ParamConfigItem<BallsortParams>[] = [
   numberItem<BallsortParams>("colors", "Colors", "colors", {
     doc: "How many colors the balls come in. There is one full tube of balls for each color.",
-    bounds: { min: 2, max: MAX_COLORS },
+    bounds: { min: 2, max: MAX_COLORS, maxShown: true },
     label: { slot: "size", words: (p) => `${p.colors} colors` },
   }),
   numberItem<BallsortParams>("tube-size", "Balls per tube", "capacity", {
@@ -85,7 +86,7 @@ export const paramConfig: ParamConfigItem<BallsortParams>[] = [
     bounds: { min: 2, max: 6 },
     label: {
       slot: "kind",
-      words: (p) => (p.capacity === DEFAULT_CAPACITY ? null : `${p.capacity} per tube`),
+      words: (p) => (p.capacity === DEFAULT_CAPACITY ? null : `of ${p.capacity}`),
     },
   }),
   numberItem<BallsortParams>("spare", "Empty tubes", "spare", {
@@ -100,18 +101,26 @@ export const paramConfig: ParamConfigItem<BallsortParams>[] = [
 
 const DEFAULT_CAPACITY = 4;
 
-const board = (colors: number, spare: number): BallsortParams => ({
-  colors,
-  capacity: DEFAULT_CAPACITY,
-  spare,
-});
+const board = (
+  colors: number,
+  spare: number,
+  capacity = DEFAULT_CAPACITY,
+): BallsortParams => ({ colors, capacity, spare });
 
 export function defaultParams(): BallsortParams {
   return board(7, 2);
 }
 
 export const menu: PresetBoards<BallsortParams> = {
-  boards: [board(4, 2), board(7, 2), board(9, 2), board(5, 1), board(7, 1)],
+  boards: [
+    board(4, 2),
+    board(7, 2),
+    board(9, 2),
+    board(10, 2, 5),
+    board(5, 1),
+    board(7, 1),
+    board(9, 1),
+  ],
 };
 
 /** `<colors>h<capacity>e<spare>`: `7h4e2`. */

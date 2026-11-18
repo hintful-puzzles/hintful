@@ -78,6 +78,22 @@ async function mountMenu(placement: "light DOM" | "shadow root") {
   return { context, menu };
 }
 
+describe("the Type menu drawn as chips", () => {
+  it("puts a label with a comma in one chip, as the one control it is", async () => {
+    const { menu } = await mountMenu("light DOM");
+    const puzzle = (menu as unknown as { puzzle: ReturnType<typeof fakePuzzle> })
+      .puzzle;
+    puzzle.getParamsDescription = async () => "9x9, 10 mines";
+    puzzle.currentParams = "9x9n10";
+    menu.presentation = "chips";
+    menu.requestUpdate();
+    await vi.waitFor(() => {
+      const chips = [...(menu.shadowRoot?.querySelectorAll('[part="chip"]') ?? [])];
+      expect(chips.map((c) => c.textContent)).toEqual(["9x9, 10 mines"]);
+    });
+  });
+});
+
 describe("the Type menu's Custom type… dialog", () => {
   for (const placement of ["light DOM", "shadow root"] as const) {
     it(`opens from a menu in the ${placement}`, async () => {

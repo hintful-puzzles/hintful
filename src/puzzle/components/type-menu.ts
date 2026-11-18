@@ -52,8 +52,8 @@ export class PuzzleTypeMenu extends SignalWatcher(LitElement) {
    * How the trigger draws.
    *
    * `button` is the Web Awesome button with a caret, used where this menu is
-   * one control among several. `chips` splits the current parameter
-   * description into its own small monospaced chips — `7×7`, `Easy` — which is
+   * one control among several. `chips` draws the current parameter
+   * description as one small monospaced chip — `7×7 Easy` — which is
    * what the puzzle screen's readout row wants: the type is a *fact about the
    * board in front of you*, and hiding it behind a caret while the board is
    * governed by it is the wrong way round.
@@ -142,20 +142,14 @@ export class PuzzleTypeMenu extends SignalWatcher(LitElement) {
     `;
   }
 
-  /** The parameter description as chips. Split on commas, which is how
-   * `engine/param-label.ts` joins a label's qualifiers — "7x7 Normal, strip
-   * clues" is two facts, and two facts read better as two chips than as one
-   * sentence with a comma in it. A game with nothing to say yet gets a single
-   * "Type…" chip, so the control is never an empty target. */
+  /** The parameter description as one chip. The row is one control, the
+   * trigger of one menu whose presets set every field at once, so its words
+   * share one box: two boxes read as two choices to be made apart. A game with
+   * nothing to say yet gets "Type…", so the control is never an empty
+   * target. */
   private renderChips() {
-    const parts = this.currentGameTypeLabel
-      .split(",")
-      .map((part) => part.trim())
-      .filter(Boolean);
-    if (parts.length < 1) {
-      return html`<span part="chip">Type…</span>`;
-    }
-    return parts.map((part) => html`<span part="chip">${part}</span>`);
+    const label = this.currentGameTypeLabel.trim();
+    return html`<span part="chip">${label || "Type…"}</span>`;
   }
 
   private renderTriggerContent() {

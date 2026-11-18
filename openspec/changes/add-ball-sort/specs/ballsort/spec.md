@@ -71,8 +71,9 @@ included.
 The generator SHALL shuffle every ball into the full tubes, leave the spare
 tubes empty, and keep the deal only where no tube is dealt already sorted and
 the search sorts it within its budget. The game has no difficulty tiers: its
-difficulty is the board's colors and empty tubes, and the preset menu is
-ordered by how often a player gets stuck on each.
+difficulty is the board's colors, balls a tube and empty tubes, and the preset
+menu gives the boards with two empty tubes by size, up to ten colors of five,
+then those with one.
 
 #### Scenario: Every preset deals a board that can be sorted
 
@@ -118,6 +119,18 @@ up.
 
 - **WHEN** on `2h2e1:ab,ba,` tube 0 is tapped and then tube 2
 - **THEN** the b on top of tube 0 is poured into tube 2
+
+### Requirement: Controls: A press with nothing picked up lifts at once
+
+With nothing picked up, a press on a tube with balls SHALL lift its top run
+before the release, since a tap and a drag from there both begin by picking
+it up; the release of that press SHALL leave it up. A press with a run
+already up SHALL change nothing until its release.
+
+#### Scenario: The finger goes down
+
+- **WHEN** on `2h2e1:ab,ba,` tube 0 is pressed and not yet released
+- **THEN** the b on top of tube 0 is shown lifted
 
 ### Requirement: Controls: A drag pours, and the keyboard taps
 
@@ -203,7 +216,8 @@ hue alone.
 
 A pour SHALL fly its balls one after another, each drawn over the board: up
 out of its tube into its row's headroom, clear of every mouth, across to the
-headroom of the row it lands in, and down into its slot. A ball bound for the
+headroom of the row it lands in, and down into its slot, fast at first and
+slowing into place. A ball bound for the
 tube right below its own SHALL step aside toward the board's middle on the
 way. Solve SHALL show the sorted board at once.
 
