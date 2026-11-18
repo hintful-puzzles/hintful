@@ -15,7 +15,7 @@ The findings and the decisions behind these are `design.md`.
 - [x] 2.1 A script under `scripts/` that builds the answers and guesses lists from the pinned SCOWL release and 12dicts, applies the filter, and writes the module; the sources' versions and hashes are recorded beside it, and the output is committed (`scripts/word-list.ts`; `design.md` § "The word list, as built")
 - [x] 2.2 The notices: SCOWL's verbatim in `licenses/`, 12dicts and LDNOOBW credited in `CREDITS.md` and About
 - [x] 2.3 The engine module: lookup by length, membership, a seeded draw from the answers; its entry in `docs/engine-catalog.md` (`src/engine/word-list/`)
-- [ ] 2.4 Precache: the list is in the service worker's manifest, and the app works offline with it. The list ships in the game worker's bundle once a game imports it, and the build's `precacheCoverage` check already fails a build that leaves an emitted file out of the manifest, so no new test is owed; what is owed is a build with Wordguess in it, and a game dealt offline
+- [x] 2.4 Done 2026-11-18: the game worker grew to 3.58 MB with the list, so the precache limit went to 5 MiB in `vite.config.ts`; checked on `vite preview` in Chrome with offline use ticked (319 entries, the worker among them), then offline: reload, new game, a guess scored. Precache: the list is in the service worker's manifest, and the app works offline with it. The list ships in the game worker's bundle once a game imports it, and the build's `precacheCoverage` check already fails a build that leaves an emitted file out of the manifest, so no new test is owed; what is owed is a build with Wordguess in it, and a game dealt offline
 
 ## 3. Wordguess (Guess's kind: moves and search, answer hidden)
 
