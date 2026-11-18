@@ -36,6 +36,7 @@ import {
   marksOf,
   NONE,
   ROLES,
+  shutEdge,
   TRACK,
 } from "./solver.ts";
 import {
@@ -325,6 +326,18 @@ export const { hint: tracksHint, judgeMove: tracksJudgeMove } = describedEdgeHin
   tiers: { lowest: (state) => state.diff, count: (state) => state.diff + 1 },
   roles: ROLES,
   done: (_marks, ctx) => ctx.finished(),
+  // No technique crosses a side its squares close, or marks track on a square
+  // a rail runs through, so a player's mark is decided where the
+  // description's `shut` and `on` read it so.
+  holds: (marks, ctx, f) => {
+    const kept = ladderOf(ctx.board);
+    if (f.kind === PLACE) return f.value === NONE && shutEdge(marks, kept, f.at);
+    return (
+      f.kind === STRIKE_EDGE &&
+      f.value === NONE &&
+      tracks.drawn(marks, kept.sp, kept.dl, f.at) > 0
+    );
+  },
   step: stepOf,
   stated: STATED,
   // A sentence's marks are squares, indexed; the sides and clues it names are

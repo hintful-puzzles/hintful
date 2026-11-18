@@ -20,6 +20,7 @@
 import {
   clueList,
   type GridSpace,
+  PLACE,
   RELATE,
   type Reads,
   rangeMask,
@@ -685,12 +686,23 @@ export function hintWalk(
     citing,
     ...(judging ? { aim: judging.aim } : {}),
   });
-  if (judging) judging.graph = walk.graph;
+  let count = 0;
+  if (judging) {
+    judging.graph = walk.graph;
+    // The walk stops once the loop closes, so no firing crosses the edges
+    // left over: a player's cross there is decided by the closed loop.
+    let asked = -1;
+    let closed = false;
+    judging.holds = (_m, f) => {
+      if (f.kind !== PLACE || f.value !== NONE) return false;
+      if (asked !== count) [asked, closed] = [count, hintBoardSolved(board)];
+      return closed;
+    };
+  }
   const angleEdges = (a: number): readonly [number, number] => [
     sp.angleEdges[a][0],
     sp.angleEdges[a][1],
   ];
-  let count = 0;
   // The line firings returned, each a step of the plan's.
   let lines = 0;
   const next = (): LoopyFiring | null => {

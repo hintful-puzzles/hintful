@@ -36,12 +36,13 @@ import {
   TIERS,
 } from "./ladder-runtime.ts";
 import {
-  chainedWords,
   followedWords,
   type Judging,
   judgeByWalk,
+  type MovedFact,
   movedFacts,
   unforcedWords,
+  unquotedWords,
 } from "./move-judge.ts";
 import {
   type Clauses,
@@ -134,6 +135,10 @@ export interface EdgeHintSpec<
    * also note the board as it stands in `ctx`, for the step that follows the
    * firing to tell what the firing changed (Magnets). */
   settle?(marks: CellMarks, ctx: Ctx): boolean;
+  /** Whether the marks decide a fact of a player's move they hold no mark
+   * for, as the board reads them, for Check & save's verdict: Tracks' side a
+   * square's two rails close, which no technique crosses. */
+  holds?(marks: CellMarks, ctx: Ctx, fact: MovedFact): boolean;
   /** The most steps a plan holds, a firing's last leg included; {@link
    * DEFAULT_PLAN} where left out. */
   plan?: number;
@@ -286,7 +291,11 @@ export function describedEdgeHint<
         ...(judging ? { aim: judging.aim } : {}),
       },
     );
-    if (judging) judging.graph = walk.graph;
+    if (judging) {
+      judging.graph = walk.graph;
+      const { holds } = spec;
+      if (holds) judging.holds = (marks, fact) => holds(marks, ctx, fact);
+    }
     const steps: Step[] = [];
     while (judging ? !judging.done(m) : steps.length < plan && !spec.done?.(m, ctx)) {
       if (spec.settle?.(m, ctx) === false) return "contradiction";
@@ -399,7 +408,6 @@ export function describedEdgeHint<
         });
       });
     }
-    if (judging) judging.answered = spec.done?.(m, ctx) === true;
     return steps;
   };
 
@@ -429,7 +437,8 @@ export function describedEdgeHint<
     if (judged === null || !Array.isArray(steps)) return null;
     if (judged.kind === "unforced")
       return { followed: false, words: unforcedWords(null) };
-    if (judged.firing === null) return { followed: true, words: chainedWords(null) };
+    if (judged.firing === null)
+      return { followed: true, words: unquotedWords(null, undefined, judged.chained) };
     const quoted: Step | null = steps[firstStep[judged.firing]] ?? null;
     if (quoted?.words === undefined) return null;
     return {

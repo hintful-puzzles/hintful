@@ -14,6 +14,7 @@ import {
   type ForcedBorderEdge,
   forcedEdgesOf,
 } from "../../engine/border-grid-hint.ts";
+import { PLACE } from "../../engine/describe-runtime.ts";
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
@@ -77,6 +78,10 @@ export const { hint: palisadeHint, judgeMove: palisadeJudgeMove } = describedEdg
   walk: (state) => palisadeWalk(state),
   tiers: { lowest: () => 0, count: 1 },
   done: wallsAreAnswer,
+  // No technique marks an edge inside a region once the walls close every
+  // region, so a player's no-wall mark is decided then.
+  holds: (marks, ctx, f) =>
+    f.kind === PLACE && f.value !== WALL && wallsAreAnswer(marks, ctx),
   step: stepOf,
   stated: STATED,
   ringKind: EDGE,

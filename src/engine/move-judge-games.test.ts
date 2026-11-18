@@ -89,6 +89,22 @@ describe("judgeMove", () => {
       expect(judged, `${id}: none of the first steps was judged`).toBeGreaterThan(0);
     });
 
+    // Every mark of the answer is one the deductions reach, so a player's
+    // mark is never left without words: one no firing makes (Tracks' side
+    // a square's two rails close, the edges left once Loopy's loop closes)
+    // is the game's to read off the marks (`EdgeHintSpec.holds`).
+    if (game.solve !== undefined)
+      it(`${id}: the whole answer, as one move, followed`, () => {
+        const params = game.defaultParams();
+        const { desc, aux } = dealt(game, params);
+        const state = game.newState(params, desc);
+        const solved = game.solve?.(state, state, aux);
+        if (!solved?.ok) throw new Error(`${id}: no solve of its own board`);
+        const after = game.executeMove(state, solved.move);
+        const verdict = judge(state, after, game.newUi(state));
+        expect(verdict?.followed, verdict?.words.text).toBe(true);
+      });
+
     // A verdict marks the board after the move, where the hint marked it
     // before: a ring round a value just placed must fit clear of its text.
     it(`${id}: the board paints a verdict on the hint's first moves`, () => {

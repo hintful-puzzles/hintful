@@ -54,6 +54,8 @@ import {
 /** What the description reads a link as holding. */
 const LINED = 1;
 const NONE = 2;
+/** A spoke marked unused, as the description's marks hold it. */
+export const UNUSED = NONE;
 
 /** What each technique says, as the hint's sentences read it. */
 export type SpokesSays = spokes.SaysById;
@@ -235,6 +237,18 @@ function spokesLadder(dl: spokes.Dealt): Ladder {
  * by its ID. A board the generator deals needs far fewer: every removal it
  * keeps is proved within `DEALING_BUDGET`. */
 const ANSWER_BUDGET = 5000;
+
+/** Whether the marks decide that spoke `e` is unused though no firing marks
+ * it so: a line crosses it, or the lines are the answer, every spoke left
+ * being unused. */
+export function unusedDecided(
+  m: CellMarks,
+  ctx: SpokesWalkContext,
+  e: number,
+): boolean {
+  const x = m.sp.crossing[e];
+  return (x >= 0 && m.grid[x] === LINED) || ctx.complete();
+}
 
 /** The positions a stuck one divides into: a link both of whose hubs still
  * take a line and that crosses no line, as a line and as none. A stuck board

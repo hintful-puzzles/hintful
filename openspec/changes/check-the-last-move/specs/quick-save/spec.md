@@ -30,6 +30,14 @@ marked.
   candidate, then activates Check & save
 - **THEN** the move is judged as a placed value is
 
+#### Scenario: A mark the board already shows is told so
+
+- **WHEN** the player's last move marked what the marks already on the
+  board decide (a Tracks side a square's two rails close), then activates
+  Check & save
+- **THEN** the words say the move followed from what the board already
+  shows
+
 ### Requirement: Only a move a deduction could make is judged
 
 A move that placed nothing a deduction makes (a note added, a value taken

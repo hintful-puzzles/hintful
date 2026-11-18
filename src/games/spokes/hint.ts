@@ -6,6 +6,7 @@
  * the description's (`breaks`, said by `{broke}`).
  */
 
+import { PLACE } from "../../engine/describe-runtime.ts";
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import type { HintResult, MoveVerdict } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
@@ -17,6 +18,8 @@ import {
   type SpokesWalkContext,
   spokesAnswer,
   spokesWalk,
+  UNUSED,
+  unusedDecided,
 } from "./solver.ts";
 import {
   canonicalEdge,
@@ -81,6 +84,8 @@ const { hint: spokesPlan, judgeMove: judgePlan } = describedEdgeHint<
   // Up to Normal: the search beneath is not a deduction.
   tiers: { lowest: () => DIFF_TRICKY, count: DIFF_TRICKY + 1 },
   done: (_marks, ctx) => ctx.complete(),
+  holds: (marks, ctx, f) =>
+    f.kind === PLACE && f.value === UNUSED && unusedDecided(marks, ctx, f.at),
   reads: (taken, ctx) => ctx.reads(taken),
   step: stepOf,
   stated: STATED,

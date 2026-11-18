@@ -159,6 +159,19 @@ export function marksOf(b: Board, sp: GridSpace): CellMarks {
   return m;
 }
 
+/** Whether the marks say the track does not cross edge `e`, as the
+ * description's `shut` reads a side: crossed out, a square either side
+ * holding none, or one with both its rails elsewhere already. */
+export function shutEdge(m: CellMarks, kept: Kept, e: number): boolean {
+  if (m.grid[e] === NONE) return true;
+  if (m.grid[e] === TRACK) return false;
+  const { sp, dl } = kept;
+  const ends = [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]];
+  return ends.some(
+    (c) => (m.edgeCands[c] & (1 << TRACK)) === 0 || tracks.drawn(m, sp, dl, c) === 2,
+  );
+}
+
 /** Whether the marks hold the board's answer: the rails known are the whole
  * track, every edge left open being one it does not cross. */
 export function finished(m: CellMarks, kept: Kept): boolean {

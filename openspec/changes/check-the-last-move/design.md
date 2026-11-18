@@ -32,9 +32,21 @@ follows from a board, and its words are the hint's words for that firing.
 - **Edge games** (`describedEdgeHint`, 2026-11-18). Their spans are cells
   whose values the walk narrows by striking, so a value left the one
   candidate counts as placed (not where the player's notes had it so). A
-  fact the walk never makes though it ended on the answer
-  (`EdgeHintSpec.done`) is the game's bookkeeping, as Spokes crosses the
-  spoke a line cuts, and is not judged. A firing is quoted by its first leg,
+  mark no firing makes, because the description reads it off other marks
+  (Tracks' side a square's two rails close, a spoke a line crosses) or the
+  walk ends on the answer first (the edges left once Loopy's loop closes,
+  Palisade's inside a region, Spokes' unused), is the game's to read
+  (`EdgeHintSpec.holds`, `Judging.holds`). It was first left unjudged as
+  bookkeeping, which hid most Tracks crosses (owner's acceptance,
+  2026-11-18).
+- **A mark the board already decides** before any firing (the other sides of
+  a Tracks square with its two rails) is the player writing down what the
+  board shows. Where the move makes nothing else it says so: "Your last move
+  followed from what the board already shows", or, with a square to ring,
+  "…: what is already marked decides the ringed square". It was first not
+  judged, which left a bare tick.
+- **The walk is asked once more after it ends**: Loopy's stops on a solved
+  board, so the move closing the loop read as reached by nothing. A firing is quoted by its first leg,
   which states the whole reason. A verdict that quotes no step rings
   nothing, since the builder has no element for an edge to ring; the player
   has just made the move, and "it" names it.

@@ -3,7 +3,8 @@
  * `describedFiringHint`: a move a deduction makes is named in that
  * deduction's own sentence, a move only a deeper chain reaches says so, a
  * right move nothing decided yet is told apart, and a move that makes nothing
- * a deduction makes is not judged.
+ * a deduction makes is not judged. And on Tracks, a mark no firing makes
+ * (`EdgeHintSpec.holds`): a cross the board already shows says so.
  */
 import { describe, expect, it } from "vitest";
 import { lightupGame } from "../games/lightup/index.ts";
@@ -15,8 +16,20 @@ import {
   type LightupParams,
   type LightupState,
 } from "../games/lightup/state.ts";
+import { tracksGame } from "../games/tracks/index.ts";
+import {
+  E_NOTRACK,
+  E_TRACK,
+  S_NOTRACK,
+  sEFlags,
+  stateToBoard,
+  type TracksOp,
+  type TracksState,
+} from "../games/tracks/state.ts";
 import { randomNew } from "./random/index.ts";
+import { D, dirX, dirY, L, R, U } from "./square-edges.ts";
 import { SYMM_ROT4 } from "./symmetric-blacks.ts";
+import { dealt } from "./testing/dealt.ts";
 
 const EASY: LightupParams = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };
 const UNREASONABLE: LightupParams = { ...EASY, difficulty: 2 };
@@ -112,5 +125,64 @@ describe("judgeMove", () => {
     // The same toggles again take the marks off.
     const unmarked = lightupGame.executeMove(marked, res.steps[0].move);
     expect(judge(marked, unmarked)).toBeNull();
+  });
+});
+
+describe("judgeMove, a mark no firing makes", () => {
+  const tracksJudge = tracksGame.judgeMove;
+  if (!tracksJudge) throw new Error("Tracks wires no judgeMove");
+  // Tracks' sides a square closes, by its two rails or by holding none, are
+  // read off the marks and crossed by no technique.
+  const params = tracksGame.defaultParams();
+  const { desc, aux } = dealt(tracksGame, params);
+  let state = tracksGame.newState(params, desc);
+  const path = [state];
+  for (let k = 0; k < 300; k++) {
+    const res = tracksGame.hint?.(state, aux, tracksGame.newUi(state));
+    if (!res?.ok) break;
+    state = tracksGame.executeMove(state, res.steps[0].move);
+    path.push(state);
+  }
+  const answer = stateToBoard(state);
+  const { w, h } = answer;
+  /** The crosses of the answer's open sides not yet marked at `at`, each
+   * with whether a square either side already says it. */
+  const crosses = (at: TracksState): { op: TracksOp; shown: boolean }[] => {
+    const b = stateToBoard(at);
+    const rails = (x: number, y: number): number =>
+      [R, U, L, D].filter((d) => sEFlags(b, x, y, d) & E_TRACK).length;
+    const closes = (x: number, y: number): boolean =>
+      (b.sflags[y * w + x] & S_NOTRACK) !== 0 || rails(x, y) === 2;
+    const out: { op: TracksOp; shown: boolean }[] = [];
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++)
+        for (const dir of [R, D]) {
+          const [nx, ny] = [x + dirX(dir), y + dirY(dir)];
+          if (nx >= w || ny >= h) continue;
+          if (sEFlags(answer, x, y, dir) & E_TRACK) continue;
+          if (sEFlags(b, x, y, dir) & E_NOTRACK) continue;
+          const op = { kind: "edge", x, y, dir, track: false, set: true } as const;
+          out.push({ op, shown: closes(x, y) || closes(nx, ny) });
+        }
+    return out;
+  };
+
+  it("names a cross the board already shows as such, and follows the rest", () => {
+    let shown = 0;
+    let reached = 0;
+    for (const at of [path[0], path[Math.floor(path.length / 2)]])
+      for (const { op, shown: isShown } of crosses(at)) {
+        const after = tracksGame.executeMove(at, { ops: [op] });
+        const verdict = tracksJudge(at, after, tracksGame.newUi(at));
+        expect(verdict?.followed, JSON.stringify(op)).toBe(true);
+        if (isShown) {
+          expect(verdict?.words.text).toBe(
+            "Your last move followed from what the board already shows.",
+          );
+          shown++;
+        } else reached++;
+      }
+    expect(shown).toBeGreaterThan(0);
+    expect(reached).toBeGreaterThan(0);
   });
 });

@@ -22,11 +22,11 @@ import type { HintStep, MoveVerdict } from "./game.ts";
 import type { Sentence } from "./hint-words.ts";
 import type { CellMarks } from "./ladder-runtime.ts";
 import {
-  chainedWords,
   followedWords,
   judgeByWalk,
   movedFacts,
   unforcedWords,
+  unquotedWords,
 } from "./move-judge.ts";
 import type { Point } from "./types.ts";
 
@@ -79,7 +79,7 @@ export function candidateJudge<State, Move, H extends CandidateHighlights>(
   }
   if (judged.firing === null) {
     const at = pointOf(moved[0].at);
-    return ringed(at, chainedWords(at, noun), true);
+    return ringed(at, unquotedWords(at, noun, judged.chained), true);
   }
   // The firing's step that acts on a cell the move did, past the notes it
   // writes down first to read them.

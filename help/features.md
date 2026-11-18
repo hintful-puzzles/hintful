@@ -240,7 +240,9 @@ deduction in the words a hint would use for it; where it took a few deductions
 to get there, it says so, and names the first of them where it can tell which
 that was. It can also tell you that the
 move was right but that nothing on the board decided it yet: a lucky guess, or a
-step you saw further ahead than the board shows. Crosses and ruled-out
+step you saw further ahead than the board shows. A mark the board had already
+settled, such as a cross beside a *Tracks* square that already has both its
+rails, is said to follow from what the board already shows. Crosses and ruled-out
 candidates count as moves. Adding a pencil note to a square's notes doesn't,
 since a note decides nothing, but writing the first notes into an empty square
 does: it says what the square can't be. The verdict is shown where hints appear and stays until your next

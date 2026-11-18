@@ -1255,9 +1255,15 @@ next transition puts it away. Test: `src/engine/move-judge.test.ts`.
 
 What the edge games taught, in `judgeByWalk`. A walk that only strikes never
 places: a value left the cell's one candidate is reached, unless the player's
-notes had it so before the walk began. Where the walk ends on marks the game
-calls the answer (`EdgeHintSpec.done`), a fact it never made is the game's own
-bookkeeping (Spokes crosses the spoke a line cuts) and is not judged. A move
+notes had it so before the walk began. A mark no firing makes is the game's
+to read off the walked marks (`EdgeHintSpec.holds`, `Judging.holds`): one the
+description reads off others (Tracks' side a square's two rails close, a
+spoke a line crosses), or one left when the walk ends on the answer (Loopy's
+edges once the loop closes). Leaving such a mark unjudged gave the player a
+bare tick for most Tracks crosses. A mark the board decided before any firing
+says the move followed from what the board already shows. The walk is asked
+once more after it ends, since Loopy's stops on a solved board. Each judging
+game's whole answer, as one move, must read as followed. A move
 whose facts take several firings opens with the first, so the aim takes a
 firing that makes every fact left before one that makes some; a count would
 take the strikes a placement brings along first. A firing the hint shows no

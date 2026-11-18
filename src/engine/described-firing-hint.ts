@@ -41,12 +41,12 @@ import {
   TIERS,
 } from "./ladder-runtime.ts";
 import {
-  chainedWords,
   followedWords,
   type Judging,
   judgeByWalk,
   movedFacts,
   unforcedWords,
+  unquotedWords,
 } from "./move-judge.ts";
 import type { PairIndex } from "./piece.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
@@ -511,7 +511,8 @@ export function describedFiringHint<
     };
     if (judged.kind === "unforced") return ringed(judged.fact, unforcedWords, false);
     const { firing: k, chained } = judged;
-    if (k === null) return ringed(0, chainedWords, true);
+    if (k === null)
+      return ringed(0, (at, noun) => unquotedWords(at, noun, chained), true);
     const end = firstStep[k + 1] ?? steps.length;
     const ofFiring = steps.slice(firstStep[k], end);
     const cells = new Set(moved.map(cellOf));
