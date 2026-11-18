@@ -306,15 +306,11 @@ export function describedFiringHint<
       judging ? { aim: judging.aim } : {},
     );
     if (judging)
-      judging.traced = {
-        graph: walk.graph,
-        walked: walk.taken,
-        fresh: () => {
-          const again = spec.walk(state, cap)?.marks ?? m;
-          again.budget = stepBudget(spec.name);
-          return again;
-        },
-      };
+      judging.traced = walk.trace(() => {
+        const again = spec.walk(state, cap)?.marks ?? m;
+        again.budget = stepBudget(spec.name);
+        return again;
+      });
     const steps: Step[] = [];
     for (let fired = 0; judging ? !judging.done(m) : fired < plan; fired++) {
       const before = m.grid.slice();

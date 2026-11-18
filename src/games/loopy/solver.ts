@@ -688,15 +688,11 @@ export function hintWalk(
   });
   let count = 0;
   if (judging) {
-    judging.traced = {
-      graph: walk.graph,
-      walked: walk.taken,
-      fresh: () => {
-        const again = marksOf(cloneState(state), true);
-        again.budget = budget;
-        return again;
-      },
-    };
+    judging.traced = walk.trace(() => {
+      const again = marksOf(cloneState(state), true);
+      again.budget = budget;
+      return again;
+    });
     // The walk stops once the loop closes, so no firing crosses the edges
     // left over: a player's cross there is decided by the closed loop.
     let asked = -1;

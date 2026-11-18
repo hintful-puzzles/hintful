@@ -1291,22 +1291,36 @@ calling its own hint's first move followed.
 (`trace-a-chain-from-its-reads`, 2026-11-18). Naming a technique the chain
 does not rest on is worse than naming none, and the graph alone can be wrong
 both ways: a read wider than the premise needed points at an earlier firing,
-and a builder that writes marks outside the walk's firings leaves the graph a
-parent short (Pearl's step draws the line a pearl carries on). So the builder
-hands the judge its trace (`Judging.traced`: the graph, the firings it took,
-and its starting marks made again), and the judge replays the walk's firings
-on fresh marks, each as its technique offers it then, leaving one candidate
-out at a time, earliest first: the start is the first without which the move
-is not made. A firing no longer offered once a candidate is left out is passed
-over, not counted as the move failing, or a firing the move never needed
-would be named for what a bystander needed. The candidates are what the
-graph says the fact rests on where every firing said its reads, and every
-earlier firing where one did not; most compiled techniques do not, and the
-search finds their starts as well. A search is bounded (`MOST_TRIED`,
-`MOST_OFFERS`) and names none past it. Every builder that walks a ladder sets
-the trace with the graph, so a new one cannot keep a graph and skip the
-check. Recording every compiled technique's reads was tried and dropped: a
-formula that counts a line reads all of it, so the graph pointed at starts
+and one that leaves out what the player sees (Loopy's lines) leaves the graph
+a parent short. So the builder hands the judge its trace (`Judging.traced`:
+the graph, the firings it took, and its starting marks made again), and the
+judge replays the walk's firings on fresh marks, each as its technique offers
+it then, leaving candidates out: the start is a candidate without which the
+move is not made. A firing no longer offered once a candidate is left out is
+passed over, not counted as the move failing, or a firing the move never
+needed would be named for what a bystander needed. The candidates are what
+the graph says the fact rests on where every firing said its reads and it
+names one, and every earlier firing otherwise: the walk takes the firing
+that makes the move the moment one is on offer, so one it reached late rests
+on something before it. Most compiled techniques say no reads, and the
+search finds their starts as well. It halves: the first candidate such that
+the chain, less every candidate up to it, stops short, confirmed left out
+alone, since a later one may stand in for it (`close-trace-gaps`). Leaving
+more out seldom brings the move back, and where it does (a rung that offers
+a fact on fewer marks and not on more, another rung then making it) the
+start named is still one the chain cannot do without, if not the earliest. A
+search is bounded (`MOST_OFFERS`) and names none past it. Where the chain
+reaches the move with every candidate left out, the firing that made it made
+it from the board, and the walk only took others first: the verdict is
+direct, naming it. Every builder that walks a ladder sets the trace with
+`LadderWalk.trace`, so a new one cannot keep a graph and skip the check, and
+from then on the walk keeps what the builder writes to the marks beside its
+firings (Pearl's step draws the line a pearl carries on, Map's settle colors
+what the legs colored, Subsets' collapse strikes the sets a square's letters
+rule out) as the facts of the firing before, which the replay makes with it.
+A fact made by a firing that shows no step is dated to the firing whose step
+its facts go with. Recording every compiled technique's reads was tried and
+dropped: a formula that counts a line reads all of it, so the graph pointed at starts
 the chain did not need, and the search names more starts without it. A
 value placed by striking the rest of its cell rests on every strike there,
 whichever firings made them, so the chain begins from all of them; from the
@@ -1339,7 +1353,8 @@ ones, since a replay of every firing asks each for all its facts, those the
 move does not need included. The replay asks the firing's rung again with
 the walk's board and notes set to the replay's marks, and a game's own state
 beside them (`ownState`, Salad's holes) as the walk began. The setup is no firing
-it replays: the obvious clean is made before each one (`between`). A step of
+it replays: the obvious clean is made before each one (`Traced.between`,
+which only the plan uses). A step of
 the game's own (Salad's markers) makes no fact, so a firing that rests on
 one is not offered again and its chain names no start. Test:
 `move-judge.test.ts`, "names a notes game's start".

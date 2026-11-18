@@ -284,12 +284,7 @@ export function deduceHintPlan(
     reads,
     judging ? { aim: judging.aim } : {},
   );
-  if (judging)
-    judging.traced = {
-      graph: walk.graph,
-      walked: walk.taken,
-      fresh: () => deduction(board, board, w, h).m,
-    };
+  if (judging) judging.traced = walk.trace(() => deduction(board, board, w, h).m);
   while (!judging?.done(m)) {
     const known = walk.graph.facts.length;
     const from = plan.length;

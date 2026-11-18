@@ -284,20 +284,11 @@ export function describedEdgeHint<
       },
     );
     if (judging) {
-      // The context of the walk made again, which `settle` reads.
-      let again = walked;
-      judging.traced = {
-        graph: walk.graph,
-        walked: walk.taken,
-        fresh: () => {
-          again = spec.walk(state, cap) ?? walked;
-          again.marks.budget = stepBudget(spec.name);
-          return again.marks;
-        },
-        between: () => {
-          spec.settle?.(again.marks, again.ctx);
-        },
-      };
+      judging.traced = walk.trace(() => {
+        const again = spec.walk(state, cap)?.marks ?? m;
+        again.budget = stepBudget(spec.name);
+        return again;
+      });
       const { holds } = spec;
       if (holds) judging.holds = (marks, fact) => holds(marks, ctx, fact);
     }

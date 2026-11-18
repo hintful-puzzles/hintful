@@ -600,11 +600,7 @@ function stepsFrom(
     ...(judging ? { aim: judging.aim } : {}),
   });
   if (judging)
-    judging.traced = {
-      graph: walk.graph,
-      walked: walk.taken,
-      fresh: () => marksOn(g, recordedMarks(state, g, dl)),
-    };
+    judging.traced = walk.trace(() => marksOn(g, recordedMarks(state, g, dl)));
   const f = new Facts(state, g, dl, m, walk.graph, firings);
   let s = state;
   const steps: HintStep<NetMove, NetHint, NetRung>[] = [];

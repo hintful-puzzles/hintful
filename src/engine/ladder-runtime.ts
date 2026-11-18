@@ -29,6 +29,7 @@ import {
   inverseOf,
   MARK,
   type Marks,
+  PLACE,
   RELATE,
   type Reads,
   STRIKE,
@@ -36,6 +37,7 @@ import {
 } from "./describe-runtime.ts";
 import { FactGraph, readsOf } from "./fact-graph.ts";
 import { MADE } from "./marks-made.ts";
+import type { Traced } from "./move-judge.ts";
 import { type StepBudget, stepBudget } from "./step-budget.ts";
 
 /** Why a placement struck a value from a cell: the value just placed at
@@ -1173,11 +1175,19 @@ export interface LadderWalk<S extends CellMarks = CellMarks> {
   readonly graph: FactGraph;
   /** Each firing taken, in order, with the graph's facts it made. */
   readonly taken: readonly Walked<S>[];
+  /**
+   * The walk as a check replays it (`move-judge.ts`), on marks `fresh`
+   * makes as the walk began. From then on the walk keeps what its builder
+   * writes to the marks beside the firings, as the firing before's: Pearl's
+   * step draws the line a pearl carries on, Map's settle colors what the
+   * steps' legs colored.
+   */
+  trace(fresh: () => S): Traced;
 }
 
 /** A firing a walk took, and the graph's facts it made: its own, in order
- * from `from`, then those its placements made ({@link placingRung}), up to
- * `to`. */
+ * from `from`, then those its placements made ({@link placingRung}), then
+ * what its builder wrote beside it ({@link LadderWalk.trace}), up to `to`. */
 export interface Walked<S extends CellMarks = CellMarks> {
   readonly firing: Taken<S>;
   readonly from: number;
@@ -1253,6 +1263,28 @@ export function ladderWalk<S extends CellMarks>(
   const graph = m.graph ?? new FactGraph();
   m.graph = graph;
   const walked: Walked<S>[] = [];
+  // The marks as the last firing left them, kept once a check traces the
+  // walk.
+  let shot: Shot | null = null;
+  // What the builder wrote to the marks since the last firing, recorded as
+  // that firing's: facts the graph has not got already (a placement's cull),
+  // which say nothing of what they read.
+  const adopt = (): void => {
+    const last = walked.at(-1);
+    if (shot === null || last === undefined) return;
+    const kept = new Set(
+      graph.facts.slice(last.from).map((g) => `${g.kind},${g.about.at},${g.value}`),
+    );
+    const facts = writtenSince(shot, m);
+    const left: number[] = [];
+    for (let i = 0; i < facts.length; i += 3)
+      if (!kept.has(`${facts[i]},${facts[i + 1]},${facts[i + 2]}`))
+        left.push(facts[i], facts[i + 1], facts[i + 2]);
+    if (left.length > 0) graph.record(left, null);
+    if (graph.facts.length !== last.to)
+      walked[walked.length - 1] = { ...last, to: graph.facts.length };
+    shot = shotOf(m);
+  };
   const techniques = entries
     .filter((e) => admits(e, caps))
     .map((entry): DeductionTechnique => {
@@ -1273,11 +1305,17 @@ export function ladderWalk<S extends CellMarks>(
               reads: () => reads(f),
               writes: () => (roles.writes ? roles.writes(f) : cellsOf(f.facts)),
               take: () => {
+                // What the builder wrote since the last firing is that one's.
+                adopt();
                 const from = graph.facts.length;
+                if (shot !== null) shot = shotOf(m);
                 graph.record(f.facts, roles.citing?.(f) ?? readsOf(f));
                 m.group++;
                 m.applyFacts(f.facts, (i) => f.reasons[i / 3]);
                 walked.push({ firing: f, from, to: graph.facts.length });
+                // And what the firing's strikes set off beside its facts
+                // (`CellMarks.striking`), which records none, is this one's.
+                adopt();
                 taken = f;
               },
             };
@@ -1299,5 +1337,45 @@ export function ladderWalk<S extends CellMarks>(
       if (driver.next() === null) return driver.impossible() ? "contradiction" : null;
       return taken;
     },
+    trace(fresh) {
+      shot = shotOf(m);
+      return { graph, walked, fresh, adopt };
+    },
   };
+}
+
+/** The marks a walk's builder may write beside its firings. */
+interface Shot {
+  readonly grid: Uint8Array | Int8Array | Int16Array;
+  readonly cands: Int32Array;
+  readonly edgeCands: Int32Array;
+  readonly marked: Int32Array;
+}
+
+const shotOf = (m: CellMarks): Shot => ({
+  grid: m.grid.slice(),
+  cands: m.cands.slice(),
+  edgeCands: m.edgeCands.slice(),
+  marked: m.marked.slice(),
+});
+
+/** The facts marks `m` hold that they did not at `shot`: a value placed (and
+ * not the strikes its cell's other values took with it), a candidate or an
+ * edge's mark struck, a cell marked. */
+function writtenSince(shot: Shot, m: CellMarks): number[] {
+  const out: number[] = [];
+  for (let c = 0; c < m.grid.length; c++) {
+    if (m.grid[c] !== 0) {
+      if (shot.grid[c] === 0) out.push(PLACE, c, m.grid[c]);
+      continue;
+    }
+    for (let gone = shot.cands[c] & ~m.cands[c]; gone !== 0; gone &= gone - 1)
+      out.push(STRIKE, c, 31 - Math.clz32(gone & -gone));
+  }
+  for (let e = 0; e < m.edgeCands.length; e++)
+    for (let gone = shot.edgeCands[e] & ~m.edgeCands[e]; gone !== 0; gone &= gone - 1)
+      out.push(STRIKE_EDGE, e, 31 - Math.clz32(gone & -gone));
+  for (let c = 0; c < m.marked.length; c++)
+    if (shot.marked[c] === -1 && m.marked[c] !== -1) out.push(MARK, c, m.marked[c]);
+  return out;
 }

@@ -18,6 +18,7 @@ import {
   type LightupParams,
   type LightupState,
 } from "../games/lightup/state.ts";
+import { mapGame } from "../games/map/index.ts";
 import { mathraxGame } from "../games/mathrax/index.ts";
 import { pathGame } from "../games/path/index.ts";
 import { pathWalk } from "../games/path/solver.ts";
@@ -290,55 +291,155 @@ describe("judgeMove, where a chain began", () => {
     }
   });
 
-  it("names no start the move does not rest on, though a later firing does", () => {
-    // Three squares: A places the first, B the second once the first is
-    // placed, and C the third from the board alone. Without A, B is not
-    // offered, but the move, C's square, is still made.
-    const place =
-      (at: number, ready: (b: Marks) => boolean) =>
+  /** A technique that places 1 in square `at` once `ready` holds. */
+  const placing = (
+    id: string,
+    at: number,
+    ready: (b: Marks) => boolean = () => true,
+  ): LadderEntry => ({
+    id,
+    name: id,
+    tier: 0,
+    run: compiledRung(
       (b: Marks, _sp: GridSpace, _cl: null, fire: Fire<object> | null): number => {
         if (b.grid[at] !== 0 || !ready(b)) return 0;
         if (fire === null) b.placeAt(at, 1);
         else fire({}, [PLACE, at, 1]);
         return 1;
-      };
-    const technique = (id: string, run: ReturnType<typeof place>): LadderEntry => ({
-      id,
-      name: id,
-      tier: 0,
-      run: compiledRung(run, null),
-    });
-    const entries = [
-      technique(
-        "A",
-        place(0, () => true),
-      ),
-      technique(
-        "B",
-        place(1, (b) => b.grid[0] === 1),
-      ),
-      technique(
-        "C",
-        place(2, () => true),
-      ),
-    ];
+      },
+      null,
+    ),
+  });
+  /**
+   * The verdict on placing 1 in square `at` of a row of `n`, each square 1
+   * or 2, by a walk of `entries` taken in their order: each firing shows a
+   * step where `shows` says so, and `writes` is what the builder does to the
+   * marks after each, as Pearl's step draws a line on. Also the order the
+   * walk took them in.
+   */
+  const judgedBy = (
+    n: number,
+    at: number,
+    entries: readonly LadderEntry[],
+    opts: {
+      citing?: () => Reads;
+      shows?: (id: string) => boolean;
+      writes?: (m: CellMarks) => void;
+    } = {},
+  ): { judged: Judged | null; order: string[] } => {
     const fresh = (): CellMarks =>
-      new CellMarks(describedSpace([], 3, 1), 0b110, new Uint8Array(3));
+      new CellMarks(describedSpace([], n, 1), 0b110, new Uint8Array(n));
     let order: string[] = [];
-    const judged = judgeByWalk([{ kind: PLACE, at: 2, value: 1 }], (judging) => {
+    const judged = judgeByWalk([{ kind: PLACE, at, value: 1 }], (judging) => {
       const m = fresh();
-      const walk = ladderWalk(m, entries, { [TIERS]: 9 }, () => []);
-      judging.traced = { graph: walk.graph, walked: walk.taken, fresh };
+      const walk = ladderWalk(
+        m,
+        entries,
+        { [TIERS]: 9 },
+        () => [],
+        opts.citing ? { citing: opts.citing } : {},
+      );
+      judging.traced = walk.trace(fresh);
       while (!judging.done(m)) {
         const known = walk.graph.facts.length;
         const taken = walk.next();
         if (taken === null || taken === "contradiction") break;
-        judging.took(walk.graph, known, taken.entry.id, true);
+        opts.writes?.(m);
+        const { id } = taken.entry;
+        judging.took(walk.graph, known, id, opts.shows?.(id) ?? true);
       }
       order = walk.taken.map((t) => t.firing.entry.id);
     });
+    return { judged, order };
+  };
+
+  it("names no start the move does not rest on, though a later firing does", () => {
+    // Three squares: A places the first, B the second once the first is
+    // placed, and C the third from the board alone. Without A, B is not
+    // offered, but the move, C's square, is still made: by C alone, from the
+    // board, though the walk took it last.
+    const { judged, order } = judgedBy(3, 2, [
+      placing("A", 0),
+      placing("B", 1, (b) => b.grid[0] === 1),
+      placing("C", 2),
+    ]);
     expect(order).toEqual(["A", "B", "C"]);
-    expect(judged).toEqual({ kind: "chained", technique: null });
+    expect(judged).toEqual({ kind: "direct", techniques: ["C"] });
+  });
+
+  it("looks before the move where the graph says it rests on nothing earlier", () => {
+    // Every firing cites nothing, as Loopy's leave out the lines a player
+    // sees: the graph is complete and names no parent, yet B is offered only
+    // once A has placed.
+    const { judged } = judgedBy(
+      2,
+      1,
+      [placing("A", 0), placing("B", 1, (b) => b.grid[0] === 1)],
+      { citing: () => ({ cells: [], edges: [] }) },
+    );
+    expect(judged).toEqual({ kind: "chained", technique: "A" });
+  });
+
+  it("finds a start behind more than a dozen it can do without", () => {
+    // Fourteen squares placed from the board, then the fifteenth once the
+    // last of them is: every one is a candidate, and only the last is needed.
+    const firsts = Array.from({ length: 14 }, (_, k) => placing(`P${k}`, k));
+    const { judged } = judgedBy(15, 14, [
+      ...firsts,
+      placing("Q", 14, (b) => b.grid[13] === 1),
+    ]);
+    expect(judged).toEqual({ kind: "chained", technique: "P13" });
+  });
+
+  it("replays what the builder writes beside a firing", () => {
+    // After each firing the builder places the square past the one it
+    // placed, as Pearl's step carries a line on through a pearl: B needs
+    // what it wrote after A, and the move is what it wrote after B, the
+    // walk's last firing.
+    const { judged } = judgedBy(
+      4,
+      3,
+      [placing("A", 0), placing("B", 2, (b) => b.grid[1] === 1)],
+      {
+        writes: (m) => {
+          for (const c of [0, 2])
+            if (m.grid[c] === 1 && m.grid[c + 1] === 0) m.place(c + 1, 1);
+        },
+      },
+    );
+    expect(judged).toEqual({ kind: "chained", technique: "A" });
+  });
+
+  it("dates a move a firing with no step made to the firing it goes with", () => {
+    // B shows no step, and the walk ends on it: its facts are the last
+    // firing's, not A's before it.
+    const { judged } = judgedBy(
+      2,
+      1,
+      [placing("A", 0), placing("B", 1, (b) => b.grid[0] === 1)],
+      { shows: (id) => id === "A" },
+    );
+    expect(judged).toEqual({ kind: "chained", technique: "A" });
+  });
+
+  it("names the start of a move a builder's settle carries (Map)", () => {
+    // Map's settle colors what the steps' legs colored, beside the firings:
+    // every chained verdict on the board as dealt names its start.
+    const game = mapGame;
+    const params = game.defaultParams();
+    const { desc, aux } = dealt(game, params);
+    const start = game.newState(params, desc);
+    const res = game.hint?.(start, aux, game.newUi(start));
+    if (!res?.ok) throw new Error("no hint on the board as dealt");
+    let chained = 0;
+    for (const step of res.steps) {
+      const text =
+        game.judgeMove?.(start, game.executeMove(start, step.move))?.words.text ?? "";
+      if (!text.includes("a few steps on")) continue;
+      chained++;
+      expect(text, step.explanation).toMatch(CHAINED);
+    }
+    expect(chained).toBeGreaterThan(5);
   });
 
   it("passes over a start a read wider than the premise's would give it", () => {
@@ -357,11 +458,7 @@ describe("judgeMove, where a chain began", () => {
         aim: judging.aim,
         ...(wide ? { citing: () => all } : {}),
       });
-      judging.traced = {
-        graph: walk.graph,
-        walked: walk.taken,
-        fresh: () => pathWalk(state).marks,
-      };
+      judging.traced = walk.trace(() => pathWalk(state).marks);
       while (!judging.done(marks)) {
         const known = walk.graph.facts.length;
         const taken = walk.next();
@@ -389,8 +486,12 @@ describe("judgeMove, where a chain began", () => {
       // A candidate the chain reaches the move without is passed over, and
       // the start named is the first it cannot.
       if (audit === undefined) continue;
-      refuted += audit.tried.filter((t) => t.without === null).length;
-      expect(judged).toEqual({ kind: "chained", technique: namedBy(audit) });
+      refuted += audit.passed;
+      expect(judged).toEqual(
+        audit.alone
+          ? { kind: "direct", techniques: [expect.any(String)] }
+          : { kind: "chained", technique: namedBy(audit) },
+      );
     }
     expect(refuted).toBeGreaterThan(0);
     // Read as the premises read them, the same moves name their starts.
