@@ -19,7 +19,7 @@
 - [x] 3.2 Refusals and Check without saving answer under the board (`Puzzle.showCheckMessage`); the modal and the toasts go
 - [x] 3.3 The words area shows the verdict, led by "Check", a refusal in the warning color
 - [x] 3.4 Run the app (Chrome, 2026-11-18): Light Up a followed cross and a mistake at desktop and phone width; Star Battle a followed cross. A guess and a dead end are covered in tests, not seen in the app
-- [ ] 3.5 Found in 3.4: words longer than the hint room's sizer grow the room and move the board up, here to y=188.625. The canvas is then composited off the pixel grid, and its crosses show fringes. Any long hint does this, and the verdict's lead makes it likelier. Snap the board to whole pixels, or count the lead in `LONGEST_HINT`
+- [x] 3.5 Found in 3.4: words longer than the hint room's sizer grow the room and move the board up, here to y=188.625. The canvas is then composited off the pixel grid, and its crosses show fringes. Measured 2026-11-18: the board sat off the grid on load too (x+0.5, y+0.19 at 1280×800), with no hint. The view now snaps the board to whole device pixels on every resize and size transition (`view.ts`, `snapToPixels`); seen in Chrome to hold at 1280 and 412 wide while the words area grows by fractional heights and back
 
 ## 4. Every builder
 

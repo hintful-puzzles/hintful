@@ -279,9 +279,29 @@ export class PuzzleView extends SignalWatcher(LitElement) {
         await this.puzzle.redraw();
       }
     }
+    this.snapToPixels();
 
     return changed;
   }
+
+  /**
+   * Shift the board onto whole device pixels. Centered in a box whose height
+   * the words under it set, the canvas lands on fractions of a pixel (a long
+   * hint put it at y=188.625), and the compositor then resamples it: every
+   * line of the board shows a fringe. The shift is under a pixel, and the
+   * pointer reads the canvas's own box, so a tap lands where it did.
+   */
+  private snapToPixels = (): void => {
+    const part = this.puzzlePart;
+    const canvas = this.canvas;
+    if (!part || !canvas) return;
+    part.style.translate = "";
+    const dpr = window.devicePixelRatio || 1;
+    const { left, top } = canvas.getBoundingClientRect();
+    const dx = Math.round(left * dpr) / dpr - left;
+    const dy = Math.round(top * dpr) / dpr - top;
+    if (dx !== 0 || dy !== 0) part.style.translate = `${dx}px ${dy}px`;
+  };
 
   //
   // Canvas
@@ -343,8 +363,10 @@ export class PuzzleView extends SignalWatcher(LitElement) {
     await this.puzzle.resizeDrawing(this.canvasSize, this.canvasDpr);
     await this.puzzle.redraw();
 
-    // Enable size transitions
+    // Enable size transitions, after which the board is snapped again: it is
+    // centered, so its place moves with its size.
     this.canvas.classList.add("attached");
+    this.canvas.addEventListener("transitionend", this.snapToPixels);
 
     // (Wait to set canvasReady until after all async ops,
     // to avoid updated() attempting competing changes.)
