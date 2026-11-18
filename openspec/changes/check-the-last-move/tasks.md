@@ -31,5 +31,5 @@
 
 ## 5. Close
 
-- [ ] 5.1 Help: what Check & save says (`help/features.md`); `docs/hints.md` on the judge
+- [x] 5.1 Help: what Check & save says (`help/features.md` § "Checking your work", now with the chained verdict and a square's first notes); `docs/hints.md` on the judge. Found: CI's Gate was red from the first commit of this change, `help-coverage.test.ts` wanting a line for `judgeMove` (the push hook leaves that guard to CI)
 - [ ] 5.2 Owner's acceptance (proposal)

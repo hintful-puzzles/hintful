@@ -641,6 +641,11 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     anchor: "checking",
     why: "the mistake overlay, and the save it gates",
   },
+  judgeMove: {
+    kind: "features",
+    anchor: "checking",
+    why: "Check & save's word on the last move",
+  },
   clearMistakes: {
     kind: "features",
     anchor: "hint-refusals",

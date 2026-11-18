@@ -236,11 +236,13 @@ couldn't tell.
 When nothing is wrong, the check also looks at **your last move**: the one you
 were probably unsure of when you reached for the button. In many puzzles it can
 tell you whether that move followed from the board, and if so it names the
-deduction in the words a hint would use for it. It can also tell you that the
+deduction in the words a hint would use for it; where it took a few deductions
+to get there, it says so and marks the square. It can also tell you that the
 move was right but that nothing on the board decided it yet: a lucky guess, or a
 step you saw further ahead than the board shows. Crosses and ruled-out
-candidates count as moves; adding a pencil note doesn't, since a note decides
-nothing. The verdict is shown where hints appear and stays until your next
+candidates count as moves. Adding a pencil note to a square's notes doesn't,
+since a note decides nothing, but writing the first notes into an empty square
+does: it says what the square can't be. The verdict is shown where hints appear and stays until your next
 move.
 
 In a puzzle that can't check itself the button reads the same and simply saves —
