@@ -28,6 +28,7 @@ import {
   tierOf,
   withTier,
 } from "./difficulty.ts";
+import { easeOut } from "./easing.ts";
 import {
   type ActiveHint,
   fieldLabel,
@@ -2050,6 +2051,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     }
   }
 
+  /** `animTime` through the shared curve: the same span, with its progress
+   * front-loaded. Outside a move's animation it is `animTime` itself. */
+  private easedAnimTime(): number {
+    if (this.animLength <= 0 || this.animTime >= this.animLength) return this.animTime;
+    return easeOut(this.animTime / this.animLength) * this.animLength;
+  }
+
   currentAnimationMs(): number {
     // `animLength` is already the scaled duration (base × animScale), in
     // seconds; the auto-hint loop wants milliseconds.
@@ -2824,7 +2832,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // Report time at the game's own scale: a slow-motion (hint) move
       // has a stretched `animLength`, and dividing by the same factor
       // keeps the game's `animTime / its-anim-length` progress correct.
-      this.animTime / this.animScale,
+      // The time is eased, so every game's move starts fast and settles
+      // while the game interpolates linearly (`easing.ts`).
+      this.easedAnimTime() / this.animScale,
       wave ?? (this.flashTime > 0 ? ownFlash(this.flashTime) : NO_FLASH),
       this.drawnHintStep ?? undefined,
       this.activeMistakes ?? undefined,

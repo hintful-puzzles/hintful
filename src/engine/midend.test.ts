@@ -6,6 +6,7 @@ import { HINT_RING, HINT_STRIPES } from "./color/palette.ts";
 import { AUTO_SOLVED, AUTO_SOLVER_USED, COMPLETED } from "./completion-status.ts";
 import { DESC_MALFORMED } from "./desc-error.ts";
 import { dealGaveUp, difficultyItem } from "./difficulty.ts";
+import { easeOut } from "./easing.ts";
 import {
   type FakeDrawState,
   type FakeMove,
@@ -384,8 +385,34 @@ describe("Midend completion: the status is the position's, the history is the en
     h.m.timer(0.4);
     h.m.processInput(0, 0, CURSOR_SELECT);
     h.m.redraw(dr);
-    expect(times.at(-1)).toBeCloseTo(0.4);
+    expect(times.at(-1)).toBeCloseTo(easeOut(0.4));
     expect(h.timerActive()).toBe(true);
+  });
+
+  it("hands redraw a move's time eased, ahead of the clock and ending on its length", () => {
+    const times: number[] = [];
+    const h = harness({
+      ...fakeGame,
+      animLength: () => 0.5,
+      redraw: (_dr, _ds, _prev, _s, _dir, _ui, animTime) => {
+        times.push(animTime);
+      },
+    });
+    h.m.newGame();
+    h.m.setPreferences({ [SHOW_TIMER_PREF]: false });
+    const { dr } = recordingDrawing();
+    inc(h);
+    const at = (seconds: number) => {
+      h.m.timer(seconds);
+      h.m.redraw(dr);
+      return times.at(-1);
+    };
+    const first = at(0.1);
+    expect(first).toBeCloseTo(0.5 * easeOut(0.2));
+    expect(first).toBeGreaterThan(0.1);
+    expect(at(0.2)).toBeCloseTo(0.5 * easeOut(0.6));
+    at(0.19);
+    expect(times.every((t) => t <= 0.5)).toBe(true);
   });
 
   it("ends a win flash that the game asked nothing of", () => {

@@ -605,13 +605,16 @@ describe("Sokoban render", () => {
             ? [middle(o.points)[0]]
             : [],
       );
+    // The clock time at which the eased motion is `share` of the way through
+    // the walk and push, of 0.18 s: the inverse of `easeOut`.
+    const clockAt = (share: number) => (1 - Math.cbrt(1 - share)) * 0.18;
     // A third of the way: the player has reached the square behind the barrel,
     // and the barrel has not moved.
-    me.timer(0.06);
+    me.timer(clockAt(1 / 3));
     const third = renderOps(me);
     expect(at(third, COL_BARREL)).toContain(2 * 32 + 16);
     // Halfway: both are between squares.
-    me.timer(0.03);
+    me.timer(clockAt(1 / 2) - clockAt(1 / 3));
     const two = renderOps(me);
     expect(at(two, COL_PLAYER).some((x) => (x - 16) % 32 !== 0)).toBe(true);
     expect(at(two, COL_BARREL).some((x) => (x - 16) % 32 !== 0)).toBe(true);

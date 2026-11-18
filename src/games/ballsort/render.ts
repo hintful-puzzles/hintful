@@ -21,7 +21,6 @@ import {
   GRID_DARK,
   HELD,
 } from "../../engine/color/palette.ts";
-import { easeOut } from "../../engine/easing.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
@@ -555,7 +554,7 @@ export function redraw(
       const end = { x: toTop.x, y: toTop.y + (pour.count - 1 - k) * ts };
       return along(
         flightPath(start, end, hoverFrom, hoverTo, ts, size.w / 2),
-        easeOut(f * span - k * POUR_LAG),
+        f * span - k * POUR_LAG,
       );
     });
     flight = { color, balls };

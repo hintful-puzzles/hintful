@@ -1626,9 +1626,10 @@ unordered links in route order first. The rules and the table of routes:
 
 ### `easing.ts` — the curve a move animates along
 
-Take a move animation's time through `easeOut` in `redraw`: a piece that
-answers the player starts fast and settles into place, where a constant
-speed reads as mechanical. Exemplar: the pour in `ballsort/render.ts`.
+The midend passes every move animation's `animTime` through `easeOut`, so
+a piece that answers the player starts fast and settles into place, where
+a constant speed reads as mechanical. A game interpolates linearly in the
+time it is handed (`rendering.md` § "Animation and flash").
 
 ### `pencil-indicator.ts` — the pencil-mode indicator
 

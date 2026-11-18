@@ -603,6 +603,12 @@ by the timer (`engine-drawing` § "The midend repaints on every transition,
 rebuilds the draw state for a new tile size, and lays the ground under a
 fresh one").
 
+**`animTime` arrives eased, so interpolate linearly in it.** The midend
+passes it through `easeOut` (`engine/easing.ts`): a move starts fast and
+settles, in every game alike. Do not ease again in `redraw`, and do not
+read a constant speed from `animTime`; a move of several stages (Cube's
+rolls, Ball Sort's stream of balls) plays them in order, front-loaded.
+
 **Only a change of position ends an animation.** An input that changes the
 `Ui` alone (`UI_UPDATE`, a hover, a release that tidies the `Ui`) leaves a
 move's animation and any flash running (`engine-drawing` § "A change of the

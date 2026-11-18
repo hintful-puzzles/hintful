@@ -1,6 +1,7 @@
 /**
- * The curve a move's animation takes its time through, so every game that
- * moves a piece in answer to the player moves it the same way.
+ * The curve a move's animation takes its time through: the midend eases the
+ * `animTime` it hands `redraw`, so every game that moves a piece in answer to
+ * the player moves it the same way.
  *
  * Motion that answers an input starts fast and settles gently into place;
  * a constant speed reads as mechanical, and one that starts slowly reads as
