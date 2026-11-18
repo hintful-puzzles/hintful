@@ -101,10 +101,12 @@ describe("candidateJudge", () => {
       .find((v) => v?.words.text.includes("a few steps on"));
     if (!chained) throw new Error("no placement on the board took a chain");
     expect(chained.followed).toBe(true);
-    // The plan keeps no fact graph, so where the chain began is not named.
-    expect(chained.words.text).toBe(
-      verdictOf({ kind: "chained", technique: null }).words.text,
+    // The plan hands the judge its trace, so where the chain began is named
+    // (`move-judge.test.ts`, "where a chain began").
+    const start = /^Your last move follows a few steps on, starting from (.+)\.$/.exec(
+      chained.words.text,
     );
+    expect(Object.values(NAMES)).toContain(start?.[1]);
   });
 
   it("tells apart a value the walk never places", () => {

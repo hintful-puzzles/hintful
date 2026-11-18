@@ -1307,8 +1307,11 @@ search finds their starts as well. A search is bounded (`MOST_TRIED`,
 the trace with the graph, so a new one cannot keep a graph and skip the
 check. Recording every compiled technique's reads was tried and dropped: a
 formula that counts a line reads all of it, so the graph pointed at starts
-the chain did not need, and the search names more starts without it. Tests: `move-judge.test.ts`, "where a chain began". The candidate
-plans keep no trace yet, so their chained verdicts name no start.
+the chain did not need, and the search names more starts without it. A
+value placed by striking the rest of its cell rests on every strike there,
+whichever firings made them, so the chain begins from all of them; from the
+last alone, its replay never left the cell one value. Tests:
+`move-judge.test.ts`, "where a chain began".
 
 What the notes games taught, in `candidate-plan.ts`'s walk
 (`candidate-judge.ts`). A move's facts are read off the board as the player
@@ -1323,8 +1326,23 @@ player's reading unchanged, such as the populate or a clean of what the
 implied notes never held, opens no firing. A firing is named by its first
 leg's rung, from the game's compiled `NAMES`; a technique of the description
 whose firings the plan records under a rung declares it (`rung:`), so the
-rung's name is its name too. The plan keeps no fact graph, so a chained
-verdict names no start. Test: `src/engine/candidate-judge.test.ts`.
+rung's name is its name too. Test: `src/engine/candidate-judge.test.ts`.
+
+The plan hands the judge its trace (`trace-candidate-plans`). Each step that
+makes a fact is a firing of the graph: its legs' facts, and under the
+implicit reading the placement a strike folds into, resting on its steps'
+premise (area, stripes, `reads` and targets), the cells the frontier already
+reads it by. A premise is what the step's sentence rests on, not what a
+formula scanned, so it is the narrow read the ladder walks lack; leaving
+every earlier firing a candidate instead named fewer starts and some wrong
+ones, since a replay of every firing asks each for all its facts, those the
+move does not need included. The replay asks the firing's rung again with
+the walk's board and notes set to the replay's marks, and a game's own state
+beside them (`ownState`, Salad's holes) as the walk began. The setup is no firing
+it replays: the obvious clean is made before each one (`between`). A step of
+the game's own (Salad's markers) makes no fact, so a firing that rests on
+one is not offered again and its chain names no start. Test:
+`move-judge.test.ts`, "names a notes game's start".
 
 What the games that walk the ladder from their own code taught (Crossing,
 Filling, Loopy, Net, Pattern, Slant, Subsets). Each threads the `Judging` its

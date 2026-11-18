@@ -18,6 +18,7 @@ import {
   type LightupParams,
   type LightupState,
 } from "../games/lightup/state.ts";
+import { mathraxGame } from "../games/mathrax/index.ts";
 import { pathGame } from "../games/path/index.ts";
 import { pathWalk } from "../games/path/solver.ts";
 import {
@@ -249,6 +250,44 @@ describe("judgeMove, where a chain began", () => {
       }
     }
     expect(named).toBeGreaterThan(5);
+  });
+
+  it("names a notes game's start from the steps' premises, under either reading", () => {
+    // Mathrax's candidate plan, each of its hint's moves made alone on the
+    // board as dealt. Unlike Unruly's, every firing says what it read (its
+    // steps' premise), so the chain is the graph's: a number left alone in its
+    // cell rests on every strike there, which several firings made. Under the
+    // implicit reading a strike from a cell with no notes places what it
+    // leaves, and the replay must place it too.
+    const game = mathraxGame;
+    const params = game.defaultParams();
+    const { desc, aux } = dealt(game, params);
+    const start = game.newState(params, desc);
+    for (const candidateReading of ["populate", "implicit"] as const) {
+      const ui = { ...game.newUi(start), candidateReading };
+      const res = game.hint?.(start, aux, ui);
+      if (!res?.ok) throw new Error("no hint on the board as dealt");
+      let named = 0;
+      for (const step of res.steps) {
+        let text = "";
+        const audits = heard(() => {
+          text =
+            game.judgeMove?.(start, game.executeMove(start, step.move), ui)?.words
+              .text ?? "";
+        });
+        if (audits.length === 0) continue;
+        const [audit] = audits;
+        expect(audit.whole, `${candidateReading}: ${step.explanation}`).toBeNull();
+        const said = namedBy(audit);
+        expect(text).toBe(
+          said === null
+            ? verdictOf({ kind: "chained", technique: null }).words.text
+            : `${CHAINED}${said}.`,
+        );
+        if (said !== null) named++;
+      }
+      expect(named, candidateReading).toBeGreaterThan(10);
+    }
   });
 
   it("names no start the move does not rest on, though a later firing does", () => {

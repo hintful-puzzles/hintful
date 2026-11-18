@@ -8,7 +8,8 @@
  * cell's notes, or where it has none what its regions leave it. So notes
  * written into a cell with none strike what they leave out, as the plan's
  * own note step concludes, and penciling everything in makes no fact. The
- * plan keeps no fact graph, so a chain's first deduction is not named.
+ * plan hands the judge its trace, so a chain's start is named where the
+ * replay confirms it.
  */
 import {
   type CandidatePlanPrefs,

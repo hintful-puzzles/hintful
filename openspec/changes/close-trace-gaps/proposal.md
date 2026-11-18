@@ -15,7 +15,7 @@ of the ladder walks' chained verdicts, 363 still name no start. Loopy 168
 22 of 43, Sticks 14 of 35, Subsets 12 of 28, and a few each in Unruly,
 Magnets, Map, Clusters, Spokes and Filling.
 
-The judge can come up empty for four reasons, and which one applies to each
+The judge can come up empty for these reasons, and which one applies to each
 of these is not yet known:
 
 - **The replay with every firing does not reach the move.** A builder
@@ -25,6 +25,12 @@ of these is not yet known:
   `placingRung` records its culls), or made by one.
 - **The fact is not found among the firing's facts** (`chainOf` returns
   `null`), or the move is reached by the first firing.
+- **The aim does not see a placement's cull** (found by
+  `trace-candidate-plans`, 2026-11-18). `aimsAt` counts a firing's own
+  facts, so a move a placement's cull makes is walked to after unrelated
+  firings, and its chain rests on nothing before the firing that made it:
+  Adjacent's notes written into a cell with none, under the implicit
+  reading, 3 on the default board.
 - **The candidates are cut off** (`MOST_TRIED`, `MOST_OFFERS`) before the
   one the move needs.
 - **Every candidate can be left out**, since another path reaches the move

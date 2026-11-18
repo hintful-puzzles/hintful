@@ -21,7 +21,7 @@ import { type Facts, MARK, PLACE, STRIKE, STRIKE_EDGE } from "./describe-runtime
 import type { FactGraph } from "./fact-graph.ts";
 import type { MoveVerdict } from "./game.ts";
 import { phrase, type Sentence, unshaped } from "./hint-words.ts";
-import type { CellMarks, Walked } from "./ladder-runtime.ts";
+import type { CellMarks, Firing } from "./ladder-runtime.ts";
 
 /** A fact a move made: a value placed, a candidate struck, an edge's mark
  * struck, a cell marked; `at` is the cell or the edge. */
@@ -135,8 +135,10 @@ function aimsAt(
 /**
  * Where a chain to fact `f` may have begun: of the firings the walk took
  * (`made`, each the ids of the graph's facts it made), `reachedAt` is the one
- * (past the first) that made it. Where every firing the fact rests on said
- * what it read (`FactGraph.restsOn`, complete), the chain is those, and the
+ * (past the first) that made it. The fact rests on every fact up to then that
+ * makes it, which for a value placed by striking the rest is every strike in
+ * its cell, from whichever firing. Where every firing they rest on said what
+ * it read (`FactGraph.restsOn`, complete), the chain is those, and the
  * candidates their firings; where one did not, the chain is every fact made
  * up to `reachedAt`, and every firing before it is a candidate. Earliest
  * first; `null` where there is none.
@@ -147,26 +149,27 @@ function chainOf(
   f: MovedFact,
   reachedAt: number,
 ): { candidates: readonly number[]; chain: ReadonlySet<number> } | null {
-  let id = -1;
-  for (const x of made[reachedAt] ?? []) {
+  const before = made.slice(0, reachedAt + 1).flat();
+  // A value placed by striking the rest rests on every strike in its cell,
+  // and they may come from several firings.
+  const ids = before.filter((x) => {
     const g = graph.facts[x];
     const sameSpace = (g.about.space === "edges") === (f.kind === STRIKE_EDGE);
-    if (id < 0 && sameSpace && makes(g.kind, g.about.at, g.value, f)) id = x;
-  }
-  if (id < 0) return null;
-  const rests = graph.restsOn(id);
-  if (!rests.complete) {
-    const before = made.slice(0, reachedAt + 1).flat();
+    return sameSpace && makes(g.kind, g.about.at, g.value, f);
+  });
+  if (!(made[reachedAt] ?? []).some((x) => ids.includes(x))) return null;
+  const rests = ids.map((x) => graph.restsOn(x));
+  if (!rests.every((r) => r.complete))
     return reachedAt === 0
       ? null
       : { candidates: [...made.keys()].slice(0, reachedAt), chain: new Set(before) };
-  }
-  const firingOf = (x: number): number => made.findIndex((ids) => ids.includes(x));
-  const candidates = [...new Set(rests.facts.map((g) => firingOf(g.id)))]
+  const chain = new Set([...ids, ...rests.flatMap((r) => r.facts.map((g) => g.id))]);
+  const firingOf = (x: number): number => made.findIndex((m) => m.includes(x));
+  const candidates = [...new Set([...chain].map(firingOf))]
     .filter((k) => k >= 0 && k < reachedAt)
     .sort((a, b) => a - b);
   if (candidates.length === 0) return null;
-  return { candidates, chain: new Set([id, ...rests.facts.map((g) => g.id)]) };
+  return { candidates, chain };
 }
 
 /** The most candidates a chain's replay tries for its start, and the most
@@ -190,11 +193,31 @@ const MOST_OFFERS = 2000;
 export interface Traced {
   readonly graph: FactGraph;
   /** The firings the walk took, with the graph's facts each made. */
-  readonly walked: readonly Walked[];
+  readonly walked: readonly TracedFiring[];
   /** The marks the walk began on, made again. */
   fresh(): CellMarks;
   /** What the builder does to the marks before each firing (`settle`). */
   between?(m: CellMarks): void;
+}
+
+/**
+ * A firing a judging walk took, as a replay makes it again: its facts, the
+ * graph's facts it made (its own from `from`, then its placements' culls, up
+ * to `to`), and its technique, by `id`, which offers what it would fire on
+ * other marks. A ladder walk's `taken` are these as they are; a walk of
+ * another kind says what its technique offers (`candidate-plan.ts`).
+ */
+export interface TracedFiring {
+  readonly firing: Firing & {
+    readonly entry: {
+      readonly id: string;
+      readonly run: {
+        firings(m: CellMarks): readonly Firing[] | "contradiction";
+      };
+    };
+  };
+  readonly from: number;
+  readonly to: number;
 }
 
 /** Whether marks `m` hold a firing's fact: its value placed, its candidate

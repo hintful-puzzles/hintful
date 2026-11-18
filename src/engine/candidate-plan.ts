@@ -38,6 +38,7 @@ import {
   regionReach,
 } from "./candidate-hint.ts";
 import { describedSpace, PLACE, STRIKE } from "./describe-runtime.ts";
+import { FactGraph } from "./fact-graph.ts";
 import type { HintStep } from "./game.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import {
@@ -75,7 +76,7 @@ import {
   singleReasonOf,
   type WholeRegion,
 } from "./latin-hint.ts";
-import type { Judging } from "./move-judge.ts";
+import type { Judging, TracedFiring } from "./move-judge.ts";
 import { stepBudget } from "./step-budget.ts";
 import type { Point } from "./types.ts";
 
@@ -414,6 +415,11 @@ export interface CandidatePlan<
    * keeps state of its own beside `grid` that a placement also settles
    * (Salad marks the square as no hole). */
   onPlace?: (x: number, y: number, n: number) => void;
+  /** A game's state beside `grid` and `pencil` that its rungs read (Salad's
+   * holes): `save` returns what puts it back as it is now. A judge's replay
+   * asks a rung with it as the walk began, since the replay makes only the
+   * firings' facts. */
+  ownState?: { save(): () => void };
 }
 
 /** The default dialect's placement and strike moves (Towers, Unequal, Keen, Solo). */
@@ -636,6 +642,18 @@ function madeFact(was: CellMarks, now: CellMarks): boolean {
   return false;
 }
 
+/** A reason for each of `facts`: a replay's marks keep no record of them. */
+function reasonsFor(facts: readonly number[]): object[] {
+  return Array.from({ length: facts.length / 3 }, () => ({}));
+}
+
+/** Whether facts `facts` place a value in cell `c`. */
+function placesAt(facts: readonly number[], c: number): boolean {
+  for (let i = 0; i < facts.length; i += 3)
+    if (facts[i] === PLACE && facts[i + 1] === c) return true;
+  return false;
+}
+
 class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRegion> {
   private readonly bit: (n: number) => number;
   private readonly place: (x: number, y: number, n: number, autoElim: boolean) => M;
@@ -649,6 +667,14 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
   /** The candidates as the player reads them (`impliedNotes`), taken afresh on
    * every turn of the walk. */
   private shown: Int32Array;
+  /** The singles, then the game's rungs. */
+  private readonly ladder: CandidateRung<M, H, Reason>[];
+  /** The rung of the ladder each firing offered came from. */
+  private readonly fromRung = new WeakMap<Firing<M, H, Reason>, number>();
+  /** The firing the walk took last, `null` while a setup step is taken. */
+  private lastTaken: Firing<M, H, Reason> | null = null;
+  /** Whether a rung is asked on a replay's marks, the notes set up. */
+  private replaying = false;
   /** Each firing's steps, built once whether the frontier or the take asks. */
   private readonly built = new WeakMap<
     Firing<M, H, Reason>,
@@ -708,6 +734,8 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
       }
     }
     this.shown = this.view();
+    const singles: CandidateRung<M, H, Reason> = () => this.singles();
+    this.ladder = [singles, ...(plan.rungs ?? [])];
   }
 
   private fillAll(i: number): number {
@@ -735,9 +763,6 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
     const frontier = new HintFrontier(gridKey(w, plan.grid.length / w));
     const budget = stepBudget(plan.label);
     const finished = plan.finished ?? (() => !plan.grid.includes(0));
-    const own = plan.rungs ?? [];
-    const singles: CandidateRung<M, H, Reason> = () => this.singles();
-    const ladder = [singles, ...own];
     // Aiming at a move, a rung that waits its turn offers its firings all the
     // same: the wait is the order a hint takes them in, not what makes them
     // sound.
@@ -745,7 +770,7 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
       const lists: (readonly Firing<M, H, Reason>[])[] = [];
       let nothingEarlier = true;
       this.shown = this.view();
-      for (const rung of ladder) {
+      for (const [r, rung] of this.ladder.entries()) {
         const offered = rung({
           nothingEarlier: aiming || nothingEarlier,
           populated: this.setUp.done(),
@@ -753,6 +778,7 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
           continues: (f) => aiming || frontier.continues(this.premise(f)),
         });
         if (offered.length > 0) nothingEarlier = false;
+        for (const f of offered) this.fromRung.set(f, r);
         lists.push(offered);
       }
       return lists;
@@ -802,30 +828,200 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
     // Judging, the marks now, and as of the last firing that made a fact.
     let now = judging && this.marksShown();
     let counted = now;
+    const trace = judging && this.traceInto(judging);
     const cap = plan.cap ?? w * w * w * 4 + 4;
     for (let guard = 0; guard < cap; guard++) {
       budget.tick();
       if (judging && now && judging.done(now)) return;
       if (finished()) return;
       const from = plan.steps.length;
+      const was = plan.grid.slice();
+      this.lastTaken = null;
       if (!next()) return;
-      if (!judging || !counted) continue;
+      if (!judging || !counted || !trace) continue;
       now = this.marksShown();
       // A step that strikes nothing the player could read (penciling the
       // notes in, or cleaning out what the implied notes never held) is
       // bookkeeping: it opens no firing, and the next is quoted instead.
       if (!madeFact(counted, now)) continue;
+      const known = trace.take(this.lastTaken, was, counted, now);
       counted = now;
       // Named by its first step that is no setup's.
       const own = plan.steps.slice(from).find((s) => nameOf(s.rung) !== null);
-      judging.took(null, 0, nameOf(own?.rung ?? null), true);
+      judging.took(trace.graph, known, nameOf(own?.rung ?? null), true);
+    }
+  }
+
+  /**
+   * Hand `judging` the walk's trace (`Judging.traced`), and return what
+   * records each step that made a fact, answering where its facts begin in
+   * the graph. They are made on marks of the trace's own, read as the judge
+   * reads the board, so a placement's cull follows them.
+   *
+   * A firing's facts are its legs', and the placement a strike folds into
+   * under the implicit reading; they rest on its premise (`premise`), the
+   * cells its steps read. A setup step's are the stale notes its clean
+   * struck, and say nothing of what they read. The replay makes that clean
+   * before every firing (`between`): it strikes only what a placement on the
+   * board rules out.
+   */
+  private traceInto(judging: Judging): {
+    graph: FactGraph;
+    take(
+      f: Firing<M, H, Reason> | null,
+      was: ArrayLike<number>,
+      counted: CellMarks,
+      now: CellMarks,
+    ): number;
+  } {
+    const { w } = this.plan;
+    const grid = this.plan.grid.slice();
+    const pencil = this.plan.pencil.slice();
+    const graph = new FactGraph();
+    const asBegun = this.plan.ownState?.save() ?? null;
+    const marks = this.marksShown(grid, pencil);
+    marks.graph = graph;
+    const walked: TracedFiring[] = [];
+    judging.traced = {
+      graph,
+      walked,
+      fresh: () => this.marksShown(grid, pencil),
+      between: (m) => this.cleanObvious(m),
+    };
+    const offersNone = (): LadderFiring[] => [];
+    return {
+      graph,
+      take: (f, was, counted, now) => {
+        const facts: number[] = [];
+        const folded: number[] = [];
+        if (f === null) {
+          for (let c = 0; c < now.cands.length; c++) {
+            if (now.grid[c] !== 0) continue;
+            for (let gone = counted.cands[c] & ~now.cands[c]; gone; gone &= gone - 1)
+              facts.push(STRIKE, c, 31 - Math.clz32(gone & -gone));
+          }
+        } else {
+          facts.push(...this.factsOf(f));
+          const { grid: placed } = this.plan;
+          for (let c = 0; c < was.length; c++)
+            if (was[c] === 0 && placed[c] !== 0 && !placesAt(facts, c)) {
+              facts.push(PLACE, c, placed[c]);
+              folded.push(c);
+            }
+        }
+        const from = graph.facts.length;
+        graph.record(
+          facts,
+          f === null
+            ? null
+            : { cells: this.premise(f).map((p) => p.y * w + p.x), edges: [] },
+        );
+        marks.group++;
+        marks.applyFacts(facts, null);
+        const r = f === null ? undefined : this.fromRung.get(f);
+        const first = f?.[0];
+        const id =
+          first === undefined
+            ? "setup"
+            : "step" in first
+              ? first.step.rung
+              : rungOf<Reason>(first.reason);
+        walked.push({
+          firing: {
+            facts,
+            reasons: reasonsFor(facts),
+            entry: {
+              id,
+              run: {
+                firings:
+                  r === undefined ? offersNone : this.offerOf(r, folded, asBegun),
+              },
+            },
+          },
+          from,
+          to: graph.facts.length,
+        });
+        return from;
+      },
+    };
+  }
+
+  /**
+   * What rung `r` of the ladder offers on a replay's marks `m`, each firing
+   * as its facts. The walk's board and notes are set to `m` while the rung is
+   * asked, and the game's own state to `asBegun`'s; all are put back after. A
+   * strike that leaves one of `folded` a single value places it, as the
+   * walked firing's fold did.
+   */
+  private offerOf(
+    r: number,
+    folded: readonly number[],
+    asBegun: (() => void) | null,
+  ): (m: CellMarks) => LadderFiring[] {
+    return (m) => {
+      const { grid, pencil } = this.plan;
+      const was = { grid: grid.slice(), pencil: pencil.slice(), shown: this.shown };
+      const own = this.plan.ownState?.save() ?? null;
+      const values = this.valuesIn(~0);
+      try {
+        asBegun?.();
+        for (let i = 0; i < grid.length; i++) {
+          grid[i] = m.grid[i];
+          let notes = 0;
+          if (m.grid[i] === 0)
+            for (const n of values) if (m.cands[i] & (1 << n)) notes |= this.bit(n);
+          pencil[i] = notes;
+        }
+        this.shown = pencil.slice();
+        this.replaying = true;
+        const offered = this.ladder[r]({
+          nothingEarlier: true,
+          populated: true,
+          shown: this.shown,
+          continues: () => true,
+        });
+        return offered.map((g) => {
+          const facts = this.factsOf(g);
+          for (const c of folded) {
+            let left = m.cands[c];
+            for (let i = 0; i < facts.length; i += 3)
+              if (facts[i] === STRIKE && facts[i + 1] === c)
+                left &= ~(1 << facts[i + 2]);
+            if (m.grid[c] === 0 && left !== 0 && (left & (left - 1)) === 0)
+              facts.push(PLACE, c, 31 - Math.clz32(left));
+          }
+          return { facts, reasons: reasonsFor(facts) };
+        });
+      } finally {
+        grid.set(was.grid);
+        pencil.set(was.pencil);
+        own?.();
+        this.shown = was.shown;
+        this.replaying = false;
+      }
+    };
+  }
+
+  /** Strike from marks `m` every value a placement on them rules out: the
+   * obvious clean, made on a judge's marks. */
+  private cleanObvious(m: CellMarks): void {
+    for (let c = 0; c < m.grid.length; c++) {
+      const n = m.grid[c];
+      if (n === 0) continue;
+      const cells = this.reach(c, n);
+      for (let k = 0; k < cells.length; k++)
+        if (m.grid[cells[k]] === 0 && m.has(cells[k], n)) m.strikeAt(cells[k], n);
     }
   }
 
   /** The board as the player reads it, as a judge reads marks
-   * ({@link PlanJudging}). */
-  private marksShown(): CellMarks {
-    const { grid, pencil, w, enc } = this.plan;
+   * ({@link PlanJudging}): the walk's, or `grid` and `pencil`. A placement's
+   * cull goes into the marks' graph where they keep one. */
+  private marksShown(
+    grid: Uint8Array | Int8Array = this.plan.grid,
+    pencil: Int32Array = this.plan.pencil,
+  ): CellMarks {
+    const { w, enc } = this.plan;
     const m = new CellMarks(describedSpace([], w, grid.length / w), ~0, grid.slice());
     const implied = impliedNotes(grid, pencil, w, this.reach, enc);
     for (let i = 0; i < grid.length; i++)
@@ -835,8 +1031,12 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
       (marks, c) => {
         const n = marks.grid[c];
         const cells = reach(c, n);
+        const facts: number[] = [];
         for (let k = 0; k < cells.length; k++)
-          if (cells[k] !== c && marks.grid[cells[k]] === 0) marks.strikeAt(cells[k], n);
+          if (cells[k] !== c && marks.grid[cells[k]] === 0 && marks.has(cells[k], n))
+            facts.push(STRIKE, cells[k], n);
+        marks.graph?.record(facts, { cells: [c], edges: [] });
+        for (let k = 0; k < facts.length; k += 3) marks.strikeAt(facts[k + 1], n);
       },
     ];
     return m;
@@ -871,7 +1071,7 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
     );
     // A hidden single is the notes' to show, once a note-less cell reads as
     // something.
-    if (this.implicit || this.setUp.done())
+    if (this.implicit || this.replaying || this.setUp.done())
       for (const { m, region } of this.hiddenSingles())
         out.push(this.single(m, { kind: "hidden", region }));
     return out;
@@ -1291,6 +1491,7 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
   /** Push a firing's steps, the later legs continuing the first, and play each
    * on the working board. */
   private take(f: Firing<M, H, Reason>): void {
+    this.lastTaken = f;
     this.stepsOf(f).forEach(({ step, apply }, i) => {
       if (i > 0) step.continuesPrevious = true;
       this.plan.steps.push(step);

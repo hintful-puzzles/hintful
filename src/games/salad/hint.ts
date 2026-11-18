@@ -812,6 +812,12 @@ function buildSteps(
     onPlace: (x, y) => {
       w.holes[y * o + x] = CIRCLE;
     },
+    ownState: {
+      save: () => {
+        const holes = w.holes.slice();
+        return () => w.holes.set(holes);
+      },
+    },
   });
   return steps;
 }
