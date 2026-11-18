@@ -24,7 +24,7 @@
 ## 4. Every builder
 
 - [x] 4.1 `describedEdgeHint`: its fourteen games and the edge skeleton (the grid skeleton was missed in 2.4, wired now). Guard: `move-judge-games.test.ts`, every judging game calls its hint's first move followed, and a ledger of the hinting games that judge nothing. Seen in Chrome: Bridges and Tents, a followed move. Found: Pearl's `earlyThrough` fired with no pair of sides closing a loop (shape alone locks a side), its sentence false and its outline empty, which crashed the aimed walk; it now needs a pair (soundness check held) Measured 2026-11-18, each judging game's default board: the hint's first eight steps are all judged direct, the slowest judgment 60 ms (Spokes)
-- [ ] 4.2 `describedHint`
+- [x] 4.2 `describedHint` (Unruly), the guard holding its first steps direct; seen in Chrome, a followed move
 - [ ] 4.3 The candidate plan (Latin games)
 - [ ] 4.4 The games that walk the ladder from their own code (Crossing, Filling, Loopy, Magnets, Net, Pattern, Slant, Subsets), or a recorded decline
 

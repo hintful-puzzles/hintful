@@ -11,7 +11,7 @@
  * Cell games only: a fact is a placement of a value on a cell.
  */
 import { PLACE } from "./describe-runtime.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
+import type { HintResult, HintStep, HintTrackVerdict, MoveVerdict } from "./game.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { CELL, type Sentence } from "./hint-words.ts";
 import {
@@ -22,6 +22,14 @@ import {
   type Taken,
   TIERS,
 } from "./ladder-runtime.ts";
+import {
+  chainedWords,
+  followedWords,
+  type Judging,
+  judgeByWalk,
+  movedFacts,
+  unforcedWords,
+} from "./move-judge.ts";
 import type { PairIndex } from "./piece.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
@@ -101,6 +109,8 @@ export interface DescribedHintSpec<
 /** The hooks a game takes from its description. */
 export interface DescribedHint<State, Move, Kind extends string> {
   hint(state: State): HintResult<Move, CellHint, Kind>;
+  /** What Check & save says of the last move (`Game.judgeMove`). */
+  judgeMove(before: State, after: State): MoveVerdict<CellHint> | null;
   hintKeepTrack(m: Move, step: HintStep<Move, CellHint, Kind>): HintTrackVerdict;
   /** The kinds a step can speak: the techniques that have a sentence. */
   hintRungs: readonly Kind[];
@@ -178,7 +188,10 @@ export function describedHint<
   const spoken = spokenOf<SaysOf>;
   const filled = filledBy;
 
-  const hint = (state: State): HintResult<Move, CellHint, Kind> => {
+  type Step = HintStep<Move, CellHint, Kind>;
+  /** Every step the ladder makes from `state`. Judging a move, the walk is
+   * aimed at its facts and ends once `judging` says they are made. */
+  const stepsFrom = (state: State, judging?: Judging): Step[] => {
     const m = spec.marks(state);
     const w = spec.width(state);
     const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
@@ -193,9 +206,20 @@ export function describedHint<
       spec.entries(state),
       { [TIERS]: Number.MAX_SAFE_INTEGER },
       reads,
+      judging ? { aim: judging.aim } : {},
     );
-    const steps: HintStep<Move, CellHint, Kind>[] = [];
-    for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next()) {
+    if (judging) judging.graph = walk.graph;
+    const steps: Step[] = [];
+    while (!judging?.done(m)) {
+      const known = walk.graph.facts.length;
+      const f = walk.next();
+      if (f === null || f === "contradiction") break;
+      if (judging) {
+        const ids: number[] = [];
+        for (let id = known; id < walk.graph.facts.length; id++) ids.push(id);
+        judging.made.push(ids);
+        judging.firstStep.push(steps.length);
+      }
       const kind = f.entry.id as Kind;
       const { terms, marks, wording } = spoken(f).says;
       const fills = filled(f);
@@ -238,13 +262,64 @@ export function describedHint<
         });
       }
     }
+    return steps;
+  };
+
+  const hint = (state: State): HintResult<Move, CellHint, Kind> => {
+    const steps = stepsFrom(state);
     return steps.length === 0
       ? { ok: false, error: DEDUCTION_EXHAUSTED }
       : { ok: true, steps };
   };
 
+  /** What Check & save says of the last move: the step that places a square
+   * the player filled, or the move's square ringed where none does. */
+  const judgeMove = (before: State, after: State): MoveVerdict<CellHint> | null => {
+    const moved = movedFacts(spec.marks(before), spec.marks(before), spec.marks(after));
+    if (moved.length === 0) return null;
+    let steps: Step[] = [];
+    let firstStep: readonly number[] = [];
+    const judged = judgeByWalk(moved, (judging) => {
+      steps = stepsFrom(before, judging);
+      firstStep = judging.firstStep;
+    });
+    if (judged === null) return null;
+    const w = spec.width(before);
+    const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
+    const ringed = (i: number, followed: boolean): MoveVerdict<CellHint> => {
+      const { at, value } = moved[i];
+      const target = pointOf(at);
+      return {
+        followed,
+        words: followed ? chainedWords(target) : unforcedWords(target),
+        highlights: { target: { ...target, value } },
+      };
+    };
+    if (judged.kind === "unforced") return ringed(judged.fact, false);
+    if (judged.firing === null) return ringed(0, true);
+    const ofFiring = steps.slice(
+      firstStep[judged.firing],
+      firstStep[judged.firing + 1] ?? steps.length,
+    );
+    const cells = new Set(moved.map((f) => f.at));
+    const quoted =
+      ofFiring.find(
+        (s) =>
+          s.highlights && cells.has(s.highlights.target.y * w + s.highlights.target.x),
+      ) ??
+      ofFiring[0] ??
+      null;
+    if (quoted?.words === undefined) return null;
+    return {
+      followed: true,
+      words: followedWords(quoted.words, judged.chained),
+      ...(quoted.highlights === undefined ? {} : { highlights: quoted.highlights }),
+    };
+  };
+
   return {
     hint,
+    judgeMove,
     // A move completes the step iff it is the step's move; anything else drops
     // the plan to recompute.
     hintKeepTrack: (m, step) => (sameMove(m, step.move) ? "completed" : "off"),

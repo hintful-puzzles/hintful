@@ -214,6 +214,7 @@ export const unrulyGame: Game<
   },
 
   hint: described.hint,
+  judgeMove: described.judgeMove,
   hintRungs: described.hintRungs,
   hintMarks: {
     roles: {

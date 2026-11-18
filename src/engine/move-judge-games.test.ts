@@ -57,7 +57,6 @@ const UNJUDGED: Readonly<Record<string, string>> = {
   twiddle: NOT_MARKS,
   undead: OWN_SOLVER,
   unequal: LATER,
-  unruly: LATER,
   untangle: NOT_MARKS,
 };
 
