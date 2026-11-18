@@ -1,0 +1,57 @@
+import { describe, expect, it } from "vitest";
+import { randomNew } from "../random/index.ts";
+import { ANSWERS, GUESSES } from "./data.ts";
+import { answerCount, drawAnswer, isAnswer, isGuess, WORD_LENGTHS } from "./index.ts";
+
+function words(list: Readonly<Record<number, string>>, length: number): string[] {
+  return list[length].match(new RegExp(`.{${length}}`, "g")) ?? [];
+}
+
+describe("word-list", () => {
+  it("holds sorted, distinct, lowercase words of each length, answers among guesses", () => {
+    expect(WORD_LENGTHS).toEqual([3, 4, 5, 6, 7, 8]);
+    for (const length of WORD_LENGTHS) {
+      for (const list of [ANSWERS, GUESSES]) {
+        const all = words(list, length);
+        expect(list[length].length).toBe(all.length * length);
+        expect(all.every((w) => /^[a-z]+$/.test(w))).toBe(true);
+        expect(all.every((w, i) => i === 0 || all[i - 1] < w)).toBe(true);
+      }
+      expect(words(ANSWERS, length).every(isGuess)).toBe(true);
+    }
+  });
+
+  it("finds every listed word, at both ends, and no near miss", () => {
+    for (const length of WORD_LENGTHS) {
+      const all = words(GUESSES, length);
+      for (const word of [all[0], all[all.length - 1], all[all.length >> 1]]) {
+        expect(isGuess(word)).toBe(true);
+      }
+    }
+    expect(isGuess("crane")).toBe(true);
+    expect(isAnswer("crane")).toBe(true);
+    expect(isGuess("cranx")).toBe(false);
+    expect(isGuess("aaaaa")).toBe(false);
+    expect(isGuess("crane".toUpperCase())).toBe(false);
+    expect(isGuess("ab")).toBe(false);
+    expect(isGuess("")).toBe(false);
+    // A guess that is no answer: an inflection.
+    expect(isGuess("cranes")).toBe(true);
+    expect(isAnswer("cranes")).toBe(false);
+  });
+
+  it("deals the same answer from the same seed, and every answer it deals is one", () => {
+    const first = drawAnswer(5, randomNew("seed"));
+    expect(drawAnswer(5, randomNew("seed"))).toBe(first);
+    const rs = randomNew("many");
+    const dealt = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      const word = drawAnswer(5, rs);
+      expect(isAnswer(word)).toBe(true);
+      dealt.add(word);
+    }
+    expect(dealt.size).toBeGreaterThan(150);
+    expect(answerCount(5)).toBeGreaterThan(1000);
+    expect(() => drawAnswer(2, rs)).toThrow(RangeError);
+  });
+});

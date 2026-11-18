@@ -1,0 +1,49 @@
+# Words never dealt as an answer, beyond SCOWL's offensive and vulgar notes
+# and LDNOOBW's English list: slurs, insults on a group, and words a player
+# would not want handed to them, that both of those miss. Read by
+# scripts/word-list.ts; one word a line, `#` starts a comment. A player may
+# still type any of them as a guess (the owner, 2026-11-18).
+#
+# Found 2026-11-18 by checking a list of candidates against the answers; a
+# word not here was either missing from the answers or judged fit to deal.
+
+# Slurs and insults on a group of people
+chink
+cripple
+dyke
+gringo
+gyp
+gypsy
+hick
+imbecile
+midget
+moron
+mulatto
+oriental
+pansy
+queer
+redskin
+retard
+sissy
+welsh
+
+# Insults on a person's mind
+loony
+psycho
+
+# Sexual, or about violence against a person
+bimbo
+crotch
+floozy
+genital
+harlot
+lynch
+molest
+pimp
+prick
+slave
+sperm
+
+# Crude
+turd
+junkie

@@ -24,6 +24,7 @@ import "../components/command-link"; // may appear in embedded text (e.g., priva
 // Raw content
 import appLicenseText from "../../LICENSE.md?raw";
 import unreleasedLicenseText from "../../licenses/puzzles-unreleased-LICENSE?raw";
+import scowlLicenseText from "../../licenses/scowl-LICENSE?raw";
 import puzzlesLicenseText from "../../licenses/sgt-puzzles-LICENSE?raw";
 import privacyHtml from "../assets/privacy.html?raw";
 
@@ -40,6 +41,10 @@ const androidAppLink =
   "https://play.google.com/store/apps/details?id=name.boyle.chris.sgtpuzzles";
 const iOSAppLink = "https://apps.apple.com/in/app/puzzles-reloaded/id6504365885";
 const norinoriLink = "https://github.com/sen-ltd/norinori";
+const scowlLink = "https://github.com/en-wl/wordlist";
+const twelveDictsLink = "http://wordlist.aspell.net/12dicts/";
+const ldnoobwLink =
+  "https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words";
 
 // Form of dependencies-app.json
 interface DependencyInfo {
@@ -295,6 +300,13 @@ export function credits() {
         keeps</li>
       <li>${offsiteLink(norinoriLink, html`<span translate="no">sen-ltd/norinori</span>`)},
         whose way of packing dominoes deals this app's Norinori boards</li>
+      <li><span translate="no">Kevin Atkinson</span>’s
+        ${offsiteLink(scowlLink, html`<span translate="no">SCOWL</span>`)},
+        <span translate="no">Alan Beale</span>’s
+        ${offsiteLink(twelveDictsLink, html`<span translate="no">12dicts</span>`)}
+        and the
+        ${offsiteLink(ldnoobwLink, "List of Dirty, Naughty, Obscene, and Otherwise Bad Words")},
+        from which the word games’ lists are built</li>
       <li>${offsiteLink("https://lucide.dev/", html`<span translate="no">Lucide</span>`)}
         icons and ${offsiteLink(
           "https://webawesome.com",
@@ -404,6 +416,10 @@ export class AboutDialog extends LitElement {
           <wa-details appearance="plain" icon-placement="start">
             <div slot="summary" translate="no">x-sheep/puzzles-unreleased</div>
             ${licenseTextToHTML(unreleasedLicenseText)}
+          </wa-details>
+          <wa-details appearance="plain" icon-placement="start">
+            <div slot="summary" translate="no">SCOWL (word lists)</div>
+            ${licenseTextToHTML(scowlLicenseText)}
           </wa-details>
 
           ${this.dependencies?.map(

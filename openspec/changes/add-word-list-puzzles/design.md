@@ -58,6 +58,28 @@ list, not only of the answers: otherwise a player who finds a real word the
 answer did not use is told it is wrong. The generator deals answers' words
 and proves uniqueness against every accepted word.
 
+## The word list, as built
+
+`scripts/word-list.ts`, 2026-11-18. Its header is the full statement; what
+changed from the plan above, and why:
+
+- **SCOWL's data is read, not its build run.** SCOWLv2 ships a Python build
+  into SQLite; running code from a download was refused on this machine, and
+  a build script that needs Python and SQLite is a second toolchain. The
+  script reads `scowl-pre.txt` and the files SCOWL merges into it by the
+  format its README documents, and skips its adjustment files, which act on
+  a few hundred entries far from where either list is cut.
+- **Answers are lemmas in their preferred spelling, and not informal.** The
+  first build dealt plurals 2of12 keeps as headwords ("books", "hours") and
+  "dunno", "sorta": an answer SCOWL lists as another word's inflection, or
+  under an informal usage note, or at a variant level past 1, is out. That
+  left 425 / 1,401 / 1,952 / 2,531 / 2,508 / 2,414 answers of 3 to 8
+  letters, against 1,214 / 4,214 / 8,976 / 15,459 / 23,301 / 28,745
+  guesses.
+- **Our own filter** is `scripts/word-list-exclude.txt`: checking a list of
+  candidate slurs and charged words against the answers found 33 that
+  SCOWL's notes and LDNOOBW both let through.
+
 ## What each inherits (task 1.3)
 
 Each game's rules are stated in `candidates/` and reported on by

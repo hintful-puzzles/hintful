@@ -31,6 +31,17 @@ Tatham's notice verbatim. It is kept as its own file regardless: they are two
 projects' notices, and their being the same text is a fact about today rather
 than a guarantee.
 
+## `scowl-LICENSE`
+
+SCOWL (Spell Checker Oriented Word Lists), by Kevin Atkinson: its `Copyright`
+file from release `rel-2026.02.25`, whole. The word games' lists in
+`../src/engine/word-list/data.ts` are generated from it by
+`../scripts/word-list.ts`, which says which sizes; they stop at size 80, so
+the notice before its first `===` is the one that applies, and the rest is
+kept because the file is kept whole.
+
+- Upstream: <https://github.com/en-wl/wordlist>
+
 ## Why they are not in `puzzles/` any more
 
 They were, until `rehome-upstream-help-sources` (2026-08-01). `puzzles/` was the

@@ -34,16 +34,18 @@ const FLOOR = 900;
 /**
  * Paths the guard does not read. Each is one of: the record (archived
  * changes and postmortems keep the words they were written in); someone
- * else's words (the two MIT notices; the upstream C kept as reading
- * references under a change's `reference/`; the lockfile); generated output
- * that its generator, not this guard, keeps honest (`metrics/`,
- * `__snapshots__`); and the spelling tooling itself, whose table must name
+ * else's words (the two MIT notices and SCOWL's; the upstream C kept as
+ * reading references under a change's `reference/`; the lockfile); generated
+ * output that its generator, not this guard, keeps honest (`metrics/`,
+ * `__snapshots__`, and the word list, which accepts British spellings as
+ * guesses on purpose); and the spelling tooling itself, whose table must name
  * every British stem to fold it and whose comments explain them by example.
  */
 const EXCLUDED = [
   /^openspec\/changes\/archive\//,
   /^openspec\/postmortems\//,
-  /^licenses\/(sgt-puzzles|puzzles-unreleased)-LICENSE$/,
+  /^licenses\/(sgt-puzzles|puzzles-unreleased|scowl)-LICENSE$/,
+  /^src\/engine\/word-list\/data\.ts$/,
   /^metrics\//,
   /^package-lock\.json$/,
   /\.snap$/,

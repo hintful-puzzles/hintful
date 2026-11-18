@@ -53,6 +53,20 @@ shell it ships.
 
 - Source: <https://github.com/medmunds/puzzles-web>
 
+## Word lists
+
+The word games' answers and accepted guesses (`src/engine/word-list/data.ts`,
+built by `scripts/word-list.ts`) come from three lists:
+
+- **SCOWL** by Kevin Atkinson, the accepted words and how common each is.
+  <https://github.com/en-wl/wordlist>; notice:
+  [`licenses/scowl-LICENSE`](./licenses/scowl-LICENSE).
+- **12dicts** by Alan Beale, whose 2of12 list of headwords chooses the
+  answers. Public domain. <http://wordlist.aspell.net/12dicts/>
+- **List of Dirty, Naughty, Obscene, and Otherwise Bad Words** (LDNOOBW),
+  used to keep words out of the answers; none of it ships. CC BY 4.0.
+  <https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words>
+
 ## Ideas from other projects
 
 Where a technique here came from someone else's work, it is credited in the
