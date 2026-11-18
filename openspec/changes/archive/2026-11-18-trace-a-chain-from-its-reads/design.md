@@ -25,9 +25,12 @@ condition there). It was measured wrong both ways. A formula that counts a
 line reads all of it, so Sticks, Galaxies and Range named starts their chains
 did not need. A builder that writes marks outside its firings leaves the
 graph a parent short: Pearl's `stepOf` draws the line a pearl carries on, and
-34 of its 42 chains could not be replayed. And it cost 240 KB on the game
-worker (2.94 MB to 3.18 MB), past the precache cap of 3 MiB, which a commit's
-build refused. Dropped; the compiler is as it was.
+34 of its 42 chains could not be replayed. It named 414 starts, where the
+replay search below names 626 without it. And it cost every player 240 KB of
+download (the game worker, 2.94 MB to 3.18 MB). That also passed the build's
+3 MiB precache limit, but the limit is only a trip-wire against Workbox
+silently dropping the worker from the offline cache; it would have been
+raised, and did not decide this. Dropped; the compiler is as it was.
 
 What decides instead is a replay. A builder hands the judge its trace
 (`Judging.traced`: the graph, the firings the walk took with the graph's
