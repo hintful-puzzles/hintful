@@ -170,6 +170,14 @@ const BOUNDED_SEARCH_HINTS = SEARCH_REACH_GAMES;
  * the member (`docs/doctrine.md` § "Convention over configuration").
  */
 const SEARCH_REACH: Record<string, string> = {
+  ballsort:
+    "Enumerates every position the board reaches, within a budget of " +
+    "positions, and the generator deals no board past it; a custom board " +
+    "of many colors and tall tubes can be. Every preset measured reaches " +
+    "under a tenth of it, and every hinted pour is one nearer sorted, so " +
+    "no walk has cycled or refused. Largest board on every commit: this " +
+    "walk, and ballsort-hint.test.ts walks 7 colors to sorted on " +
+    "recomputed hints.",
   blackbox:
     "Once every laser is fired and none settles a square on its own, searches " +
     "for balls that send every laser where it went, within a budget. Measured " +

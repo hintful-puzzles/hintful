@@ -14,6 +14,7 @@
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import type { DrawOp } from "../engine/testing/recording-drawing.ts";
+import * as ballsort from "../games/ballsort/render.ts";
 import * as dominosa from "../games/dominosa/render.ts";
 import * as galaxies from "../games/galaxies/render.ts";
 import * as mosaic from "../games/mosaic/render.ts";
@@ -31,7 +32,18 @@ interface Declared {
 const NUMBER_ON_A_PIECE =
   "one number, in ink on an open cell and in white on a dark piece; the dark scheme lightens both";
 
+/** Ball Sort's square, diamond, plus and cross, each a four-cornered
+ * polygon to the reading, are four colors' symbols, each drawn on a ball of
+ * its own color. */
+const BALLSORT_SYMBOLS = [2, 3, 4, 5].map((i) => ballsort.COL_SYMBOL + i);
+
 const DECLARED: Record<string, Declared[]> = {
+  ballsort: BALLSORT_SYMBOLS.flatMap((a, k) =>
+    BALLSORT_SYMBOLS.slice(k + 1).map((b) => ({
+      pair: [a, b] as [number, number],
+      why: "two colors' symbols, each on a ball of its own color, a square apart from a diamond by its corners and a plus from a cross by its angle",
+    })),
+  ),
   dominosa: [
     { pair: [dominosa.COL_TEXT, dominosa.COL_DOMINOTEXT], why: NUMBER_ON_A_PIECE },
   ],

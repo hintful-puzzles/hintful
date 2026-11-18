@@ -24,6 +24,8 @@ const PROVING = UNCHECKED.filter(([, game]) => game.hasNoSolution !== undefined)
 
 /** A game ID with no solution that each game reads, and that loading refuses. */
 const REFUSED: Record<string, string> = {
+  // Two tubes with room, b and c on top, and no other b or c on top to go in.
+  ballsort: "3h2e1:ca,b,ba,c",
   // One painted square, for a cube with six faces to paint.
   cube: "c4x4:8000,2",
   // Two tiles of the finished board swapped.

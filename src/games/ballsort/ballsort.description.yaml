@@ -1,0 +1,141 @@
+# yaml-language-server: $schema=../../describe/description.schema.json
+
+game: ballsort
+help:
+  rules: |-
+    Each tube holds balls of several colors, and some tubes start empty. Pour
+    balls from one tube into another until every tube is either empty or full
+    of balls of one color.
+
+    A pour moves the balls of one color at the top of a tube, as many as
+    fit, onto a ball of that color or into an empty tube.
+
+    Some positions can never be sorted however you go on. If you reach one,
+    undo.
+  controls: |-
+    {{controls}}
+
+    The balls you pick up rise out of their tube. Tap the tube again to put
+    them back, or tap a tube they can't go into to pick that one up
+    instead. You can also drag from one tube to another to pour in one go.
+  hints: |-
+    **Hint** shows the next pour rather than making it. No pour in Ball Sort
+    is forced by logic, so the hint looks through every position the tubes
+    can reach from here and shows you the first pour of a way to sort them
+    in the fewest pours.
+
+    {{hint-marks}}
+
+    A position from which no series of pours can sort the tubes is a **dead
+    end**. You can reach one without noticing, since there are often still
+    pours to make. So before anything else, the hint looks at your other
+    pours: where one of them leads to a dead end, it stripes it and shows a
+    pour that does not. When every other pour leads to one, it says so.
+
+    Each hint names the color the next few pours are working toward: the
+    color its way of sorting fills a tube with next. It keeps to that color
+    from one hint to the next until the tube is full.
+
+    If you are already in a dead end, the hint says so; apply it to go back
+    to the last position that can still be sorted. **Check & save** asks the
+    same question: it won't save a dead end.
+name: Ball Sort
+family: position
+sizes:
+  # Tubes across, slots up; a desc loads any count, and 99 stands for no
+  # bound.
+  w: { min: 2, max: 99 }
+  h: { min: 1, max: 99 }
+  # The colors a ball may be.
+  colors: { min: 1, max: 10 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+position:
+  # Each slot's ball, by its color, 0 where the slot is empty. A column is a
+  # tube, its top row the tube's mouth.
+  ball: { domain: "range(0, colors)" }
+freedom: { kind: transition }
+define:
+  # The ball on c is the top one of its tube.
+  top(c): "ball(c) != 0 and (y(c) = 0 or ball(cell(x(c), y(c) - 1)) = 0)"
+  # c is the lowest empty slot of its tube: where a poured ball lands.
+  slot(c): "ball(c) = 0 and (y(c) = h - 1 or ball(cell(x(c), y(c) + 1)) != 0)"
+  # The balls of f's color in an unbroken run from f down.
+  run(f): >-
+    count(d in cells(col(f)) where y(d) >= y(f) and
+    forall e in cells(col(f)) where y(e) >= y(f) and y(e) <= y(d): ball(e) = ball(f))
+moves:
+  # The top run of f's tube pours into t's tube, whose lowest empty slot is t,
+  # onto a ball of its color or into an empty tube: as many balls as there
+  # is room for, which is the slots from t up.
+  pour:
+    for: >-
+      f in cells where top(f),
+      t in cells where slot(t) and x(t) != x(f)
+      and (y(t) = h - 1 or ball(cell(x(t), y(t) + 1)) = ball(f))
+    set:
+      - for: "c in cells(col(f)) where y(c) >= y(f) and y(c) - y(f) < run(f) and y(c) - y(f) <= y(t)"
+        ball: "0"
+      - for: "c in cells(col(t)) where y(c) <= y(t) and y(t) - y(c) < run(f)"
+        ball: "ball(f)"
+finish:
+  - "forall c in cells where ball(c) != 0: forall d in cells(col(c)): ball(d) = ball(c)"
+deadEnds:
+  # A tube is not sorted yet, and no top ball can go anywhere: every tube
+  # with room shows another color on top.
+  stuck: >-
+    (exists c in cells where ball(c) != 0: exists d in cells(col(c)): ball(d) != ball(c)) and
+    forall f in cells where top(f): forall t in cells where slot(t) and x(t) != x(f):
+    y(t) < h - 1 and ball(cell(x(t), y(t) + 1)) != ball(f)
+phrases:
+  # The step's pour, mid-sentence: its run ringed, `n` balls, and the slots
+  # they land in ringed in the tube they go to.
+  pour: "pour {ring run: {n: this ball | these balls}} into {ring tube: the ringed tube}"
+  # The color the run of pours to come next gathers into a full tube, said
+  # by the palette's name for it.
+  gather: "the {color} balls"
+steps:
+  # A step offers the first pour of a shortest line that sorts the board,
+  # every rival settled by the same search. Each step but the last is
+  # narrated by the color the line next completes a tube of.
+  # The pour that sorts the board.
+  last:
+    ring: [run, tube]
+    terms: { n: number }
+    move: "{pour}"
+    effect: "that sorts the board"
+  # Every other pour leads to a dead end, a board that can never be sorted;
+  # the rival judging's relation says "so".
+  only:
+    ring: [run, tube]
+    terms: { n: number, color: number }
+    aim: "{gather}"
+    look: "every other pour leads to a dead end"
+    move: "{pour}"
+  # A rival pour, striped, leads to a dead end, and this one does not.
+  trap:
+    ring: [run, tube]
+    terms: { n: number, color: number }
+    marks: { stripes: [pour] }
+    aim: "{gather}"
+    look: "{stripes pour: the striped pour} leads to a dead end"
+    answers: "Avoid it"
+    move: "{pour}"
+  # This pour fills its tube with the aim's color.
+  fills:
+    ring: [run, tube]
+    terms: { n: number, color: number }
+    aim: "{gather}"
+    move: "{pour}"
+    effect: "that fills it"
+  # No rival is lost, so nothing but the aim to say.
+  serves:
+    ring: [run, tube]
+    terms: { n: number, color: number }
+    aim: "{gather}"
+    move: "{pour}"
+deal:
+  start: >-
+    each color's balls shuffled into the full tubes at random, the spare
+    tubes empty, kept only where a search finds a way to sort it

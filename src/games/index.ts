@@ -23,6 +23,7 @@ import { registerGame } from "../engine/registry.ts";
 import { abcdGame } from "./abcd/index.ts";
 import { adjacentGame } from "./adjacent/index.ts";
 import { ascentGame } from "./ascent/index.ts";
+import { ballsortGame } from "./ballsort/index.ts";
 import { blackboxGame } from "./blackbox/index.ts";
 import { boatsGame } from "./boats/index.ts";
 import { bricksGame } from "./bricks/index.ts";
@@ -154,6 +155,7 @@ export function registerAllGames(): void {
   registerGame(unequalGame);
   registerGame(unrulyGame);
   registerGame(untangleGame);
+  registerGame(ballsortGame);
 }
 
 // Module-load side effect: importing this barrel populates the registry,

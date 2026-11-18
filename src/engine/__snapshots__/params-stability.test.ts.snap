@@ -53,6 +53,17 @@ flip:removeends  full=6x7mOEde  brief=6x7mO
 flip:symmetrical  full=6x7mOdeS  brief=6x7mO"
 `;
 
+exports[`encoded params are byte-stable > ballsort 1`] = `
+"default  full=7h4e2
+preset:4 colors, 2 empty tubes  full=4h4e2
+preset:9 colors, 2 empty tubes  full=9h4e2
+preset:5 colors, 1 empty tube  full=5h4e1
+preset:7 colors, 1 empty tube  full=7h4e1
+bump:colors  full=8h4e2
+bump:capacity  full=7h5e2
+bump:spare  full=7h4e3"
+`;
+
 exports[`encoded params are byte-stable > blackbox 1`] = `
 "default  full=w8h8m5M5
 preset:5x5, 3 balls  full=w5h5m3M3

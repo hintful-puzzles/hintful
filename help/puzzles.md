@@ -10,6 +10,7 @@ instructions. The last column names puzzles you may know it as elsewhere.
 | [ABCD](../abcd)          | [help](abcd)     | ABC-Kombi                                                                       |
 | [Adjacent](../adjacent)  | [help](adjacent) |                                                                                 |
 | [Ascent](../ascent)      | [help](ascent)   | Hidato®, Hidoku, King's Journey, Numbrix                                        |
+| [Ball Sort](../ballsort) | [help](ballsort) | Water Sort, Color Sort                                                          |
 | [Black Box](../blackbox) | [help](blackbox) |                                                                                 |
 | [Boats](../boats)        | [help](boats)    | Battleships Solitaire, Bimaru, Marinespiel                                      |
 | [Bricks](../bricks)      | [help](bricks)   | Tawamurenga                                                                     |

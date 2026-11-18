@@ -1,3 +1,95 @@
+ballsort w=2 h=1 colors=1: 4 positions, 4 can finish, 0 that cannot are claimed by none
+ballsort w=2 h=1 colors=2: 9 positions, 9 can finish, 0 that cannot are claimed by none
+ballsort w=2 h=1 colors=3: 16 positions, 16 can finish, 0 that cannot are claimed by none
+ballsort w=2 h=1 colors=4: 25 positions, 25 can finish, 0 that cannot are claimed by none
+ballsort w=2 h=2 colors=1: 16 positions, 10 can finish, 6 that cannot are claimed by none
+ballsort w=2 h=2 colors=2: 81 positions, 25 can finish, 34 that cannot are claimed by none
+ballsort w=2 h=2 colors=3: 256 positions, 46 can finish, 96 that cannot are claimed by none
+ballsort w=2 h=2 colors=4: 625 positions, 73 can finish, 204 that cannot are claimed by none
+ballsort w=2 h=3 colors=1: 64 positions, 36 can finish, 28 that cannot are claimed by none
+ballsort w=2 h=3 colors=2: 729 positions, 117 can finish, 440 that cannot are claimed by none
+ballsort w=2 h=3 colors=3: 4096 positions, 256 can finish, 2148 that cannot are claimed by none
+ballsort w=2 h=3 colors=4: 15625 positions, 465 can finish, 6856 that cannot are claimed by none
+ballsort w=2 h=4 colors=1: 256 positions, 147 can finish, 109 that cannot are claimed by none
+ballsort w=2 h=4 colors=2: 6561 positions, 671 can finish, 4724 that cannot are claimed by none
+ballsort w=2 h=4 colors=3: 65536 positions, 1825 can finish, 40539 that cannot are claimed by none
+ballsort w=2 h=4 colors=4: 390625 positions, 3909 can finish, 198280 that cannot are claimed by none
+ballsort w=3 h=1 colors=1: 8 positions, 8 can finish, 0 that cannot are claimed by none
+ballsort w=3 h=1 colors=2: 27 positions, 27 can finish, 0 that cannot are claimed by none
+ballsort w=3 h=1 colors=3: 64 positions, 64 can finish, 0 that cannot are claimed by none
+ballsort w=3 h=1 colors=4: 125 positions, 125 can finish, 0 that cannot are claimed by none
+ballsort w=3 h=2 colors=1: 64 positions, 48 can finish, 16 that cannot are claimed by none
+ballsort w=3 h=2 colors=2: 729 positions, 257 can finish, 392 that cannot are claimed by none
+ballsort w=3 h=2 colors=3: 4096 positions, 670 can finish, 2340 that cannot are claimed by none
+ballsort w=3 h=2 colors=4: 15625 positions, 1329 can finish, 8224 that cannot are claimed by none
+ballsort w=3 h=3 colors=1: 512 positions, 410 can finish, 102 that cannot are claimed by none
+ballsort w=3 h=3 colors=2: 19683 positions, 6079 can finish, 12620 that cannot are claimed by none
+ballsort w=3 h=3 colors=3: 262144 positions, 22522 can finish, 192972 that cannot are claimed by none
+ballsort w=3 h=4 colors=1: 4096 positions, 3562 can finish, 534 that cannot are claimed by none
+ballsort w=4 h=1 colors=1: 16 positions, 16 can finish, 0 that cannot are claimed by none
+ballsort w=4 h=1 colors=2: 81 positions, 81 can finish, 0 that cannot are claimed by none
+ballsort w=4 h=1 colors=3: 256 positions, 256 can finish, 0 that cannot are claimed by none
+ballsort w=4 h=1 colors=4: 625 positions, 625 can finish, 0 that cannot are claimed by none
+ballsort w=4 h=2 colors=1: 256 positions, 212 can finish, 44 that cannot are claimed by none
+ballsort w=4 h=2 colors=2: 6561 positions, 2921 can finish, 3336 that cannot are claimed by none
+ballsort w=4 h=2 colors=3: 65536 positions, 13024 can finish, 43116 that cannot are claimed by none
+ballsort w=4 h=2 colors=4: 390625 positions, 36353 can finish, 256328 that cannot are claimed by none
+ballsort w=4 h=3 colors=1: 4096 positions, 3706 can finish, 390 that cannot are claimed by none
+ballsort w=4 h=4 colors=1: 65536 positions, 62950 can finish, 2586 that cannot are claimed by none
+ballsort w=5 h=1 colors=1: 32 positions, 32 can finish, 0 that cannot are claimed by none
+ballsort w=5 h=1 colors=2: 243 positions, 243 can finish, 0 that cannot are claimed by none
+ballsort w=5 h=1 colors=3: 1024 positions, 1024 can finish, 0 that cannot are claimed by none
+ballsort w=5 h=1 colors=4: 3125 positions, 3125 can finish, 0 that cannot are claimed by none
+ballsort w=5 h=2 colors=1: 1024 positions, 898 can finish, 126 that cannot are claimed by none
+ballsort w=5 h=2 colors=2: 59049 positions, 29905 can finish, 27992 that cannot are claimed by none
+ballsort w=5 h=3 colors=1: 32768 positions, 31156 can finish, 1612 that cannot are claimed by none
+  stuck in w=2 h=1 colors=1: holds of 0, 0 of them can finish
+  stuck in w=2 h=1 colors=2: holds of 0, 0 of them can finish
+  stuck in w=2 h=1 colors=3: holds of 0, 0 of them can finish
+  stuck in w=2 h=1 colors=4: holds of 0, 0 of them can finish
+  stuck in w=2 h=2 colors=1: holds of 0, 0 of them can finish
+  stuck in w=2 h=2 colors=2: holds of 22, 0 of them can finish
+  stuck in w=2 h=2 colors=3: holds of 114, 0 of them can finish
+  stuck in w=2 h=2 colors=4: holds of 348, 0 of them can finish
+  stuck in w=2 h=3 colors=1: holds of 0, 0 of them can finish
+  stuck in w=2 h=3 colors=2: holds of 172, 0 of them can finish
+  stuck in w=2 h=3 colors=3: holds of 1692, 0 of them can finish
+  stuck in w=2 h=3 colors=4: holds of 8304, 0 of them can finish
+  stuck in w=2 h=4 colors=1: holds of 0, 0 of them can finish
+  stuck in w=2 h=4 colors=2: holds of 1166, 0 of them can finish
+  stuck in w=2 h=4 colors=3: holds of 23172, 0 of them can finish
+  stuck in w=2 h=4 colors=4: holds of 188436, 0 of them can finish
+  stuck in w=3 h=1 colors=1: holds of 0, 0 of them can finish
+  stuck in w=3 h=1 colors=2: holds of 0, 0 of them can finish
+  stuck in w=3 h=1 colors=3: holds of 0, 0 of them can finish
+  stuck in w=3 h=1 colors=4: holds of 0, 0 of them can finish
+  stuck in w=3 h=2 colors=1: holds of 0, 0 of them can finish
+  stuck in w=3 h=2 colors=2: holds of 80, 0 of them can finish
+  stuck in w=3 h=2 colors=3: holds of 1086, 0 of them can finish
+  stuck in w=3 h=2 colors=4: holds of 6072, 0 of them can finish
+  stuck in w=3 h=3 colors=1: holds of 0, 0 of them can finish
+  stuck in w=3 h=3 colors=2: holds of 984, 0 of them can finish
+  stuck in w=3 h=3 colors=3: holds of 46650, 0 of them can finish
+  stuck in w=3 h=4 colors=1: holds of 0, 0 of them can finish
+  stuck in w=4 h=1 colors=1: holds of 0, 0 of them can finish
+  stuck in w=4 h=1 colors=2: holds of 0, 0 of them can finish
+  stuck in w=4 h=1 colors=3: holds of 0, 0 of them can finish
+  stuck in w=4 h=1 colors=4: holds of 0, 0 of them can finish
+  stuck in w=4 h=2 colors=1: holds of 0, 0 of them can finish
+  stuck in w=4 h=2 colors=2: holds of 304, 0 of them can finish
+  stuck in w=4 h=2 colors=3: holds of 9396, 0 of them can finish
+  stuck in w=4 h=2 colors=4: holds of 97944, 0 of them can finish
+  stuck in w=4 h=3 colors=1: holds of 0, 0 of them can finish
+  stuck in w=4 h=4 colors=1: holds of 0, 0 of them can finish
+  stuck in w=5 h=1 colors=1: holds of 0, 0 of them can finish
+  stuck in w=5 h=1 colors=2: holds of 0, 0 of them can finish
+  stuck in w=5 h=1 colors=3: holds of 0, 0 of them can finish
+  stuck in w=5 h=1 colors=4: holds of 0, 0 of them can finish
+  stuck in w=5 h=2 colors=1: holds of 0, 0 of them can finish
+  stuck in w=5 h=2 colors=2: holds of 1152, 0 of them can finish
+  stuck in w=5 h=3 colors=1: holds of 0, 0 of them can finish
+ballsort stuck: sound (3.9s for the game)
+ballsort stuck planted: unsound, as it must be
 cube solid=0 d1=0 d2=3 squares=9 nfaces=4: 73728 positions, 46305 can finish, 24021 that cannot are claimed by none
 cube solid=0 d1=3 d2=0 squares=9 nfaces=4: 73728 positions, 46305 can finish, 24021 that cannot are claimed by none
 cube solid=1 d1=2 d2=4 squares=8 nfaces=6: 131072 positions, 103288 can finish, 0 that cannot are claimed by none

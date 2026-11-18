@@ -102,6 +102,14 @@ export const puzzleCatalog = {
     collection: "unreleased",
     family: "lines",
   },
+  ballsort: {
+    name: "Ball Sort",
+    aliases: ["Water Sort", "Color Sort"],
+    description: "Tube-sorting puzzle",
+    objective: "Pour balls between tubes until each tube holds one color.",
+    collection: "own",
+    family: "moves",
+  },
   blackbox: {
     name: "Black Box",
     description: "Ball-finding puzzle",

@@ -24,6 +24,7 @@ const HIDDEN = "its answer is hidden, so no probe is forced";
  * proposal, "Which games"). */
 const UNJUDGED: Readonly<Record<string, string>> = {
   ascent: OWN_SOLVER,
+  ballsort: NOT_MARKS,
   blackbox: HIDDEN,
   cube: NOT_MARKS,
   fifteen: NOT_MARKS,

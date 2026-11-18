@@ -1,0 +1,11 @@
+# A defect planted in each of the dead-end claims the description states,
+# keyed by its id: the statement with a condition loosened, which the
+# soundness checks under research/technique-check must find unsound.
+
+deadEnds:
+  # A tube with room shows another color on top, read as every tube: an
+  # empty tube taken for a closed one.
+  stuck: >-
+    (exists c in cells where ball(c) != 0: exists d in cells(col(c)): ball(d) != ball(c)) and
+    forall f in cells where top(f): forall t in cells where slot(t) and x(t) != x(f) and y(t) < h - 1:
+    ball(cell(x(t), y(t) + 1)) != ball(f)

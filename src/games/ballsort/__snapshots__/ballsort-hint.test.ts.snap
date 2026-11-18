@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ballsort: pinned hint positions > says, at each pin 1`] = `
+{
+  "fills": "Working on the magenta balls, pour these balls into the ringed tube: that fills it.",
+  "last": "Pour these balls into the ringed tube: that sorts the board.",
+  "only": "Working on the teal balls: every other pour leads to a dead end, so pour these balls into the ringed tube.",
+  "serves": "Working on the teal balls: pour this ball into the ringed tube.",
+  "trap": "Working on the teal balls: the striped pour leads to a dead end. Avoid it: pour these balls into the ringed tube.",
+}
+`;

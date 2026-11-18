@@ -22,6 +22,7 @@
   "src/games/ascent/ascent.description.yaml#overlap": "aadba58e18c9e77c",
   "src/games/ascent/ascent.description.yaml#overlapEdges": "aadba58e18c9e77c",
   "src/games/ascent/ascent.description.yaml#reach": "a65b2fd610d94216",
+  "src/games/ballsort/ballsort.description.yaml#deadEnd:stuck": "a153e71ae190dc62",
   "src/games/blackbox/blackbox.description.yaml#ray": "f636c015c8af43e9",
   "src/games/boats/boats.description.yaml#center": "fc7e145858b732cc",
   "src/games/boats/boats.description.yaml#centerRoom": "ae946c6d86caf5c3",

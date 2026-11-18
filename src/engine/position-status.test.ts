@@ -69,6 +69,8 @@ const UNBREAKABLE: Record<string, string> = {
   // A board Solve refuses, so there is no solved position to start from.
   mines: "the probe board has no first click yet, so there is nothing to solve",
   // A solved board whose rules take no move that could break it.
+  ballsort:
+    "a sorted board pours only a whole tube into an empty one, which leaves it sorted",
   blackbox: "a revealed arena takes no move",
   cube: "a solid with every face painted rolls freely, and moves no paint",
   flood: "a flooded board accepts no fill",
