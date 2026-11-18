@@ -24,6 +24,7 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
+import { candidateJudge } from "../../engine/candidate-judge.ts";
 import {
   LATIN_RUNGS,
   type PlanRung,
@@ -416,7 +417,7 @@ export type MathraxRung = (typeof MATHRAX_RUNGS)[number];
  * preferences. */
 function buildSteps(
   state: MathraxState,
-  { autoClean, reading }: CandidatePlanPrefs,
+  { autoClean, reading, judging }: CandidatePlanPrefs,
 ): HintStep<MathraxMove, MathraxHint, MathraxRung>[] {
   const o = state.params.o;
   const steps: HintStep<MathraxMove, MathraxHint, PlanRung<HintReason>>[] = [];
@@ -455,6 +456,7 @@ function buildSteps(
     pencil: Int32Array.from(state.pencil),
     autoClean,
     reading,
+    judging,
     label: "mathrax hint plan",
     placeWords: (m, reason) => ({ words: narrate(reason, m, o) }),
     strikeWords: (marks, reason) => premise(reason, marks, wGrid, o),
@@ -645,6 +647,8 @@ export const mathraxGame: Game<
   revealOne: (state, solved) =>
     revealEntry(setMoves, state.grid, solved.grid, state.params.o),
   hint,
+  judgeMove: (before, after, ui) =>
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
   hintRungs: MATHRAX_RUNGS,
   hintMarks: {
     roles: {

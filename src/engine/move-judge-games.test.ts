@@ -9,9 +9,12 @@
  * so a game whose builder supplies `judgeMove` cannot leave it unwired.
  */
 import { describe, expect, it } from "vitest";
-import { dealt } from "./testing/dealt.ts";
+import { Midend } from "./midend.ts";
+import { beginDealt, dealt } from "./testing/dealt.ts";
 import { REGISTERED_GAME_COUNT } from "./testing/enrollment.ts";
 import { HINT_GAMES } from "./testing/hint-games.ts";
+import { RecordingDrawing } from "./testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 
 const OWN_SOLVER = "its hint is its own solver's, not the engine's walk";
 const NOT_MARKS = "its moves are not marks a deduction makes";
@@ -21,8 +24,6 @@ const LATER = "check-the-last-move task 4";
 /** The hinting games with no `judgeMove`, and why (`check-the-last-move`'s
  * proposal, "Which games"). */
 const UNJUDGED: Readonly<Record<string, string>> = {
-  abcd: LATER,
-  adjacent: LATER,
   ascent: OWN_SOLVER,
   blackbox: HIDDEN,
   crossing: LATER,
@@ -31,32 +32,23 @@ const UNJUDGED: Readonly<Record<string, string>> = {
   filling: LATER,
   flip: NOT_MARKS,
   flood: NOT_MARKS,
-  group: LATER,
   guess: HIDDEN,
   inertia: NOT_MARKS,
-  keen: LATER,
   loopy: LATER,
-  mathrax: LATER,
   mines: OWN_SOLVER,
   net: LATER,
   netslide: NOT_MARKS,
   numgame: NOT_MARKS,
   pattern: LATER,
   pegs: NOT_MARKS,
-  rome: LATER,
-  salad: LATER,
   samegame: NOT_MARKS,
-  seismic: LATER,
   sixteen: NOT_MARKS,
   slant: LATER,
   slide: NOT_MARKS,
   sokoban: NOT_MARKS,
-  solo: LATER,
   subsets: LATER,
-  towers: LATER,
   twiddle: NOT_MARKS,
   undead: OWN_SOLVER,
-  unequal: LATER,
   untangle: NOT_MARKS,
 };
 
@@ -96,9 +88,32 @@ describe("judgeMove", () => {
         if (verdict === null) continue;
         expect(verdict.followed, step.explanation).toBe(true);
         expect(verdict.words.text, step.explanation).toMatch(LEAD);
+        // A step quoted alone states its whole reason, never a journey's
+        // "...and" that leans on a leg before it.
+        expect(verdict.words.text, step.explanation).not.toMatch(/: (\.\.\.|…)/);
         judged++;
       }
       expect(judged, `${id}: none of the first steps was judged`).toBeGreaterThan(0);
+    });
+
+    // A verdict marks the board after the move, where the hint marked it
+    // before: a ring round a value just placed must fit clear of its text.
+    it(`${id}: the board paints a verdict on the hint's first moves`, () => {
+      const midend = new Midend(game);
+      expect(beginDealt(midend, game, game.defaultParams())).toBeNull();
+      const palette = game.colors(DEFAULT_BACKGROUND);
+      let painted = 0;
+      for (let k = 0; k < 5 && midend.hint() === null; k++) {
+        const step = midend.activeHintStep();
+        if (step === null) break;
+        midend.playMoves([step.move]);
+        const verdict = midend.check();
+        if (!("judged" in verdict) || verdict.judged !== true) continue;
+        midend.timer(60);
+        midend.redraw(new RecordingDrawing(palette));
+        painted++;
+      }
+      expect(painted, `${id}: no verdict was painted`).toBeGreaterThan(0);
     });
   }
 });

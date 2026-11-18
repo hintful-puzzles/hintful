@@ -59,6 +59,7 @@ import {
   hint,
   hintGesture,
   hintKeepTrack,
+  judgeMove,
   refreshHintStep,
   SALAD_RUNGS,
   type SaladHint,
@@ -388,6 +389,7 @@ export const saladGame: Game<
   solve,
   difficulty,
   hint,
+  judgeMove,
   hintRungs: SALAD_RUNGS,
   hintMarks: {
     roles: {

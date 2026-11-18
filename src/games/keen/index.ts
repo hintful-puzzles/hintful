@@ -20,6 +20,7 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
+import { candidateJudge } from "../../engine/candidate-judge.ts";
 import {
   type CandidateRung,
   type Firing,
@@ -412,7 +413,7 @@ export type KeenRung = (typeof KEEN_RUNGS)[number];
  * preferences. */
 function buildSteps(
   state: KeenState,
-  { autoClean, reading }: CandidatePlanPrefs,
+  { autoClean, reading, judging }: CandidatePlanPrefs,
 ): HintStep<KeenMove, KeenHint, KeenRung>[] {
   const w = state.params.w;
   const steps: HintStep<KeenMove, KeenHint, PlanRung<HintReason>>[] = [];
@@ -434,6 +435,7 @@ function buildSteps(
     pencil: Int32Array.from(state.pencil),
     autoClean,
     reading,
+    judging,
     label: "keen hint plan",
     placeWords: (m, reason) => ({ words: narrate(reason, m, w) }),
     strikeWords: (marks, reason) => ({
@@ -523,6 +525,8 @@ export const keenGame: Game<
   solve,
   difficulty,
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+  judgeMove: (before, after, ui) =>
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
   hintRungs: KEEN_RUNGS,
   hintMarks: {
     roles: {

@@ -1410,10 +1410,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return this.hintDisplayed ? this.currentHintStep : null;
   }
 
-  /** The hidden reference of the displayed step, ending one left on a step
-   * no longer displayed. */
+  /** The hidden reference of the narrated step, ending one left on a step
+   * no longer narrated. */
   private get displayedHintHidden(): { index: number; drawn: HintStep<Move> } | null {
-    if (this.hintHidden !== null && this.hintHidden.step !== this.displayedHintStep)
+    if (this.hintHidden !== null && this.hintHidden.step !== this.narratedStep)
       this.hintHidden = null;
     return this.hintHidden;
   }
@@ -1430,11 +1430,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * reference's marks. */
   private get drawnHintStep(): HintStep<Move> | null {
     return (
-      this.displayedHintLook ??
-      this.displayedHintHidden?.drawn ??
-      this.displayedHintStep ??
-      this.activeCheck?.step ??
-      null
+      this.displayedHintLook ?? this.displayedHintHidden?.drawn ?? this.narratedStep
     );
   }
 
@@ -1485,7 +1481,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   hideHintReference(index: number | null): void {
-    const step = this.displayedHintStep;
+    // A check's verdict is narrated as a step is, and its words' references
+    // are measured the same way.
+    const step = this.narratedStep;
     const words = step?.words;
     const before = this.displayedHintHidden?.index ?? null;
     this.hintHidden =
@@ -1581,7 +1579,11 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (gesture === null || !judge) return false;
     const move = this.moveLog[gesture.to - 1];
     if (move === undefined || move instanceof Restart) return false;
-    const verdict = judge(this.history[gesture.from], this.history[gesture.to]);
+    const verdict = judge(
+      this.history[gesture.from],
+      this.history[gesture.to],
+      this.ui,
+    );
     if (verdict === null) return false;
     const { words, highlights, followed } = verdict;
     // The verdict answers the press just made, so it takes the displayed

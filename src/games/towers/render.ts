@@ -624,8 +624,19 @@ export function redraw(
     if (ds.hint.packed[i] & HINT_TARGET) targets.push(c);
     if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
   }
+  // A ring on a raised tower (a check's verdict on the height just placed)
+  // goes round its top, where its digit is: round the square it stands on,
+  // the digit would cross the stroke. The clips repainted when a cell's
+  // overlay moves cover that top.
+  const ringed = new Set(targets.map((c) => index(c.x, c.y)));
   ds.marks.paint(dr, targets, evidence, {
-    band: (x, y) => markBand(ds.tileSize, x, y),
+    band: (x, y) => {
+      const band = markBand(ts, x, y);
+      const tile = ds.tiles[index(x, y)];
+      if (!ringed.has(index(x, y)) || !isTower(threeD, tile)) return band;
+      const face = faceOrigin(ts, w, threeD, x, y, tile);
+      return { ...band, box: { ...band.box, x: face.x, y: face.y } };
+    },
     text: (x, y) => cellText(ds, threeD, x, y),
     evidenceColor: COL_HINT_CELL,
   });

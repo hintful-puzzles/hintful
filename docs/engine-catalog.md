@@ -90,6 +90,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `candidate-hint.ts` — candidate-elimination plan plumbing |
 | – `entry-mistakes.ts` — Check & Save for one value or a set of marks per cell |
 | – `candidate-plan.ts` — the candidate-elimination plan walk |
+| – `candidate-judge.ts` — a notes game's last move, judged by its plan |
 | – `hint-frontier.ts` — which available firing a plan takes next |
 | – `latin-hint.ts` — regions and the reasons of a single |
 | – `latin-notes.ts` — a Latin ladder run on the player's notes |
@@ -789,8 +790,9 @@ makes some, and a sentence a technique, which an `arms` technique reads by
 The pieces a builder's `judgeMove` is made of: the facts a move made, read
 from the marks before and after it; whether walked marks hold each; which
 walk step to quote, direct or chained; and the lead-in each verdict is said
-under. `describedFiringHint`, `describedEdgeHint` and `describedHint` drive them through
-`judgeByWalk` with an aimed walk (`docs/hints.md` § "Judging the last move").
+under. `describedFiringHint`, `describedEdgeHint`, `describedHint` and the
+candidate plan (`candidate-judge.ts`) drive them through `judgeByWalk` with an
+aimed walk (`docs/hints.md` § "Judging the last move").
 
 ### `described-rules-out.ts` — `Game.rulesOut` from the description
 
@@ -956,6 +958,15 @@ supplies its rungs, regions and words. See
   fails to type-check against it and calls `runCandidatePlan`
   (`solo/index.ts`). See [`hints-candidates.md`](./hints-candidates.md) §
   "The row/column preset".
+- **`buildSteps` hands its plan the prefs' `judging`**, and the game wires
+  `judgeMove` as `candidateJudge` over the same `buildSteps`.
+
+### `candidate-judge.ts` — a notes game's last move, judged by its plan
+
+`candidateJudge(before, after, ui, buildSteps)` is the `judgeMove` of a game
+whose hint is `candidateHint`: the plan walked from `before` under the
+player's preferences, aimed at the move's facts. See
+[`hints.md`](./hints.md) § "Judging the last move".
 
 ### `hint-frontier.ts` — which available firing a plan takes next
 

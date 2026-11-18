@@ -45,6 +45,19 @@ follows from a board, and its words are the hint's words for that firing.
   hint's move (Bridges) takes it into a chain; it does not rank by count,
   which prefers the strikes a placement brings along (Light Up's lit
   squares) to the placement.
+- **Notes games** (the candidate plan, 2026-11-18). The plan walks a
+  `HintFrontier`, not `ladderWalk`, so it is aimed in its own loop: a firing
+  whose legs make a fact is taken first, every rung's offered (a rung waiting
+  its turn too: the wait is only the hint's order), and the setup before any
+  firing the aim did not choose, since the rungs that read the notes offer
+  nothing until it is done. A move's facts are read off the board as the
+  player reads it, each blank cell's notes or its implied candidates, so a
+  populate makes none, and a step that leaves that reading unchanged opens no
+  firing. The plan keeps no fact graph, so a chained verdict rings the
+  square. `Game.judgeMove` takes the `Ui`, whose preferences the plan is
+  walked under as the hint is. Measured on each game's default board, every
+  answer placement from the board as dealt: none unforced, the slowest 48 ms
+  (Keen).
 - **A firing the hint shows no step for** (Pearl's square that already has
   its two lines) is bookkeeping, as `settle` is: its facts go with the next
   step's, so it neither opens a chain nor is quoted.

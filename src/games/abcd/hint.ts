@@ -318,7 +318,7 @@ type AbcdFiring = Firing<AbcdMove, AbcdHint, AbcdReason>;
 
 export function buildSteps(
   state: AbcdState,
-  { autoClean, reading }: CandidatePlanPrefs,
+  { autoClean, reading, judging }: CandidatePlanPrefs,
 ): HintStep<AbcdMove, AbcdHint, AbcdRung>[] {
   const p = state.params;
   const { w, diag } = p;
@@ -404,6 +404,7 @@ export function buildSteps(
     moves: abcdCandidateMoves,
     autoClean,
     reading,
+    judging,
     label: "abcd hint plan",
     // No region holds every letter or forbids a repeat: a line's rule is a
     // count, which the rungs read, and the no-touch rule is `reach`.

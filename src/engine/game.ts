@@ -702,8 +702,9 @@ export interface Game<
    * it was made from and `after` the one it made (`move-judge.ts`): whether
    * the game's deductions reach it from `before`, in the words of the step
    * that does, or `null` where it made nothing a deduction makes. A builder
-   * that walks a compiled ladder supplies it; a game writes none. */
-  judgeMove?(before: State, after: State): MoveVerdict<Highlights> | null;
+   * that walks a compiled ladder supplies it; a game writes none. `ui`
+   * carries the preferences the hint is walked under (a candidate plan's). */
+  judgeMove?(before: State, after: State, ui?: Ui): MoveVerdict<Highlights> | null;
 
   /** Does this `UI_UPDATE` dismiss the hint, as a real move that goes off-plan
    * does? Absent ⇒ never: a UI/cursor change leaves the hint on screen, which

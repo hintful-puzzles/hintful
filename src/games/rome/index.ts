@@ -23,6 +23,7 @@ import {
   obviousCandidateMarks,
   regionReach,
 } from "../../engine/candidate-hint.ts";
+import { candidateJudge } from "../../engine/candidate-judge.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
@@ -734,6 +735,8 @@ export const romeGame: Game<
   // Rome has no auto-pencil preference, so a placement's area cull is always
   // taught as an explicit strike rather than folded into the placement.
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+  judgeMove: (before, after, ui) =>
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
   hintRungs: ROME_RUNGS,
   hintMarks: {
     roles: {

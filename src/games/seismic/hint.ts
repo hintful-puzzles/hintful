@@ -265,7 +265,7 @@ export function workingBoard(state: SeismicState): SeismicBoard {
 
 export function buildSteps(
   state: SeismicState,
-  { autoClean, reading }: CandidatePlanPrefs,
+  { autoClean, reading, judging }: CandidatePlanPrefs,
 ): HintStep<SeismicMove, SeismicHint, SeismicRung>[] {
   const { w, dsf, mode } = state;
   const tectonic = mode === MODE_TECTONIC;
@@ -326,6 +326,7 @@ export function buildSteps(
     moves: seismicCandidateMoves,
     autoClean,
     reading,
+    judging,
     label: "seismic hint plan",
     regionsOf: (x, y) => [{ cells: area.cells[area.of[y * w + x]], holdsEvery: true }],
     reach,

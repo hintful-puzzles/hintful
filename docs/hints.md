@@ -1240,7 +1240,7 @@ the same banner, so word a `solve` refusal as player-facing text.
 ## Judging the last move
 
 Check & save, on a board with nothing wrong, judges the player's last gesture
-through `Game.judgeMove(before, after)` (spec `quick-save`, "Check & save
+through `Game.judgeMove(before, after, ui)` (spec `quick-save`, "Check & save
 judges the last move"). A game gets it from its plan builder and wires it as
 it wires `hint`; it decides nothing itself. The builder walks the ladder
 **aimed** (`ladderWalk`'s `aim`), so a firing that makes one of the move's
@@ -1267,6 +1267,26 @@ nothing there, since the builder knows no element for an edge. Which hinting
 games judge nothing, and why, is a ledger in
 `src/engine/move-judge-games.test.ts`, which also holds every judging game to
 calling its own hint's first move followed.
+
+What the notes games taught, in `candidate-plan.ts`'s walk
+(`candidate-judge.ts`). A move's facts are read off the board as the player
+reads it: a blank cell's notes, or where it has none what its regions leave
+it. So penciling everything in makes no fact, and notes written into a cell
+with none strike what they leave out, as the plan's own note step concludes.
+The aim sees every rung's firings, a rung
+that waits its turn included, since the wait is only the hint's order. The
+setup goes before any firing the aim did not choose, because the rungs that
+read the notes offer nothing until it is done. A step that leaves the
+player's reading unchanged, such as the populate or a clean of what the
+implied notes never held, opens no firing. A journey's legs are worded to
+stand alone, since a verdict quotes one leg. The plan keeps no fact graph, so
+a chained verdict rings the cell and quotes nothing. Test:
+`src/engine/candidate-judge.test.ts`.
+
+**A verdict marks the board after the move.** Its ring can land on the value
+just placed, which no hint step rings, so it must fit there clear of that
+value's text (Towers rings a raised 3D tower's top, where its digit is).
+`move-judge-games.test.ts` paints a verdict for every judging game.
 
 ## The cross-game guards
 

@@ -772,7 +772,7 @@ export const MODULES = [
     module: "src/engine/candidate-hint.ts",
     cases: [
       {
-        within: "candidateHint",
+        within: "planPrefs",
         why: "with no ui the plan folds the trivial eliminations away instead of teaching them",
         find: "    autoClean: ui?.autoPencil ?? false,",
         replace: "    autoClean: ui?.autoPencil ?? true,",

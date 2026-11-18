@@ -26,7 +26,7 @@ import {
   type Sentence,
   unshaped,
 } from "./hint-words.ts";
-import type { CellMarks, Taken } from "./ladder-runtime.ts";
+import type { CellMarks } from "./ladder-runtime.ts";
 import type { Point } from "./types.ts";
 
 /** A fact a move made: a value placed, a candidate struck, an edge's mark
@@ -172,7 +172,8 @@ function quotedStep(
  * graph's ids) and the index of its first step among the builder's steps.
  */
 export interface Judging {
-  aim(f: Taken): number;
+  /** How well a firing, by its facts, aims at the facts not yet reached. */
+  aim(f: { readonly facts: Facts }): number;
   done(m: CellMarks): boolean;
   made: number[][];
   firstStep: number[];
@@ -193,7 +194,7 @@ export type Judged =
  * Judge `moved` by a walk: `walk` runs the builder's steps with the
  * {@link Judging} given it, aimed at the facts not yet reached and ending
  * once all are. `null` where the walk could not judge: a fact the marks held
- * before any firing (the move made nothing), or no graph.
+ * before any firing (the move made nothing).
  */
 export function judgeByWalk(
   moved: readonly MovedFact[],
@@ -248,9 +249,11 @@ export function judgeByWalk(
   const chained = judged.some((i) => at[i] > 1);
   // A move the board decides at once in part opens with that part's firing.
   if (first === 1) return { kind: "followed", firing: 0, chained };
-  if (judging.graph === null) return null;
+  // A walk that keeps no fact graph cannot say where the chain began.
+  const graph = judging.graph;
+  if (graph === null) return { kind: "followed", firing: null, chained: true };
   const i = judged.find((k) => at[k] === first) ?? judged[0];
-  const firing = quotedStep(judging.graph, judging.made, moved[i], first - 1);
+  const firing = quotedStep(graph, judging.made, moved[i], first - 1);
   return { kind: "followed", firing, chained: true };
 }
 

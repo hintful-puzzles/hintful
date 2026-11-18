@@ -16,6 +16,7 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
+import { candidateJudge } from "../../engine/candidate-judge.ts";
 import {
   type CandidateRung,
   LATIN_RUNGS,
@@ -139,7 +140,7 @@ export type AdjacentRung = (typeof ADJACENT_RUNGS)[number];
  * preferences. */
 function buildSteps(
   state: EdgeClueState,
-  { autoClean, reading }: CandidatePlanPrefs,
+  { autoClean, reading, judging }: CandidatePlanPrefs,
 ): HintStep<EdgeClueMove, EdgeClueHint, AdjacentRung>[] {
   const o = state.order;
   const steps: HintStep<EdgeClueMove, EdgeClueHint, PlanRung<HintReason>>[] = [];
@@ -182,6 +183,7 @@ function buildSteps(
     pencil: Int32Array.from(state.pencil),
     autoClean,
     reading,
+    judging,
     label: "adjacent hint plan",
     placeWords: (m, reason) => ({ words: narrate(reason, m, o) }),
     strikeWords: (marks, reason) => premise(reason, marks, o),
@@ -276,6 +278,8 @@ export const adjacentGame: Game<
   solve,
   difficulty: edgeClueDifficulty(BARS),
   hint,
+  judgeMove: (before, after, ui) =>
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
   hintRungs: ADJACENT_RUNGS,
   hintMarks: {
     roles: {

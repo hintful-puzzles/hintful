@@ -15,6 +15,7 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { candidateHint } from "../../engine/candidate-hint.ts";
+import { candidateJudge } from "../../engine/candidate-judge.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   clearEntries,
@@ -312,6 +313,8 @@ export const seismicGame: Game<
   clearMistakes: (_state, mistakes) => clearEntries(setMoves, mistakes),
   revealOne: (state, solved) => revealEntry(setMoves, state.grid, solved.grid, state.w),
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+  judgeMove: (before, after, ui) =>
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
   hintRungs: SEISMIC_RUNGS,
   hintMarks: {
     roles: {

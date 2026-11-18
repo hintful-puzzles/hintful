@@ -47,6 +47,7 @@ import {
   refreshCandidateHintStep,
   regionReach,
 } from "../../engine/candidate-hint.ts";
+import { candidateJudge } from "../../engine/candidate-judge.ts";
 import {
   type CandidateRung,
   evidenceOf,
@@ -63,6 +64,7 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
+  type MoveVerdict,
   narratedStep,
 } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
@@ -684,7 +686,7 @@ function circledEmptyNotes(w: Working, o: number, nums: number): SaladFiring[] {
  */
 function buildSteps(
   state: SaladState,
-  { autoClean }: CandidatePlanPrefs,
+  { autoClean, judging }: CandidatePlanPrefs,
 ): HintStep<SaladMove, SaladHint, SaladRung>[] {
   const o = state.order;
   const nums = state.nums;
@@ -775,6 +777,7 @@ function buildSteps(
     enc,
     moves: saladCandidateMoves(nums),
     autoClean,
+    judging,
     label: "salad hint plan",
     cap: o * o * (nums + 4) + 8,
     finished: () => isComplete(board()),
@@ -822,6 +825,14 @@ export function hint(
   // No `autoPencil` preference to honor: Salad has no auto-elimination on
   // placement, so the plan always teaches the row/column note cull explicitly.
   return candidateHint(state, null, buildSteps);
+}
+
+/** What Check & save says of the last move, by the hint's own walk. */
+export function judgeMove(
+  before: SaladState,
+  after: SaladState,
+): MoveVerdict<SaladHint> | null {
+  return candidateJudge(before, after, null, buildSteps);
 }
 
 /** Classify a player move against the displayed step. Salad's two emptiness

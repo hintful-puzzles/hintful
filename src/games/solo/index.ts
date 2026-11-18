@@ -19,6 +19,7 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
+import { candidateJudge } from "../../engine/candidate-judge.ts";
 import {
   CANDIDATE_RUNGS,
   type PlanRung,
@@ -591,7 +592,7 @@ export type SoloRung = (typeof SOLO_RUNGS)[number];
  * solves it (`runCandidatePlan`). */
 function buildSteps(
   state: SoloState,
-  { autoClean, reading }: CandidatePlanPrefs,
+  { autoClean, reading, judging }: CandidatePlanPrefs,
 ): HintStep<SoloMove, SoloHint, SoloRung>[] {
   const cr = state.cr;
   const steps: HintStep<SoloMove, SoloHint, PlanRung<SoloReason>>[] = [];
@@ -603,6 +604,7 @@ function buildSteps(
     pencil: Int32Array.from(state.pencil),
     autoClean,
     reading,
+    judging,
     label: "solo hint plan",
     rungs: soloRungs(state, wGrid),
     regionsOf: (x, y) => regionsOf(state, x, y),
@@ -783,6 +785,8 @@ export const soloGame: Game<
   solve,
   difficulty,
   hint,
+  judgeMove: (before, after, ui) =>
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
   hintRungs: SOLO_RUNGS,
   hintMarks: {
     roles: {

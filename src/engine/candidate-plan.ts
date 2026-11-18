@@ -32,11 +32,12 @@ import {
   type NotesRungUnder,
   nakedSingles,
   obviousCandidateMarks,
+  type PlanJudging,
   type Reach,
   regionDuplicateMarks,
   regionReach,
 } from "./candidate-hint.ts";
-import { STRIKE } from "./describe-runtime.ts";
+import { describedSpace, PLACE, STRIKE } from "./describe-runtime.ts";
 import type { HintStep } from "./game.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import {
@@ -59,7 +60,7 @@ import {
 import {
   admits,
   type Caps,
-  type CellMarks,
+  CellMarks,
   type Ladder,
   type Firing as LadderFiring,
   techniqueFirings,
@@ -74,6 +75,7 @@ import {
   singleReasonOf,
   type WholeRegion,
 } from "./latin-hint.ts";
+import type { Judging } from "./move-judge.ts";
 import { stepBudget } from "./step-budget.ts";
 import type { Point } from "./types.ts";
 
@@ -341,6 +343,9 @@ export interface CandidatePlan<
   moves?: CandidateMoveAdapter<M>;
   /** The auto-pencil preference: a placement's cull is silent rather than taught. */
   autoClean: boolean;
+  /** Where the walk judges a move rather than writes a hint
+   * ({@link CandidatePlanPrefs}). */
+  judging?: PlanJudging;
   /** How a blank cell with no notes reads ({@link CandidateReading}). Under
    * `implicit` there is no populate: a firing first writes the notes of every
    * blank, note-less cell it strikes or outlines as evidence, one leg each, and
@@ -619,12 +624,27 @@ export function runLatinCandidatePlan<
   runCandidatePlan(full as typeof full & OwnSetUp<Reading>);
 }
 
+/** Whether marks `now` hold a fact `was` does not: a value placed, or a
+ * candidate gone. */
+function madeFact(was: CellMarks, now: CellMarks): boolean {
+  for (let i = 0; i < was.grid.length; i++)
+    if (
+      (was.grid[i] === 0 && now.grid[i] !== 0) ||
+      (was.cands[i] & ~now.cands[i]) !== 0
+    )
+      return true;
+  return false;
+}
+
 class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRegion> {
   private readonly bit: (n: number) => number;
   private readonly place: (x: number, y: number, n: number, autoElim: boolean) => M;
   private readonly strike: (marks: Mark[]) => M;
   private readonly setUp: PlanSetUp;
   private readonly implicit: boolean;
+  /** Whether the walk judges a move: its steps are quoted one at a time,
+   * never shown as a journey, so each leg's words stand alone. */
+  private readonly judging: boolean;
   private readonly reach: Reach;
   /** The candidates as the player reads them (`impliedNotes`), taken afresh on
    * every turn of the walk. */
@@ -642,6 +662,7 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
     this.place = (dialect?.place ?? latinMoves.place) as typeof this.place;
     this.strike = (dialect?.strike ?? latinMoves.strike) as typeof this.strike;
     this.implicit = plan.reading === "implicit";
+    this.judging = plan.judging !== undefined;
     const reach = plan.reach ?? regionReach(w, plan.regionsOf);
     this.reach = reach;
     if (plan.setUp) {
@@ -706,38 +727,119 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
   run(): void {
     const { plan } = this;
     const w = plan.w;
+    let judging: Judging | null = null;
+    if (plan.judging) {
+      judging = plan.judging.begin(this.marksShown(), plan.conclude.cell);
+      if (judging === null) return;
+    }
     const frontier = new HintFrontier(gridKey(w, plan.grid.length / w));
     const budget = stepBudget(plan.label);
     const finished = plan.finished ?? (() => !plan.grid.includes(0));
     const own = plan.rungs ?? [];
     const singles: CandidateRung<M, H, Reason> = () => this.singles();
     const ladder = [singles, ...own];
-    const listed = (): FrontierCandidate[][] => {
-      const lists: FrontierCandidate[][] = [];
+    // Aiming at a move, a rung that waits its turn offers its firings all the
+    // same: the wait is the order a hint takes them in, not what makes them
+    // sound.
+    const firings = (aiming = false): (readonly Firing<M, H, Reason>[])[] => {
+      const lists: (readonly Firing<M, H, Reason>[])[] = [];
       let nothingEarlier = true;
       this.shown = this.view();
       for (const rung of ladder) {
-        const firings = rung({
-          nothingEarlier,
+        const offered = rung({
+          nothingEarlier: aiming || nothingEarlier,
           populated: this.setUp.done(),
           shown: this.shown,
-          continues: (f) => frontier.continues(this.premise(f)),
+          continues: (f) => aiming || frontier.continues(this.premise(f)),
         });
-        if (firings.length > 0) nothingEarlier = false;
-        lists.push(firings.map((f) => this.candidate(f)));
+        if (offered.length > 0) nothingEarlier = false;
+        lists.push(offered);
       }
       return lists;
     };
+    const listed = (): FrontierCandidate[][] =>
+      firings().map((list) => list.map((f) => this.candidate(f)));
+    // Judging a move, a firing that makes one of its facts is taken before
+    // the frontier's choice, the earliest rung's on a tie.
+    const aimed = (aim: Judging): FrontierCandidate | null => {
+      let best: Firing<M, H, Reason> | null = null;
+      let most = 0;
+      for (const list of firings(true))
+        for (const f of list) {
+          const n = aim.aim({ facts: this.factsOf(f) });
+          if (n > most) [best, most] = [f, n];
+        }
+      return best && this.candidate(best);
+    };
+    const next = (): boolean => {
+      if (judging) {
+        const chosen = aimed(judging);
+        if (chosen) return frontier.take([[chosen]], plan.steps);
+        // The setup lets the rungs that read the notes offer theirs, which
+        // the aim may want, so it goes before any firing the aim did not.
+        if (!this.setUp.done()) {
+          this.setUp.step();
+          return true;
+        }
+      } else if (!this.setUp.done()) {
+        if (frontier.take(listed(), plan.steps)) return true;
+        if (this.setUp.step()) return true;
+      }
+      return frontier.take(listed(), plan.steps);
+    };
+    // Judging, the marks now, and as of the last firing that made a fact.
+    let now = judging && this.marksShown();
+    let counted = now;
     const cap = plan.cap ?? w * w * w * 4 + 4;
     for (let guard = 0; guard < cap; guard++) {
       budget.tick();
+      if (judging && now && judging.done(now)) return;
       if (finished()) return;
-      if (!this.setUp.done()) {
-        if (frontier.take(listed(), plan.steps)) continue;
-        if (this.setUp.step()) continue;
-      }
-      if (!frontier.take(listed(), plan.steps)) return;
+      const from = plan.steps.length;
+      if (!next()) return;
+      if (!judging || !counted) continue;
+      now = this.marksShown();
+      // A step that strikes nothing the player could read (penciling the
+      // notes in, or cleaning out what the implied notes never held) is
+      // bookkeeping: it opens no firing, and the next is quoted instead.
+      if (!madeFact(counted, now)) continue;
+      counted = now;
+      judging.made.push([]);
+      judging.firstStep.push(from);
     }
+  }
+
+  /** The board as the player reads it, as a judge reads marks
+   * ({@link PlanJudging}). */
+  private marksShown(): CellMarks {
+    const { grid, pencil, w, enc } = this.plan;
+    const m = new CellMarks(describedSpace([], w, grid.length / w), ~0, grid.slice());
+    const implied = impliedNotes(grid, pencil, w, this.reach, enc);
+    for (let i = 0; i < grid.length; i++)
+      for (const n of this.valuesIn(implied[i])) m.cands[i] |= 1 << n;
+    const reach = this.reach;
+    m.placing = [
+      (marks, c) => {
+        const n = marks.grid[c];
+        const cells = reach(c, n);
+        for (let k = 0; k < cells.length; k++)
+          if (cells[k] !== c && marks.grid[cells[k]] === 0) marks.strikeAt(cells[k], n);
+      },
+    ];
+    return m;
+  }
+
+  /** A firing's facts, as a judge reads them: each leg's placement or
+   * strikes. A game's own step makes no fact a judge reads. */
+  private factsOf(f: Firing<M, H, Reason>): number[] {
+    const w = this.plan.w;
+    const facts: number[] = [];
+    for (const leg of f) {
+      if ("place" in leg) facts.push(PLACE, leg.place.y * w + leg.place.x, leg.place.n);
+      else if ("strike" in leg)
+        for (const m of leg.strike) facts.push(STRIKE, m.y * w + m.x, m.n);
+    }
+    return facts;
   }
 
   // --- the standard rungs ---------------------------------------------------
@@ -886,7 +988,7 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
     reason: Reason | DupReason,
     continues: boolean,
   ): RungStrikeWords<H, Reason> {
-    const words = this.plan.strikeWords(marks, reason, continues);
+    const words = this.plan.strikeWords(marks, reason, continues && !this.judging);
     const more = reasonReads(reason);
     const reads = more.length > 0 ? [...(words.reads ?? []), ...more] : words.reads;
     return { ...words, ...(reads ? { reads } : {}), rung: rungOf<Reason>(reason) };
@@ -910,7 +1012,7 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
     const { words, rung, ...rest } = this.plan.placeWords(
       leg.place,
       leg.reason,
-      continues,
+      continues && !this.judging,
     );
     const reads = [
       ...(rest.reads ?? []),

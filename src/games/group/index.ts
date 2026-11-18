@@ -21,6 +21,7 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
+import { candidateJudge } from "../../engine/candidate-judge.ts";
 import {
   type Firing,
   LATIN_RUNGS,
@@ -592,7 +593,7 @@ function premise(
  * is not teachable). */
 function buildSteps(
   state: GroupState,
-  { reading }: CandidatePlanPrefs,
+  { reading, judging }: CandidatePlanPrefs,
 ): HintStep<GroupMove, GroupHint, GroupRung>[] {
   const w = state.w;
   const id = state.id;
@@ -685,6 +686,7 @@ function buildSteps(
     moves: groupCandidateMoves,
     autoClean: false,
     reading,
+    judging,
     label: "group hint plan",
     placeWords: (m, reason, continues) => ({
       words: narrate(reason, m, w, id, continues),
@@ -859,6 +861,8 @@ export const groupGame: Game<
   solve,
   difficulty,
   hint,
+  judgeMove: (before, after, ui) =>
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
   hintRungs: GROUP_RUNGS,
   hintMarks: {
     roles: {

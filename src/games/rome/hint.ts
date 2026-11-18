@@ -345,7 +345,7 @@ function termsOf<K extends keyof rome.SaysById>(
 
 export function buildSteps(
   state: RomeState,
-  { autoClean, reading }: CandidatePlanPrefs,
+  { autoClean, reading, judging }: CandidatePlanPrefs,
 ): HintStep<RomeMove, RomeHint, RomeRung>[] {
   const { w, h } = state;
   const steps: HintStep<RomeMove, RomeHint, PlanRung<RomeHintReason>>[] = [];
@@ -453,6 +453,7 @@ export function buildSteps(
     moves: romeCandidateMoves,
     autoClean,
     reading,
+    judging,
     label: "rome hint plan",
     regionsOf,
     // The ladder's order: a technique waits for every one before it.

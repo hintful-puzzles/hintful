@@ -25,7 +25,8 @@
 
 - [x] 4.1 `describedEdgeHint`: its fourteen games and the edge skeleton (the grid skeleton was missed in 2.4, wired now). Guard: `move-judge-games.test.ts`, every judging game calls its hint's first move followed, and a ledger of the hinting games that judge nothing. Seen in Chrome: Bridges and Tents, a followed move. Found: Pearl's `earlyThrough` fired with no pair of sides closing a loop (shape alone locks a side), its sentence false and its outline empty, which crashed the aimed walk; it now needs a pair (soundness check held) Measured 2026-11-18, each judging game's default board: the hint's first eight steps are all judged direct, the slowest judgment 60 ms (Spokes)
 - [x] 4.2 `describedHint` (Unruly), the guard holding its first steps direct; seen in Chrome, a followed move
-- [ ] 4.3 The candidate plan (Latin games)
+- [x] 4.3 The candidate plan: its eleven games (`candidate-judge.ts`; test `candidate-judge.test.ts`, the guard holding each game's first steps direct). Found: Abcd's second step read as chained, the aim never seeing the rungs that wait for the setup; the setup now goes first when judging
+- [x] 4.3.1 Run the app (Chrome, 2026-11-18): Towers at 1280 wide, a placement the board shows and one a chain reaches; Keen at 412 wide, Fill marks (not judged), a chained placement and a struck note. Found and fixed: a ring on a 3D tower just placed threw, the tower's digit raised off its square (Towers now rings the tower's top; the guard paints a verdict in every judging game); a journey's later leg was quoted as "...and"; the verdict's chips all took one color, since hiding a reference to measure its color read only a displayed hint step; a chained verdict said "square" in games that say "cell"
 - [ ] 4.4 The games that walk the ladder from their own code (Crossing, Filling, Loopy, Magnets, Net, Pattern, Slant, Subsets), or a recorded decline
 
 ## 5. Close

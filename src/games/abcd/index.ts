@@ -12,6 +12,7 @@
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
 import { adaptiveMarkAll, candidateHint } from "../../engine/candidate-hint.ts";
+import { candidateJudge } from "../../engine/candidate-judge.ts";
 import {
   clearEntries,
   type EntryMistakeKind,
@@ -362,6 +363,8 @@ export const abcdGame: Game<
   revealOne: (state, solved) =>
     revealEntry(abcdEntryMoves, state.grid, solved.grid, state.params.w),
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+  judgeMove: (before, after, ui) =>
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
   hintRungs: ABCD_RUNGS,
   hintMarks: {
     roles: {

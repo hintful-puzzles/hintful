@@ -20,6 +20,7 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
+import { candidateJudge } from "../../engine/candidate-judge.ts";
 import {
   type CandidateRung,
   type Firing,
@@ -565,7 +566,7 @@ export type TowersRung = (typeof TOWERS_RUNGS)[number];
  * placement's cull is taught and how a note-less cell reads. */
 function buildSteps(
   state: TowersState,
-  { autoClean, reading }: CandidatePlanPrefs,
+  { autoClean, reading, judging }: CandidatePlanPrefs,
 ): HintStep<TowersMove, TowersHint, TowersRung>[] {
   const w = state.w;
   const steps: HintStep<TowersMove, TowersHint, PlanRung<HintReason>>[] = [];
@@ -621,6 +622,7 @@ function buildSteps(
     pencil: Int32Array.from(state.pencil),
     autoClean,
     reading,
+    judging,
     label: "towers hint plan",
     placeWords: (m, reason, continues) => ({ words: narrate(reason, m, w, continues) }),
     strikeWords: (marks, reason) => ({
@@ -689,6 +691,8 @@ export const towersGame: Game<
   solve,
   difficulty,
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+  judgeMove: (before, after, ui) =>
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
   hintRungs: TOWERS_RUNGS,
   hintMarks: {
     roles: {

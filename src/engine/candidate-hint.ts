@@ -14,7 +14,9 @@ import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
 import { markAllPress, type PointerAction } from "./hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { CELL, Narration, NOTE, type Sentence, unshaped } from "./hint-words.ts";
+import type { CellMarks } from "./ladder-runtime.ts";
 import type { CellRegion } from "./latin-hint.ts";
+import type { Judging } from "./move-judge.ts";
 import { type NoteTakingUi, noteEntryGesture } from "./note-taking-cell.ts";
 import type { Point } from "./types.ts";
 
@@ -197,6 +199,35 @@ export const DEFAULT_CANDIDATE_READING: CandidateReading = "populate";
 export interface CandidatePlanPrefs {
   autoClean: boolean;
   reading: CandidateReading;
+  /** Set where the plan is walked to judge a move (`candidate-judge.ts`). */
+  judging?: PlanJudging;
+}
+
+/**
+ * A check judging a move by a candidate plan's walk: told, once the walk is
+ * set up, the marks of the board as the player reads them (each blank cell's
+ * candidates its {@link impliedNotes}, a value `n` at bit `n`, and a placement
+ * striking its value from the cells it reaches) and what the game calls a
+ * cell, it answers with the judging to aim the walk by, or `null` for a walk
+ * that only reads them.
+ */
+export interface PlanJudging {
+  begin(shown: CellMarks, cell: string): Judging | null;
+}
+
+/** The preferences a plan is walked under, read off the player's `Ui`
+ * ({@link candidateHint} says why each defaults as it does). */
+export function planPrefs(ui: CandidatePrefsUi | null): CandidatePlanPrefs {
+  return {
+    autoClean: ui?.autoPencil ?? false,
+    reading: ui?.candidateReading ?? DEFAULT_CANDIDATE_READING,
+  };
+}
+
+/** The part of a `Ui` that holds a candidate plan's preferences. */
+export interface CandidatePrefsUi {
+  autoPencil?: boolean;
+  candidateReading?: CandidateReading;
 }
 
 /** The shared `hint()` entry every candidate-elimination game uses: build the
@@ -215,13 +246,10 @@ export interface CandidatePlanPrefs {
  */
 export function candidateHint<State, Move, Hint, Rung extends string = string>(
   state: State,
-  ui: { autoPencil?: boolean; candidateReading?: CandidateReading } | null,
+  ui: CandidatePrefsUi | null,
   buildSteps: (state: State, prefs: CandidatePlanPrefs) => HintStep<Move, Hint, Rung>[],
 ): HintResult<Move, Hint, Rung> {
-  const steps = buildSteps(state, {
-    autoClean: ui?.autoPencil ?? false,
-    reading: ui?.candidateReading ?? DEFAULT_CANDIDATE_READING,
-  });
+  const steps = buildSteps(state, planPrefs(ui));
   if (steps.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
