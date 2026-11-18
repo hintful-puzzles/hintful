@@ -646,9 +646,10 @@ export default defineConfig(async ({ command, mode }) => {
           // `ico` is the tab icon, which the guard found was also outside the
           // cache — a second, older gap of the same kind.
           globPatterns: ["**/*.{css,html,ico,js,json,png,svg,woff2}"],
-          // The game worker holds every game and passed Workbox's 2 MiB
-          // default (2026-11-02); past the cap it would build without it and
-          // fail offline. Splitting it is `shrink-the-download`'s.
+          // Workbox leaves a file past this out of the offline cache, and the
+          // build fails rather than ship that. It is no size budget: the game
+          // worker holds every game, and when it outgrows the limit the limit
+          // is raised.
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
           manifestTransforms: [precacheSizes("dist")],
         },

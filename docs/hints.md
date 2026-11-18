@@ -1307,8 +1307,7 @@ search finds their starts as well. A search is bounded (`MOST_TRIED`,
 the trace with the graph, so a new one cannot keep a graph and skip the
 check. Recording every compiled technique's reads was tried and dropped: a
 formula that counts a line reads all of it, so the graph pointed at starts
-the chain did not need, the search names more starts without it, and it put
-240 KB on every player's download. Tests: `move-judge.test.ts`, "where a chain began". The candidate
+the chain did not need, and the search names more starts without it. Tests: `move-judge.test.ts`, "where a chain began". The candidate
 plans keep no trace yet, so their chained verdicts name no start.
 
 What the notes games taught, in `candidate-plan.ts`'s walk

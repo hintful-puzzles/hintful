@@ -31,10 +31,10 @@ library table (`corpus.md`).
 
 - **Which list**, under a license the app can ship (`licenses/` holds every
   notice), and in which languages; English first.
-- **Its size offline**: the app is a PWA that works offline, so the list is
-  precached, and its weight is measured against the bundle
-  (`AGENTS.md`, "Weigh bundle size and offline use before adding a
-  dependency").
+- **Offline**: the app is a PWA that works offline, so the list is
+  precached. Its size is no constraint for now (`AGENTS.md`, "weigh offline
+  use before adding a dependency"); a file past the precache limit is
+  covered by raising the limit (`vite.config.ts`).
 - **Answers and accepted guesses** may be two lists: common words as
   answers, every word as a guess.
 

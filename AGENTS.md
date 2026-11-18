@@ -149,8 +149,8 @@ The long form, with the shapes to search for, is `docs/method.md`.
   (`docs/new-game.md` § "Comments, and what earns one").
 - Port to idiomatic TypeScript. The C is a reference for the logic, never a
   template for control flow.
-- Keep Baseline 2023 compatibility. Weigh bundle size and offline use before
-  adding a dependency.
+- Keep Baseline 2023 compatibility, and weigh offline use before adding a
+  dependency. Download size is no constraint for now: no size budget is kept.
 - Let an unrecoverable error propagate; do not catch it only to log it.
 - UI changes work with touch, keyboard and mouse, at varying screen sizes,
   offline, and with accessibility considered.
