@@ -4,9 +4,8 @@
 adding a test tube color sort game", without the ad and micropayment
 mechanics most implementations sell.
 
-**Waits for `describe-the-whole-catalog`** (the owner, 2026-11-01): no new
-game before every game is described, so this one is written from its
-description. Its moves and finish compile on the position runtime, step 3
+**Written from its description** (the owner, 2026-11-01: no new game
+before every game is described). Its moves and finish compile on the position runtime, step 3
 of that change's plan (`design.md` § "The plan"); its pours are guarded and
 cannot always be undone, which `describe-guarded-moves` states.
 
@@ -23,13 +22,15 @@ corpus.md` § "Added after the test"), its moves are not always reversible, so
 it is a **planning** game with **dead ends**, as Sokoban and Pegs are. It is
 in scope (`theory.md` § "Scope"): no chance in play, no adversary, no clock.
 
-## Decisions for the session, and the owner's where marked
+## Decided (owner, 2026-11-18), after the measurements below
 
-- **The way out of a dead end.** The owner suggested letting the player add
-  an empty tube. Undo is the other. Whether to offer an added tube, how many,
-  and whether it is a setting, is player-visible: the owner's.
-- **A move**: one ball, or the whole run of a color on top (water sort). The
-  owner's, with what the session finds about each.
+- **The way out of a dead end is undo, with the hint's rewind**: no added
+  tube, as button or setting. The hint and Check & save name a dead end, and
+  applying the hint goes back to the last position that can still finish.
+  Difficulty comes from the deal, not from a rescue.
+- **A move pours**: the top run of one color, as much of it as fits.
+
+## Decisions for the session
 - **Generation**: deals that are solvable, at tiers, and the measure a tier
   rests on.
 - **The hint**: a planning game's hint, a stable subgoal and the next move
