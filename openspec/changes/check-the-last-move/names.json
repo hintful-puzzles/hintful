@@ -1,0 +1,454 @@
+{
+  "about": "Check & save's verdict words and each technique's name, by the technical-writer subagent (2026-11-18), keyed as the judge sees a firing: a description technique's id, a candidate game's rung. design.md, 'Name, don't quote'.",
+  "fixed": {
+    "followed": "Your last move follows from {names}.",
+    "join": "One: 'A'. Two: 'A, or B'. Three: 'A, B, or C'. Over maxNames: the first two, then 'or N more', N spelled out to nine, digits from 10: 'A, B, or two more'. Where three would run past two lines on a phone, two and 'or one more'.",
+    "maxNames": 3,
+    "chained": "Your last move follows a few steps on, starting from {name}.",
+    "chainedUnknown": "Your last move follows from the board, a few steps on.",
+    "shown": "Your last move writes down what the board already shows.",
+    "unforced": "Your last move is right, though nothing on the board decides it yet."
+  },
+  "setup": ["populate", "clean", "note", "salad.circleXNote"],
+  "shared": { "wing": "a wing" },
+  "games": {
+    "abcd": {
+      "populate": "penciling in every letter",
+      "clean": "crossing out letters next door",
+      "note": "penciling in a square's letters",
+      "dup": "a placed letter's neighbors",
+      "single": "the only letter left in a square",
+      "regionsFull": "every other letter beside it",
+      "satisfied": "a line with enough of a letter",
+      "packed": "stretches with no room to spare"
+    },
+    "adjacent": {
+      "populate": "penciling in every number",
+      "clean": "crossing out placed numbers",
+      "note": "penciling in a cell's numbers",
+      "dup": "a placed number's row and column",
+      "single": "the only number left in a cell",
+      "regionsFull": "every other number already placed",
+      "hiddenSingle": "the only cell left for a number",
+      "set": "numbers already accounted for",
+      "adjacent": "the bars beside a placed number",
+      "adjacentSet": "the bars beside open cells"
+    },
+    "boats": {
+      "given": "a given segment's shape",
+      "near": "boats never touching",
+      "lineShips": "a line needing every free square",
+      "total": "the fleet filling every free square",
+      "center": "a middle segment's direction",
+      "extend": "a lone segment's one way on",
+      "lineWater": "a line with all its boat segments",
+      "isolated": "a square shut in by water",
+      "grow": "a boat that can't stop yet",
+      "onlyFit": "the only run a boat fits",
+      "centerRoom": "a middle segment with no room",
+      "tooLong": "a boat that would grow too long",
+      "shortRun": "one boat too many of a size",
+      "hidden": "a hidden number read from the fleet",
+      "onlyRuns": "the only runs a boat fits",
+      "shared": "a line with little water left",
+      "lastWater": "trying a line's last water",
+      "lastShip": "trying a line's last boat segment",
+      "centerTrial": "trying a middle segment's direction"
+    },
+    "bricks": {
+      "strandSupport": "a shaded brick's only support",
+      "undercount": "a number short of shaded cells",
+      "three": "avoiding three in a row",
+      "unsupported": "a cell with nothing to rest on",
+      "overcount": "a number already met"
+    },
+    "bridges": {
+      "exactSpace": "an island with no room to spare",
+      "everyNeighbor": "an island needing every neighbor",
+      "needsThisWay": "an island that needs this line",
+      "sealing": "a bridge that would cut a group off",
+      "loop": "avoiding a loop",
+      "tooMany": "too many bridges for one line",
+      "mustReachOut": "an island that must reach out"
+    },
+    "clusters": {
+      "broken": "a piece that can't find its match",
+      "refute": "the other piece breaking a rule",
+      "countFull": "two tiles' counts compared",
+      "countShort": "two tiles' counts compared"
+    },
+    "crossing": {
+      "onlyNumber": "a run only one number fits",
+      "onlyRun": "a number only one run fits",
+      "sharedDigit": "a digit every fitting number shares",
+      "crossRuns": "crossing runs",
+      "narrow": "the digits a run's numbers allow",
+      "misread": "a run that reads no number",
+      "twice": "a number used twice"
+    },
+    "dominosa": {
+      "onlySpot": "a domino with one spot left",
+      "squareOnly": "a square with one neighbor left",
+      "squareSingleDomino": "a square fit for only one domino",
+      "mustOverlap": "a spot overlapping every spot left",
+      "localDuplicate": "each domino used once",
+      "localDuplicate2": "each domino used once",
+      "parity": "a spot leaving odd areas",
+      "set": "a number's squares sharing dominoes",
+      "setDoubles": "a number's squares sharing dominoes"
+    },
+    "filling": {
+      "mustGrow": "a region that must grow",
+      "onlyWay": "a region with one way to grow",
+      "tooBig": "a region that would grow too big",
+      "noRoom": "a region with no room to grow",
+      "tooFar": "a region too far away",
+      "onlyNumber": "the only number left in a square"
+    },
+    "galaxies": {
+      "dotTile": "the squares under a dot",
+      "split": "a wall inside a galaxy",
+      "separate": "squares in different galaxies",
+      "enclosed": "a square walled into one galaxy",
+      "soleOwner": "a square only one dot can own",
+      "onlyReach": "a square only one galaxy reaches",
+      "exclave": "a piece's only way to its dot",
+      "mirrorWall": "a galaxy's mirror symmetry"
+    },
+    "group": {
+      "populate": "penciling in every element",
+      "clean": "crossing out placed elements",
+      "note": "penciling in a cell's elements",
+      "dup": "a placed element's row and column",
+      "single": "the only element left in a cell",
+      "regionsFull": "every other element already placed",
+      "hiddenSingle": "the only cell left for an element",
+      "set": "elements already accounted for",
+      "associativity": "associativity",
+      "identityFill": "finding the identity",
+      "identityElim": "an element that isn't the identity"
+    },
+    "keen": {
+      "populate": "penciling in every number",
+      "clean": "crossing out placed numbers",
+      "note": "penciling in a cell's numbers",
+      "dup": "a placed number's row and column",
+      "single": "the only number left in a cell",
+      "regionsFull": "every other number already placed",
+      "hiddenSingle": "the only cell left for a number",
+      "set": "numbers already accounted for",
+      "cage": "the ways to fill a cage",
+      "cageLine": "what a cage puts in its line"
+    },
+    "lightup": {
+      "clueFull": "a number with all its bulbs",
+      "clueExact": "a number needing every free square",
+      "square": "the only way to light a square",
+      "darkSet": "a bulb leaving a square unlit",
+      "clueSet": "a bulb that would starve a number"
+    },
+    "loopy": {
+      "deadEnd": "a line that would dead-end",
+      "lineContinues": "a line with one way to go on",
+      "dotFull": "a dot with its two lines",
+      "clueFull": "a clue with all its lines",
+      "clueStarved": "a clue needing every open edge",
+      "clueBlockedPair": "an edge joining two dots with lines",
+      "clueOneShort": "the one edge a clue can spare",
+      "earlyLoop": "a loop closing too early",
+      "closed": "the loop already closed",
+      "related": "an edge paired with a settled one",
+      "cornerAtDot": "a corner at a dot with a line",
+      "cornerOther": "a corner's other edge",
+      "cornerBoth": "a dot's last two open edges",
+      "clueBound": "a clue counted with its corners",
+      "cornerFromClue": "a corner read from a clue",
+      "cornerAcross": "corners across a dot",
+      "cornerExit": "the loop's way out of a dot",
+      "cornerOppositeExit": "the opposite corner at a dot",
+      "matchingPair": "a matching pair at a clue",
+      "pairAtClue": "a pair read from a clue",
+      "parityClue": "a clue's third edge from a pair",
+      "linkClue": "pairs linked around a clue",
+      "pairFromCorner": "a pair read from a corner",
+      "cornerFromPair": "a corner read from a pair",
+      "pairAtDot": "a pair read from a dot",
+      "parityDot": "a dot's third edge from a pair",
+      "linkDot": "pairs linked at a dot"
+    },
+    "magnets": {
+      "single": "a square with one choice left",
+      "count": "a line's counts",
+      "oddGap": "the odd gap",
+      "marked": "magnets already counted in a line",
+      "oneNeutral": "room for just one more neutral",
+      "everyTile": "a pole needed from every tile",
+      "onlyEnd": "the only end that can give a pole"
+    },
+    "map": {
+      "lone": "a region with one color left",
+      "pair": "a pair of regions",
+      "weigh": "every color of one region"
+    },
+    "mathrax": {
+      "populate": "penciling in every number",
+      "clean": "crossing out placed numbers",
+      "note": "penciling in a cell's numbers",
+      "dup": "a placed number's row and column",
+      "single": "the only number left in a cell",
+      "regionsFull": "every other number already placed",
+      "hiddenSingle": "the only cell left for a number",
+      "set": "numbers already accounted for",
+      "clue": "what a clue allows"
+    },
+    "mosaic": {
+      "alone": "one number's count on its own",
+      "compared": "two overlapping numbers compared"
+    },
+    "net": {
+      "fitLock": "the only way a square fits",
+      "fitNote": "a side every fitting way shares",
+      "loopLock": "the only way without a loop",
+      "loopNote": "a side fixed by avoiding loops",
+      "sealLock": "the only way that seals nothing off",
+      "sealNote": "a side fixed by sealing nothing off",
+      "strandLock": "the only way that leaves none stuck",
+      "strandNote": "a side fixed by leaving none stuck"
+    },
+    "norinori": {
+      "domino": "a finished domino",
+      "partner": "a shaded square's only partner",
+      "between": "a square that would touch two",
+      "alone": "a square with nothing to pair with",
+      "claimed": "a partner confined to one region",
+      "fullRegion": "a full region",
+      "exactRegion": "a region needing every open square",
+      "neededRegion": "a square a region needs",
+      "blocked": "a square blocking a region's pair",
+      "crowded": "a square that would crowd a region"
+    },
+    "palisade": {
+      "cluesVersusRegionSize": "two clues side by side",
+      "numberExhausted": "a clue's count of walls",
+      "notTooBig": "a region that would grow too big",
+      "notTooSmall": "a region's last way to grow",
+      "noDanglingEdges": "a wall continuing at a corner",
+      "equivalentEdges": "edges that share a fate",
+      "inside": "a region already joined"
+    },
+    "path": {
+      "forced": "a square with no edge to spare",
+      "lineBreaks": "a line that would break the board",
+      "pairBreaks": "two lines breaking the board",
+      "weighed": "a square weighed whole"
+    },
+    "pattern": { "line": "every way a line's runs fit" },
+    "pearl": {
+      "square": "a square's only way through",
+      "blackPearl": "a black pearl's turn",
+      "blackRunsOn": "a black pearl running straight on",
+      "blackCannotRunOn": "a black pearl with no way on",
+      "whiteCannotTurn": "a white pearl with nowhere to turn",
+      "whiteTurnsOpposite": "a white pearl's turn opposite",
+      "closed": "the loop already closed",
+      "earlyLoop": "a loop closing too early",
+      "earlyThrough": "a square closing a loop early"
+    },
+    "range": {
+      "besideShaded": "shaded squares never touching",
+      "capped": "a clue that sees enough",
+      "reach": "a clue that must see further",
+      "cut": "keeping clear squares joined"
+    },
+    "rect": {
+      "fit": "a clue with only one fit",
+      "uncovered": "a square no clue can cover",
+      "boxed": "a clue already walled in",
+      "reach": "a square only one clue can reach",
+      "overlap": "squares another clue must cover",
+      "starve": "a fit that leaves no room",
+      "line": "a line no rectangle can cross"
+    },
+    "rome": {
+      "populate": "penciling in every arrow",
+      "clean": "crossing out placed arrows",
+      "note": "penciling in a square's arrows",
+      "dup": "one of each arrow in an area",
+      "single": "the only arrow left in a square",
+      "regionsFull": "every other arrow used in its area",
+      "hiddenSingle": "the only square left for an arrow",
+      "loop": "avoiding a loop",
+      "reach": "the only way to a goal",
+      "opposite": "an arrow that would point back",
+      "pair": "a pair of arrows in an area"
+    },
+    "salad": {
+      "populate": "penciling in every letter",
+      "clean": "crossing out placed letters",
+      "dup": "a placed letter's row and column",
+      "single": "the only letter left in a square",
+      "hiddenSingle": "the only square left for a letter",
+      "set": "letters already accounted for",
+      "borderNear": "the letter a clue sees first",
+      "borderFar": "how far in a clue's letter sits",
+      "countHolesDone": "a line with all its empty squares",
+      "countLettersDone": "a line with all its letters",
+      "crossNaked": "a square with no letter left",
+      "xNoteGone": "a square with no empty-square mark",
+      "circleXNote": "clearing empty-square marks"
+    },
+    "seismic": {
+      "populate": "penciling in every number",
+      "clean": "crossing out placed numbers",
+      "note": "penciling in a cell's numbers",
+      "dup": "a placed number's area and reach",
+      "singleton": "an area of one cell",
+      "single": "the only number left in a cell",
+      "regionsFull": "every other number placed nearby",
+      "hidden": "the only cell left for a number",
+      "starve": "a number an area needs"
+    },
+    "separate": {
+      "sharedLetter": "letters that can't share a region",
+      "walledApart": "regions already walled apart",
+      "onlyWay": "a square with one way out"
+    },
+    "signpost": {
+      "onlyNext": "the only square that can come next",
+      "onlyBefore": "the only arrow that can lead in"
+    },
+    "singles": {
+      "besideCovered": "shaded squares never touching",
+      "sameLine": "a number already clear in its line",
+      "sandwich": "a sandwich",
+      "pair": "a touching pair",
+      "corner": "a crowded corner",
+      "boxedIn": "a clear square's last neighbor",
+      "offset": "pairs in neighboring lines",
+      "split": "keeping clear squares joined"
+    },
+    "slant": {
+      "clue": "a clue's count of lines",
+      "loop": "avoiding a loop",
+      "pair": "a same-slant pair at a clue",
+      "share": "two squares sharing a clue's line",
+      "deadEnd": "corners that would be shut in",
+      "same": "squares marked to slant alike",
+      "one": "a pair of squares at a 1",
+      "three": "a pair of squares at a 3",
+      "two": "pairs of squares across a 2"
+    },
+    "solo": {
+      "populate": "penciling in every number",
+      "clean": "crossing out placed numbers",
+      "note": "penciling in a cell's numbers",
+      "dup": "a placed number's line and block",
+      "single": "the only number left in a cell",
+      "regionsFull": "every other number already placed",
+      "hiddenSingle": "the only cell left for a number",
+      "intersect": "a number confined to an overlap",
+      "set": "numbers already accounted for",
+      "cageSingle": "a cage's last cell",
+      "cageMinMax": "the limits of a cage's total",
+      "cageSums": "the sums that fit a cage"
+    },
+    "spokes": {
+      "saturation": "a hub needing every free spoke",
+      "twoOnes": "two 1-hubs cut off together",
+      "exhaustion": "a hub with all its lines",
+      "lineBreaks": "a line that would break the board",
+      "spareBreaks": "a hub with one spoke to spare"
+    },
+    "starbattle": {
+      "around": "stars never touching",
+      "fullLine": "a line with all its stars",
+      "fullRegion": "a region with all its stars",
+      "exactLine": "a line needing every open square",
+      "exactRegion": "a region needing every open square",
+      "confined": "a line and its regions, counted",
+      "neededLine": "a square a line needs",
+      "neededRegion": "a square a region needs",
+      "crowdedLine": "a star that would crowd a line",
+      "crowdedRegion": "a star that would crowd a region",
+      "banded": "several lines counted together",
+      "starvedLine": "a star that leaves a line short",
+      "starvedRegion": "a star that leaves a region short"
+    },
+    "sticks": {
+      "overConnected": "a block with all its lines",
+      "twoClues": "a line joining two numbers",
+      "tooLong": "a line too long for its number",
+      "starved": "a block needing its open sides",
+      "unreachable": "a number with no room to reach"
+    },
+    "subsets": {
+      "carryIn": "letters the bigger set must hold",
+      "carryOut": "letters the smaller set can't hold",
+      "noShoe": "no empty or full set by a gap",
+      "noShoeBeside": "a set ruled out beside its neighbor",
+      "lone": "the only set left for a cell",
+      "onlyCell": "the only cell left for a set",
+      "smaller": "room for a smaller set inside",
+      "bigger": "room for a bigger set around"
+    },
+    "tents": {
+      "tentLink": "a tent with one tree left",
+      "noTree": "a square beside no tree",
+      "treesDone": "trees that all have their tents",
+      "nextToTent": "tents never touching",
+      "treeSingle": "a tree with one square left",
+      "treeLink": "a tree's only tent",
+      "treeDiagonal": "a tree's two squares round a corner",
+      "lineCount": "a line's tent count",
+      "lineNeighbors": "a neighboring line's tents"
+    },
+    "towers": {
+      "populate": "penciling in every height",
+      "clean": "crossing out placed heights",
+      "note": "penciling in a cell's heights",
+      "dup": "a placed height's row and column",
+      "single": "the only height left in a cell",
+      "regionsFull": "every other height already placed",
+      "hiddenSingle": "the only cell left for a height",
+      "set": "heights already accounted for",
+      "fullLine": "a clue as large as the grid",
+      "tallestNearest": "a clue of 1",
+      "facing": "facing clues that pin the tallest",
+      "lineFull": "the next tower a clue must see",
+      "lowerBound": "a tower too tall, too close",
+      "arrangement": "every way a clue's line can fill"
+    },
+    "tracks": {
+      "oneWayIn": "a square with one way in",
+      "bothSidesLeft": "a track square's last open sides",
+      "clueFull": "a line with all its track",
+      "clueExact": "a line needing every open square",
+      "closeLoop": "avoiding a loop",
+      "strand": "finishing the track too soon",
+      "finishEarly": "finishing the track short of a clue",
+      "looseEnd": "a loose end running along a line",
+      "sharedFate": "a clue with one track square left",
+      "sharedFateEmpties": "a clue with one empty square left",
+      "parity": "every entry needing an exit"
+    },
+    "unequal": {
+      "populate": "penciling in every number",
+      "clean": "crossing out placed numbers",
+      "note": "penciling in a cell's numbers",
+      "dup": "a placed number's row and column",
+      "single": "the only number left in a cell",
+      "regionsFull": "every other number already placed",
+      "hiddenSingle": "the only cell left for a number",
+      "set": "numbers already accounted for",
+      "greater": "the larger side of a sign",
+      "lesser": "the smaller side of a sign"
+    },
+    "unruly": {
+      "threes": "avoiding three in a row",
+      "lastGap": "a line with one square left",
+      "quota": "a full quota",
+      "unique": "no two lines alike",
+      "lastOne": "where the last one can go"
+    }
+  }
+}

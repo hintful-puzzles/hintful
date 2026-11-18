@@ -57,6 +57,20 @@ and if so, by what.
   check stood because it covered the board, which the hint's place does not.
 - **Refusals move to the same place**, "red and obvious".
 
+## Decided in acceptance (owner, 2026-11-18)
+
+- **A verdict names the deduction; it does not quote it.** In Tracks a
+  player who reasoned from a row's count was shown a column's count in full,
+  with three rings and a striped column: "an extremely over-detailed display
+  of an alternate deduction, which is just unnecessarily overwhelming." Each
+  deduction gets a short name, and a verdict says the name.
+- **No board marks on a verdict**, of any kind.
+- **Every deduction that makes the move from the board as it stood is
+  named**, where the space allows, so the one the player used is likely
+  among them.
+- **The names and the fixed words are wordsmithed** by a technical-writer
+  subagent.
+
 ## Measured (2026-11-17)
 
 Each game's largest preset, at its hardest tier on the menu, two boards,

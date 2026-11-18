@@ -78,6 +78,47 @@ The plan cap does not apply: the judge walks until the move is reached or
 nothing follows. Measured (proposal): a fixpoint from the board as dealt
 costs at most 43 ms.
 
+## Name, don't quote (owner, in acceptance, 2026-11-18)
+
+Supersedes "Direct or chained"'s quoting and "What the midend shows"'s
+words and marks below; the walk, the aim and what counts as reached stand.
+
+- **A verdict names techniques and paints nothing.** `MoveVerdict` loses
+  `highlights` and its type parameter; `activeCheck`'s step carries none.
+- **The judge returns names, not firings.** `Judged` becomes `unforced`,
+  `direct` (every technique that makes the whole move, offered before the
+  first firing, the walk's own first), `chained` (the technique the chain
+  began with, by `chainStart`, the old `quotedStep`; `null` where the graph
+  cannot say) and `shown`. `Judging.aim` is offered `{ facts, entry? }` and
+  collects, while `made` is empty, each offered firing that makes every fact
+  left (rank 2); `took` gains the firing's technique, kept in
+  `Judging.techniques` beside `made`; `firstStep` goes, since no step is
+  quoted, and so do the builders' `ring`, `about` and steps-for-verdicts.
+  The words are one table in `move-judge.ts` (`verdictOf`), which builders
+  call; none writes its own.
+- **A name is declared with its technique, and the build refuses one
+  without.** The compiled `ladder` rows gain a required `name`, which
+  `describedLadder` spreads into every `LadderEntry` (`CompiledEntry.name`),
+  so a ladder walk's `Taken.entry.name` is what the judge records: no lookup,
+  no per-game line. Sources: a technique's `name:` in its description, a
+  library technique's in its library, and a `kindWords` block's per count
+  kind. The candidate plan's own rungs (`single`, `hiddenSingle`, `set`,
+  `wing`, `dup`, `regionsFull`, and a game's reason kinds such as Towers'
+  `fullLine`) are named where they are declared, and its `aim` call passes
+  the firing's first leg's rung and name. Setup rungs (`populate`, `clean`,
+  `note`) are never named, since no verdict counts them.
+- **What fits**: at most `MOST_NAMED` names, the rest counted.
+- **The words and names** are the technical writer's
+  (`openspec/changes/check-the-last-move/names.json`), taken as written
+  unless one is wrong about its technique.
+- **Guard**: the compiler refuses a technique with no name; the candidate
+  rungs are typed against their names; `move-judge-games.test.ts` holds that
+  a verdict names nothing as an id (no camelCase, no dot), and a test finds
+  a move two techniques each make from the board and holds that both are
+  named. Whether the owner's own route in Tracks (the bottom row's one more
+  track square must touch the track) is one technique offered from the
+  board is to be found out, not assumed: if it is not, say so to the owner.
+
 ## Where it is built: the builders, behind one hook
 
 `Game.judgeMove?(before, after)` returns the verdict or `null` where the move
