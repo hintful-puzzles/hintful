@@ -729,7 +729,7 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
     const w = plan.w;
     let judging: Judging | null = null;
     if (plan.judging) {
-      judging = plan.judging.begin(this.marksShown(), plan.conclude.cell);
+      judging = plan.judging.begin(this.marksShown());
       if (judging === null) return;
     }
     const frontier = new HintFrontier(gridKey(w, plan.grid.length / w));
@@ -761,12 +761,24 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
       firings().map((list) => list.map((f) => this.candidate(f)));
     // Judging a move, a firing that makes one of its facts is taken before
     // the frontier's choice, the earliest rung's on a tie.
+    const nameOf = (rung: string | null): string | null =>
+      rung === null ? null : (plan.judging?.name(rung) ?? null);
     const aimed = (aim: Judging): FrontierCandidate | null => {
       let best: Firing<M, H, Reason> | null = null;
       let most = 0;
       for (const list of firings(true))
         for (const f of list) {
-          const n = aim.aim({ facts: this.factsOf(f) });
+          // A firing's deduction is its first leg's.
+          const leg = f[0];
+          const rung =
+            leg === undefined
+              ? null
+              : "step" in leg
+                ? leg.step.rung
+                : rungOf(leg.reason);
+          const name = nameOf(rung);
+          const facts = this.factsOf(f);
+          const n = aim.aim(name === null ? { facts } : { facts, entry: { name } });
           if (n > most) [best, most] = [f, n];
         }
       return best && this.candidate(best);
@@ -804,8 +816,9 @@ class CandidateWalk<M, H extends CandidateHighlights, Reason, Reg extends CellRe
       // bookkeeping: it opens no firing, and the next is quoted instead.
       if (!madeFact(counted, now)) continue;
       counted = now;
-      judging.made.push([]);
-      judging.firstStep.push(from);
+      // Named by its first step that is no setup's.
+      const own = plan.steps.slice(from).find((s) => nameOf(s.rung) !== null);
+      judging.took(null, 0, nameOf(own?.rung ?? null), true);
     }
   }
 

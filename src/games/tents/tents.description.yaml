@@ -135,6 +135,16 @@ deal:
   count: every row's and column's tents
   tier: one of the tiers, the board finished at it and not at the tier below
 tiers: [Easy, Normal]
+names:
+  tentLink: "a tent with one tree left"
+  noTree: "a square beside no tree"
+  treesDone: "trees that all have their tents"
+  nextToTent: "tents never touching"
+  treeSingle: "a tree with one square left"
+  treeLink: "a tree's only tent"
+  treeDiagonal: "a tree's two squares round a corner"
+  lineCount: "a line's tent count"
+  lineNeighbors: "a neighboring line's tents"
 techniques:
   # A tent with one tree beside it still without its tent is that tree's.
   - kind: one.cell

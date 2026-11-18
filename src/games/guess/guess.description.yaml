@@ -150,6 +150,14 @@ variations:
           for: "s in cells where |cand(s)| = 1, d in cand(s)"
           conclude: "forall t in cells where t != s: strike(t, d)"
 tiers: [Normal]
+names:
+  scoredNothing: "a guess that scored nothing"
+  noBlack: "a guess with no black pegs"
+  everyPegScored: "a guess whose every peg scored"
+  blacksForced: "black pegs with nowhere else to go"
+  blacksAccounted: "black pegs already accounted for"
+  totalAccounted: "a score already accounted for"
+  noRepeats: "a color used once"
 techniques:
   # A guess that scored nothing at all: none of its colors is in the answer.
   - id: scoredNothing

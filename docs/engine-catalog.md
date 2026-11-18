@@ -791,12 +791,12 @@ makes some, and a sentence a technique, which an `arms` technique reads by
 
 The pieces a builder's `judgeMove` is made of: the facts a move made, read
 from the marks before and after it; whether walked marks hold each; which
-walk step to quote, direct or chained; and the lead-in each verdict is said
-under. `describedFiringHint`, `describedEdgeHint`, `describedHint` and the
-candidate plan (`candidate-judge.ts`) drive them through `judgeByWalk` with an
-aimed walk. A game whose hint walks the ladder from its own code passes its
-marks, its aimed steps and its ring to `judgeWalked` (`docs/hints.md` §
-"Judging the last move").
+techniques made it, direct or chained; and the one table of words a verdict
+names them in (`verdictOf`). `describedFiringHint`, `describedEdgeHint`,
+`describedHint` and the candidate plan (`candidate-judge.ts`) drive them
+through `judgeByWalk` with an aimed walk. A game whose hint walks the ladder
+from its own code passes its marks and its aimed walk to `judgeWalked`
+(`docs/hints.md` § "Judging the last move").
 
 ### `described-rules-out.ts` — `Game.rulesOut` from the description
 

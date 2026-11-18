@@ -135,6 +135,16 @@ deal:
   givens: how many
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
+names:
+  dup: "a placed element's row and column"
+  single: "the only element left in a cell"
+  regionsFull: "every other element already placed"
+  hiddenSingle: "the only cell left for an element"
+  set: "elements already accounted for"
+  wing: "a wing"
+  associativity: "associativity"
+  identityFill: "finding the identity"
+  identityElim: "an element that isn't the identity"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }

@@ -76,6 +76,15 @@ deal:
   value: every arrow, then as many hidden as the board stays at its tier
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky]
+names:
+  dup: "one of each arrow in an area"
+  single: "the only arrow left in a square"
+  regionsFull: "every other arrow used in its area"
+  hiddenSingle: "the only square left for an arrow"
+  loop: "avoiding a loop"
+  reach: "the only way to a goal"
+  opposite: "an arrow that would point back"
+  pair: "a pair of arrows in an area"
 techniques:
   # A placed arrow leaves the rest of its area.
   - kind: peer.placed
@@ -87,6 +96,7 @@ techniques:
   - kind: one.cell
     as: lone
     tier: Easy
+    rung: single
   # An arrow pointing at a square whose arrows lead back here would go round
   # in a loop and never reach a goal.
   - kind: loop.never
@@ -104,6 +114,7 @@ techniques:
   - kind: one.place
     as: onlyHome
     tier: Normal
+    rung: hiddenSingle
     with:
       group: "r in area where |cells(r)| = 4, d in range(1, 4) where not (exists c in cells(r): value(c) = d)"
       set: cells(r)

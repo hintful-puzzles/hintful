@@ -167,6 +167,12 @@ kindWords:
   restWord: "must be unused"
   fillWord: "must be a line"
   terms: { c: c, clue: "takes(c)", placed: "n < takes(c)" }
+names:
+  saturation: "a hub needing every free spoke"
+  twoOnes: "two 1-hubs cut off together"
+  exhaustion: "a hub with all its lines"
+  lineBreaks: "a line that would break the board"
+  spareBreaks: "a hub with one spoke to spare"
 techniques:
   # A hub with only as many free spokes left as it still needs lines takes a
   # line on each. One with fewer makes the marks inconsistent.

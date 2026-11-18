@@ -83,6 +83,12 @@ deal:
   number: on each clear square, then as many hidden as the board stays at its tier
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
+names:
+  strandSupport: "a shaded brick's only support"
+  undercount: "a number short of shaded cells"
+  three: "avoiding three in a row"
+  unsupported: "a cell with nothing to rest on"
+  overcount: "a number already met"
 techniques:
   # Each technique supposes a color in an open square and sees a rule
   # broken at once, so the square is the other color: the order is the one

@@ -862,7 +862,7 @@ export const groupGame: Game<
   difficulty,
   hint,
   judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps, group.NAMES),
   hintRungs: GROUP_RUNGS,
   hintMarks: {
     roles: {

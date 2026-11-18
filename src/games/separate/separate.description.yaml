@@ -80,6 +80,10 @@ deal:
   letter: one of each letter a region, swapped until the ladder finishes the board
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
+names:
+  sharedLetter: "letters that can't share a region"
+  walledApart: "regions already walled apart"
+  onlyWay: "a square with one way out"
 techniques:
   # Two groups side by side that hold a letter in common are different
   # regions: wall every edge between them. The letter is the first they share.

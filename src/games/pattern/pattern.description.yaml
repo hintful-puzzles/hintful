@@ -76,6 +76,8 @@ deal:
   runs: every line's
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
+names:
+  line: "every way a line's runs fit"
 techniques:
   # A line's squares that every way its runs can fit, round what the line
   # holds, gives one value: each unbroken stretch of the open ones holds it.

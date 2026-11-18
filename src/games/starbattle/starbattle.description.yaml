@@ -112,6 +112,20 @@ kindWords:
   fillWord: must hold a star
   tried: a star on
   a: a star
+names:
+  around: "stars never touching"
+  fullLine: "a line with all its stars"
+  fullRegion: "a region with all its stars"
+  exactLine: "a line needing every open square"
+  exactRegion: "a region needing every open square"
+  confined: "a line and its regions, counted"
+  neededLine: "a square a line needs"
+  neededRegion: "a square a region needs"
+  crowdedLine: "a star that would crowd a line"
+  crowdedRegion: "a star that would crowd a region"
+  banded: "several lines counted together"
+  starvedLine: "a star that leaves a line short"
+  starvedRegion: "a star that leaves a region short"
 techniques:
   # Nothing touching a star holds another. A star touching one makes the
   # marks inconsistent.

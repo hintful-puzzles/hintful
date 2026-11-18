@@ -35,15 +35,7 @@ import {
   type Taken,
   TIERS,
 } from "./ladder-runtime.ts";
-import {
-  followedWords,
-  type Judging,
-  judgeByWalk,
-  type MovedFact,
-  movedFacts,
-  unforcedWords,
-  unquotedWords,
-} from "./move-judge.ts";
+import { type Judging, judgeWalked, type MovedFact } from "./move-judge.ts";
 import {
   type Clauses,
   type StatedContext,
@@ -225,7 +217,7 @@ export interface EdgeHintSpec<
  * the last move (`Game.judgeMove`). */
 export interface DescribedEdgeHint<State, Move, H, Kind extends string> {
   hint(state: State): HintResult<Move, H, Kind>;
-  judgeMove(before: State, after: State): MoveVerdict<H> | null;
+  judgeMove(before: State, after: State): MoveVerdict | null;
 }
 
 /** The hint of a game whose ladder works on the edges, a step a firing. */
@@ -303,7 +295,6 @@ export function describedEdgeHint<
       if (judging?.done(m)) break;
       const before = m.cands.slice();
       const known = walk.graph.facts.length;
-      const firstStep = steps.length;
       const taken = walk.next();
       if (taken === "contradiction") return taken;
       if (taken === null) break;
@@ -315,7 +306,7 @@ export function describedEdgeHint<
       );
       // Each leg is one step; a firing with none is bookkeeping (Pearl's
       // square that has its two lines).
-      judging?.took(walk.graph, known, firstStep, firstStep + legs.length);
+      judging?.took(walk.graph, known, taken.entry.name, legs.length > 0);
       const rung = (
         says.arm === undefined ? technique : `${technique}.${says.arm}`
       ) as Kind;
@@ -414,38 +405,20 @@ export function describedEdgeHint<
   const tierCount = (state: State): number =>
     typeof spec.tiers.count === "number" ? spec.tiers.count : spec.tiers.count(state);
 
-  /**
-   * What Check & save says of the last move. A firing is quoted by its first
-   * leg, which says the whole reason; its ring may hold more edges than the
-   * player's move, all decided by the one reason. A move nothing reached has
-   * no square to ring, so its words name it as the move just made.
-   */
-  const judgeMove = (before: State, after: State): MoveVerdict<H> | null => {
+  /** What Check & save says of the last move: nothing where the walk from
+   * the position before it finds the marks inconsistent. */
+  const judgeMove = (before: State, after: State): MoveVerdict | null => {
     const cap = tierCount(before) - 1;
-    const was = spec.walk(before, cap);
-    const placed = spec.walk(before, cap);
-    const now = spec.walk(after, cap);
-    if (was === null || placed === null || now === null) return null;
-    const moved = movedFacts(was.marks, placed.marks, now.marks);
-    if (moved.length === 0) return null;
-    let steps: Step[] | "contradiction" | "clash" = [];
-    let firstStep: readonly number[] = [];
-    const judged = judgeByWalk(moved, (judging) => {
-      steps = stepsAt(before, cap, judging);
-      firstStep = judging.firstStep;
-    });
-    if (judged === null || !Array.isArray(steps)) return null;
-    if (judged.kind === "unforced")
-      return { followed: false, words: unforcedWords(null) };
-    if (judged.firing === null)
-      return { followed: true, words: unquotedWords(null, undefined, judged.chained) };
-    const quoted: Step | null = steps[firstStep[judged.firing]] ?? null;
-    if (quoted?.words === undefined) return null;
-    return {
-      followed: true,
-      words: followedWords(quoted.words, judged.chained),
-      ...(quoted.highlights === undefined ? {} : { highlights: quoted.highlights }),
-    };
+    let clashed = false;
+    const verdict = judgeWalked(
+      before,
+      after,
+      (state) => spec.walk(state, cap)?.marks ?? null,
+      (judging) => {
+        clashed = !Array.isArray(stepsAt(before, cap, judging));
+      },
+    );
+    return clashed ? null : verdict;
   };
 
   const hint = (state: State): HintResult<Move, H, Kind> => {

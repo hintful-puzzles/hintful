@@ -550,36 +550,11 @@ function hint(
   return candidateHint(state, null, (s) => buildSteps(s));
 }
 
-/** What Check & save says of the last move: the step that writes a digit or
- * a note the player wrote, or strikes one they struck, or the move's square
- * ringed where none is quoted. */
-function judgeMove(
-  before: CrossingState,
-  after: CrossingState,
-): MoveVerdict<CrossingHint> | null {
-  const { puzzle } = before;
-  return judgeWalked<
-    CrossingState,
-    CrossingHint,
-    HintStep<CrossingMove, CrossingHint, CrossingRung>
-  >(
-    before,
-    after,
-    shownMarks,
-    (judging) => buildSteps(before, judging),
-    ({ at }) => ({
-      at: cellAt(puzzle, at),
-      highlights: {
-        area: [],
-        hatch: [],
-        targets: [cellAt(puzzle, at)],
-        marks: [],
-        numbers: [],
-        numberTarget: null,
-      },
-    }),
-    (s, cells) =>
-      s.highlights?.targets.some((p) => cells.has(p.y * puzzle.w + p.x)) === true,
+/** What Check & save says of the last move: a digit or a note the player
+ * wrote, or one they struck. */
+function judgeMove(before: CrossingState, after: CrossingState): MoveVerdict | null {
+  return judgeWalked(before, after, shownMarks, (judging) =>
+    buildSteps(before, judging),
   );
 }
 

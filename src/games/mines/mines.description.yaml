@@ -87,6 +87,12 @@ deal:
     the mines, laid out at the first square opened, none on it or beside it,
     so that the techniques finish the board from there
 tiers: [Normal]
+names:
+  alone: "one number's count on its own"
+  pair: "two overlapping numbers compared"
+  region: "a number read beside its neighbor"
+  regions: "two numbers' leftovers compared"
+  count: "the mines left on the board"
 techniques:
   # One number with no mines left to find has its unopened squares safe;
   # one needing as many as it has unopened, mines. Its words are the

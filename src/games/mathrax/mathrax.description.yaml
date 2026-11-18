@@ -117,6 +117,14 @@ tiers: [Easy, Normal, Tricky, Unreasonable]
 # every clue at the cell's corners allows it, and a cell with none is a
 # contradiction. The Easy and Normal readings go on to the corners only where
 # M is at most one value; a firing is one clue's strikes at one cell.
+names:
+  dup: "a placed number's row and column"
+  single: "the only number left in a cell"
+  regionsFull: "every other number already placed"
+  hiddenSingle: "the only cell left for a number"
+  set: "numbers already accounted for"
+  wing: "a wing"
+  clue: "what a clue allows"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   - id: clueEasy

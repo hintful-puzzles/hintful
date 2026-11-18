@@ -99,6 +99,15 @@ tiers: [Easy, Normal]
 kindWords:
   link: the horseshoe
   cell: "{stripes: this cell}"
+names:
+  carryIn: "letters the bigger set must hold"
+  carryOut: "letters the smaller set can't hold"
+  noShoe: "no empty or full set by a gap"
+  noShoeBeside: "a set ruled out beside its neighbor"
+  lone: "the only set left for a cell"
+  onlyCell: "the only cell left for a set"
+  smaller: "room for a smaller set inside"
+  bigger: "room for a bigger set around"
 techniques:
   # A placed set goes in no other square.
   - kind: peer.placed

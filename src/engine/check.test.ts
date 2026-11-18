@@ -262,11 +262,7 @@ describe("the check's verdict on the last move", () => {
       after.count === before.count - 1
         ? {
             followed: before.count === 0,
-            words: unshaped(
-              phrase`From ${mark.the("ring", CELL, [{ x: 0, y: 0 }], "square")}.`,
-              "evident",
-            ),
-            highlights: null,
+            words: unshaped(phrase`Your last move follows from a count.`, "evident"),
           }
         : null,
     );
@@ -281,7 +277,7 @@ describe("the check's verdict on the last move", () => {
     const { m, said } = judgedGame();
     m.playMoves(["dec"]);
     expect(m.check()).toEqual({ kind: "sound", mistakesChecked: false, judged: true });
-    expect(said()?.activeHintExplanation).toBe("From the ringed square.");
+    expect(said()?.activeHintExplanation).toBe("Your last move follows from a count.");
     expect(said()?.activeCheck).toBe("followed");
     m.playMoves(["dec"]);
     m.check();
@@ -300,35 +296,6 @@ describe("the check's verdict on the last move", () => {
     expect(m.check()).toEqual({ kind: "sound", mistakesChecked: false });
     expect(judge).not.toHaveBeenCalled();
     expect(said()?.activeCheck).toBeUndefined();
-  });
-
-  it("hides a reference's marks as a step's are, so the app can tell its color", () => {
-    // How many references the painted words still mark.
-    const drawn: (number | null)[] = [];
-    const words = unshaped(
-      phrase`From ${mark.the("ring", CELL, [{ x: 0, y: 0 }], "square")}.`,
-      "evident",
-    );
-    const m = new Midend({
-      ...fakeGame,
-      judgeMove: () => ({ followed: true, words, highlights: null }),
-      redraw: (_dr, ds, _p, _s, _d, _ui, _a, _f, hint) => {
-        ds.redrawCalls += 1;
-        drawn.push(hint?.words?.refs.length ?? null);
-      },
-    });
-    m.newGameFromId("t3:g3-0");
-    m.playMoves(["dec"]);
-    m.check();
-    const paint = () => {
-      m.redraw(new RecordingDrawing(fakeGame.colors([0, 0, 0])));
-      return drawn.at(-1) ?? null;
-    };
-    expect(paint()).toBe(1);
-    m.hideHintReference(0);
-    expect(paint()).toBe(0);
-    m.hideHintReference(null);
-    expect(paint()).toBe(1);
   });
 
   it("is not given for a move the judge finds nothing in", () => {

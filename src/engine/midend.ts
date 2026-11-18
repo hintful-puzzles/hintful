@@ -1587,13 +1587,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       this.ui,
     );
     if (verdict === null) return false;
-    const { words, highlights, followed } = verdict;
+    const { words, followed } = verdict;
     // The verdict answers the press just made, so it takes the displayed
     // hint's place; the plan is kept, and the next Hint shows its step.
     this.hintDisplayed = false;
     this.activeCheck = {
       followed,
-      step: { move, rung: "check", explanation: words.text, words, highlights },
+      step: { move, rung: "check", explanation: words.text, words },
     };
     this.requestRedraw();
     this.emitStatusBar();

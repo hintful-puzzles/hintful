@@ -109,6 +109,9 @@ export interface DescriptionJson {
   /** What a kind of rule's parameters are in this game, said once
    * (`kinds.ts`); a placement's `with` overrides. */
   kindWords?: Record<string, unknown>;
+  /** What a player calls each technique, by its id or by a rung it is
+   * recorded under: what Check & save names a move by. */
+  names?: Record<string, string>;
   variations?: Record<string, VariationJson>;
 }
 
@@ -671,6 +674,9 @@ export interface Technique {
   until: number | null;
   /** The hint rungs a firing of it is recorded under. */
   rungs: string[];
+  /** What a player calls it (`names`, by its id or else a rung's); `null`
+   * where the description names it nothing. */
+  name: string | null;
   on: "place" | "strike" | null;
   binders: Binder[];
   premise: Expr | null;
@@ -821,7 +827,7 @@ export function parseDefinitions(
 }
 
 /** What a technique's place on a game's ladder gives it. */
-type Placed = "tier" | "scale" | "from" | "until" | "rungs";
+type Placed = "tier" | "scale" | "from" | "until" | "rungs" | "name";
 
 /** A technique placed on no ladder: a library's, read alone. */
 export const UNPLACED: Pick<Technique, Placed> = {
@@ -830,6 +836,7 @@ export const UNPLACED: Pick<Technique, Placed> = {
   from: null,
   until: null,
   rungs: [],
+  name: null,
 };
 
 /** A library's or a description's technique, parsed. */
@@ -1115,14 +1122,12 @@ export function loadDescription(
     const until = above("until", t.until);
     if (from !== null && until !== null && until <= from)
       throw new SyntaxError(`${json.game} ${parsed.id}: until is not above from`);
-    return {
-      ...parsed,
-      tier,
-      scale,
-      from,
-      until,
-      rungs: t.rung === undefined ? [] : typeof t.rung === "string" ? [t.rung] : t.rung,
-    };
+    const rungs =
+      t.rung === undefined ? [] : typeof t.rung === "string" ? [t.rung] : t.rung;
+    const names = json.names ?? {};
+    const key = [parsed.id, ...rungs].find((k) => Object.hasOwn(names, k));
+    const name = key === undefined ? null : names[key];
+    return { ...parsed, tier, scale, from, until, rungs, name };
   });
   return {
     json,

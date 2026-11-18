@@ -297,20 +297,14 @@ function hint(state: FillingState): HintResult<FillingMove, FillingHint, Filling
     : { ok: true, steps };
 }
 
-/** What Check & save says of the last move: the step that fills a square
- * the player filled, or the move's square ringed where none does. */
-function judgeMove(
-  before: FillingState,
-  after: FillingState,
-): MoveVerdict<FillingHint> | null {
+/** What Check & save says of the last move. */
+function judgeMove(before: FillingState, after: FillingState): MoveVerdict | null {
   const { w, h } = before;
   return judgeWalked(
     before,
     after,
     (s) => boardMarks(s.board, w, h),
     (judging) => stepsFrom(before, judging),
-    ({ at, value }) => ({ at: pointOf(at, w), highlights: { cells: [at], value } }),
-    (s, cells) => s.highlights?.cells.some((c) => cells.has(c)) === true,
   );
 }
 

@@ -130,12 +130,24 @@ tiers: [Easy, Normal, Tricky, Hard, Extreme, Unreasonable]
 # board's grade is a tier on each.
 scales:
   killer: [Single, MinMax, Sums, Region]
+names:
+  dup: "a placed number's line and block"
+  single: "the only number left in a cell"
+  regionsFull: "every other number already placed"
+  hiddenSingle: "the only cell left for a number"
+  intersect: "a number confined to an overlap"
+  set: "numbers already accounted for"
+  wing: "a wing"
+  cageSingle: "a cage's last cell"
+  cageMinMax: "the limits of a cage's total"
+  cageSums: "the sums that fit a cage"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   # A value with one place left in a box goes there.
   - kind: one.place
     as: boxSingle
     tier: Easy
+    rung: hiddenSingle
     with:
       group: >-
         u in box, placed = set(value(c) over c in cells(u) where known(c)),
@@ -162,6 +174,7 @@ techniques:
   # sum of nothing or less left is a contradiction.
   - id: regionRule
     tier: Region
+    rung: cageSingle
     for: >-
       u in rows + cols + box,
       W = {r in cage where inside(r, u)},
@@ -203,6 +216,7 @@ techniques:
   - kind: sum.bounds
     as: partMinMax
     tier: MinMax
+    rung: cageMinMax
     from: Region
     with:
       group: >-
@@ -248,6 +262,7 @@ techniques:
   - kind: sum.sets
     as: partSums
     tier: Sums
+    rung: cageSums
     from: Region
     with:
       group: >-
@@ -271,8 +286,8 @@ techniques:
     says:
       terms: { u: u, W: W, L: L, s: s, R: R, t: t, i: i }
       marks: {}
-  - { use: latin.hiddenSingle, tier: Normal }
-  - { use: latin.single, tier: Normal }
+  - { use: latin.hiddenSingle, tier: Normal, rung: hiddenSingle }
+  - { use: latin.single, tier: Normal, rung: single }
   # A value whose places left in a row, column or diagonal all lie in one
   # box is struck from the rest of the box; failing that, one whose places
   # left in the box all lie in the line is struck from the rest of the line.
@@ -294,7 +309,7 @@ techniques:
     says:
       terms: { L: L, b: b, d: d, first: first }
       marks: {}
-  - { use: latin.set, tier: Hard }
+  - { use: latin.set, tier: Hard, rung: set }
   # One value d: the rows lacking it that have no place for it in a set T of
   # the columns lacking it are as many as those columns' others, X0 - T, so
   # they hold d in those columns, and the other rows cannot. More rows than
@@ -303,6 +318,7 @@ techniques:
   # columns swapped, as upstream's matrix has them.
   - id: digitSet
     tier: Extreme
+    rung: set
     for: >-
       d in domain,
       Y0 = {L in rows where not (exists c in cells(L): value(c) = d)},
@@ -317,7 +333,7 @@ techniques:
     says:
       terms: { d: d, Y0: Y0, X0: X0, T: T, Y: Y }
       marks: {}
-  - { use: latin.wing, tier: Extreme }
+  - { use: latin.wing, tier: Extreme, rung: wing }
 # Solo's own sentences, spoken through the hint's voice (`hint.ts`); the Latin
 # library's (a lone note, a hidden single, a set across lines, a wing, a
 # placement's cull and the opening clean) stay every candidate game's. A value

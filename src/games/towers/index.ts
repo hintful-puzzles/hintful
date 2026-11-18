@@ -92,7 +92,7 @@ import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import type * as towers from "../../generated/games/towers/towers.compiled.ts";
-import { WORDS } from "../../generated/games/towers/towers.compiled.ts";
+import { NAMES, WORDS } from "../../generated/games/towers/towers.compiled.ts";
 import { newTowersDesc } from "./generator.ts";
 import {
   colors,
@@ -692,7 +692,7 @@ export const towersGame: Game<
   difficulty,
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
   judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
   hintRungs: TOWERS_RUNGS,
   hintMarks: {
     roles: {

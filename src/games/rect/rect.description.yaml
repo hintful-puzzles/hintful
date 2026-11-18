@@ -210,6 +210,14 @@ variations:
             n = count(s in R where y(s) = y(at)), m = count(s in R where x(s) = x(at)):
             (v = 1 implies n = m) and (v = 2 implies m > n) and (v = 3 implies n > m)
 tiers: [Easy, Normal, Unreasonable]
+names:
+  fit: "a clue with only one fit"
+  uncovered: "a square no clue can cover"
+  boxed: "a clue already walled in"
+  reach: "a square only one clue can reach"
+  overlap: "squares another clue must cover"
+  starve: "a fit that leaves no room"
+  line: "a line no rectangle can cross"
 techniques:
   # A clue with one fit takes it: the line round it drawn, none inside. A
   # clue with no fit makes the marks inconsistent.

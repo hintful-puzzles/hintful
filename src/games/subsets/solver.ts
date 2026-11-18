@@ -810,7 +810,7 @@ export function deduceHintPlan(
     const r = t.reasons[0] as SubsetsFiring | undefined;
     if (r?.kind === "carryIn" || r?.kind === "carryOut") push(carryStep(board, r));
     settle(cells);
-    judging?.took(walk.graph, known, from, plan.length);
+    judging?.took(walk.graph, known, t.entry.name, plan.length > from);
   }
   return { status: subsetsValidate(board), deductions: plan };
 }

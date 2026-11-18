@@ -248,6 +248,26 @@ kindWords:
   restWord: must be water
   # "One": a boat square, which the look has just named.
   fillWord: "must be one{has then: , with {ring then: its water}}"
+names:
+  given: "a given segment's shape"
+  near: "boats never touching"
+  lineShips: "a line needing every free square"
+  total: "the fleet filling every free square"
+  center: "a middle segment's direction"
+  extend: "a lone segment's one way on"
+  lineWater: "a line with all its boat segments"
+  isolated: "a square shut in by water"
+  grow: "a boat that can't stop yet"
+  onlyFit: "the only run a boat fits"
+  centerRoom: "a middle segment with no room"
+  tooLong: "a boat that would grow too long"
+  shortRun: "one boat too many of a size"
+  hidden: "a hidden number read from the fleet"
+  onlyRuns: "the only runs a boat fits"
+  shared: "a line with little water left"
+  lastWater: "trying a line's last water"
+  lastShip: "trying a line's last boat segment"
+  centerTrial: "trying a middle segment's direction"
 techniques:
   # A given square decides itself, and an end or a boat of one square the
   # squares round it: an end's boat continues away from the side it ends.

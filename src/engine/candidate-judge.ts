@@ -8,93 +8,60 @@
  * cell's notes, or where it has none what its regions leave it. So notes
  * written into a cell with none strike what they leave out, as the plan's
  * own note step concludes, and penciling everything in makes no fact. The
- * plan keeps no fact graph, so a move a chain reached rings its square
- * rather than quoting where the chain began.
+ * plan keeps no fact graph, so a chain's first deduction is not named.
  */
 import {
-  type CandidateHighlights,
   type CandidatePlanPrefs,
   type CandidatePrefsUi,
+  NOTES_RUNGS,
+  type NotesRung,
   planPrefs,
 } from "./candidate-hint.ts";
-import { evidenceOf } from "./candidate-plan.ts";
 import type { HintStep, MoveVerdict } from "./game.ts";
-import type { Sentence } from "./hint-words.ts";
 import type { CellMarks } from "./ladder-runtime.ts";
-import {
-  followedWords,
-  judgeByWalk,
-  movedFacts,
-  unforcedWords,
-  unquotedWords,
-} from "./move-judge.ts";
-import type { Point } from "./types.ts";
+import { judgeByWalk, movedFacts, verdictOf } from "./move-judge.ts";
+
+/** What a player calls each of a plan's deductions, by rung: the game's
+ * compiled `NAMES`, which must name every rung but the setup's. */
+export type RungNames<Rung extends string> = Readonly<
+  Record<Exclude<Rung, NotesRung>, string>
+>;
+
+const SETUP: ReadonlySet<string> = new Set(NOTES_RUNGS);
 
 /** `Game.judgeMove` for a game whose hint is `candidateHint` over
- * `buildSteps`, which hands its plan the `judging` it is given. */
-export function candidateJudge<State, Move, H extends CandidateHighlights>(
+ * `buildSteps`, which hands its plan the `judging` it is given, its
+ * deductions named by `names`. */
+export function candidateJudge<State, Move, H, Rung extends string>(
   before: State,
   after: State,
   ui: CandidatePrefsUi | null,
-  buildSteps: (state: State, prefs: CandidatePlanPrefs) => HintStep<Move, H, string>[],
-): MoveVerdict<H> | null {
+  buildSteps: (state: State, prefs: CandidatePlanPrefs) => HintStep<Move, H, Rung>[],
+  names: RungNames<Rung>,
+): MoveVerdict | null {
   const prefs = planPrefs(ui);
-  // What the game calls a cell, which a verdict that rings one names it by.
-  let noun = "cell";
+  const byRung = names as Readonly<Record<string, string>>;
+  const name = (rung: string): string | null =>
+    SETUP.has(rung) || !Object.hasOwn(byRung, rung) ? null : byRung[rung];
   const shown = (state: State): CellMarks => {
     let read: CellMarks | null = null;
     buildSteps(state, {
       ...prefs,
       judging: {
-        begin: (m, cell) => {
+        begin: (m) => {
           read = m;
-          noun = cell;
           return null;
         },
+        name,
       },
     });
     if (read === null) throw new Error("a candidate plan that takes no judging");
     return read;
   };
-  const was = shown(before);
-  const moved = movedFacts(was, shown(before), shown(after));
+  const moved = movedFacts(shown(before), shown(before), shown(after));
   if (moved.length === 0) return null;
-  let steps: HintStep<Move, H, string>[] = [];
-  let firstStep: readonly number[] = [];
   const judged = judgeByWalk(moved, (judging) => {
-    steps = buildSteps(before, { ...prefs, judging: { begin: () => judging } });
-    firstStep = judging.firstStep;
+    buildSteps(before, { ...prefs, judging: { begin: () => judging, name } });
   });
-  if (judged === null) return null;
-  const w = was.sp.w;
-  const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
-  const ringed = (at: Point, words: Sentence, followed: boolean): MoveVerdict<H> => ({
-    followed,
-    words,
-    highlights: { ...evidenceOf(words), targets: [at], marks: [] } as unknown as H,
-  });
-  if (judged.kind === "unforced") {
-    const at = pointOf(moved[judged.fact].at);
-    return ringed(at, unforcedWords(at, noun), false);
-  }
-  if (judged.firing === null) {
-    const at = pointOf(moved[0].at);
-    return ringed(at, unquotedWords(at, noun, judged.chained), true);
-  }
-  // The firing's step that acts on a cell the move did, past the notes it
-  // writes down first to read them.
-  const own = steps
-    .slice(firstStep[judged.firing], firstStep[judged.firing + 1] ?? steps.length)
-    .filter((s) => s.rung !== "note");
-  const cells = new Set(moved.map((f) => f.at));
-  const quoted =
-    own.find((s) => s.highlights?.targets.some((p) => cells.has(p.y * w + p.x))) ??
-    own[0] ??
-    null;
-  if (quoted?.words === undefined) return null;
-  return {
-    followed: true,
-    words: followedWords(quoted.words, judged.chained),
-    ...(quoted.highlights === undefined ? {} : { highlights: quoted.highlights }),
-  };
+  return judged === null ? null : verdictOf(judged);
 }

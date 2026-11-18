@@ -128,6 +128,12 @@ kindWords:
   items: "{piece full}s"
   restWord: "must hold a {piece fill}"
   terms: { horizontal: "L in rows", full: d, fill: flip(d) }
+names:
+  threes: "avoiding three in a row"
+  lastGap: "a line with one square left"
+  quota: "a full quota"
+  unique: "no two lines alike"
+  lastOne: "where the last one can go"
 techniques:
   # Two of three squares in a row of a line hold one piece, so the third holds
   # the other.

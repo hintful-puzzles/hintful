@@ -162,7 +162,7 @@ export function dominosaHint(
 export function dominosaJudgeMove(
   before: DominosaState,
   after: DominosaState,
-): MoveVerdict<DominosaHint> | null {
+): MoveVerdict | null {
   return answerOf(before).kind === "one" ? judgePlan(before, after) : null;
 }
 

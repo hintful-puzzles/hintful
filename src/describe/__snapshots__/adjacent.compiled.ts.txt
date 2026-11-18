@@ -70,15 +70,19 @@ export const techniques = {
  * tier, the cap from which it no longer runs where it has one, and the
  * variation that adds it where one does, in the order the description
  * lists them, a variation's before the first of a higher tier. */
-export const ladder: readonly { id: LadderId; tier: number; scale?: string; from?: number; until?: number; variation?: string }[] = [
-  { id: "latin.hiddenSingle", tier: 0 },
-  { id: "latin.single", tier: 0 },
-  { id: "adjacent", tier: 1 },
-  { id: "adjacentSet", tier: 2 },
-  { id: "latin.set", tier: 2 },
-  { id: "latin.fish", tier: 3 },
-  { id: "latin.wing", tier: 3 },
+export const ladder: readonly { id: LadderId; name: string; tier: number; scale?: string; from?: number; until?: number; variation?: string }[] = [
+  { id: "latin.hiddenSingle", name: "the only cell left for a number", tier: 0 },
+  { id: "latin.single", name: "the only number left in a cell", tier: 0 },
+  { id: "adjacent", name: "the bars beside a placed number", tier: 1 },
+  { id: "adjacentSet", name: "the bars beside open cells", tier: 2 },
+  { id: "latin.set", name: "numbers already accounted for", tier: 2 },
+  { id: "latin.fish", name: "numbers already accounted for", tier: 3 },
+  { id: "latin.wing", name: "a wing", tier: 3 },
 ];
+
+/** What a player calls each technique, by its id or a rung: a plan's
+ * own rungs are named here too. */
+export const NAMES = {"dup":"a placed number's row and column","single":"the only number left in a cell","regionsFull":"every other number already placed","hiddenSingle":"the only cell left for a number","set":"numbers already accounted for","wing":"a wing","adjacent":"the bars beside a placed number","adjacentSet":"the bars beside open cells"} as const;
 
 /** The description's tiers, by name. */
 export const tiers: readonly string[] = ["Easy","Normal","Tricky","Hard","Unreasonable"];

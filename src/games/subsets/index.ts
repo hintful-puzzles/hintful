@@ -714,33 +714,12 @@ function hint(state: SubsetsState): HintResult<SubsetsMove, unknown, SubsetsRung
   return { ok: true, steps };
 }
 
-/** What Check & save says of the last move: the step a letter or rule-out
- * the player marked was decided by, or its cell ringed where none is quoted.
- * A firing's steps are its deductions', the rule-outs each rests on first. */
-function judgeMove(
-  before: SubsetsState,
-  after: SubsetsState,
-): MoveVerdict<unknown> | null {
-  return judgeWalked(
-    before,
-    after,
-    (s) => boardMarks(s),
-    (judging) => {
-      const { deductions } = deduceHintPlan(before, undefined, judging);
-      const board = cloneState(before);
-      const steps: Step[] = [];
-      const startOf: number[] = [];
-      for (const d of deductions) {
-        startOf.push(steps.length);
-        steps.push(...stepsForFiring(board, d));
-      }
-      // The walk counted deductions; a verdict counts their steps.
-      judging.firstStep = judging.firstStep.map((d) => startOf[d] ?? steps.length);
-      return steps;
-    },
-    ({ at }) => ({ at: pointOf(at, before.w), noun: "cell" }),
-    (s, cells) => s.move.kind === "set" && cells.has(s.move.pos),
-  );
+/** What Check & save says of the last move: a letter or a rule-out the
+ * player marked. */
+function judgeMove(before: SubsetsState, after: SubsetsState): MoveVerdict | null {
+  return judgeWalked(before, after, boardMarks, (judging) => {
+    deduceHintPlan(before, undefined, judging);
+  });
 }
 
 /** A move completes the step iff it is exactly the hinted letter toggle

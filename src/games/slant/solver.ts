@@ -614,7 +614,7 @@ export function deduceHintPlan(
       const fact = completing(e, before[e], first);
       merges.set(fact, mergeOf(e, fact));
     }
-    judging?.took(walk.graph, first, from, firings.length);
+    judging?.took(walk.graph, first, taken.entry.name, firings.length > from);
   }
   return {
     firings,

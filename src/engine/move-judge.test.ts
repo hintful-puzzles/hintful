@@ -1,10 +1,12 @@
 /**
  * The judge of a player's last move (`Game.judgeMove`), on Light Up's
- * `describedFiringHint`: a move a deduction makes is named in that
- * deduction's own sentence, a move only a deeper chain reaches says so, a
- * right move nothing decided yet is told apart, and a move that makes nothing
- * a deduction makes is not judged. And on Tracks, a mark no firing makes
- * (`EdgeHintSpec.holds`): a cross the board already shows says so.
+ * `describedFiringHint`: a move a deduction makes from the board is named
+ * by its technique; a move only a deeper chain reaches says so; a right move
+ * nothing decided yet is told apart; and a move that makes nothing a
+ * deduction makes is not judged. On Unruly, a move several techniques make
+ * from the board names each. And on Tracks, a mark no firing makes
+ * (`EdgeHintSpec.holds`): a cross the board already shows says so. The words
+ * are `verdictOf`'s table.
  */
 import { describe, expect, it } from "vitest";
 import { lightupGame } from "../games/lightup/index.ts";
@@ -26,6 +28,10 @@ import {
   type TracksOp,
   type TracksState,
 } from "../games/tracks/state.ts";
+import { unrulyGame } from "../games/unruly/index.ts";
+import { NAMES } from "../generated/games/lightup/lightup.compiled.ts";
+import { NAMES as UNRULY_NAMES } from "../generated/games/unruly/unruly.compiled.ts";
+import { verdictOf } from "./move-judge.ts";
 import { randomNew } from "./random/index.ts";
 import { D, dirX, dirY, L, R, U } from "./square-edges.ts";
 import { SYMM_ROT4 } from "./symmetric-blacks.ts";
@@ -34,20 +40,41 @@ import { dealt } from "./testing/dealt.ts";
 const EASY: LightupParams = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };
 const UNREASONABLE: LightupParams = { ...EASY, difficulty: 2 };
 
-const DIRECT = "Your last move followed from the board: ";
-const CHAINED =
-  /^Your last move followed from the board(:| in a few steps, the first of them:) /;
+const DIRECT = "Your last move follows from ";
+const CHAINED = "Your last move follows a few steps on, starting from ";
 
 function fresh(p: LightupParams, seed: string): LightupState {
   const { desc } = lightupGame.newDesc(p, randomNew(seed));
   return lightupGame.newState(p, desc);
 }
 
+/** What a player calls the technique of a Light Up step's rung. */
+const nameOf = (rung: string): string =>
+  NAMES[rung.split(".")[0] as keyof typeof NAMES];
+
 const judge = lightupGame.judgeMove;
 if (!judge) throw new Error("Light Up wires no judgeMove");
 
+describe("verdictOf", () => {
+  it("names one, two and three techniques, and counts the rest", () => {
+    const said = (techniques: readonly string[]): string =>
+      verdictOf({ kind: "direct", techniques }).words.text;
+    expect(said(["a"])).toBe("Your last move follows from a.");
+    expect(said(["a", "b"])).toBe("Your last move follows from a, or b.");
+    expect(said(["a", "b", "c"])).toBe("Your last move follows from a, b, or c.");
+    expect(said(["a", "b", "c", "d"])).toBe(
+      "Your last move follows from a, b, or two more.",
+    );
+    // Three that run past two lines on a phone are two and one more.
+    const long = "a deduction with a long name of its own";
+    expect(said([long, long, long])).toBe(
+      `Your last move follows from ${long}, ${long}, or one more.`,
+    );
+  });
+});
+
 describe("judgeMove", () => {
-  it("names a hint's own move by the hint's sentence", () => {
+  it("names a hint's own move by its technique", () => {
     for (const seed of ["mj-a", "mj-b", "mj-c"]) {
       const state = fresh(EASY, seed);
       const res = lightupGame.hint?.(state);
@@ -57,13 +84,30 @@ describe("judgeMove", () => {
       expect(verdict?.followed).toBe(true);
       const text = verdict?.words.text ?? "";
       expect(text.startsWith(DIRECT)).toBe(true);
-      // The sentence, its first letter lowered for the lead; a step on
-      // several squares may be narrowed to the player's, so it is matched up
-      // to its first mark.
-      const sentence = step.explanation ?? "";
-      const head = sentence.slice(1, sentence.indexOf(","));
-      expect(text).toContain(head);
+      expect(text).toContain(nameOf(step.rung));
     }
+  });
+
+  it("names every technique that makes a move from the board", () => {
+    // A square both three in a row and a line's full quota decide: the
+    // player may have reasoned either way, so both are named.
+    const game = unrulyGame;
+    const params = game.defaultParams();
+    const { desc, aux } = dealt(game, params);
+    let state = game.newState(params, desc);
+    for (let k = 0; k < 40; k++) {
+      const res = game.hint?.(state, aux, game.newUi(state));
+      if (!res?.ok) break;
+      const after = game.executeMove(state, res.steps[0].move);
+      const text = game.judgeMove?.(state, after)?.words.text ?? "";
+      if (text.startsWith(DIRECT) && text.includes(", or ")) {
+        const named = Object.values(UNRULY_NAMES).filter((n) => text.includes(n));
+        expect(named.length, text).toBeGreaterThanOrEqual(2);
+        return;
+      }
+      state = after;
+    }
+    throw new Error("no move of forty was made by two techniques");
   });
 
   it("follows a move a later step makes back to the board, in steps", () => {
@@ -81,8 +125,10 @@ describe("judgeMove", () => {
         const verdict = judge(state, lightupGame.executeMove(state, step.move));
         expect(verdict?.followed).toBe(true);
         const text = verdict?.words.text ?? "";
-        expect(text).toMatch(CHAINED);
-        if (!text.startsWith(DIRECT) || text.includes("a few steps on")) chained++;
+        if (text.startsWith(CHAINED)) {
+          expect(Object.values(NAMES).some((n) => text.includes(n))).toBe(true);
+          chained++;
+        } else expect(text.startsWith(DIRECT)).toBe(true);
       }
     }
     // A plan's later steps rest on its earlier ones, so some must be chained.
@@ -109,9 +155,7 @@ describe("judgeMove", () => {
       const after = lightupGame.executeMove(state, { ops: [{ kind: "light", x, y }] });
       const verdict = judge(state, after);
       expect(verdict?.followed).toBe(false);
-      expect(verdict?.words.text).toBe(
-        "Your last move was right, but nothing on the board decided the ringed square yet.",
-      );
+      expect(verdict?.words.text).toBe(verdictOf({ kind: "unforced" }).words.text);
       judged++;
     }
     expect(judged).toBeGreaterThan(0);
@@ -176,9 +220,7 @@ describe("judgeMove, a mark no firing makes", () => {
         const verdict = tracksJudge(at, after, tracksGame.newUi(at));
         expect(verdict?.followed, JSON.stringify(op)).toBe(true);
         if (isShown) {
-          expect(verdict?.words.text).toBe(
-            "Your last move followed from what the board already shows.",
-          );
+          expect(verdict?.words.text).toBe(verdictOf({ kind: "shown" }).words.text);
           shown++;
         } else reached++;
       }

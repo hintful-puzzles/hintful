@@ -526,7 +526,7 @@ export const keenGame: Game<
   difficulty,
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
   judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps, keen.NAMES),
   hintRungs: KEEN_RUNGS,
   hintMarks: {
     roles: {

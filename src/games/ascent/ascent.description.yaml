@@ -109,6 +109,16 @@ variations:
             or (n < top and not (exists p in nbr(c): n + 1 in cand(p)))):
             strike(c, n)
 tiers: [Easy, Normal, Tricky, Hard]
+names:
+  onlySquare: "the only square left for a number"
+  nextTo: "a placed number's neighbors on the path"
+  reach: "how far a missing number can stray"
+  deadEnd: "a square the path can only end in"
+  overlap: "a square beside neither neighbor"
+  onlyNumberNear: "the only number left beside its neighbor"
+  onlyNumber: "the only number left in a square"
+  onLine: "a number on its arrow's line"
+  overlapEdges: "a square beside neither neighbor"
 techniques:
   # A placed number is on no other square.
   - kind: peer.placed

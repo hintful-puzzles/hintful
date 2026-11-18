@@ -130,6 +130,12 @@ phrases:
   # where it has one.
   tried: "a {if hor: vertical | horizontal} line"
   here: "{ring: {if own: this {each} | this square}}"
+names:
+  overConnected: "a block with all its lines"
+  twoClues: "a line joining two numbers"
+  tooLong: "a line too long for its number"
+  starved: "a block needing its open sides"
+  unreachable: "a number with no room to reach"
 techniques:
   # Each technique supposes a line in a square and finds a number it would
   # break at once, so the square's line runs the other way.

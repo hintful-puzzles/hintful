@@ -681,7 +681,6 @@ function deductions(
 function planSteps(
   state: LoopyState,
   { plan, graph, notes, angleEdges }: ReturnType<typeof deduceLoopyPlan>,
-  startOf: number[] = [],
 ): Step[] {
   const pl: Planner = { state, angleEdges, notes: new Notes(state), steps: [] };
   const stepOf = new Map(plan.map((p, i) => [p.firing, i]));
@@ -720,7 +719,6 @@ function planSteps(
   };
 
   plan.forEach((p, i) => {
-    startOf.push(pl.steps.length);
     const groups = deductions(graph, notes, before[i]);
     const uses = (group: readonly number[]): boolean =>
       group.some((id) => closure[i].has(id));
@@ -774,29 +772,14 @@ export function hint(state: LoopyState): HintResult<LoopyMove, unknown, LoopyRun
 }
 
 /**
- * What Check & save says of the last move: the step of the firing that
- * draws a line or places a corner note the player made, the notes it rests
- * on first. A move nothing quotes is the move just made, as the edge games
- * name it: a line has no square to ring. A pair of lines marked alike or
- * opposite is a relation, no fact a firing makes, and is not judged.
+ * What Check & save says of the last move: a line drawn or a corner note
+ * placed. A pair of lines marked alike or opposite is a relation, no fact a
+ * firing makes, and is not judged.
  */
-export function judgeMove(
-  before: LoopyState,
-  after: LoopyState,
-): MoveVerdict<unknown> | null {
-  return judgeWalked(
-    before,
-    after,
-    shownMarks,
-    (judging) => {
-      const startOf: number[] = [];
-      const steps = planSteps(before, deduceLoopyPlan(before, judging), startOf);
-      // The walk counted line firings; a verdict counts their steps.
-      judging.firstStep = judging.firstStep.map((i) => startOf[i] ?? steps.length);
-      return steps;
-    },
-    () => ({ at: null }),
-  );
+export function judgeMove(before: LoopyState, after: LoopyState): MoveVerdict | null {
+  return judgeWalked(before, after, shownMarks, (judging) => {
+    deduceLoopyPlan(before, judging);
+  });
 }
 
 /**

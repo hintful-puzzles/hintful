@@ -86,6 +86,7 @@ import {
 import { noteEntryGesture } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
 import type * as salad from "../../generated/games/salad/salad.compiled.ts";
+import { NAMES } from "../../generated/games/salad/salad.compiled.ts";
 import { CLUE } from "./kinds.ts";
 import { holeSymbol, repeatsFor, saladLadder } from "./solver.ts";
 import { saladVocab, say } from "./speak.ts";
@@ -828,11 +829,8 @@ export function hint(
 }
 
 /** What Check & save says of the last move, by the hint's own walk. */
-export function judgeMove(
-  before: SaladState,
-  after: SaladState,
-): MoveVerdict<SaladHint> | null {
-  return candidateJudge(before, after, null, buildSteps);
+export function judgeMove(before: SaladState, after: SaladState): MoveVerdict | null {
+  return candidateJudge(before, after, null, buildSteps, NAMES);
 }
 
 /** Classify a player move against the displayed step. Salad's two emptiness

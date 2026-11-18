@@ -74,7 +74,6 @@ import {
   boardMarks,
   deduceHintPlan,
   findMistakes,
-  gridValOf,
   linesDecide,
   PATTERN_RUNGS,
   type PatternHintMove,
@@ -385,23 +384,10 @@ function hint(state: PatternState): HintResult<PatternMove, PatternHint, Pattern
     : { ok: true, steps };
 }
 
-/** What Check & save says of the last move: the step that decides a square
- * the player marked, or the move's square ringed where none does. */
-function judgeMove(
-  before: PatternState,
-  after: PatternState,
-): MoveVerdict<PatternHint> | null {
-  const { w } = before.common;
-  return judgeWalked(
-    before,
-    after,
-    boardMarks,
-    (judging) => stepsFrom(before, judging),
-    ({ at, value }) => ({
-      at: cellAt(at, w),
-      highlights: { cells: [at], value: gridValOf(value), w },
-    }),
-    (s, cells) => s.highlights?.cells.some((c) => cells.has(c)) === true,
+/** What Check & save says of the last move. */
+function judgeMove(before: PatternState, after: PatternState): MoveVerdict | null {
+  return judgeWalked(before, after, boardMarks, (judging) =>
+    stepsFrom(before, judging),
   );
 }
 

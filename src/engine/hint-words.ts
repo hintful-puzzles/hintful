@@ -376,23 +376,9 @@ export class Narration {
       ...rest,
     ]);
   }
-
-  /** The same words with the first letter lowered, for a sentence quoted
-   * after a lead-in of its own ("…followed from the board: no tree…"). */
-  uncapitalized(): this {
-    const [first, ...rest] = this.parts;
-    if (first === undefined) return this;
-    if (typeof first === "string") return this.remade([lower(first), ...rest]);
-    if (first instanceof ColorWord) return this.remade([first.map(lower), ...rest]);
-    return this.remade([
-      { ...first, words: (els) => lower(first.words(els)) },
-      ...rest,
-    ]);
-  }
 }
 
 const capitalize = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
-const lower = (s: string): string => s.charAt(0).toLowerCase() + s.slice(1);
 
 /**
  * Compose a sentence: literal words, numbers, and narrations (a reference, or a

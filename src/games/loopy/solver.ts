@@ -736,7 +736,7 @@ export function hintWalk(
           relations.add({ edges: note.edges, opposite: note.opposite });
       }
       const shown = ops.length === 0 ? lines : lines + 1;
-      judging?.took(walk.graph, first, lines, shown);
+      judging?.took(walk.graph, first, got.entry.name, shown > lines);
       lines = shown;
       if (ops.length === 0) continue;
       return {

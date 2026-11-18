@@ -88,6 +88,13 @@ deal:
   number: every square's, stripped while the ladder, or the search at Unreasonable, still finds the one answer
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
+names:
+  mustGrow: "a region that must grow"
+  onlyWay: "a region with one way to grow"
+  tooBig: "a region that would grow too big"
+  noRoom: "a region with no room to grow"
+  tooFar: "a region too far away"
+  onlyNumber: "the only number left in a square"
 techniques:
   # A region of d holds d squares: the area kinds. A region short of its
   # number grows where it must (`mustGrow`, `onlyWay`), and a number is struck

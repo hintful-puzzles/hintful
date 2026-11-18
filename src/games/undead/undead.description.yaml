@@ -137,6 +137,10 @@ deal:
   sees: every number
   tier: one of the tiers
 tiers: [Easy, Normal, Unreasonable]
+names:
+  single: "the only monster left in a square"
+  total: "a monster count used up"
+  sightline: "every way a sightline can fill"
 techniques:
   # A square down to one monster holds it. One with none left, placed or
   # not, makes the marks inconsistent.

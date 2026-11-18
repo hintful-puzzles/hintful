@@ -508,8 +508,11 @@ function hintEntries(b: Board, drawn: Int32Array): LadderEntry[] {
     if (e === undefined) throw new Error(`tents: no technique ${id}`);
     return e;
   };
+  // A link is either technique's, `tentLink`'s or `treeLink`'s, so its name
+  // says what both find.
   const drawFor = (id: string, then: readonly string[], anyway: boolean) => ({
     id,
+    name: "a tent paired with its tree",
     tier: 0,
     run: linkFor(b, drawn, then, anyway),
   });

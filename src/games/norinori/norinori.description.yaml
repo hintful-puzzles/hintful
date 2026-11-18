@@ -99,6 +99,17 @@ kindWords:
   restWord: "must be {unshaded}"
   items: "{shaded} {n: square | squares}"
   fillWord: "must be {shaded}"
+names:
+  domino: "a finished domino"
+  partner: "a shaded square's only partner"
+  between: "a square that would touch two"
+  alone: "a square with nothing to pair with"
+  claimed: "a partner confined to one region"
+  fullRegion: "a full region"
+  exactRegion: "a region needing every open square"
+  neededRegion: "a square a region needs"
+  blocked: "a square blocking a region's pair"
+  crowded: "a square that would crowd a region"
 techniques:
   # Two shaded squares side by side are a domino, and nothing else beside
   # either is shaded. A shaded square beside two others makes the marks

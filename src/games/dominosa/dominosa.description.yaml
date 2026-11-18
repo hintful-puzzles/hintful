@@ -112,6 +112,16 @@ deal:
   number: one domino of the set on each tile, dealt again until the ladder finishes the board at the tier and not below it, or at Unreasonable the search finds one answer and the ladder below it stops short
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky, Unreasonable]
+names:
+  onlySpot: "a domino with one spot left"
+  squareOnly: "a square with one neighbor left"
+  squareSingleDomino: "a square fit for only one domino"
+  mustOverlap: "a spot overlapping every spot left"
+  localDuplicate: "each domino used once"
+  localDuplicate2: "each domino used once"
+  parity: "a spot leaving odd areas"
+  set: "a number's squares sharing dominoes"
+  setDoubles: "a number's squares sharing dominoes"
 techniques:
   # A domino covers a spot: no other covers either of its squares, and no
   # other spot holds that domino.

@@ -91,6 +91,15 @@ deal:
   givens: how many
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
+names:
+  dup: "a placed number's row and column"
+  single: "the only number left in a cell"
+  regionsFull: "every other number already placed"
+  hiddenSingle: "the only cell left for a number"
+  set: "numbers already accounted for"
+  wing: "a wing"
+  greater: "the larger side of a sign"
+  lesser: "the smaller side of a sign"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }

@@ -126,6 +126,29 @@ describe("the compiler refuses an ill-sorted technique", () => {
   });
 });
 
+describe("every technique on the ladder is named", () => {
+  // Check & save names a move by the technique that made it.
+  const source = "src/games/pattern/pattern.description.yaml";
+  const pattern = sources.get(source);
+  if (pattern === undefined || !isFormal(pattern)) throw new Error(`${source} moved`);
+
+  it("refuses one the names block leaves out", () => {
+    const all = new Map(sources);
+    all.set(source, { ...pattern, names: {} });
+    expect(() => compileSource(source, all)).toThrow(/line: no name/);
+  });
+
+  it("names one by a rung it is recorded under", () => {
+    const all = new Map(sources);
+    all.set(source, {
+      ...pattern,
+      names: { lines: "a line" },
+      techniques: (pattern.techniques ?? []).map((t) => ({ ...t, rung: "lines" })),
+    });
+    expect(compileSource(source, all)).toContain('name: "a line"');
+  });
+});
+
 describe("a function's fresh names are its own", () => {
   // A name taken in one function renumbered every function after it, so a
   // compiled diff could not show which functions a change touched.

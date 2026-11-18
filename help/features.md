@@ -236,13 +236,16 @@ couldn't tell.
 When nothing is wrong, the check also looks at **your last move**: the one you
 were probably unsure of when you reached for the button. In many puzzles it can
 tell you whether that move followed from the board, and if so it names the
-deduction in the words a hint would use for it; where it took a few deductions
-to get there, it says so, and names the first of them where it can tell which
-that was. It can also tell you that the
-move was right but that nothing on the board decided it yet: a lucky guess, or a
+deduction it follows from, such as *a line with all its track*. Where more than
+one deduction gets there from the board as it stood, it names them all, as far
+as there's room, so the one you used is likely among them. Where it took a few
+deductions to get there, it says so, and names the first of them where it can
+tell which that was. It can also tell you that the
+move was correct but that nothing on the board forces it yet: a lucky guess, or a
 step you saw further ahead than the board shows. A mark the board had already
 settled, such as a cross beside a *Tracks* square that already has both its
-rails, is said to follow from what the board already shows. Crosses and ruled-out
+rails, is said to write down what the board already shows. The check marks
+nothing on the board for your move; it only says what it found. Crosses and ruled-out
 candidates count as moves. Adding a pencil note to a square's notes doesn't,
 since a note decides nothing, but writing the first notes into an empty square
 does: it says what the square can't be. The verdict is shown where hints appear and stays until your next

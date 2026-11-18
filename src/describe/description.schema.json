@@ -746,6 +746,11 @@
           "description": "What a kind of rule's parameters (`src/describe/kinds.ts`) are in this game, said once: the value a count leaves the rest, the words for what is held. Each placement's `with` adds to these or overrides them, and a name a kind does not take is ignored for it.",
           "additionalProperties": true
         },
+        "names": {
+          "type": "object",
+          "description": "What a player calls each technique, keyed by its id or by a rung it is recorded under (a library's technique by its rung): Check & save names the deduction a move followed from by it. Every technique on the ladder needs one; a short noun phrase, lowercase, that reads after \"follows from\".",
+          "additionalProperties": { "type": "string" }
+        },
         "phrases": {
           "type": "object",
           "description": "Clause source a step's or a technique's clause says by name, `{name}`, written once: the loader puts it in place before the clause is checked, so a phrase holds what a clause may and names the terms of the clause that says it. A phrase may say another; a term named like a phrase is refused.",

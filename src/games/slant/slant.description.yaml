@@ -123,6 +123,16 @@ deal:
   n: at every point, then as many hidden as the board stays at its tier, the readiest first above Easy
   tier: one of the tiers
 tiers: [Easy, Normal]
+names:
+  clue: "a clue's count of lines"
+  loop: "avoiding a loop"
+  pair: "a same-slant pair at a clue"
+  share: "two squares sharing a clue's line"
+  deadEnd: "corners that would be shut in"
+  same: "squares marked to slant alike"
+  one: "a pair of squares at a 1"
+  three: "a pair of squares at a 3"
+  two: "pairs of squares across a 2"
 techniques:
   # A number with no lines left to come has none from its open squares, and
   # one with as many left as open squares has one from each. One with more

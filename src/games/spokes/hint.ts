@@ -112,6 +112,6 @@ export function spokesHint(
 export function spokesJudgeMove(
   before: SpokesState,
   after: SpokesState,
-): MoveVerdict<SpokesHint> | null {
+): MoveVerdict | null {
   return spokesAnswer(before).kind === "one" ? judgePlan(before, after) : null;
 }

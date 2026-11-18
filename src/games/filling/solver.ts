@@ -290,7 +290,7 @@ export function deduceHintPlan(
     const from = plan.length;
     const f = walk.next();
     if (f === null || f === "contradiction") break;
-    judging?.took(walk.graph, known, from, plan.length);
+    judging?.took(walk.graph, known, f.entry.name, plan.length > from);
   }
   return plan;
 }

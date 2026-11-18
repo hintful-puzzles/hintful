@@ -557,24 +557,16 @@ const shownMarks = (state: NetState): CellMarks => {
   return marksOn(g, recordedMarks(state, g, dl));
 };
 
-/**
- * What Check & save says of the last move: the step of the firing that
- * decides the sides a lock or a note the player made, its turn first where
- * it has one. A move nothing quotes is the move just made, as the edge
- * games name it: a side has no square to ring.
- */
+/** What Check & save says of the last move: a lock or a note the player
+ * made. */
 export function netJudgeMove(
   before: NetState,
   after: NetState,
   verbs: Verbs,
   ui: NetUi,
-): MoveVerdict<NetHint> | null {
-  return judgeWalked(
-    before,
-    after,
-    shownMarks,
-    (judging) => stepsFrom(before, verbs, ui, judging),
-    () => ({ at: null }),
+): MoveVerdict | null {
+  return judgeWalked(before, after, shownMarks, (judging) =>
+    stepsFrom(before, verbs, ui, judging),
   );
 }
 
@@ -693,7 +685,7 @@ function stepsFrom(
     f.before(placed, () => say1(stepOf(f, fired, taken.facts), fired.kind));
     // The tiles it settled are locked as its steps: they are what it decided.
     for (const c of reads(taken)) lockIfSettled(c);
-    judging?.took(walk.graph, known, from, steps.length);
+    judging?.took(walk.graph, known, taken.entry.name, steps.length > from);
   }
   return steps;
 }

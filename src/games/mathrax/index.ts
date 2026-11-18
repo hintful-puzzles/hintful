@@ -648,7 +648,7 @@ export const mathraxGame: Game<
     revealEntry(setMoves, state.grid, solved.grid, state.params.o),
   hint,
   judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps, mathrax.NAMES),
   hintRungs: MATHRAX_RUNGS,
   hintMarks: {
     roles: {

@@ -59,12 +59,10 @@ export type SolveResult<Move> =
  * The current step is what the renderer displays and the status bar
  * narrates. */
 /** What a check says of a move ({@link Game.judgeMove}): whether a deduction
- * reached it, and the words and marks that say so, painted as a step's are.
- * No highlights where the words mark nothing. */
-export interface MoveVerdict<Highlights = unknown> {
+ * reached it, and the words that name it. It marks nothing on the board. */
+export interface MoveVerdict {
   readonly followed: boolean;
   readonly words: Sentence;
-  readonly highlights?: Highlights;
 }
 
 export interface HintStep<Move, Highlights = unknown, Rung extends string = string> {
@@ -713,11 +711,11 @@ export interface Game<
 
   /** What Check & save says of the player's last move, `before` the position
    * it was made from and `after` the one it made (`move-judge.ts`): whether
-   * the game's deductions reach it from `before`, in the words of the step
-   * that does, or `null` where it made nothing a deduction makes. A builder
-   * that walks a compiled ladder supplies it; a game writes none. `ui`
-   * carries the preferences the hint is walked under (a candidate plan's). */
-  judgeMove?(before: State, after: State, ui?: Ui): MoveVerdict<Highlights> | null;
+   * the game's deductions reach it from `before`, naming the techniques that
+   * do, or `null` where it made nothing a deduction makes. A builder that
+   * walks a compiled ladder supplies it; a game writes none. `ui` carries the
+   * preferences the hint is walked under (a candidate plan's). */
+  judgeMove?(before: State, after: State, ui?: Ui): MoveVerdict | null;
 
   /** Does this `UI_UPDATE` dismiss the hint, as a real move that goes off-plan
    * does? Absent ⇒ never: a UI/cursor change leaves the hint on screen, which

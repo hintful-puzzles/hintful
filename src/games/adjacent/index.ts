@@ -279,7 +279,7 @@ export const adjacentGame: Game<
   difficulty: edgeClueDifficulty(BARS),
   hint,
   judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps, adjacent.NAMES),
   hintRungs: ADJACENT_RUNGS,
   hintMarks: {
     roles: {

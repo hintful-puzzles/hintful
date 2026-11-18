@@ -20,7 +20,7 @@ import type {
 } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
-import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
+import { judgeWalked } from "../../engine/move-judge.ts";
 import type { Point } from "../../engine/types.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";
 import { ALIKE, CLUE } from "./hint-marks.ts";
@@ -965,31 +965,27 @@ export function slantHint(
     : { ok: true, steps };
 }
 
-/** What Check & save says of the last move: the step of the firing that
- * draws a diagonal the player drew, or the marks it cites first; or the
- * square ringed where none is quoted. */
+/** What Check & save says of the last move: a diagonal the player drew, or a
+ * pair they marked alike. */
 export function slantJudgeMove(
   before: SlantState,
   after: SlantState,
-): MoveVerdict<SlantHint> | null {
+): MoveVerdict | null {
   const { w, h, clues } = before;
-  return judgeWalked<SlantState, SlantHint, Step>(
+  return judgeWalked(
     before,
     after,
     (s) => shownMarks(w, h, clues, s.soln, s.alike),
-    (judging) => stepsFrom(before, judging),
-    ({ at }) => ({ at: pointOf(at, w), highlights: { target: pointOf(at, w) } }),
-    (s, cells) =>
-      s.highlights?.target !== undefined &&
-      cells.has(s.highlights.target.y * w + s.highlights.target.x),
+    (judging) => {
+      deduceHintPlan(w, h, clues, before.soln, before.alike, judging);
+    },
   );
 }
 
-/** The hint's steps from `state`; judging a move, aimed at its facts, with
- * the judging's `firstStep` counting steps where the walk counted firings. */
-function stepsFrom(state: SlantState, judging?: Judging): Step[] {
+/** The hint's steps from `state`. */
+function stepsFrom(state: SlantState): Step[] {
   const { w, h } = state;
-  const plan = deduceHintPlan(w, h, state.clues, state.soln, state.alike, judging);
+  const plan = deduceHintPlan(w, h, state.clues, state.soln, state.alike);
   const { firings, cites } = plan;
   if (firings.length === 0) return [];
   const boardBefore = (i: number): Int8Array =>
@@ -1018,9 +1014,7 @@ function stepsFrom(state: SlantState, judging?: Judging): Step[] {
       return markOf(a, b, w);
     });
   const steps: Step[] = [];
-  const startOf: number[] = [];
   firings.forEach((firing, i) => {
-    startOf.push(steps.length);
     let first = true;
     const push = (step: Step) => {
       steps.push(first ? step : { ...step, continuesPrevious: true });
@@ -1055,8 +1049,6 @@ function stepsFrom(state: SlantState, judging?: Judging): Step[] {
       });
     }
   });
-  if (judging)
-    judging.firstStep = judging.firstStep.map((i) => startOf[i] ?? steps.length);
   return steps;
 }
 

@@ -109,6 +109,12 @@ kindWords:
   restWord: "can't hold a bulb"
   fillWord: "must hold a bulb"
   terms: { clue: "clue(number, c)", placed: "bulbs(c) > 0" }
+names:
+  clueFull: "a number with all its bulbs"
+  clueExact: "a number needing every free square"
+  square: "the only way to light a square"
+  darkSet: "a bulb leaving a square unlit"
+  clueSet: "a bulb that would starve a number"
 techniques:
   # A bulb lights its row and its column up to a wall, so no other bulb
   # stands there.

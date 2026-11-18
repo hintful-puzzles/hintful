@@ -207,12 +207,14 @@ export interface CandidatePlanPrefs {
  * A check judging a move by a candidate plan's walk: told, once the walk is
  * set up, the marks of the board as the player reads them (each blank cell's
  * candidates its {@link impliedNotes}, a value `n` at bit `n`, and a placement
- * striking its value from the cells it reaches) and what the game calls a
- * cell, it answers with the judging to aim the walk by, or `null` for a walk
- * that only reads them.
+ * striking its value from the cells it reaches), it answers with the judging
+ * to aim the walk by, or `null` for a walk that only reads them.
  */
 export interface PlanJudging {
-  begin(shown: CellMarks, cell: string): Judging | null;
+  begin(shown: CellMarks): Judging | null;
+  /** What a player calls the deduction of a step of rung `rung`; `null` for
+   * the setup's rungs, which no verdict names. */
+  name(rung: string): string | null;
 }
 
 /** The preferences a plan is walked under, read off the player's `Ui`

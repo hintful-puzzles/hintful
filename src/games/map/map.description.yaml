@@ -116,6 +116,10 @@ deal:
   givens: which regions show their color, fewer at higher tiers
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky, Unreasonable]
+names:
+  lone: "a region with one color left"
+  pair: "a pair of regions"
+  weigh: "every color of one region"
 techniques:
   # A colored region's color leaves every region it borders.
   - kind: peer.placed

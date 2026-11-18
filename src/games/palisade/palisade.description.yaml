@@ -125,6 +125,14 @@ kindWords:
   slots: "open {n: edge | edges}"
   restWord: "can't be a wall"
   fillWord: "must be a wall"
+names:
+  cluesVersusRegionSize: "two clues side by side"
+  numberExhausted: "a clue's count of walls"
+  notTooBig: "a region that would grow too big"
+  notTooSmall: "a region's last way to grow"
+  noDanglingEdges: "a wall continuing at a corner"
+  equivalentEdges: "edges that share a fate"
+  inside: "a region already joined"
 techniques:
   # Two numbers side by side, c and d: open, the edge between them would
   # join their squares, each with its other open sides leading further into

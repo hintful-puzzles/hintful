@@ -31,6 +31,10 @@ itself is § "The file". A game whose techniques are stated:
    that runs them. It places the library's with `use` and states its own
    (§ "The formula syntax", § "A statement's order is behavior"); the Latin
    library is [`engine/latin.description.yaml`](../src/engine/latin.description.yaml).
+   Its `names` block says what a player calls each, by the technique's id or a
+   rung it is recorded under (a library's by its rung): Check & save names a
+   move by it, and the compiler refuses a ladder technique with none
+   ([`hints.md`](./hints.md) § "Judging the last move").
 2. **Imports its compiled module from `src/generated/`**, where
    `npm run describe` writes `src/d/x.description.yaml` as
    `src/generated/d/x.compiled.ts`: generated, ignored by git, and never

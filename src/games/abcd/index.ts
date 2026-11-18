@@ -50,6 +50,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
+import { NAMES } from "../../generated/games/abcd/abcd.compiled.ts";
 import { newAbcdDesc } from "./generator.ts";
 import {
   ABCD_RUNGS,
@@ -364,7 +365,7 @@ export const abcdGame: Game<
     revealEntry(abcdEntryMoves, state.grid, solved.grid, state.params.w),
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
   judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
   hintRungs: ABCD_RUNGS,
   hintMarks: {
     roles: {

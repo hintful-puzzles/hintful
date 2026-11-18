@@ -109,6 +109,11 @@ deal:
   number: on every clear square, then as many hidden as the board stays at its tier
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
+names:
+  besideShaded: "shaded squares never touching"
+  capped: "a clue that sees enough"
+  reach: "a clue that must see further"
+  cut: "keeping clear squares joined"
 techniques:
   # A shaded square's neighbors are clear, and one shaded beside it breaks
   # the rules.

@@ -80,6 +80,11 @@ phrases:
   twoName: "{twoDot: dotted {piece twoValue} | {piece twoValue}}"
   # How many of the counted piece the second tile allows.
   allowed: "{if none: no {piece v}s | at most {spelled most} {most: {piece v} | {piece v}s}}"
+names:
+  broken: "a piece that can't find its match"
+  refute: "the other piece breaking a rule"
+  countFull: "two tiles' counts compared"
+  countShort: "two tiles' counts compared"
 techniques:
   # A tile that can no longer have its own color beside it as its rule says
   # makes the marks inconsistent: one with no room left for it, one without a

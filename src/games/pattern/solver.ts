@@ -521,7 +521,7 @@ export function deduceHintPlan(
     const known = walk.graph.facts.length;
     const f = walk.next();
     if (f === null || f === "contradiction") break;
-    judging?.took(walk.graph, known, plan.length, plan.length + 1);
+    judging?.took(walk.graph, known, f.entry.name, true);
     const reason = reasonOfTaken(f);
     const cells: number[] = [];
     for (let i = 0; i < f.facts.length; i += 3) cells.push(f.facts[i + 1]);
@@ -546,8 +546,7 @@ export function boardMarks(state: PatternState): CellMarks {
 }
 
 /** The square's value a described one is. */
-export const gridValOf = (v: number): GridVal =>
-  v === SHADED ? GRID_FULL : GRID_EMPTY;
+const gridValOf = (v: number): GridVal => (v === SHADED ? GRID_FULL : GRID_EMPTY);
 
 /** Every player-marked cell that contradicts the board's one answer. Returns
  * `[]` when no single answer was found (nothing to check against) or when

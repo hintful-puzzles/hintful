@@ -101,6 +101,14 @@ deal:
   count: every number, or as many hidden as the answer stays unique at its tier
   tier: one of the tiers
 tiers: [Easy, Normal]
+names:
+  single: "a square with one choice left"
+  count: "a line's counts"
+  oddGap: "the odd gap"
+  marked: "magnets already counted in a line"
+  oneNeutral: "room for just one more neutral"
+  everyTile: "a pole needed from every tile"
+  onlyEnd: "the only end that can give a pole"
 techniques:
   # The other end of a placed tile holds the opposite.
   - id: pair

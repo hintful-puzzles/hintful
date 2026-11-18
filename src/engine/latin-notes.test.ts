@@ -11,8 +11,8 @@ describe("a Latin ladder run on the notes", () => {
   const ladder = latinLadder<string, string, LatinSolver, Record<never, never>>(
     {
       ladder: [
-        { id: "latin.single", tier: 0 },
-        { id: "latin.wing", tier: 2 },
+        { id: "latin.single", name: "single", tier: 0 },
+        { id: "latin.wing", name: "wing", tier: 2 },
       ],
       placing: [{ id: "latin.placed" }],
       striking: [],

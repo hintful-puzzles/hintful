@@ -90,6 +90,15 @@ deal:
   number: a repeated number on each covered square
   tier: one of the tiers
 tiers: [Easy, Normal]
+names:
+  besideCovered: "shaded squares never touching"
+  sameLine: "a number already clear in its line"
+  sandwich: "a sandwich"
+  pair: "a touching pair"
+  corner: "a crowded corner"
+  boxedIn: "a clear square's last neighbor"
+  offset: "pairs in neighboring lines"
+  split: "keeping clear squares joined"
 techniques:
   # A covered square's neighbors are clear.
   - kind: peer.touch

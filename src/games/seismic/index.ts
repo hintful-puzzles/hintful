@@ -54,6 +54,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
+import { NAMES } from "../../generated/games/seismic/seismic.compiled.ts";
 import { maxGeneratedRegionSize, newSeismicDesc } from "./generator.ts";
 import {
   buildSteps,
@@ -314,7 +315,7 @@ export const seismicGame: Game<
   revealOne: (state, solved) => revealEntry(setMoves, state.grid, solved.grid, state.w),
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
   judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
   hintRungs: SEISMIC_RUNGS,
   hintMarks: {
     roles: {

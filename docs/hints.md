@@ -1244,14 +1244,29 @@ through `Game.judgeMove(before, after, ui)` (spec `quick-save`, "Check & save
 judges the last move"). A game gets it from its plan builder and wires it as
 it wires `hint`; it decides nothing itself. The builder walks the ladder
 **aimed** (`ladderWalk`'s `aim`), so a firing that makes one of the move's
-facts is taken first at any tier. A fact made at the walk's first step is
-direct, and that step's own sentence is quoted under a lead
-(`move-judge.ts`). A later one is chained, and the quoted step is the earliest
-that `FactGraph.restsOn` goes back to. A fact the walk never reaches is "right,
-but nothing decided it yet". A move that makes no fact a deduction makes, such
-as an added note or a mark taken off, is not judged. The verdict is the
-midend's `activeCheck`. It is painted and said as a displayed step is, and the
-next transition puts it away. Test: `src/engine/move-judge.test.ts`.
+facts is taken first at any tier. A move made at the walk's first step is
+direct. A later one is chained, and its chain began at the earliest firing
+`FactGraph.restsOn` goes back to. A fact the walk never reaches is unforced. A
+move that makes no fact a deduction makes, such as an added note or a mark
+taken off, is not judged. The verdict is the midend's `activeCheck`: it is said
+as a displayed step is, and the next transition puts it away.
+
+**A verdict names techniques and marks nothing** (owner, in acceptance,
+2026-11-18). A quoted step, with its rings and stripes, showed a player who had
+reasoned from a row's count a column's count in full: "an extremely
+over-detailed display of an alternate deduction". So a verdict names the
+technique, by what a player calls it. A direct one names every technique
+offered before the walk's first firing that makes the whole move, since the
+one the player used is likely among them; a chained one names where its chain
+began. The names are the description's `names` block, keyed by a technique's
+id or a rung it is recorded under. The compiler refuses a ladder technique
+with none, and a candidate plan's `RungNames` type refuses a rung with none.
+A name is a short lowercase noun phrase that reads after "follows from", and
+it can point at nothing on the board, so it never says "this". The words are
+`verdictOf`'s one table in `move-judge.ts`, and no builder writes its own.
+Tests: `src/engine/move-judge.test.ts` (a move two techniques make names
+both), and `move-judge-games.test.ts` (no verdict says an id, and every
+declared name passes the hint words' lint).
 
 What the edge games taught, in `judgeByWalk`. A walk that only strikes never
 places: a value left the cell's one candidate is reached, unless the player's
@@ -1267,10 +1282,8 @@ game's whole answer, as one move, must read as followed. A move
 whose facts take several firings opens with the first, so the aim takes a
 firing that makes every fact left before one that makes some; a count would
 take the strikes a placement brings along first. A firing the hint shows no
-step for is bookkeeping too, and its facts go with the next step's. An edge
-game quotes a firing by its first leg, and a verdict that quotes nothing rings
-nothing there, since the builder knows no element for an edge. Which hinting
-games judge nothing, and why, is a ledger in
+step for is bookkeeping too, and its facts go with the next step's. Which
+hinting games judge nothing, and why, is a ledger in
 `src/engine/move-judge-games.test.ts`, which also holds every judging game to
 calling its own hint's first move followed.
 
@@ -1284,28 +1297,23 @@ that waits its turn included, since the wait is only the hint's order. The
 setup goes before any firing the aim did not choose, because the rungs that
 read the notes offer nothing until it is done. A step that leaves the
 player's reading unchanged, such as the populate or a clean of what the
-implied notes never held, opens no firing. A journey's legs are worded to
-stand alone, since a verdict quotes one leg. The plan keeps no fact graph, so
-a chained verdict rings the cell and quotes nothing. Test:
-`src/engine/candidate-judge.test.ts`.
+implied notes never held, opens no firing. A firing is named by its first
+leg's rung, from the game's compiled `NAMES`; a technique of the description
+whose firings the plan records under a rung declares it (`rung:`), so the
+rung's name is its name too. The plan keeps no fact graph, so a chained
+verdict names no start. Test: `src/engine/candidate-judge.test.ts`.
 
 What the games that walk the ladder from their own code taught (Crossing,
 Filling, Loopy, Net, Pattern, Slant, Subsets). Each threads the `Judging` its
 plan is handed through its own loop: `aim` into `ladderWalk`, the loop running
-while `done` says a fact is left, and `took` after each firing with the steps
-it showed. `judgeWalked` does the rest from the game's `marks`, its steps and
-how it rings a fact. Where steps are built after the walk (Slant, Loopy,
-Subsets), the walk counts its plan's firings, and the game maps the judging's
-`firstStep` onto its steps once they are built. Crossing's judging walk takes
-`narrow` with the rest, since a player's notes are a move of their own, which
-its hint takes only on the way to a digit. Where a game's `citing` keeps lines
-out of what a firing rests on (Loopy, Slant: the player sees them), the graph
-cannot name a chain's start, so a chained verdict quotes nothing.
-
-**A verdict marks the board after the move.** Its ring can land on the value
-just placed, which no hint step rings, so it must fit there clear of that
-value's text (Towers rings a raised 3D tower's top, where its digit is).
-`move-judge-games.test.ts` paints a verdict for every judging game.
+while `done` says a fact is left, and `took` after each firing with its
+technique's name and whether it showed a step. `judgeWalked` does the rest
+from the game's `marks`. Where steps are built after the walk (Slant, Loopy,
+Subsets), judging runs the walk alone. Crossing's judging walk takes `narrow`
+with the rest, since a player's notes are a move of their own, which its hint
+takes only on the way to a digit. Where a game's `citing` keeps lines out of
+what a firing rests on (Loopy, Slant: the player sees them), the graph cannot
+name a chain's start, so a chained verdict names none.
 
 ## The cross-game guards
 

@@ -235,6 +235,11 @@ deal:
   step: the ruleset
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky, Unreasonable]
+names:
+  forced: "a square with no edge to spare"
+  lineBreaks: "a line that would break the board"
+  pairBreaks: "two lines breaking the board"
+  weighed: "a square weighed whole"
 techniques:
   # A square with only as many edges left as it still needs lines takes a
   # line on each. One with more lines than it takes, or fewer edges left

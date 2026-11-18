@@ -103,7 +103,7 @@ export interface DescribedHintSpec<
 export interface DescribedHint<State, Move, Kind extends string> {
   hint(state: State): HintResult<Move, CellHint, Kind>;
   /** What Check & save says of the last move (`Game.judgeMove`). */
-  judgeMove(before: State, after: State): MoveVerdict<CellHint> | null;
+  judgeMove(before: State, after: State): MoveVerdict | null;
   hintKeepTrack(m: Move, step: HintStep<Move, CellHint, Kind>): HintTrackVerdict;
   /** The kinds a step can speak: the techniques that have a sentence. */
   hintRungs: readonly Kind[];
@@ -249,7 +249,7 @@ export function describedHint<
           continuesPrevious: leg++ > 0,
         });
       }
-      judging?.took(walk.graph, known, from, steps.length);
+      judging?.took(walk.graph, known, f.entry.name, steps.length > from);
     }
     return steps;
   };
@@ -261,25 +261,9 @@ export function describedHint<
       : { ok: true, steps };
   };
 
-  /** What Check & save says of the last move: the step that places a square
-   * the player filled, or the move's square ringed where none does. */
-  const judgeMove = (before: State, after: State): MoveVerdict<CellHint> | null => {
-    const w = spec.width(before);
-    const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
-    return judgeWalked(
-      before,
-      after,
-      spec.marks,
-      (judging) => stepsFrom(before, judging),
-      ({ at, value }) => ({
-        at: pointOf(at),
-        highlights: { target: { ...pointOf(at), value } },
-      }),
-      (s, cells) =>
-        s.highlights !== undefined &&
-        cells.has(s.highlights.target.y * w + s.highlights.target.x),
-    );
-  };
+  /** What Check & save says of the last move. */
+  const judgeMove = (before: State, after: State): MoveVerdict | null =>
+    judgeWalked(before, after, spec.marks, (judging) => stepsFrom(before, judging));
 
   return {
     hint,

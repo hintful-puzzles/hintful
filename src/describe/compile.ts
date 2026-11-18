@@ -7881,14 +7881,20 @@ export function compileGame(
     " * tier, the cap from which it no longer runs where it has one, and the",
     " * variation that adds it where one does, in the order the description",
     " * lists them, a variation's before the first of a higher tier. */",
-    "export const ladder: readonly { id: LadderId; tier: number; scale?: string; from?: number; until?: number; variation?: string }[] = [",
+    "export const ladder: readonly { id: LadderId; name: string; tier: number; scale?: string; from?: number; until?: number; variation?: string }[] = [",
     ...rungOrder(
       d.techniques.filter((t) => t.on === null),
       addedBy,
     ).map((t) => {
       const by = addedBy.get(t.id);
+      // Check & save names a move by the technique that made it.
+      if (t.name === null)
+        throw new CompileError(
+          `${json.game} ${t.id}: no name (\`names\`, by its id or a rung)`,
+        );
       const fields = [
         `id: ${JSON.stringify(t.id)}`,
+        `name: ${JSON.stringify(t.name)}`,
         `tier: ${t.tier}`,
         ...(t.scale === null ? [] : [`scale: ${JSON.stringify(t.scale)}`]),
         ...(t.from === null ? [] : [`from: ${t.from}`]),
@@ -7899,6 +7905,14 @@ export function compileGame(
     }),
     "];",
     "",
+    ...(json.names === undefined
+      ? []
+      : [
+          "/** What a player calls each technique, by its id or a rung: a plan's",
+          " * own rungs are named here too. */",
+          `export const NAMES = ${JSON.stringify(json.names)} as const;`,
+          "",
+        ]),
     `/** The description's tiers, by name. */`,
     `export const tiers: readonly string[] = ${JSON.stringify(d.tiers)};`,
     ...(scales.length === 0

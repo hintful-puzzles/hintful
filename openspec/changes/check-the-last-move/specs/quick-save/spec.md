@@ -5,24 +5,31 @@
 Where the check behind Check & save finds no mistakes and no dead end, and
 the game judges moves (`judgeMove`), the check SHALL judge the player's last
 move against the position before it, by the game's own deductions, and SHALL
-NOT gate the save on the verdict. A move that followed SHALL be told the
-deduction it followed from, in that step's sentence. A move no deduction
-reached SHALL be told it was right but not yet forced, with its square
-marked.
+NOT gate the save on the verdict. A move that followed SHALL be told, by
+name, every deduction that makes it from the board where there is room. A
+move no deduction reached SHALL be told it is correct but not yet forced. A
+verdict SHALL mark nothing on the board.
 
 #### Scenario: A reasoned move is named
 
 - **WHEN** the player places a value one of the game's deductions makes from
   the position before it, then activates Check & save
 - **THEN** the board is saved, and the words under the board say the move
-  followed from the board in that deduction's sentence, with its marks
+  follows from that deduction, by its name, and nothing on the board is
+  marked for it
+
+#### Scenario: A move two deductions make names both
+
+- **WHEN** the player's last move is one two of the game's deductions each
+  make from the position before it, then activates Check & save
+- **THEN** the words name both
 
 #### Scenario: A lucky move is told so
 
 - **WHEN** the player places a correct value no deduction reaches from the
   position before it, then activates Check & save
-- **THEN** the board is saved, and the words say the move was right but
-  nothing on the board forced it yet, with its square marked
+- **THEN** the board is saved, and the words say the move is correct but
+  nothing on the board forces it yet
 
 #### Scenario: A cross and a struck candidate are judged
 
@@ -35,8 +42,7 @@ marked.
 - **WHEN** the player's last move marked what the marks already on the
   board decide (a Tracks side a square's two rails close), then activates
   Check & save
-- **THEN** the words say the move followed from what the board already
-  shows
+- **THEN** the words say the move writes down what the board already shows
 
 ### Requirement: Only a move a deduction could make is judged
 

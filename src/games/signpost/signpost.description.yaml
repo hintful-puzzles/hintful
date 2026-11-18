@@ -134,6 +134,9 @@ deal:
   number: the first and last, and as many more as the board stays at its tier
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
+names:
+  onlyNext: "the only square that can come next"
+  onlyBefore: "the only arrow that can lead in"
 techniques:
   # Of the squares an arrow points at, only one can come next: every other
   # already has a square before it, leads round to the arrow, or holds a

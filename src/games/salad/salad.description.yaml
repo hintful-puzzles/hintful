@@ -73,6 +73,19 @@ deal:
   givens: which letters, numbers and crosses
   tier: one of the tiers
 tiers: [Easy, Normal]
+names:
+  dup: "a placed letter's row and column"
+  single: "the only letter left in a square"
+  hiddenSingle: "the only square left for a letter"
+  set: "letters already accounted for"
+  wing: "a wing"
+  borderNear: "the letter a clue sees first"
+  borderFar: "how far in a clue's letter sits"
+  countHolesDone: "a line with all its empty squares"
+  countLettersDone: "a line with all its letters"
+  crossNaked: "a square with no letter left"
+  xNoteGone: "a square with no empty-square mark"
+  circleXNote: "clearing empty-square marks"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   # Upstream's salad_letters_solver_dir, one clue a binding, square by

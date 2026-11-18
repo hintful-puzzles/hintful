@@ -111,6 +111,14 @@ deal:
   numbers: every run's, sorted by length and then by digit; a board two runs read alike on is dealt again
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
+names:
+  onlyNumber: "a run only one number fits"
+  onlyRun: "a number only one run fits"
+  sharedDigit: "a digit every fitting number shares"
+  crossRuns: "crossing runs"
+  narrow: "the digits a run's numbers allow"
+  misread: "a run that reads no number"
+  twice: "a number used twice"
 techniques:
   # A run that only one number still fits is that number. One no number fits
   # makes the marks inconsistent.

@@ -150,6 +150,15 @@ deal:
   dot: one at the center of each galaxy
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
+names:
+  dotTile: "the squares under a dot"
+  split: "a wall inside a galaxy"
+  separate: "squares in different galaxies"
+  enclosed: "a square walled into one galaxy"
+  soleOwner: "a square only one dot can own"
+  onlyReach: "a square only one galaxy reaches"
+  exclave: "a piece's only way to its dot"
+  mirrorWall: "a galaxy's mirror symmetry"
 techniques:
   # The squares under a dot are its galaxy's.
   - id: dotTile

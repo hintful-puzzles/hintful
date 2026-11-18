@@ -86,6 +86,12 @@ variations:
           with:
             peer: "p in adj8(c) where p not in adj4(c) and not known(p)"
 tiers: [Easy, Unreasonable]
+names:
+  dup: "a placed letter's neighbors"
+  single: "the only letter left in a square"
+  regionsFull: "every other letter beside it"
+  satisfied: "a line with enough of a letter"
+  packed: "stretches with no room to spare"
 techniques:
   # A placed letter leaves the squares beside it.
   - kind: peer.placed
@@ -114,6 +120,7 @@ techniques:
   # only one shape, the letter in its even places.
   - id: runs
     tier: Easy
+    rung: packed
     for: >-
       L in lines, d in domain, v = clue(count, L, d) where v > holds(L, d),
       O = {c in cells(L) where not known(c) and d in cand(c)}

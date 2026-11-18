@@ -238,6 +238,15 @@ deal:
   wall: across some of the sides the answer leaves without a wire, at the barrier rate
   tier: one of the tiers
 tiers: [Easy, Unreasonable]
+names:
+  fitLock: "the only way a square fits"
+  fitNote: "a side every fitting way shares"
+  loopLock: "the only way without a loop"
+  loopNote: "a side fixed by avoiding loops"
+  sealLock: "the only way that seals nothing off"
+  sealNote: "a side fixed by sealing nothing off"
+  strandLock: "the only way that leaves none stuck"
+  strandNote: "a side fixed by leaving none stuck"
 techniques:
   # Each idea comes as a lock, where one way of turning a square is left,
   # and a note, where every way left agrees about one side. A lock comes

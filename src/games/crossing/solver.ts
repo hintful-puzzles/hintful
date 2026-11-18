@@ -880,7 +880,7 @@ function judgedWalk(
       applyCrossingFiring(board, f);
       firings.push(f);
     }
-    judging.took(walk.graph, known, from, firings.length);
+    judging.took(walk.graph, known, t.entry.name, firings.length > from);
   }
 }
 

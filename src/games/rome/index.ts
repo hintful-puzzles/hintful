@@ -80,6 +80,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
+import { NAMES } from "../../generated/games/rome/rome.compiled.ts";
 import { newRomeDesc } from "./generator.ts";
 import {
   buildSteps,
@@ -736,7 +737,7 @@ export const romeGame: Game<
   // taught as an explicit strike rather than folded into the placement.
   hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
   judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
   hintRungs: ROME_RUNGS,
   hintMarks: {
     roles: {

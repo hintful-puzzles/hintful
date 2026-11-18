@@ -203,6 +203,14 @@ deal:
   maxb: the setting
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky]
+names:
+  exactSpace: "an island with no room to spare"
+  everyNeighbor: "an island needing every neighbor"
+  needsThisWay: "an island its other lines can't satisfy"
+  sealing: "a bridge that would cut a group off"
+  loop: "avoiding a loop"
+  tooMany: "too many bridges for one line"
+  mustReachOut: "an island that must reach out"
 techniques:
   # An island with only as much room left as it needs bridges takes the
   # most each line allows. One with more bridges than its number, or less

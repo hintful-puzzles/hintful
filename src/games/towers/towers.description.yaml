@@ -110,6 +110,19 @@ deal:
   givens: how many
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky, Unreasonable]
+names:
+  dup: "a placed height's row and column"
+  single: "the only height left in a cell"
+  regionsFull: "every other height already placed"
+  hiddenSingle: "the only cell left for a height"
+  set: "heights already accounted for"
+  wing: "a wing"
+  fullLine: "a clue as large as the grid"
+  tallestNearest: "a clue of 1"
+  facing: "facing clues that pin the tallest"
+  lineFull: "the next tower a clue must see"
+  lowerBound: "a tower too tall, too close"
+  arrangement: "every way a clue's line can fill"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   # Facing clues that sum to w + 1 see a line climbing to its tallest tower

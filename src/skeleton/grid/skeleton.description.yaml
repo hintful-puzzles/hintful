@@ -49,6 +49,9 @@ deal:
     order while the ladder still finishes the board at the tier
   tier: one of the tiers
 tiers: [Easy, Normal]
+names:
+  count: "one number's count on its own"
+  shared: "two overlapping numbers compared"
 techniques:
   # One number alone, n the shaded squares it still needs among its open
   # squares O: with none, they are all clear; with as many as there are,

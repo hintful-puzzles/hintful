@@ -51,11 +51,11 @@ function cfg(maxdiff: number, repeats = true): LatinSolverConfig {
     ladder: latinLadder(
       {
         ladder: [
-          { id: "latin.hiddenSingle", tier: 1 },
-          { id: "latin.single", tier: 1 },
-          { id: "latin.set", tier: 2 },
-          { id: "latin.fish", tier: 3 },
-          { id: "latin.wing", tier: 3 },
+          { id: "latin.hiddenSingle", name: "hidden single", tier: 1 },
+          { id: "latin.single", name: "single", tier: 1 },
+          { id: "latin.set", name: "set", tier: 2 },
+          { id: "latin.fish", name: "fish", tier: 3 },
+          { id: "latin.wing", name: "wing", tier: 3 },
         ],
         placing: [{ id: "latin.placed" }],
         striking: [],

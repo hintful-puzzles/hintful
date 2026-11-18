@@ -850,6 +850,9 @@ export const TIERS = "tiers";
 /** A ladder entry as the compiled module lists it. */
 export interface CompiledEntry<Id extends string = string> {
   id: Id;
+  /** What a player calls the technique (the description's `names`): what
+   * Check & save names a move it made by. */
+  name: string;
   tier: number;
   scale?: string;
   from?: number;

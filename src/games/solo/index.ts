@@ -79,6 +79,7 @@ import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
+import { NAMES } from "../../generated/games/solo/solo.compiled.ts";
 import { newSoloDesc } from "./generator.ts";
 import { type RegionCells, regionName, SOLO_VOCAB, say } from "./hint.ts";
 import { type SoloReason, type SoloRegion, soloRungs } from "./hint-reasons.ts";
@@ -786,7 +787,7 @@ export const soloGame: Game<
   difficulty,
   hint,
   judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
   hintRungs: SOLO_RUNGS,
   hintMarks: {
     roles: {

@@ -21,7 +21,7 @@
  *
  * Cell games only: a fact is a placement of a value on a cell.
  */
-import { PLACE, STRIKE_EDGE } from "./describe-runtime.ts";
+import { PLACE } from "./describe-runtime.ts";
 import { DEFAULT_PLAN, filledBy, premiseOf, spokenOf } from "./described-hint.ts";
 import { type DescribedRulesOut, describedRulesOut } from "./described-rules-out.ts";
 import type {
@@ -40,14 +40,7 @@ import {
   ladderWalk,
   TIERS,
 } from "./ladder-runtime.ts";
-import {
-  followedWords,
-  type Judging,
-  judgeByWalk,
-  movedFacts,
-  unforcedWords,
-  unquotedWords,
-} from "./move-judge.ts";
+import { type Judging, judgeWalked } from "./move-judge.ts";
 import type { PairIndex } from "./piece.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
@@ -254,7 +247,7 @@ export interface DescribedFiringHint<
 > {
   hint(state: State): HintResult<Move, H, Kind>;
   /** What Check & save says of the last move (`Game.judgeMove`). */
-  judgeMove(before: State, after: State): MoveVerdict<H> | null;
+  judgeMove(before: State, after: State): MoveVerdict | null;
   /** What a placement rules out, where the spec has the description's. */
   rulesOut?: RulesOut<State, Move>;
   /** Judges a move against a step of any kind: the kind is no part of it. */
@@ -468,69 +461,19 @@ export function describedFiringHint<
         for (const [i, move] of legs.entries())
           steps.push({ ...step, move, continuesPrevious: i > 0 });
       }
-      judging?.took(walk.graph, known, firstStep, steps.length);
+      judging?.took(walk.graph, known, f.entry.name, steps.length > firstStep);
     }
     return steps;
   };
 
-  const judgeMove = (before: State, after: State): MoveVerdict<H> | null => {
+  const judgeMove = (before: State, after: State): MoveVerdict | null => {
     const cap = spec.tiers ? spec.tiers.count - 1 : Number.MAX_SAFE_INTEGER;
-    const was = spec.walk(before, cap);
-    const placed = spec.walk(before, cap);
-    const now = spec.walk(after, cap);
-    if (was === null || placed === null || now === null) return null;
-    const moved = movedFacts(was.marks, placed.marks, now.marks);
-    if (moved.length === 0) return null;
-    let steps: Step[] = [];
-    let firstStep: readonly number[] = [];
-    const judged = judgeByWalk(moved, (judging) => {
-      steps = stepsAt(before, cap, judging);
-      firstStep = judging.firstStep;
-    });
-    if (judged === null) return null;
-    const w = spec.width(before);
-    const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
-    const cellOf = (f: (typeof moved)[number]): number =>
-      f.kind === STRIKE_EDGE ? was.marks.sp.edgeEnds[2 * f.at] : f.at;
-    // The words of a verdict that quotes no step, and the marks of its square.
-    const ringed = (
-      i: number,
-      words: (at: Point, noun: string) => Sentence,
-      followed: boolean,
-    ): MoveVerdict<H> => {
-      const c = cellOf(moved[i]);
-      const target = spec.target(pointOf(c), spec.valueAt(after, c));
-      const marked = { targets: [target], outline: [], stripes: [], strand: [] };
-      return {
-        followed,
-        words: words(pointOf(c), "square"),
-        highlights: (spec.highlights
-          ? spec.highlights(marked, after)
-          : { targets: [target], strand: [] }) as H,
-      };
-    };
-    if (judged.kind === "unforced") return ringed(judged.fact, unforcedWords, false);
-    const { firing: k, chained } = judged;
-    if (k === null)
-      return ringed(0, (at, noun) => unquotedWords(at, noun, chained), true);
-    const end = firstStep[k + 1] ?? steps.length;
-    const ofFiring = steps.slice(firstStep[k], end);
-    const cells = new Set(moved.map(cellOf));
-    const own = (s: Step): Target[] =>
-      (s.highlights?.targets ?? []).filter((t) => cells.has(t.y * w + t.x));
-    const quoted = ofFiring.find((s) => own(s).length > 0) ?? ofFiring[0];
-    if (quoted === undefined) return null;
-    // The firing that made the move is said of the squares the player made.
-    const said =
-      chained || spec.journey !== undefined || own(quoted).length === 0
-        ? quoted
-        : { ...quoted, ...narrowedTo(quoted, own(quoted), before) };
-    if (said.words === undefined) return null;
-    return {
-      followed: true,
-      words: followedWords(said.words, chained),
-      highlights: said.highlights as H,
-    };
+    return judgeWalked(
+      before,
+      after,
+      (state) => spec.walk(state, cap)?.marks ?? null,
+      (judging) => stepsAt(before, cap, judging),
+    );
   };
 
   const hint = (state: State): HintResult<Move, H, Kind> => {

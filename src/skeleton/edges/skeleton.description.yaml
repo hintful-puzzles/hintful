@@ -132,6 +132,9 @@ deal:
     the ladder still finishes the board at the tier
   tier: one of the tiers
 tiers: [Easy, Normal]
+names:
+  forced: "a square with no edge to spare"
+  pairBreaks: "two lines breaking the board"
 techniques:
   # A square with only as many edges left as it still needs lines takes a
   # line on each. One with more lines than two, or fewer edges left than it

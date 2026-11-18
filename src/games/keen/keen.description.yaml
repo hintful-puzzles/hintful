@@ -112,6 +112,15 @@ deal:
   cages: the partition, connected cages of at most six cells, and each cage's sign and value
   tier: one of the tiers
 tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
+names:
+  dup: "a placed number's row and column"
+  single: "the only number left in a cell"
+  regionsFull: "every other number already placed"
+  hiddenSingle: "the only cell left for a number"
+  set: "numbers already accounted for"
+  wing: "a wing"
+  cage: "the ways to fill a cage"
+  cageLine: "what a cage puts in its line"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   # Cage by cage: a value no filling of the cage from its candidates that

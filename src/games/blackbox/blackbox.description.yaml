@@ -96,6 +96,8 @@ deal:
     balls a square at random, each on a square that keeps the board one
     answer once every laser is fired
 tiers: [Normal]
+names:
+  ray: "a laser's path"
 techniques:
   # Follow a laser through the squares settled to the first, u, that would
   # change where it goes: where d in u would send it elsewhere, u holds the

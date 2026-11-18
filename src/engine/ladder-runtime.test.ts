@@ -22,6 +22,7 @@ const entry = (
   scale?: string,
 ): LadderEntry => ({
   id,
+  name: id,
   tier,
   scale,
   run: compiledRung(

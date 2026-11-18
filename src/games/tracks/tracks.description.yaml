@@ -155,6 +155,18 @@ kindWords:
   items: "track {n: square | squares} by {outline clueAt: its clue}"
   restWord: must be empty
   fillWord: must carry track
+names:
+  oneWayIn: "a square with one way in"
+  bothSidesLeft: "a track square's last open sides"
+  clueFull: "a line with all its track"
+  clueExact: "a line needing every open square"
+  closeLoop: "avoiding a loop"
+  strand: "finishing the track too soon"
+  finishEarly: "finishing the track short of a clue"
+  looseEnd: "a loose end running along a line"
+  sharedFate: "a clue with one track square left"
+  sharedFateEmpties: "a clue with one empty square left"
+  parity: "every entry needing an exit"
 techniques:
   # A square's own sides come first: a firing runs the ladder again from its
   # top, so a rail forced along a run of squares is laid before a clue is

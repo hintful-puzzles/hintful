@@ -287,7 +287,7 @@ export const unequalGame: Game<
   difficulty: edgeClueDifficulty(SIGNS),
   hint,
   judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps),
+    candidateJudge(before, after, ui ?? newUi(before), buildSteps, unequal.NAMES),
   hintRungs: UNEQUAL_RUNGS,
   hintMarks: {
     roles: {

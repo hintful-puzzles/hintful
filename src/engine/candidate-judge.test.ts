@@ -1,15 +1,17 @@
 /**
  * The judge of a player's last move on a candidate plan (`candidate-judge.ts`),
- * on Towers: a move the board shows is named in its step's sentence, one only
- * a chain reaches rings its square, a move a walk never makes is told apart,
- * and the notes are read as the player reads them, so penciling everything
- * in is not judged while writing fewer notes than the regions allow is. *
- * That each judging game calls its hint's own steps followed is
+ * on Towers: a move the board shows is named by its step's rung, one only a
+ * chain reaches says so, a move a walk never makes is told apart, and the
+ * notes are read as the player reads them, so penciling everything in is not
+ * judged while writing fewer notes than the regions allow is. That each
+ * judging game calls its hint's own steps followed is
  * `move-judge-games.test.ts`.
  */
 import { describe, expect, it } from "vitest";
 import { towersGame } from "../games/towers/index.ts";
 import type { TowersState } from "../games/towers/state.ts";
+import { NAMES } from "../generated/games/towers/towers.compiled.ts";
+import { verdictOf } from "./move-judge.ts";
 import { dealt } from "./testing/dealt.ts";
 
 const game = towersGame;
@@ -30,9 +32,10 @@ function with_(s: TowersState, edit: (t: TowersState) => void): TowersState {
   return t;
 }
 
-/** What a check says of a move the board shows, in its step's words. */
-const direct = (explanation: string): string =>
-  `Your last move followed from the board: ${explanation.charAt(0).toLowerCase()}${explanation.slice(1)}`;
+/** What a player calls the deduction of a step of `rung`. */
+const nameOf = (rung: string): string => NAMES[rung as keyof typeof NAMES];
+
+const DIRECT = /^Your last move follows from (?!the board)/;
 
 const placed = (s: TowersState, i: number, n = answer[i]): TowersState =>
   with_(s, (t) => {
@@ -40,14 +43,15 @@ const placed = (s: TowersState, i: number, n = answer[i]): TowersState =>
   });
 
 describe("candidateJudge", () => {
-  it("names a placement the board shows in its step's words", () => {
+  it("names a placement the board shows by its step's rung", () => {
     const s = fresh();
     const res = game.hint?.(s, aux, game.newUi(s));
     if (!res?.ok) throw new Error("no hint");
     const step = res.steps[0];
     const v = game.judgeMove?.(s, game.executeMove(s, step.move));
     expect(v?.followed).toBe(true);
-    expect(v?.words.text).toBe(direct(step.explanation));
+    expect(v?.words.text).toMatch(DIRECT);
+    expect(v?.words.text).toContain(nameOf(step.rung));
   });
 
   it("names directly a placement the board shows, though the hint takes it later", () => {
@@ -66,10 +70,11 @@ describe("candidateJudge", () => {
       );
     if (later === undefined) throw new Error("the hint fires its first rung once");
     const v = game.judgeMove?.(s, game.executeMove(s, later.move));
-    expect(v?.words.text).toBe(direct(later.explanation));
+    expect(v?.words.text).toMatch(DIRECT);
+    expect(v?.words.text).toContain(nameOf(later.rung));
   });
 
-  it("quotes a journey's later leg in words that stand alone", () => {
+  it("names a journey's later leg as its first", () => {
     // A clue as high as the board places its whole line as one journey.
     for (let n = 0; n < 30; n++) {
       const board = dealt(game, params, n);
@@ -81,25 +86,25 @@ describe("candidateJudge", () => {
       );
       if (later === undefined) continue;
       const v = game.judgeMove?.(s, game.executeMove(s, later.move));
-      expect(v?.words.text).toMatch(/^Your last move followed from the board: /);
-      expect(v?.words.text).not.toMatch(/: (\.\.\.|…)/);
+      expect(v?.words.text).toMatch(DIRECT);
+      expect(v?.words.text).toContain(nameOf(later.rung));
       return;
     }
     throw new Error("no board's hint walked a journey of placements");
   });
 
-  it("rings a placement only a chain reaches", () => {
+  it("says a placement only a chain reaches follows a few steps on", () => {
     const s = fresh();
     const chained = [...s.grid.keys()]
       .filter((i) => s.grid[i] === 0)
-      .map((i) => ({ i, v: game.judgeMove?.(s, placed(s, i)) }))
-      .find(({ v }) => v?.words.text.includes("a few steps on"));
-    if (!chained?.v) throw new Error("no placement on the board took a chain");
-    expect(chained.v.followed).toBe(true);
-    expect(chained.v.words.text).toMatch(/the ringed cell is decided/);
-    expect(chained.v.highlights?.targets).toEqual([
-      { x: chained.i % s.w, y: Math.floor(chained.i / s.w) },
-    ]);
+      .map((i) => game.judgeMove?.(s, placed(s, i)))
+      .find((v) => v?.words.text.includes("a few steps on"));
+    if (!chained) throw new Error("no placement on the board took a chain");
+    expect(chained.followed).toBe(true);
+    // The plan keeps no fact graph, so where the chain began is not named.
+    expect(chained.words.text).toBe(
+      verdictOf({ kind: "chained", technique: null }).words.text,
+    );
   });
 
   it("tells apart a value the walk never places", () => {
@@ -110,7 +115,7 @@ describe("candidateJudge", () => {
     const wrong = (answer[i] % s.w) + 1;
     const v = game.judgeMove?.(s, placed(s, i, wrong));
     expect(v?.followed).toBe(false);
-    expect(v?.words.text).toMatch(/^Your last move was right, but nothing/);
+    expect(v?.words.text).toBe(verdictOf({ kind: "unforced" }).words.text);
   });
 
   const penciled = (s: TowersState): TowersState =>

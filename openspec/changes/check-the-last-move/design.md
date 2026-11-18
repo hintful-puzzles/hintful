@@ -92,22 +92,41 @@ words and marks below; the walk, the aim and what counts as reached stand.
   cannot say) and `shown`. `Judging.aim` is offered `{ facts, entry? }` and
   collects, while `made` is empty, each offered firing that makes every fact
   left (rank 2); `took` gains the firing's technique, kept in
-  `Judging.techniques` beside `made`; `firstStep` goes, since no step is
-  quoted, and so do the builders' `ring`, `about` and steps-for-verdicts.
+  `Judging.techniques` beside `made` (`took(graph, known, name, shown)`);
+  `firstStep` goes, since no step is quoted, and so do the builders' `ring`,
+  `about` and steps-for-verdicts, the plan judging's cell noun, and
+  `Narration.uncapitalized`.
   The words are one table in `move-judge.ts` (`verdictOf`), which builders
   call; none writes its own.
 - **A name is declared with its technique, and the build refuses one
   without.** The compiled `ladder` rows gain a required `name`, which
   `describedLadder` spreads into every `LadderEntry` (`CompiledEntry.name`),
   so a ladder walk's `Taken.entry.name` is what the judge records: no lookup,
-  no per-game line. Sources: a technique's `name:` in its description, a
-  library technique's in its library, and a `kindWords` block's per count
-  kind. The candidate plan's own rungs (`single`, `hiddenSingle`, `set`,
-  `wing`, `dup`, `regionsFull`, and a game's reason kinds such as Towers'
-  `fullLine`) are named where they are declared, and its `aim` call passes
-  the firing's first leg's rung and name. Setup rungs (`populate`, `clean`,
-  `note`) are never named, since no verdict counts them.
-- **What fits**: at most `MOST_NAMED` names, the rest counted.
+  no per-game line. Sources, as built (2026-11-18): one `names` block in
+  each description, keyed by a technique's id or by a rung it is recorded
+  under. That is one block a game, the writer's table pasted as written,
+  where a `name:` on every technique would be several hundred edits, and it
+  serves a library's technique by the rung each game places it under, so
+  Latin's names say each game's noun ("height", "element") without a
+  library-wide one. The candidate plan's rungs (`single`, `hiddenSingle`,
+  `regionsFull`, a game's reason kinds such as Towers' `fullLine`) are named
+  in the same block, compiled as `NAMES`. A game hands that to
+  `candidateJudge`, whose `RungNames` type refuses a rung it leaves out, and
+  its `aim` call passes the firing's first leg's rung's name. A description's
+  technique whose firings the plan records under another rung declares it
+  (`rung:`, Solo's `regionRule` under `cageSingle`), so it is named once.
+  Setup rungs (`populate`, `clean`, `note`) are never named, since no verdict
+  counts them; Salad's `circleXNote` is named, as the writer named it.
+- **What fits**: at most `MOST_NAMED` names, the rest counted. "Past two
+  lines on a phone" is measured as a sentence over 90 characters.
+- **The writer's names, changed where wrong**: Bridges' `needsThisWay` was
+  "an island that needs this line". With no mark, "this" points at nothing,
+  and the hint words' lint refuses it, so it reads "an island its other lines
+  can't satisfy". Tents' two link rungs, which run either link technique,
+  are "a tent paired with its tree". The games whose hint is their own
+  (Ascent, Black Box, Guess, Mines, Undead) and the engine's skeletons had no
+  names in the table. Their names are written in its voice, for the compiler,
+  which names every ladder technique; none is said yet.
 - **The words and names** are the technical writer's
   (`openspec/changes/check-the-last-move/names.json`), accepted by the owner
   (2026-11-18, "no comments"), taken as written unless one is wrong about its

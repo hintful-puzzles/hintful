@@ -182,6 +182,16 @@ deal:
     the board at the tier, which it does not at the tier below
   tier: one of the tiers
 tiers: [Easy, Normal]
+names:
+  square: "a square's only way through"
+  blackPearl: "a black pearl's turn"
+  blackRunsOn: "a black pearl running straight on"
+  blackCannotRunOn: "a black pearl with no way on"
+  whiteCannotTurn: "a white pearl with nowhere to turn"
+  whiteTurnsOpposite: "a white pearl's turn opposite"
+  closed: "the loop already closed"
+  earlyLoop: "a loop closing too early"
+  earlyThrough: "a square closing a loop early"
 techniques:
   # The squares' own ways come first: they cost a scan of the squares, and
   # a firing runs the ladder again from its top, so a line forced along a
