@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=../../../../src/describe/description.schema.json
+
+game: wordguess
+name: Wordguess
+family: code
+sizes:
+  len: { min: 2, max: 8 }
+  nletters: { min: 2, max: 26 }
+space:
+  # The answer: a letter a slot.
+  grid: { w: "len", h: "1" }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, nletters)" }
+define:
+  # Guess k's right letters: in the slot the answer has them in.
+  black(k): "count(s in cells where mark(k, s) = 2)"
+  # Guess k's letters that scored at all, in place or elsewhere.
+  total(k): "count(s in cells where mark(k, s) > 0)"
+  # How many letters d guess k holds.
+  pegs(k, d): "count(s in cells where peg(k, s) = d)"
+  colors(k): "set(peg(k, s) over s in cells)"
+clues:
+  # A scored guess: its letter in each slot and that slot's mark, 2 where
+  # the answer has the letter there, 1 where the answer has it elsewhere
+  # and not every copy of it is already marked, earlier slots first, and 0
+  # otherwise.
+  score:
+    at: board
+    fields:
+      peg: { at: cell, value: "range(1, nletters)" }
+      mark: { at: cell, value: "range(0, 2)" }
+    means: >-
+      forall s in cells:
+        (mark(k, s) = 2 iff value(s) = peg(k, s))
+        and (mark(k, s) = 1 iff value(s) != peg(k, s)
+          and count(t in cells where index(t, cells) < index(s, cells)
+            and peg(k, t) = peg(k, s) and value(t) != peg(k, t))
+          < count(u in cells where value(u) = peg(k, s) and peg(k, u) != value(u)))
+freedom: { kind: query }
+deal:
+  answer: a word of the list, at random

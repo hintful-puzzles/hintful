@@ -1,0 +1,212 @@
+# What wordpaths inherits
+
+| Source | Technique | In the candidate |
+| --- | --- | --- |
+| dominosa | placed | not in its words: clue(kind, x) names a clue kind of the description, and number is none |
+| dominosa | onlySpot | not in its words: unknown name "n" |
+| dominosa | squareOnly | UNSOUND in wordpaths 3 at cell 0 |
+| dominosa | squareSingleDomino | not in its words: clue(kind, x) names a clue kind of the description, and number is none |
+| dominosa | mustOverlap | not in its words: unknown name "n" |
+| dominosa | localDuplicate | not in its words: clue(kind, x) names a clue kind of the description, and number is none |
+| dominosa | localDuplicate2 | not in its words: clue(kind, x) names a clue kind of the description, and number is none |
+| dominosa | parity | UNSOUND in wordpaths 3 at eset |
+| dominosa | set | not in its words: unknown name "n" |
+| dominosa | setDoubles | not in its words: unknown name "n" |
+| filling | mustGrow | not in its words: known: expected a edge, got cell |
+| filling | onlyWay | not in its words: known: expected a edge, got cell |
+| filling | tooBig | not in its words: known: expected a edge, got cell |
+| filling | noRoom | not in its words: known: expected a edge, got cell |
+| filling | tooFar | not in its words: known: expected a edge, got cell |
+| filling | onlyNumber | not in its words: known: expected a edge, got cell |
+| galaxies | dotTile | not in its words: clues(kind) names a clue kind of the description, and dot is none |
+| galaxies | split | not in its words: unknown function "arrow" |
+| galaxies | separate | not in its words: unknown function "arrow" |
+| galaxies | enclosed | not in its words: unknown function "arrow" |
+| galaxies | soleOwner | not in its words: unknown function "arrow" |
+| galaxies | onlyReach | not in its words: unknown function "arrow" |
+| galaxies | exclave | not in its words: unknown function "arrow" |
+| galaxies | mirrorWall | not in its words: unknown function "arrow" |
+| net | fitLock | not in its words: unknown function "edges" |
+| net | fitNote | not in its words: unknown function "edges" |
+| net | loopLock | not in its words: unknown function "edges" |
+| net | loopNote | not in its words: unknown function "edges" |
+| net | sealLock | not in its words: unknown function "edges" |
+| net | sealNote | not in its words: unknown function "edges" |
+| net | strandLock | not in its words: unknown function "edges" |
+| net | strandNote | not in its words: unknown function "edges" |
+| palisade | cluesVersusRegionSize | not in its words: clues(kind) names a clue kind of the description, and number is none |
+| palisade | numberExhausted | not in its words: clues(kind) names a clue kind of the description, and number is none |
+| palisade | notTooBig | not in its words: unknown name "k" |
+| palisade | notTooSmall | not in its words: unknown name "k" |
+| palisade | noDanglingEdges | sound on wordpaths 3, wordpaths 4 |
+| palisade | equivalentEdges | not in its words: clues(kind) names a clue kind of the description, and number is none |
+| palisade | inside | sound on wordpaths 3, wordpaths 4 |
+| rect | fit | not in its words: clues(kind) names a clue kind of the description, and number is none |
+| rect | uncovered | not in its words: clues(kind) names a clue kind of the description, and number is none |
+| rect | boxed | not in its words: clues(kind) names a clue kind of the description, and number is none |
+| rect | reach | not in its words: clues(kind) names a clue kind of the description, and number is none |
+| rect | overlap | not in its words: clues(kind) names a clue kind of the description, and number is none |
+| rect | starve | not in its words: clues(kind) names a clue kind of the description, and number is none |
+| rect | line | not in its words: clues(kind) names a clue kind of the description, and number is none |
+| separate | sharedLetter | UNSOUND in wordpaths 3 at eset |
+| separate | walledApart | sound on wordpaths 3, wordpaths 4 |
+| separate | onlyWay | not in its words: unknown name "k" |
+| subsets | placed | not in its words: known: expected a edge, got cell |
+| subsets | carryIn | not in its words: opens takes 1, given 2 |
+| subsets | carryOut | not in its words: opens takes 1, given 2 |
+| subsets | noShoe | not in its words: clue(kind, x) names a clue kind of the description, and shoe is none |
+| subsets | noShoeBeside | not in its words: clue(kind, x) names a clue kind of the description, and shoe is none |
+| subsets | lone | not in its words: known: expected a edge, got cell |
+| subsets | onlyCell | not in its words: value: expected a edge, got cell |
+| subsets | smaller | not in its words: opens takes 1, given 2 |
+| subsets | bigger | not in its words: opens takes 1, given 2 |
+
+| The candidate's rules | By what it inherits |
+| --- | --- |
+| clue words | **no technique inherited reads it** |
+| clue letter | **no technique inherited reads it** |
+
+## The run
+
+```
+=== dominosa.placed
+    not in its words: clue(kind, x) names a clue kind of the description, and number is none
+=== dominosa.onlySpot
+    not in its words: unknown name "n"
+=== dominosa.squareOnly
+unsound  wordpaths                squareOnly               3     1 queries     0.1s   at cell 0
+    model of squareOnly at cell 0
+    answer 2 2 1 1 1 1 1 1 2 1 1 2
+    known  K . . . . . . . . . . .
+    clue words: 
+    clue letter: 
+    UNSOUND in wordpaths 3 at cell 0
+=== dominosa.squareSingleDomino
+    not in its words: clue(kind, x) names a clue kind of the description, and number is none
+=== dominosa.mustOverlap
+    not in its words: unknown name "n"
+=== dominosa.localDuplicate
+    not in its words: clue(kind, x) names a clue kind of the description, and number is none
+=== dominosa.localDuplicate2
+    not in its words: clue(kind, x) names a clue kind of the description, and number is none
+=== dominosa.parity
+unsound  wordpaths                parity                   3     1 queries     0.4s   at eset
+    model of parity at eset
+    answer 2 1 1 2 1 1 2 1 1 1 2 2
+    known  K . . K . . K . . . K K
+    clue words: 
+    clue letter: 
+    UNSOUND in wordpaths 3 at eset
+=== dominosa.set
+    not in its words: unknown name "n"
+=== dominosa.setDoubles
+    not in its words: unknown name "n"
+=== filling.mustGrow
+    not in its words: known: expected a edge, got cell
+=== filling.onlyWay
+    not in its words: known: expected a edge, got cell
+=== filling.tooBig
+    not in its words: known: expected a edge, got cell
+=== filling.noRoom
+    not in its words: known: expected a edge, got cell
+=== filling.tooFar
+    not in its words: known: expected a edge, got cell
+=== filling.onlyNumber
+    not in its words: known: expected a edge, got cell
+=== galaxies.dotTile
+    not in its words: clues(kind) names a clue kind of the description, and dot is none
+=== galaxies.split
+    not in its words: unknown function "arrow"
+=== galaxies.separate
+    not in its words: unknown function "arrow"
+=== galaxies.enclosed
+    not in its words: unknown function "arrow"
+=== galaxies.soleOwner
+    not in its words: unknown function "arrow"
+=== galaxies.onlyReach
+    not in its words: unknown function "arrow"
+=== galaxies.exclave
+    not in its words: unknown function "arrow"
+=== galaxies.mirrorWall
+    not in its words: unknown function "arrow"
+=== net.fitLock
+    not in its words: unknown function "edges"
+=== net.fitNote
+    not in its words: unknown function "edges"
+=== net.loopLock
+    not in its words: unknown function "edges"
+=== net.loopNote
+    not in its words: unknown function "edges"
+=== net.sealLock
+    not in its words: unknown function "edges"
+=== net.sealNote
+    not in its words: unknown function "edges"
+=== net.strandLock
+    not in its words: unknown function "edges"
+=== net.strandNote
+    not in its words: unknown function "edges"
+=== palisade.cluesVersusRegionSize
+    not in its words: clues(kind) names a clue kind of the description, and number is none
+=== palisade.numberExhausted
+    not in its words: clues(kind) names a clue kind of the description, and number is none
+=== palisade.notTooBig
+    not in its words: unknown name "k"
+=== palisade.notTooSmall
+    not in its words: unknown name "k"
+=== palisade.noDanglingEdges
+sound    wordpaths                noDanglingEdges          3     4 queries     0.4s
+sound    wordpaths                noDanglingEdges          4     9 queries     3.0s
+    sound on wordpaths 3, wordpaths 4
+=== palisade.equivalentEdges
+    not in its words: clues(kind) names a clue kind of the description, and number is none
+=== palisade.inside
+sound    wordpaths                inside                   3     1 queries     0.4s
+sound    wordpaths                inside                   4     1 queries    26.1s
+    sound on wordpaths 3, wordpaths 4
+=== rect.fit
+    not in its words: clues(kind) names a clue kind of the description, and number is none
+=== rect.uncovered
+    not in its words: clues(kind) names a clue kind of the description, and number is none
+=== rect.boxed
+    not in its words: clues(kind) names a clue kind of the description, and number is none
+=== rect.reach
+    not in its words: clues(kind) names a clue kind of the description, and number is none
+=== rect.overlap
+    not in its words: clues(kind) names a clue kind of the description, and number is none
+=== rect.starve
+    not in its words: clues(kind) names a clue kind of the description, and number is none
+=== rect.line
+    not in its words: clues(kind) names a clue kind of the description, and number is none
+=== separate.sharedLetter
+unsound  wordpaths                sharedLetter             3     1 queries     0.5s   at eset
+    model of sharedLetter at eset
+    answer 2 1 1 2 1 1 2 1 2 1 1 2
+    known  . . . . . . . . . . . .
+    clue words: 
+    clue letter: 3:1 6:1
+    UNSOUND in wordpaths 3 at eset
+=== separate.walledApart
+sound    wordpaths                walledApart              3     1 queries     0.5s
+sound    wordpaths                walledApart              4     1 queries   211.8s
+    sound on wordpaths 3, wordpaths 4
+=== separate.onlyWay
+    not in its words: unknown name "k"
+=== subsets.placed
+    not in its words: known: expected a edge, got cell
+=== subsets.carryIn
+    not in its words: opens takes 1, given 2
+=== subsets.carryOut
+    not in its words: opens takes 1, given 2
+=== subsets.noShoe
+    not in its words: clue(kind, x) names a clue kind of the description, and shoe is none
+=== subsets.noShoeBeside
+    not in its words: clue(kind, x) names a clue kind of the description, and shoe is none
+=== subsets.lone
+    not in its words: known: expected a edge, got cell
+=== subsets.onlyCell
+    not in its words: value: expected a edge, got cell
+=== subsets.smaller
+    not in its words: opens takes 1, given 2
+=== subsets.bigger
+    not in its words: opens takes 1, given 2
+```

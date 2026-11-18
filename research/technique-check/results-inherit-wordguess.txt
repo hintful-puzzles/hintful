@@ -1,0 +1,82 @@
+# What wordguess inherits
+
+| Source | Technique | In the candidate |
+| --- | --- | --- |
+| guess | scoredNothing | sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4 |
+| guess | noBlack | sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4 |
+| guess | everyPegScored | sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4 |
+| guess | blacksForced | sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4 |
+| guess | blacksAccounted | sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4 |
+| guess | totalAccounted | sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4 |
+| guess | noRepeats | UNSOUND in wordguess nletters=2 3 at cell 0 |
+
+| The candidate's rules | By what it inherits |
+| --- | --- |
+| clue score | read |
+
+## The run
+
+```
+=== guess.scoredNothing
+sound    wordguess nletters=2     scoredNothing            3     2 queries     0.0s
+sound    wordguess nletters=3     scoredNothing            3     2 queries     0.0s
+sound    wordguess nletters=4     scoredNothing            3     2 queries     0.0s
+sound    wordguess nletters=2     scoredNothing            4     2 queries     0.0s
+sound    wordguess nletters=3     scoredNothing            4     2 queries     0.1s
+sound    wordguess nletters=4     scoredNothing            4     2 queries     0.1s
+sound    wordguess nletters=5     scoredNothing            4     2 queries     0.1s
+    sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4
+=== guess.noBlack
+sound    wordguess nletters=2     noBlack                  3     2 queries     0.0s
+sound    wordguess nletters=3     noBlack                  3     2 queries     0.0s
+sound    wordguess nletters=4     noBlack                  3     2 queries     0.0s
+sound    wordguess nletters=2     noBlack                  4     2 queries     0.0s
+sound    wordguess nletters=3     noBlack                  4     2 queries     0.0s
+sound    wordguess nletters=4     noBlack                  4     2 queries     0.0s
+sound    wordguess nletters=5     noBlack                  4     2 queries     0.0s
+    sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4
+=== guess.everyPegScored
+sound    wordguess nletters=2     everyPegScored           3     2 queries     0.0s
+sound    wordguess nletters=3     everyPegScored           3     2 queries     0.0s
+sound    wordguess nletters=4     everyPegScored           3     2 queries     0.0s
+sound    wordguess nletters=2     everyPegScored           4     2 queries     0.0s
+sound    wordguess nletters=3     everyPegScored           4     2 queries     0.1s
+sound    wordguess nletters=4     everyPegScored           4     2 queries     0.1s
+sound    wordguess nletters=5     everyPegScored           4     2 queries     0.1s
+    sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4
+=== guess.blacksForced
+sound    wordguess nletters=2     blacksForced             3     2 queries     0.0s
+sound    wordguess nletters=3     blacksForced             3     2 queries     0.0s
+sound    wordguess nletters=4     blacksForced             3     2 queries     0.0s
+sound    wordguess nletters=2     blacksForced             4     2 queries     0.0s
+sound    wordguess nletters=3     blacksForced             4     2 queries     0.0s
+sound    wordguess nletters=4     blacksForced             4     2 queries     0.0s
+sound    wordguess nletters=5     blacksForced             4     2 queries     0.0s
+    sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4
+=== guess.blacksAccounted
+sound    wordguess nletters=2     blacksAccounted          3     2 queries     0.0s
+sound    wordguess nletters=3     blacksAccounted          3     2 queries     0.0s
+sound    wordguess nletters=4     blacksAccounted          3     2 queries     0.0s
+sound    wordguess nletters=2     blacksAccounted          4     2 queries     0.0s
+sound    wordguess nletters=3     blacksAccounted          4     2 queries     0.0s
+sound    wordguess nletters=4     blacksAccounted          4     2 queries     0.0s
+sound    wordguess nletters=5     blacksAccounted          4     2 queries     0.0s
+    sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4
+=== guess.totalAccounted
+sound    wordguess nletters=2     totalAccounted           3     2 queries     0.1s
+sound    wordguess nletters=3     totalAccounted           3     2 queries     0.4s
+sound    wordguess nletters=4     totalAccounted           3     2 queries     0.8s
+sound    wordguess nletters=2     totalAccounted           4     2 queries     0.4s
+sound    wordguess nletters=3     totalAccounted           4     2 queries     3.3s
+sound    wordguess nletters=4     totalAccounted           4     2 queries     7.5s
+sound    wordguess nletters=5     totalAccounted           4     2 queries    29.9s
+    sound on wordguess nletters=2 3, wordguess nletters=3 3, wordguess nletters=4 3, wordguess nletters=2 4, wordguess nletters=3 4, wordguess nletters=4 4, wordguess nletters=5 4
+=== guess.noRepeats
+unsound  wordguess nletters=2     noRepeats                3     1 queries     0.0s   at cell 0
+    model of noRepeats at cell 0
+    answer 1 1 1
+    known  . . .
+    clue score: 
+    size nletters = 2
+    UNSOUND in wordguess nletters=2 3 at cell 0
+```

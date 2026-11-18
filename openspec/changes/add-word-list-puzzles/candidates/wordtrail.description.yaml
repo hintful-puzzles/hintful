@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../../../src/describe/description.schema.json
+
+game: wordtrail
+name: Wordtrail
+family: regions
+sizes:
+  w: { min: 1, max: 12 }
+  h: { min: 1, max: 12 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  units: []
+answer:
+  # The edge between two squares side by side: 1 a wall, 2 the two squares
+  # follow each other in one word.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  joined: "{e in edges where value(e) = 2}"
+  opens(c): "count(y in adj4(c) where value(edge(c, y)) = 2)"
+shape:
+  # A wall stands between two squares side by side exactly where they are in
+  # different words.
+  - "forall O = joined, e in edges: value(e) = 1 iff end2(e) not in through(end1(e), O)"
+  # Each word is a path: no square has three neighbors in its word, and a
+  # word of n squares has n - 1 joins, so it closes no loop.
+  - "forall c in cells: opens(c) <= 2"
+  - >-
+    forall O = joined, c in cells:
+    2 * (|through(c, O)| - 1) = sum(x in through(c, O) of opens(x))
+clues:
+  # One word's length; the lengths together fill the grid.
+  words:
+    at: board
+    fields:
+      len: { value: "range(1, w * h)" }
+    means: >-
+      count(c in cells where |through(c, joined)| = len(k))
+        = len(k) * count(j in clues(words) where len(j) = len(k))
+      and sum(j in clues(words) of len(j)) = |cells|
+  # A square's letter. Each word's letters, read along its path from one end,
+  # spell a word of the list: a table the language has no form for yet.
+  letter: { at: cell, value: "range(1, 26)", means: "true" }
+freedom: { kind: fill }
+deal:
+  answer: the grid divided at random into paths of the listed lengths, each spelling a word of the list
+  words: every word's length
+  letter: every square's

@@ -1,6 +1,41 @@
 # Tasks
 
-- [ ] 1.1 Find word lists the app can ship, with their licenses and sizes, and confirm Wend's rules from a primary source
-- [ ] 1.2 Bring the owner the choice of list and Wordle's guess bound, with what was found; record the answers
-- [ ] 1.3 State each game's rules in its description and run the inheritance report on it (`proposal.md`, "Each ladder starts from its family's")
-- [ ] 1.4 Write the rest of this list from `docs/new-game.md` § "The route by kind of game", for the word list and each game
+The findings and the decisions behind these are `design.md`.
+
+## 1. Settle the plan
+
+- [x] 1.1 Find word lists the app can ship, with their licenses and sizes, and confirm Wend's rules from a primary source
+- [x] 1.2 Bring the owner the choice of list, Wordle's guess bound and the two games' names, with what was found; record the answers in `design.md` § "Asked of the owner"
+- [x] 1.3 State each game's rules in its description and run the inheritance report on it (`candidates/`, `design.md` § "What each inherits")
+- [x] 1.4 Write the rest of this list from `docs/new-game.md` § "The route by kind of game", for the word list and each game
+- [x] 1.5 Declined: bring the inheritance report's guards into the gate. They broke unseen when names became required, but `research/` is read by no test, build or gate step, and `src/gate-scope.test.ts` proves it so that a commit touching only it skips vitest; a tool run by hand that fails on every line at its next run is not worth that
+
+## 2. The word list (an engine asset)
+
+- [ ] 2.1 A script under `scripts/` that builds the answers and guesses lists from the pinned SCOWL release and 12dicts, applies the filter, and writes the module; the sources' versions and hashes are recorded beside it, and the output is committed
+- [ ] 2.2 The notices: SCOWL's verbatim in `licenses/`, 12dicts and LDNOOBW credited in `CREDITS.md` and About
+- [ ] 2.3 The engine module: lookup by length, membership, a seeded draw from the answers; its entry in `docs/engine-catalog.md`
+- [ ] 2.4 Precache: the list is in the service worker's manifest (a test asserts it), and the app works offline with it
+
+## 3. Wordguess (Guess's kind: moves and search, answer hidden)
+
+- [ ] 3.1 Scaffold (`scripts/new-game.sh`), first verdict (`npm run game`); its description from `candidates/wordguess.description.yaml`
+- [ ] 3.2 Params (`paramConfig`): word length, the guess bound as the owner decides, a hard-mode variation if wanted (every revealed letter reused); presets and Custom
+- [ ] 3.3 State and moves: guesses typed on a letter keypad and the keyboard, a guess not in the guess list refused with its reason, the answer row of candidate letters, Check & save over it
+- [ ] 3.4 Rendering on Guess's shape, the collection's palette; marks for in place, elsewhere and absent that do not lean on color alone
+- [ ] 3.5 Hint: the per-slot rungs (`design.md` § "What each inherits"), Guess's six inherited techniques where they add a step, then the probe over the answers that still fit; checked sound
+- [ ] 3.6 Help page, spec, icons; play it in the app with pointer, keyboard and touch, and a hint at every stage; a fresh subagent reads the hints against the board
+
+## 4. Wordtrail (edges kind, on Palisade's wall model)
+
+- [ ] 4.1 Scaffold from the `edges` skeleton, first verdict; its description from `candidates/wordtrail.description.yaml`, blocked squares added
+- [ ] 4.2 Generator: lay answers' words as paths on a grid with blocked squares, and keep a board only when its division is unique against the guess list; bounded retries, the deal walk's census, sizes probed at both ends
+- [ ] 4.3 Moves and input: a word drawn by drag through orthogonal neighbors, a keyboard path, removing a word; findMistakes
+- [ ] 4.4 Rendering: letters, blocked squares, drawn words, the length list with found words
+- [ ] 4.5 Hint and tiers: its own rungs (a letter with one way on, a pocket no listed length fits, a word that fits one place), the three inherited techniques; checked sound
+- [ ] 4.6 Help page, spec, icons; play it in the app, hints at every stage, a fresh subagent's read
+
+## 5. Close
+
+- [ ] 5.1 `npm run test:hint-sweeps` after the shared changes; push
+- [ ] 5.2 The owner's acceptance in the running app; archive

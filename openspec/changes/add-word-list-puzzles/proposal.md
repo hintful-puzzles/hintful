@@ -20,8 +20,8 @@ Two games, and the engine piece they share.
   absent. A query game, as Guess (Mastermind) already is in the collection.
 - **Wend** (LinkedIn): a grid of letters with some cells blocked, divided
   into words, each a path of orthogonally adjacent letters, using every
-  letter once, with the words' lengths listed. **Its rules are read from the
-  owner's screenshot alone and are unverified**; the session confirms them.
+  letter once, with the words' lengths listed. Confirmed from LinkedIn's
+  own game (`design.md` § "Wend's rules, confirmed").
 
 Both are in scope (`2026-10-29-investigate-a-language-for-puzzle-games/
 theory.md` § "Scope"), and the language states both, with a word list as a

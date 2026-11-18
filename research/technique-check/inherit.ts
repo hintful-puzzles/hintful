@@ -42,6 +42,8 @@ import {
 export interface Source {
   name: string;
   define: Readonly<Record<string, string>>;
+  /** What a player calls each technique; a library's are its placer's. */
+  names: Readonly<Record<string, string>>;
   techniques: readonly (readonly [string, StatedTechnique])[];
 }
 
@@ -52,6 +54,7 @@ export function sourceOf(file: DescriptionFile): Source | null {
     return {
       name: file.library,
       define: {},
+      names: {},
       techniques: Object.entries(file.techniques),
     };
   if (!isFormal(file)) return null;
@@ -67,7 +70,12 @@ export function sourceOf(file: DescriptionFile): Source | null {
         ],
   );
   if (own.length === 0) return null;
-  return { name: file.game, define: every.define ?? {}, techniques: own };
+  return {
+    name: file.game,
+    define: every.define ?? {},
+    names: every.names ?? {},
+    techniques: own,
+  };
 }
 
 /** The sources a candidate is reported against by default: each library its
@@ -115,6 +123,9 @@ export function inCandidateWords(
     ...candidate,
     tiers,
     define: { ...Object.fromEntries(carried), ...candidate.define },
+    // The compiler refuses a technique with no name, and a library's has
+    // none until a game places it, so its id stands in.
+    names: { ...candidate.names, [id]: source.names[id] ?? id },
     techniques: [{ id, tier: tiers[0], ...stated }],
     variations:
       candidate.variations === undefined
