@@ -1207,11 +1207,11 @@ export function ladderWalk<S extends CellMarks>(
     readonly citing?: (firing: Taken<S>) => Reads | null | readonly (Reads | null)[];
     /**
      * The firings to take before any other, on whichever rung and at
-     * whichever tier they are offered: a check walks to the facts of the
-     * move it judges, and takes a firing that makes one the moment one is
-     * on offer.
+     * whichever tier they are offered, ranked (0 for none, the highest
+     * first): a check walks to the facts of the move it judges, and takes
+     * the firing that makes the most of them the moment one is on offer.
      */
-    readonly aim?: (firing: Taken<S>) => boolean;
+    readonly aim?: (firing: Taken<S>) => number;
   } = {},
 ): LadderWalk<S> {
   // An edge's mark, or value, is written as its two cells are.
@@ -1254,7 +1254,7 @@ export function ladderWalk<S extends CellMarks>(
           return got.map((firing) => {
             const f: Taken<S> = { ...firing, entry };
             return {
-              aimed: roles.aim?.(f) === true,
+              aimed: roles.aim?.(f) ?? 0,
               reads: () => reads(f),
               writes: () => (roles.writes ? roles.writes(f) : cellsOf(f.facts)),
               take: () => {

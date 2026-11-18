@@ -53,7 +53,13 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { TRACKS_RUNGS, type TracksRung, tracksHint, tracksKeepTrack } from "./hint.ts";
+import {
+  TRACKS_RUNGS,
+  type TracksRung,
+  tracksHint,
+  tracksJudgeMove,
+  tracksKeepTrack,
+} from "./hint.ts";
 import {
   copyAndApplyDrag,
   executeMove,
@@ -629,6 +635,7 @@ export const tracksGame: Game<
   findMistakes,
   clearMistakes,
   hint: tracksHint,
+  judgeMove: tracksJudgeMove,
   hintMarks: {
     roles: {
       ring: "what the step decides, in the hint color: a ring round a square means that square is settled (with a cross in it as well, it must be empty; a ring on its own means it must carry track, though not yet which way); a short pair of rail ends poking through a side means the track must cross that side, and a cross on a side means it must not.",

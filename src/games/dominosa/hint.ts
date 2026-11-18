@@ -7,7 +7,12 @@
  */
 
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+  MoveVerdict,
+} from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import type { Point } from "../../engine/types.ts";
 import {
@@ -92,7 +97,7 @@ function stepOf(
   return steps;
 }
 
-const dominosaPlan = describedEdgeHint<
+const { hint: dominosaPlan, judgeMove: judgePlan } = describedEdgeHint<
   DominosaState,
   DominosaMove,
   DominosaHint,
@@ -150,6 +155,15 @@ export function dominosaHint(
   if (answerOf(state).kind !== "one")
     return { ok: false, error: PUZZLE_NOT_REASONABLE };
   return dominosaPlan(state);
+}
+
+/** What Check & save says of the last move, where the hint has a deduction
+ * to teach. */
+export function dominosaJudgeMove(
+  before: DominosaState,
+  after: DominosaState,
+): MoveVerdict<DominosaHint> | null {
+  return answerOf(before).kind === "one" ? judgePlan(before, after) : null;
 }
 
 /** The player's move completes the step iff it is the step's exact

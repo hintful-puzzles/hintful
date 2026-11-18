@@ -54,7 +54,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
-import { type SpokesHint, spokesHint } from "./hint.ts";
+import { type SpokesHint, spokesHint, spokesJudgeMove } from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -485,6 +485,7 @@ export const spokesGame: Game<
   solve,
   difficulty,
   hint: spokesHint,
+  judgeMove: spokesJudgeMove,
   hintMarks: {
     roles: {
       ring: "each spoke the step decides: a line in the hint color is one to draw, and a ring round a dot on a hub's rim is a spoke that must be unused, which you mark on that dot, as described above.",

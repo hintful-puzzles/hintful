@@ -19,7 +19,12 @@ import { newCursor } from "../../engine/pointer.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import { newSkeletonDesc } from "./generator.ts";
-import { type SkeletonHighlights, skeletonHint, skeletonKeepTrack } from "./hint.ts";
+import {
+  type SkeletonHighlights,
+  skeletonHint,
+  skeletonJudgeMove,
+  skeletonKeepTrack,
+} from "./hint.ts";
 import { skeletonLines } from "./moves.ts";
 import {
   colors,
@@ -136,6 +141,7 @@ export const skeletonGame: Game<
   textFormat,
 
   hint: skeletonHint,
+  judgeMove: skeletonJudgeMove,
   hintRungs: SKELETON_RUNGS,
   hintMarks: {
     roles: {

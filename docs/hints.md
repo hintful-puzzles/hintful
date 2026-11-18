@@ -1253,6 +1253,21 @@ as an added note or a mark taken off, is not judged. The verdict is the
 midend's `activeCheck`. It is painted and said as a displayed step is, and the
 next transition puts it away. Test: `src/engine/move-judge.test.ts`.
 
+What the edge games taught, in `judgeByWalk`. A walk that only strikes never
+places: a value left the cell's one candidate is reached, unless the player's
+notes had it so before the walk began. Where the walk ends on marks the game
+calls the answer (`EdgeHintSpec.done`), a fact it never made is the game's own
+bookkeeping (Spokes crosses the spoke a line cuts) and is not judged. A move
+whose facts take several firings opens with the first, so the aim takes a
+firing that makes every fact left before one that makes some; a count would
+take the strikes a placement brings along first. A firing the hint shows no
+step for is bookkeeping too, and its facts go with the next step's. An edge
+game quotes a firing by its first leg, and a verdict that quotes nothing rings
+nothing there, since the builder knows no element for an edge. Which hinting
+games judge nothing, and why, is a ledger in
+`src/engine/move-judge-games.test.ts`, which also holds every judging game to
+calling its own hint's first move followed.
+
 ## The cross-game guards
 
 A game enrolls in every cross-game hint guard by declaring `hint`, with no

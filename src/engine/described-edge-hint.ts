@@ -19,7 +19,7 @@ import {
   spokenOf,
   techniqueOf,
 } from "./described-hint.ts";
-import type { HintResult, HintStep } from "./game.ts";
+import type { HintResult, HintStep, MoveVerdict } from "./game.ts";
 import { CONTRADICTION_UNLOCALIZED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import {
   CELL,
@@ -35,6 +35,14 @@ import {
   type Taken,
   TIERS,
 } from "./ladder-runtime.ts";
+import {
+  chainedWords,
+  followedWords,
+  type Judging,
+  judgeByWalk,
+  movedFacts,
+  unforcedWords,
+} from "./move-judge.ts";
 import {
   type Clauses,
   type StatedContext,
@@ -208,6 +216,13 @@ export interface EdgeHintSpec<
       };
 }
 
+/** What the builder hands a game: its hint, and what Check & save says of
+ * the last move (`Game.judgeMove`). */
+export interface DescribedEdgeHint<State, Move, H, Kind extends string> {
+  hint(state: State): HintResult<Move, H, Kind>;
+  judgeMove(before: State, after: State): MoveVerdict<H> | null;
+}
+
 /** The hint of a game whose ladder works on the edges, a step a firing. */
 export function describedEdgeHint<
   State,
@@ -222,7 +237,7 @@ export function describedEdgeHint<
   Supplied = Record<never, never>,
 >(
   spec: EdgeHintSpec<State, Move, H, Marked, Ctx, Says, Ring, Elem, Supplied>,
-): (state: State) => HintResult<Move, H, Kind> {
+): DescribedEdgeHint<State, Move, H, Kind> {
   type Step = HintStep<Move, H, Kind>;
   type Say = (spoken: unknown, marked: Marked, state: State) => Sentence;
   const { say } = spec;
@@ -239,8 +254,14 @@ export function describedEdgeHint<
   const plan = spec.plan ?? DEFAULT_PLAN;
 
   /** The steps the ladder makes from `state` at tier `cap`, or the refusal
-   * where its marks contradict themselves. */
-  const stepsAt = (state: State, cap: number): Step[] | "contradiction" | "clash" => {
+   * where its marks contradict themselves. Judging a move, the walk is aimed
+   * at its facts and runs until `judging` says they are made, past the
+   * plan's length, and each firing's legs are said as its first is. */
+  const stepsAt = (
+    state: State,
+    cap: number,
+    judging?: Judging,
+  ): Step[] | "contradiction" | "clash" => {
     const walked = spec.walk(state, cap);
     if (walked === null) return "clash";
     const { marks: m, entries, ctx } = walked;
@@ -262,12 +283,20 @@ export function describedEdgeHint<
         ...(spec.writes === undefined
           ? {}
           : { writes: (taken: Taken) => spec.writes?.(taken, ctx) ?? [] }),
+        ...(judging ? { aim: judging.aim } : {}),
       },
     );
+    if (judging) judging.graph = walk.graph;
     const steps: Step[] = [];
-    while (steps.length < plan && !spec.done?.(m, ctx)) {
+    // The facts of firings the hint shows no step for, since the last one.
+    let carried: number[] = [];
+    while (judging ? !judging.done(m) : steps.length < plan && !spec.done?.(m, ctx)) {
       if (spec.settle?.(m, ctx) === false) return "contradiction";
+      // What the board shows may hold a fact before the next firing does.
+      if (judging?.done(m)) break;
       const before = m.cands.slice();
+      const known = walk.graph.facts.length;
+      const firstStep = steps.length;
       const taken = walk.next();
       if (taken === "contradiction") return taken;
       if (taken === null) break;
@@ -277,6 +306,19 @@ export function describedEdgeHint<
         { taken, says: says as Says[keyof Says & string], ctx, before, marks: m },
         state,
       );
+      if (judging) {
+        const ids = carried;
+        carried = [];
+        for (let id = known; id < walk.graph.facts.length; id++) ids.push(id);
+        // A firing the hint shows no step for is its bookkeeping, as `settle`
+        // is (Pearl's square that has its two lines): its facts go with the
+        // next step's, and a judged move is not called chained for it.
+        if (legs.length === 0) carried = ids;
+        else {
+          judging.made.push(ids);
+          judging.firstStep.push(firstStep);
+        }
+      }
       const rung = (
         says.arm === undefined ? technique : `${technique}.${says.arm}`
       ) as Kind;
@@ -369,12 +411,49 @@ export function describedEdgeHint<
         });
       });
     }
+    if (judging) judging.answered = spec.done?.(m, ctx) === true;
     return steps;
   };
 
-  return (state) => {
+  const tierCount = (state: State): number =>
+    typeof spec.tiers.count === "number" ? spec.tiers.count : spec.tiers.count(state);
+
+  /**
+   * What Check & save says of the last move. A firing is quoted by its first
+   * leg, which says the whole reason; its ring may hold more edges than the
+   * player's move, all decided by the one reason. A move nothing reached has
+   * no square to ring, so its words name it as the move just made.
+   */
+  const judgeMove = (before: State, after: State): MoveVerdict<H> | null => {
+    const cap = tierCount(before) - 1;
+    const was = spec.walk(before, cap);
+    const placed = spec.walk(before, cap);
+    const now = spec.walk(after, cap);
+    if (was === null || placed === null || now === null) return null;
+    const moved = movedFacts(was.marks, placed.marks, now.marks);
+    if (moved.length === 0) return null;
+    let steps: Step[] | "contradiction" | "clash" = [];
+    let firstStep: readonly number[] = [];
+    const judged = judgeByWalk(moved, (judging) => {
+      steps = stepsAt(before, cap, judging);
+      firstStep = judging.firstStep;
+    });
+    if (judged === null || !Array.isArray(steps)) return null;
+    if (judged.kind === "unforced")
+      return { followed: false, words: unforcedWords(null) };
+    if (judged.firing === null) return { followed: true, words: chainedWords(null) };
+    const quoted: Step | null = steps[firstStep[judged.firing]] ?? null;
+    if (quoted?.words === undefined) return null;
+    return {
+      followed: true,
+      words: followedWords(quoted.words, judged.chained),
+      ...(quoted.highlights === undefined ? {} : { highlights: quoted.highlights }),
+    };
+  };
+
+  const hint = (state: State): HintResult<Move, H, Kind> => {
     const { tiers } = spec;
-    const count = typeof tiers.count === "number" ? tiers.count : tiers.count(state);
+    const count = tierCount(state);
     let steps = stepsAt(state, tiers.lowest(state));
     for (
       let cap = tiers.lowest(state) + 1;
@@ -391,4 +470,6 @@ export function describedEdgeHint<
       ? { ok: false, error: DEDUCTION_EXHAUSTED }
       : { ok: true, steps };
   };
+
+  return { hint, judgeMove };
 }

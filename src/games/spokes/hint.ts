@@ -7,7 +7,7 @@
  */
 
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
-import type { HintResult } from "../../engine/game.ts";
+import type { HintResult, MoveVerdict } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { STATED } from "../../generated/games/spokes/spokes.compiled.ts";
 import { HUB, SPOKE, type Spoke } from "./kinds.ts";
@@ -65,7 +65,7 @@ function stepOf(
   });
 }
 
-const spokesPlan = describedEdgeHint<
+const { hint: spokesPlan, judgeMove: judgePlan } = describedEdgeHint<
   SpokesState,
   SpokesMove,
   SpokesHint,
@@ -100,4 +100,13 @@ export function spokesHint(
   if (spokesAnswer(state).kind !== "one")
     return { ok: false, error: PUZZLE_NOT_REASONABLE };
   return spokesPlan(state);
+}
+
+/** What Check & save says of the last move, where the hint has a deduction
+ * to teach. */
+export function spokesJudgeMove(
+  before: SpokesState,
+  after: SpokesState,
+): MoveVerdict<SpokesHint> | null {
+  return spokesAnswer(before).kind === "one" ? judgePlan(before, after) : null;
 }

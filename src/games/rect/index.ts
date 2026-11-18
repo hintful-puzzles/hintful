@@ -42,7 +42,13 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point, Rect } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { type RectHint, rectHint, rectKeepTrack, rectRefreshStep } from "./hint.ts";
+import {
+  type RectHint,
+  rectHint,
+  rectJudgeMove,
+  rectKeepTrack,
+  rectRefreshStep,
+} from "./hint.ts";
 import {
   drawnBoxAt,
   executeMove,
@@ -615,6 +621,7 @@ export const rectGame: Game<
   }),
 
   hint: rectHint,
+  judgeMove: rectJudgeMove,
   hintMarks: {
     roles: {
       ring: "what the step draws: the rectangle it decides, or the one edge it makes a line.",

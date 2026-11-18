@@ -59,11 +59,12 @@ export type SolveResult<Move> =
  * The current step is what the renderer displays and the status bar
  * narrates. */
 /** What a check says of a move ({@link Game.judgeMove}): whether a deduction
- * reached it, and the words and marks that say so, painted as a step's are. */
+ * reached it, and the words and marks that say so, painted as a step's are.
+ * No highlights where the words mark nothing. */
 export interface MoveVerdict<Highlights = unknown> {
   readonly followed: boolean;
   readonly words: Sentence;
-  readonly highlights: Highlights;
+  readonly highlights?: Highlights;
 }
 
 export interface HintStep<Move, Highlights = unknown, Rung extends string = string> {

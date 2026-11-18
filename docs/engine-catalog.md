@@ -789,8 +789,8 @@ makes some, and a sentence a technique, which an `arms` technique reads by
 The pieces a builder's `judgeMove` is made of: the facts a move made, read
 from the marks before and after it; whether walked marks hold each; which
 walk step to quote, direct or chained; and the lead-in each verdict is said
-under. `describedFiringHint` drives them with an aimed walk (`docs/hints.md`
-§ "Judging the last move").
+under. `describedFiringHint` and `describedEdgeHint` drive them through
+`judgeByWalk` with an aimed walk (`docs/hints.md` § "Judging the last move").
 
 ### `described-rules-out.ts` — `Game.rulesOut` from the description
 

@@ -63,6 +63,7 @@ import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newMapDesc } from "./generator.ts";
 import {
   hintKeepTrack,
+  judgeMove,
   MAP_RUNGS,
   type MapHint,
   type MapRung,
@@ -540,6 +541,7 @@ export const mapGame: Game<
   clearMistakes,
   revealOne,
   hint,
+  judgeMove,
   hintRungs: MAP_RUNGS,
   hintMarks: {
     roles: {

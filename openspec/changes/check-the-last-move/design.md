@@ -29,6 +29,26 @@ follows from a board, and its words are the hint's words for that firing.
   decide "direct", but a firing whose facts all have root parents can still
   read a fact the walk made, so the walk's first step is the test.
 
+- **Edge games** (`describedEdgeHint`, 2026-11-18). Their spans are cells
+  whose values the walk narrows by striking, so a value left the one
+  candidate counts as placed (not where the player's notes had it so). A
+  fact the walk never makes though it ended on the answer
+  (`EdgeHintSpec.done`) is the game's bookkeeping, as Spokes crosses the
+  spoke a line cuts, and is not judged. A firing is quoted by its first leg,
+  which states the whole reason. A verdict that quotes no step rings
+  nothing, since the builder has no element for an edge to ring; the player
+  has just made the move, and "it" names it.
+- **A move several firings make** opens with the first: where the board
+  decides part of it at once, that firing is quoted, under the chained lead
+  when the rest took more. So the aim prefers a firing that makes every fact
+  left to one that makes some, else a cheaper rung that makes part of a
+  hint's move (Bridges) takes it into a chain; it does not rank by count,
+  which prefers the strikes a placement brings along (Light Up's lit
+  squares) to the placement.
+- **A firing the hint shows no step for** (Pearl's square that already has
+  its two lines) is bookkeeping, as `settle` is: its facts go with the next
+  step's, so it neither opens a chain nor is quoted.
+
 The plan cap does not apply: the judge walks until the move is reached or
 nothing follows. Measured (proposal): a fixpoint from the board as dealt
 costs at most 43 ms.

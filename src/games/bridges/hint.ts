@@ -265,7 +265,7 @@ export type BridgesRung = (typeof BRIDGES_RUNGS)[number];
  * on a firing that leaves a line its marks cannot show, and
  * `bridges-hint.test.ts` holds each step to moving the board.
  */
-export const bridgesHint = describedEdgeHint<
+export const { hint: bridgesHint, judgeMove: bridgesJudgeMove } = describedEdgeHint<
   BridgesState,
   BridgesMove,
   BridgesHighlights,

@@ -56,7 +56,7 @@ import {
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
-import { tentsHint, tentsKeepTrack } from "./hint.ts";
+import { tentsHint, tentsJudgeMove, tentsKeepTrack } from "./hint.ts";
 import {
   cellCenter,
   colors,
@@ -515,6 +515,7 @@ export const tentsGame: Game<
   findMistakes,
   clearMistakes,
   hint: tentsHint,
+  judgeMove: tentsJudgeMove,
   hintRungs: TENTS_RUNGS,
   hintMarks: {
     roles: {

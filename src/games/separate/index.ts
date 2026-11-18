@@ -37,6 +37,7 @@ import {
   type SeparateRung,
   separateHint,
   separateHintKeepTrack,
+  separateJudgeMove,
 } from "./hint.ts";
 import {
   colors,
@@ -169,6 +170,7 @@ export const separateGame: Game<
     return edits === null ? null : { type: "edges", edits };
   },
   hint: separateHint,
+  judgeMove: separateJudgeMove,
   hintMarks: {
     roles: {
       ring: BORDER_RING_LEGEND,

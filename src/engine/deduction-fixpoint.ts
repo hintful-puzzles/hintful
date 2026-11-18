@@ -86,9 +86,9 @@ export interface LadderCandidate {
   writes(): readonly number[];
   /** Make the firing: write the marks and record it. */
   take(): void;
-  /** Whether a walk aimed at some facts wants this firing first
-   * ({@link SingleFiringOptions.aimed}). */
-  aimed?: boolean;
+  /** How much a walk aimed at some facts wants this firing first, the
+   * highest first; 0 where not at all ({@link SingleFiringOptions.aimed}). */
+  aimed?: number;
 }
 
 /**

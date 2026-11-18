@@ -31,6 +31,7 @@ import {
   type PalisadeRung,
   palisadeHint,
   palisadeHintKeepTrack,
+  palisadeJudgeMove,
 } from "./hint.ts";
 import {
   colors,
@@ -163,6 +164,7 @@ export const palisadeGame: Game<
     return edits === null ? null : { type: "edges", edits };
   },
   hint: palisadeHint,
+  judgeMove: palisadeJudgeMove,
   hintMarks: {
     roles: {
       ring: BORDER_RING_LEGEND,

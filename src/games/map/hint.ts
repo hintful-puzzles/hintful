@@ -574,7 +574,7 @@ function workOf(state: MapState): Work {
  * are not left to carry: before every firing they are brought down to the
  * working board, which the legs of the steps so far have advanced.
  */
-const deduction = describedEdgeHint<
+const { hint: deduction, judgeMove } = describedEdgeHint<
   MapState,
   MapMove,
   MapHint,
@@ -614,6 +614,11 @@ const deduction = describedEdgeHint<
   // Every technique's words are its legs', made in `legsOf`.
   say: (_spoken, { words }) => words,
 });
+
+/** What Check & save says of the last move: the deduction's walk from the
+ * player's own dots, with no Mark-all press, which is a note and no move a
+ * deduction makes. */
+export { judgeMove };
 
 /** The whole plan from `state`'s board, opening with the Mark-all press where
  * the player reads dots that way: a refusal where deduction has run out and

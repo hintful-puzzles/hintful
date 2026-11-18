@@ -63,7 +63,7 @@ function stepOf(
  * firing. Refuses only when the deduction has nothing left to set, which on an
  * Unreasonable board is before the end.
  */
-export const palisadeHint = describedEdgeHint<
+export const { hint: palisadeHint, judgeMove: palisadeJudgeMove } = describedEdgeHint<
   PalisadeState,
   PalisadeMove,
   BorderHint,

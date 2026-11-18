@@ -233,7 +233,7 @@ function stepOf(
  * engine's walk takes it without a step, and the step budget catches a firing
  * that decides nothing.
  */
-export const galaxiesHint = describedEdgeHint<
+export const { hint: galaxiesHint, judgeMove: galaxiesJudgeMove } = describedEdgeHint<
   GalaxiesState,
   GalaxiesMove,
   GalaxiesHint,

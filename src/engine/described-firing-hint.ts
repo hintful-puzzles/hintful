@@ -24,7 +24,6 @@
 import { PLACE, STRIKE_EDGE } from "./describe-runtime.ts";
 import { DEFAULT_PLAN, filledBy, premiseOf, spokenOf } from "./described-hint.ts";
 import { type DescribedRulesOut, describedRulesOut } from "./described-rules-out.ts";
-import type { FactGraph } from "./fact-graph.ts";
 import type {
   HintResult,
   HintStep,
@@ -39,16 +38,14 @@ import {
   type CellMarks,
   type LadderEntry,
   ladderWalk,
-  type Taken,
   TIERS,
 } from "./ladder-runtime.ts";
 import {
-  aimsAt,
   chainedWords,
   followedWords,
+  type Judging,
+  judgeByWalk,
   movedFacts,
-  quotedStep,
-  reached,
   unforcedWords,
 } from "./move-judge.ts";
 import type { PairIndex } from "./piece.ts";
@@ -265,16 +262,6 @@ export interface DescribedFiringHint<
   /** A step the player has already made some of (undo and redo move the board
    * under a shown step) is shown for what is left, or `null` where nothing is. */
   refreshHintStep(step: HintStep<Move, H>, state: State): HintStep<Move, H> | null;
-}
-
-/** A walk judging a move: what it aims at, when it is done, and what each
- * firing it took made (the graph's ids) and where its steps begin. */
-interface Judging {
-  aim(f: Taken): boolean;
-  done(m: CellMarks): boolean;
-  made: number[][];
-  firstStep: number[];
-  graph: FactGraph | null;
 }
 
 /** A line of squares by its noun, for a stated clause's `{unit}`. */
@@ -499,30 +486,17 @@ export function describedFiringHint<
     if (was === null || placed === null || now === null) return null;
     const moved = movedFacts(was.marks, placed.marks, now.marks);
     if (moved.length === 0) return null;
-    // How many firings the walk had taken when its marks first held each fact.
-    const at = moved.map(() => -1);
-    const judging: Judging = {
-      aim: (f) =>
-        aimsAt(
-          f.facts,
-          moved.filter((_, i) => at[i] < 0),
-        ),
-      made: [],
-      firstStep: [],
-      graph: null,
-      done(m) {
-        for (const [i, f] of moved.entries())
-          if (at[i] < 0 && reached(m, f)) at[i] = this.made.length;
-        return at.every((n) => n >= 0);
-      },
-    };
-    const steps = stepsAt(before, cap, judging);
+    let steps: Step[] = [];
+    let firstStep: readonly number[] = [];
+    const judged = judgeByWalk(moved, (judging) => {
+      steps = stepsAt(before, cap, judging);
+      firstStep = judging.firstStep;
+    });
+    if (judged === null) return null;
     const w = spec.width(before);
     const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
     const cellOf = (f: (typeof moved)[number]): number =>
       f.kind === STRIKE_EDGE ? was.marks.sp.edgeEnds[2 * f.at] : f.at;
-    // A fact the marks held before any firing is one the move did not make.
-    if (at.some((n) => n === 0)) return null;
     // The words of a verdict that quotes no step, and the marks of its square.
     const ringed = (
       i: number,
@@ -540,14 +514,11 @@ export function describedFiringHint<
           : { targets: [target], strand: [] }) as H,
       };
     };
-    const missed = moved.findIndex((_, i) => at[i] < 0);
-    if (missed >= 0) return ringed(missed, unforcedWords, false);
-    const graph = judging.graph;
-    if (graph === null) return null;
-    const { step: k, chained } = quotedStep(graph, judging.made, moved[0], at[0] - 1);
+    if (judged.kind === "unforced") return ringed(judged.fact, unforcedWords, false);
+    const { firing: k, chained } = judged;
     if (k === null) return ringed(0, chainedWords, true);
-    const end = judging.firstStep[k + 1] ?? steps.length;
-    const ofFiring = steps.slice(judging.firstStep[k], end);
+    const end = firstStep[k + 1] ?? steps.length;
+    const ofFiring = steps.slice(firstStep[k], end);
     const cells = new Set(moved.map(cellOf));
     const own = (s: Step): Target[] =>
       (s.highlights?.targets ?? []).filter((t) => cells.has(t.y * w + t.x));

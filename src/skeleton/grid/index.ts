@@ -27,6 +27,7 @@ import { newSkeletonDesc } from "./generator.ts";
 import {
   type SkeletonHint,
   skeletonHint,
+  skeletonJudgeMove,
   skeletonKeepTrack,
   skeletonRefreshHintStep,
 } from "./hint.ts";
@@ -227,6 +228,7 @@ export const skeletonGame: Game<
   textFormat,
 
   hint: skeletonHint,
+  judgeMove: skeletonJudgeMove,
   hintRungs: SKELETON_RUNGS,
   hintMarks: {
     roles: {

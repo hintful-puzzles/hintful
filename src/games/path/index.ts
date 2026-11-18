@@ -21,7 +21,7 @@ import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import { newPathDesc } from "./generator.ts";
-import { type PathHighlights, pathHint, pathKeepTrack } from "./hint.ts";
+import { type PathHighlights, pathHint, pathJudgeMove, pathKeepTrack } from "./hint.ts";
 import { pathLines } from "./moves.ts";
 import {
   colors,
@@ -134,6 +134,7 @@ export const pathGame: Game<
   textFormat,
 
   hint: pathHint,
+  judgeMove: pathJudgeMove,
   hintRungs: PATH_RUNGS,
   hintMarks: {
     roles: {

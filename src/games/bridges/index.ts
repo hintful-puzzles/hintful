@@ -57,6 +57,7 @@ import {
   type BridgesHighlights,
   type BridgesRung,
   bridgesHint,
+  bridgesJudgeMove,
   bridgesKeepTrack,
   limitAfter,
   spanBridges,
@@ -585,6 +586,7 @@ export const bridgesGame: Game<
   computeSize,
   newDrawState,
   hint: bridgesHint,
+  judgeMove: bridgesJudgeMove,
   hintMarks: {
     roles: {
       ring: "what the step decides along a line, in the hint color. Bridges drawn in the hint color are the ones to add; a line that already carries a bridge keeps it in the board's own ink, so you can see how many the hint is asking you to add. A pair of small crosses means no bridge may ever run there, and a ≤1 means at most one may: the same marks you draw yourself with the right mouse button, and later hints count on them being there. The sentence calls the line they lie on “the ringed line”.",

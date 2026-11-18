@@ -458,6 +458,13 @@ techniques:
       fits: "loopFits(c, e, @, L, Q)"
       least: "1"
       every: exists
+      # The open sides a way through would close a loop from. The square's
+      # shape alone also locks a side (a white pearl with one side ruled
+      # out), which the Easy rungs say: this rung says the loop, so it needs
+      # one.
+      reads: >-
+        , P = {x in F where exists y in F where y != x:
+        other(y, c) in through(other(x, c), L)} where |P| > 0
     says:
       long: >-
         The owner's 2026-09-27 request (pearl/hint.ts, carryOn): a step also
@@ -482,9 +489,7 @@ techniques:
         reads: >-
           {c} + set(q over x in F, y in F where y != x
           and other(y, c) in through(other(x, c), L), q in through(other(x, c), L))
-        outline: >-
-          through(other(first({x in F where exists y in F where y != x:
-          other(y, c) in through(other(x, c), L)}), c), L)
+        outline: "through(other(first(P), c), L)"
       wordings:
         - when: isWhite
           look: >-

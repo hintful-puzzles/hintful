@@ -105,12 +105,13 @@ export class HintFrontier<P = Point> {
    * inconsistent) the choice ends with nothing taken. Returns the candidate
    * taken.
    *
-   * `aimed`, where given, is offered first, in its rungs' order: the first
-   * candidate it holds that says it is `aimed` is taken before any choice the
-   * frontier would make (a check judging a move walks to the move's facts).
+   * `aimed`, where given, is offered first: the candidate it holds that says
+   * it is aimed at the most (`aimed`), the earliest rung's on a tie, is taken
+   * before any choice the frontier would make (a check judging a move walks
+   * to the move's facts).
    */
   takeContinuing<
-    C extends FrontierCandidate<P> & { writes(): readonly P[]; aimed?: boolean },
+    C extends FrontierCandidate<P> & { writes(): readonly P[]; aimed?: number },
   >(
     rungs: readonly (() => readonly C[])[],
     stop: () => boolean = () => false,
@@ -129,8 +130,7 @@ export class HintFrontier<P = Point> {
     for (const offer of aimed) {
       const list = offer();
       if (stop()) return null;
-      chosen = list.find((c) => c.aimed === true) ?? null;
-      if (chosen) break;
+      for (const c of list) if ((c.aimed ?? 0) > (chosen?.aimed ?? 0)) chosen = c;
     }
     find: for (let age = this.recent.length - 1; age >= 0 && !chosen; age--) {
       const wrote = this.recent[age];

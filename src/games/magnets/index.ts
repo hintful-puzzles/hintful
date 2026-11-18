@@ -26,6 +26,7 @@ import {
   type MagnetsHighlights,
   type MagnetsRung,
   magnetsHint,
+  magnetsJudgeMove,
   magnetsKeepTrack,
 } from "./hint.ts";
 import {
@@ -316,6 +317,7 @@ export const magnetsGame: Game<
   findMistakes,
   clearMistakes,
   hint: magnetsHint,
+  judgeMove: magnetsJudgeMove,
   hintRungs: MAGNETS_RUNGS,
   hintMarks: {
     roles: {

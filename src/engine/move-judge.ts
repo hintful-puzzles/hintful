@@ -13,7 +13,8 @@
  * the board showed.
  *
  * What is here is about the description's marks and nothing else; a hint
- * builder drives the walk and makes the words (`described-firing-hint.ts`).
+ * builder drives the walk and makes the words (`described-firing-hint.ts`,
+ * `described-edge-hint.ts`).
  */
 import { type Facts, MARK, PLACE, STRIKE, STRIKE_EDGE } from "./describe-runtime.ts";
 import type { FactGraph } from "./fact-graph.ts";
@@ -25,7 +26,7 @@ import {
   type Sentence,
   unshaped,
 } from "./hint-words.ts";
-import type { CellMarks } from "./ladder-runtime.ts";
+import type { CellMarks, Taken } from "./ladder-runtime.ts";
 import type { Point } from "./types.ts";
 
 /** A fact a move made: a value placed, a candidate struck, an edge's mark
@@ -77,11 +78,14 @@ export function movedFacts(
 
 /** Whether marks `m` hold the fact: its value placed, its candidate or edge
  * mark gone (a placement of another value takes the candidate), its mark
- * made. */
-export function reached(m: CellMarks, f: MovedFact): boolean {
+ * made. With `struck`, a value left the one candidate counts as placed. */
+function reached(m: CellMarks, f: MovedFact, struck = false): boolean {
   switch (f.kind) {
     case PLACE:
-      return m.grid[f.at] === f.value;
+      return (
+        m.grid[f.at] === f.value ||
+        (struck && m.grid[f.at] === 0 && m.cands[f.at] === 1 << f.value)
+      );
     case STRIKE:
       return !m.has(f.at, f.value);
     case STRIKE_EDGE:
@@ -93,43 +97,61 @@ export function reached(m: CellMarks, f: MovedFact): boolean {
   }
 }
 
-/** Whether one of a firing's facts (kind, element, value) makes `f`. */
+/** Whether one of a firing's facts (kind, element, value) makes `f`, or
+ * for a placement, has a part in making it: a strike of another value. */
 function makes(kind: number, at: number, value: number, f: MovedFact): boolean {
   if (at !== f.at) return false;
   if (f.kind === STRIKE)
     return (
       (kind === STRIKE && value === f.value) || (kind === PLACE && value !== f.value)
     );
+  if (f.kind === PLACE) return value === f.value ? kind === PLACE : kind === STRIKE;
   return kind === f.kind && value === f.value;
 }
 
-/** Whether a firing's facts make one of `wanted`. */
-export function aimsAt(facts: Facts, wanted: readonly MovedFact[]): boolean {
-  for (let i = 0; i < facts.length; i += 3)
-    for (const f of wanted)
-      if (makes(facts[i], facts[i + 1], facts[i + 2], f)) return true;
-  return false;
+/** How many of `wanted` a firing's facts make on marks `m`. A placement is
+ * made by placing it, or by striking what leaves it the cell's one candidate
+ * (`struck`, as {@link reached} reads it); a strike that only narrows the
+ * cell is not counted, or it would be taken before the firing that decides
+ * the cell. */
+function aimsAt(
+  facts: Facts,
+  wanted: readonly MovedFact[],
+  m: CellMarks,
+  struck: (f: MovedFact) => boolean,
+): number {
+  let n = 0;
+  for (const f of wanted) {
+    let made = false;
+    let gone = 0;
+    for (let i = 0; i < facts.length && !made; i += 3) {
+      if (f.kind !== PLACE) made = makes(facts[i], facts[i + 1], facts[i + 2], f);
+      else if (facts[i + 1] === f.at) {
+        if (facts[i] === PLACE && facts[i + 2] === f.value) made = true;
+        if (facts[i] === STRIKE) gone |= 1 << facts[i + 2];
+      }
+    }
+    if (!made && gone !== 0 && struck(f))
+      made = (m.cands[f.at] & ~gone) === 1 << f.value;
+    if (made) n++;
+  }
+  return n;
 }
 
 /**
- * The walk step to quote for fact `f`, of the steps the walk took (`made`,
- * each the ids of the graph's facts it made), `reachedAt` the step after
- * which the walked marks first held it.
- *
- * The walk is aimed, so a firing that makes the fact from the board as it
- * stood is the first it takes: a fact reached at the first step is direct,
- * and that step is quoted. Otherwise it is `chained`, and the step quoted is
- * the earliest one what it rests on goes back to (`FactGraph.restsOn`), which
- * read only the board; `step` is `null` where the graph cannot say, since
+ * The walk step to quote for fact `f`, which a chain reached: of the steps
+ * the walk took (`made`, each the ids of the graph's facts it made),
+ * `reachedAt` is the one (past the first) that made it. The step quoted is
+ * the earliest one what it rests on goes back to (`FactGraph.restsOn`),
+ * which read only the board; `null` where the graph cannot say, since
  * another step would be quoted as the chain's start without being in it.
  */
-export function quotedStep(
+function quotedStep(
   graph: FactGraph,
   made: readonly (readonly number[])[],
   f: MovedFact,
   reachedAt: number,
-): { step: number | null; chained: boolean } {
-  if (reachedAt <= 0) return { step: 0, chained: false };
+): number | null {
   let id = -1;
   for (const x of made[reachedAt] ?? []) {
     const g = graph.facts[x];
@@ -141,7 +163,95 @@ export function quotedStep(
     .map((g) => stepOf(g.id))
     .filter((k) => k >= 0)
     .reduce((a, b) => Math.min(a, b), reachedAt);
-  return { step: earliest < reachedAt ? earliest : null, chained: true };
+  return earliest < reachedAt ? earliest : null;
+}
+
+/**
+ * A walk judging a move, as a builder drives it: what it aims at, whether
+ * the walked marks hold every fact yet, and what each firing made (the
+ * graph's ids) and the index of its first step among the builder's steps.
+ */
+export interface Judging {
+  aim(f: Taken): number;
+  done(m: CellMarks): boolean;
+  made: number[][];
+  firstStep: number[];
+  graph: FactGraph | null;
+  /** Whether the walk ended on marks the game calls the answer, though the
+   * ladder may still have marks to make (`EdgeHintSpec.done`). */
+  answered?: boolean;
+}
+
+/** What the walk found of a move: a fact nothing reached (its index in
+ * `moved`), or the firing whose step is quoted, and whether a chain led
+ * there; `firing` is `null` for a chain whose start the graph cannot say. */
+export type Judged =
+  | { kind: "unforced"; fact: number }
+  | { kind: "followed"; firing: number | null; chained: boolean };
+
+/**
+ * Judge `moved` by a walk: `walk` runs the builder's steps with the
+ * {@link Judging} given it, aimed at the facts not yet reached and ending
+ * once all are. `null` where the walk could not judge: a fact the marks held
+ * before any firing (the move made nothing), or no graph.
+ */
+export function judgeByWalk(
+  moved: readonly MovedFact[],
+  walk: (judging: Judging) => void,
+): Judged | null {
+  // How many firings the walk had taken when its marks first held each fact.
+  const at = moved.map(() => -1);
+  // Per fact, whether striking may place it, read the first time asked.
+  let struck: boolean[] | null = null;
+  // The walked marks, which `done` is handed before each firing.
+  let marks: CellMarks | null = null;
+  const judging: Judging = {
+    // A firing that makes every fact left before one that makes some: a
+    // count would prefer one that makes many of the strikes a placement
+    // brings along (Light Up's lit squares) to the one that places it.
+    aim: (f) => {
+      const wanted = moved.filter((_, i) => at[i] < 0);
+      const n =
+        marks === null
+          ? 0
+          : aimsAt(f.facts, wanted, marks, (g) => struck?.[moved.indexOf(g)] === true);
+      return n === 0 ? 0 : n === wanted.length ? 2 : 1;
+    },
+    made: [],
+    firstStep: [],
+    graph: null,
+    done(m) {
+      marks = m;
+      // A walk that only strikes leaves a value the one candidate, where
+      // marks read off a board place it (Bridges' lines); a cell already so
+      // when the walk began is the player's notes, which a firing places.
+      if (struck === null)
+        struck = moved.map(
+          (f) => f.kind === PLACE && m.grid[f.at] === 0 && m.candCount(f.at) > 1,
+        );
+      for (const [i, f] of moved.entries())
+        if (at[i] < 0 && reached(m, f, struck[i])) at[i] = this.made.length;
+      return at.every((n) => n >= 0);
+    },
+  };
+  walk(judging);
+  // A fact the marks held before any firing is one the move did not make.
+  if (at.some((n) => n === 0)) return null;
+  // Where the walk ended on the answer, a fact it never made is one the
+  // hint leaves to the board, as the game's own move made it (Spokes'
+  // crossing spoke, taken away when a line crosses it): not judged.
+  const judged = moved.flatMap((_, i) => (at[i] > 0 || !judging.answered ? [i] : []));
+  if (judged.length === 0) return null;
+  const missed = judged.find((i) => at[i] < 0);
+  if (missed !== undefined) return { kind: "unforced", fact: missed };
+  const first = Math.min(...judged.map((i) => at[i]));
+  const chained = judged.some((i) => at[i] > 1);
+  // A move the board decides at once in part opens with that part's firing.
+  if (first === 1) return { kind: "followed", firing: 0, chained };
+  if (judging.graph === null) return null;
+  const i = judged.find((k) => at[k] === first) ?? judged[0];
+  const firing = quotedStep(judging.graph, judging.made, moved[i], first - 1);
+  return { kind: "followed", firing, chained: true };
 }
 
 /** What a check says of a move the deductions reached: the step's words,
@@ -154,18 +264,24 @@ export function followedWords(words: Narration, chained: boolean): Sentence {
 }
 
 /** What a check says of a move a chain of deductions reached where what it
- * rests on is not known, its square ringed. */
-export function chainedWords(at: Point, noun: string): Sentence {
+ * rests on is not known, its square ringed where there is one to ring. */
+export function chainedWords(at: Point | null, noun = "square"): Sentence {
   return unshaped(
-    phrase`Your last move followed from the board: a few steps on from what is marked, ${mark.the("ring", CELL, [at], noun)} is decided.`,
+    at === null
+      ? phrase`Your last move followed from the board, a few steps on from what it shows.`
+      : phrase`Your last move followed from the board: a few steps on from what is marked, ${mark.the("ring", CELL, [at], noun)} is decided.`,
     "evident",
   );
 }
 
-/** What a check says of a move no deduction reached, its square ringed. */
-export function unforcedWords(at: Point, noun: string): Sentence {
+/** What a check says of a move no deduction reached, its square ringed where
+ * there is one to ring. A game that decides edges has no square: its player
+ * has just made the move, which the words then name as "it". */
+export function unforcedWords(at: Point | null, noun = "square"): Sentence {
   return unshaped(
-    phrase`Your last move was right, but nothing on the board decided ${mark.the("ring", CELL, [at], noun)} yet.`,
+    at === null
+      ? phrase`Your last move was right, but nothing on the board decided it yet.`
+      : phrase`Your last move was right, but nothing on the board decided ${mark.the("ring", CELL, [at], noun)} yet.`,
     "evident",
   );
 }

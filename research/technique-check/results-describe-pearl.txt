@@ -1,22 +1,11 @@
-ok  pearl square 2x2 square                         3  sound    (want sound   )     9 queries    0.2s
-ok  pearl square 2x2 square (planted)               3  unsound  (want unsound )     2 queries    0.1s   at cell 1
-ok  pearl square 2x2 blackPearl                     3  sound    (want sound   )     9 queries    0.1s
-ok  pearl square 2x2 blackPearl (planted)           3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  pearl square 2x2 blackRunsOn                    3  sound    (want sound   )     9 queries    0.1s
-ok  pearl square 2x2 blackRunsOn (planted)          3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  pearl square 2x2 blackCannotRunOn               3  sound    (want sound   )     9 queries    0.1s
-ok  pearl square 2x2 blackCannotRunOn (planted)     3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  pearl square 2x2 whiteCannotTurn                3  sound    (want sound   )     5 queries    0.1s
-BAD pearl square 2x2 whiteCannotTurn (planted)      3  sound    (want unsound )     5 queries    0.1s
-ok  pearl square 3x2 whiteCannotTurn                4  sound    (want sound   )     8 queries    0.3s
-ok  pearl square 3x2 whiteCannotTurn (planted)      4  unsound  (want unsound )     4 queries    0.2s   at cell 4
-ok  pearl square 2x2 whiteTurnsOpposite             3  sound    (want sound   )     0 queries    0.0s
-BAD pearl square 2x2 whiteTurnsOpposite (planted)   3  sound    (want unsound )     0 queries    0.0s
-ok  pearl square 3x2 whiteTurnsOpposite             4  sound    (want sound   )     6 queries    0.3s
-ok  pearl square 3x2 whiteTurnsOpposite (planted)   4  unsound  (want unsound )     1 queries    0.1s   at cell 1
-ok  pearl square 2x2 closed                         3  sound    (want sound   )     1 queries    0.1s
-ok  pearl square 2x2 closed (planted)               3  unsound  (want unsound )     1 queries    0.1s   at eset
-ok  pearl square 2x2 earlyLoop                      3  sound    (want sound   )     1 queries    0.1s
-ok  pearl square 2x2 earlyLoop (planted)            3  unsound  (want unsound )     1 queries    0.1s   at eset
-ok  pearl square 2x2 earlyThrough                   3  sound    (want sound   )     1 queries    0.3s
-ok  pearl square 2x2 earlyThrough (planted)         3  unsound  (want unsound )     1 queries    0.2s   at eset
+ok  pearl      square                         current: recorded src/games/pearl/pearl.description.yaml#square 86e9a09715b57af7
+ok  pearl      blackPearl                     current: recorded src/games/pearl/pearl.description.yaml#blackPearl 1a2afd2d31222e05
+ok  pearl      blackRunsOn                    current: recorded src/games/pearl/pearl.description.yaml#blackRunsOn 3b4107c2f4774e1e
+ok  pearl      blackCannotRunOn               current: recorded src/games/pearl/pearl.description.yaml#blackCannotRunOn 74d75e72c7eae210
+ok  pearl      whiteCannotTurn                current: recorded src/games/pearl/pearl.description.yaml#whiteCannotTurn 1687b2d9f7b5be59
+ok  pearl      whiteTurnsOpposite             current: recorded src/games/pearl/pearl.description.yaml#whiteTurnsOpposite 685750b4a8ca9c46
+ok  pearl      closed                         current: recorded src/games/pearl/pearl.description.yaml#closed 9760fcf45903de06
+ok  pearl      earlyLoop                      current: recorded src/games/pearl/pearl.description.yaml#earlyLoop f04c5265bb1d7c23
+ok  pearl square 2x2 earlyThrough                   3  sound    (want sound   )     1 queries    0.6s
+ok  pearl square 2x2 earlyThrough (planted)         3  unsound  (want unsound )     1 queries    0.3s   at eset
+ok  src/games/pearl/pearl.description.yaml#earlyThrough: recorded sound, proved whole on all 1 boards

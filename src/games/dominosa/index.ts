@@ -40,6 +40,7 @@ import {
   type DominosaRung,
   dominosaHint,
   dominosaHintKeepTrack,
+  dominosaJudgeMove,
 } from "./hint.ts";
 import {
   border,
@@ -597,6 +598,7 @@ export const dominosaGame: Game<
   reference,
   selectReference,
   hint: dominosaHint,
+  judgeMove: dominosaJudgeMove,
   hintMarks: {
     roles: {
       ring: "the spot the step is about, round its two squares as one domino: empty where a domino must go, or with a thick line across its middle where one can't. That line is the one the step asks you to draw.",

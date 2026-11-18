@@ -50,6 +50,7 @@ import {
   type SignpostHint,
   type SignpostRung,
   signpostHint,
+  signpostJudgeMove,
   signpostKeepTrack,
 } from "./hint.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
@@ -459,6 +460,7 @@ export const signpostGame: Game<
   clearMistakes,
   revealOne,
   hint: signpostHint,
+  judgeMove: signpostJudgeMove,
   hintMarks: {
     roles: {
       ring: "the link the step decides, at both ends: the arrow it leaves by is drawn in the hint color, and the square it arrives at is ringed.",
