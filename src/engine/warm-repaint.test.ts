@@ -53,6 +53,8 @@ const PINNED_EVENTS = 20;
 const PINNED: Readonly<Record<string, readonly string[]>> = {
   // A striped square: the reach of the one run that can fill it.
   ascent: ["5x5mRdt:25_1a4b24_2_8_6_22d12a15a17c19a"],
+  // A striped pour, which a hint names only on a board with two pours.
+  ballsort: ["5h4e1:bcd,ceaa,ade,acce,dbde,bb"],
   crossing: [
     // A note ruled out in a square, which the 7x7 deal's plan never needs:
     // this plan's third step narrows notes its second wrote.

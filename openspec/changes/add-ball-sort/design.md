@@ -102,13 +102,20 @@ second search to prove one.
 
 ## D5. The hint
 
-- **The subgoal is the color the line next completes**: the first pour of
-  the line that leaves a tube full of one color names it, and every pour up
-  to it serves gathering that color. Its tube is marked, and the step's
-  `aim` says it.
-- **The rivals** are the other legal pours. Where one leads to a dead end,
-  it is striped and the step says so; otherwise the step says every pour
-  can still sort the board, or which can.
+- **A step says what its pour does on the board**, the first that holds of:
+  it sorts the board, fills its tube, frees balls (named by color) that the
+  line pours out before pouring anything onto them, empties the tube it
+  leaves, lands on its own color, or begins a tube the line fills with that
+  color before pouring out of it; else the pour alone. On the 1,027
+  positions of the hint's scan (2026-11-18): fills 313, frees 278, joins
+  187, last 90, starts 84, empties 35, the two-pour dead end 30, and the
+  pour alone 10. Naming the color the line next fills a
+  tube with, as at first, named a color the pour often did not touch, and
+  the player read it as a contradiction.
+- **A dead end is named only as one of two choices** (owner, 2026-11-18):
+  where the board has two pours and the other leads to a dead end, it is
+  striped and the step concludes "so". Among more, naming one pour that
+  fails says nothing about the one to make, and filled the step.
 - **A dead end is refused** with `NO_SOLUTION_FROM_HERE`, which the engine
   answers with the rewind; `hasNoSolution` answers the description's
   `stuck` (no pour at all) at a glance.

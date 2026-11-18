@@ -26,15 +26,14 @@ help:
 
     {{hint-marks}}
 
+    Each hint says what its pour does: fills a tube, frees balls that are
+    to move next, empties a tube, lands on its own color, or starts a tube
+    of one color.
+
     A position from which no series of pours can sort the tubes is a **dead
     end**. You can reach one without noticing, since there are often still
-    pours to make. So before anything else, the hint looks at your other
-    pours: where one of them leads to a dead end, it stripes it and shows a
-    pour that does not. When every other pour leads to one, it says so.
-
-    Each hint names the color the next few pours are working toward: the
-    color its way of sorting fills a tube with next. It keeps to that color
-    from one hint to the next until the tube is full.
+    pours to make. Where you have only two pours and one leads to a dead
+    end, the hint stripes that one and shows the other.
 
     If you are already in a dead end, the hint says so; apply it to go back
     to the last position that can still be sorted. **Check & save** asks the
@@ -92,48 +91,57 @@ phrases:
   # The step's pour, mid-sentence: its run ringed, `n` balls, and the slots
   # they land in ringed in the tube they go to.
   pour: "pour {ring run: {n: this ball | these balls}} into {ring tube: the ringed tube}"
-  # The color the run of pours to come next gathers into a full tube, said
-  # by the palette's name for it.
-  gather: "the {color} balls"
 steps:
   # A step offers the first pour of a shortest line that sorts the board,
-  # every rival settled by the same search. Each step but the last is
-  # narrated by the color the line next completes a tube of.
+  # and says what that pour does on the board. A dead end is named only
+  # where it is one of two choices.
   # The pour that sorts the board.
   last:
     ring: [run, tube]
     terms: { n: number }
     move: "{pour}"
     effect: "that sorts the board"
-  # Every other pour leads to a dead end, a board that can never be sorted;
-  # the rival judging's relation says "so".
-  only:
-    ring: [run, tube]
-    terms: { n: number, color: number }
-    aim: "{gather}"
-    look: "every other pour leads to a dead end"
-    move: "{pour}"
-  # A rival pour, striped, leads to a dead end, and this one does not.
-  trap:
-    ring: [run, tube]
-    terms: { n: number, color: number }
-    marks: { stripes: [pour] }
-    aim: "{gather}"
-    look: "{stripes pour: the striped pour} leads to a dead end"
-    answers: "Avoid it"
-    move: "{pour}"
-  # This pour fills its tube with the aim's color.
+  # This pour fills its tube with one color.
   fills:
     ring: [run, tube]
-    terms: { n: number, color: number }
-    aim: "{gather}"
+    terms: { n: number }
     move: "{pour}"
     effect: "that fills it"
-  # No rival is lost, so nothing but the aim to say.
-  serves:
+  # The board has two pours, and the other, striped, leads to a dead end;
+  # the rival judging's relation says "so".
+  either:
+    ring: [run, tube]
+    terms: { n: number }
+    marks: { stripes: [pour] }
+    look: "the only other pour, {stripes pour: the striped one}, leads to a dead end"
+    move: "{pour}"
+  # The next pour of the line moves the ball this one uncovers.
+  frees:
+    ring: [run, tube]
+    terms: { n: number, color: number, freed: number }
+    move: "{pour}"
+    effect: "that frees the {color} {freed: ball | balls} beneath"
+  # This pour leaves its tube empty.
+  empties:
+    ring: [run, tube]
+    terms: { n: number }
+    move: "{pour}"
+    effect: "that empties the tube {n: it leaves | they leave}"
+  # This pour lands on balls of its own color.
+  joins:
+    ring: [run, tube]
+    terms: { n: number }
+    move: "{pour}, onto {n: its | their} own color"
+  # Into an empty tube, where the balls stay until the line fills it.
+  starts:
     ring: [run, tube]
     terms: { n: number, color: number }
-    aim: "{gather}"
+    move: "{pour}"
+    effect: "that starts a tube of {color}"
+  # None of those: the pour alone.
+  plain:
+    ring: [run, tube]
+    terms: { n: number }
     move: "{pour}"
 deal:
   start: >-

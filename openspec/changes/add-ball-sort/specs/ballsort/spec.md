@@ -145,41 +145,38 @@ SHALL do what a tap there does.
   on tube 2
 - **THEN** the a on top of tube 1 is poured into tube 2
 
-### Requirement: Hint: The first pour of a shortest line, its rivals settled
+### Requirement: Hint: The first pour of a shortest line, and what it does
 
 The hint SHALL offer the first pour of the search's shortest line, ringing the
-balls that go and the slots they land in, and SHALL judge every other legal
-pour by the same search. Where every other pour leads to a dead end the step
-SHALL say so and conclude "so"; where some do, it SHALL stripe one and offer
-the pour as one way to avoid it.
+balls that go and the slots they land in, and SHALL say the first that holds
+of: it sorts the board, fills its tube, frees balls the line pours out before
+pouring onto them (by their color), empties the tube it leaves, lands on its
+own color, or starts a tube the line fills with its color before pouring out
+of it; else it SHALL say the pour alone. It SHALL name no color its pour
+does not move or free.
 
-#### Scenario: A rival into a dead end
+#### Scenario: A pour that frees the next
 
-- **WHEN** a hint is asked where another pour leads to a dead end and this
-  one does not
-- **THEN** it reads "Working on the teal balls: the striped pour leads to a
-  dead end. Avoid it: pour these balls into the ringed tube." with the
-  board's color
+- **WHEN** a hint is asked where the line's next pour moves from the tube
+  this one leaves
+- **THEN** it reads "Pour this ball into the ringed tube: that frees the
+  yellow ball beneath." with the board's color
 
-### Requirement: Hint: The striped pour is beside the offered one, clear of its ring
+### Requirement: Hint: A dead end is named only as one of two choices
 
-Of the pours that lead to a dead end, the one striped SHALL be, where there
-is one, a pour into the tube the offered pour leaves or out of the one it
-fills; else one that moves none of its balls and fills none of its slots;
-and only else one whose stripes lie under its ring.
+Where the board has exactly two pours and the one not offered leads to a
+dead end, the step SHALL stripe it, say it is the only other and leads to a
+dead end, and conclude "so". Otherwise the step SHALL name no dead end.
 
-#### Scenario: A dead end into the same slot
+#### Scenario: Two pours
 
-- **WHEN** on `5h4e1:caae,dada,ecbc,bdbe,debc,` a hint is asked
-- **THEN** the striped pour is tube 0's orange ball into the empty tube, the
-  slot the offered pour is ringed into, since no pour that leads to a dead
-  end there keeps clear of the ring
+- **WHEN** a hint is asked on a board with two pours, one into a dead end
+- **THEN** it reads "The only other pour, the striped one, leads to a dead
+  end, so pour this ball into the ringed tube."
 
-### Requirement: Hint: Each step names the color it works toward
+### Requirement: Hint: The last pour sorts the board
 
-Each step but the last SHALL name, as its aim, the color the line next fills
-a tube with, and SHALL say when its pour fills that tube; the last step SHALL
-say that it sorts the board.
+The last step SHALL say that it sorts the board.
 
 #### Scenario: The last pour
 

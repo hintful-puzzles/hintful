@@ -6,6 +6,7 @@
  * (docs/testing.md § "Pinning a hint's positions").
  */
 import { describe, expect, it } from "vitest";
+import { FREE_NAMES } from "../../engine/color/colors.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
@@ -18,9 +19,11 @@ import {
   type BallsortParams,
   type BallsortState,
   encodeDesc,
+  isSorted,
   legalPours,
   newState,
   poured,
+  topColor,
 } from "./state.ts";
 
 const G = ballsortGame;
@@ -30,8 +33,8 @@ const pinned = describeHintPins({
   params: [G.decodeParams("4h4e2"), G.decodeParams("5h4e1")],
   seeds: 20,
   descOf: encodeDesc,
-  // A hint keeps to lines that sort the board, and a trap is about a pour
-  // that would not, so the scan strays on every other turn.
+  // A hint keeps to lines that sort the board, and a choice of two is about
+  // a pour that would not, so the scan strays on every other turn.
   stray: (s, turn, hinted) => {
     if (turn % 2 === 0 && hinted) return hinted;
     const pours = legalPours(s);
@@ -40,14 +43,20 @@ const pinned = describeHintPins({
   pins: {
     /** Held on 90 of 1027 positions walked. */
     last: "4h4e2:bbb,dddd,aaaa,b,cccc,",
-    /** Held on 32 of 1027 positions walked. */
-    only: "5h4e1:abea,aaee,ddcd,edbb,bccc,",
-    /** Held on 63 of 1027 positions walked. */
-    trap: "5h4e1:eccc,adea,aebb,ebac,ddbd,",
     /** Held on 313 of 1027 positions walked. */
     fills: "4h4e2:cbac,aaba,bb,ccdd,dd,",
-    /** Held on 529 of 1027 positions walked. */
-    serves: "4h4e2:ccad,dbab,acdd,bbac,,",
+    /** Held on 30 of 1027 positions walked. */
+    either: "5h4e1:bcd,ceaa,ade,acce,dbde,bb",
+    /** Held on 278 of 1027 positions walked. */
+    frees: "4h4e2:ccad,dbab,acdd,bbac,,",
+    /** Held on 35 of 1027 positions walked. */
+    empties: "4h4e2:dcc,aa,ccbb,bbad,dd,a",
+    /** Held on 187 of 1027 positions walked. */
+    joins: "4h4e2:cca,dbab,acdd,bbac,d,",
+    /** Held on 84 of 1027 positions walked. */
+    starts: "4h4e2:dcdb,cdba,bdaa,bcca,,",
+    /** Held on 10 of 1027 positions walked. */
+    plain: "5h4e1:abae,cceb,dedb,adcc,bead,",
   },
 });
 
@@ -81,20 +90,60 @@ describe("Ball Sort's hint", () => {
   });
 
   it("rings the balls that go and the slots they land in, and stripes a lost rival's", () => {
-    for (const kind of ["trap", "serves"] as const) {
+    for (const kind of ["either", "plain"] as const) {
       const { state, steps } = pinned(kind);
       const step = steps[0];
       const marks = stepMarks(step);
       if (step.move.type !== "pour") throw new Error("expected a pour");
       expect(marks.of("ring", RUN)).toEqual(movingBalls(state, step.move));
       expect(marks.of("ring", TUBE)).toEqual([step.move.to]);
-      if (kind === "trap") {
+      if (kind === "either") {
+        expect(legalPours(state)).toHaveLength(2);
         const [rival] = marks.of("stripes", POUR);
         const after = poured(state, { type: "pour", ...rival });
         expect(Reach.of(state)?.distance(after)).toBeNull();
         expect(landingSlots(state, rival).length).toBeGreaterThan(0);
       }
     }
+  });
+
+  it("frees balls the hints go on to move before covering them, of the color it names", () => {
+    const { state, steps } = pinned("frees");
+    const first = steps[0].move;
+    if (first.type !== "pour") throw new Error("expected a pour");
+    let s = G.executeMove(state, first);
+    const named = topColor(s, first.from);
+    for (;;) {
+      const result = hint(s);
+      if (!result.ok) throw new Error(result.error);
+      const next = result.steps[0].move;
+      if (next.type !== "pour") throw new Error("expected a pour");
+      expect(next.to, "nothing is poured onto the freed balls").not.toBe(first.from);
+      if (next.from === first.from) {
+        expect(topColor(s, next.from)).toBe(named);
+        expect(steps[0].explanation).toContain(`the ${FREE_NAMES[named - 1].only} `);
+        return;
+      }
+      s = G.executeMove(s, next);
+    }
+  });
+
+  it("starts a tube the hints go on to fill with its color before pouring out of it", () => {
+    const { state, steps } = pinned("starts");
+    const first = steps[0].move;
+    if (first.type !== "pour") throw new Error("expected a pour");
+    let s = G.executeMove(state, first);
+    const color = topColor(s, first.to);
+    expect(steps[0].explanation).toContain(`a tube of ${FREE_NAMES[color - 1].only}`);
+    while (!isSorted(s, first.to)) {
+      const result = hint(s);
+      if (!result.ok) throw new Error(result.error);
+      const next = result.steps[0].move;
+      if (next.type !== "pour") throw new Error("expected a pour");
+      expect(next.from, "nothing leaves the tube begun").not.toBe(first.to);
+      s = G.executeMove(s, next);
+    }
+    expect(topColor(s, first.to)).toBe(color);
   });
 
   it("sees at a glance a board with no pour at all", () => {
