@@ -7,7 +7,7 @@
     "chained": "Your last move follows a few steps on, starting from {name}.",
     "chainedUnknown": "Your last move follows from the board, a few steps on.",
     "shown": "Your last move writes down what the board already shows.",
-    "unforced": "Your last move is right, though nothing on the board decides it yet."
+    "unforced": "Your last move is correct, but nothing on the board forces it yet — was it a stroke of insight?"
   },
   "setup": ["populate", "clean", "note", "salad.circleXNote"],
   "shared": { "wing": "a wing" },

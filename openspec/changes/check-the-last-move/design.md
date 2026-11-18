@@ -109,8 +109,12 @@ words and marks below; the walk, the aim and what counts as reached stand.
   `note`) are never named, since no verdict counts them.
 - **What fits**: at most `MOST_NAMED` names, the rest counted.
 - **The words and names** are the technical writer's
-  (`openspec/changes/check-the-last-move/names.json`), taken as written
-  unless one is wrong about its technique.
+  (`openspec/changes/check-the-last-move/names.json`), accepted by the owner
+  (2026-11-18, "no comments"), taken as written unless one is wrong about its
+  technique. The unforced verdict is the owner's own: it asks rather than
+  says the player guessed, since what the judge knows is only that none of
+  the hint's deductions reach the move (a technique past the board's tier,
+  or reasoning no rung models, reads the same).
 - **Guard**: the compiler refuses a technique with no name; the candidate
   rungs are typed against their names; `move-judge-games.test.ts` holds that
   a verdict names nothing as an id (no camelCase, no dot), and a test finds
