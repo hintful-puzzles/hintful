@@ -12,9 +12,14 @@ help:
   controls: |-
     Type a word with the keyboard, or with the letter buttons below the
     board. Each letter goes into the first empty square of the row you are
-    filling, and the frame shows where the next one will land. Press
-    **Submit** once the row is full. A row that isn't a word of the list
-    isn't sent: it gets a red frame, and the line below the board says why.
+    filling, and the frame shows where the next one will land; once the row
+    is full it takes no more. Press **Submit** once the row is full. A row
+    that isn't a word of the list isn't sent: it gets a red frame, and the
+    line below the board says why.
+
+    The letter buttons show what your guesses have found out about each
+    letter, marked as on the board: filled when it has been in place, a
+    disc when it is in the word somewhere, and faint when the word has none.
 
     Tap a square of the row you are filling to choose where the next letter
     goes instead, which is how you change one letter. **Clear**, or

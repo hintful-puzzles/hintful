@@ -2614,6 +2614,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "findMistakes",
       "finishesByDeduction",
       "ignoresSecondaryButton",
+      "keyStatus",
       "notApplicable",
       "paramConfig",
       "preferredTileSize",

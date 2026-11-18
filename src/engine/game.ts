@@ -31,6 +31,7 @@ import type {
   DrawTextOptions,
   GameStatus,
   KeyLabel,
+  KeyStatus,
   PaletteScheme,
   Point,
   Rect,
@@ -464,6 +465,12 @@ export interface Game<
    * only, since the app's key panel reloads only on a param change, so it
    * deliberately takes neither state nor ui. Absent ⇒ no keypad. */
   requestKeys?(p: Params): KeyLabel[];
+  /** What the board has shown of the value each key types, for a game whose
+   * scores say it of a value as a whole (Wordguess: a letter in the word, in
+   * its place, or not in it). Sent with every move, so the keypad keeps up
+   * with the board; a key with no entry is drawn plain. Absent ⇒ every key is
+   * plain. */
+  keyStatus?(state: State): KeyStatus[];
 
   defaultParams(): Params;
   /** The preset menu's boards; `presetMenu` is the menu built from them. */
@@ -929,5 +936,8 @@ export interface Game<
    * and, after replaying the move log on load, restores it via `decodeUi`.
    * Absent ⇒ the `Ui` carries no save-surviving state (every other game). */
   encodeUi?(ui: Ui): string;
-  decodeUi?(ui: Ui, encoded: string): void;
+  /** `state` is the board the `Ui` is restored onto, the log replayed: what a
+   * field derived from both is judged against (Wordguess's "this row may be
+   * sent" asks the word list and the rows already scored). */
+  decodeUi?(ui: Ui, encoded: string, state: State): void;
 }

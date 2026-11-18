@@ -4,7 +4,7 @@ import { css, html, LitElement, nothing } from "lit";
 import { customElement, eventOptions, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { PENCIL_MODE_BUTTON } from "../../engine/pointer.ts";
-import type { KeyLabel } from "../../engine/types.ts";
+import type { KeyLabel, KeyStatus } from "../../engine/types.ts";
 import { cssColorToOKLCH } from "../../utils/color.ts";
 import { cssStackedButton, cssWATweaks } from "../../utils/css.ts";
 import { puzzleContext } from "../contexts.ts";
@@ -52,6 +52,22 @@ function swatchProperties(fill: string): string {
   return `--wa-color-fill-loud: ${fill}; --wa-color-on-loud: ${ink}; --swatch-edge: ${ink};`;
 }
 
+/** Whether a keypad declares its keys' rows (`KeyLabel.row`), and is drawn as
+ * a keyboard. */
+export function isKeyboard(keys: readonly KeyLabel[]): boolean {
+  return keys.some((key) => key.row !== undefined);
+}
+
+/** A keyboard's keys, a list a row, in the order each row's keys were given. */
+function keyboardRows(keys: readonly KeyLabel[]): KeyLabel[][] {
+  const rows: KeyLabel[][] = [];
+  for (const key of keys) {
+    const row = key.row ?? 0;
+    rows[row] = [...(rows[row] ?? []), key];
+  }
+  return rows;
+}
+
 /**
  * A virtual keyboard for the puzzle: the keys it is given, drawn as buttons
  * that send each key's code to the game. Which keys a game has, and when they
@@ -93,28 +109,24 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
       return nothing;
     }
 
-    // If >5 keys, divide into two equal groups for better wrapping
-    const split =
-      this.columns === null && this.keys.length > 5
-        ? Math.floor(this.keys.length / 2)
-        : this.keys.length;
-    const keyGroups = [this.keys.slice(0, split), this.keys.slice(split)];
-    const groups = keyGroups
+    const keyboard = isKeyboard(this.keys);
+    const groups = (keyboard ? keyboardRows(this.keys) : this.keyGroups())
       .filter((keys) => keys.length > 0)
       .map(
         (keys) => html`
           <div
               part="group"
-              style=${this.columns === null ? nothing : `--columns: ${this.columns}`}
+              style=${keyboard || this.columns === null ? nothing : `--columns: ${this.columns}`}
             >${keys.map(this.renderVirtualKey)}</div>`,
       );
+    const layout = keyboard ? "keyboard" : this.columns === null ? "rows" : "grid";
 
     // Activate virtual keys on touchstart for better responsiveness in rapid "typing".
     // But also handle click for keyboard activation (if a virtual key somehow gets focus).
     return html`
       <div
           part="base"
-          class=${this.columns === null ? "rows" : "grid"}
+          class=${layout}
           @click=${this.handleButtonPress}
           @mousedown=${keepFocusOnTheBoard}
           @touchstart=${this.handleButtonPress}
@@ -122,30 +134,49 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
     `;
   }
 
+  /** Without rows, more than five keys divide into two equal groups, for
+   * better wrapping. */
+  private keyGroups(): KeyLabel[][] {
+    const split =
+      this.columns === null && this.keys.length > 5
+        ? Math.floor(this.keys.length / 2)
+        : this.keys.length;
+    return [this.keys.slice(0, split), this.keys.slice(split)];
+  }
+
   private renderVirtualKey = (key: KeyLabel) => {
     const label = key.label;
     const icon = this.labelIcons[label];
-    const fill = this.swatchFill(key);
+    const status = this.statusOf(key);
+    const look = status === null || status.look === "faint" ? null : status;
+    const fill =
+      look?.look === "fill" ? this.paletteColor(look.swatch) : this.swatchFill(key);
+    const disc = look?.look === "disc" ? this.paletteColor(look.swatch) : null;
     const mode = this.modeIn(key);
     const classes = classMap({
       single: !this.labeled && (icon || label.length === 1),
       stacked: this.labeled && Boolean(icon),
+      wide: label.length > 1,
       swatch: fill !== null,
+      faint: status?.look === "faint",
       "mode-on": mode === true,
     });
-    const content = !icon
+    const text = !icon
       ? label
       : this.labeled
         ? html`<span class="stack">
             <wa-icon name=${icon}></wa-icon><span>${label}</span>
           </span>`
         : html`<wa-icon name=${icon} label=${label}></wa-icon>`;
+    const content =
+      disc === null
+        ? text
+        : html`<span class="disc" style=${swatchProperties(disc)}>${text}</span>`;
     // The state is part of the key's name, not an `aria-pressed`: `wa-button`
     // draws its own `<button>` and passes no `aria-pressed` on to it.
+    const spoken = mode === null ? status?.spoken : mode ? "on" : "off";
     const state =
-      mode === null
-        ? nothing
-        : html`<span class="spoken">${mode ? "on" : "off"}</span>`;
+      spoken === undefined ? nothing : html`<span class="spoken">${spoken}</span>`;
     // Exclude virtual keys from keyboard navigation
     // (they're not helpful for a keyboard user).
     return html`
@@ -157,6 +188,16 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
         >${content}${state}</wa-button>
     `;
   };
+
+  /** What the board has shown of this key's value, or `null`: read off the
+   * game's own `keyStatus` through the `Puzzle`, never kept here. */
+  private statusOf(key: KeyLabel): KeyStatus | null {
+    return this.puzzle?.keyStatus.find((s) => s.button === key.button) ?? null;
+  }
+
+  private paletteColor(index: number): string | null {
+    return this.puzzle?.palette[index] ?? null;
+  }
 
   /**
    * The CSS color a key with a `swatch` is painted in, or `null` for an
@@ -248,6 +289,61 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
         /* Make all single-char buttons the same width, for uniform layout.
          * (This cheats the horizontal padding just a bit.) */
         width: var(--wa-form-control-height);
+      }
+
+      /* A keyboard: a line a row, never wrapped, ten keys of the usual size
+       * wide where there is room (a side column takes its content's width),
+       * and shrinking with the width where there is not, so a phone fits ten
+       * to a row. */
+      .keyboard {
+        --gap: var(--wa-space-2xs);
+        --key: var(--wa-form-control-height);
+
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        width: calc(10 * var(--key) + 9 * var(--gap));
+        max-width: 100%;
+      }
+      .keyboard [part~="group"] {
+        justify-content: center;
+      }
+      .keyboard wa-button {
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: var(--key);
+      }
+      .keyboard wa-button::part(base) {
+        padding-inline: 0;
+      }
+      .keyboard .single {
+        width: auto;
+      }
+      .keyboard .wide {
+        flex-grow: 1.5;
+        max-width: calc(1.5 * var(--key));
+      }
+      /* The label alone: a key's height is in ems of its own font. */
+      .keyboard .wide::part(label) {
+        font-size: var(--wa-font-size-xs);
+      }
+
+      /* A value the board has scored somewhere in it: a disc behind the
+       * label, as the board draws one. */
+      .disc {
+        display: inline-grid;
+        place-items: center;
+        width: 1.6em;
+        height: 1.6em;
+        border-radius: 50%;
+        background-color: var(--wa-color-fill-loud);
+        color: var(--wa-color-on-loud);
+      }
+
+      /* A value the board has shown is not there: faint, as the board's ink
+       * for it is. */
+      .faint::part(label) {
+        opacity: 0.35;
       }
 
       .swatch::part(base) {

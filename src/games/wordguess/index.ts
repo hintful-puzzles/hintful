@@ -20,7 +20,7 @@ import {
 } from "../../engine/code-rows.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { clearKey } from "../../engine/key-labels.ts";
+import { clearKey, letterKeyboard } from "../../engine/key-labels.ts";
 import {
   CURSOR_SELECT,
   isCursorMove,
@@ -33,9 +33,11 @@ import {
   PENCIL_MODE_BUTTON,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { KeyLabel, Point } from "../../engine/types.ts";
+import type { KeyLabel, KeyStatus, Point } from "../../engine/types.ts";
 import {
   answerSlotAt,
+  COL_ELSEWHERE,
+  COL_IN_PLACE,
   colors,
   computeSize,
   newDrawState,
@@ -45,10 +47,13 @@ import {
   workingSlotAt,
 } from "./render.ts";
 import {
+  ABSENT,
   decodeParams,
   defaultParams,
+  ELSEWHERE,
   encodeParams,
   findMistakes,
+  IN_PLACE,
   letterOf,
   menu,
   NLETTERS,
@@ -115,17 +120,39 @@ function letterFrom(button: number): number | null {
 }
 
 /**
- * A key a letter, then Clear and Submit. Submit is a key rather than the
- * consequence of filling the last slot, because a row that goes cannot be
+ * The letters as a keyboard has them, with Submit and Clear flanking the last
+ * row where a word game keeps Enter and Backspace. Submit is a key rather than
+ * the consequence of filling the last slot, because a row that goes cannot be
  * undone back to the word typed; a row that cannot go is declined, and the
  * status line says why.
  */
 function requestKeys(_p: WordguessParams): KeyLabel[] {
-  const letters = Array.from({ length: NLETTERS }, (_, i) => ({
-    button: 0x41 + i,
-    label: letterOf(i + 1).toUpperCase(),
-  }));
-  return [...letters, clearKey, { button: SUBMIT_BUTTON, label: "Submit" }];
+  const keys = letterKeyboard();
+  const last = keys.findIndex((k) => k.row === 2);
+  keys.splice(last, 0, { button: SUBMIT_BUTTON, label: "Submit", row: 2 });
+  keys.push({ ...clearKey, row: 2 });
+  return keys;
+}
+
+/** Each letter key as the board has scored that letter, at its best: in place
+ * in some row, elsewhere, or nowhere, which is a letter the word lacks. A
+ * scored copy outranks an absent one, since only a copy past those the word
+ * has is scored absent. */
+function keyStatus(s: WordguessState): KeyStatus[] {
+  const best = new Map<number, number>();
+  for (const { letters, marks } of s.rows) {
+    letters.forEach((v, i) => {
+      best.set(v, Math.max(best.get(v) ?? ABSENT, marks[i]));
+    });
+  }
+  return [...best].map(([v, mark]): KeyStatus => {
+    const button = letterOf(v).toUpperCase().charCodeAt(0);
+    if (mark === IN_PLACE)
+      return { button, look: "fill", swatch: COL_IN_PLACE, spoken: "in place" };
+    if (mark === ELSEWHERE)
+      return { button, look: "disc", swatch: COL_ELSEWHERE, spoken: "in the word" };
+    return { button, look: "faint", spoken: "not in the word" };
+  });
 }
 
 // --- input ------------------------------------------------------------------
@@ -221,7 +248,7 @@ function interpretMove(
     // A letter is the game's even where the row has no room for it: declined,
     // it would fall through to the app's one-letter shortcuts, and an N typed
     // past the end of a word would deal a new game.
-    if (enterValue(ui, letter, ready)) ui.refused = false;
+    if (enterValue(ui, letter, ready, "close")) ui.refused = false;
     return UI_UPDATE;
   }
   if (isEraseKey(button)) {
@@ -259,12 +286,14 @@ function encodeUi(ui: WordguessUi): string {
   return ui.entries.map((v) => (v > 0 ? letterOf(v) : ".")).join("");
 }
 
-function decodeUi(ui: WordguessUi, encoded: string): void {
+function decodeUi(ui: WordguessUi, encoded: string, s: WordguessState): void {
   // A save is not a trusted input: anything but a letter is an empty slot.
   for (let i = 0; i < ui.entries.length; i++) {
     ui.entries[i] = letterFrom(encoded.charCodeAt(i)) ?? 0;
   }
-  restCursor(ui);
+  ui.ready = readyIn(s)(ui.entries);
+  // A whole row that is no word takes no more letters, as when it was typed.
+  restCursor(ui, -1);
 }
 
 // --- status line ------------------------------------------------------------
@@ -326,6 +355,7 @@ export const wordguessGame: Game<
   clearMistakes: (state, mistakes) =>
     mistakes.flatMap(({ pos }) => clearMarks(state, pos) ?? []),
   requestKeys,
+  keyStatus,
   statusbarText,
 
   solve(_orig, curr) {

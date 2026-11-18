@@ -13,7 +13,7 @@
 import { signal } from "@lit-labs/signals";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { pencilModeKey } from "../../engine/key-labels.ts";
-import type { KeyLabel } from "../../engine/types.ts";
+import type { KeyLabel, KeyStatus } from "../../engine/types.ts";
 import { cssColorToOKLCH, oklchToCSSColor } from "../../utils/color.ts";
 import { PuzzleContext } from "./context.ts";
 import "./keys.ts";
@@ -56,12 +56,15 @@ afterEach(() => {
   mounted = [];
 });
 
-async function mountKeys(keys: KeyLabel[]): Promise<PuzzleKeys> {
+async function mountKeys(
+  keys: KeyLabel[],
+  puzzle: object = { keyStatus: [] },
+): Promise<PuzzleKeys> {
   const context = new PuzzleContext();
-  (context as unknown as { _puzzle: unknown })._puzzle = {
-    palette: PALETTE,
-    delete: async () => {},
-  };
+  (context as unknown as { _puzzle: unknown })._puzzle = Object.defineProperties(
+    { palette: PALETTE, delete: async () => {} },
+    Object.getOwnPropertyDescriptors(puzzle),
+  );
   const panel = document.createElement("puzzle-keys");
   panel.keys = keys;
   context.append(panel);
@@ -111,6 +114,7 @@ describe("a key that names a color", () => {
     const context = new PuzzleContext();
     (context as unknown as { _puzzle: unknown })._puzzle = {
       palette: [],
+      keyStatus: [],
       delete: async () => {},
     };
     const panel = document.createElement("puzzle-keys");
@@ -141,20 +145,12 @@ describe("the Marks key shows the mode it toggles", () => {
     // The mode is read off the puzzle, not kept by the key: the key is not the
     // only way to flip it, so a copy would show it as the key last left it.
     const pencilMode = signal(false);
-    const context = new PuzzleContext();
-    (context as unknown as { _puzzle: unknown })._puzzle = {
-      palette: PALETTE,
+    const panel = await mountKeys([{ button: 0x31, label: "1" }, pencilModeKey], {
+      keyStatus: [],
       get pencilMode() {
         return pencilMode.get();
       },
-      delete: async () => {},
-    };
-    const panel = document.createElement("puzzle-keys");
-    panel.keys = [{ button: 0x31, label: "1" }, pencilModeKey];
-    context.append(panel);
-    document.body.append(context);
-    mounted.push(context);
-    await panel.updateComplete;
+    });
     // What a screen reader is told, and whether the key is drawn lit.
     const shown = () =>
       buttons(panel).map((b) => [
@@ -173,6 +169,72 @@ describe("the Marks key shows the mode it toggles", () => {
     pencilMode.set(false);
     await panel.updateComplete;
     expect(shown()[1]).toEqual(["off", false]);
+  });
+});
+
+describe("a key shows what the board has shown of its value", () => {
+  it("is filled, given a disc, or made faint, follows the board, and says so", async () => {
+    // Read off the puzzle, as the Marks key's mode is: the keys are fetched
+    // once a params change, and the status moves with every guess.
+    const status = signal<KeyStatus[]>([]);
+    const panel = await mountKeys(
+      ["A", "B", "C", "D"].map((label) => ({ button: label.charCodeAt(0), label })),
+      {
+        get keyStatus() {
+          return status.get();
+        },
+      },
+    );
+    const looks = () =>
+      buttons(panel).map((b) => [
+        b.style.getPropertyValue("--wa-color-fill-loud") ||
+          (b
+            .querySelector<HTMLElement>(".disc")
+            ?.style.getPropertyValue("--wa-color-fill-loud") ??
+            null),
+        b.classList.contains("faint"),
+        b.querySelector(".spoken")?.textContent ?? null,
+      ]);
+    expect(looks()).toEqual([
+      [null, false, null],
+      [null, false, null],
+      [null, false, null],
+      [null, false, null],
+    ]);
+    status.set([
+      { button: 0x41, look: "fill", swatch: 3, spoken: "in place" },
+      { button: 0x42, look: "disc", swatch: 2, spoken: "in the word" },
+      { button: 0x43, look: "faint", spoken: "not in the word" },
+    ]);
+    await panel.updateComplete;
+    expect(looks()).toEqual([
+      [PALETTE[3], false, "in place"],
+      [PALETTE[2], false, "in the word"],
+      [null, true, "not in the word"],
+      [null, false, null],
+    ]);
+    // The label is still the letter the key types.
+    expect(buttons(panel)[1].textContent?.trim()).toMatch(/^B/);
+  });
+});
+
+describe("a keypad with rows is a keyboard", () => {
+  it("draws a line a row, in the order the rows are numbered", async () => {
+    const panel = await mountKeys([
+      { button: 0x51, label: "Q", row: 0 },
+      { button: 0x41, label: "A", row: 1 },
+      { button: 0x57, label: "W", row: 0 },
+      { button: 8, label: "Clear", row: 1 },
+    ]);
+    const base = panel.shadowRoot?.querySelector("[part~=base]");
+    expect(base?.classList.contains("keyboard")).toBe(true);
+    const rows = [...(base?.querySelectorAll("[part~=group]") ?? [])].map((g) =>
+      [...g.querySelectorAll("wa-button")].map((b) => b.getAttribute("data-button")),
+    );
+    expect(rows).toEqual([
+      ["81", "87"],
+      ["65", "8"],
+    ]);
   });
 });
 

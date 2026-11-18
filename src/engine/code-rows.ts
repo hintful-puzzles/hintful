@@ -126,16 +126,19 @@ export function selectedSlot(row: WorkingRow): number {
  * keeps a row pre-filled out of order (Guess's holds) from having a slot the
  * player asked to keep overwritten by the next key.
  *
- * `fallback` is where to rest when the row is full but cannot be submitted:
- * the submit position would draw the submit box around a row that will not go.
- * In notes mode the cursor names an answer slot, and the submit position is not
- * one, so a full row rests on its last slot.
+ * A row that is full but cannot be submitted has nowhere for the next value,
+ * and the submit position would draw the submit box around a row that will not
+ * go. There the cursor rests on slot `kept`, or with `kept` at `-1` is hidden,
+ * so a value typed next is declined ({@link FullRow}). In notes mode the cursor
+ * names an answer slot, and the submit position is not one, so a full row
+ * rests on its last slot.
  */
-export function restCursor(row: WorkingRow, fallback = 0): void {
+export function restCursor(row: WorkingRow, kept = 0): void {
   const n = row.entries.length;
   const open = firstOpen(row);
-  const full = row.pencilMode ? n - 1 : row.ready ? n : fallback;
-  row.cursor.x = open >= 0 ? open : full;
+  const full = row.pencilMode ? n - 1 : row.ready ? n : kept;
+  if (open < 0 && full < 0) row.cursor.visible = false;
+  else row.cursor.x = open >= 0 ? open : full;
 }
 
 /** Write `value` (or `0`, empty) into `slot` and re-judge the row. */
@@ -150,20 +153,44 @@ function setEntry(
 }
 
 /**
+ * Where the cursor goes when a value fills a row that cannot be submitted,
+ * each member's choice by what makes its row unsendable:
+ *
+ * - `"stay"`: on the slot just filled, so the next value rewrites it. Guess's
+ *   refusal is about a peg, a color repeated, and the peg last typed is the
+ *   one that repeated.
+ * - `"close"`: hidden, so a value typed past the end of the row is declined,
+ *   as a word game's keyboard does. Wordguess's refusal is about the word, and
+ *   rewriting its last letter would change a letter the player did not name.
+ *   A slot the player selected to change keeps the cursor all the same.
+ */
+export type FullRow = "stay" | "close";
+
+/**
  * Enter `value` where the player is pointing: the slot they selected, else the
  * first open one. Declines, returning `false`, when the row is full and nothing
  * is selected: there is nowhere for the value to go, and overwriting a slot the
  * player did not name would be a guess about which.
  */
-export function enterValue(row: WorkingRow, value: number, isReady: IsReady): boolean {
+export function enterValue(
+  row: WorkingRow,
+  value: number,
+  isReady: IsReady,
+  fullRow: FullRow = "stay",
+): boolean {
   const chosen = selectedSlot(row);
-  const slot = chosen >= 0 ? chosen : firstOpen(row);
+  const open = firstOpen(row);
+  const slot = chosen >= 0 ? chosen : open;
   if (slot < 0) return false;
   setEntry(row, slot, value, isReady);
   // The ring is the "where does the next one land" marker, so it is shown
   // whether or not the player has ever moved a cursor.
   row.cursor.visible = true;
-  restCursor(row, slot);
+  // A cursor on the first open slot is where it rests after each value, so
+  // only a cursor elsewhere is a slot the player chose to change.
+  const named = chosen >= 0 && chosen !== open;
+  const kept = fullRow === "stay" || named ? slot : -1;
+  restCursor(row, kept);
   return true;
 }
 

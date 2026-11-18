@@ -164,6 +164,33 @@ its behavior; Wordguess is then the module's second consumer. Where writing
 Wordguess's `interpretMove` repeats Guess's routing line for line, that
 part is lifted too, from the two copies.
 
+## The keypad (task 3.4a)
+
+Decided 2026-11-18, after seeing the 26-key panel run off both sides of a
+390-pixel phone in two unwrapped groups of fourteen.
+
+- **A keypad may declare rows** (`KeyLabel.row`), and the panel draws it as a
+  keyboard whose keys share the width, rather than a layout per game. A
+  keyboard is a fact about letters, not about Wordguess, so `letterKeyboard()`
+  is the engine's; a later word game takes it as is.
+- **Each letter key shows the letter's best score**, through a new
+  `Game.keyStatus(state)` sent with every move. `requestKeys` stays a function
+  of params, because the panel reloads keys only on a params change. The key
+  uses the board's own picture (filled, disc, faint) and palette, so it does
+  not rely on color alone and cannot drift from the board. It tells nothing
+  the rows do not already show. It summarizes them, as Wordle's keyboard does,
+  and leaves the answer row as the player's own deductions.
+- **A letter typed onto a full row that is no word is declined**, as Wordle
+  does, unless the player tapped a slot to change it. Rewriting the last
+  letter made the result of a key depend on whether the row happened to be a
+  word, and changed a letter the player had not named. Guess keeps rewriting
+  the peg last typed, because its refusal is about that peg, a repeated
+  color, so `enterValue` takes the choice as `FullRow`.
+- **`decodeUi` is given the restored state.** Wordguess judges "this row may
+  go" against the word list and the rows already scored. Without the state, a
+  whole word restored from a save read as not ready, and Submit framed it as
+  refused while the status line said it was ready.
+
 ## Asked of the owner
 
 Asked together on 2026-11-18, and answered the same day:

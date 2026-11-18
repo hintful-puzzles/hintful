@@ -25,7 +25,7 @@ import type { Puzzle } from "../puzzle.ts";
 // Component registration
 import "@awesome.me/webawesome/dist/components/button/button.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
-import "./keys.ts";
+import { isKeyboard } from "./keys.ts";
 
 /** The key columns a side panel starts from, before its height is measured. */
 function startingColumns(keyCount: number): number {
@@ -210,7 +210,8 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
   /** One more key column while the content is taller than the panel. Each
    * step re-renders and measures again, and stops at one key to a row. */
   private fitColumns() {
-    if (this.along !== "side" || !this.base) return;
+    // A keyboard keeps its own rows wherever it is.
+    if (this.along !== "side" || !this.base || isKeyboard(this.keyLabels)) return;
     const overflows = this.base.scrollHeight > this.clientHeight;
     if (overflows && this.columns < this.characterKeys.length) this.columns++;
   }

@@ -360,8 +360,9 @@ Reach for it when a hidden answer is guessed a row at a time and the player
 rules values out of an answer row. The answer row's rule-outs are state
 (`withRuleOuts`, `ruleOutMistakes` for Check & save); the working row is the
 `Ui`'s `WorkingRow`, edited by `enterValue` and `rubOut`. The game keeps its
-score, keys, picture, hint and the routing of taps and keys onto these.
-Exemplar: `guess/index.ts`.
+score, keys, picture, hint and the routing of taps and keys onto these, and
+chooses what a value typed onto a full row that cannot go does (`FullRow`).
+Exemplars: `guess/index.ts`, `wordguess/index.ts`.
 
 ### `grid/index.ts` — planar-grid geometry (upstream `grid.c`)
 
@@ -1355,6 +1356,8 @@ Build `Game.requestKeys` from these and do not spell digit codes in a game;
 - `colorKeys(n, firstColor)` for a game whose element is a color: each key
   carries a palette index (`KeyLabel.swatch`). `colorKeysZeroIsTen` is the
   same for a game that reads its tenth value off the `0` key.
+- `letterKeyboard()`: the alphabet in QWERTY rows (`KeyLabel.row`), for a
+  game that types words.
 - **Never list `pencilModeKey`.** `Midend.requestKeys` appends it for any
   game `takesNotes` recognizes, by a `pencil` array on the state or the
   mode flag on the `Ui`. `takesNotes` is the one definition of that

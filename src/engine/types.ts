@@ -52,7 +52,34 @@ export type KeyLabel = {
    * the keyboard binding rather than replacing it.
    */
   swatch?: number;
+  /**
+   * The keyboard row the key sits on, from 0, for a keypad laid out as a
+   * keyboard a player already knows: a line a row, in order, the keys sharing
+   * the width. Given on every key of a keypad or on none; without rows the
+   * panel lays the keys out by their count.
+   */
+  row?: number;
 };
+
+/**
+ * What the board has shown of the value a key types, drawn on the key in the
+ * board's own picture of it (`Game.keyStatus`).
+ */
+export type KeyStatus = {
+  /** The key it is drawn on, by the code it sends. */
+  button: number;
+  /** Said after the key's label, in the board's words for it: "in place". */
+  spoken: string;
+} & (
+  | {
+      /** The whole key filled, or a disc behind its label, in palette index
+       * `swatch`. */
+      look: "fill" | "disc";
+      swatch: number;
+    }
+  /** The key's label faint. */
+  | { look: "faint" }
+);
 
 /** One entry in the game-type preset menu; `submenu` makes it a nested group
  * rather than a selectable preset. */
@@ -132,6 +159,9 @@ export type NotifyGameStateChange = {
    * persisted `Ui` costs nothing at all.
    */
   uiState?: string;
+  /** `Game.keyStatus` for the board on screen, left out for a game without
+   * the hook. */
+  keyStatus?: KeyStatus[];
 };
 
 export type NotifyParamsChange = {

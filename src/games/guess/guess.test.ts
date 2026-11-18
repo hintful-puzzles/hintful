@@ -561,7 +561,7 @@ describe("guess encodeUi / decodeUi", () => {
 
     const restored = guessGame.newUi(state);
     guessGame.changedState?.(restored, null, state);
-    guessGame.decodeUi?.(restored, guessGame.encodeUi?.(ui) ?? "");
+    guessGame.decodeUi?.(restored, guessGame.encodeUi?.(ui) ?? "", state);
     expect(restored.entries).toEqual(ui.entries);
     expect(restored.holds).toEqual(ui.holds);
     // And the restored cursor is where the next color goes, not wherever it
@@ -570,8 +570,8 @@ describe("guess encodeUi / decodeUi", () => {
   });
 
   it("drops a peg a save claims that this game has no color for", () => {
-    const { ui } = freshGame("decode-ui-junk");
-    guessGame.decodeUi?.(ui, "3,99,-1,2_");
+    const { state, ui } = freshGame("decode-ui-junk");
+    guessGame.decodeUi?.(ui, "3,99,-1,2_", state);
     expect(ui.entries).toEqual([3, 0, 0, 2]);
     expect(ui.holds).toEqual([false, false, false, true]);
   });

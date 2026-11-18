@@ -21,6 +21,7 @@ import type {
   GameStatus,
   HintSpan,
   KeyLabel,
+  KeyStatus,
   OtherRun,
   PaletteScheme,
   Point,
@@ -284,6 +285,13 @@ export class Puzzle {
         update(this._hasPencilMarks, message.hasPencilMarks);
         update(this._pencilMode, message.pencilMode);
         update(this._uiState, message.uiState ?? "");
+        {
+          const said = JSON.stringify(message.keyStatus ?? []);
+          if (said !== this.keyStatusSaid) {
+            this.keyStatusSaid = said;
+            this._keyStatus.set(message.keyStatus ?? []);
+          }
+        }
         break;
       case "params-change":
         update(this._params, message.params);
@@ -370,6 +378,11 @@ export class Puzzle {
    * no `encodeUi`. Watched so that composing a Guess row — a `Ui` edit and not
    * a move — refreshes the autosave. See {@link NotifyGameStateChange.uiState}. */
   private _uiState = signal<string>("");
+  /** What the board has shown of each key's value (`Game.keyStatus`); empty
+   * for a game without the hook. Compared by value, through
+   * {@link keyStatusSaid}: the engine sends a fresh list with every move. */
+  private _keyStatus = signal<readonly KeyStatus[]>([]);
+  private keyStatusSaid = "[]";
   /**
    * The board's resolved palette, as CSS colors — what the canvas is actually
    * painted with, after dark-mode authoring and the background's hue tint
@@ -663,6 +676,10 @@ export class Puzzle {
 
   public get uiState(): string {
     return this._uiState.get();
+  }
+
+  public get keyStatus(): readonly KeyStatus[] {
+    return this._keyStatus.get();
   }
 
   public get canRedo(): boolean {

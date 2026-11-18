@@ -98,12 +98,33 @@ letter at the selected slot of the working row, else at its first empty slot,
 or, in Marks mode, rule it out of the selected answer slot or back in. Every
 letter key SHALL be consumed while the game is in play, even where the row
 has no room for it, so that no letter falls through to the app's one-letter
-shortcuts. The panel SHALL offer the 26 letters, Clear and Submit.
+shortcuts.
 
 #### Scenario: A letter on a full row deals no new game
 
 - **WHEN** the working row is full and N is typed
 - **THEN** the key is consumed and the row is unchanged
+
+### Requirement: Controls: A full row takes no more letters
+
+A letter typed onto a full row SHALL be declined, whether or not the row may
+go, unless the player selected a slot of it to change.
+
+#### Scenario: A letter past a row that is no word changes nothing
+
+- **WHEN** the working row spells CRANX and E is typed
+- **THEN** the row still spells CRANX; and when its last slot is tapped and K
+  typed, it spells CRANK
+
+### Requirement: Controls: The panel is a keyboard
+
+The panel SHALL lay the letters out in QWERTY rows, with Submit and Clear
+flanking the last row.
+
+#### Scenario: The last row
+
+- **WHEN** the panel is shown
+- **THEN** its last row is Submit, Z X C V B N M and Clear
 
 ### Requirement: Controls: Enter submits and never switches Marks mode on
 
@@ -145,6 +166,12 @@ guess SHALL empty it.
 - **WHEN** CR has been typed and the game is saved and reloaded
 - **THEN** the working row holds CR, with the frame on the third slot
 
+#### Scenario: A whole word brought back from a save goes
+
+- **WHEN** CRANE has been typed, the game is saved and reloaded, and Enter is
+  pressed
+- **THEN** CRANE is submitted
+
 ### Requirement: Status bar: Wordguess says why a word will not go
 
 The status bar SHALL count the guesses (`Guess 2 of 6`), add
@@ -169,6 +196,19 @@ surface, so the score reads without color.
 - **WHEN** CRANE is scored against CIGAR
 - **THEN** C is drawn on a filled square, R and A on discs, and N and E in
   faint ink
+
+### Requirement: Look: Each letter key shows its letter's best score
+
+Each letter key SHALL show the best score its letter has had in any row, in
+the board's picture of it: filled for in place, a disc for elsewhere, and
+faint for a letter scored only absent, which the word lacks; a letter not yet
+guessed SHALL be plain. A screen reader SHALL be told `in place`,
+`in the word` or `not in the word` after the letter.
+
+#### Scenario: A repeated letter is shown at its best
+
+- **WHEN** LOLLY has been scored against HOTEL
+- **THEN** the O key is filled, the L key has a disc, and the Y key is faint
 
 ### Requirement: Look: The answer row shows each slot's letters still possible
 

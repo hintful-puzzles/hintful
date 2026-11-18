@@ -2701,7 +2701,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // completion flag), after the replay above — replay goes through
     // `executeMove`, never `interpretMove`, so a death removed from the log by
     // an undo would otherwise be lost. See {@link Game.encodeUi}.
-    if (env.ui !== undefined) this.game.decodeUi?.(this.ui, env.ui);
+    if (env.ui !== undefined) this.game.decodeUi?.(this.ui, env.ui, this.state);
     // Replay armed animations for each step; a restored game should
     // appear settled, not mid-animation.
     this.clearAnimation();
@@ -2902,6 +2902,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // and its state cannot disagree about which games have the mode.
       pencilMode: (this.ui as { pencilMode?: unknown } | null)?.pencilMode === true,
       ...(this.game.encodeUi ? { uiState: this.game.encodeUi(this.ui) } : {}),
+      ...(this.game.keyStatus ? { keyStatus: this.game.keyStatus(this.state) } : {}),
     });
   }
 

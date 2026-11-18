@@ -93,6 +93,18 @@ export function numberKeys(): KeyLabel[] {
 }
 
 /**
+ * The alphabet as a typist's keyboard has it, in three rows (`KeyLabel.row`),
+ * each key sending its capital letter. For a game that types words, whose
+ * player looks for a letter where a keyboard keeps it; the game adds its own
+ * keys to the rows, as a word game's Enter and Backspace flank the last.
+ */
+export function letterKeyboard(): KeyLabel[] {
+  return ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"].flatMap((letters, row) =>
+    [...letters].map((label) => ({ button: label.charCodeAt(0), label, row })),
+  );
+}
+
+/**
  * {@link digitKeys} where each key **enters a color**: key `i` carries palette
  * index `firstColor + i`, and the panel paints the key in it.
  *

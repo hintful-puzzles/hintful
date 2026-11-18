@@ -192,6 +192,20 @@ describe("input", () => {
     expect(press(s, ui, "n".charCodeAt(0)).result).toBe(UI_UPDATE);
     expect(ui.entries).toEqual(before);
   });
+  it("declines a letter past a full row that is no word, but changes a tapped slot", () => {
+    const s = board("cigar");
+    const ui = wordguessGame.newUi(s);
+    typeWord(s, ui, "cranx");
+    expect(ui.cursor.visible).toBe(false);
+    expect(press(s, ui, "e".charCodeAt(0)).result).toBe(UI_UPDATE);
+    expect(wordOf(ui.entries)).toBe("cranx");
+    const ds = preferredDrawState(wordguessGame, s);
+    const last = centerOf(tileRect(ds.tileSize, 0, 4));
+    wordguessGame.interpretMove(s, ui, ds, last, LEFT_BUTTON);
+    press(s, ui, "k".charCodeAt(0));
+    expect(wordOf(ui.entries)).toBe("crank");
+    expect(ui.cursor.x).toBe(5);
+  });
   it("rubs out the last letter, and Enter on the submit position sends the row", () => {
     const s = board("cigar");
     const ui = wordguessGame.newUi(s);
@@ -239,9 +253,21 @@ describe("input", () => {
     const encoded = wordguessGame.encodeUi?.(ui) ?? "";
     expect(encoded).toBe("cr...");
     const back = wordguessGame.newUi(s);
-    wordguessGame.decodeUi?.(back, encoded);
+    wordguessGame.decodeUi?.(back, encoded, s);
     expect(back.entries).toEqual(ui.entries);
     expect(back.cursor.x).toBe(2);
+  });
+  it("sends a whole word brought back from a save", () => {
+    const s = board("cigar");
+    const ui = wordguessGame.newUi(s);
+    typeWord(s, ui, "crane");
+    const back = wordguessGame.newUi(s);
+    wordguessGame.decodeUi?.(back, wordguessGame.encodeUi?.(ui) ?? "", s);
+    expect(back.ready).toBe(true);
+    expect(press(s, back, SUBMIT).result).toEqual({
+      type: "guess",
+      letters: valuesOf("crane"),
+    });
   });
   it("sends the word on Enter wherever the frame is, and never enters Marks mode", () => {
     const s = board("cigar");
@@ -267,6 +293,7 @@ describe("input", () => {
     const ui = wordguessGame.newUi(s);
     typeWord(s, ui, "crnae");
     ui.cursor.x = 4;
+    ui.cursor.visible = true;
     expect(press(s, ui, CURSOR_RIGHT).result).toBeNull();
   });
 });
@@ -286,10 +313,30 @@ describe("Check & save", () => {
 });
 
 describe("the keypad", () => {
-  it("is the alphabet, Clear and Submit", () => {
+  it("is a keyboard, Submit and Clear flanking its last row", () => {
     const keys = wordguessGame.requestKeys?.(defaultParams()) ?? [];
-    expect(keys.map((k) => k.label).join(" ")).toBe(
-      "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z Clear Submit",
+    const rows = [0, 1, 2].map((r) =>
+      keys
+        .filter((k) => k.row === r)
+        .map((k) => k.label)
+        .join(" "),
     );
+    expect(rows).toEqual([
+      "Q W E R T Y U I O P",
+      "A S D F G H J K L",
+      "Submit Z X C V B N M Clear",
+    ]);
+  });
+  it("shows each letter scored at its best: in place, in the word, or not", () => {
+    // LOLLY against HOTEL: one L elsewhere and two absent, so L is in the
+    // word; O in place; Y absent.
+    const s = play(board("hotel"), "lolly");
+    const status = new Map(
+      (wordguessGame.keyStatus?.(s) ?? []).map((k) => [
+        String.fromCharCode(k.button),
+        k.look,
+      ]),
+    );
+    expect(Object.fromEntries(status)).toEqual({ L: "disc", O: "fill", Y: "faint" });
   });
 });

@@ -19,7 +19,9 @@ for each puzzle and does not come back; the page is always in the Menu, as
 ## On-screen keyboard {#virtual-keyboard}
 
 Puzzles you solve by typing, such as Solo and Keen, show an on-screen keypad
-so they can be played by touch.
+so they can be played by touch. A word puzzle's keypad is laid out like a
+keyboard, and its keys show what your guesses have found out about each
+letter, marked as the board marks it.
 
 If you have a real keyboard and would rather have the screen space, turn the
 keypad off in the

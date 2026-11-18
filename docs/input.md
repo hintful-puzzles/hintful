@@ -910,7 +910,16 @@ Exemplars: [`solo/index.ts`](../src/games/solo/index.ts), `keen/index.ts`,
 - **Test `isEraseKey`, never the panel's code.** The panel's Clear sends
   `CLEAR_BUTTON` (8) and the keyboard's Backspace sends `DELETE` (127).
 - **The hook takes `params` only.** The panel reloads only on a param change,
-  so thread no state or `Ui` through it.
+  so thread no state or `Ui` through it. What the board has shown of each
+  key's value goes through `Game.keyStatus(state)` instead, which the midend
+  sends with every move: a key filled, given a disc behind its label, or made
+  faint, each in the board's own picture of that score and with the board's
+  words for it read out. Exemplar: `wordguess/index.ts`.
+- **A keypad a player already knows by its layout gives each key its `row`**
+  (`KeyLabel.row`, on every key or none), and the panel draws it as a
+  keyboard: a line a row, the keys sharing the width, no column fitting.
+  `letterKeyboard()` is the alphabet in QWERTY rows; the game adds its own keys
+  to them.
 - **Every key offered must reach the game.** `input-parity.test.ts` sends each
   returned button over a real board and fails on one `interpretMove` never
   consumes.

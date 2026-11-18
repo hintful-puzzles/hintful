@@ -692,6 +692,11 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     anchor: "virtual-keyboard",
     why: "the on-screen keyboard's keys are this",
   },
+  keyStatus: {
+    kind: "features",
+    anchor: "virtual-keyboard",
+    why: "a word puzzle's keys show what the guesses found",
+  },
   textFormat: {
     kind: "features",
     anchor: "sharing",
