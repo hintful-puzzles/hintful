@@ -1,0 +1,248 @@
+# ballsort Specification
+
+## Purpose
+Ball Sort, the puzzle of pouring balls between tubes until each tube holds
+one color. This spec holds the pour, the params and description, what a deal
+promises, the search behind Solve and the hint, the controls, what a hint
+says of its pour, and how the tubes and a pour look.
+
+## Requirements
+
+### Requirement: Rules: A pour moves the top run of one color, as much of it as fits
+
+A move SHALL pour from one tube into another: the balls of one color in an
+unbroken run at the top of the first tube, as many of them as the second tube
+has room for. It SHALL be legal only onto a ball of that color or into an
+empty tube, and only where the second tube has room. The board SHALL be
+solved when every tube is empty or full of balls of one color. A position
+from which no series of pours sorts the board is a dead end; it is not lost,
+and Undo leaves it.
+
+#### Scenario: Three balls into room for one
+
+- **WHEN** `2h4e1:abbb,aab,a` pours tube 0 into tube 1
+- **THEN** one b goes and the board is `abb,aabb,a`
+
+#### Scenario: Onto another color
+
+- **WHEN** `2h2e1:ab,ba,` pours tube 0 into tube 1
+- **THEN** the pour is refused, the b on top of tube 0 meeting the a on top
+  of a full tube 1
+
+### Requirement: Params: Colors, balls per tube and empty tubes
+
+Params SHALL be the number of colors (2 to 10), the balls a tube holds (2 to
+6) and the tubes that start empty (1 to 3), encoded `<colors>h<capacity>e<spare>`.
+A string that leaves out `h` or `e` SHALL decode to 4 balls a tube and 2
+empty tubes. There are as many full tubes as colors, so a board has colors
+plus empty tubes.
+
+#### Scenario: A bare count of colors
+
+- **WHEN** `9` is decoded
+- **THEN** the board is 9 colors, 4 balls a tube and 2 empty tubes, `9h4e2`
+
+### Requirement: Params: A deal is refused where the generator cannot make one in good time
+
+When a board is to be dealt, and only then, `validateParams` SHALL refuse
+more than 48 balls with one empty tube, where almost no shuffle can be
+sorted, and more than 30 with three, where a deal's positions near the
+search's budget. A board of any size that arrives with its description SHALL
+load.
+
+#### Scenario: Nine colors of six with one empty tube
+
+- **WHEN** `9h6e1` is checked for dealing
+- **THEN** it is refused with "With one empty tube, a board can have at most
+  48 balls."
+- **AND** the same params are not refused for a board that arrives with its
+  description
+
+### Requirement: Description: Each tube from the bottom up, a letter a color
+
+A description SHALL list every tube's balls from the bottom up, `a` for the
+first color, `b` the second and so on, tubes split by commas, an empty tube
+written as nothing. `newState` SHALL refuse a tube over its capacity, a letter
+past the board's colors, a count of tubes other than colors plus empty tubes,
+and a board without exactly one tube's worth of balls of every color. A
+description may hold any such position, sorted tubes and partly filled ones
+included.
+
+#### Scenario: Two tubes of four and two empty ones
+
+- **WHEN** `2h4e2:abba,baab,,` is loaded
+- **THEN** tube 0 holds a, b, b, a from the bottom, tube 1 b, a, a, b, and
+  tubes 2 and 3 are empty
+
+### Requirement: Generation: A deal is a shuffle the search sorts, with no tube sorted
+
+The generator SHALL shuffle every ball into the full tubes, leave the spare
+tubes empty, and keep the deal only where no tube is dealt already sorted and
+the search sorts it within its budget. The game has no difficulty tiers: its
+difficulty is the board's colors, balls a tube and empty tubes, and the preset
+menu gives the boards with two empty tubes by size, up to ten colors of five,
+then those with one.
+
+#### Scenario: Every preset deals a board that can be sorted
+
+- **WHEN** any preset is dealt
+- **THEN** the search finds a line of pours that sorts it, and no tube is
+  full of one color
+
+### Requirement: Solver: Every reachable position, measured from sorted
+
+The search SHALL enumerate every position the pours can reach from a board,
+taking two positions that differ only in the order of their tubes as one, and
+measure each by the fewest pours that sort it, or none. Its line SHALL be a
+shortest one, each pour the first in order of the tube poured from and then
+into that brings the board one pour nearer, so the line from any position on
+it is the rest of it. Past its budget of positions it SHALL settle nothing.
+
+#### Scenario: A dead end with pours left
+
+- **WHEN** the board is a position no series of pours sorts, and pours
+  remain
+- **THEN** the search measures it as none, and the hint refuses it
+
+### Requirement: Solver: Solve shows the sorted board a shortest line ends on
+
+Solve SHALL show the sorted board that the search's line from the player's
+position ends on, and else the one from the board as dealt.
+
+#### Scenario: Solve from the deal
+
+- **WHEN** Solve is chosen on a dealt board
+- **THEN** every tube is empty or full of one color
+
+### Requirement: Controls: Two taps make a pour
+
+A tap on a tube with balls SHALL pick up its top run, shown lifted out of the
+tube. A second tap SHALL pour the run into the tube tapped where the pour is
+legal; on the tube picked up it SHALL put the run back; on a tube the run
+cannot go into it SHALL pick that tube's run up instead, or put the run back
+where that tube is empty. Any change of board SHALL put down what was picked
+up.
+
+#### Scenario: A pour by two taps
+
+- **WHEN** on `2h2e1:ab,ba,` tube 0 is tapped and then tube 2
+- **THEN** the b on top of tube 0 is poured into tube 2
+
+### Requirement: Controls: A press with nothing picked up lifts at once
+
+With nothing picked up, a press on a tube with balls SHALL lift its top run
+before the release, since a tap and a drag from there both begin by picking
+it up; the release of that press SHALL leave it up. A press with a run
+already up SHALL change nothing until its release.
+
+#### Scenario: The finger goes down
+
+- **WHEN** on `2h2e1:ab,ba,` tube 0 is pressed and not yet released
+- **THEN** the b on top of tube 0 is shown lifted
+
+### Requirement: Controls: A drag pours, and the keyboard taps
+
+A drag from one tube to another SHALL pour from the first into the second,
+whatever was picked up. The keyboard's cursor SHALL move along the tubes with
+the arrow keys, up and down between rows, and Enter or Space at the cursor
+SHALL do what a tap there does.
+
+#### Scenario: A drag into the empty tube
+
+- **WHEN** on `2h2e1:ab,ba,` the pointer is pressed on tube 1 and released
+  on tube 2
+- **THEN** the a on top of tube 1 is poured into tube 2
+
+### Requirement: Hint: The first pour of a shortest line, and what it does
+
+The hint SHALL offer the first pour of the search's shortest line, ringing the
+balls that go and the slots they land in, and SHALL say the first that holds
+of: it sorts the board, fills its tube, frees balls the line pours out before
+pouring onto them (by their color), empties the tube it leaves, lands on its
+own color, or starts a tube the line fills with its color before pouring out
+of it; else it SHALL say the pour alone. It SHALL name no color its pour
+does not move or free.
+
+#### Scenario: A pour that frees the next
+
+- **WHEN** a hint is asked where the line's next pour moves from the tube
+  this one leaves
+- **THEN** it reads "Pour this ball into the ringed tube: that frees the
+  yellow ball beneath." with the board's color
+
+### Requirement: Hint: Of equal pours, the one leaving the most room
+
+Of the pours that bring the board one pour nearer sorted, the hint SHALL
+offer the one leaving the most pours that can still sort it, the first in
+order of the tubes on a tie. Where no other legal pour leaves as many pours
+after it, and no stronger effect holds (it sorts, fills, frees or
+empties), the step SHALL say "that leaves you more pours than any other".
+
+#### Scenario: The roomiest pour
+
+- **WHEN** a hint is asked where the offered pour leaves more pours after
+  it than any other legal pour
+- **THEN** it reads "Pour this ball into the ringed tube: that leaves you
+  more pours than any other." unless a stronger effect holds
+
+### Requirement: Hint: A dead end is named only as one of two choices
+
+Where the board has exactly two pours and the one not offered leads to a
+dead end, the step SHALL stripe it, say it is the only other and leads to a
+dead end, and conclude "so". Otherwise the step SHALL name no dead end.
+
+#### Scenario: Two pours
+
+- **WHEN** a hint is asked on a board with two pours, one into a dead end
+- **THEN** it reads "The only other pour, the striped one, leads to a dead
+  end, so pour this ball into the ringed tube."
+
+### Requirement: Hint: The last pour sorts the board
+
+The last step SHALL say that it sorts the board.
+
+#### Scenario: The last pour
+
+- **WHEN** a hint is asked one pour from sorted
+- **THEN** it reads "Pour these balls into the ringed tube: that sorts the
+  board." or the same of "this ball"
+
+### Requirement: Hint: A dead end is refused, and the hint goes back
+
+A dead end SHALL be refused as one, so that applying the hint goes back to the
+last position that can still be sorted. A position with no pour at all is
+refused at a glance, without the search.
+
+#### Scenario: One pour into a dead end
+
+- **WHEN** on `5h4e1:caae,dada,ecbc,bdbe,debc,` tube 0 is poured into tube 5
+  and a hint is asked
+- **THEN** the hint refuses the position, and applying it returns the board
+  to before the pour
+
+### Requirement: Look: Tubes in rows, balls told apart by a symbol
+
+The tubes SHALL stand in as many rows as keep the board no wider than tall,
+a short last row centered. Each ball SHALL be a disc of its color with a
+symbol of its color's own drawn on it, so that no two colors are told apart by
+hue alone.
+
+#### Scenario: Six tubes
+
+- **WHEN** a board of 4 colors and 2 empty tubes is drawn
+- **THEN** its six tubes stand in two rows of three
+
+### Requirement: Look: A pour streams its balls over the mouths
+
+A pour SHALL fly its balls one after another, each drawn over the board: up
+out of its tube into its row's headroom, clear of every mouth, across to the
+headroom of the row it lands in, and down into its slot, fast at first and
+slowing into place. A ball bound for the
+tube right below its own SHALL step aside toward the board's middle on the
+way. Solve SHALL show the sorted board at once.
+
+#### Scenario: Into the tube below
+
+- **WHEN** a pour goes into the tube right below the one it leaves
+- **THEN** each ball leaves its tube by the mouth and steps aside, and never
+  falls down through the tube it left

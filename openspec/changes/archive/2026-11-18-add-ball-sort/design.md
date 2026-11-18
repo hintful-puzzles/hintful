@@ -112,6 +112,15 @@ second search to prove one.
   pour alone 10. Naming the color the line next fills a
   tube with, as at first, named a color the pour often did not touch, and
   the player read it as a contradiction.
+- **Room is the secondary objective** (owner, 2026-11-18): of the pours
+  that bring the board one nearer, the line takes the one leaving the most
+  pours that can still sort it (`Reach.nearer`, `engine/best-by.ts`). On
+  the first choice it had, the hinted pour left the most such pours on 54%
+  to 76% of positions, where some equally short pour did on 77% to 91%. A
+  step says so, "that leaves you more pours than any other", by the count a
+  player can make, the pours after it, and only where no other pour leaves
+  as many: 119 of 1,026 positions of the scan, after frees and empties and
+  before joins and starts. A first version, to be iterated on.
 - **A dead end is named only as one of two choices** (owner, 2026-11-18):
   where the board has two pours and the other leads to a dead end, it is
   striped and the step concludes "so". Among more, naming one pour that

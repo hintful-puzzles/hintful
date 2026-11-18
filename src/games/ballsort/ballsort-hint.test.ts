@@ -41,21 +41,23 @@ const pinned = describeHintPins({
     return pours.length > 0 ? pours[turn % pours.length] : null;
   },
   pins: {
-    /** Held on 90 of 1027 positions walked. */
+    /** Held on 91 of 1026 positions walked. */
     last: "4h4e2:bbb,dddd,aaaa,b,cccc,",
-    /** Held on 313 of 1027 positions walked. */
-    fills: "4h4e2:cbac,aaba,bb,ccdd,dd,",
-    /** Held on 30 of 1027 positions walked. */
+    /** Held on 301 of 1026 positions walked. */
+    fills: "5h4e1:eccc,adea,aebb,eba,ddbd,c",
+    /** Held on 26 of 1026 positions walked. */
     either: "5h4e1:bcd,ceaa,ade,acce,dbde,bb",
-    /** Held on 278 of 1027 positions walked. */
-    frees: "4h4e2:ccad,dbab,acdd,bbac,,",
-    /** Held on 35 of 1027 positions walked. */
-    empties: "4h4e2:dcc,aa,ccbb,bbad,dd,a",
-    /** Held on 187 of 1027 positions walked. */
-    joins: "4h4e2:cca,dbab,acdd,bbac,d,",
-    /** Held on 84 of 1027 positions walked. */
-    starts: "4h4e2:dcdb,cdba,bdaa,bcca,,",
-    /** Held on 10 of 1027 positions walked. */
+    /** Held on 251 of 1026 positions walked. */
+    frees: "4h4e2:bbac,caad,dcba,dbdc,,",
+    /** Held on 43 of 1026 positions walked. */
+    empties: "4h4e2:cca,dbab,ac,bbac,dd,d",
+    /** Held on 119 of 1026 positions walked. */
+    roomiest: "5h4e1:eccc,adea,aebb,ebac,ddbd,",
+    /** Held on 111 of 1026 positions walked. */
+    joins: "4h4e2:dcdb,cdb,bdaa,bcca,a,",
+    /** Held on 79 of 1026 positions walked. */
+    starts: "4h4e2:ccad,dbab,acdd,bbac,,",
+    /** Held on 5 of 1026 positions walked. */
     plain: "5h4e1:abae,cceb,dedb,adcc,bead,",
   },
 });
@@ -144,6 +146,19 @@ describe("Ball Sort's hint", () => {
       s = G.executeMove(s, next);
     }
     expect(topColor(s, first.to)).toBe(color);
+  });
+
+  it("says a pour leaves the most pours only where every other leaves fewer", () => {
+    const { state, steps } = pinned("roomiest");
+    const first = steps[0].move;
+    if (first.type !== "pour") throw new Error("expected a pour");
+    const room = (r: { from: number; to: number }) =>
+      legalPours(poured(state, { type: "pour", ...r })).length;
+    const others = legalPours(state).filter(
+      (r) => r.from !== first.from || r.to !== first.to,
+    );
+    expect(others.length).toBeGreaterThan(0);
+    expect(Math.max(...others.map(room))).toBeLessThan(room(first));
   });
 
   it("sees at a glance a board with no pour at all", () => {

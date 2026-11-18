@@ -27,8 +27,9 @@ help:
     {{hint-marks}}
 
     Each hint says what its pour does: fills a tube, frees balls that are
-    to move next, empties a tube, lands on its own color, or starts a tube
-    of one color.
+    to move next, empties a tube, leaves you more pours than any other,
+    lands on its own color, or starts a tube of one color. Where several
+    pours are as good, it picks the one that leaves you the most room.
 
     A position from which no series of pours can sort the tubes is a **dead
     end**. You can reach one without noticing, since there are often still
@@ -127,6 +128,12 @@ steps:
     terms: { n: number }
     move: "{pour}"
     effect: "that empties the tube {n: it leaves | they leave}"
+  # No other pour leaves as many pours after it.
+  roomiest:
+    ring: [run, tube]
+    terms: { n: number }
+    move: "{pour}"
+    effect: "that leaves you more pours than any other"
   # This pour lands on balls of its own color.
   joins:
     ring: [run, tube]

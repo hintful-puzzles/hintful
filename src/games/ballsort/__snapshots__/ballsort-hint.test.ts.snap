@@ -6,9 +6,10 @@ exports[`ballsort: pinned hint positions > says, at each pin 1`] = `
   "empties": "Pour these balls into the ringed tube: that empties the tube they leave.",
   "fills": "Pour these balls into the ringed tube: that fills it.",
   "frees": "Pour this ball into the ringed tube: that frees the yellow ball beneath.",
-  "joins": "Pour these balls into the ringed tube, onto their own color.",
+  "joins": "Pour this ball into the ringed tube, onto its own color.",
   "last": "Pour these balls into the ringed tube: that sorts the board.",
   "plain": "Pour this ball into the ringed tube.",
-  "starts": "Pour this ball into the ringed tube: that starts a tube of yellow.",
+  "roomiest": "Pour this ball into the ringed tube: that leaves you more pours than any other.",
+  "starts": "Pour these balls into the ringed tube: that starts a tube of magenta.",
 }
 `;

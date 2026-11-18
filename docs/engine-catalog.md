@@ -85,6 +85,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `hint-gesture.ts` — how the pointer makes a hint step |
 | – `apart-by-position.ts` — two things of one name, told apart |
 | – `rival-judging.ts` — what a searched move's rivals let it say |
+| – `best-by.ts` — the best of equal moves, and whether it is best alone |
 | – `search-outcome.ts` — what a budgeted search for a line established |
 | – `finish-search.ts` — the depth-first search that finds a line or proves none |
 | – `candidate-hint.ts` — candidate-elimination plan plumbing |
@@ -859,6 +860,14 @@ whose rivals are ruled out by a deduction or a rule judges them through it
 too. The judge, the search behind it and what to say when nothing is
 settled stay the game's. Exemplar: `pegs/hint.ts`. See
 [`hints-search.md`](./hints-search.md) § "Judge the rivals of a searched move".
+
+### `best-by.ts` — the best of equal moves, and whether it is best alone
+
+Reach for `bestBy` where a hint chooses among equally good moves by a
+secondary measure, and where its sentence claims the chosen one is the most
+or the fewest of something: `alone` says no other ties it, so the claim is
+true. Exemplar: Ball Sort's room, in `ballsort/solver.ts` (`nearer`) and
+`ballsort/hint.ts`.
 
 ### `search-outcome.ts` — what a budgeted search for a line established
 

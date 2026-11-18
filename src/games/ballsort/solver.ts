@@ -13,6 +13,7 @@
  * can leave a position unsettled.
  */
 
+import { bestBy } from "../../engine/best-by.ts";
 import type { SearchOutcome } from "../../engine/search-outcome.ts";
 import { type BallsortPour, type BallsortState, legalPour, rulesOf } from "./state.ts";
 
@@ -177,9 +178,11 @@ export class Reach {
   }
 
   /**
-   * The pours that sort `s` in the fewest, each the first legal one, in order
-   * of the tube poured from and then into, that brings the board one pour
-   * nearer. Each is so chosen from where the last left the board, so the
+   * The pours that sort `s` in the fewest. Of the pours that bring the board
+   * one pour nearer, each is the one that leaves the most pours that can
+   * still sort it, the first in order of the tube poured from and then into
+   * on a tie: the player's room is the secondary objective, a tie-break among
+   * equal gains. Each is so chosen from where the last left the board, so the
    * line from any position on it is the rest of it.
    */
   line(s: BallsortState): BallsortPour[] | null {
@@ -200,16 +203,34 @@ export class Reach {
     s: BallsortState,
     d: number,
   ): { pour: BallsortPour; board: BallsortState } {
+    const nearer = this.pours(s).filter((p) => this.distance(p.board) === d - 1);
+    const best = bestBy(nearer, (p) => this.liveRoom(p.board));
+    if (best === null)
+      throw new Error("ballsort: a position the search measured has no pour nearer");
+    return best.item;
+  }
+
+  /** How many pours from `s` lead to a position that can still be sorted. */
+  liveRoom(s: BallsortState): number {
+    return this.pours(s).filter((p) => this.distance(p.board) !== null).length;
+  }
+
+  /** Every legal pour from `s` with the board after it, in order of the tube
+   * poured from and then into. */
+  private pours(s: BallsortState): { pour: BallsortPour; board: BallsortState }[] {
+    const out: { pour: BallsortPour; board: BallsortState }[] = [];
     for (let from = 0; from < s.w; from++) {
       for (let to = 0; to < s.w; to++) {
         const pour: BallsortPour = { type: "pour", from, to };
         const m = legalPour(s, pour);
         if (m === null) continue;
-        const board = { ...s, ball: rulesOf(s).play({ ball: s.ball }, m).ball };
-        if (this.distance(board) === d - 1) return { pour, board };
+        out.push({
+          pour,
+          board: { ...s, ball: rulesOf(s).play({ ball: s.ball }, m).ball },
+        });
       }
     }
-    throw new Error("ballsort: a position the search measured has no pour nearer");
+    return out;
   }
 }
 

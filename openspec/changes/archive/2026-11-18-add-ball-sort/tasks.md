@@ -27,4 +27,4 @@ game"), exemplar Pegs. Read the sections that row names before each concern.
 
 - [x] 3.1 `npm run game -- <id>` clean; the game's tests and the hint sweeps
 - [x] 3.2 Run the app in Chrome: play a board with pointer, keyboard and touch at desktop and phone width; ask for a hint at every stage, into and out of a dead end; a subagent that did not write the game reads the hint's words against the board
-- [ ] 3.3 `docs/new-game.md` § "Definition of done"; commit, push, and bring the game to the owner for acceptance
+- [x] 3.3 `docs/new-game.md` § "Definition of done"; commit, push, and bring the game to the owner for acceptance

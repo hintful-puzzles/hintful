@@ -14,6 +14,7 @@
  * construction (docs/hints-search.md § "Recompute-stable plans").
  */
 
+import { bestBy } from "../../engine/best-by.ts";
 import { FREE_NAMES } from "../../engine/color/colors.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
@@ -42,6 +43,7 @@ export const BALLSORT_RUNGS = [
   "either",
   "frees",
   "empties",
+  "roomiest",
   "joins",
   "starts",
   "plain",
@@ -144,6 +146,11 @@ export function hint(
     return { ok: true, steps: [step("frees", words)] };
   }
   if (heightOf(after, m.from) === 0) return one("empties");
+  // The room a pour leaves, said by the count a player can make: the pours
+  // there are after it. Said only where no other pour leaves as many.
+  const room = bestBy(legalPours(state), (r) => legalPours(poured(state, r)).length);
+  if (room?.alone && room.item.from === m.from && room.item.to === m.to)
+    return one("roomiest");
   if (heightOf(state, m.to) > 0) return one("joins");
   if (staysUntilFull(after, rest, m.to)) {
     const color = topColor(after, m.to);

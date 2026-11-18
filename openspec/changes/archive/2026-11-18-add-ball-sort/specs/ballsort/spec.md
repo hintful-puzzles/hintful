@@ -162,6 +162,21 @@ does not move or free.
 - **THEN** it reads "Pour this ball into the ringed tube: that frees the
   yellow ball beneath." with the board's color
 
+### Requirement: Hint: Of equal pours, the one leaving the most room
+
+Of the pours that bring the board one pour nearer sorted, the hint SHALL
+offer the one leaving the most pours that can still sort it, the first in
+order of the tubes on a tie. Where no other legal pour leaves as many pours
+after it, and no stronger effect holds (it sorts, fills, frees or
+empties), the step SHALL say "that leaves you more pours than any other".
+
+#### Scenario: The roomiest pour
+
+- **WHEN** a hint is asked where the offered pour leaves more pours after
+  it than any other legal pour
+- **THEN** it reads "Pour this ball into the ringed tube: that leaves you
+  more pours than any other." unless a stronger effect holds
+
 ### Requirement: Hint: A dead end is named only as one of two choices
 
 Where the board has exactly two pours and the one not offered leads to a
