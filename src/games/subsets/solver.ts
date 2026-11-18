@@ -787,7 +787,16 @@ export function deduceHintPlan(
     readsOf,
     judging ? { aim: judging.aim } : {},
   );
-  if (judging) judging.graph = walk.graph;
+  if (judging)
+    judging.traced = {
+      graph: walk.graph,
+      walked: walk.taken,
+      fresh: () => {
+        const again = boardMarks(cloneState(orig), ladder) ?? m;
+        again.budget = stepBudget("subsets hint");
+        return again;
+      },
+    };
   while (!judging?.done(m)) {
     const known = walk.graph.facts.length;
     const from = plan.length;

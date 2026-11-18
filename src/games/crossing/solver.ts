@@ -869,7 +869,19 @@ function judgedWalk(
   const walk = ladderWalk(m, entries, { [TIERS]: 0 }, (t) => readsOf(board.puzzle, t), {
     aim: judging.aim,
   });
-  judging.graph = walk.graph;
+  // The board as the walk began, which it writes its firings on.
+  const grid = board.grid.slice();
+  const pencil = board.pencil.slice();
+  judging.traced = {
+    graph: walk.graph,
+    walked: walk.taken,
+    fresh: () =>
+      boardMarks({
+        puzzle: board.puzzle,
+        grid: grid.slice(),
+        pencil: pencil.slice(),
+      }) ?? m,
+  };
   while (!judging.done(m)) {
     const known = walk.graph.facts.length;
     const from = firings.length;

@@ -21,7 +21,7 @@ import { type Facts, MARK, PLACE, STRIKE, STRIKE_EDGE } from "./describe-runtime
 import type { FactGraph } from "./fact-graph.ts";
 import type { MoveVerdict } from "./game.ts";
 import { phrase, type Sentence, unshaped } from "./hint-words.ts";
-import type { CellMarks } from "./ladder-runtime.ts";
+import type { CellMarks, Walked } from "./ladder-runtime.ts";
 
 /** A fact a move made: a value placed, a candidate struck, an edge's mark
  * struck, a cell marked; `at` is the cell or the edge. */
@@ -133,31 +133,161 @@ function aimsAt(
 }
 
 /**
- * The walk's firing a chain to fact `f` began with: of the firings the walk
- * took (`made`, each the ids of the graph's facts it made), `reachedAt` is
- * the one (past the first) that made it, and the chain began at the earliest
- * one what it rests on goes back to (`FactGraph.restsOn`), which read only
- * the board; `null` where the graph cannot say, since another firing would
- * be named as the chain's start without being in it.
+ * Where a chain to fact `f` may have begun: of the firings the walk took
+ * (`made`, each the ids of the graph's facts it made), `reachedAt` is the one
+ * (past the first) that made it. Where every firing the fact rests on said
+ * what it read (`FactGraph.restsOn`, complete), the chain is those, and the
+ * candidates their firings; where one did not, the chain is every fact made
+ * up to `reachedAt`, and every firing before it is a candidate. Earliest
+ * first; `null` where there is none.
  */
-function chainStart(
+function chainOf(
   graph: FactGraph,
   made: readonly (readonly number[])[],
   f: MovedFact,
   reachedAt: number,
-): number | null {
+): { candidates: readonly number[]; chain: ReadonlySet<number> } | null {
   let id = -1;
   for (const x of made[reachedAt] ?? []) {
     const g = graph.facts[x];
     const sameSpace = (g.about.space === "edges") === (f.kind === STRIKE_EDGE);
     if (id < 0 && sameSpace && makes(g.kind, g.about.at, g.value, f)) id = x;
   }
+  if (id < 0) return null;
+  const rests = graph.restsOn(id);
+  if (!rests.complete) {
+    const before = made.slice(0, reachedAt + 1).flat();
+    return reachedAt === 0
+      ? null
+      : { candidates: [...made.keys()].slice(0, reachedAt), chain: new Set(before) };
+  }
   const firingOf = (x: number): number => made.findIndex((ids) => ids.includes(x));
-  const earliest = (id < 0 ? [] : graph.restsOn(id).facts)
-    .map((g) => firingOf(g.id))
-    .filter((k) => k >= 0)
-    .reduce((a, b) => Math.min(a, b), reachedAt);
-  return earliest < reachedAt ? earliest : null;
+  const candidates = [...new Set(rests.facts.map((g) => firingOf(g.id)))]
+    .filter((k) => k >= 0 && k < reachedAt)
+    .sort((a, b) => a - b);
+  if (candidates.length === 0) return null;
+  return { candidates, chain: new Set([id, ...rests.facts.map((g) => g.id)]) };
+}
+
+/** The most candidates a chain's replay tries for its start, and the most
+ * firings its replays may ask a technique to offer again, all told: each
+ * offer reads the board, and a check past them names no start. Every
+ * judging game's default board stayed within both, its dearest check
+ * 139 ms (2026-11-18). */
+const MOST_TRIED = 12;
+const MOST_OFFERS = 2000;
+
+/**
+ * What a judging walk kept of how it reached the move: the facts it made and
+ * what each rests on, the firings it took, and the marks it began on, made
+ * again, on which a chain's firings are replayed. The graph says what a
+ * chain rests on only as far as its firings say what they read, too widely
+ * where a formula reads a whole line, and a builder may change the marks
+ * outside them (Pearl's line carried on through a pearl), so the replay is
+ * what decides: the start named is the earliest firing the chain's firings
+ * cannot reach the move without.
+ */
+export interface Traced {
+  readonly graph: FactGraph;
+  /** The firings the walk took, with the graph's facts each made. */
+  readonly walked: readonly Walked[];
+  /** The marks the walk began on, made again. */
+  fresh(): CellMarks;
+  /** What the builder does to the marks before each firing (`settle`). */
+  between?(m: CellMarks): void;
+}
+
+/** Whether marks `m` hold a firing's fact: its value placed, its candidate
+ * or edge mark gone, its mark made. */
+const holdsFact = (m: CellMarks, kind: number, at: number, value: number): boolean =>
+  reached(m, { kind, at, value });
+
+/**
+ * Whether the walked firings that made a fact of `chain` (graph ids), less
+ * those `dropped`, made again in order on fresh marks, leave `target` true:
+ * `null` where they do, else why not. A firing is made again where its
+ * technique offers one making each of its facts in the chain that the marks
+ * do not hold yet, and its placements' where one of theirs is (they are made
+ * with them). One no longer offered, since a dropped firing was what it
+ * rested on, is passed over: whether the move rests on it is the target's
+ * to say, and a firing the move does not need must not decide it.
+ */
+function replays(
+  replay: Traced,
+  chain: ReadonlySet<number>,
+  dropped: (k: number) => boolean,
+  target: (m: CellMarks) => boolean,
+  offers: { left: number },
+): string | null {
+  let passed: string | null = null;
+  const m = replay.fresh();
+  for (const [k, { firing, from, to }] of replay.walked.entries()) {
+    const own = from + firing.facts.length / 3;
+    let inChain = false;
+    for (let id = from; id < to && !inChain; id++) inChain = chain.has(id);
+    if (!inChain || dropped(k)) continue;
+    replay.between?.(m);
+    let culls = false;
+    for (let id = own; id < to && !culls; id++) culls = chain.has(id);
+    const { facts } = firing;
+    const want: number[] = [];
+    for (let i = 0; i < facts.length; i += 3)
+      if (
+        (chain.has(from + i / 3) || (culls && facts[i] === PLACE)) &&
+        !holdsFact(m, facts[i], facts[i + 1], facts[i + 2])
+      )
+        want.push(i);
+    if (want.length === 0) continue;
+    if (--offers.left < 0) return "the replays offered too many firings";
+    const offered = firing.entry.run.firings(m);
+    const match =
+      offered === "contradiction"
+        ? undefined
+        : offered.find((g) =>
+            want.every((i) => {
+              for (let j = 0; j < g.facts.length; j += 3)
+                if (
+                  g.facts[j] === facts[i] &&
+                  g.facts[j + 1] === facts[i + 1] &&
+                  g.facts[j + 2] === facts[i + 2]
+                )
+                  return true;
+              return false;
+            }),
+          );
+    if (match === undefined) {
+      passed ??= `${firing.entry.id} (firing ${k}) is not offered`;
+      continue;
+    }
+    m.group++;
+    m.applyFacts(match.facts, (i) => match.reasons[i / 3]);
+  }
+  replay.between?.(m);
+  return target(m) ? null : (passed ?? "the move is not made");
+}
+
+/** What a chain's replay found: where it stopped short of the move with
+ * all its firings (`null` where it reached it), and for each candidate
+ * start tried, earliest first, its technique and where the replay stopped
+ * without its firings. The start named is the first tried that the chain
+ * cannot reach the move without. */
+export interface ChainAudit {
+  readonly whole: string | null;
+  readonly tried: readonly {
+    readonly start: string | null;
+    readonly without: string | null;
+  }[];
+  /** How many firings the replays asked a technique to offer again. */
+  readonly offers: number;
+}
+
+/** Who hears each chain's replay: a test, which can see what was not
+ * named and why. */
+let listener: ((found: ChainAudit) => void) | null = null;
+
+/** Hear each chained verdict's replay, until `null` (test-only). */
+export function auditChains(listen: ((found: ChainAudit) => void) | null): void {
+  listener = listen;
 }
 
 /**
@@ -178,7 +308,8 @@ export interface Judging {
   /** The technique of each firing in {@link made}, by its name; `null`
    * where its builder names none. */
   techniques: (string | null)[];
-  graph: FactGraph | null;
+  /** How the walk reached the move, where the builder keeps it. */
+  traced: Traced | null;
   /**
    * Records a firing the walk took, by its technique's `name`: the graph's
    * facts from `known` on are what it made (none where there is no graph),
@@ -201,7 +332,8 @@ export interface Judging {
 /**
  * What the walk found of a move: no deduction reached it; every technique
  * that makes the whole of it from the board as it stood (`direct`); a chain,
- * and the technique it began with, `null` where the graph cannot say; or the
+ * and the technique it began with, `null` where its replay does not confirm
+ * one ({@link Traced}); or the
  * marks already on the board decided it (`shown`), the player writing down
  * what they show.
  */
@@ -258,7 +390,7 @@ export function judgeByWalk(
     },
     made: [],
     techniques: [],
-    graph: null,
+    traced: null,
     done(m) {
       marks = m;
       // A walk that only strikes leaves a value the one candidate, where
@@ -295,12 +427,39 @@ export function judgeByWalk(
     }
     return { kind: "chained", technique: techniques[0] ?? null };
   }
-  // A walk that keeps no fact graph cannot say where the chain began.
-  const graph = judging.graph;
-  if (graph === null) return { kind: "chained", technique: null };
+  // A walk that keeps no trace cannot say where the chain began.
+  const { traced } = judging;
+  if (traced === null) return { kind: "chained", technique: null };
   const i = judged.find((k) => at[k] === first) ?? judged[0];
-  const start = chainStart(graph, judging.made, moved[i], first - 1);
-  return { kind: "chained", technique: start === null ? null : techniques[start] };
+  const found = chainOf(traced.graph, judging.made, moved[i], first - 1);
+  if (found === null) return { kind: "chained", technique: null };
+  const target = (m: CellMarks): boolean =>
+    reached(m, moved[i], struck?.[i]) || judging.holds?.(m, moved[i]) === true;
+  // The walked firings that made a fact of firing `k` of `made`.
+  const of = (k: number) => {
+    const facts = new Set(judging.made[k]);
+    return (w: number): boolean => {
+      const { from, to } = traced.walked[w];
+      for (let id = from; id < to; id++) if (facts.has(id)) return true;
+      return false;
+    };
+  };
+  const offers = { left: MOST_OFFERS };
+  const all = replays(traced, found.chain, () => false, target, offers);
+  const tried: { start: string | null; without: string | null }[] = [];
+  let named: string | null = null;
+  if (all === null)
+    for (const k of found.candidates.slice(0, MOST_TRIED)) {
+      const without = replays(traced, found.chain, of(k), target, offers);
+      if (offers.left < 0) break;
+      tried.push({ start: techniques[k], without });
+      if (without !== null) {
+        named = techniques[k];
+        break;
+      }
+    }
+  listener?.({ whole: all, tried, offers: MOST_OFFERS - offers.left });
+  return { kind: "chained", technique: named };
 }
 
 /** The most techniques a verdict names; the rest it counts. */

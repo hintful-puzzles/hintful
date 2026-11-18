@@ -37,6 +37,11 @@ need would name an earlier technique than the chain's. And an edge game's
 
 ## What changes
 
+`design.md` § "Decision: a replay decides, not the reads" replaced the first
+item: the judge replays the walk's firings, leaving out one candidate start
+at a time, and names the earliest the move cannot be made without. The
+compiler is unchanged.
+
 - The graph records a firing's `reads` where nothing narrower is stated, in
   each builder whose `reads` is the premise's own, and not in one whose
   isn't (to be measured per builder).

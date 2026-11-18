@@ -515,7 +515,16 @@ export function deduceHintPlan(
     (f) => [...m.sp.lineCells[reasonOfTaken(f).line]],
     judging ? { aim: judging.aim } : {},
   );
-  if (judging) judging.graph = walk.graph;
+  if (judging)
+    judging.traced = {
+      graph: walk.graph,
+      walked: walk.taken,
+      fresh: () => {
+        const again = boardMarks(state);
+        again.budget = stepBudget("pattern hint");
+        return again;
+      },
+    };
   const plan: PatternHintMove[] = [];
   while (!judging?.done(m)) {
     const known = walk.graph.facts.length;

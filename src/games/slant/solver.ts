@@ -576,7 +576,16 @@ export function deduceHintPlan(
     citing: cite,
     ...(judging ? { aim: judging.aim } : {}),
   });
-  if (judging) judging.graph = walk.graph;
+  if (judging)
+    judging.traced = {
+      graph: walk.graph,
+      walked: walk.taken,
+      fresh: () => {
+        const again = marksOf(sp, Uint8Array.from(soln, describedOf), ladder, alike);
+        again.budget = stepBudget("slant hint");
+        return again;
+      },
+    };
   const firings: SlantFiring[] = [];
   while (!judging?.done(m)) {
     const before = Int32Array.from(m.edgeCands);

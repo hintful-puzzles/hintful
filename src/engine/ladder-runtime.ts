@@ -1171,6 +1171,17 @@ export interface LadderWalk<S extends CellMarks = CellMarks> {
   /** The facts the firings taken so far made, each with its firing and
    * parents, and what any of them rests on. */
   readonly graph: FactGraph;
+  /** Each firing taken, in order, with the graph's facts it made. */
+  readonly taken: readonly Walked<S>[];
+}
+
+/** A firing a walk took, and the graph's facts it made: its own, in order
+ * from `from`, then those its placements made ({@link placingRung}), up to
+ * `to`. */
+export interface Walked<S extends CellMarks = CellMarks> {
+  readonly firing: Taken<S>;
+  readonly from: number;
+  readonly to: number;
 }
 
 /**
@@ -1241,6 +1252,7 @@ export function ladderWalk<S extends CellMarks>(
   // strikes a given diagonal made as the marks were seeded.
   const graph = m.graph ?? new FactGraph();
   m.graph = graph;
+  const walked: Walked<S>[] = [];
   const techniques = entries
     .filter((e) => admits(e, caps))
     .map((entry): DeductionTechnique => {
@@ -1261,9 +1273,11 @@ export function ladderWalk<S extends CellMarks>(
               reads: () => reads(f),
               writes: () => (roles.writes ? roles.writes(f) : cellsOf(f.facts)),
               take: () => {
+                const from = graph.facts.length;
                 graph.record(f.facts, roles.citing?.(f) ?? readsOf(f));
                 m.group++;
                 m.applyFacts(f.facts, (i) => f.reasons[i / 3]);
+                walked.push({ firing: f, from, to: graph.facts.length });
                 taken = f;
               },
             };
@@ -1279,6 +1293,7 @@ export function ladderWalk<S extends CellMarks>(
   });
   return {
     graph,
+    taken: walked,
     next() {
       taken = null;
       if (driver.next() === null) return driver.impossible() ? "contradiction" : null;

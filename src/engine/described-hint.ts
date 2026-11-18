@@ -201,7 +201,16 @@ export function describedHint<
       reads,
       judging ? { aim: judging.aim } : {},
     );
-    if (judging) judging.graph = walk.graph;
+    if (judging)
+      judging.traced = {
+        graph: walk.graph,
+        walked: walk.taken,
+        fresh: () => {
+          const again = spec.marks(state);
+          again.budget = stepBudget(spec.name);
+          return again;
+        },
+      };
     const steps: Step[] = [];
     while (!judging?.done(m)) {
       const known = walk.graph.facts.length;

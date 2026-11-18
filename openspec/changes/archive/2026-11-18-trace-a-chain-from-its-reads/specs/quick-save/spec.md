@@ -4,8 +4,9 @@
 
 Where Check & save judges a move that follows from the board only after
 other deductions, the verdict SHALL name the deduction the chain began with
-wherever the game's walk records what each deduction read, and SHALL NOT
-name a deduction the chain does not rest on.
+wherever a replay of the game's walk finds the earliest deduction the move
+cannot be made without, and SHALL NOT name a deduction the chain does not
+rest on.
 
 #### Scenario: A chain's start is named
 

@@ -1287,6 +1287,29 @@ hinting games judge nothing, and why, is a ledger in
 `src/engine/move-judge-games.test.ts`, which also holds every judging game to
 calling its own hint's first move followed.
 
+**A chain's start is the earliest firing it cannot do without**
+(`trace-a-chain-from-its-reads`, 2026-11-18). Naming a technique the chain
+does not rest on is worse than naming none, and the graph alone can be wrong
+both ways: a read wider than the premise needed points at an earlier firing,
+and a builder that writes marks outside the walk's firings leaves the graph a
+parent short (Pearl's step draws the line a pearl carries on). So the builder
+hands the judge its trace (`Judging.traced`: the graph, the firings it took,
+and its starting marks made again), and the judge replays the walk's firings
+on fresh marks, each as its technique offers it then, leaving one candidate
+out at a time, earliest first: the start is the first without which the move
+is not made. A firing no longer offered once a candidate is left out is passed
+over, not counted as the move failing, or a firing the move never needed
+would be named for what a bystander needed. The candidates are what the
+graph says the fact rests on where every firing said its reads, and every
+earlier firing where one did not; most compiled techniques do not, and the
+search finds their starts as well. A search is bounded (`MOST_TRIED`,
+`MOST_OFFERS`) and names none past it. Every builder that walks a ladder sets
+the trace with the graph, so a new one cannot keep a graph and skip the
+check. Recording every compiled technique's reads was tried and dropped: it
+put 240 KB on the game worker, past its precache cap, and the search does
+without it. Tests: `move-judge.test.ts`, "where a chain began". The candidate
+plans keep no trace yet, so their chained verdicts name no start.
+
 What the notes games taught, in `candidate-plan.ts`'s walk
 (`candidate-judge.ts`). A move's facts are read off the board as the player
 reads it: a blank cell's notes, or where it has none what its regions leave

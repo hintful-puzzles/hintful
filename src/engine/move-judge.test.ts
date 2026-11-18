@@ -18,6 +18,13 @@ import {
   type LightupParams,
   type LightupState,
 } from "../games/lightup/state.ts";
+import { pathGame } from "../games/path/index.ts";
+import { pathWalk } from "../games/path/solver.ts";
+import {
+  DIFF_NORMAL,
+  MODE_PATH,
+  newState as newPathState,
+} from "../games/path/state.ts";
 import { tracksGame } from "../games/tracks/index.ts";
 import {
   E_NOTRACK,
@@ -31,7 +38,29 @@ import {
 import { unrulyGame } from "../games/unruly/index.ts";
 import { NAMES } from "../generated/games/lightup/lightup.compiled.ts";
 import { NAMES as UNRULY_NAMES } from "../generated/games/unruly/unruly.compiled.ts";
-import { verdictOf } from "./move-judge.ts";
+import type { Reads } from "./describe-runtime.ts";
+import {
+  describedSpace,
+  type Fire,
+  type GridSpace,
+  type Marks,
+  PLACE,
+} from "./describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  type LadderEntry,
+  ladderWalk,
+  TIERS,
+} from "./ladder-runtime.ts";
+import {
+  auditChains,
+  type ChainAudit,
+  type Judged,
+  type Judging,
+  judgeByWalk,
+  verdictOf,
+} from "./move-judge.ts";
 import { randomNew } from "./random/index.ts";
 import { D, dirX, dirY, L, R, U } from "./square-edges.ts";
 import { SYMM_ROT4 } from "./symmetric-blacks.ts";
@@ -169,6 +198,172 @@ describe("judgeMove", () => {
     // The same toggles again take the marks off.
     const unmarked = lightupGame.executeMove(marked, res.steps[0].move);
     expect(judge(marked, unmarked)).toBeNull();
+  });
+});
+
+describe("judgeMove, where a chain began", () => {
+  /** Every chain the judge replays while `run` runs. */
+  const heard = (run: () => void): ChainAudit[] => {
+    const out: ChainAudit[] = [];
+    auditChains((found) => out.push(found));
+    try {
+      run();
+    } finally {
+      auditChains(null);
+    }
+    return out;
+  };
+  /** The start a replay names: the first candidate tried that the chain
+   * cannot reach the move without, where the chain reaches it at all. */
+  const namedBy = (a: ChainAudit): string | null =>
+    a.whole === null ? (a.tried.find((t) => t.without !== null)?.start ?? null) : null;
+
+  it("names a chain's start only where its replay confirms it", () => {
+    // Each of a hint's moves, made alone on the board as dealt: most are a
+    // few steps on, and no Unruly technique's graph says what it read, so
+    // every earlier firing is a candidate.
+    const game = unrulyGame;
+    const params = game.defaultParams();
+    const { desc, aux } = dealt(game, params);
+    const start = game.newState(params, desc);
+    const moves: Parameters<typeof game.executeMove>[1][] = [];
+    let state = start;
+    for (let k = 0; k < 40; k++) {
+      const res = game.hint?.(state, aux, game.newUi(state));
+      if (!res?.ok) break;
+      moves.push(res.steps[0].move);
+      state = game.executeMove(state, res.steps[0].move);
+    }
+    let named = 0;
+    for (const move of moves) {
+      let text = "";
+      const audits = heard(() => {
+        text = game.judgeMove?.(start, game.executeMove(start, move))?.words.text ?? "";
+      });
+      const said = audits.length === 1 ? namedBy(audits[0]) : null;
+      if (said === null) expect(text).not.toMatch(CHAINED);
+      else {
+        expect(text).toBe(`${CHAINED}${said}.`);
+        expect(Object.values(UNRULY_NAMES)).toContain(said);
+        named++;
+      }
+    }
+    expect(named).toBeGreaterThan(5);
+  });
+
+  it("names no start the move does not rest on, though a later firing does", () => {
+    // Three squares: A places the first, B the second once the first is
+    // placed, and C the third from the board alone. Without A, B is not
+    // offered, but the move, C's square, is still made.
+    const place =
+      (at: number, ready: (b: Marks) => boolean) =>
+      (b: Marks, _sp: GridSpace, _cl: null, fire: Fire<object> | null): number => {
+        if (b.grid[at] !== 0 || !ready(b)) return 0;
+        if (fire === null) b.placeAt(at, 1);
+        else fire({}, [PLACE, at, 1]);
+        return 1;
+      };
+    const technique = (id: string, run: ReturnType<typeof place>): LadderEntry => ({
+      id,
+      name: id,
+      tier: 0,
+      run: compiledRung(run, null),
+    });
+    const entries = [
+      technique(
+        "A",
+        place(0, () => true),
+      ),
+      technique(
+        "B",
+        place(1, (b) => b.grid[0] === 1),
+      ),
+      technique(
+        "C",
+        place(2, () => true),
+      ),
+    ];
+    const fresh = (): CellMarks =>
+      new CellMarks(describedSpace([], 3, 1), 0b110, new Uint8Array(3));
+    let order: string[] = [];
+    const judged = judgeByWalk([{ kind: PLACE, at: 2, value: 1 }], (judging) => {
+      const m = fresh();
+      const walk = ladderWalk(m, entries, { [TIERS]: 9 }, () => []);
+      judging.traced = { graph: walk.graph, walked: walk.taken, fresh };
+      while (!judging.done(m)) {
+        const known = walk.graph.facts.length;
+        const taken = walk.next();
+        if (taken === null || taken === "contradiction") break;
+        judging.took(walk.graph, known, taken.entry.id, true);
+      }
+      order = walk.taken.map((t) => t.firing.entry.id);
+    });
+    expect(order).toEqual(["A", "B", "C"]);
+    expect(judged).toEqual({ kind: "chained", technique: null });
+  });
+
+  it("passes over a start a read wider than the premise's would give it", () => {
+    // Path's walk, every firing citing the whole board: the graph then says
+    // each chain rests on every firing before it, most of which it does not
+    // need.
+    const p = { w: 7, h: 7, diff: DIFF_NORMAL, mode: MODE_PATH };
+    const state = newPathState(p, pathGame.newDesc(p, randomNew("g1")).desc);
+    const walked = (judging: Judging, wide: boolean): void => {
+      const { marks, entries } = pathWalk(state);
+      const all: Reads = {
+        cells: [...marks.grid.keys()],
+        edges: [...marks.edgeCands.keys()],
+      };
+      const walk = ladderWalk(marks, entries, { [TIERS]: 99 }, () => [], {
+        aim: judging.aim,
+        ...(wide ? { citing: () => all } : {}),
+      });
+      judging.traced = {
+        graph: walk.graph,
+        walked: walk.taken,
+        fresh: () => pathWalk(state).marks,
+      };
+      while (!judging.done(marks)) {
+        const known = walk.graph.facts.length;
+        const taken = walk.next();
+        if (taken === null || taken === "contradiction") break;
+        judging.took(walk.graph, known, taken.entry.id, true);
+      }
+    };
+    // The facts of the walk's later firings, each judged as a move alone.
+    const { marks, entries } = pathWalk(state);
+    const walk = ladderWalk(marks, entries, { [TIERS]: 99 }, () => []);
+    while (true) {
+      const taken = walk.next();
+      if (taken === null || taken === "contradiction") break;
+    }
+    const facts = walk.graph.facts.filter(
+      (f) => f.firing > 2 && f.about.space === "cells",
+    );
+    let refuted = 0;
+    for (const f of facts.slice(0, 30)) {
+      const moved = [{ kind: f.kind, at: f.about.at, value: f.value }];
+      let judged: Judged | null = null;
+      const [audit] = heard(() => {
+        judged = judgeByWalk(moved, (j) => walked(j, true));
+      });
+      // A candidate the chain reaches the move without is passed over, and
+      // the start named is the first it cannot.
+      if (audit === undefined) continue;
+      refuted += audit.tried.filter((t) => t.without === null).length;
+      expect(judged).toEqual({ kind: "chained", technique: namedBy(audit) });
+    }
+    expect(refuted).toBeGreaterThan(0);
+    // Read as the premises read them, the same moves name their starts.
+    let narrow = 0;
+    for (const f of facts.slice(0, 30)) {
+      const judged = judgeByWalk(
+        [{ kind: f.kind, at: f.about.at, value: f.value }],
+        (j) => walked(j, false),
+      );
+      if (judged?.kind === "chained" && judged.technique !== null) narrow++;
+    }
+    expect(narrow).toBeGreaterThan(0);
   });
 });
 
