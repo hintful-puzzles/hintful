@@ -70,3 +70,4 @@ const described = describedFiringHint<
 
 export const { hint: mosaicHint, hintKeepTrack: mosaicKeepTrack } = described;
 export const mosaicRefreshHintStep = described.refreshHintStep;
+export const mosaicJudgeMove = described.judgeMove;

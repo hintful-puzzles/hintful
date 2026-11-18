@@ -23,6 +23,7 @@ import type { Point } from "../../engine/types.ts";
 import {
   type MosaicHint,
   mosaicHint,
+  mosaicJudgeMove,
   mosaicKeepTrack,
   mosaicRefreshHintStep,
 } from "./hint.ts";
@@ -199,6 +200,7 @@ export const mosaicGame: Game<
   revealOne,
 
   hint: mosaicHint,
+  judgeMove: mosaicJudgeMove,
   hintRungs: MOSAIC_RUNGS,
   hintKeepTrack: mosaicKeepTrack,
   refreshHintStep: mosaicRefreshHintStep,

@@ -90,6 +90,7 @@ Each step names the file of `src/skeleton/grid/` that already does it.
 | – Census the reasons, not only the rungs | a reason kind may never fire, or you add one |
 | Refusal wording comes from one module | `hint()` has no step to give |
 | Refusal couples to the mistake overlay | the board holds a mistake when a hint is asked, or `solve` refuses |
+| Judging the last move | you wire `judgeMove`, or a plan builder that should supply it |
 | The cross-game guards | a cross-game hint test fails for your game |
 | – A hint must resume from any position | the hint is asked from a board the player reached alone |
 | – A hint carries on from an entry the player made first | a rule bounds a line by the nearest undecided cell |
@@ -1235,6 +1236,22 @@ the Auto-Hint path ([`src/puzzle/puzzle.ts`](../src/puzzle/puzzle.ts)), with
 or without a `statusbarText`; both are requirements of
 [`engine-hints`](../openspec/specs/engine-hints/spec.md). A refused Solve uses
 the same banner, so word a `solve` refusal as player-facing text.
+
+## Judging the last move
+
+Check & save, on a board with nothing wrong, judges the player's last gesture
+through `Game.judgeMove(before, after)` (spec `quick-save`, "Check & save
+judges the last move"). A game gets it from its plan builder and wires it as
+it wires `hint`; it decides nothing itself. The builder walks the ladder
+**aimed** (`ladderWalk`'s `aim`), so a firing that makes one of the move's
+facts is taken first at any tier. A fact made at the walk's first step is
+direct, and that step's own sentence is quoted under a lead
+(`move-judge.ts`). A later one is chained, and the quoted step is the earliest
+that `FactGraph.restsOn` goes back to. A fact the walk never reaches is "right,
+but nothing decided it yet". A move that makes no fact a deduction makes, such
+as an added note or a mark taken off, is not judged. The verdict is the
+midend's `activeCheck`. It is painted and said as a displayed step is, and the
+next transition puts it away. Test: `src/engine/move-judge.test.ts`.
 
 ## The cross-game guards
 

@@ -214,8 +214,9 @@ you've entered so far contradicts it.
 
 ::check-and-save:: **Check & save** — on the bar of commands by the board, and
 on <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>S</kbd> — checks the board and
-then saves your position if it's sound. If it isn't, it tells you how many squares are
-wrong, highlights them, and **doesn't save**; the position you saved earlier is
+then saves your position if it's sound. If it isn't, it says how many squares are
+wrong, in red under the board where hints appear, highlights them, and
+**doesn't save**; the position you saved earlier is
 left exactly as it was, so a check you fail can never cost you the one you
 passed. Return to that saved position at any time with
 ::back-to-last-save:: **Back to last save**, in the *Menu* beside the move
@@ -231,6 +232,16 @@ is always one you can still finish from. In the puzzles whose hint works by
 searching ahead, a position can be further from the finish than the search can
 see. The check can't settle that either way, so it saves, and tells you it
 couldn't tell.
+
+When nothing is wrong, the check also looks at **your last move**: the one you
+were probably unsure of when you reached for the button. In many puzzles it can
+tell you whether that move followed from the board, and if so it names the
+deduction in the words a hint would use for it. It can also tell you that the
+move was right but that nothing on the board decided it yet: a lucky guess, or a
+step you saw further ahead than the board shows. Crosses and ruled-out
+candidates count as moves; adding a pencil note doesn't, since a note decides
+nothing. The verdict is shown where hints appear and stays until your next
+move.
 
 In a puzzle that can't check itself the button reads the same and simply saves —
 one name for the save in every puzzle.

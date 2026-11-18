@@ -318,6 +318,7 @@ export const singlesGame: Game<
   solve,
   difficulty,
   hint: described.hint,
+  judgeMove: described.judgeMove,
   hintRungs: SAYS_KINDS,
   hintMarks: {
     roles: {

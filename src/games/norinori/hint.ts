@@ -67,3 +67,4 @@ export const {
   rulesOut: norinoriRulesOut,
 } = described;
 export const norinoriRefreshHintStep = described.refreshHintStep;
+export const norinoriJudgeMove = described.judgeMove;

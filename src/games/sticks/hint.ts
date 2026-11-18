@@ -84,4 +84,5 @@ export const {
   hint: sticksHint,
   hintKeepTrack: sticksKeepTrack,
   refreshHintStep: sticksRefreshHintStep,
+  judgeMove: sticksJudgeMove,
 } = described;

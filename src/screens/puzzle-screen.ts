@@ -509,11 +509,20 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     // Read with the scheme, so a scheme changed under a hint re-words it.
     const scheme = currentColorScheme.get();
     const spans = puzzle?.activeHintSpansIn(scheme) ?? [];
-    const explanation = spans.length
-      ? spans
-      : puzzle?.helpMessage
-        ? [{ text: puzzle.helpMessage, ref: null }]
-        : null;
+    // A check's own words outrank a hint's: they answer the press just made.
+    const message = puzzle?.checkMessage ?? null;
+    const explanation = message
+      ? [{ text: message.text, ref: null }]
+      : spans.length
+        ? spans
+        : puzzle?.helpMessage
+          ? [{ text: puzzle.helpMessage, ref: null }]
+          : null;
+    const refusal = message?.refusal === true;
+    const lead =
+      message !== null || (spans.length > 0 && puzzle?.checkVerdict)
+        ? "Check"
+        : (puzzle?.hintJourney ?? "");
     const flashing = puzzle?.hintFlashing ?? null;
     const colors = puzzle?.hintReferenceColorsIn(scheme) ?? [];
     // Read here, so the leader is drawn again when the marks are measured.
@@ -566,12 +575,12 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
                   : nothing
               }${
                 explanation
-                  ? html`<div class="hint" role="status" @click=${this.handleChromeClick}>
-                      ${
-                        puzzle?.hintJourney
-                          ? html`<span class="hint-journey">${puzzle.hintJourney}</span>`
-                          : nothing
-                      }
+                  ? html`<div
+                        class="hint ${refusal ? "refusal" : ""}"
+                        role=${refusal ? "alert" : "status"}
+                        @click=${this.handleChromeClick}
+                    >
+                      ${lead ? html`<span class="hint-journey">${lead}</span>` : nothing}
                       <span>${this.renderHintSpans(explanation, flashing, colors)}</span>
                     </div>`
                   : nothing
@@ -1009,9 +1018,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
    * they were keeping. That player wants this.
    *
    * The engine has already highlighted what it found by the time this
-   * resolves, so the report is a non-blocking toast either way. An
-   * interrupting modal is what Check & save uses to say "and I did not save";
-   * there is nothing here to not do, so there is nothing to interrupt for.
+   * resolves, and the report is under the board where Check & save's is: a
+   * wrong board in the warning color, and a judged last move in its verdict.
    */
   private async handleCheckOnly() {
     const puzzle = this.puzzle;
@@ -1020,45 +1028,26 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     switch (verdict.kind) {
       case "mistakes": {
         const n = verdict.count;
-        showToast({
-          label: mistakesFound(n),
-          message:
-            `The problem ${n === 1 ? "cell is" : "cells are"} highlighted. ` +
-            "Your last save is untouched.",
-          type: "warning",
-        });
+        puzzle.showCheckMessage(
+          `${mistakesFound(n)}. The problem ${n === 1 ? "cell is" : "cells are"} ` +
+            "highlighted. Your last save is untouched.",
+          true,
+        );
         return;
       }
       case "dead-end":
-        showToast({
-          label: "Dead end",
-          message: verdict.reason,
-          type: "warning",
-          duration: 6000,
-        });
+        puzzle.showCheckMessage(`Dead end: ${verdict.reason}`, true);
         return;
       case "out-of-reach":
-        showToast({
-          label: "Couldn't tell",
-          message: CHECK_OUT_OF_REACH,
-          type: "info",
-          duration: 6000,
-        });
+        if (!verdict.judged) puzzle.showCheckMessage(CHECK_OUT_OF_REACH, false);
         return;
       case "sound":
-        showToast(
+        if (verdict.judged) return;
+        puzzle.showCheckMessage(
           verdict.mistakesChecked
-            ? {
-                label: "No mistakes",
-                message: "Nothing on the board is wrong so far.",
-                type: "success",
-              }
-            : {
-                label: "Nothing wrong found",
-                message:
-                  "Nothing the check can see stops this position being finished.",
-                type: "success",
-              },
+            ? "No mistakes: nothing on the board is wrong so far."
+            : "Nothing wrong found: nothing the check can see stops this position being finished.",
+          false,
         );
         return;
       default:
@@ -1777,6 +1766,15 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         background-color: var(--app-color-hint-surface);
         color: var(--app-color-hint-ink);
         animation: hint-emerge 180ms ease-out;
+      }
+      /* A check that refused the save, or found the board wrong: it must not
+       * read as a hint's quiet aside (owner, 2026-11-18: "red and obvious"). */
+      .hint.refusal {
+        border-color: var(--wa-color-danger-border-loud);
+        border-inline-start: 4px solid var(--wa-color-danger-fill-loud);
+        background-color: var(--wa-color-danger-fill-quiet);
+        color: var(--wa-color-danger-on-quiet);
+        font-weight: var(--wa-font-weight-semibold);
       }
       /* Moved down and cut at the same height, so the part showing is always
        * the part above the panel it rises from. */

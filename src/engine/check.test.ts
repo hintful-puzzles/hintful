@@ -14,9 +14,10 @@ import {
   markedDeadEnd,
   SEARCH_OUT_OF_REACH,
 } from "./hint-refusal.ts";
-import { CELL, mark, phrase } from "./hint-words.ts";
+import { CELL, mark, phrase, unshaped } from "./hint-words.ts";
 import { Midend } from "./midend.ts";
 import { decodeSave } from "./save.ts";
+import { observeMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 /** What the hint says at each count below the target; a plan anywhere else. */
@@ -251,5 +252,60 @@ describe("a position the game proves nothing finishes from", () => {
       const m = new Midend({ ...fakeGame, hasNoSolution: proof });
       expect(m.newGameFromId("t3:g3-0")).toBe(DESC_NO_SOLUTION);
     }
+  });
+});
+
+describe("the check's verdict on the last move", () => {
+  /** A judge that follows a step down from 0 and stays silent on the rest. */
+  function judgedGame() {
+    const judge = vi.fn((before: FakeState, after: FakeState) =>
+      after.count === before.count - 1
+        ? {
+            followed: before.count === 0,
+            words: unshaped(
+              phrase`From ${mark.the("ring", CELL, [{ x: 0, y: 0 }], "square")}.`,
+              "evident",
+            ),
+            highlights: null,
+          }
+        : null,
+    );
+    const m = new Midend({ ...fakeGame, judgeMove: judge });
+    m.newGameFromId("t3:g3-0");
+    const seen = observeMidend(m);
+    const said = () => seen.last("status-bar-change");
+    return { m, judge, said };
+  }
+
+  it("judges the last move on a sound board, and says so where a hint is said", () => {
+    const { m, said } = judgedGame();
+    m.playMoves(["dec"]);
+    expect(m.check()).toEqual({ kind: "sound", mistakesChecked: false, judged: true });
+    expect(said()?.activeHintExplanation).toBe("From the ringed square.");
+    expect(said()?.activeCheck).toBe("followed");
+    m.playMoves(["dec"]);
+    m.check();
+    expect(said()?.activeCheck).toBe("unforced");
+  });
+
+  it("puts the verdict away on the next move, and judges nothing after an undo", () => {
+    const { m, judge, said } = judgedGame();
+    m.playMoves(["dec"]);
+    m.check();
+    m.playMoves(["inc"]);
+    expect(said()?.activeHintExplanation).toBeUndefined();
+    expect(said()?.activeCheck).toBeUndefined();
+    m.undo();
+    judge.mockClear();
+    expect(m.check()).toEqual({ kind: "sound", mistakesChecked: false });
+    expect(judge).not.toHaveBeenCalled();
+    expect(said()?.activeCheck).toBeUndefined();
+  });
+
+  it("is not given for a move the judge finds nothing in", () => {
+    const { m, said } = judgedGame();
+    m.playMoves(["inc"]);
+    expect(m.check()).toEqual({ kind: "sound", mistakesChecked: false });
+    expect(said()?.activeCheck).toBeUndefined();
   });
 });

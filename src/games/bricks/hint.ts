@@ -93,4 +93,5 @@ export function bricksHint(
 }
 
 export const bricksKeepTrack = described.hintKeepTrack;
+export const bricksJudgeMove = described.judgeMove;
 export const bricksRefreshHintStep = described.refreshHintStep;

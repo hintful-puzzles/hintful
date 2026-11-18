@@ -86,6 +86,9 @@ export interface LadderCandidate {
   writes(): readonly number[];
   /** Make the firing: write the marks and record it. */
   take(): void;
+  /** Whether a walk aimed at some facts wants this firing first
+   * ({@link SingleFiringOptions.aimed}). */
+  aimed?: boolean;
 }
 
 /**
@@ -232,7 +235,10 @@ function continuingFiring(
   const rungs = techniques.map(
     (technique, k) => () => (technique.tier > tierNow() ? [] : ask(k)),
   );
-  const taken = frontier.takeContinuing(rungs, () => contradiction);
+  // An aimed firing is looked for on every rung, past the tier ceiling: the
+  // ceiling chooses what a hint teaches, and a judged move may be harder.
+  const aimed = opts.aimed ? techniques.map((_, k) => () => ask(k)) : [];
+  const taken = frontier.takeContinuing(rungs, () => contradiction, aimed);
   if (contradiction) return "contradiction";
   if (taken === null) return null;
   firings.set(taken.technique.id, (firings.get(taken.technique.id) ?? 0) + 1);
@@ -276,6 +282,12 @@ export type SingleFiringOptions = Omit<DeductionFixpointOptions, "budget"> & {
    * alike.
    */
   continuing?: boolean;
+  /**
+   * Whether a continuing plan takes a firing its candidates mark `aimed`
+   * before any other, on whichever rung it is offered: how a check walks to
+   * the facts of the move it judges.
+   */
+  aimed?: boolean;
 };
 
 /** The ladder, one firing per call. */

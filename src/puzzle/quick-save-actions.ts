@@ -49,13 +49,14 @@ export function mistakesFound(n: number): string {
  * first (`Puzzle.check`) and quick-save only a board the check passes: on
  * mistakes, or a position the hint calls a dead end, leave the previous
  * quick-save intact and say why (the engine has already highlighted what it
- * found) via an interrupting modal. On a game that cannot check, this is a
+ * found) where the hint's words go, in the warning color (owner, 2026-11-18:
+ * "red and obvious", and no modal). On a game that cannot check, this is a
  * plain quick-save.
  *
  * **Success is confirmed on the button itself** (owner, 2026-09-25: the save
  * "shouldn't be that special"): it reads "Saved" for a moment through
- * {@link justSaved}, and a screen reader hears the same thing. Only a refused
- * save interrupts.
+ * {@link justSaved}, and a screen reader hears the same thing. Where the check
+ * judged the last move (`Game.judgeMove`), its verdict is under the board.
  *
  * **"Checkpoint" is the history panel's word and only its word**: this is the
  * one-slot quick-save, a different feature from the panel's numbered,
@@ -64,42 +65,31 @@ export function mistakesFound(n: number): string {
  * The spoken confirmation reports the *check*, not only the save, where there
  * was one to run: a player who pressed "Check and save" asked whether the board
  * is still sound, and the answer is the part they cannot see for themselves.
- * A save the check could not settle says so in a toast, which is announced in
- * its place (owner, 2026-10-02).
+ * A save the check could not settle says so under the board (owner,
+ * 2026-10-02, moved there 2026-11-18).
  */
 export async function checkAndSave(puzzle: Puzzle): Promise<void> {
   const verdict = puzzle.canCheck ? await puzzle.check() : null;
   if (verdict?.kind === "mistakes") {
     const n = verdict.count;
-    await showAlert({
-      label: "Not saved",
-      message: `${mistakesFound(n)} — the problem ${
+    puzzle.showCheckMessage(
+      `Not saved: ${mistakesFound(n).toLowerCase()}. The problem ${
         n === 1 ? "cell is" : "cells are"
-      } highlighted. Fix ${n === 1 ? "it" : "them"} before quick-saving.`,
-      type: "warning",
-      lightDismiss: true,
-    });
+      } highlighted. Fix ${n === 1 ? "it" : "them"} before saving.`,
+      true,
+    );
     return;
   }
   if (verdict?.kind === "dead-end") {
-    await showAlert({
-      label: "Not saved",
-      message: verdict.reason,
-      type: "warning",
-      lightDismiss: true,
-    });
+    puzzle.showCheckMessage(`Not saved: ${verdict.reason}`, true);
     return;
   }
   await savedGames.quickSave(puzzle);
   flashSaved(puzzle.puzzleId);
-  if (verdict?.kind === "out-of-reach") {
-    showToast({
-      label: "Saved",
-      message: CHECK_OUT_OF_REACH,
-      type: "info",
-      duration: 6000,
-    });
-  } else {
+  // A judged move's verdict is under the board already, and says the rest.
+  if (verdict?.kind === "out-of-reach" && !verdict.judged) {
+    puzzle.showCheckMessage(`Saved. ${CHECK_OUT_OF_REACH}`, false);
+  } else if (!(verdict?.kind === "sound" && verdict.judged)) {
     announce(
       verdict?.kind === "sound" && verdict.mistakesChecked
         ? "No mistakes. Saved."

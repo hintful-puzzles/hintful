@@ -31,6 +31,7 @@ import { newStarbattleDesc } from "./generator.ts";
 import {
   type StarbattleHint,
   starbattleHint,
+  starbattleJudgeMove,
   starbattleKeepTrack,
   starbattleRefreshHintStep,
   starbattleRulesOut,
@@ -242,6 +243,7 @@ export const starbattleGame: Game<
   textFormat,
 
   hint: starbattleHint,
+  judgeMove: starbattleJudgeMove,
   hintRungs: STARBATTLE_RUNGS,
   hintMarks: {
     roles: {

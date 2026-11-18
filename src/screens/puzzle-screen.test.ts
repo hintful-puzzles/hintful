@@ -89,12 +89,14 @@ function makeScreen(opts: { canCheck: boolean; verdict?: CheckVerdict }) {
   const check = vi.fn(async () => verdict);
   const selectReference = vi.fn(async () => undefined);
   const solve = vi.fn(async () => undefined);
+  const showCheckMessage = vi.fn((_text: string, _refusal: boolean) => undefined);
   const fakePuzzle = {
     puzzleId: "galaxies",
     canCheck: opts.canCheck,
     check,
     selectReference,
     solve,
+    showCheckMessage,
   };
   const screen = new PuzzleScreen();
   Object.defineProperty(screen, "puzzle", {
@@ -112,6 +114,7 @@ function makeScreen(opts: { canCheck: boolean; verdict?: CheckVerdict }) {
     check,
     selectReference,
     solve,
+    showCheckMessage,
   };
 }
 
@@ -163,52 +166,63 @@ describe("puzzle-screen: Check-&-Save command", () => {
     }
   });
 
-  it("refuses to save when mistakes are present, and reports them in a modal", async () => {
-    const { host, check } = makeScreen({ canCheck: true, verdict: mistakes(3) });
+  it("refuses to save when mistakes are present, and says so where the hint is", async () => {
+    const { host, check, showCheckMessage } = makeScreen({
+      canCheck: true,
+      verdict: mistakes(3),
+    });
     await host.commandMap["check-and-save"].call(host);
     expect(check).toHaveBeenCalledOnce();
     expect(quickSave).not.toHaveBeenCalled();
-    // A refused save must interrupt — modal, not toast.
+    // Owner, 2026-11-18: under the board, "red and obvious", no modal.
     expect(showToast).not.toHaveBeenCalled();
-    expect(showAlert).toHaveBeenCalledOnce();
-    expect(showAlert.mock.calls[0]?.[0]).toMatchObject({
-      label: "Not saved",
-      type: "warning",
-    });
+    expect(showAlert).not.toHaveBeenCalled();
+    expect(showCheckMessage).toHaveBeenCalledOnce();
+    const [text, refusal] = showCheckMessage.mock.calls[0] ?? [];
+    expect(refusal).toBe(true);
     // The count and pluralization reach the message.
-    expect(String(showAlert.mock.calls[0]?.[0]?.message)).toContain("3 mistakes found");
+    expect(text).toMatch(/^Not saved: 3 mistakes found\./);
   });
 
-  it("refuses to save a dead end, in the hint's words, in a modal", async () => {
+  it("refuses to save a dead end, in the hint's words", async () => {
     const reason = "The outlined peg is cut off. Undo.";
-    const { host } = makeScreen({
+    const { host, showCheckMessage } = makeScreen({
       canCheck: true,
       verdict: { kind: "dead-end", reason },
     });
     await host.commandMap["check-and-save"].call(host);
     expect(quickSave).not.toHaveBeenCalled();
-    expect(showToast).not.toHaveBeenCalled();
-    expect(showAlert).toHaveBeenCalledOnce();
-    expect(showAlert.mock.calls[0]?.[0]).toMatchObject({
-      label: "Not saved",
-      message: reason,
-    });
+    expect(showAlert).not.toHaveBeenCalled();
+    expect(showCheckMessage).toHaveBeenCalledWith(`Not saved: ${reason}`, true);
   });
 
   it("saves a position the check could not settle, and says so", async () => {
     // Owner, 2026-10-02: past the search's reach establishes nothing, so it
     // saves; but "Saved." alone would hide that the check could not tell.
-    const { host } = makeScreen({ canCheck: true, verdict: { kind: "out-of-reach" } });
+    const { host, showCheckMessage } = makeScreen({
+      canCheck: true,
+      verdict: { kind: "out-of-reach" },
+    });
     await host.commandMap["check-and-save"].call(host);
     expect(quickSave).toHaveBeenCalledOnce();
     expect(justSaved("galaxies")).toBe(true);
     expect(showAlert).not.toHaveBeenCalled();
-    expect(showToast).toHaveBeenCalledOnce();
-    expect(showToast.mock.calls[0]?.[0]).toMatchObject({
-      label: "Saved",
-      message: CHECK_OUT_OF_REACH,
+    expect(showCheckMessage).toHaveBeenCalledWith(
+      `Saved. ${CHECK_OUT_OF_REACH}`,
+      false,
+    );
+    // The words area is a live region; a second announcement would say it twice.
+    expect(announce).not.toHaveBeenCalled();
+  });
+
+  it("leaves a judged last move's verdict to say the rest", async () => {
+    const { host, showCheckMessage } = makeScreen({
+      canCheck: true,
+      verdict: { kind: "sound", mistakesChecked: true, judged: true },
     });
-    // The toast is announced; a second announcement would say it twice.
+    await host.commandMap["check-and-save"].call(host);
+    expect(quickSave).toHaveBeenCalledOnce();
+    expect(showCheckMessage).not.toHaveBeenCalled();
     expect(announce).not.toHaveBeenCalled();
   });
 
@@ -265,31 +279,37 @@ describe("puzzle-screen: Check without saving", () => {
    * asserting that the mock remembers what it was told.
    */
   it("checks and reports without touching the quick-save slot", async () => {
-    const { host, check } = makeScreen({ canCheck: true, verdict: mistakes(2) });
+    const { host, check, showCheckMessage } = makeScreen({
+      canCheck: true,
+      verdict: mistakes(2),
+    });
     await host.commandMap["check-only"].call(host);
     expect(check).toHaveBeenCalledOnce();
     expect(quickSave).not.toHaveBeenCalled();
-    expect(showToast).toHaveBeenCalledOnce();
-    expect(showToast.mock.calls[0]?.[0]).toMatchObject({
-      label: "2 mistakes found",
-      type: "warning",
-    });
+    const [text, refusal] = showCheckMessage.mock.calls[0] ?? [];
+    expect(text).toMatch(/^2 mistakes found\./);
+    expect(refusal).toBe(true);
     // The message says the checkpoint survived, because that is the whole
     // reason a player chose this command over the other one.
-    expect(String(showToast.mock.calls[0]?.[0]?.message)).toContain("untouched");
-    // A report, not an interruption: there is nothing here that failed to
-    // happen, so there is nothing to stop the player for.
+    expect(text).toContain("untouched");
     expect(showAlert).not.toHaveBeenCalled();
+    expect(showToast).not.toHaveBeenCalled();
   });
 
-  it("reports a clean board too", async () => {
-    const { host } = makeScreen({ canCheck: true });
-    await host.commandMap["check-only"].call(host);
+  it("reports a clean board too, unless the last move's verdict does", async () => {
+    const clean = makeScreen({ canCheck: true });
+    await clean.host.commandMap["check-only"].call(clean.host);
     expect(quickSave).not.toHaveBeenCalled();
-    expect(showToast.mock.calls[0]?.[0]).toMatchObject({
-      label: "No mistakes",
-      type: "success",
+    expect(clean.showCheckMessage).toHaveBeenCalledWith(
+      expect.stringMatching(/^No mistakes/),
+      false,
+    );
+    const judged = makeScreen({
+      canCheck: true,
+      verdict: { kind: "sound", mistakesChecked: true, judged: true },
     });
+    await judged.host.commandMap["check-only"].call(judged.host);
+    expect(judged.showCheckMessage).not.toHaveBeenCalled();
   });
 
   it("reports a dead end in the hint's words, and what it could not settle", async () => {
@@ -297,16 +317,13 @@ describe("puzzle-screen: Check without saving", () => {
       "The ball can no longer reach the outlined gem. Undo to where it can.";
     const dead = makeScreen({ canCheck: true, verdict: { kind: "dead-end", reason } });
     await dead.host.commandMap["check-only"].call(dead.host);
-    expect(showToast.mock.calls[0]?.[0]).toMatchObject({
-      label: "Dead end",
-      message: reason,
-      type: "warning",
-    });
+    expect(dead.showCheckMessage).toHaveBeenCalledWith(`Dead end: ${reason}`, true);
     const far = makeScreen({ canCheck: true, verdict: { kind: "out-of-reach" } });
     await far.host.commandMap["check-only"].call(far.host);
-    expect(showToast.mock.calls[1]?.[0]).toMatchObject({ message: CHECK_OUT_OF_REACH });
+    expect(far.showCheckMessage).toHaveBeenCalledWith(CHECK_OUT_OF_REACH, false);
     expect(quickSave).not.toHaveBeenCalled();
     expect(showAlert).not.toHaveBeenCalled();
+    expect(showToast).not.toHaveBeenCalled();
   });
 
   it("does nothing on a game that cannot check", async () => {

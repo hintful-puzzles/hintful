@@ -1205,6 +1205,13 @@ export function ladderWalk<S extends CellMarks>(
      * firing, in order, where the facts rest on different things.
      */
     readonly citing?: (firing: Taken<S>) => Reads | null | readonly (Reads | null)[];
+    /**
+     * The firings to take before any other, on whichever rung and at
+     * whichever tier they are offered: a check walks to the facts of the
+     * move it judges, and takes a firing that makes one the moment one is
+     * on offer.
+     */
+    readonly aim?: (firing: Taken<S>) => boolean;
   } = {},
 ): LadderWalk<S> {
   // An edge's mark, or value, is written as its two cells are.
@@ -1247,6 +1254,7 @@ export function ladderWalk<S extends CellMarks>(
           return got.map((firing) => {
             const f: Taken<S> = { ...firing, entry };
             return {
+              aimed: roles.aim?.(f) === true,
               reads: () => reads(f),
               writes: () => (roles.writes ? roles.writes(f) : cellsOf(f.facts)),
               take: () => {
@@ -1264,6 +1272,7 @@ export function ladderWalk<S extends CellMarks>(
     techniques: compiledTechniques(techniques),
     budget: m.budget ?? stepBudget("ladder walk"),
     continuing: true,
+    aimed: roles.aim !== undefined,
   });
   return {
     graph,

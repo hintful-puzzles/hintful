@@ -7,18 +7,19 @@
 
 ## 2. The judge, in the engine
 
-- [ ] 2.1 An aimed walk: `ladderWalk`'s `aim`, taken by the driver before the frontier's choice, at any tier, under `fallback` and `prerequisite`
-- [ ] 2.2 A move's facts from two `CellMarks`, and whether walked marks hold each
-- [ ] 2.3 `Game.judgeMove` and its verdict type; the judge's run over an aimed walk, direct or chained by the fact graph
-- [ ] 2.4 `describedFiringHint` supplies `judgeMove` from its spec and step loop
-- [ ] 2.5 A test: a move a deduction makes is named by its sentence, a guess is not reached, a chain quotes its first step, a note added is not judged
+- [x] 2.1 An aimed walk: `ladderWalk`'s `aim`, taken by the driver before the frontier's choice, at any tier, under `fallback` and `prerequisite`
+- [x] 2.2 A move's facts from two `CellMarks`, and whether walked marks hold each
+- [x] 2.3 `Game.judgeMove` and its verdict type; the judge's run over an aimed walk, direct or chained by the fact graph
+- [x] 2.4 `describedFiringHint` supplies `judgeMove` from its spec and step loop
+- [x] 2.5 A test: a move a deduction makes is named by its sentence, a guess is not reached, a chain quotes its first step, a mark taken off is not judged (`move-judge.test.ts`; no firing-builder game has notes, so the note case waits for 4.3)
 
 ## 3. The midend and the app
 
-- [ ] 3.1 `check()` judges the last gesture after a sound verdict; `activeCheck` painted, sent and cleared as a displayed step is
-- [ ] 3.2 Refusals and Check without saving answer in `activeCheck`; the modal and the toasts go
-- [ ] 3.3 The words area shows `activeCheck`, led by "Check", a refusal in the warning color
-- [ ] 3.4 Run the app: a followed move, a guess, a cross, a mistake, a dead end, in two firing-builder games
+- [x] 3.1 `check()` judges the last gesture after a sound verdict; `activeCheck` painted, sent and cleared as a displayed step is (`check.test.ts`)
+- [x] 3.2 Refusals and Check without saving answer under the board (`Puzzle.showCheckMessage`); the modal and the toasts go
+- [x] 3.3 The words area shows the verdict, led by "Check", a refusal in the warning color
+- [x] 3.4 Run the app (Chrome, 2026-11-18): Light Up a followed cross and a mistake at desktop and phone width; Star Battle a followed cross. A guess and a dead end are covered in tests, not seen in the app
+- [ ] 3.5 Found in 3.4: words longer than the hint room's sizer grow the room and move the board up, here to y=188.625. The canvas is then composited off the pixel grid, and its crosses show fringes. Any long hint does this, and the verdict's lead makes it likelier. Snap the board to whole pixels, or count the lead in `LONGEST_HINT`
 
 ## 4. Every builder
 

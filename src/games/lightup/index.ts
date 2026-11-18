@@ -331,7 +331,7 @@ const described = describedFiringHint<
   say: {},
 });
 
-const { hint, hintKeepTrack, refreshHintStep } = described;
+const { hint, hintKeepTrack, refreshHintStep, judgeMove } = described;
 
 /** The solver's rules, by the kind of step each makes: a technique's id, and
  * for `square` the arm of it that held. */
@@ -426,6 +426,7 @@ export const lightupGame: Game<
   difficulty,
 
   hint,
+  judgeMove,
   hintRungs: LIGHTUP_RUNGS,
   hintMarks: {
     roles: {

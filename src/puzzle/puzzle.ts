@@ -271,6 +271,7 @@ export class Puzzle {
         break;
       }
       case "game-state-change":
+        this._checkMessage.set(null);
         if (!this.followBoard(message.board, message.boardAfter))
           this.purgeInvalidCheckpoints(message.totalMoves);
         update(this._status, message.status);
@@ -291,6 +292,7 @@ export class Puzzle {
       case "status-bar-change": {
         update(this._statusbarText, message.statusBarText);
         update(this._activeHintExplanation, message.activeHintExplanation ?? "");
+        update(this._checkVerdict, message.activeCheck ?? null);
         // Compared by value: the engine sends fresh runs each time. Other
         // words, or the same words marking other squares (a step a move
         // narrowed), are marks a flash begun on these is not, and that the
@@ -409,6 +411,12 @@ export class Puzzle {
    * single-leg hint and when no hint is displayed. Formatted here rather than
    * in the chrome, so that whatever shows it cannot word it differently. */
   private _hintJourney = signal<string>("");
+  /** Whether the hint's words are a check's verdict on the last move, and
+   * which. */
+  private _checkVerdict = signal<"followed" | "unforced" | null>(null);
+  /** What a check says in words of the app's own, where the hint's are: a
+   * refusal to save, or a note; until the board next changes. */
+  private _checkMessage = signal<{ text: string; refusal: boolean } | null>(null);
   private _helpMessageTimeoutId?: ReturnType<typeof setTimeout>;
   /** A `processHover` round trip is outstanding. */
   private hoverInFlight = false;
@@ -513,6 +521,22 @@ export class Puzzle {
 
   public get hintJourney(): string {
     return this._hintJourney.get();
+  }
+
+  /** Whether the hint's words are a check's verdict on the last move. */
+  public get checkVerdict(): "followed" | "unforced" | null {
+    return this._checkVerdict.get();
+  }
+
+  /** What a check says in the app's own words, where the hint's are shown. */
+  public get checkMessage(): { text: string; refusal: boolean } | null {
+    return this._checkMessage.get();
+  }
+
+  /** Say what a check found where the hint's words go: a refusal to save in
+   * the warning color, or a note. It stays until the board next changes. */
+  public showCheckMessage(text: string, refusal: boolean): void {
+    this._checkMessage.set({ text, refusal });
   }
 
   /** The hint's sentence in `scheme`, whose words for a color may differ, as

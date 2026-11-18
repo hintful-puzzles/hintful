@@ -104,10 +104,17 @@ export class HintFrontier<P = Point> {
    * cheaper one continues; once `stop` says so (a rung found the board
    * inconsistent) the choice ends with nothing taken. Returns the candidate
    * taken.
+   *
+   * `aimed`, where given, is offered first, in its rungs' order: the first
+   * candidate it holds that says it is `aimed` is taken before any choice the
+   * frontier would make (a check judging a move walks to the move's facts).
    */
-  takeContinuing<C extends FrontierCandidate<P> & { writes(): readonly P[] }>(
+  takeContinuing<
+    C extends FrontierCandidate<P> & { writes(): readonly P[]; aimed?: boolean },
+  >(
     rungs: readonly (() => readonly C[])[],
     stop: () => boolean = () => false,
+    aimed: readonly (() => readonly C[])[] = [],
   ): C | null {
     const lists = new Map<number, readonly C[]>();
     const rung = (k: number): readonly C[] | null => {
@@ -119,6 +126,12 @@ export class HintFrontier<P = Point> {
       return stop() ? null : list;
     };
     let chosen: C | null = null;
+    for (const offer of aimed) {
+      const list = offer();
+      if (stop()) return null;
+      chosen = list.find((c) => c.aimed === true) ?? null;
+      if (chosen) break;
+    }
     find: for (let age = this.recent.length - 1; age >= 0 && !chosen; age--) {
       const wrote = this.recent[age];
       for (let k = 0; k < rungs.length; k++) {

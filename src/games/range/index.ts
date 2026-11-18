@@ -39,6 +39,7 @@ import type { GameStatus, Point } from "../../engine/types.ts";
 import {
   type RangeHint,
   rangeHint,
+  rangeJudgeMove,
   rangeKeepTrack,
   rangeRefreshHintStep,
 } from "./hint.ts";
@@ -252,6 +253,7 @@ export const rangeGame: Game<
     answerOf,
   }),
   hint: rangeHint,
+  judgeMove: rangeJudgeMove,
   hintRungs: RANGE_RUNGS,
   hintMarks: {
     roles: {

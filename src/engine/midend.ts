@@ -401,6 +401,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * (`Game.rulesOut`), so Undo and Redo cross the two together. */
   private joined: boolean[] = [];
   private pos = 0;
+  /** The positions the player's last gesture began at and made, its drag's
+   * joined entries included and the marks `Game.rulesOut` brought after it
+   * left out: what a check judges. `null` once the last thing done was not
+   * a move (an undo, a redo, a restart, another board). */
+  private lastGesture: { from: number; to: number } | null = null;
+  /** A check's verdict on the last move, painted and narrated as a displayed
+   * hint step is while no hint is displayed, until the next transition. */
+  private activeCheck: { step: HintStep<Move>; followed: boolean } | null = null;
   /** The boards this one replaced, the last of them the one Undo at this
    * board's first position brings back. Never serialized: another board is no
    * part of this one's save. Kept in the engine because every way a board is
@@ -820,6 +828,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.moveLog = [];
     this.joined = [];
     this.pos = 0;
+    this.lastGesture = null;
     const kept = this.keep(left);
     this.before = kept === null ? prior : [...prior, kept].slice(-KEPT_BOARDS);
     this.after = [];
@@ -879,6 +888,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** Make `next` the step after the cursor, reached by `entry`. A step drops
    * what was ahead of the cursor: the steps, and the boards an undo left. */
   private record(next: State, entry: Move | Restart, joins = false): void {
+    // A move's caller says where its gesture began, after this.
+    this.lastGesture = null;
     this.history = this.history.slice(0, this.pos + 1);
     this.moveLog = this.moveLog.slice(0, this.pos);
     this.joined = this.joined.slice(0, this.pos);
@@ -1229,8 +1240,11 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (brought !== null && (brought.state === undefined || brought.state === null))
       refuse(brought.move);
     const prev = this.state;
+    const from = joins && this.lastGesture !== null ? this.lastGesture.from : this.pos;
     this.record(next, move, joins);
+    const to = this.pos;
     if (brought !== null) this.record(brought.state, brought.move, true);
+    this.lastGesture = { from, to };
     const shown = brought?.state ?? next;
     this.stateReplaced(prev, shown);
     this.setupAnimation(prev, shown, 1);
@@ -1303,6 +1317,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** Move the cursor one step along the history. */
   private step(dir: 1 | -1): void {
     this.clearHint();
+    this.lastGesture = null;
     const prev = this.state;
     const crossed = this.moveLog[dir > 0 ? this.pos : this.pos - 1];
     this.pos += dir;
@@ -1417,8 +1432,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return (
       this.displayedHintLook ??
       this.displayedHintHidden?.drawn ??
-      this.displayedHintStep
+      this.displayedHintStep ??
+      this.activeCheck?.step ??
+      null
     );
+  }
+
+  /** What the words under the board narrate: the displayed hint step, or
+   * where none is, a check's verdict on the last move. */
+  private get narratedStep(): HintStep<Move> | null {
+    return this.displayedHintStep ?? this.activeCheck?.step ?? null;
   }
 
   hintLooking(): boolean {
@@ -1449,7 +1472,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // Where to look names no reference in words, so the player has none to
     // point at.
     if (this.hintLooking()) return [];
-    return this.displayedHintStep?.words?.refs.map((r) => r.role) ?? [];
+    return this.narratedStep?.words?.refs.map((r) => r.role) ?? [];
   }
 
   hintInkIndices(): readonly number[] {
@@ -1495,6 +1518,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private clearOverlays(): void {
     this.activeMistakes = null;
     this.activeDeadEnd = null;
+    this.activeCheck = null;
     this.wayForward = null;
   }
 
@@ -1523,6 +1547,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * leads on from, are not asked about, since the answer is already known.
    */
   check(): CheckVerdict {
+    const verdict = this.checkBoard();
+    if (verdict.kind !== "sound" && verdict.kind !== "out-of-reach") return verdict;
+    return this.judgeLastMove() ? { ...verdict, judged: true } : verdict;
+  }
+
+  private checkBoard(): CheckVerdict {
     const mistakesChecked = this.game.findMistakes !== undefined;
     const count = this.findMistakes();
     if (count > 0) return { kind: "mistakes", count };
@@ -1536,6 +1566,34 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (!isDeadEnd(result.error)) return sound;
     this.showDeadEnd(result);
     return { kind: "dead-end", reason: result.error };
+  }
+
+  /**
+   * The check's word on the last move, on a board with nothing wrong on it:
+   * whether the game's deductions reach it from the position before it
+   * (`Game.judgeMove`), shown where a hint's step is until the next
+   * transition. Nothing where the last thing done was not a move, or the
+   * move made nothing a deduction makes. Says whether it judged.
+   */
+  private judgeLastMove(): boolean {
+    const gesture = this.lastGesture;
+    const judge = this.game.judgeMove;
+    if (gesture === null || !judge) return false;
+    const move = this.moveLog[gesture.to - 1];
+    if (move === undefined || move instanceof Restart) return false;
+    const verdict = judge(this.history[gesture.from], this.history[gesture.to]);
+    if (verdict === null) return false;
+    const { words, highlights, followed } = verdict;
+    // The verdict answers the press just made, so it takes the displayed
+    // hint's place; the plan is kept, and the next Hint shows its step.
+    this.hintDisplayed = false;
+    this.activeCheck = {
+      followed,
+      step: { move, rung: "check", explanation: words.text, words, highlights },
+    };
+    this.requestRedraw();
+    this.emitStatusBar();
+    return true;
   }
 
   /**
@@ -2613,6 +2671,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     } finally {
       this.replaying = false;
     }
+    // A loaded game's last move was made in another sitting.
+    this.lastGesture = null;
     // The replay made every step as a player's, which drops the boards after.
     if (kept !== null) ({ before: this.before, after: this.after } = kept);
     const joined = new Set(env.joined);
@@ -2866,11 +2926,18 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         )
       : "";
     const looking = this.hintLooking();
-    const words = looking ? undefined : this.displayedHintStep?.words;
+    const words = looking ? undefined : this.narratedStep?.words;
+    const check =
+      this.displayedHintStep === null && this.activeCheck !== null
+        ? this.activeCheck.followed
+          ? ("followed" as const)
+          : ("unforced" as const)
+        : undefined;
     this.emit({
       type: "status-bar-change",
       statusBarText: text,
-      activeHintExplanation: looking ? LOOK_HERE : this.displayedHintStep?.explanation,
+      activeHintExplanation: looking ? LOOK_HERE : this.narratedStep?.explanation,
+      ...(check === undefined ? {} : { activeCheck: check }),
       activeHintSpans: words && {
         light: words.spansIn("light"),
         dark: words.spansIn("dark"),

@@ -58,6 +58,7 @@ import { newSticksDesc } from "./generator.ts";
 import {
   type SticksHint,
   sticksHint,
+  sticksJudgeMove,
   sticksKeepTrack,
   sticksRefreshHintStep,
 } from "./hint.ts";
@@ -418,6 +419,7 @@ export const sticksGame: Game<
         ],
   revealOne,
   hint: sticksHint,
+  judgeMove: sticksJudgeMove,
   hintRungs: STICKS_RUNGS,
   hintMarks: {
     roles: {

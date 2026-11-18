@@ -68,6 +68,7 @@ const described = describedFiringHint<
 export const starbattleHint = described.hint;
 export const starbattleRulesOut = described.rulesOut;
 export const starbattleRefreshHintStep = described.refreshHintStep;
+export const starbattleJudgeMove = described.judgeMove;
 
 /**
  * Judge a move against the step on show by what it did to the board, so a

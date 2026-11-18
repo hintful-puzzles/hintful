@@ -57,6 +57,7 @@ import { newBricksDesc } from "./generator.ts";
 import {
   type BricksHint,
   bricksHint,
+  bricksJudgeMove,
   bricksKeepTrack,
   bricksRefreshHintStep,
 } from "./hint.ts";
@@ -433,6 +434,7 @@ export const bricksGame: Game<
   solve,
   difficulty,
   hint: bricksHint,
+  judgeMove: bricksJudgeMove,
   hintRungs: BRICKS_RUNGS,
   hintMarks: {
     roles: {

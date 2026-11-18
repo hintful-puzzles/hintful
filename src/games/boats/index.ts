@@ -483,7 +483,7 @@ const described = describedFiringHint<
   stated: STATED,
   say: {},
 });
-const { hint, hintKeepTrack } = described;
+const { hint, hintKeepTrack, judgeMove } = described;
 
 /**
  * A leg of one still-empty square is a click, found from the verbs. A longer
@@ -636,6 +636,7 @@ export const boatsGame: Game<
     })),
   difficulty,
   hint,
+  judgeMove,
   hintMarks: {
     roles: {
       ring: "the squares the step decides, drawn in the hint color in the shape of what goes there: a small boat segment for a boat square, two wavy lines, like a given water square's, for water. A step that places a boat segment also shows the water that has to go round it.",

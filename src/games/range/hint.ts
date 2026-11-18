@@ -69,3 +69,4 @@ const described = describedFiringHint<
 
 export const { hint: rangeHint, hintKeepTrack: rangeKeepTrack } = described;
 export const rangeRefreshHintStep = described.refreshHintStep;
+export const rangeJudgeMove = described.judgeMove;

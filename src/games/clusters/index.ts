@@ -53,6 +53,7 @@ import { newClustersDesc } from "./generator.ts";
 import {
   type ClustersHint,
   clustersHint,
+  clustersJudgeMove,
   clustersKeepTrack,
   clustersRefreshHintStep,
 } from "./hint.ts";
@@ -393,6 +394,7 @@ export const clustersGame: Game<
   solve,
   difficulty,
   hint: clustersHint,
+  judgeMove: clustersJudgeMove,
   hintMarks: {
     roles: {
       ring: "the square the step colors. It is drawn empty: the sentence says which color it must be.",

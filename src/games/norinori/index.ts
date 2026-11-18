@@ -31,6 +31,7 @@ import { newNorinoriDesc } from "./generator.ts";
 import {
   type NorinoriHint,
   norinoriHint,
+  norinoriJudgeMove,
   norinoriKeepTrack,
   norinoriRefreshHintStep,
   norinoriRulesOut,
@@ -225,6 +226,7 @@ export const norinoriGame: Game<
   rulesOut: norinoriRulesOut,
 
   hint: norinoriHint,
+  judgeMove: norinoriJudgeMove,
   hintRungs: NORINORI_RUNGS,
   hintMarks: {
     roles: {

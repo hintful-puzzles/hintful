@@ -167,6 +167,11 @@ export interface NotifyStatusBarChange {
    */
   activeHintMarks?: string[];
   /**
+   * The words shown are a check's verdict on the last move (`Game.judgeMove`)
+   * and not a hint step: whether a deduction reached it. Absent for a hint.
+   */
+  activeCheck?: "followed" | "unforced";
+  /**
    * Where the displayed hint sits in its **journey**, 1-based, and how many
    * legs the journey has — so the chrome can say "Step 2 of 3" while a single
    * deduction plays out over several moves.
@@ -279,12 +284,15 @@ export type GameStatus = NotifyGameStateChange["status"];
  *   check could not either.
  * - sound: nothing found; `mistakesChecked` when `findMistakes` ran, so the
  *   report may say "no mistakes".
+ *
+ * `judged` on a sound or unsettled board: the last move was judged
+ * (`Game.judgeMove`), and its verdict is shown under the board.
  */
 export type CheckVerdict =
   | { kind: "mistakes"; count: number }
   | { kind: "dead-end"; reason: string }
-  | { kind: "out-of-reach" }
-  | { kind: "sound"; mistakesChecked: boolean };
+  | { kind: "out-of-reach"; judged?: boolean }
+  | { kind: "sound"; mistakesChecked: boolean; judged?: boolean };
 
 export enum PuzzleButton {
   // The middle button's codes (0x0201, 0x0204, 0x0207) are left unused.

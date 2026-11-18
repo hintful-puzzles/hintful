@@ -21,10 +21,17 @@
  *
  * Cell games only: a fact is a placement of a value on a cell.
  */
-import { PLACE } from "./describe-runtime.ts";
+import { PLACE, STRIKE_EDGE } from "./describe-runtime.ts";
 import { DEFAULT_PLAN, filledBy, premiseOf, spokenOf } from "./described-hint.ts";
 import { type DescribedRulesOut, describedRulesOut } from "./described-rules-out.ts";
-import type { HintResult, HintStep, HintTrackVerdict, RulesOut } from "./game.ts";
+import type { FactGraph } from "./fact-graph.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+  MoveVerdict,
+  RulesOut,
+} from "./game.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { changedCells, trackLeg, trackTargets } from "./hint-track.ts";
 import { CELL, type MarkKind, type Sentence } from "./hint-words.ts";
@@ -32,8 +39,18 @@ import {
   type CellMarks,
   type LadderEntry,
   ladderWalk,
+  type Taken,
   TIERS,
 } from "./ladder-runtime.ts";
+import {
+  aimsAt,
+  chainedWords,
+  followedWords,
+  movedFacts,
+  quotedStep,
+  reached,
+  unforcedWords,
+} from "./move-judge.ts";
 import type { PairIndex } from "./piece.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
@@ -239,6 +256,8 @@ export interface DescribedFiringHint<
   H extends { targets: Target[] } = FiringHint<Target>,
 > {
   hint(state: State): HintResult<Move, H, Kind>;
+  /** What Check & save says of the last move (`Game.judgeMove`). */
+  judgeMove(before: State, after: State): MoveVerdict<H> | null;
   /** What a placement rules out, where the spec has the description's. */
   rulesOut?: RulesOut<State, Move>;
   /** Judges a move against a step of any kind: the kind is no part of it. */
@@ -246,6 +265,16 @@ export interface DescribedFiringHint<
   /** A step the player has already made some of (undo and redo move the board
    * under a shown step) is shown for what is left, or `null` where nothing is. */
   refreshHintStep(step: HintStep<Move, H>, state: State): HintStep<Move, H> | null;
+}
+
+/** A walk judging a move: what it aims at, when it is done, and what each
+ * firing it took made (the graph's ids) and where its steps begin. */
+interface Judging {
+  aim(f: Taken): boolean;
+  done(m: CellMarks): boolean;
+  made: number[][];
+  firstStep: number[];
+  graph: FactGraph | null;
 }
 
 /** A line of squares by its noun, for a stated clause's `{unit}`. */
@@ -278,21 +307,38 @@ export function describedFiringHint<
     if (Object.keys(stated).some((k) => k === id || k.startsWith(`${id}.`)))
       throw new Error(`${spec.name}: ${id} is both stated and overridden`);
 
-  /** The steps of the firings the ladder makes from `state` at tier `cap`. */
+  /** The steps of the firings the ladder makes from `state` at tier `cap`.
+   * Judging a move, the walk is aimed at its facts and runs until `judging`
+   * says they are made, past the plan's length. */
   const plan = spec.plan ?? DEFAULT_PLAN;
-  const stepsAt = (state: State, cap: number): Step[] => {
+  const stepsAt = (state: State, cap: number, judging?: Judging): Step[] => {
     const walked = spec.walk(state, cap);
     if (walked === null) return [];
     const { marks: m, entries } = walked;
     const w = spec.width(state);
     const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
     m.budget = stepBudget(spec.name);
-    const walk = ladderWalk(m, entries, { [TIERS]: cap }, premiseOf);
+    const walk = ladderWalk(
+      m,
+      entries,
+      { [TIERS]: cap },
+      premiseOf,
+      judging ? { aim: judging.aim } : {},
+    );
+    if (judging) judging.graph = walk.graph;
     const steps: Step[] = [];
-    for (let fired = 0; fired < plan; fired++) {
+    for (let fired = 0; judging ? !judging.done(m) : fired < plan; fired++) {
       const before = m.grid.slice();
+      const known = walk.graph.facts.length;
+      const firstStep = steps.length;
       const f = walk.next();
       if (f === null || f === "contradiction") break;
+      if (judging) {
+        const ids: number[] = [];
+        for (let id = known; id < walk.graph.facts.length; id++) ids.push(id);
+        judging.made.push(ids);
+        judging.firstStep.push(firstStep);
+      }
       const { says } = spokenOf<SaysOf>(f);
       const kind = (
         says.arm === undefined ? f.entry.id : `${f.entry.id}.${says.arm}`
@@ -322,7 +368,8 @@ export function describedFiringHint<
       // A step for the firing, or one for each square it decides, which is then
       // the only square the evidence is taken less.
       const each = spec.each?.includes(f.entry.id) === true;
-      const continued = spec.legs?.includes(f.entry.id) === true;
+      // A judged move quotes one step alone, so every leg is said as a first.
+      const continued = !judging && spec.legs?.includes(f.entry.id) === true;
       for (const [leg, group] of (each
         ? decided.map((t) => [t])
         : [decided]
@@ -444,6 +491,81 @@ export function describedFiringHint<
     return steps;
   };
 
+  const judgeMove = (before: State, after: State): MoveVerdict<H> | null => {
+    const cap = spec.tiers ? spec.tiers.count - 1 : Number.MAX_SAFE_INTEGER;
+    const was = spec.walk(before, cap);
+    const placed = spec.walk(before, cap);
+    const now = spec.walk(after, cap);
+    if (was === null || placed === null || now === null) return null;
+    const moved = movedFacts(was.marks, placed.marks, now.marks);
+    if (moved.length === 0) return null;
+    // How many firings the walk had taken when its marks first held each fact.
+    const at = moved.map(() => -1);
+    const judging: Judging = {
+      aim: (f) =>
+        aimsAt(
+          f.facts,
+          moved.filter((_, i) => at[i] < 0),
+        ),
+      made: [],
+      firstStep: [],
+      graph: null,
+      done(m) {
+        for (const [i, f] of moved.entries())
+          if (at[i] < 0 && reached(m, f)) at[i] = this.made.length;
+        return at.every((n) => n >= 0);
+      },
+    };
+    const steps = stepsAt(before, cap, judging);
+    const w = spec.width(before);
+    const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
+    const cellOf = (f: (typeof moved)[number]): number =>
+      f.kind === STRIKE_EDGE ? was.marks.sp.edgeEnds[2 * f.at] : f.at;
+    // A fact the marks held before any firing is one the move did not make.
+    if (at.some((n) => n === 0)) return null;
+    // The words of a verdict that quotes no step, and the marks of its square.
+    const ringed = (
+      i: number,
+      words: (at: Point, noun: string) => Sentence,
+      followed: boolean,
+    ): MoveVerdict<H> => {
+      const c = cellOf(moved[i]);
+      const target = spec.target(pointOf(c), spec.valueAt(after, c));
+      const marked = { targets: [target], outline: [], stripes: [], strand: [] };
+      return {
+        followed,
+        words: words(pointOf(c), "square"),
+        highlights: (spec.highlights
+          ? spec.highlights(marked, after)
+          : { targets: [target], strand: [] }) as H,
+      };
+    };
+    const missed = moved.findIndex((_, i) => at[i] < 0);
+    if (missed >= 0) return ringed(missed, unforcedWords, false);
+    const graph = judging.graph;
+    if (graph === null) return null;
+    const { step: k, chained } = quotedStep(graph, judging.made, moved[0], at[0] - 1);
+    if (k === null) return ringed(0, chainedWords, true);
+    const end = judging.firstStep[k + 1] ?? steps.length;
+    const ofFiring = steps.slice(judging.firstStep[k], end);
+    const cells = new Set(moved.map(cellOf));
+    const own = (s: Step): Target[] =>
+      (s.highlights?.targets ?? []).filter((t) => cells.has(t.y * w + t.x));
+    const quoted = ofFiring.find((s) => own(s).length > 0) ?? ofFiring[0];
+    if (quoted === undefined) return null;
+    // The firing that made the move is said of the squares the player made.
+    const said =
+      chained || spec.journey !== undefined || own(quoted).length === 0
+        ? quoted
+        : { ...quoted, ...narrowedTo(quoted, own(quoted), before) };
+    if (said.words === undefined) return null;
+    return {
+      followed: true,
+      words: followedWords(said.words, chained),
+      highlights: said.highlights as H,
+    };
+  };
+
   const hint = (state: State): HintResult<Move, H, Kind> => {
     const { tiers } = spec;
     const first = tiers ? tiers.lowest(state) : Number.MAX_SAFE_INTEGER;
@@ -458,6 +580,7 @@ export function describedFiringHint<
   const { rulesOut, move } = spec;
   return {
     hint,
+    judgeMove,
     ...(rulesOut && move
       ? { rulesOut: describedRulesOut(rulesOut, { ...spec, move }) }
       : {}),
