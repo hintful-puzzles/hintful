@@ -509,7 +509,7 @@ export function verdictOf(judged: Judged): MoveVerdict {
       return {
         followed: false,
         words: say(
-          "Your last move is correct, but nothing on the board forces it yet — was it a stroke of insight?",
+          "Your last move is correct, but nothing on the board forces it yet: was it a stroke of insight?",
         ),
       };
     case "shown":
