@@ -126,7 +126,8 @@ export interface GameWords {
 
 /** What a step's term is: a `number`, said by the game's value words; a
  * `flag`, which an `if` and a `when` read; a `unit`, said as its name
- * ("row", "column", "block", "diagonal"); `values`, several numbers said by
+ * ("row", "column", "block", "diagonal"); a `word` the planner makes, said
+ * as it is (a word game's guess); `values`, several numbers said by
  * the value words as a list ("1, 2 and 4"), whose count form reads how many;
  * a list of words, one of which the planner supplies and the clause says
  * as it is (a tile's shape, a heading); or a `clause`, the move of one of the
@@ -138,6 +139,7 @@ export type StepTermKind =
   | "number"
   | "flag"
   | "unit"
+  | "word"
   | "values"
   | readonly string[]
   | { readonly clause: readonly string[] }
@@ -151,8 +153,12 @@ export interface StatedStep extends Worded {
   ring: string | string[];
   terms?: Record<string, StepTermKind>;
   /** The sorts marked in each role. */
-  marks?: Partial<Record<"outline" | "stripes" | "strand", string[]>>;
+  marks?: Partial<Record<StepMarkRole, string[]>>;
 }
+
+/** The roles a planner's step marks in besides its ring: its evidence, and
+ * the notes it strikes (Wordguess's letters, where a step rules them out). */
+export type StepMarkRole = "outline" | "stripes" | "strand" | "strike";
 
 /** The description with the named variations applied, in order. */
 export function withVariations(
@@ -791,7 +797,7 @@ export interface Step {
   id: string;
   ring: string | string[];
   terms: { name: string; kind: StepTermKind }[];
-  marks: { role: "outline" | "stripes" | "strand"; sort: string }[];
+  marks: { role: StepMarkRole; sort: string }[];
   /** The step's stated words, by wording. */
   words: Wording[];
 }
@@ -1184,9 +1190,9 @@ export function stepsOf(
       id,
       ring: s.ring,
       terms: Object.entries(s.terms ?? {}).map(([name, kind]) => ({ name, kind })),
-      marks: (
-        Object.entries(s.marks ?? {}) as ["outline" | "stripes" | "strand", string[]][]
-      ).flatMap(([role, sorts]) => sorts.map((sort) => ({ role, sort }))),
+      marks: (Object.entries(s.marks ?? {}) as [StepMarkRole, string[]][]).flatMap(
+        ([role, sorts]) => sorts.map((sort) => ({ role, sort })),
+      ),
       words: wordingsOf(s, label, at),
     };
   });

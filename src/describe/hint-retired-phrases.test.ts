@@ -9,24 +9,44 @@
  * population is derived (`HINT_GAMES`), so a game that joins is held at once.
  */
 import { describe, expect, it } from "vitest";
+import { loadDescriptionFile } from "../describe/load.ts";
 import {
   engineCodeLinesMatching,
   SCANNED_ENGINE_FILES,
 } from "./testing/engine-source.ts";
 import { codeLinesMatching, SCANNED_SOURCE_FILES } from "./testing/enrollment.ts";
 import { HINT_GAMES } from "./testing/hint-games.ts";
-import { IS_OUT, KEEPS_IS_OUT, RETIRED_PHRASE as RETIRED } from "./wording-rules.ts";
+import {
+  IS_OUT,
+  KEEPS_IS_OUT_FAMILY,
+  RETIRED_PHRASE as RETIRED,
+} from "./wording-rules.ts";
 
 /** Loopy's preference label, which names a setting and not a hint step; a
  * label is the player's to be asked about, so it is left as it is. */
 const SETTING_LABEL = /^name: "Rule out edges that counting has already settled",?$/;
+
+const descriptions = import.meta.glob<string>("../games/*/*.description.yaml", {
+  eager: true,
+  query: "?raw",
+  import: "default",
+});
+
+/** The games whose description's family keeps "is out", as the compiler's
+ * lint reads it. */
+const KEEPS_IS_OUT = new Set(
+  Object.entries(descriptions).flatMap(([path, text]) => {
+    const file = loadDescriptionFile(text, path);
+    return "family" in file && file.family === KEEPS_IS_OUT_FAMILY ? [file.game] : [];
+  }),
+);
 
 describe("no hint says a retired phrase", () => {
   it("scanned a populated source tree", () => {
     expect(SCANNED_SOURCE_FILES).toBeGreaterThan(100);
     expect(SCANNED_ENGINE_FILES).toBeGreaterThan(50);
     expect(HINT_GAMES.length).toBeGreaterThan(25);
-    expect(KEEPS_IS_OUT.size).toBe(1);
+    expect(Object.keys(descriptions).length).toBeGreaterThan(25);
     expect(HINT_GAMES.some(([id]) => KEEPS_IS_OUT.has(id))).toBe(true);
   });
 
@@ -38,7 +58,7 @@ describe("no hint says a retired phrase", () => {
     expect(hits.map((h) => `${h.id}: ${h.line}`)).toEqual([]);
   });
 
-  it('holds every hinting game but Mastermind to "is out"', () => {
+  it('holds every hinting game but the code-breaking ones to "is out"', () => {
     const hits = codeLinesMatching(
       HINT_GAMES.map(([id]) => id).filter((id) => !KEEPS_IS_OUT.has(id)),
       IS_OUT,

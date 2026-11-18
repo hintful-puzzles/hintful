@@ -2,6 +2,8 @@
 
 Findings of 2026-11-18. The questions for the owner are § "Asked of the
 owner"; everything else here is the session's call, with its reason.
+Wordtrail was split into `add-wordtrail` on the owner's word, its findings
+carried there; this change ships the word list and Wordguess.
 
 ## Wend's rules, confirmed
 
@@ -190,6 +192,75 @@ Decided 2026-11-18, after seeing the 26-key panel run off both sides of a
   go" against the word list and the rows already scored. Without the state, a
   whole word restored from a save read as not ready, and Submit framed it as
   refused while the status line said it was ready.
+
+## The hint (task 3.5)
+
+Decided 2026-11-18, on Guess's two halves.
+
+- **The deductions are six techniques of the description**, each read off the
+  per-slot marks: a letter in place (`inPlace`), a letter scored nowhere in a
+  guess (`absent`), a letter not in place is not where it was guessed
+  (`notHere`), a letter found with as many slots left as copies
+  (`onlyPlace`), a letter whose count a faint copy fixes, once that many
+  slots hold it (`copiesPlaced`), and the letters found filling every slot
+  (`lettersFill`). All six checked sound, each plant caught. **Guess's six
+  inherited techniques add no step**: each is one of these read through
+  Guess's counts (`scoredNothing` and `absent`, `noBlack` and
+  `blacksAccounted` and `notHere`, `blacksForced` and `inPlace`,
+  `everyPegScored` and `lettersFill`, `totalAccounted` and `copiesPlaced`),
+  so the ladder states the per-slot forms alone.
+- **The guess is any common word the board accepts, not only one that
+  fits.** Following words that fit took up to twelve guesses over every
+  three-letter answer and lost six four-letter ones in six rows, in clusters
+  such as _ILL; a word that cannot win can split them. Its sentence says so
+  (`split`). Common words only, not the whole guess list, so a suggestion is
+  a word a player knows: without the search below, the whole list left six
+  four-letter words needing a seventh guess against the common words'
+  eleven, and the search closes both.
+- **Where at most 300 words fit, the guess is the best split from which a
+  short search finds every one of them in the rows left.** The search's
+  guesses at each step are a function of the words fitting there alone, so
+  the hint asked again continues what the last one found; trying the first
+  hint's own candidates at every depth lost more words than no search (the
+  next hint could not find the continuation). The search is budgeted in
+  words scored, never time; below the first step it tries the fifteen best
+  splits, and every word that fits where thirty or fewer do (a word that
+  fits may win outright, and only a few are left to try).
+- **A guess is said as the word** (`{word}`, a term kind the language gained
+  for it): the letters are data, not prose, and `THIS` would otherwise trip
+  the lint against an unbound "this".
+- **"Is out" is kept by the `code` family**, as Guess kept it alone: the
+  letter is out of the hidden answer, and no mark of the player's is. The
+  exemption reads the description's family, so a later code-breaking game
+  takes it without a list.
+- **A letter ruled out is struck; a suggested guess rings the working row's
+  squares.** An answer slot's letters are a grid of notes, and a ring round
+  one crossed its neighbours (the frame test caught it, and none fitted clear
+  of them): the engine's rule is that a struck note is not ringed. A
+  planner's step could not name a strike, so the language gained
+  `marks: { strike: [...] }` for one, and the role-to-mark map the lint and
+  the renderer each kept became one (`stated-clauses.ts`'s `DRAWN`). The
+  guess is said as the word and ringed where it goes, "guess it in the
+  ringed squares".
+- **The opening leaves the fewest words on average, not at worst.** The best
+  worst case on four letters, AEON, left an 80-word _A_E cluster that no
+  common word could finish in the rows (HAZE and PAVE were lost); TALE, the
+  best on average, loses none, and the look-ahead takes the worst cases
+  from the second guess on. Measured 2026-11-18, following the hint over
+  every common word of each preset: all won, the slowest hint 696 ms (six
+  letters), within four guesses for most (four letters: 61 of 1401 took a
+  sixth).
+- **The wording, after a fresh reader's pass**: a letter not in place is
+  "did not score A in place", not "off a filled square", a phrase the board
+  never teaches; a count fixed by a faint copy names that copy; letters are
+  listed in the striped row's order; a guess that fits "may win, or leave at
+  most N"; and once no common word fits, the sentence says so, since a game
+  ID may hide a rarer word (SHARD is none) and "the only common word" would
+  otherwise be followed by a count of all words with no reason given.
+- **Where no common word is sure to finish, a word of the whole list with a
+  vowel may be suggested.** No preset reaches it now; it is kept for the
+  custom sizes and guess counts, where the walk was not run. The vowel keeps
+  out BLDG and TSK, which the search found first.
 
 ## Asked of the owner
 

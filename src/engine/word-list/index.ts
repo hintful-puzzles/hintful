@@ -47,6 +47,33 @@ export function answerCount(length: number): number {
   return (ANSWERS[length] ?? "").length / length;
 }
 
+/** Each list's words of `length` letters, in order, split once. */
+const split = new Map<string, readonly string[]>();
+function wordsOf(
+  name: "answers" | "guesses",
+  list: Readonly<Record<number, string>>,
+  length: number,
+): readonly string[] {
+  const key = `${name}${length}`;
+  let words = split.get(key);
+  if (words === undefined) {
+    const all = list[length] ?? "";
+    words = Array.from({ length: all.length / length }, (_, i) =>
+      all.slice(i * length, (i + 1) * length),
+    );
+    split.set(key, words);
+  }
+  return words;
+}
+
+/** Every answer of `length` letters, in alphabetical order. */
+export const answerWords = (length: number): readonly string[] =>
+  wordsOf("answers", ANSWERS, length);
+
+/** Every accepted guess of `length` letters, in alphabetical order. */
+export const guessWords = (length: number): readonly string[] =>
+  wordsOf("guesses", GUESSES, length);
+
 /** A uniformly random answer of `length` letters. */
 export function drawAnswer(length: number, rs: RandomState): string {
   const count = answerCount(length);

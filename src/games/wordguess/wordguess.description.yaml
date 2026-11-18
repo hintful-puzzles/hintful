@@ -72,6 +72,37 @@ help:
         drawn from the words that both SCOWL's commoner lists and Alan
         Beale's 12dicts call ordinary: no plurals, no past tenses and
         nothing offensive.
+  hints: |-
+    **Next hint** first points out anything your scored guesses prove that
+    your answer row does not show yet, and rules those letters out of their
+    slots for you, as marks you could have made yourself. It reasons only
+    from the scores, never from the marks already in your answer row, and
+    it waits until no slot rules out its own letter, as **Check & save**
+    does.
+
+    {{hint-marks}}
+
+    What a single guess tells you for certain:
+
+    - A letter **in place** is the only letter its slot can hold.
+    - A letter scored **nowhere** in a guess is not in the word.
+    - A letter **not in place** is not where you guessed it.
+
+    Once some slots are narrowed down, the scores say more. A letter found
+    in the word with only one slot left that can hold it is there. A guess
+    that scored one copy of a letter and nothing for a second shows how
+    many the word has, and once that many slots hold it, no other can. And
+    when the letters found so far fill every slot, the word has no other.
+
+    When nothing more follows, the hint suggests a word to guess in the
+    ringed squares, and tells you how many common words still fit every
+    score and the most that could be left after it. Sometimes the word it
+    suggests cannot be the answer, because a word that can't win can narrow
+    the field further than any that can; the hint then says it can't win.
+    That part is a suggestion rather than a deduction, and
+    the hint says so by counting rather than arguing. On every preset,
+    followed from the first guess, the suggestions find every common word
+    within the six rows.
 name: Wordguess
 family: code
 sizes:
@@ -103,3 +134,171 @@ clues:
 freedom: { kind: query }
 deal:
   answer: a word of the list, at random
+define:
+  # The letters guess k holds.
+  letters(k): "set(peg(k, s) over s in cells)"
+  # How many copies of letter d guess k scored, in place or elsewhere: the
+  # answer has at least that many, and exactly that many where a copy of d
+  # in guess k scored nothing.
+  found(k, d): "count(s in cells where peg(k, s) = d and mark(k, s) > 0)"
+  # Whether a copy of letter d in guess k scored nothing.
+  faint(k, d): "count(s in cells where peg(k, s) = d and mark(k, s) = 0) > 0"
+  # The slots settled to letter d: d is all they can still hold.
+  settled(d): "{s in cells where cand(s) = {d}}"
+  # The most copies of letter d any guess has scored.
+  least(d): "max(k in clues(score) of found(k, d))"
+  # The letters some guess has scored.
+  known: "set(peg(k, s) over k in clues(score), s in cells where mark(k, s) > 0)"
+tiers: [Normal]
+names:
+  inPlace: "a letter in place"
+  absent: "a letter not in the word"
+  notHere: "a letter not where it was guessed"
+  onlyPlace: "a letter with one place left"
+  copiesPlaced: "every copy of a letter placed"
+  lettersFill: "the found letters fill the word"
+techniques:
+  # A guess's letters scored in place: each is its slot's letter.
+  - id: inPlace
+    tier: Normal
+    for: "k in clues(score) where count(s in cells where mark(k, s) = 2) > 0"
+    conclude: >-
+      forall s in cells where mark(k, s) = 2, d in domain where d != peg(k, s):
+      strike(s, d)
+  # A letter no copy of which a guess scored: the answer has none.
+  - id: absent
+    tier: Normal
+    for: "k in clues(score) where count(d in letters(k) where found(k, d) = 0) > 0"
+    conclude: "forall d in letters(k) where found(k, d) = 0, s in cells: strike(s, d)"
+  # A guess's letters not scored in place: none is where the guess put it.
+  - id: notHere
+    tier: Normal
+    for: "k in clues(score) where count(s in cells where mark(k, s) < 2) > 0"
+    conclude: "forall s in cells where mark(k, s) < 2: strike(s, peg(k, s))"
+  # A letter a guess scored n copies of, with only n slots left that can
+  # hold it: it is in each of them.
+  - id: onlyPlace
+    tier: Normal
+    for: >-
+      k in clues(score), d in letters(k), n = found(k, d),
+      S = {s in cells where d in cand(s)}
+      where n > 0 and |S| = n
+    conclude: "forall s in S, e in domain where e != d: strike(s, e)"
+  # A letter a guess scored n copies of and also scored nothing for, so the
+  # answer has exactly n, with n slots settled to it: it is in no other.
+  - id: copiesPlaced
+    tier: Normal
+    for: >-
+      k in clues(score), d in letters(k), n = found(k, d), P = settled(d)
+      where n > 0 and faint(k, d) and |P| = n
+    conclude: "forall t in cells where t not in P: strike(t, d)"
+  # The letters the guesses have scored, as many copies of each as one guess
+  # scored, fill every slot: the answer has no other letter.
+  - id: lettersFill
+    tier: Normal
+    for: "e = sum(d in known of least(d)) where e = |cells|"
+    conclude: "forall d in domain where d not in known, s in cells: strike(s, d)"
+# A step's words use three references and the letters themselves: the
+# striped row is the scored guess it reads, an outlined slot one whose
+# letters it leans on, the struck letters the ones in the answer row it
+# rules out, and the ringed squares the working row's, where a suggested
+# guess goes. A deduction ends on the letters it rules out, "out" of their
+# slots, which no
+# mark of the player's is; whether "so" may be said is the rival judging's
+# (`hint.ts`), passed as the relation. A probe is chosen by what it leaves,
+# and ends on that.
+phrases:
+  # The letters the step rules out; `several` is fixed when the step is
+  # made, so a step the player has partly made keeps its words.
+  out: "{if several: {strike struck: the struck letters} are out | {strike struck: the struck letter} is out}"
+  row: "{stripes row: the striped row}"
+  slots: "{outline slots: the outlined slot | the outlined slots}"
+steps:
+  # `letters` are the letters the row scored in place.
+  inPlace:
+    ring: letter
+    terms: { several: flag, letters: values }
+    marks: { stripes: [row], strike: [struck] }
+    look: "{row} scored {letters} in place"
+    follows: "{letters: that slot holds it | those slots hold them}"
+    move: "{out}"
+  # `letters` are the letters no copy of which the row scored.
+  absent:
+    ring: letter
+    terms: { several: flag, letters: values }
+    marks: { stripes: [row], strike: [struck] }
+    look: "{row} scored nothing for {letters}"
+    follows: "the word has {letters: none | none of them}"
+    move: "{out}"
+  # `letters` are the row's letters off a filled square.
+  notHere:
+    ring: letter
+    terms: { several: flag, letters: values }
+    marks: { stripes: [row], strike: [struck] }
+    look: "{row} did not score {letters} in place"
+    follows: "{letters: it is not | they are not} where {letters: it was | they were} guessed"
+    move: "{out}"
+  # The row scored `n` copies of `letter`, and only the outlined slots can
+  # still hold it.
+  onlyPlace:
+    ring: letter
+    terms: { several: flag, letter: number, n: number }
+    marks: { stripes: [row], outline: [slots], strike: [struck] }
+    move: "{out}"
+    wordings:
+      - when: "n = 1"
+        look: "{row} found {letter}, and only {slots} can still hold it"
+      - look: "{row} found {spelled n} of {letter}, and only {slots} can still hold them"
+  # The row scored `n` copies of `letter` and nothing for another, so the
+  # word has exactly `n`, and the outlined slots hold them.
+  copiesPlaced:
+    ring: letter
+    terms: { several: flag, letter: number, n: number }
+    marks: { stripes: [row], outline: [slots], strike: [struck] }
+    move: "{out}"
+    wordings:
+      - when: "n = 1"
+        look: "{row} scored a spare {letter} faint, and {slots} holds the word's only {letter}"
+      - look: "{row} scored a spare {letter} faint, and {slots} hold the word's {spelled n} of it"
+  # The rows whose scores, the most copies of each letter any one scored,
+  # add up to every slot.
+  lettersFill:
+    ring: letter
+    terms: { several: flag }
+    marks: { stripes: [row], strike: [struck] }
+    look: "the letters {stripes row: the striped row | the striped rows} found fill every slot"
+    follows: "the word has no other letter"
+    move: "{out}"
+  # A guess is chosen among the common words, the ones a game deals, and
+  # among every word of the list only once no common word fits (a game ID
+  # may hide any word); `common` says which. `word` is the guess, which goes
+  # in the ringed squares of the working row.
+  #
+  # The only word that fits every score.
+  onlyAnswer:
+    ring: square
+    terms: { word: word, common: flag }
+    look: "{if common: {word} is the only common word | no common word fits, and {word} is the only word} that fits every score"
+    move: "guess it in {ring: the ringed squares}"
+  # `fitting` words fit every score; `worst` is the most this guess can
+  # leave, whatever it scores.
+  opening:
+    ring: square
+    terms: { word: word, fitting: number, worst: number }
+    look: "nothing is scored yet"
+    move: "guess {word} in {ring: the ringed squares}"
+    effect: "at most {numeral worst} of the {numeral fitting} common words will be left"
+  probe:
+    ring: square
+    terms: { word: word, common: flag, fitting: number, worst: number }
+    look: "{if common: {numeral fitting} common words fit | no common word fits, but {numeral fitting} words fit} every score, and {word} is one"
+    move: "guess it in {ring: the ringed squares}"
+    effect: "it may win, or leave at most {numeral worst}"
+  # A word that does not fit, so cannot win, but leaves fewer than any that
+  # does.
+  split:
+    ring: square
+    terms: { word: word, common: flag, fitting: number, worst: number }
+    look: "{if common: {numeral fitting} common words fit | no common word fits, but {numeral fitting} words fit} every score"
+    move: "guess {word} in {ring: the ringed squares}"
+    effect: "it can't win, but at most {numeral worst} will be left"

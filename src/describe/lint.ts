@@ -14,13 +14,17 @@
  */
 
 import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "../engine/piece.ts";
-import { DEFAULT_FORMS, type Piece, parseClause } from "../engine/stated-clauses.ts";
+import {
+  DEFAULT_FORMS,
+  DRAWN,
+  type Piece,
+  parseClause,
+} from "../engine/stated-clauses.ts";
 import { judge } from "../engine/testing/hint-reference.ts";
 import {
   adjectiveDefect,
   IS_OUT,
-  KEEPS_IS_OUT,
-  type MarkRole,
+  KEEPS_IS_OUT_FAMILY,
   NARRATION_LIMIT,
   RETIRED_PHRASE,
   unboundDefect,
@@ -124,14 +128,6 @@ const LONGEST: Prints = {
     either: "1, 2 or 3",
   },
   closing: "this square must be clear",
-};
-
-/** The role a slot role is drawn in: `strand` is outlined apart. */
-const DRAWN: Readonly<Record<string, MarkRole>> = {
-  ring: "ring",
-  outline: "outline",
-  stripes: "stripes",
-  strand: "outline",
 };
 
 /** A clause one way: literal words, and references with their words. */
@@ -447,7 +443,7 @@ function wordingsIn(
 function wordingFindings(file: DescriptionFile): Finding[] {
   const out: Finding[] = [];
   const needed = new Map<string, boolean>();
-  const keepsIsOut = "game" in file && KEEPS_IS_OUT.has(file.game);
+  const keepsIsOut = "family" in file && file.family === KEEPS_IS_OUT_FAMILY;
   for (const { where: id, w, moveRing, spoken } of wordingsIn(file)) {
     const where = id === "" ? w.label : `${id} ${w.label}`;
     for (const message of wordDefects(w.clauses, moveRing === true, keepsIsOut))

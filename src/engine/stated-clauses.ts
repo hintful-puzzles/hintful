@@ -86,6 +86,7 @@ const SLOT_ROLES: ReadonlySet<string> = new Set([
   "outline",
   "stripes",
   "strand",
+  "strike",
   "if",
   "piece",
   "spelled",
@@ -97,12 +98,25 @@ const SLOT_ROLES: ReadonlySet<string> = new Set([
   "or",
 ]);
 
+/** The mark each reference role is drawn in, of `wording-rules.ts`'s
+ * `MarkRole`: `strand` is outlined apart. */
+export const DRAWN: Readonly<
+  Record<string, "ring" | "outline" | "stripes" | "strike">
+> = {
+  ring: "ring",
+  outline: "outline",
+  stripes: "stripes",
+  strand: "outline",
+  strike: "strike",
+};
+
 /** The words a reference takes when its slot gives none, by role. */
 export const DEFAULT_FORMS: Readonly<Record<string, readonly string[]>> = {
   ring: ["this {noun}", "these {nouns}"],
   stripes: ["this {unit}"],
   outline: ["the outlined {noun}", "the outlined {nouns}"],
   strand: ["the outlined {noun}", "the outlined {nouns}"],
+  strike: ["the struck {noun}", "the struck {nouns}"],
 };
 
 /** The squares a `ring` reference or a `has` slot is over, by name: `1`, `2`

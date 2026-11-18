@@ -1411,11 +1411,17 @@ notes as the player presses them, and its `{struck}` values are theirs (the
 voice's `noteValue` reads a note's `n` where it is not the value); stating no
 `move`, it closes on them in a firing's strike words, "the 3 must go", saying
 where they are unless a reference already names their squares alone, and
-"too" on a later leg. Terms and marks are required where the step declares any, so a
+"too" on a later leg. **A step whose struck notes are not cells' notes declares
+them as a mark**, `marks: { strike: [letter] }`, and names them with a
+reference, `{strike letter: the struck letters}`, drawn on the sort's kind as
+any other mark is: Wordguess's letters in an answer slot, which a step rules
+out and whose slot is no cell. Terms and marks are required where the step declares any, so a
 term left out is a type error; a game whose words vary by the board (Salad's
 mode) makes a voice for them. **A term of kind `unit`** is a row, column, block
 or diagonal, said as its name (`{axis}`, `{axis}s`); `StepsById` types it as
 `Unit`, and `lineUnit` turns a Latin reason's `"row" | "col"` into one. **A
+term of kind `word`** is a word the planner makes, said as it is and not
+linted as prose, since a guess may spell "this" (Wordguess's `{word}`). **A
 term of kind `values`** is several numbers, said by the value words as a list
 ("1, 2 and 4") and counted by a count form (`{vs: isn't | aren't}`): the
 notes a step pencils (Seismic's `note`); `{either vs}` says them as

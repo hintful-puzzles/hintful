@@ -1,0 +1,31 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A letter scored elsewhere read as in place too.
+  inPlace:
+    conclude: >-
+      forall s in cells where mark(k, s) >= 1, d in domain where d != peg(k, s):
+      strike(s, d)
+  # A letter one copy of which scored read as scoring none.
+  absent:
+    conclude: "forall d in letters(k) where found(k, d) <= 1, s in cells: strike(s, d)"
+  # A letter scored in place read as not there either.
+  notHere:
+    conclude: "forall s in cells where mark(k, s) <= 2: strike(s, peg(k, s))"
+  # One slot more than the copies scored, each read as holding the letter.
+  onlyPlace:
+    for: >-
+      k in clues(score), d in letters(k), n = found(k, d),
+      S = {s in cells where d in cand(s)}
+      where n > 0 and |S| <= n + 1
+  # The copies counted without a faint one, so the answer may have more.
+  copiesPlaced:
+    for: >-
+      k in clues(score), d in letters(k), n = found(k, d), P = settled(d)
+      where n > 0 and |P| = n
+  # The found letters one short of the word read as filling it.
+  lettersFill:
+    for: "e = sum(d in known of least(d)) where e + 1 >= |cells|"

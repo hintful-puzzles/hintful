@@ -1,0 +1,18 @@
+ok  wordguess  inPlace                        3  sound    (want sound   )     2 queries    0.0s
+ok  wordguess  inPlace (planted)              3  unsound  (want unsound )     1 queries    0.0s   at clue score 0
+ok  src/games/wordguess/wordguess.description.yaml#inPlace: recorded sound, proved whole on all 1 boards
+ok  wordguess  absent                         3  sound    (want sound   )     2 queries    0.7s
+ok  wordguess  absent (planted)               3  unsound  (want unsound )     1 queries    0.1s   at clue score 0
+ok  src/games/wordguess/wordguess.description.yaml#absent: recorded sound, proved whole on all 1 boards
+ok  wordguess  notHere                        3  sound    (want sound   )     2 queries    0.0s
+ok  wordguess  notHere (planted)              3  unsound  (want unsound )     1 queries    0.0s   at clue score 0
+ok  src/games/wordguess/wordguess.description.yaml#notHere: recorded sound, proved whole on all 1 boards
+ok  wordguess  onlyPlace                      3  sound    (want sound   )     2 queries    8.9s
+ok  wordguess  onlyPlace (planted)            3  unsound  (want unsound )     1 queries    0.1s   at clue score 0
+ok  src/games/wordguess/wordguess.description.yaml#onlyPlace: recorded sound, proved whole on all 1 boards
+ok  wordguess  copiesPlaced                   3  sound    (want sound   )     2 queries    1.3s
+ok  wordguess  copiesPlaced (planted)         3  unsound  (want unsound )     1 queries    0.0s   at clue score 0
+ok  src/games/wordguess/wordguess.description.yaml#copiesPlaced: recorded sound, proved whole on all 1 boards
+ok  wordguess  lettersFill                    3  sound    (want sound   )     1 queries  183.3s
+ok  wordguess  lettersFill (planted)          3  unsound  (want unsound )     1 queries    0.1s   at ?
+ok  src/games/wordguess/wordguess.description.yaml#lettersFill: recorded sound, proved whole on all 1 boards

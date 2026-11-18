@@ -4811,9 +4811,10 @@ function statedTable(own: readonly Technique[]): string[] {
 }
 
 /** Whether a step's term is words the clause says as they are: a unit's name,
- * one of the words the term lists, or another step's clause. */
+ * a word the planner makes, one of the words the term lists, or another
+ * step's clause. */
 const saidPlainly = (kind: StepTermKind): boolean =>
-  kind === "unit" || typeof kind !== "string";
+  kind === "unit" || kind === "word" || typeof kind !== "string";
 
 /** The steps a `clause` or `clauses` term may speak, or null for any other
  * term. */
@@ -4838,9 +4839,11 @@ const stepTermType = (kind: StepTermKind): string =>
       ? "boolean"
       : kind === "unit"
         ? "Unit"
-        : kind === "values"
-          ? "readonly number[]"
-          : "number";
+        : kind === "word"
+          ? "string"
+          : kind === "values"
+            ? "readonly number[]"
+            : "number";
 
 /** A planner's kind of step checks as a technique's `says` does, over the
  * terms and marks it declares: a number term is a number, a flag a truth, and

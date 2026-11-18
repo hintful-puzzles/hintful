@@ -86,9 +86,9 @@ export const RETIRED_PHRASE =
   /\brule out\b|phrase`[^`]*\brules out\b|something to cross out/i;
 
 /** "is out" / "are out" as a move's closing, retired with "rule out".
- * Mastermind's framed colors keep it: the color is out of the answer, and no
- * mark of the player's is. */
+ * A code-breaking game keeps it: its framed colors or letters are out of the
+ * hidden answer, and no mark of the player's is. */
 export const IS_OUT = /\b(?:is|are) out\b/i;
 
-/** The games that keep "is out" as their own closing, by id. */
-export const KEEPS_IS_OUT: ReadonlySet<string> = new Set(["guess"]);
+/** The catalog family whose games keep "is out" as their own closing. */
+export const KEEPS_IS_OUT_FAMILY = "code";

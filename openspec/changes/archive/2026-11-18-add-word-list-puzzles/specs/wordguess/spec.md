@@ -221,3 +221,61 @@ SHALL show the answer's letter in each slot instead.
 - **WHEN** Q is ruled out of a slot
 - **THEN** the slot shows every other letter in its place and nothing where
   Q was
+
+### Requirement: Hint: Wordguess's hint places what the scores prove, then suggests a guess
+
+The hint SHALL read only the scored rows, never the hidden word or the
+player's marks. Its plan SHALL first rule out of the answer row each letter a
+technique of the description proves out and the row does not already show,
+one firing a step, striking the letters, striping the scored row it reads and
+outlining the slots it leans on; then it SHALL end with a guess, ringing the
+working row's squares it goes in. Each technique SHALL be checked sound
+against the rules.
+
+#### Scenario: A letter scored in place settles its slot
+
+- **WHEN** CRANE is scored against MOUSE and a hint is asked
+- **THEN** its first step rules every letter but E out of the last slot, and
+  says the striped row scored E in place
+
+#### Scenario: The same scores give the same plan
+
+- **WHEN** CRANE is scored against MOUSE on one board and against HOUSE on
+  another
+- **THEN** the two hints are the same
+
+### Requirement: Hint: The suggested guess is counted, not argued
+
+The guess SHALL be a word the board accepts, a common word wherever one is
+sure to find the answer in time, and its sentence SHALL name it and claim
+only what was counted: how many common
+words still fit every score, and the most the guess can leave whatever it
+scores. A guess that does not fit SHALL say it can't win. Once no
+common word fits, the words counted SHALL be every word of the list, and
+the sentence SHALL say that no common word fits.
+
+#### Scenario: A guess that cannot win
+
+- **WHEN** the word that leaves the fewest standing is not one that fits
+- **THEN** the sentence says how many fit, that the guess can't win,
+  and the most it can leave
+
+### Requirement: Hint: Following the hint wins on every preset
+
+On every preset, a player who follows the hint SHALL find every common word
+within the rows. Where few enough words still fit, the guess SHALL be one
+from which a short search finds every one of them in the rows left, and that
+search SHALL depend only on the words still fitting and the words the board
+accepts, so that the hint asked again after the guess continues what it
+found.
+
+#### Scenario: Every answer is found
+
+- **WHEN** every common word of each preset's length is played by applying
+  the hint's plans until the game ends
+- **THEN** every game is won
+
+#### Scenario: A lost game has no hint
+
+- **WHEN** a hint is asked after the rows are exhausted
+- **THEN** the hint refuses, saying the game is over

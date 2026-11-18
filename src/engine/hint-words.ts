@@ -194,6 +194,12 @@ export class Narration {
     return new Narration(s ? [s] : []);
   }
 
+  /** Words the board shows, said as they are and not linted as prose: a word
+   * game's guess may spell "this" or "here". */
+  static verbatim(s: string): Narration {
+    return new Narration(s ? [s] : []);
+  }
+
   /** A single reference. */
   static ref<E>(ref: Reference<E>): Narration {
     checkAdjective(ref.role, ref.words(ref.elements));

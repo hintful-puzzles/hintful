@@ -25,19 +25,14 @@ The findings and the decisions behind these are `design.md`.
 - [x] 3.3 State and moves: guesses typed on a letter keypad and the keyboard, a guess not in the guess list refused with its reason, the answer row of candidate letters, Check & save over it
 - [x] 3.4 Rendering on Guess's shape, the collection's palette; marks for in place, elsewhere and absent that do not lean on color alone
 - [x] 3.4a Done 2026-11-18 (`design.md` § "The keypad (task 3.4a)"): QWERTY rows through `KeyLabel.row`, each key's status through `Game.keyStatus`, a full non-word row declining letters, and `decodeUi` given the state; checked in Chrome on a phone (touch) and a desktop, light and dark, and Solo's keypad unchanged. The keypad as a keyboard: the panel lays keys out by count (`game-controls.ts`, `keys.ts`), so QWERTY rows need a panel extension a game can ask for; and whether each letter key may show its known status, which `requestKeys` (params only) cannot carry. Also decide whether a letter typed on a full row that is no word should overwrite its last letter, as `code-rows.ts`'s cursor fallback does now, or be ignored, as Wordle does
-- [ ] 3.5 Hint: the per-slot rungs (`design.md` § "What each inherits"), Guess's six inherited techniques where they add a step, then the probe over the answers that still fit; checked sound
-- [ ] 3.6 Help page, spec, icons; play it in the app with pointer, keyboard and touch, and a hint at every stage; a fresh subagent reads the hints against the board
+- [x] 3.5 Done 2026-11-18 (`design.md` § "The hint (task 3.5)"): six per-slot techniques, sound with every plant caught; Guess's six add no step; the guess searched so that following the hint wins every common word of every preset, hard mode included. Hint: the per-slot rungs (`design.md` § "What each inherits"), Guess's six inherited techniques where they add a step, then the probe over the answers that still fit; checked sound
+- [x] 3.6 Done 2026-11-18: the help's Hints section and legend read on a fresh dev server; the hint played to the end by taps alone on a phone-sized touch screen, and by mouse and the keyboard's letters on a desktop, strikes, stripes, outlines and ringed squares checked against each sentence; a fresh subagent read 39 steps over six games and found every claim true and every mark matching, and its wording points were taken (`design.md` § "The hint (task 3.5)"). Help page, spec, icons; play it in the app with pointer, keyboard and touch, and a hint at every stage; a fresh subagent reads the hints against the board
 
-## 4. Wordtrail (edges kind, on Palisade's wall model)
+## 4. Wordtrail
 
-- [ ] 4.1 Scaffold from the `edges` skeleton, first verdict; its description from `candidates/wordtrail.description.yaml`, blocked squares added
-- [ ] 4.2 Generator: lay answers' words as paths on a grid with blocked squares, and keep a board only when its division is unique against the guess list; bounded retries, the deal walk's census, sizes probed at both ends
-- [ ] 4.3 Moves and input: a word drawn by drag through orthogonal neighbors, a keyboard path, removing a word; findMistakes
-- [ ] 4.4 Rendering: letters, blocked squares, drawn words, the length list with found words
-- [ ] 4.5 Hint and tiers: its own rungs (a letter with one way on, a pocket no listed length fits, a word that fits one place), the three inherited techniques; checked sound
-- [ ] 4.6 Help page, spec, icons; play it in the app, hints at every stage, a fresh subagent's read
+- [x] 4.1 Split into its own change, `add-wordtrail`, on the owner's word (2026-11-18: wrap up Wordguess here and archive; Wordtrail later, not a priority), with its findings and candidate description
 
 ## 5. Close
 
-- [ ] 5.1 `npm run test:hint-sweeps` after the shared changes; push
-- [ ] 5.2 The owner's acceptance in the running app; archive
+- [x] 5.1 `npm run test:hint-sweeps` after the shared changes (2026-11-18: 621 passed); push
+- [x] 5.2 Archived on the owner's word (2026-11-18: wrap up Wordguess and archive, Wordtrail in `add-wordtrail`); their look at the running app comes with the deploy. The owner's acceptance in the running app; archive

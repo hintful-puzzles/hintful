@@ -84,6 +84,37 @@ export function ruleOutMistakes(
   return out;
 }
 
+// --- a hint's rule-outs -------------------------------------------------
+
+const sameRuleOut = (a: RuleOut, b: RuleOut): boolean =>
+  a.pos === b.pos && a.value === b.value;
+
+/** The marks of `wanted` the answer row does not already show. */
+export function pendingRuleOuts(
+  masks: Int32Array,
+  wanted: readonly RuleOut[],
+): RuleOut[] {
+  return wanted.filter((m) => !isRuledOut(masks, m.pos, m.value));
+}
+
+/**
+ * How the player's rule-outs `made` stand to a hint step that rules `wanted`
+ * out, on the answer row `masks` before them: each one the step asks for and
+ * together all it still lacks, or some of them, or a mark it does not ask for.
+ */
+export function ruleOutProgress(
+  masks: Int32Array,
+  wanted: readonly RuleOut[],
+  made: readonly RuleOut[],
+): "completed" | "onTrack" | "off" {
+  if (!made.every((x) => wanted.some((y) => sameRuleOut(x, y)))) return "off";
+  return pendingRuleOuts(masks, wanted).every((x) =>
+    made.some((y) => sameRuleOut(x, y)),
+  )
+    ? "completed"
+    : "onTrack";
+}
+
 // --- the working row ----------------------------------------------------
 
 /**

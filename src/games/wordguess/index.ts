@@ -20,6 +20,7 @@ import {
 } from "../../engine/code-rows.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
+import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { clearKey, letterKeyboard } from "../../engine/key-labels.ts";
 import {
   CURSOR_SELECT,
@@ -35,14 +36,23 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, KeyStatus, Point } from "../../engine/types.ts";
 import {
+  WORDGUESS_RUNGS,
+  wordguessHint,
+  wordguessHintKeepTrack,
+  wordguessRefreshHintStep,
+} from "./hint.ts";
+import {
+  answerRect,
   answerSlotAt,
   COL_ELSEWHERE,
   COL_IN_PLACE,
+  centerOf,
   colors,
   computeSize,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
+  tileRect,
   type WordguessDrawState,
   workingSlotAt,
 } from "./render.ts";
@@ -360,6 +370,39 @@ export const wordguessGame: Game<
 
   solve(_orig, curr) {
     return { ok: true, move: { type: "guess", letters: curr.answer.slice() } };
+  },
+  hint: (state) => wordguessHint(state),
+  hintRungs: WORDGUESS_RUNGS,
+  hintMarks: {
+    roles: {
+      ring: "the squares of the row you are writing, when the step suggests a guess: *the ringed squares* the word goes in.",
+      strike:
+        "a letter in the answer row: *the struck letters*, the ones the step rules out of their slots.",
+      outline:
+        "an answer slot, in a second color: *the outlined slot*, one whose letters the step already knows and leans on.",
+      stripes: "a scored row: *the striped row* the step reads.",
+    },
+  },
+  hintKeepTrack: wordguessHintKeepTrack,
+  refreshHintStep: wordguessRefreshHintStep,
+  // A tap selects a slot, and the row it is in decides whether a letter key
+  // types the letter or rules it out of the answer.
+  hintGesture(state, ui, ds, m): readonly PointerAction[] {
+    const letterKey = (v: number) => key(letterOf(v).toUpperCase().charCodeAt(0));
+    const ts = ds.tileSize;
+    if (m.type === "mark") {
+      return m.marks.flatMap((mark) => [
+        click(centerOf(answerRect(state.params, ts, mark.pos))),
+        letterKey(mark.letter),
+      ]);
+    }
+    if (m.type !== "guess") return [];
+    const typed = m.letters.flatMap((v, pos) =>
+      ui.entries[pos] === v
+        ? []
+        : [click(centerOf(tileRect(ts, state.rows.length, pos))), letterKey(v)],
+    );
+    return [...typed, key(SUBMIT_BUTTON)];
   },
 
   colors,

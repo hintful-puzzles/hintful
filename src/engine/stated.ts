@@ -21,7 +21,6 @@ import {
   joinWith,
   listOf,
   type MarkKind,
-  type MarkRole,
   mark,
   NARRATION_LIMIT,
   Narration,
@@ -38,6 +37,7 @@ import {
 import { PAIR_NAMES, type PairIndex, SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
 import {
   DEFAULT_FORMS,
+  DRAWN,
   type Piece,
   parseClause,
   ringNames,
@@ -72,14 +72,6 @@ export interface Clauses {
 /** A part of a step's sentence a description states. */
 export type ClausePart = Exclude<keyof Clauses, "long" | "answers">;
 
-/** The role each slot role is drawn in: `strand` is outlined apart. */
-const DRAWN: Readonly<Record<string, MarkRole>> = {
-  ring: "ring",
-  outline: "outline",
-  stripes: "stripes",
-  strand: "outline",
-};
-
 /** What a clause is rendered against: a firing's terms and marks, and the
  * game's words. */
 export interface StatedContext<E, R = E> {
@@ -112,7 +104,7 @@ export interface StatedContext<E, R = E> {
   readonly marks: Readonly<
     Partial<
       Record<
-        "outline" | "stripes" | "strand" | "ring",
+        "outline" | "stripes" | "strand" | "strike" | "ring",
         readonly E[] | Readonly<Record<string, readonly E[]>>
       >
     >
@@ -293,6 +285,12 @@ function colored<E>(
   if (t instanceof Narration) {
     if (either) throw new Error(`stated clause: {either ${name}} is no values term`);
     return t;
+  }
+  // Words the planner supplies (a unit's name, a listed word, a guess) are
+  // its data, which the description's lint has read where it lists them.
+  if (typeof t === "string" && !STATED_WORDS.has(name)) {
+    if (either) throw new Error(`stated clause: {either ${name}} is no values term`);
+    return Narration.verbatim(t);
   }
   const values =
     (name === "struck" || name === "struckOr") && cx.struck

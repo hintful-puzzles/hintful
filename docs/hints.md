@@ -710,8 +710,9 @@ two ways (owner, 2026-11-13, `standardize-hint-vocabulary`).
   action the move makes").
 - **"rule out" and "is out" are retired as closings**, and so is ", so there
   is something to cross out" (the notes are on the board). Mastermind keeps
-  "is out" for a color that is out of the answer, where no mark of the
-  player's is involved. `hint-retired-phrases.test.ts` scans every hinting
+  "is out" for a letter or color that is out of the answer, where no mark of
+  the player's is involved: the `code` family's games (Guess, Wordguess).
+  `describe/hint-retired-phrases.test.ts` scans every hinting
   game's source and the engine's for them.
 - **One form per kind of deduction**, where games say the same thing: a
   last candidate is "Every other {value} has been ruled out in {this}"; a met

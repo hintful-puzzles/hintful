@@ -16,6 +16,11 @@
  * Nothing here reads `state.solution`. The hint knows what the player knows.
  */
 
+import {
+  pendingRuleOuts,
+  type RuleOut,
+  ruleOutProgress,
+} from "../../engine/code-rows.ts";
 import { describedSpace, type GridSpace } from "../../engine/describe-runtime.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { GAME_OVER, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
@@ -589,8 +594,8 @@ function probeReason(probe: Probe): Reason {
   return { kind: "probe", fitting, worst };
 }
 
-const sameMark = (a: SlotMark, b: SlotMark): boolean =>
-  a.pos === b.pos && a.color === b.color;
+const asRuleOuts = (marks: readonly SlotMark[]): RuleOut[] =>
+  marks.map(({ pos, color }) => ({ pos, value: color }));
 
 /** `state` is the board *before* `m` (the midend classifies a move before it
  * applies it). */
@@ -605,11 +610,7 @@ export function guessHintKeepTrack(
     return m.pegs.every((c, i) => c === want.pegs[i]) ? "completed" : "off";
   }
   if (want.type !== "mark" || m.type !== "mark" || !m.ruledOut) return "off";
-  if (!m.marks.every((x) => want.marks.some((y) => sameMark(x, y)))) return "off";
-  const pending = want.marks.filter((x) => !(state.ruledOut[x.pos] & bit(x.color)));
-  return pending.every((x) => m.marks.some((y) => sameMark(x, y)))
-    ? "completed"
-    : "onTrack";
+  return ruleOutProgress(state.ruledOut, asRuleOuts(want.marks), asRuleOuts(m.marks));
 }
 
 /** Drop the marks a stored step would set that are already on the board. */
@@ -619,7 +620,9 @@ export function guessRefreshHintStep(
 ): HintStep<GuessMove, GuessHighlights> | null {
   const move = step.move;
   if (move.type !== "mark") return step;
-  const live = move.marks.filter((m) => !(state.ruledOut[m.pos] & bit(m.color)));
+  const live = pendingRuleOuts(state.ruledOut, asRuleOuts(move.marks)).map(
+    ({ pos, value }) => ({ pos, color: value }),
+  );
   if (live.length === 0) return null;
   if (live.length === move.marks.length) return step;
   const hl = step.highlights as GuessHighlights;
