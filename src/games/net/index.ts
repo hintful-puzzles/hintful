@@ -78,6 +78,7 @@ import {
   type NetRung,
   netHint,
   netHintKeepTrack,
+  netJudgeMove,
 } from "./hint.ts";
 import { findMistakes, type NetMistake } from "./mistakes.ts";
 import {
@@ -871,6 +872,8 @@ export const netGame: Game<
     answerOf,
   }),
   hint: (s, _aux, ui) => netHint(s, targetVerbs, ui ?? newUi(s)),
+  judgeMove: (before, after, ui) =>
+    netJudgeMove(before, after, targetVerbs, ui ?? newUi(before)),
   hintRungs: NET_RUNGS,
   hintMarks: {
     roles: {

@@ -21,13 +21,19 @@
 
 import { Dsf } from "../../engine/dsf.ts";
 import { type FactGraph, placeNotes } from "../../engine/fact-graph.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+  MoveVerdict,
+} from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
 import type { Sentence } from "../../engine/hint-words.ts";
+import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import { type Clauses, statedSentence } from "../../engine/stated.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { STATED, voice } from "../../generated/games/loopy/loopy.compiled.ts";
@@ -42,6 +48,7 @@ import {
   type LoopyFiring,
   type Note,
   type RelationNote,
+  shownMarks,
 } from "./solver.ts";
 import {
   AF_ADAPTIVE,
@@ -121,7 +128,10 @@ type PlanStatus = "solved" | "incomplete";
 /** The line firings from the player's position, the walk's graph of facts, and
  * the notes among them. `contradiction` when the solver found the marks
  * inconsistent, which only a board no solution vouches for can reach. */
-export function deduceLoopyPlan(state: LoopyState): {
+export function deduceLoopyPlan(
+  state: LoopyState,
+  judging?: Judging,
+): {
   plan: Planned[];
   graph: FactGraph;
   notes: ReadonlyMap<number, Note>;
@@ -131,6 +141,7 @@ export function deduceLoopyPlan(state: LoopyState): {
   const { board, graph, notes, angleEdges, next } = hintWalk(
     state,
     stepBudget("loopy hint plan"),
+    judging,
   );
   const { plan } = deduceHintPlan<HintBoard, Planned, PlanStatus>({
     board,
@@ -670,6 +681,7 @@ function deductions(
 function planSteps(
   state: LoopyState,
   { plan, graph, notes, angleEdges }: ReturnType<typeof deduceLoopyPlan>,
+  startOf: number[] = [],
 ): Step[] {
   const pl: Planner = { state, angleEdges, notes: new Notes(state), steps: [] };
   const stepOf = new Map(plan.map((p, i) => [p.firing, i]));
@@ -708,6 +720,7 @@ function planSteps(
   };
 
   plan.forEach((p, i) => {
+    startOf.push(pl.steps.length);
     const groups = deductions(graph, notes, before[i]);
     const uses = (group: readonly number[]): boolean =>
       group.some((id) => closure[i].has(id));
@@ -758,6 +771,32 @@ export function hint(state: LoopyState): HintResult<LoopyMove, unknown, LoopyRun
     };
   }
   return { ok: true, steps: planSteps(state, found) };
+}
+
+/**
+ * What Check & save says of the last move: the step of the firing that
+ * draws a line or places a corner note the player made, the notes it rests
+ * on first. A move nothing quotes is the move just made, as the edge games
+ * name it: a line has no square to ring. A pair of lines marked alike or
+ * opposite is a relation, no fact a firing makes, and is not judged.
+ */
+export function judgeMove(
+  before: LoopyState,
+  after: LoopyState,
+): MoveVerdict<unknown> | null {
+  return judgeWalked(
+    before,
+    after,
+    shownMarks,
+    (judging) => {
+      const startOf: number[] = [];
+      const steps = planSteps(before, deduceLoopyPlan(before, judging), startOf);
+      // The walk counted line firings; a verdict counts their steps.
+      judging.firstStep = judging.firstStep.map((i) => startOf[i] ?? steps.length);
+      return steps;
+    },
+    () => ({ at: null }),
+  );
 }
 
 /**

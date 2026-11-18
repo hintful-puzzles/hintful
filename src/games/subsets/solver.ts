@@ -34,6 +34,7 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
+import type { Judging } from "../../engine/move-judge.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 import {
@@ -754,18 +755,15 @@ function collapseStep(
 export function deduceHintPlan(
   orig: SubsetsState,
   maxdiff: number = DIFF_NORMAL,
+  judging?: Judging,
 ): SubsetsHintPlan {
   const board = cloneState(orig);
   const plan: SubsetsDeduction[] = [];
   if (subsetsValidate(board) === "invalid")
     return { status: "invalid", deductions: plan };
   const ladder = subsetsLadder(dealtOf(board));
-  const m = new CellMarks(spaceOf(board.w, board.h), SETS, decidedGrid(board));
-  m.placing = ladder.placing;
-  if (!m.seed(m.grid)) return { status: "invalid", deductions: plan };
-  for (let i = 0; i < m.cands.length; i++)
-    for (let v = 0; v < 16; v++)
-      if (!decided(board, i) && !marksAllow(board, i, v)) m.cands[i] &= ~(1 << (v + 1));
+  const m = boardMarks(board, ladder);
+  if (m === null) return { status: "invalid", deductions: plan };
   m.budget = stepBudget("subsets hint");
   const why = new Map<number, RuleOutWhy>();
   const push = (d: SubsetsDeduction | null): void => {
@@ -782,8 +780,17 @@ export function deduceHintPlan(
     }
   };
   settle([]);
-  const walk = ladderWalk(m, ladder.entries, { [TIERS]: maxdiff }, readsOf);
-  for (;;) {
+  const walk = ladderWalk(
+    m,
+    ladder.entries,
+    { [TIERS]: maxdiff },
+    readsOf,
+    judging ? { aim: judging.aim } : {},
+  );
+  if (judging) judging.graph = walk.graph;
+  while (!judging?.done(m)) {
+    const known = walk.graph.facts.length;
+    const from = plan.length;
     const t = walk.next();
     if (t === "contradiction") return { status: "invalid", deductions: plan };
     if (t === null) break;
@@ -803,6 +810,23 @@ export function deduceHintPlan(
     const r = t.reasons[0] as SubsetsFiring | undefined;
     if (r?.kind === "carryIn" || r?.kind === "carryOut") push(carryStep(board, r));
     settle(cells);
+    judging?.took(walk.graph, known, from, plan.length);
   }
   return { status: subsetsValidate(board), deductions: plan };
+}
+
+/** The sets each square may hold, as the hint reads them off the player's
+ * letters and rule-outs, which a judged move's facts are the difference of;
+ * `null` where the decided squares break the rules. */
+export function boardMarks(
+  board: SubsetsState,
+  ladder: Ladder<CellMarks> = subsetsLadder(dealtOf(board)),
+): CellMarks | null {
+  const m = new CellMarks(spaceOf(board.w, board.h), SETS, decidedGrid(board));
+  m.placing = ladder.placing;
+  if (!m.seed(m.grid)) return null;
+  for (let i = 0; i < m.cands.length; i++)
+    for (let v = 0; v < 16; v++)
+      if (!decided(board, i) && !marksAllow(board, i, v)) m.cands[i] &= ~(1 << (v + 1));
+  return m;
 }

@@ -65,6 +65,7 @@ import {
   type SlantRung,
   slantHint,
   slantHintKeepTrack,
+  slantJudgeMove,
 } from "./hint.ts";
 import {
   border,
@@ -380,6 +381,7 @@ export const slantGame: Game<
           : { type: "alike", x, y, dir, on: false },
     ),
   hint: slantHint,
+  judgeMove: slantJudgeMove,
   hintMarks: {
     roles: {
       ring: "what the step decides: the squares a clue forces, all ringed together because they share its reason, or the same-slant mark to put down, drawn in the hint color. The sentence says which way a square must slant.",

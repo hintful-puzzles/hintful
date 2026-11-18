@@ -45,6 +45,7 @@ import {
   type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
+import type { Judging } from "../../engine/move-judge.ts";
 import * as crossing from "../../generated/games/crossing/crossing.compiled.ts";
 import {
   type CrossingPuzzle,
@@ -777,7 +778,10 @@ const narrowRun = (p: CrossingPuzzle, f: Firing): number => {
  * where no digit follows from notes at all, it only strikes from the notes
  * the player wrote what their runs rule out.
  */
-export function deduceCrossingPlan(state: CrossingState): CrossingPlan {
+export function deduceCrossingPlan(
+  state: CrossingState,
+  judging?: Judging,
+): CrossingPlan {
   const { puzzle } = state;
   const board: PlanBoard = {
     puzzle,
@@ -788,6 +792,10 @@ export function deduceCrossingPlan(state: CrossingState): CrossingPlan {
   const m = boardMarks(board);
   if (m === null) return { status: "invalid", firings };
   const { entries } = crossingLadder(puzzle);
+  if (judging) {
+    judgedWalk(board, m, entries, firings, judging);
+    return { status: validateBoard(puzzle, board.grid).status, firings };
+  }
   const walk = ladderWalk(
     m,
     entries.filter((e) => e.id !== "narrow"),
@@ -843,4 +851,42 @@ export function deduceCrossingPlan(state: CrossingState): CrossingPlan {
     take(strike);
   }
   return { status: validateBoard(puzzle, board.grid).status, firings };
+}
+
+/**
+ * The walk that judges a move: every technique, `narrow` among them, aimed at
+ * the move's facts, until they are made or nothing follows. The hint keeps
+ * its notes for the way to a digit, but a player's notes are a move of their
+ * own, which `narrow` reaches as a square's notes written or struck.
+ */
+function judgedWalk(
+  board: PlanBoard,
+  m: CellMarks,
+  entries: readonly LadderEntry[],
+  firings: CrossingFiring[],
+  judging: Judging,
+): void {
+  const walk = ladderWalk(m, entries, { [TIERS]: 0 }, (t) => readsOf(board.puzzle, t), {
+    aim: judging.aim,
+  });
+  judging.graph = walk.graph;
+  while (!judging.done(m)) {
+    const known = walk.graph.facts.length;
+    const from = firings.length;
+    const t = walk.next();
+    if (t === null || t === "contradiction") break;
+    const f = firingOf(board, t);
+    if (f !== null) {
+      applyCrossingFiring(board, f);
+      firings.push(f);
+    }
+    judging.took(walk.graph, known, from, firings.length);
+  }
+}
+
+/** The marks the hint reads off the player's digits and notes, which a
+ * judged move's facts are the difference of; `null` where the digits break
+ * the rules. */
+export function shownMarks(state: CrossingState): CellMarks | null {
+  return boardMarks({ puzzle: state.puzzle, grid: state.grid, pencil: state.pencil });
 }

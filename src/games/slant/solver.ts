@@ -31,6 +31,7 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
+import type { Judging } from "../../engine/move-judge.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";
 import { ALIKE_DOWN, ALIKE_RIGHT, DIFF_HARD, type Slash } from "./state.ts";
@@ -408,6 +409,7 @@ export function deduceHintPlan(
   clues: Int8Array,
   soln: Int8Array,
   alike: Uint8Array,
+  judging?: Judging,
 ): SlantPlan {
   const dl = dealtOf(clues);
   const ladder = slantLadder(dl);
@@ -572,11 +574,14 @@ export function deduceHintPlan(
   };
   const walk = ladderWalk(m, ladder.entries, { [TIERS]: NORMAL }, reads, {
     citing: cite,
+    ...(judging ? { aim: judging.aim } : {}),
   });
+  if (judging) judging.graph = walk.graph;
   const firings: SlantFiring[] = [];
-  for (;;) {
+  while (!judging?.done(m)) {
     const before = Int32Array.from(m.edgeCands);
     const first = graph.facts.length;
+    const from = firings.length;
     pending.cites = null;
     const taken = walk.next();
     if (taken === null || taken === "contradiction") break;
@@ -609,6 +614,7 @@ export function deduceHintPlan(
       const fact = completing(e, before[e], first);
       merges.set(fact, mergeOf(e, fact));
     }
+    judging?.took(walk.graph, first, from, firings.length);
   }
   return {
     firings,
@@ -618,6 +624,24 @@ export function deduceHintPlan(
     vWhy: (key, at) => strikeWhy(key, at + 1, boardOf[graph.facts[at].firing]),
     ends,
   };
+}
+
+/** The marks the hint reads off the player's diagonals and same-slant
+ * marks, which a judged move's facts are the difference of. */
+export function shownMarks(
+  w: number,
+  h: number,
+  clues: Int8Array,
+  soln: Int8Array,
+  alike: Uint8Array,
+): CellMarks {
+  const sp = describedSpace(slant.units, w, h);
+  return marksOf(
+    sp,
+    Uint8Array.from(soln, describedOf),
+    slantLadder(dealtOf(clues)),
+    alike,
+  );
 }
 
 const pairOf = (p: readonly [number, number] | null): [number, number] | null =>

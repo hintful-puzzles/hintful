@@ -29,6 +29,7 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
+  type MoveVerdict,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -37,6 +38,7 @@ import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { CELL } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
+import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import {
   highlightIsOn,
   pressNoteTakingCell,
@@ -84,6 +86,7 @@ import {
   type CrossingMistake,
   deduceCrossingPlan,
   findMistakes,
+  shownMarks,
   solveCrossing,
 } from "./solver.ts";
 import {
@@ -508,9 +511,10 @@ function hintHighlights(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingHint
  * journey with a sentence per leg. */
 function buildSteps(
   state: CrossingState,
+  judging?: Judging,
 ): HintStep<CrossingMove, CrossingHint, CrossingRung>[] {
   const { puzzle } = state;
-  const firings = deduceCrossingPlan(state).firings;
+  const firings = deduceCrossingPlan(state, judging).firings;
   return firings.map((f, j) => {
     const words = narrateCrossing(puzzle, f);
     return {
@@ -543,7 +547,40 @@ function sameNoteDeduction(a: CrossingFiring, b: CrossingFiring): boolean {
 function hint(
   state: CrossingState,
 ): HintResult<CrossingMove, CrossingHint, CrossingRung> {
-  return candidateHint(state, null, buildSteps);
+  return candidateHint(state, null, (s) => buildSteps(s));
+}
+
+/** What Check & save says of the last move: the step that writes a digit or
+ * a note the player wrote, or strikes one they struck, or the move's square
+ * ringed where none is quoted. */
+function judgeMove(
+  before: CrossingState,
+  after: CrossingState,
+): MoveVerdict<CrossingHint> | null {
+  const { puzzle } = before;
+  return judgeWalked<
+    CrossingState,
+    CrossingHint,
+    HintStep<CrossingMove, CrossingHint, CrossingRung>
+  >(
+    before,
+    after,
+    shownMarks,
+    (judging) => buildSteps(before, judging),
+    ({ at }) => ({
+      at: cellAt(puzzle, at),
+      highlights: {
+        area: [],
+        hatch: [],
+        targets: [cellAt(puzzle, at)],
+        marks: [],
+        numbers: [],
+        numberTarget: null,
+      },
+    }),
+    (s, cells) =>
+      s.highlights?.targets.some((p) => cells.has(p.y * puzzle.w + p.x)) === true,
+  );
 }
 
 /**
@@ -756,6 +793,7 @@ export const crossingGame: Game<
   revealOne: (state, solved) =>
     revealEntry(entryMoves, state.grid, solved.grid, state.puzzle.w),
   hint,
+  judgeMove,
   hintRungs: CROSSING_RUNGS,
   hintMarks: {
     roles: {

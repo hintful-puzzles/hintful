@@ -269,7 +269,7 @@ describe("crossing hint — techniques and narration", () => {
     for (const [k, { f, state }] of found()) {
       texts.set(k, narrateCrossing(state.puzzle, f).text);
     }
-    expect(texts.get("onlyNumber")).toMatch(/so the ringed squares? must be \d+\.$/);
+    expect(texts.get("onlyNumber")).toMatch(/so \d+ must fill the ringed squares?\.$/);
     expect(texts.get("sharedDigit")).toMatch(
       /^Every outlined number still fitting this (across|down) run/,
     );
@@ -320,7 +320,7 @@ describe("crossing hint — ruling a candidate out", () => {
     if (!res?.ok) throw new Error("hint refused");
     expect(res.steps[0].move).toEqual({ kind: "place", run: 0, number: 0 });
     expect(res.steps[0].explanation).toBe(
-      "Only one 4-digit number left fits the notes in this run, so the ringed squares must be 1234.",
+      "Only one 4-digit number left fits the notes in this run, so 1234 must fill the ringed squares.",
     );
   });
 

@@ -288,8 +288,6 @@ export function describedEdgeHint<
     );
     if (judging) judging.graph = walk.graph;
     const steps: Step[] = [];
-    // The facts of firings the hint shows no step for, since the last one.
-    let carried: number[] = [];
     while (judging ? !judging.done(m) : steps.length < plan && !spec.done?.(m, ctx)) {
       if (spec.settle?.(m, ctx) === false) return "contradiction";
       // What the board shows may hold a fact before the next firing does.
@@ -306,19 +304,9 @@ export function describedEdgeHint<
         { taken, says: says as Says[keyof Says & string], ctx, before, marks: m },
         state,
       );
-      if (judging) {
-        const ids = carried;
-        carried = [];
-        for (let id = known; id < walk.graph.facts.length; id++) ids.push(id);
-        // A firing the hint shows no step for is its bookkeeping, as `settle`
-        // is (Pearl's square that has its two lines): its facts go with the
-        // next step's, and a judged move is not called chained for it.
-        if (legs.length === 0) carried = ids;
-        else {
-          judging.made.push(ids);
-          judging.firstStep.push(firstStep);
-        }
-      }
+      // Each leg is one step; a firing with none is bookkeeping (Pearl's
+      // square that has its two lines).
+      judging?.took(walk.graph, known, firstStep, firstStep + legs.length);
       const rung = (
         says.arm === undefined ? technique : `${technique}.${says.arm}`
       ) as Kind;

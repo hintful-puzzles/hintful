@@ -13,6 +13,7 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
+  type MoveVerdict,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -22,6 +23,7 @@ import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/hint-words.ts";
+import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import {
@@ -69,8 +71,10 @@ import {
 } from "./render.ts";
 import {
   answerOf,
+  boardMarks,
   deduceHintPlan,
   findMistakes,
+  gridValOf,
   linesDecide,
   PATTERN_RUNGS,
   type PatternHintMove,
@@ -356,13 +360,13 @@ function narrate(m: PatternHintMove, w: number): Sentence {
   }
 }
 
-function hint(state: PatternState): HintResult<PatternMove, PatternHint, PatternRung> {
-  const plan = deduceHintPlan(state);
-  if (plan.length === 0) {
-    return { ok: false, error: DEDUCTION_EXHAUSTED };
-  }
+type PatternStep = HintStep<PatternMove, PatternHint, PatternRung>;
+
+/** The hint's steps from `state`, aimed at a judged move's facts with
+ * `judging`. */
+function stepsFrom(state: PatternState, judging?: Judging): PatternStep[] {
   const { w } = state.common;
-  const steps: HintStep<PatternMove, PatternHint, PatternRung>[] = plan.map((m) => {
+  return deduceHintPlan(state, judging).map((m) => {
     const words = narrate(m, w);
     return {
       move: { type: "fillCells", value: m.value, cells: m.cells },
@@ -372,7 +376,33 @@ function hint(state: PatternState): HintResult<PatternMove, PatternHint, Pattern
       highlights: { cells: m.cells, value: m.value, w },
     };
   });
-  return { ok: true, steps };
+}
+
+function hint(state: PatternState): HintResult<PatternMove, PatternHint, PatternRung> {
+  const steps = stepsFrom(state);
+  return steps.length === 0
+    ? { ok: false, error: DEDUCTION_EXHAUSTED }
+    : { ok: true, steps };
+}
+
+/** What Check & save says of the last move: the step that decides a square
+ * the player marked, or the move's square ringed where none does. */
+function judgeMove(
+  before: PatternState,
+  after: PatternState,
+): MoveVerdict<PatternHint> | null {
+  const { w } = before.common;
+  return judgeWalked(
+    before,
+    after,
+    boardMarks,
+    (judging) => stepsFrom(before, judging),
+    ({ at, value }) => ({
+      at: cellAt(at, w),
+      highlights: { cells: [at], value: gridValOf(value), w },
+    }),
+    (s, cells) => s.highlights?.cells.some((c) => cells.has(c)) === true,
+  );
 }
 
 /** The cells a move would actually change, mapped to their new value. */
@@ -529,6 +559,7 @@ export const patternGame: Game<
   difficulty,
 
   hint,
+  judgeMove,
   hintMarks: {
     roles: {
       ring: `the squares the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,

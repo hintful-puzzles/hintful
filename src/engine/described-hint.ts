@@ -22,14 +22,7 @@ import {
   type Taken,
   TIERS,
 } from "./ladder-runtime.ts";
-import {
-  chainedWords,
-  followedWords,
-  type Judging,
-  judgeByWalk,
-  movedFacts,
-  unforcedWords,
-} from "./move-judge.ts";
+import { type Judging, judgeWalked } from "./move-judge.ts";
 import type { PairIndex } from "./piece.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
@@ -214,12 +207,7 @@ export function describedHint<
       const known = walk.graph.facts.length;
       const f = walk.next();
       if (f === null || f === "contradiction") break;
-      if (judging) {
-        const ids: number[] = [];
-        for (let id = known; id < walk.graph.facts.length; id++) ids.push(id);
-        judging.made.push(ids);
-        judging.firstStep.push(steps.length);
-      }
+      const from = steps.length;
       const kind = f.entry.id as Kind;
       const { terms, marks, wording } = spoken(f).says;
       const fills = filled(f);
@@ -261,6 +249,7 @@ export function describedHint<
           continuesPrevious: leg++ > 0,
         });
       }
+      judging?.took(walk.graph, known, from, steps.length);
     }
     return steps;
   };
@@ -275,46 +264,21 @@ export function describedHint<
   /** What Check & save says of the last move: the step that places a square
    * the player filled, or the move's square ringed where none does. */
   const judgeMove = (before: State, after: State): MoveVerdict<CellHint> | null => {
-    const moved = movedFacts(spec.marks(before), spec.marks(before), spec.marks(after));
-    if (moved.length === 0) return null;
-    let steps: Step[] = [];
-    let firstStep: readonly number[] = [];
-    const judged = judgeByWalk(moved, (judging) => {
-      steps = stepsFrom(before, judging);
-      firstStep = judging.firstStep;
-    });
-    if (judged === null) return null;
     const w = spec.width(before);
     const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
-    const ringed = (i: number, followed: boolean): MoveVerdict<CellHint> => {
-      const { at, value } = moved[i];
-      const target = pointOf(at);
-      return {
-        followed,
-        words: followed ? chainedWords(target) : unforcedWords(target),
-        highlights: { target: { ...target, value } },
-      };
-    };
-    if (judged.kind === "unforced") return ringed(judged.fact, false);
-    if (judged.firing === null) return ringed(0, true);
-    const ofFiring = steps.slice(
-      firstStep[judged.firing],
-      firstStep[judged.firing + 1] ?? steps.length,
+    return judgeWalked(
+      before,
+      after,
+      spec.marks,
+      (judging) => stepsFrom(before, judging),
+      ({ at, value }) => ({
+        at: pointOf(at),
+        highlights: { target: { ...pointOf(at), value } },
+      }),
+      (s, cells) =>
+        s.highlights !== undefined &&
+        cells.has(s.highlights.target.y * w + s.highlights.target.x),
     );
-    const cells = new Set(moved.map((f) => f.at));
-    const quoted =
-      ofFiring.find(
-        (s) =>
-          s.highlights && cells.has(s.highlights.target.y * w + s.highlights.target.x),
-      ) ??
-      ofFiring[0] ??
-      null;
-    if (quoted?.words === undefined) return null;
-    return {
-      followed: true,
-      words: followedWords(quoted.words, judged.chained),
-      ...(quoted.highlights === undefined ? {} : { highlights: quoted.highlights }),
-    };
   };
 
   return {

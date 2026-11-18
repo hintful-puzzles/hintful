@@ -202,7 +202,9 @@ techniques:
 # listed number (`num`) is said as its digits.
 phrases:
   run: "{stripes run: this {way} run}"
-  mustBe: "{ring square: the ringed square | the ringed squares} must be {ring number: {num}}"
+  # The squares ringed are the run's still empty ones, which the number
+  # fills: "must be" would set one square to a whole number.
+  mustBe: "{ring number: {num}} must fill {ring square: the ringed square | the ringed squares}"
 steps:
   # A run (`len` squares) that only one listed number can fill, told by why:
   # its length alone, every other number of that length placed, its notes

@@ -41,6 +41,7 @@ import {
   type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
+import type { Judging } from "../../engine/move-judge.ts";
 import type { StepBudget } from "../../engine/step-budget.ts";
 import * as loopy from "../../generated/games/loopy/loopy.compiled.ts";
 import { DIFF_HARD } from "./params.ts";
@@ -240,6 +241,10 @@ function ladderOf(state: LoopyState): { dl: loopy.Dealt; ladder: Ladder } {
 
 /** The marks of `state`'s lines, and, where `notes`, its corner and pair
  * notes. */
+/** The marks the hint reads off the player's lines and notes, which a
+ * judged move's facts are the difference of. */
+export const shownMarks = (state: LoopyState): CellMarks => marksOf(state, true);
+
 function marksOf(state: LoopyState, notes: boolean): CellMarks {
   const sp = tilingSpace(state.grid);
   const grid = Uint8Array.from(state.lines, describedOf);
@@ -552,6 +557,7 @@ class Relations {
 export function hintWalk(
   state: LoopyState,
   budget: StepBudget,
+  judging?: Judging,
 ): {
   board: HintBoard;
   graph: FactGraph;
@@ -675,14 +681,21 @@ export function hintWalk(
     ...clues,
     ...ladder.entries.slice(firstDot).filter((e) => !clues.includes(e)),
   ];
-  const walk = ladderWalk(m, order, { [TIERS]: DIFF_HARD }, reads, { citing });
+  const walk = ladderWalk(m, order, { [TIERS]: DIFF_HARD }, reads, {
+    citing,
+    ...(judging ? { aim: judging.aim } : {}),
+  });
+  if (judging) judging.graph = walk.graph;
   const angleEdges = (a: number): readonly [number, number] => [
     sp.angleEdges[a][0],
     sp.angleEdges[a][1],
   ];
   let count = 0;
+  // The line firings returned, each a step of the plan's.
+  let lines = 0;
   const next = (): LoopyFiring | null => {
     for (;;) {
+      if (judging?.done(m)) return null;
       const before = m.grid.slice();
       const first = walk.graph.facts.length;
       const got = walk.next();
@@ -710,6 +723,9 @@ export function hintWalk(
         if (note.kind === "relation")
           relations.add({ edges: note.edges, opposite: note.opposite });
       }
+      const shown = ops.length === 0 ? lines : lines + 1;
+      judging?.took(walk.graph, first, lines, shown);
+      lines = shown;
       if (ops.length === 0) continue;
       return {
         reason: lineReason(r, ops, chains.get(got) ?? []),

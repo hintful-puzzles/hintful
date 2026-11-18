@@ -12,9 +12,15 @@
 import { PLACE } from "../../engine/describe-runtime.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { placeNotes } from "../../engine/fact-graph.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+  MoveVerdict,
+} from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
+import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import type { Point } from "../../engine/types.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";
 import { ALIKE, CLUE } from "./hint-marks.ts";
@@ -22,6 +28,7 @@ import {
   deduceHintPlan,
   type SlantFiring,
   type SlantMerge,
+  shownMarks,
   type VWhy,
 } from "./solver.ts";
 import type { AlikeDir, SlantMove, SlantState } from "./state.ts";
@@ -952,10 +959,39 @@ function narrate(firing: SlantFiring, leg: number, hl: SlantHint, w: number): Se
 export function slantHint(
   state: SlantState,
 ): HintResult<SlantMove, SlantHint, SlantRung> {
+  const steps = stepsFrom(state);
+  return steps.length === 0
+    ? { ok: false, error: DEDUCTION_EXHAUSTED }
+    : { ok: true, steps };
+}
+
+/** What Check & save says of the last move: the step of the firing that
+ * draws a diagonal the player drew, or the marks it cites first; or the
+ * square ringed where none is quoted. */
+export function slantJudgeMove(
+  before: SlantState,
+  after: SlantState,
+): MoveVerdict<SlantHint> | null {
+  const { w, h, clues } = before;
+  return judgeWalked<SlantState, SlantHint, Step>(
+    before,
+    after,
+    (s) => shownMarks(w, h, clues, s.soln, s.alike),
+    (judging) => stepsFrom(before, judging),
+    ({ at }) => ({ at: pointOf(at, w), highlights: { target: pointOf(at, w) } }),
+    (s, cells) =>
+      s.highlights?.target !== undefined &&
+      cells.has(s.highlights.target.y * w + s.highlights.target.x),
+  );
+}
+
+/** The hint's steps from `state`; judging a move, aimed at its facts, with
+ * the judging's `firstStep` counting steps where the walk counted firings. */
+function stepsFrom(state: SlantState, judging?: Judging): Step[] {
   const { w, h } = state;
-  const plan = deduceHintPlan(w, h, state.clues, state.soln, state.alike);
+  const plan = deduceHintPlan(w, h, state.clues, state.soln, state.alike, judging);
   const { firings, cites } = plan;
-  if (firings.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
+  if (firings.length === 0) return [];
   const boardBefore = (i: number): Int8Array =>
     i === 0 ? state.soln : firings[i - 1].grid;
   const stepOf = new Map(firings.map((f, i) => [f.id, i]));
@@ -982,7 +1018,9 @@ export function slantHint(
       return markOf(a, b, w);
     });
   const steps: Step[] = [];
+  const startOf: number[] = [];
   firings.forEach((firing, i) => {
+    startOf.push(steps.length);
     let first = true;
     const push = (step: Step) => {
       steps.push(first ? step : { ...step, continuesPrevious: true });
@@ -1017,7 +1055,9 @@ export function slantHint(
       });
     }
   });
-  return { ok: true, steps };
+  if (judging)
+    judging.firstStep = judging.firstStep.map((i) => startOf[i] ?? steps.length);
+  return steps;
 }
 
 /** The player's move completes the step iff it makes exactly the hinted

@@ -320,12 +320,6 @@ export function describedFiringHint<
       const firstStep = steps.length;
       const f = walk.next();
       if (f === null || f === "contradiction") break;
-      if (judging) {
-        const ids: number[] = [];
-        for (let id = known; id < walk.graph.facts.length; id++) ids.push(id);
-        judging.made.push(ids);
-        judging.firstStep.push(firstStep);
-      }
       const { says } = spokenOf<SaysOf>(f);
       const kind = (
         says.arm === undefined ? f.entry.id : `${f.entry.id}.${says.arm}`
@@ -474,6 +468,7 @@ export function describedFiringHint<
         for (const [i, move] of legs.entries())
           steps.push({ ...step, move, continuesPrevious: i > 0 });
       }
+      judging?.took(walk.graph, known, firstStep, steps.length);
     }
     return steps;
   };

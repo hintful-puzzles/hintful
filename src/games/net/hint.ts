@@ -13,11 +13,13 @@ import type {
   HintResult,
   HintStep,
   HintTrackVerdict,
+  MoveVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
-import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
+import { type CellMarks, ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
+import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import {
   anticlockwise,
   clockwise,
@@ -542,6 +544,48 @@ export function netHint(
   verbs: Verbs,
   ui: NetUi,
 ): HintResult<NetMove, NetHint, NetRung> {
+  const steps = stepsFrom(state, verbs, ui);
+  return steps.length === 0
+    ? { ok: false, error: DEDUCTION_EXHAUSTED }
+    : { ok: true, steps };
+}
+
+/** The marks the hint reads off the player's walls, notes and locks, which
+ * a judged move's facts are the difference of. */
+const shownMarks = (state: NetState): CellMarks => {
+  const { g, dl } = ladderOf(state);
+  return marksOn(g, recordedMarks(state, g, dl));
+};
+
+/**
+ * What Check & save says of the last move: the step of the firing that
+ * decides the sides a lock or a note the player made, its turn first where
+ * it has one. A move nothing quotes is the move just made, as the edge
+ * games name it: a side has no square to ring.
+ */
+export function netJudgeMove(
+  before: NetState,
+  after: NetState,
+  verbs: Verbs,
+  ui: NetUi,
+): MoveVerdict<NetHint> | null {
+  return judgeWalked(
+    before,
+    after,
+    shownMarks,
+    (judging) => stepsFrom(before, verbs, ui, judging),
+    () => ({ at: null }),
+  );
+}
+
+/** The hint's steps from `state`, aimed at a judged move's facts with
+ * `judging`. */
+function stepsFrom(
+  state: NetState,
+  verbs: Verbs,
+  ui: NetUi,
+  judging?: Judging,
+): HintStep<NetMove, NetHint, NetRung>[] {
   const { g, dl, ladder } = ladderOf(state);
   const m = marksOn(g, recordedMarks(state, g, dl));
   // The firings the walk takes, by their place in its graph.
@@ -561,7 +605,9 @@ export function netHint(
   const ids = ladder.entries.map((e) => e.id);
   const walk = ladderWalk(m, ladder.entries, { [TIERS]: 0 }, reads, {
     fallback: ids.slice(1),
+    ...(judging ? { aim: judging.aim } : {}),
   });
+  if (judging) judging.graph = walk.graph;
   const f = new Facts(state, g, dl, m, walk.graph, firings);
   let s = state;
   const steps: HintStep<NetMove, NetHint, NetRung>[] = [];
@@ -632,11 +678,11 @@ export function netHint(
     say1({ kind: "lock", at: c, wires: r.alive[0], because: r.ruledOut }, "fitLock");
   };
   for (let c = 0; c < f.area; c++) lockIfSettled(c);
-  for (
-    let taken = walk.next();
-    taken !== null && taken !== "contradiction";
-    taken = walk.next()
-  ) {
+  while (!judging?.done(m)) {
+    const known = walk.graph.facts.length;
+    const from = steps.length;
+    const taken = walk.next();
+    if (taken === null || taken === "contradiction") break;
     const fired = taken.reasons[0] as Fired;
     firings.push(fired);
     const placed = new Set<number>();
@@ -645,10 +691,11 @@ export function netHint(
     // The walk returns with the firing's sides on the marks; its sentence
     // finds them open.
     f.before(placed, () => say1(stepOf(f, fired, taken.facts), fired.kind));
+    // The tiles it settled are locked as its steps: they are what it decided.
     for (const c of reads(taken)) lockIfSettled(c);
+    judging?.took(walk.graph, known, from, steps.length);
   }
-  if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  return { ok: true, steps };
+  return steps;
 }
 
 /**

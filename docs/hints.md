@@ -1283,6 +1283,19 @@ stand alone, since a verdict quotes one leg. The plan keeps no fact graph, so
 a chained verdict rings the cell and quotes nothing. Test:
 `src/engine/candidate-judge.test.ts`.
 
+What the games that walk the ladder from their own code taught (Crossing,
+Filling, Loopy, Net, Pattern, Slant, Subsets). Each threads the `Judging` its
+plan is handed through its own loop: `aim` into `ladderWalk`, the loop running
+while `done` says a fact is left, and `took` after each firing with the steps
+it showed. `judgeWalked` does the rest from the game's `marks`, its steps and
+how it rings a fact. Where steps are built after the walk (Slant, Loopy,
+Subsets), the walk counts its plan's firings, and the game maps the judging's
+`firstStep` onto its steps once they are built. Crossing's judging walk takes
+`narrow` with the rest, since a player's notes are a move of their own, which
+its hint takes only on the way to a digit. Where a game's `citing` keeps lines
+out of what a firing rests on (Loopy, Slant: the player sees them), the graph
+cannot name a chain's start, so a chained verdict quotes nothing.
+
 **A verdict marks the board after the move.** Its ring can land on the value
 just placed, which no hint step rings, so it must fit there clear of that
 value's text (Towers rings a raised 3D tower's top, where its digit is).

@@ -27,6 +27,7 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
+  type MoveVerdict,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -39,6 +40,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { CELL, type MarkKind, type Sentence, so } from "../../engine/hint-words.ts";
+import { judgeWalked } from "../../engine/move-judge.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -73,6 +75,7 @@ import {
 } from "./render.ts";
 import {
   bitList,
+  boardMarks,
   type CollapseExclusion,
   candidateCells,
   candidateSets,
@@ -711,6 +714,35 @@ function hint(state: SubsetsState): HintResult<SubsetsMove, unknown, SubsetsRung
   return { ok: true, steps };
 }
 
+/** What Check & save says of the last move: the step a letter or rule-out
+ * the player marked was decided by, or its cell ringed where none is quoted.
+ * A firing's steps are its deductions', the rule-outs each rests on first. */
+function judgeMove(
+  before: SubsetsState,
+  after: SubsetsState,
+): MoveVerdict<unknown> | null {
+  return judgeWalked(
+    before,
+    after,
+    (s) => boardMarks(s),
+    (judging) => {
+      const { deductions } = deduceHintPlan(before, undefined, judging);
+      const board = cloneState(before);
+      const steps: Step[] = [];
+      const startOf: number[] = [];
+      for (const d of deductions) {
+        startOf.push(steps.length);
+        steps.push(...stepsForFiring(board, d));
+      }
+      // The walk counted deductions; a verdict counts their steps.
+      judging.firstStep = judging.firstStep.map((d) => startOf[d] ?? steps.length);
+      return steps;
+    },
+    ({ at }) => ({ at: pointOf(at, before.w), noun: "cell" }),
+    (s, cells) => s.move.kind === "set" && cells.has(s.move.pos),
+  );
+}
+
 /** A move completes the step iff it is exactly the hinted letter toggle
  * (position, letter and target tri-state all match) or the hinted rule-out;
  * anything else drops the plan to recompute. */
@@ -835,6 +867,7 @@ export const subsetsGame: Game<
   solve,
   difficulty,
   hint,
+  judgeMove,
   hintRungs: SUBSETS_RUNGS,
   hintMarks: {
     roles: {

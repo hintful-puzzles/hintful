@@ -18,6 +18,7 @@
  */
 import { type Facts, MARK, PLACE, STRIKE, STRIKE_EDGE } from "./describe-runtime.ts";
 import type { FactGraph } from "./fact-graph.ts";
+import type { MoveVerdict } from "./game.ts";
 import {
   CELL,
   mark,
@@ -178,6 +179,13 @@ export interface Judging {
   made: number[][];
   firstStep: number[];
   graph: FactGraph | null;
+  /**
+   * Records a firing the walk took: the graph's facts from `known` on are
+   * what it made, and the steps `from` up to `to` are what it showed. A
+   * firing that showed none is the hint's bookkeeping: its facts go with the
+   * next one's, so it neither opens a chain nor is quoted.
+   */
+  took(graph: FactGraph, known: number, from: number, to: number): void;
   /** Whether the walk ended on marks the game calls the answer, though the
    * ladder may still have marks to make (`EdgeHintSpec.done`). */
   answered?: boolean;
@@ -206,7 +214,16 @@ export function judgeByWalk(
   let struck: boolean[] | null = null;
   // The walked marks, which `done` is handed before each firing.
   let marks: CellMarks | null = null;
+  // The facts of firings that showed no step, since the last that did.
+  let carried: number[] = [];
   const judging: Judging = {
+    took(graph, known, from, to) {
+      for (let id = known; id < graph.facts.length; id++) carried.push(id);
+      if (to === from) return;
+      this.made.push(carried);
+      this.firstStep.push(from);
+      carried = [];
+    },
     // A firing that makes every fact left before one that makes some: a
     // count would prefer one that makes many of the strikes a placement
     // brings along (Light Up's lit squares) to the one that places it.
@@ -255,6 +272,95 @@ export function judgeByWalk(
   const i = judged.find((k) => at[k] === first) ?? judged[0];
   const firing = quotedStep(graph, judging.made, moved[i], first - 1);
   return { kind: "followed", firing, chained: true };
+}
+
+/** Where a verdict that quotes no step rings a fact: the square, the noun
+ * the game calls it, and the game's marks for it; `at` is `null` where
+ * there is no square to ring. */
+export interface Ringed<H> {
+  readonly at: Point | null;
+  readonly noun?: string;
+  readonly highlights?: H;
+}
+
+/**
+ * What a check says of a move a walk judged, from the steps the walk showed
+ * (`steps`, each firing's first at `firstStep`): the quoted firing's step,
+ * the first of them `about` the move where one is, behind the lead; or,
+ * where no step is quoted, the fact's square `ring`ed. `about` is handed the
+ * cells the move's facts are on, an edge's mark not among them. `null` where
+ * the quoted step has no words.
+ */
+function verdictOf<
+  H,
+  S extends { readonly words?: Narration; readonly highlights?: H },
+>(
+  judged: Judged,
+  moved: readonly MovedFact[],
+  steps: readonly S[],
+  firstStep: readonly number[],
+  ring: (fact: MovedFact) => Ringed<H>,
+  about: (step: S, cells: ReadonlySet<number>) => boolean = () => true,
+): MoveVerdict<H> | null {
+  const ringed = (i: number, followed: boolean): MoveVerdict<H> => {
+    const { at, noun = "square", highlights } = ring(moved[i]);
+    return {
+      followed,
+      words: (followed ? chainedWords : unforcedWords)(at, noun),
+      ...(highlights === undefined ? {} : { highlights }),
+    };
+  };
+  if (judged.kind === "unforced") return ringed(judged.fact, false);
+  if (judged.firing === null) return ringed(0, true);
+  const ofFiring = steps.slice(
+    firstStep[judged.firing],
+    firstStep[judged.firing + 1] ?? steps.length,
+  );
+  const cells = new Set(moved.flatMap((f) => (f.kind === STRIKE_EDGE ? [] : [f.at])));
+  const quoted = ofFiring.find((s) => about(s, cells)) ?? ofFiring[0];
+  if (quoted?.words === undefined) return null;
+  return {
+    followed: true,
+    words: followedWords(quoted.words, judged.chained),
+    ...(quoted.highlights === undefined ? {} : { highlights: quoted.highlights }),
+  };
+}
+
+/**
+ * `Game.judgeMove` for a hint whose steps a game builds from its own walk:
+ * the move's facts are the difference of the marks the hint reads off the
+ * board before and after it (`marks`, `null` where the board breaks the
+ * rules), and `walk` runs the hint's walk from the position before, aimed by
+ * the judging given it, returning its steps with each firing's first in the
+ * judging's `firstStep`. The verdict is {@link verdictOf}'s.
+ */
+export function judgeWalked<
+  State,
+  H,
+  S extends { readonly words?: Narration; readonly highlights?: H },
+>(
+  before: State,
+  after: State,
+  marks: (state: State) => CellMarks | null,
+  walk: (judging: Judging) => readonly S[],
+  ring: (fact: MovedFact) => Ringed<H>,
+  about?: (step: S, cells: ReadonlySet<number>) => boolean,
+): MoveVerdict<H> | null {
+  const was = marks(before);
+  const placed = marks(before);
+  const now = marks(after);
+  if (was === null || placed === null || now === null) return null;
+  const moved = movedFacts(was, placed, now);
+  if (moved.length === 0) return null;
+  let steps: readonly S[] = [];
+  let firstStep: readonly number[] = [];
+  const judged = judgeByWalk(moved, (judging) => {
+    steps = walk(judging);
+    firstStep = judging.firstStep;
+  });
+  return judged === null
+    ? null
+    : verdictOf(judged, moved, steps, firstStep, ring, about);
 }
 
 /** What a check says of a move the deductions reached: the step's words,

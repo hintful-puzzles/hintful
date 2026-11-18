@@ -1543,13 +1543,13 @@ exports[`crossing hint — the frame > matches its recorded frame 1`] = `
 
 exports[`crossing: pinned hint positions > says, at each pin 1`] = `
 {
-  "becauseDigits": "Only one 5-digit number left matches the digits already in this run, so the ringed squares must be 92612.",
-  "becauseLength": "This run is 3 squares long, and only one number in the list is 3 digits, so the ringed squares must be 235.",
-  "becauseUsed": "Every other 2-digit number is already on the board, so none can go in this run: the ringed squares must be 76.",
+  "becauseDigits": "Only one 5-digit number left matches the digits already in this run, so 92612 must fill the ringed squares.",
+  "becauseLength": "This run is 3 squares long, and only one number in the list is 3 digits, so 235 must fill the ringed squares.",
+  "becauseUsed": "Every other 2-digit number is already on the board, so none can go in this run: 76 must fill the ringed squares.",
   "crossRuns": "This across run's outlined numbers give this square 2 or 7; this down run's outlined ones only 2, so it must be 2.",
   "noteDigits": "Every outlined number still fitting this down run puts 1, 2, 3, 5, 6 or 8 in this square, so note them.",
   "noteStrike": "No outlined number still fitting this across run puts a 9 in this square, so the 9 must go.",
-  "onlyNumber": "This run is 3 squares long, and only one number in the list is 3 digits, so the ringed squares must be 235.",
+  "onlyNumber": "This run is 3 squares long, and only one number in the list is 3 digits, so 235 must fill the ringed squares.",
   "onlyRun": "26 still fits only this run: the other runs clash with the outlined squares, so it must go in the ringed squares.",
   "sharedDigit": "Every outlined number still fitting this across run has a 3 in this square, so it must be 3.",
 }

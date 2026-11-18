@@ -1,3 +1,3 @@
-5x5 Easy #0: 9 steps, solved, d14d96c5fbdae8f1 [crossRuns:1 onlyNumber:6 onlyRun:1 sharedDigit:1]
-5x5 Unreasonable #0: 6 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 0809e4ca8a0e6edc [onlyNumber:6]
-9x9 symmetric Easy #0: 26 steps, solved, f62d343631edb546 [crossRuns:1 onlyNumber:22 sharedDigit:3]
+5x5 Easy #0: 9 steps, solved, ed86ab7b1c18883d [crossRuns:1 onlyNumber:6 onlyRun:1 sharedDigit:1]
+5x5 Unreasonable #0: 6 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 0bcd8842b447d7b4 [onlyNumber:6]
+9x9 symmetric Easy #0: 26 steps, solved, 67b0bf48c77cc822 [crossRuns:1 onlyNumber:22 sharedDigit:3]

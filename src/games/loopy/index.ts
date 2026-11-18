@@ -87,6 +87,7 @@ import { newDesc } from "./generator.ts";
 import {
   hint,
   hintKeepTrack,
+  judgeMove,
   LOOPY_RUNGS,
   type LoopyRung,
   refreshHintStep,
@@ -906,6 +907,7 @@ export const loopyGame: Game<
   findMistakes,
   clearMistakes,
   hint,
+  judgeMove,
   hintMarks: {
     roles: {
       ring: "what the step decides: a band along an edge it sets, solid when it must be a line and broken when it can't be one, or a note it places, called “this corner” or “these two edges”.",

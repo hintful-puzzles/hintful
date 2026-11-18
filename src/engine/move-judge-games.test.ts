@@ -19,34 +19,26 @@ import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 const OWN_SOLVER = "its hint is its own solver's, not the engine's walk";
 const NOT_MARKS = "its moves are not marks a deduction makes";
 const HIDDEN = "its answer is hidden, so no probe is forced";
-const LATER = "check-the-last-move task 4";
 
 /** The hinting games with no `judgeMove`, and why (`check-the-last-move`'s
  * proposal, "Which games"). */
 const UNJUDGED: Readonly<Record<string, string>> = {
   ascent: OWN_SOLVER,
   blackbox: HIDDEN,
-  crossing: LATER,
   cube: NOT_MARKS,
   fifteen: NOT_MARKS,
-  filling: LATER,
   flip: NOT_MARKS,
   flood: NOT_MARKS,
   guess: HIDDEN,
   inertia: NOT_MARKS,
-  loopy: LATER,
   mines: OWN_SOLVER,
-  net: LATER,
   netslide: NOT_MARKS,
   numgame: NOT_MARKS,
-  pattern: LATER,
   pegs: NOT_MARKS,
   samegame: NOT_MARKS,
   sixteen: NOT_MARKS,
-  slant: LATER,
   slide: NOT_MARKS,
   sokoban: NOT_MARKS,
-  subsets: LATER,
   twiddle: NOT_MARKS,
   undead: OWN_SOLVER,
   untangle: NOT_MARKS,

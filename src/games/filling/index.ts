@@ -19,6 +19,7 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
+  type MoveVerdict,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -30,6 +31,7 @@ import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
+import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -60,6 +62,7 @@ import {
 } from "./render.ts";
 import {
   answerOf,
+  boardMarks,
   deduceHintPlan,
   FILLING_RUNGS,
   type FillingHintMove,
@@ -269,10 +272,13 @@ function narrate(m: FillingHintMove, w: number): Sentence {
   });
 }
 
-function hint(state: FillingState): HintResult<FillingMove, FillingHint, FillingRung> {
-  const plan = deduceHintPlan(state.board, state.w, state.h);
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  const steps: HintStep<FillingMove, FillingHint, FillingRung>[] = plan.map((m) => {
+/** The hint's steps from `state`, aimed at a judged move's facts with
+ * `judging`. */
+function stepsFrom(
+  state: FillingState,
+  judging?: Judging,
+): HintStep<FillingMove, FillingHint, FillingRung>[] {
+  return deduceHintPlan(state.board, state.w, state.h, judging).map((m) => {
     const words = narrate(m, state.w);
     return {
       move: { type: "set", cells: m.cells, value: m.value },
@@ -282,7 +288,30 @@ function hint(state: FillingState): HintResult<FillingMove, FillingHint, Filling
       highlights: { cells: m.cells, value: m.value },
     };
   });
-  return { ok: true, steps };
+}
+
+function hint(state: FillingState): HintResult<FillingMove, FillingHint, FillingRung> {
+  const steps = stepsFrom(state);
+  return steps.length === 0
+    ? { ok: false, error: DEDUCTION_EXHAUSTED }
+    : { ok: true, steps };
+}
+
+/** What Check & save says of the last move: the step that fills a square
+ * the player filled, or the move's square ringed where none does. */
+function judgeMove(
+  before: FillingState,
+  after: FillingState,
+): MoveVerdict<FillingHint> | null {
+  const { w, h } = before;
+  return judgeWalked(
+    before,
+    after,
+    (s) => boardMarks(s.board, w, h),
+    (judging) => stepsFrom(before, judging),
+    ({ at, value }) => ({ at: pointOf(at, w), highlights: { cells: [at], value } }),
+    (s, cells) => s.highlights?.cells.some((c) => cells.has(c)) === true,
+  );
 }
 
 /** Select the step's squares with one drag that visits only them, then type
@@ -377,6 +406,7 @@ export const fillingGame: Game<
   solve,
   difficulty,
   hint,
+  judgeMove,
   hintMarks: {
     roles: {
       ring: "each square the step fills. The number to write there is the one the sentence names.",

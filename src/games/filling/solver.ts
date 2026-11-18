@@ -35,6 +35,7 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
+import type { Judging } from "../../engine/move-judge.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import * as filling from "../../generated/games/filling/filling.compiled.ts";
 import { dealtOf, spaceOf } from "./state.ts";
@@ -250,6 +251,7 @@ export function deduceHintPlan(
   board: ArrayLike<number>,
   w: number,
   h: number,
+  judging?: Judging,
 ): FillingHintMove[] {
   const { m, impossible } = deduction(board, board, w, h);
   if (impossible) return [];
@@ -275,7 +277,26 @@ export function deduceHintPlan(
     for (let i = 0; i < facts.length; i += 3) own.push(facts[i + 1]);
     return [...(reasons[0] as Recorded).area, ...own];
   };
-  const walk = ladderWalk(m, LADDER.entries, { [TIERS]: 0 }, reads);
-  for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next());
+  const walk = ladderWalk(
+    m,
+    LADDER.entries,
+    { [TIERS]: 0 },
+    reads,
+    judging ? { aim: judging.aim } : {},
+  );
+  if (judging) judging.graph = walk.graph;
+  while (!judging?.done(m)) {
+    const known = walk.graph.facts.length;
+    const from = plan.length;
+    const f = walk.next();
+    if (f === null || f === "contradiction") break;
+    judging?.took(walk.graph, known, from, plan.length);
+  }
   return plan;
+}
+
+/** The marks the hint reads off `board`, which a judged move's facts are
+ * the difference of. */
+export function boardMarks(board: ArrayLike<number>, w: number, h: number): CellMarks {
+  return deduction(board, board, w, h).m;
 }

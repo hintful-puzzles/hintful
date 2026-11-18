@@ -42,6 +42,7 @@ import {
   type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
+import type { Judging } from "../../engine/move-judge.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import * as pattern from "../../generated/games/pattern/pattern.compiled.ts";
@@ -496,23 +497,35 @@ export interface PatternHintMove {
  * fires, and a fresh plan resumes from any position (docs/hints.md § "A
  * hint must resume from any position").
  */
-export function deduceHintPlan(state: PatternState): PatternHintMove[] {
+export function deduceHintPlan(
+  state: PatternState,
+  judging?: Judging,
+): PatternHintMove[] {
   const { w, h, clues } = state.common;
   const dl = dealtOf(w, h, clues);
-  const m = marksOf(spaceOf(w, h), Uint8Array.from(state.grid, described));
+  const m = boardMarks(state);
   m.budget = stepBudget("pattern hint");
   const reasonOfTaken = (f: Taken): PatternHintReason =>
     f.reasons[0] as PatternHintReason;
   // A firing reads its own line.
-  const walk = ladderWalk(m, patternLadder(dl).entries, { [TIERS]: 0 }, (f) => [
-    ...m.sp.lineCells[reasonOfTaken(f).line],
-  ]);
+  const walk = ladderWalk(
+    m,
+    patternLadder(dl).entries,
+    { [TIERS]: 0 },
+    (f) => [...m.sp.lineCells[reasonOfTaken(f).line]],
+    judging ? { aim: judging.aim } : {},
+  );
+  if (judging) judging.graph = walk.graph;
   const plan: PatternHintMove[] = [];
-  for (let f = walk.next(); f !== null && f !== "contradiction"; f = walk.next()) {
+  while (!judging?.done(m)) {
+    const known = walk.graph.facts.length;
+    const f = walk.next();
+    if (f === null || f === "contradiction") break;
+    judging?.took(walk.graph, known, plan.length, plan.length + 1);
     const reason = reasonOfTaken(f);
     const cells: number[] = [];
     for (let i = 0; i < f.facts.length; i += 3) cells.push(f.facts[i + 1]);
-    const value = f.facts[2] === SHADED ? GRID_FULL : GRID_EMPTY;
+    const value = gridValOf(f.facts[2]);
     plan.push({
       cells,
       value,
@@ -524,6 +537,17 @@ export function deduceHintPlan(state: PatternState): PatternHintMove[] {
   }
   return plan;
 }
+
+/** The marks the hint reads off the player's squares, which a judged move's
+ * facts are the difference of. */
+export function boardMarks(state: PatternState): CellMarks {
+  const { w, h } = state.common;
+  return marksOf(spaceOf(w, h), Uint8Array.from(state.grid, described));
+}
+
+/** The square's value a described one is. */
+export const gridValOf = (v: number): GridVal =>
+  v === SHADED ? GRID_FULL : GRID_EMPTY;
 
 /** Every player-marked cell that contradicts the board's one answer. Returns
  * `[]` when no single answer was found (nothing to check against) or when
