@@ -293,8 +293,9 @@ positions").
 
 - **Assert what matters with targeted op checks.** They are the guarantee.
 - **Add `toMatchSnapshot` on the record** to catch drift as a reviewable text
-  diff. Re-baseline an intended change with `vitest -u` and commit the
-  regenerated `__snapshots__/*.snap`. Pair every snapshot with a targeted
+  diff. Re-baseline an intended change with
+  `npx vitest run --update=all <file>` and commit the regenerated
+  `__snapshots__/*.snap`. Pair every snapshot with a targeted
   assertion, so a careless `-u` cannot erase the guarantee.
 - **The gate writes no snapshot and keeps no orphan.** It runs vitest with
   `--update=none`, as CI does: run a new snapshot's file yourself before

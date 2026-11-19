@@ -1,0 +1,5 @@
+# Deltas are written when the work is done, modifying `build-pipeline`
+# (what the typecheck covers, what CI runs) and possibly `repo-layout`.
+schema: spec-driven
+created: 2026-11-19
+skip_specs: true

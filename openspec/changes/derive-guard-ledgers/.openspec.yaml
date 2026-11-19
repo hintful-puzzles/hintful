@@ -1,0 +1,6 @@
+# Deltas are written when the work is done: a ledger that becomes a Game
+# declaration modifies `ts-engine`; one derived inside a test modifies
+# `testing`. Which, for each table, is the implementer's finding.
+schema: spec-driven
+created: 2026-11-19
+skip_specs: true

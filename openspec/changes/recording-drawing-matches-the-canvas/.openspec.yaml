@@ -1,0 +1,5 @@
+# Deltas are written when the work is done, modifying `testing` (what a
+# render record holds).
+schema: spec-driven
+created: 2026-11-19
+skip_specs: true

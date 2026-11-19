@@ -1,0 +1,6 @@
+# Deltas are written when the work is done: the rule most likely lands in
+# `build-pipeline` (what the gate runs and how it reports), and which
+# requirement it modifies is the implementer's to read off the spec.
+schema: spec-driven
+created: 2026-11-19
+skip_specs: true
