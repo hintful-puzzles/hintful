@@ -29,7 +29,7 @@ import { drawRectCorners, glyphFont, strokeScaledPolygon } from "../../engine/dr
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
-import { drawPathHead, drawPathStart } from "../../engine/path-arrow.ts";
+import { drawPathArrow, drawPathStart } from "../../engine/path-arrow.ts";
 import { ringContentBox, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
@@ -122,6 +122,9 @@ const HINT_HATCH = 4;
 /** How far out from a cell's center its hint marks sit: clear of the border,
  * and of a number drawn in the middle. */
 const HINT_MARK_SCALE = 0.84;
+/** The radius of the disc a number on the path sits on: the gap it leaves
+ * to the next number's disc is the engine's whole arrow (`drawPathArrow`). */
+const numberDisc = (tileSize: number): number => Math.round(tileSize * 0.3);
 /** The square a ring may reach in a hexagon, as a share of the tile: the
  * largest whose roundest-allowed rounded square stays inside the hexagon, so
  * no neighbor's repaint covers part of it. */
@@ -774,13 +777,14 @@ export function redrawAscent(
     const c = cellCenter(i, w, state.mode, tileSize, ds.offsetX, ds.offsetY);
     return { x: Math.round(c.cx), y: Math.round(c.cy) };
   };
-  /** The arrowheads the square being drawn owes, drawn over its outline: a
-   * head sits across a side, so the grid line there would cut it in two. */
-  const heads: (() => void)[] = [];
+  /** What the square being drawn owes over its outline: its arrows, which sit
+   * across a side the grid line would cut in two, and then the start ring,
+   * which the shaft out of 1 starts under. */
+  const over: (() => void)[] = [];
   /** Cell `p`'s part of the line to its neighbor `q`. Where the numbers on
-   * them say which way the path runs it is the engine's arrowhead alone:
-   * the two numbers' discs leave too little of a line between them to show
-   * beside it. A line with no direction runs from `p`'s middle to `end`. */
+   * them say which way the path runs it is the engine's arrow, which fills
+   * the gap between the numbers' discs. A line with no direction runs from
+   * `p`'s middle to `end`. */
   const link = (p: number, q: number, end: Point, color: number): void => {
     const [from, to] =
       ds.out[p] & (1 << findDirection(p, q, w, movement))
@@ -790,7 +794,17 @@ export function redrawAscent(
           : [-1, -1];
     if (from < 0)
       thickLine(dr, ds.thickness, middle(p).x, middle(p).y, end.x, end.y, color);
-    else heads.push(() => drawPathHead(dr, tileSize, middle(from), middle(to), color));
+    else
+      over.push(() =>
+        drawPathArrow(
+          dr,
+          tileSize,
+          middle(from),
+          middle(to),
+          color,
+          numberDisc(tileSize),
+        ),
+      );
   };
   const r = hexR(tileSize);
   for (let i = 0; i < w * h; i++) {
@@ -869,7 +883,7 @@ export function redrawAscent(
       for (const corner of cutCorners(tx, ty, tileSize, cut))
         dr.drawPolygon(corner, COL_MIDLIGHT, COL_MIDLIGHT);
 
-    heads.length = 0;
+    over.length = 0;
     if (ui.typingCell !== i) {
       const linecolor = ds.path[i] & FLAG_USER ? COL_LINE : COL_PATH;
 
@@ -901,20 +915,29 @@ export function redrawAscent(
         link(i, i2, { x: ex, y: ey }, linecolor);
       }
 
-      /* The engine's start mark on the path's first number, over the line out
-       * of it; the last is told by the arrow into it. */
+      /* The engine's start mark on the path's first number, over the arrow
+       * out of it; the last is told by the arrow into it. */
       if (
         (sn === 0 || sn === state.last) &&
         (state.immutable[i] || positions[sn] !== CELL_MULTIPLE)
       ) {
-        if (fn & NUMBER_FLAG_MOVE) {
-          dr.drawCircle(center, tileSize * 0.4, COL_LOWLIGHT, COL_LOWLIGHT);
-          dr.drawCircle(center, tileSize * 0.3, COL_HIGHLIGHT, COL_HIGHLIGHT);
-        } else if (sn === 0) {
-          drawPathStart(dr, tileSize, center, tileSize * 0.3, COL_PATH, COL_HIGHLIGHT);
-        } else {
-          dr.drawCircle(center, Math.trunc(tileSize / 3), color, color);
-        }
+        over.push(() => {
+          if (fn & NUMBER_FLAG_MOVE) {
+            dr.drawCircle(center, tileSize * 0.4, COL_LOWLIGHT, COL_LOWLIGHT);
+            dr.drawCircle(center, numberDisc(tileSize), COL_HIGHLIGHT, COL_HIGHLIGHT);
+          } else if (sn === 0) {
+            drawPathStart(
+              dr,
+              tileSize,
+              center,
+              numberDisc(tileSize),
+              COL_PATH,
+              COL_HIGHLIGHT,
+            );
+          } else {
+            dr.drawCircle(center, numberDisc(tileSize), color, color);
+          }
+        });
       } else if (ds.path[i] & ~FLAG_COMPLETE) {
         dr.drawCircle(center, Math.trunc(ds.thickness / 2), linecolor, linecolor);
       }
@@ -1006,7 +1029,7 @@ export function redrawAscent(
         dr.drawRect({ x: corner.x, y: corner.y, w: 1, h: 1 }, cornerInk(i, sx, sy));
       });
 
-    for (const head of heads) head();
+    for (const draw of over) draw();
 
     /* Light circle on possible endpoints. */
     if (state.grid[i] === NUMBER_EMPTY && (sn === 0 || sn === state.last)) {
@@ -1016,7 +1039,7 @@ export function redrawAscent(
     /* Background circle over lines so numbers stay readable: the player's
      * line and the board's own path alike. */
     if (sn > 0 && sn < state.last && ds.path[i] & ~FLAG_COMPLETE) {
-      dr.drawCircle(center, Math.trunc(tileSize / 3), color, color);
+      dr.drawCircle(center, numberDisc(tileSize), color, color);
       if (fn > 0 && fn & NUMBER_FLAG_MOVE)
         dr.drawCircle(center, tileSize * 0.22, COL_LOWLIGHT, COL_LOWLIGHT);
     } else if (sn > 0 && sn < state.last && fn & NUMBER_FLAG_MOVE) {

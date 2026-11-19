@@ -4339,16 +4339,6 @@ exports[`ascent hint frames > Edges: a lines step stripes the lines it must be n
     ],
   },
   {
-    "cx": 72,
-    "cy": 216,
-    "fill": 11,
-    "fillRgb": "rgb(237, 237, 237)",
-    "op": "circle",
-    "outline": 11,
-    "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -4424,6 +4414,16 @@ exports[`ascent hint frames > Edges: a lines step stripes the lines it must be n
     "w": 1,
     "x": 48,
     "y": 240,
+  },
+  {
+    "cx": 72,
+    "cy": 216,
+    "fill": 11,
+    "fillRgb": "rgb(237, 237, 237)",
+    "op": "circle",
+    "outline": 11,
+    "outlineRgb": "rgb(237, 237, 237)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -10750,6 +10750,16 @@ exports[`ascent hint frames > Edges: a pointers step outlines every missing numb
     "y": 192,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 182,
+    "x2": 192,
+    "y1": 168,
+    "y2": 168,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -10757,15 +10767,15 @@ exports[`ascent hint frames > Edges: a pointers step outlines every missing numb
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        197,
+        202,
         168,
       ],
       [
-        187,
+        192,
         175,
       ],
       [
-        187,
+        192,
         161,
       ],
     ],
@@ -10778,7 +10788,7 @@ exports[`ascent hint frames > Edges: a pointers step outlines every missing numb
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -10983,6 +10993,16 @@ exports[`ascent hint frames > Edges: a pointers step outlines every missing numb
     "y": 192,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 182,
+    "x2": 192,
+    "y1": 168,
+    "y2": 168,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -10990,15 +11010,15 @@ exports[`ascent hint frames > Edges: a pointers step outlines every missing numb
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        197,
+        202,
         168,
       ],
       [
-        187,
+        192,
         175,
       ],
       [
-        187,
+        192,
         161,
       ],
     ],
@@ -11011,7 +11031,7 @@ exports[`ascent hint frames > Edges: a pointers step outlines every missing numb
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -21770,6 +21790,16 @@ exports[`ascent hint frames > Hexagon: the ring is a circle inside the hexagon 1
     ],
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 151,
+    "x2": 156,
+    "y1": 81,
+    "y2": 90,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -21777,16 +21807,16 @@ exports[`ascent hint frames > Hexagon: the ring is a circle inside the hexagon 1
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        158,
+        161,
+        99,
+      ],
+      [
+        150,
         94,
       ],
       [
-        147,
-        89,
-      ],
-      [
-        160,
-        82,
+        162,
+        87,
       ],
     ],
   },
@@ -21798,7 +21828,7 @@ exports[`ascent hint frames > Hexagon: the ring is a circle inside the hexagon 1
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -22203,6 +22233,16 @@ exports[`ascent hint frames > Hexagon: the ring is a circle inside the hexagon 1
     ],
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 151,
+    "x2": 156,
+    "y1": 81,
+    "y2": 90,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -22210,16 +22250,16 @@ exports[`ascent hint frames > Hexagon: the ring is a circle inside the hexagon 1
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        158,
+        161,
+        99,
+      ],
+      [
+        150,
         94,
       ],
       [
-        147,
-        89,
-      ],
-      [
-        160,
-        82,
+        162,
+        87,
       ],
     ],
   },
@@ -22231,7 +22271,7 @@ exports[`ascent hint frames > Hexagon: the ring is a circle inside the hexagon 1
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -22289,16 +22329,6 @@ exports[`ascent hint frames > Hexagon: the ring is a circle inside the hexagon 1
     ],
   },
   {
-    "cx": 216,
-    "cy": 111,
-    "fill": 11,
-    "fillRgb": "rgb(237, 237, 237)",
-    "op": "circle",
-    "outline": 11,
-    "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -22330,6 +22360,16 @@ exports[`ascent hint frames > Hexagon: the ring is a circle inside the hexagon 1
         97,
       ],
     ],
+  },
+  {
+    "cx": 216,
+    "cy": 111,
+    "fill": 11,
+    "fillRgb": "rgb(237, 237, 237)",
+    "op": "circle",
+    "outline": 11,
+    "outlineRgb": "rgb(237, 237, 237)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -22702,26 +22742,6 @@ exports[`ascent hint frames > Hexagon: the ring is a circle inside the hexagon 1
     ],
   },
   {
-    "cx": 72,
-    "cy": 194,
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "circle",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "r": 17,
-  },
-  {
-    "cx": 72,
-    "cy": 194,
-    "fill": 2,
-    "fillRgb": "rgb(253, 253, 253)",
-    "op": "circle",
-    "outline": 2,
-    "outlineRgb": "rgb(253, 253, 253)",
-    "r": 14,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -22753,6 +22773,26 @@ exports[`ascent hint frames > Hexagon: the ring is a circle inside the hexagon 1
         180,
       ],
     ],
+  },
+  {
+    "cx": 72,
+    "cy": 194,
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "circle",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "r": 17,
+  },
+  {
+    "cx": 72,
+    "cy": 194,
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "circle",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -24179,6 +24219,16 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "y": 96,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 38,
+    "x2": 48,
+    "y1": 72,
+    "y2": 72,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -24186,15 +24236,15 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        53,
+        58,
         72,
       ],
       [
-        43,
+        48,
         79,
       ],
       [
-        43,
+        48,
         65,
       ],
     ],
@@ -24207,7 +24257,7 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -24412,6 +24462,16 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "y": 96,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 38,
+    "x2": 48,
+    "y1": 72,
+    "y2": 72,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -24419,15 +24479,15 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        53,
+        58,
         72,
       ],
       [
-        43,
+        48,
         79,
       ],
       [
-        43,
+        48,
         65,
       ],
     ],
@@ -24440,7 +24500,7 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -24558,16 +24618,6 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     ],
   },
   {
-    "cx": 120,
-    "cy": 72,
-    "fill": 11,
-    "fillRgb": "rgb(237, 237, 237)",
-    "op": "circle",
-    "outline": 11,
-    "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -24643,6 +24693,16 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "w": 1,
     "x": 96,
     "y": 96,
+  },
+  {
+    "cx": 120,
+    "cy": 72,
+    "fill": 11,
+    "fillRgb": "rgb(237, 237, 237)",
+    "op": "circle",
+    "outline": 11,
+    "outlineRgb": "rgb(237, 237, 237)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -24847,6 +24907,16 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "y": 96,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 168,
+    "x2": 168,
+    "y1": 86,
+    "y2": 96,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -24855,15 +24925,15 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "points": [
       [
         168,
-        101,
+        106,
       ],
       [
         161,
-        91,
+        96,
       ],
       [
         175,
-        91,
+        96,
       ],
     ],
   },
@@ -24875,7 +24945,7 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -25904,6 +25974,16 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "y": 144,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 168,
+    "x2": 168,
+    "y1": 86,
+    "y2": 96,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -25912,15 +25992,15 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "points": [
       [
         168,
-        101,
+        106,
       ],
       [
         161,
-        91,
+        96,
       ],
       [
         175,
-        91,
+        96,
       ],
     ],
   },
@@ -25932,7 +26012,7 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -27425,26 +27505,6 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     ],
   },
   {
-    "cx": 72,
-    "cy": 216,
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "circle",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "r": 17,
-  },
-  {
-    "cx": 72,
-    "cy": 216,
-    "fill": 2,
-    "fillRgb": "rgb(253, 253, 253)",
-    "op": "circle",
-    "outline": 2,
-    "outlineRgb": "rgb(253, 253, 253)",
-    "r": 14,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -27520,6 +27580,26 @@ exports[`ascent hint frames > Rectangle: rings the square to fill and outlines t
     "w": 1,
     "x": 48,
     "y": 240,
+  },
+  {
+    "cx": 72,
+    "cy": 216,
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "circle",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "r": 17,
+  },
+  {
+    "cx": 72,
+    "cy": 216,
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "circle",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -28460,6 +28540,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 48,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 82,
+    "x2": 103,
+    "y1": 62,
+    "y2": 41,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -28467,16 +28557,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        100,
-        44,
+        110,
+        34,
       ],
       [
-        97,
-        56,
+        108,
+        46,
       ],
       [
-        88,
-        47,
+        98,
+        36,
       ],
     ],
   },
@@ -28584,16 +28674,6 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     ],
   },
   {
-    "cx": 120,
-    "cy": 24,
-    "fill": 11,
-    "fillRgb": "rgb(237, 237, 237)",
-    "op": "circle",
-    "outline": 11,
-    "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -28671,25 +28751,14 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 48,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        140,
-        52,
-      ],
-      [
-        143,
-        40,
-      ],
-      [
-        152,
-        49,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 158,
+    "x2": 137,
+    "y1": 34,
+    "y2": 55,
   },
   {
     "fill": 5,
@@ -28699,18 +28768,59 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        100,
-        44,
+        130,
+        62,
       ],
       [
-        97,
-        56,
+        132,
+        50,
       ],
       [
-        88,
-        47,
+        142,
+        60,
       ],
     ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 82,
+    "x2": 103,
+    "y1": 62,
+    "y2": 41,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        110,
+        34,
+      ],
+      [
+        108,
+        46,
+      ],
+      [
+        98,
+        36,
+      ],
+    ],
+  },
+  {
+    "cx": 120,
+    "cy": 24,
+    "fill": 11,
+    "fillRgb": "rgb(237, 237, 237)",
+    "op": "circle",
+    "outline": 11,
+    "outlineRgb": "rgb(237, 237, 237)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -28915,6 +29025,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 48,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 158,
+    "x2": 137,
+    "y1": 34,
+    "y2": 55,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -28922,18 +29042,28 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        140,
-        52,
+        130,
+        62,
       ],
       [
-        143,
-        40,
+        132,
+        50,
       ],
       [
-        152,
-        49,
+        142,
+        60,
       ],
     ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 168,
+    "x2": 168,
+    "y1": 58,
+    "y2": 48,
   },
   {
     "fill": 5,
@@ -28944,15 +29074,15 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "points": [
       [
         168,
-        43,
+        38,
       ],
       [
         175,
-        53,
+        48,
       ],
       [
         161,
-        53,
+        48,
       ],
     ],
   },
@@ -28964,7 +29094,7 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -29082,26 +29212,6 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     ],
   },
   {
-    "cx": 216,
-    "cy": 24,
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "circle",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "r": 17,
-  },
-  {
-    "cx": 216,
-    "cy": 24,
-    "fill": 2,
-    "fillRgb": "rgb(253, 253, 253)",
-    "op": "circle",
-    "outline": 2,
-    "outlineRgb": "rgb(253, 253, 253)",
-    "r": 14,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -29179,6 +29289,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 48,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 216,
+    "x2": 216,
+    "y1": 38,
+    "y2": 48,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -29187,17 +29307,37 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "points": [
       [
         216,
-        53,
+        58,
       ],
       [
         209,
-        43,
+        48,
       ],
       [
         223,
-        43,
+        48,
       ],
     ],
+  },
+  {
+    "cx": 216,
+    "cy": 24,
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "circle",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "r": 17,
+  },
+  {
+    "cx": 216,
+    "cy": 24,
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "circle",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -29582,6 +29722,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 96,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 82,
+    "x2": 103,
+    "y1": 62,
+    "y2": 41,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -29589,16 +29739,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        100,
-        44,
+        110,
+        34,
       ],
       [
-        97,
-        56,
+        108,
+        46,
       ],
       [
-        88,
-        47,
+        98,
+        36,
       ],
     ],
   },
@@ -29610,7 +29760,7 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -29815,25 +29965,14 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 96,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        100,
-        44,
-      ],
-      [
-        97,
-        56,
-      ],
-      [
-        88,
-        47,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 82,
+    "x2": 103,
+    "y1": 62,
+    "y2": 41,
   },
   {
     "fill": 5,
@@ -29843,16 +29982,47 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        140,
-        52,
+        110,
+        34,
       ],
       [
-        143,
-        40,
+        108,
+        46,
       ],
       [
-        152,
-        49,
+        98,
+        36,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 158,
+    "x2": 137,
+    "y1": 34,
+    "y2": 55,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        130,
+        62,
+      ],
+      [
+        132,
+        50,
+      ],
+      [
+        142,
+        60,
       ],
     ],
   },
@@ -29864,7 +30034,7 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -30069,6 +30239,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 96,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 158,
+    "x2": 137,
+    "y1": 34,
+    "y2": 55,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -30076,18 +30256,28 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        140,
-        52,
+        130,
+        62,
       ],
       [
-        143,
-        40,
+        132,
+        50,
       ],
       [
-        152,
-        49,
+        142,
+        60,
       ],
     ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 168,
+    "x2": 168,
+    "y1": 58,
+    "y2": 48,
   },
   {
     "fill": 5,
@@ -30098,17 +30288,27 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "points": [
       [
         168,
-        43,
+        38,
       ],
       [
         175,
-        53,
+        48,
       ],
       [
         161,
-        53,
+        48,
       ],
     ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 202,
+    "x2": 192,
+    "y1": 72,
+    "y2": 72,
   },
   {
     "fill": 5,
@@ -30118,15 +30318,15 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        187,
+        182,
         72,
       ],
       [
-        197,
+        192,
         65,
       ],
       [
-        197,
+        192,
         79,
       ],
     ],
@@ -30139,7 +30339,7 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -30344,25 +30544,14 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 96,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        216,
-        53,
-      ],
-      [
-        209,
-        43,
-      ],
-      [
-        223,
-        43,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 216,
+    "x2": 216,
+    "y1": 38,
+    "y2": 48,
   },
   {
     "fill": 5,
@@ -30372,15 +30561,46 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        187,
+        216,
+        58,
+      ],
+      [
+        209,
+        48,
+      ],
+      [
+        223,
+        48,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 202,
+    "x2": 192,
+    "y1": 72,
+    "y2": 72,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        182,
         72,
       ],
       [
-        197,
+        192,
         65,
       ],
       [
-        197,
+        192,
         79,
       ],
     ],
@@ -30393,7 +30613,7 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -30768,6 +30988,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 144,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 82,
+    "x2": 103,
+    "y1": 62,
+    "y2": 41,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -30775,16 +31005,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        100,
-        44,
+        110,
+        34,
       ],
       [
-        97,
-        56,
+        108,
+        46,
       ],
       [
-        88,
-        47,
+        98,
+        36,
       ],
     ],
   },
@@ -30981,6 +31211,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 144,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 158,
+    "x2": 137,
+    "y1": 34,
+    "y2": 55,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -30988,16 +31228,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        140,
-        52,
+        130,
+        62,
       ],
       [
-        143,
-        40,
+        132,
+        50,
       ],
       [
-        152,
-        49,
+        142,
+        60,
       ],
     ],
   },
@@ -32104,6 +32344,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 192,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 202,
+    "x2": 192,
+    "y1": 168,
+    "y2": 168,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -32111,15 +32361,15 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        187,
+        182,
         168,
       ],
       [
-        197,
+        192,
         161,
       ],
       [
-        197,
+        192,
         175,
       ],
     ],
@@ -32132,7 +32382,7 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -32337,6 +32587,16 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "y": 192,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 202,
+    "x2": 192,
+    "y1": 168,
+    "y2": 168,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -32344,15 +32604,15 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        187,
+        182,
         168,
       ],
       [
-        197,
+        192,
         161,
       ],
       [
-        197,
+        192,
         175,
       ],
     ],
@@ -32365,7 +32625,7 @@ exports[`ascent hint frames > outlines the rival and the ends a fill step counts
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -33500,16 +33760,6 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     ],
   },
   {
-    "cx": 24,
-    "cy": 24,
-    "fill": 11,
-    "fillRgb": "rgb(237, 237, 237)",
-    "op": "circle",
-    "outline": 11,
-    "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -33585,6 +33835,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "w": 1,
     "x": 0,
     "y": 48,
+  },
+  {
+    "cx": 24,
+    "cy": 24,
+    "fill": 11,
+    "fillRgb": "rgb(237, 237, 237)",
+    "op": "circle",
+    "outline": 11,
+    "outlineRgb": "rgb(237, 237, 237)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -34411,6 +34671,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "y": 48,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 216,
+    "x2": 216,
+    "y1": 38,
+    "y2": 48,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -34419,15 +34689,15 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "points": [
       [
         216,
-        53,
+        58,
       ],
       [
         209,
-        43,
+        48,
       ],
       [
         223,
-        43,
+        48,
       ],
     ],
   },
@@ -34439,7 +34709,7 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -34817,26 +35087,6 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     ],
   },
   {
-    "cx": 72,
-    "cy": 72,
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "circle",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "r": 17,
-  },
-  {
-    "cx": 72,
-    "cy": 72,
-    "fill": 2,
-    "fillRgb": "rgb(253, 253, 253)",
-    "op": "circle",
-    "outline": 2,
-    "outlineRgb": "rgb(253, 253, 253)",
-    "r": 14,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -34912,6 +35162,26 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "w": 1,
     "x": 48,
     "y": 96,
+  },
+  {
+    "cx": 72,
+    "cy": 72,
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "circle",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "r": 17,
+  },
+  {
+    "cx": 72,
+    "cy": 72,
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "circle",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -35388,25 +35658,14 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "y": 96,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        196,
-        148,
-      ],
-      [
-        184,
-        145,
-      ],
-      [
-        193,
-        136,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 178,
+    "x2": 199,
+    "y1": 130,
+    "y2": 151,
   },
   {
     "fill": 5,
@@ -35416,15 +35675,46 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        187,
+        206,
+        158,
+      ],
+      [
+        194,
+        156,
+      ],
+      [
+        204,
+        146,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 202,
+    "x2": 192,
+    "y1": 72,
+    "y2": 72,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        182,
         72,
       ],
       [
-        197,
+        192,
         65,
       ],
       [
-        197,
+        192,
         79,
       ],
     ],
@@ -35437,7 +35727,7 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -35642,25 +35932,14 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "y": 96,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        216,
-        53,
-      ],
-      [
-        209,
-        43,
-      ],
-      [
-        223,
-        43,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 216,
+    "x2": 216,
+    "y1": 38,
+    "y2": 48,
   },
   {
     "fill": 5,
@@ -35670,15 +35949,46 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        187,
+        216,
+        58,
+      ],
+      [
+        209,
+        48,
+      ],
+      [
+        223,
+        48,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 202,
+    "x2": 192,
+    "y1": 72,
+    "y2": 72,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        182,
         72,
       ],
       [
-        197,
+        192,
         65,
       ],
       [
-        197,
+        192,
         79,
       ],
     ],
@@ -35691,7 +36001,7 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -36460,6 +36770,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "y": 144,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 178,
+    "x2": 199,
+    "y1": 130,
+    "y2": 151,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -36467,16 +36787,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        196,
-        148,
+        206,
+        158,
       ],
       [
-        184,
-        145,
+        194,
+        156,
       ],
       [
-        193,
-        136,
+        204,
+        146,
       ],
     ],
   },
@@ -36488,7 +36808,7 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -36683,6 +37003,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "y": 144,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 178,
+    "x2": 199,
+    "y1": 130,
+    "y2": 151,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -36690,16 +37020,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        196,
-        148,
+        206,
+        158,
       ],
       [
-        184,
-        145,
+        194,
+        156,
       ],
       [
-        193,
-        136,
+        204,
+        146,
       ],
     ],
   },
@@ -37424,6 +37754,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "y": 192,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 178,
+    "x2": 199,
+    "y1": 130,
+    "y2": 151,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -37431,16 +37771,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        196,
-        148,
+        206,
+        158,
       ],
       [
-        184,
-        145,
+        194,
+        156,
       ],
       [
-        193,
-        136,
+        204,
+        146,
       ],
     ],
   },
@@ -37635,6 +37975,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "y": 192,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 178,
+    "x2": 199,
+    "y1": 130,
+    "y2": 151,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -37642,16 +37992,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        196,
-        148,
+        206,
+        158,
       ],
       [
-        184,
-        145,
+        194,
+        156,
       ],
       [
-        193,
-        136,
+        204,
+        146,
       ],
     ],
   },
@@ -37663,7 +38013,7 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -38602,6 +38952,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "y": 240,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 178,
+    "x2": 199,
+    "y1": 130,
+    "y2": 151,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -38609,16 +38969,16 @@ exports[`ascent hint frames > rings each square of a whole run's route, the path
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        196,
-        148,
+        206,
+        158,
       ],
       [
-        184,
-        145,
+        194,
+        156,
       ],
       [
-        193,
-        136,
+        204,
+        146,
       ],
     ],
   },
@@ -38740,16 +39100,6 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "cx": 24,
-    "cy": 24,
-    "fill": 11,
-    "fillRgb": "rgb(237, 237, 237)",
-    "op": "circle",
-    "outline": 11,
-    "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -38827,6 +39177,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 48,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 41,
+    "y1": 62,
+    "y2": 41,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -38834,18 +39194,28 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        44,
-        44,
+        34,
+        34,
       ],
       [
-        56,
-        47,
+        46,
+        36,
       ],
       [
-        47,
-        56,
+        36,
+        46,
       ],
     ],
+  },
+  {
+    "cx": 24,
+    "cy": 24,
+    "fill": 11,
+    "fillRgb": "rgb(237, 237, 237)",
+    "op": "circle",
+    "outline": 11,
+    "outlineRgb": "rgb(237, 237, 237)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -38963,26 +39333,6 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "cx": 72,
-    "cy": 24,
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "circle",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "r": 17,
-  },
-  {
-    "cx": 72,
-    "cy": 24,
-    "fill": 2,
-    "fillRgb": "rgb(253, 253, 253)",
-    "op": "circle",
-    "outline": 2,
-    "outlineRgb": "rgb(253, 253, 253)",
-    "r": 14,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -39060,25 +39410,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 48,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        44,
-        44,
-      ],
-      [
-        56,
-        47,
-      ],
-      [
-        47,
-        56,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 41,
+    "y1": 62,
+    "y2": 41,
   },
   {
     "fill": 5,
@@ -39088,18 +39427,69 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        100,
-        52,
+        34,
+        34,
       ],
       [
-        88,
-        49,
+        46,
+        36,
       ],
       [
-        97,
-        40,
+        36,
+        46,
       ],
     ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 82,
+    "x2": 103,
+    "y1": 34,
+    "y2": 55,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        110,
+        62,
+      ],
+      [
+        98,
+        60,
+      ],
+      [
+        108,
+        50,
+      ],
+    ],
+  },
+  {
+    "cx": 72,
+    "cy": 24,
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "circle",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "r": 17,
+  },
+  {
+    "cx": 72,
+    "cy": 24,
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "circle",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -39304,25 +39694,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 48,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        100,
-        52,
-      ],
-      [
-        88,
-        49,
-      ],
-      [
-        97,
-        40,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 82,
+    "x2": 103,
+    "y1": 34,
+    "y2": 55,
   },
   {
     "fill": 5,
@@ -39332,18 +39711,59 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        149,
+        110,
+        62,
+      ],
+      [
+        98,
+        60,
+      ],
+      [
+        108,
+        50,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 134,
+    "x2": 144,
+    "y1": 24,
+    "y2": 24,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        154,
         24,
       ],
       [
-        139,
+        144,
         31,
       ],
       [
-        139,
+        144,
         17,
       ],
     ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 120,
+    "x2": 120,
+    "y1": 58,
+    "y2": 48,
   },
   {
     "fill": 5,
@@ -39354,15 +39774,15 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "points": [
       [
         120,
-        43,
+        38,
       ],
       [
         127,
-        53,
+        48,
       ],
       [
         113,
-        53,
+        48,
       ],
     ],
   },
@@ -39374,7 +39794,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -39579,25 +39999,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 48,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        149,
-        24,
-      ],
-      [
-        139,
-        31,
-      ],
-      [
-        139,
-        17,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 134,
+    "x2": 144,
+    "y1": 24,
+    "y2": 24,
   },
   {
     "fill": 5,
@@ -39607,15 +40016,46 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        197,
+        154,
         24,
       ],
       [
-        187,
+        144,
         31,
       ],
       [
-        187,
+        144,
+        17,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 182,
+    "x2": 192,
+    "y1": 24,
+    "y2": 24,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        202,
+        24,
+      ],
+      [
+        192,
+        31,
+      ],
+      [
+        192,
         17,
       ],
     ],
@@ -39628,7 +40068,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -39833,6 +40273,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 48,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 182,
+    "x2": 192,
+    "y1": 24,
+    "y2": 24,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -39840,18 +40290,28 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        197,
+        202,
         24,
       ],
       [
-        187,
+        192,
         31,
       ],
       [
-        187,
+        192,
         17,
       ],
     ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 216,
+    "x2": 216,
+    "y1": 38,
+    "y2": 48,
   },
   {
     "fill": 5,
@@ -39862,15 +40322,15 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "points": [
       [
         216,
-        53,
+        58,
       ],
       [
         209,
-        43,
+        48,
       ],
       [
         223,
-        43,
+        48,
       ],
     ],
   },
@@ -39882,7 +40342,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -40098,25 +40558,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 96,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        44,
-        44,
-      ],
-      [
-        56,
-        47,
-      ],
-      [
-        47,
-        56,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 41,
+    "y1": 62,
+    "y2": 41,
   },
   {
     "fill": 5,
@@ -40126,16 +40575,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        44,
-        140,
+        34,
+        34,
       ],
       [
-        56,
-        143,
+        46,
+        36,
       ],
       [
-        47,
-        152,
+        36,
+        46,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 41,
+    "y1": 158,
+    "y2": 137,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        34,
+        130,
+      ],
+      [
+        46,
+        132,
+      ],
+      [
+        36,
+        142,
       ],
     ],
   },
@@ -40330,25 +40810,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 96,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        100,
-        52,
-      ],
-      [
-        88,
-        49,
-      ],
-      [
-        97,
-        40,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 82,
+    "x2": 103,
+    "y1": 34,
+    "y2": 55,
   },
   {
     "fill": 5,
@@ -40358,16 +40827,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        44,
-        44,
+        110,
+        62,
       ],
       [
-        56,
-        47,
+        98,
+        60,
       ],
       [
-        47,
-        56,
+        108,
+        50,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 41,
+    "y1": 62,
+    "y2": 41,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        34,
+        34,
+      ],
+      [
+        46,
+        36,
+      ],
+      [
+        36,
+        46,
       ],
     ],
   },
@@ -40379,7 +40879,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -40664,6 +41164,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 96,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 82,
+    "x2": 103,
+    "y1": 34,
+    "y2": 55,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -40671,18 +41181,28 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        100,
-        52,
+        110,
+        62,
       ],
       [
-        88,
-        49,
+        98,
+        60,
       ],
       [
-        97,
-        40,
+        108,
+        50,
       ],
     ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 120,
+    "x2": 120,
+    "y1": 58,
+    "y2": 48,
   },
   {
     "fill": 5,
@@ -40693,15 +41213,15 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "points": [
       [
         120,
-        43,
+        38,
       ],
       [
         127,
-        53,
+        48,
       ],
       [
         113,
-        53,
+        48,
       ],
     ],
   },
@@ -40713,7 +41233,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -41110,6 +41630,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 96,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 216,
+    "x2": 216,
+    "y1": 38,
+    "y2": 48,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -41118,15 +41648,15 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "points": [
       [
         216,
-        53,
+        58,
       ],
       [
         209,
-        43,
+        48,
       ],
       [
         223,
-        43,
+        48,
       ],
     ],
   },
@@ -41138,7 +41668,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -41343,6 +41873,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 144,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 41,
+    "y1": 158,
+    "y2": 137,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -41350,16 +41890,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        44,
-        140,
+        34,
+        130,
       ],
       [
-        56,
-        143,
+        46,
+        132,
       ],
       [
-        47,
-        152,
+        36,
+        142,
       ],
     ],
   },
@@ -41371,7 +41911,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -41656,25 +42196,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 144,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        44,
-        44,
-      ],
-      [
-        56,
-        47,
-      ],
-      [
-        47,
-        56,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 41,
+    "y1": 62,
+    "y2": 41,
   },
   {
     "fill": 5,
@@ -41684,18 +42213,28 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        44,
-        140,
+        34,
+        34,
       ],
       [
-        56,
-        143,
+        46,
+        36,
       ],
       [
-        47,
-        152,
+        36,
+        46,
       ],
     ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 41,
+    "y1": 158,
+    "y2": 137,
   },
   {
     "fill": 5,
@@ -41705,16 +42244,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        92,
-        188,
+        34,
+        130,
       ],
       [
-        104,
-        191,
+        46,
+        132,
       ],
       [
-        95,
-        200,
+        36,
+        142,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 110,
+    "x2": 89,
+    "y1": 206,
+    "y2": 185,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        82,
+        178,
+      ],
+      [
+        94,
+        180,
+      ],
+      [
+        84,
+        190,
       ],
     ],
   },
@@ -41899,6 +42469,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 144,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 82,
+    "x2": 103,
+    "y1": 34,
+    "y2": 55,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -41906,16 +42486,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        100,
-        52,
+        110,
+        62,
       ],
       [
-        88,
-        49,
+        98,
+        60,
       ],
       [
-        97,
-        40,
+        108,
+        50,
       ],
     ],
   },
@@ -42460,6 +43040,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 192,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 41,
+    "y1": 158,
+    "y2": 137,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -42467,16 +43057,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        44,
-        140,
+        34,
+        130,
       ],
       [
-        56,
-        143,
+        46,
+        132,
       ],
       [
-        47,
-        152,
+        36,
+        142,
       ],
     ],
   },
@@ -42683,25 +43273,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 192,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        44,
-        140,
-      ],
-      [
-        56,
-        143,
-      ],
-      [
-        47,
-        152,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 41,
+    "y1": 158,
+    "y2": 137,
   },
   {
     "fill": 5,
@@ -42711,16 +43290,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        92,
-        188,
+        34,
+        130,
       ],
       [
-        104,
-        191,
+        46,
+        132,
       ],
       [
-        95,
-        200,
+        36,
+        142,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 110,
+    "x2": 89,
+    "y1": 206,
+    "y2": 185,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        82,
+        178,
+      ],
+      [
+        94,
+        180,
+      ],
+      [
+        84,
+        190,
       ],
     ],
   },
@@ -42732,7 +43342,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -42927,6 +43537,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 192,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 110,
+    "x2": 89,
+    "y1": 206,
+    "y2": 185,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -42934,16 +43554,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        92,
-        188,
+        82,
+        178,
       ],
       [
-        104,
-        191,
+        94,
+        180,
       ],
       [
-        95,
-        200,
+        84,
+        190,
       ],
     ],
   },
@@ -43692,25 +44312,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 240,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        44,
-        140,
-      ],
-      [
-        56,
-        143,
-      ],
-      [
-        47,
-        152,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 41,
+    "y1": 158,
+    "y2": 137,
   },
   {
     "fill": 5,
@@ -43720,16 +44329,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        92,
-        188,
+        34,
+        130,
       ],
       [
-        104,
-        191,
+        46,
+        132,
       ],
       [
-        95,
-        200,
+        36,
+        142,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 110,
+    "x2": 89,
+    "y1": 206,
+    "y2": 185,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        82,
+        178,
+      ],
+      [
+        94,
+        180,
+      ],
+      [
+        84,
+        190,
       ],
     ],
   },
@@ -43924,25 +44564,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 240,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        92,
-        188,
-      ],
-      [
-        104,
-        191,
-      ],
-      [
-        95,
-        200,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 110,
+    "x2": 89,
+    "y1": 206,
+    "y2": 185,
   },
   {
     "fill": 5,
@@ -43952,15 +44581,46 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        139,
+        82,
+        178,
+      ],
+      [
+        94,
+        180,
+      ],
+      [
+        84,
+        190,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 154,
+    "x2": 144,
+    "y1": 216,
+    "y2": 216,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        134,
         216,
       ],
       [
-        149,
+        144,
         209,
       ],
       [
-        149,
+        144,
         223,
       ],
     ],
@@ -43973,7 +44633,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -44178,6 +44838,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "y": 240,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 154,
+    "x2": 144,
+    "y1": 216,
+    "y2": 216,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -44185,15 +44855,15 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        139,
+        134,
         216,
       ],
       [
-        149,
+        144,
         209,
       ],
       [
-        149,
+        144,
         223,
       ],
     ],
@@ -44206,7 +44876,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -44501,25 +45171,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        87,
-        44,
-      ],
-      [
-        88,
-        56,
-      ],
-      [
-        75,
-        49,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 79,
+    "x2": 84,
+    "y1": 57,
+    "y2": 49,
   },
   {
     "fill": 5,
@@ -44529,16 +45188,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        111,
-        53,
+        89,
+        40,
       ],
       [
-        99,
-        48,
+        90,
+        52,
       ],
       [
-        112,
-        41,
+        78,
+        45,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 103,
+    "x2": 108,
+    "y1": 40,
+    "y2": 48,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        113,
+        57,
+      ],
+      [
+        102,
+        52,
+      ],
+      [
+        114,
+        45,
       ],
     ],
   },
@@ -44550,7 +45240,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -44651,25 +45341,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        135,
-        44,
-      ],
-      [
-        136,
-        56,
-      ],
-      [
-        123,
-        49,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 127,
+    "x2": 132,
+    "y1": 57,
+    "y2": 49,
   },
   {
     "fill": 5,
@@ -44679,16 +45358,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        159,
-        53,
+        137,
+        40,
       ],
       [
-        147,
-        48,
+        138,
+        52,
       ],
       [
-        160,
-        41,
+        126,
+        45,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 151,
+    "x2": 156,
+    "y1": 40,
+    "y2": 48,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        161,
+        57,
+      ],
+      [
+        150,
+        52,
+      ],
+      [
+        162,
+        45,
       ],
     ],
   },
@@ -44700,7 +45410,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -44801,25 +45511,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        221,
-        28,
-      ],
-      [
-        211,
-        35,
-      ],
-      [
-        211,
-        21,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 206,
+    "x2": 216,
+    "y1": 28,
+    "y2": 28,
   },
   {
     "fill": 5,
@@ -44829,16 +45528,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        201,
-        44,
+        226,
+        28,
       ],
       [
-        213,
-        49,
+        216,
+        35,
       ],
       [
-        200,
-        56,
+        216,
+        21,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 209,
+    "x2": 204,
+    "y1": 57,
+    "y2": 49,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        199,
+        40,
+      ],
+      [
+        210,
+        45,
+      ],
+      [
+        198,
+        52,
       ],
     ],
   },
@@ -44850,7 +45580,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -44951,25 +45681,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        221,
-        28,
-      ],
-      [
-        211,
-        35,
-      ],
-      [
-        211,
-        21,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 206,
+    "x2": 216,
+    "y1": 28,
+    "y2": 28,
   },
   {
     "fill": 5,
@@ -44979,16 +45698,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        255,
-        53,
+        226,
+        28,
       ],
       [
-        243,
-        48,
+        216,
+        35,
       ],
       [
-        256,
-        41,
+        216,
+        21,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 247,
+    "x2": 252,
+    "y1": 40,
+    "y2": 48,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        257,
+        57,
+      ],
+      [
+        246,
+        52,
+      ],
+      [
+        258,
+        45,
       ],
     ],
   },
@@ -45000,7 +45750,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -45101,25 +45851,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        87,
-        44,
-      ],
-      [
-        88,
-        56,
-      ],
-      [
-        75,
-        49,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 79,
+    "x2": 84,
+    "y1": 57,
+    "y2": 49,
   },
   {
     "fill": 5,
@@ -45129,16 +45868,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        82,
+        89,
+        40,
+      ],
+      [
+        90,
+        52,
+      ],
+      [
+        78,
+        45,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 89,
+    "x2": 84,
+    "y1": 99,
+    "y2": 90,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        79,
+        81,
+      ],
+      [
+        90,
         86,
       ],
       [
+        78,
         93,
-        91,
-      ],
-      [
-        80,
-        98,
       ],
     ],
   },
@@ -45150,7 +45920,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -45251,25 +46021,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        111,
-        53,
-      ],
-      [
-        99,
-        48,
-      ],
-      [
-        112,
-        41,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 103,
+    "x2": 108,
+    "y1": 40,
+    "y2": 48,
   },
   {
     "fill": 5,
@@ -45279,16 +46038,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        135,
-        44,
+        113,
+        57,
       ],
       [
-        136,
-        56,
+        102,
+        52,
       ],
       [
-        123,
-        49,
+        114,
+        45,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 127,
+    "x2": 132,
+    "y1": 57,
+    "y2": 49,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        137,
+        40,
+      ],
+      [
+        138,
+        52,
+      ],
+      [
+        126,
+        45,
       ],
     ],
   },
@@ -45300,7 +46090,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -45401,25 +46191,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        159,
-        53,
-      ],
-      [
-        147,
-        48,
-      ],
-      [
-        160,
-        41,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 151,
+    "x2": 156,
+    "y1": 40,
+    "y2": 48,
   },
   {
     "fill": 5,
@@ -45429,15 +46208,46 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        197,
+        161,
+        57,
+      ],
+      [
+        150,
+        52,
+      ],
+      [
+        162,
+        45,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 182,
+    "x2": 192,
+    "y1": 69,
+    "y2": 69,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        202,
         69,
       ],
       [
-        187,
+        192,
         76,
       ],
       [
-        187,
+        192,
         62,
       ],
     ],
@@ -45450,7 +46260,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -45551,25 +46361,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        201,
-        44,
-      ],
-      [
-        213,
-        49,
-      ],
-      [
-        200,
-        56,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 209,
+    "x2": 204,
+    "y1": 57,
+    "y2": 49,
   },
   {
     "fill": 5,
@@ -45579,15 +46378,46 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        197,
+        199,
+        40,
+      ],
+      [
+        210,
+        45,
+      ],
+      [
+        198,
+        52,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 182,
+    "x2": 192,
+    "y1": 69,
+    "y2": 69,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        202,
         69,
       ],
       [
-        187,
+        192,
         76,
       ],
       [
-        187,
+        192,
         62,
       ],
     ],
@@ -45600,7 +46430,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -45701,25 +46531,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        255,
-        53,
-      ],
-      [
-        243,
-        48,
-      ],
-      [
-        256,
-        41,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 247,
+    "x2": 252,
+    "y1": 40,
+    "y2": 48,
   },
   {
     "fill": 5,
@@ -45729,16 +46548,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        250,
+        257,
+        57,
+      ],
+      [
+        246,
+        52,
+      ],
+      [
+        258,
+        45,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 257,
+    "x2": 252,
+    "y1": 81,
+    "y2": 90,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        247,
+        99,
+      ],
+      [
+        246,
+        87,
+      ],
+      [
+        258,
         94,
-      ],
-      [
-        248,
-        82,
-      ],
-      [
-        261,
-        89,
       ],
     ],
   },
@@ -45750,7 +46600,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -45851,25 +46701,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        77,
-        111,
-      ],
-      [
-        67,
-        118,
-      ],
-      [
-        67,
-        104,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 72,
+    "y1": 111,
+    "y2": 111,
   },
   {
     "fill": 5,
@@ -45879,16 +46718,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        39,
-        127,
+        82,
+        111,
       ],
       [
-        40,
-        139,
+        72,
+        118,
       ],
       [
-        27,
-        132,
+        72,
+        104,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 31,
+    "x2": 36,
+    "y1": 140,
+    "y2": 132,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        41,
+        123,
+      ],
+      [
+        42,
+        135,
+      ],
+      [
+        30,
+        128,
       ],
     ],
   },
@@ -45900,7 +46770,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -46001,25 +46871,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        82,
-        86,
-      ],
-      [
-        93,
-        91,
-      ],
-      [
-        80,
-        98,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 89,
+    "x2": 84,
+    "y1": 99,
+    "y2": 90,
   },
   {
     "fill": 5,
@@ -46029,15 +46888,46 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        77,
+        79,
+        81,
+      ],
+      [
+        90,
+        86,
+      ],
+      [
+        78,
+        93,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 62,
+    "x2": 72,
+    "y1": 111,
+    "y2": 111,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        82,
         111,
       ],
       [
-        67,
+        72,
         118,
       ],
       [
-        67,
+        72,
         104,
       ],
     ],
@@ -46050,7 +46940,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -46384,25 +47274,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        250,
-        94,
-      ],
-      [
-        248,
-        82,
-      ],
-      [
-        261,
-        89,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 257,
+    "x2": 252,
+    "y1": 81,
+    "y2": 90,
   },
   {
     "fill": 5,
@@ -46412,16 +47291,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        255,
-        136,
+        247,
+        99,
       ],
       [
-        243,
-        131,
+        246,
+        87,
       ],
       [
-        256,
-        124,
+        258,
+        94,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 247,
+    "x2": 252,
+    "y1": 123,
+    "y2": 131,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        257,
+        140,
+      ],
+      [
+        246,
+        135,
+      ],
+      [
+        258,
+        128,
       ],
     ],
   },
@@ -46433,7 +47343,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -46491,16 +47401,6 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "cx": 288,
-    "cy": 111,
-    "fill": 11,
-    "fillRgb": "rgb(237, 237, 237)",
-    "op": "circle",
-    "outline": 11,
-    "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -46534,6 +47434,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 305,
+    "x2": 300,
+    "y1": 140,
+    "y2": 132,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -46541,18 +47451,28 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        297,
-        127,
+        295,
+        123,
       ],
       [
-        309,
-        132,
+        306,
+        128,
       ],
       [
-        296,
-        139,
+        294,
+        135,
       ],
     ],
+  },
+  {
+    "cx": 288,
+    "cy": 111,
+    "fill": 11,
+    "fillRgb": "rgb(237, 237, 237)",
+    "op": "circle",
+    "outline": 11,
+    "outlineRgb": "rgb(237, 237, 237)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -46653,25 +47573,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        39,
-        127,
-      ],
-      [
-        40,
-        139,
-      ],
-      [
-        27,
-        132,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 31,
+    "x2": 36,
+    "y1": 140,
+    "y2": 132,
   },
   {
     "fill": 5,
@@ -46681,16 +47590,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        34,
+        41,
+        123,
+      ],
+      [
+        42,
+        135,
+      ],
+      [
+        30,
+        128,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 41,
+    "x2": 36,
+    "y1": 182,
+    "y2": 173,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        31,
+        164,
+      ],
+      [
+        42,
         169,
       ],
       [
-        45,
-        174,
-      ],
-      [
-        32,
-        181,
+        30,
+        176,
       ],
     ],
   },
@@ -46702,7 +47642,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -46803,25 +47743,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        58,
-        177,
-      ],
-      [
-        56,
-        165,
-      ],
-      [
-        69,
-        172,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 65,
+    "x2": 60,
+    "y1": 164,
+    "y2": 173,
   },
   {
     "fill": 5,
@@ -46831,16 +47760,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        82,
+        55,
+        182,
+      ],
+      [
+        54,
+        170,
+      ],
+      [
+        66,
+        177,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 89,
+    "x2": 84,
+    "y1": 182,
+    "y2": 173,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        79,
+        164,
+      ],
+      [
+        90,
         169,
       ],
       [
-        93,
-        174,
-      ],
-      [
-        80,
-        181,
+        78,
+        176,
       ],
     ],
   },
@@ -46852,7 +47812,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -46953,6 +47913,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 113,
+    "x2": 108,
+    "y1": 164,
+    "y2": 173,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -46960,16 +47930,16 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        106,
+        103,
+        182,
+      ],
+      [
+        102,
+        170,
+      ],
+      [
+        114,
         177,
-      ],
-      [
-        104,
-        165,
-      ],
-      [
-        117,
-        172,
       ],
     ],
   },
@@ -46981,7 +47951,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -47378,25 +48348,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        255,
-        136,
-      ],
-      [
-        243,
-        131,
-      ],
-      [
-        256,
-        124,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 247,
+    "x2": 252,
+    "y1": 123,
+    "y2": 131,
   },
   {
     "fill": 5,
@@ -47406,16 +48365,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        250,
+        257,
+        140,
+      ],
+      [
+        246,
+        135,
+      ],
+      [
+        258,
+        128,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 257,
+    "x2": 252,
+    "y1": 164,
+    "y2": 173,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        247,
+        182,
+      ],
+      [
+        246,
+        170,
+      ],
+      [
+        258,
         177,
-      ],
-      [
-        248,
-        165,
-      ],
-      [
-        261,
-        172,
       ],
     ],
   },
@@ -47427,7 +48417,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -47528,25 +48518,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        297,
-        127,
-      ],
-      [
-        309,
-        132,
-      ],
-      [
-        296,
-        139,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 305,
+    "x2": 300,
+    "y1": 140,
+    "y2": 132,
   },
   {
     "fill": 5,
@@ -47556,16 +48535,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        302,
+        295,
+        123,
+      ],
+      [
+        306,
+        128,
+      ],
+      [
+        294,
+        135,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 295,
+    "x2": 300,
+    "y1": 182,
+    "y2": 173,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        305,
+        164,
+      ],
+      [
+        306,
+        176,
+      ],
+      [
+        294,
         169,
-      ],
-      [
-        304,
-        181,
-      ],
-      [
-        291,
-        174,
       ],
     ],
   },
@@ -47577,7 +48587,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -47678,25 +48688,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        34,
-        169,
-      ],
-      [
-        45,
-        174,
-      ],
-      [
-        32,
-        181,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 41,
+    "x2": 36,
+    "y1": 182,
+    "y2": 173,
   },
   {
     "fill": 5,
@@ -47706,16 +48705,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        58,
+        31,
+        164,
+      ],
+      [
+        42,
+        169,
+      ],
+      [
+        30,
+        176,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 65,
+    "x2": 60,
+    "y1": 164,
+    "y2": 173,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        55,
+        182,
+      ],
+      [
+        54,
+        170,
+      ],
+      [
+        66,
         177,
-      ],
-      [
-        56,
-        165,
-      ],
-      [
-        69,
-        172,
       ],
     ],
   },
@@ -47727,7 +48757,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -47828,25 +48858,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        82,
-        169,
-      ],
-      [
-        93,
-        174,
-      ],
-      [
-        80,
-        181,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 89,
+    "x2": 84,
+    "y1": 182,
+    "y2": 173,
   },
   {
     "fill": 5,
@@ -47856,16 +48875,47 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        106,
+        79,
+        164,
+      ],
+      [
+        90,
+        169,
+      ],
+      [
+        78,
+        176,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 113,
+    "x2": 108,
+    "y1": 164,
+    "y2": 173,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        103,
+        182,
+      ],
+      [
+        102,
+        170,
+      ],
+      [
+        114,
         177,
-      ],
-      [
-        104,
-        165,
-      ],
-      [
-        117,
-        172,
       ],
     ],
   },
@@ -47877,7 +48927,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -48200,25 +49250,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        250,
-        177,
-      ],
-      [
-        248,
-        165,
-      ],
-      [
-        261,
-        172,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 257,
+    "x2": 252,
+    "y1": 164,
+    "y2": 173,
   },
   {
     "fill": 5,
@@ -48228,15 +49267,46 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        269,
+        247,
+        182,
+      ],
+      [
+        246,
+        170,
+      ],
+      [
+        258,
+        177,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 254,
+    "x2": 264,
+    "y1": 194,
+    "y2": 194,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        274,
         194,
       ],
       [
-        259,
+        264,
         201,
       ],
       [
-        259,
+        264,
         187,
       ],
     ],
@@ -48249,7 +49319,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -48350,25 +49420,14 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        302,
-        169,
-      ],
-      [
-        304,
-        181,
-      ],
-      [
-        291,
-        174,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 295,
+    "x2": 300,
+    "y1": 182,
+    "y2": 173,
   },
   {
     "fill": 5,
@@ -48378,15 +49437,46 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        269,
+        305,
+        164,
+      ],
+      [
+        306,
+        176,
+      ],
+      [
+        294,
+        169,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 254,
+    "x2": 264,
+    "y1": 194,
+    "y2": 194,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        274,
         194,
       ],
       [
-        259,
+        264,
         201,
       ],
       [
-        259,
+        264,
         187,
       ],
     ],
@@ -48399,7 +49489,7 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     "op": "circle",
     "outline": 10,
     "outlineRgb": "rgb(194, 194, 194)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -48685,26 +49775,6 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
     ],
   },
   {
-    "cx": 216,
-    "cy": 236,
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "circle",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "r": 17,
-  },
-  {
-    "cx": 216,
-    "cy": 236,
-    "fill": 2,
-    "fillRgb": "rgb(253, 253, 253)",
-    "op": "circle",
-    "outline": 2,
-    "outlineRgb": "rgb(253, 253, 253)",
-    "r": 14,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -48736,6 +49806,26 @@ exports[`ascent hint frames > stripes the reach of the one run that can fill a s
         222,
       ],
     ],
+  },
+  {
+    "cx": 216,
+    "cy": 236,
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "circle",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "r": 17,
+  },
+  {
+    "cx": 216,
+    "cy": 236,
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "circle",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -56025,26 +57115,6 @@ exports[`ascent render > Hexagon: renders real hexagonal cells (6-vertex outline
     ],
   },
   {
-    "cx": 72,
-    "cy": 28,
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "circle",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "r": 17,
-  },
-  {
-    "cx": 72,
-    "cy": 28,
-    "fill": 2,
-    "fillRgb": "rgb(253, 253, 253)",
-    "op": "circle",
-    "outline": 2,
-    "outlineRgb": "rgb(253, 253, 253)",
-    "r": 14,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -56076,6 +57146,26 @@ exports[`ascent render > Hexagon: renders real hexagonal cells (6-vertex outline
         14,
       ],
     ],
+  },
+  {
+    "cx": 72,
+    "cy": 28,
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "circle",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "r": 17,
+  },
+  {
+    "cx": 72,
+    "cy": 28,
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "circle",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -56613,16 +57703,6 @@ exports[`ascent render > Hexagon: renders real hexagonal cells (6-vertex outline
     ],
   },
   {
-    "cx": 24,
-    "cy": 111,
-    "fill": 11,
-    "fillRgb": "rgb(237, 237, 237)",
-    "op": "circle",
-    "outline": 11,
-    "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -56654,6 +57734,16 @@ exports[`ascent render > Hexagon: renders real hexagonal cells (6-vertex outline
         97,
       ],
     ],
+  },
+  {
+    "cx": 24,
+    "cy": 111,
+    "fill": 11,
+    "fillRgb": "rgb(237, 237, 237)",
+    "op": "circle",
+    "outline": 11,
+    "outlineRgb": "rgb(237, 237, 237)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -58104,6 +59194,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 48,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 120,
+    "x2": 120,
+    "y1": 58,
+    "y2": 48,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -58112,15 +59212,15 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "points": [
       [
         120,
-        43,
+        38,
       ],
       [
         127,
-        53,
+        48,
       ],
       [
         113,
-        53,
+        48,
       ],
     ],
   },
@@ -58132,7 +59232,7 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -58337,6 +59437,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 48,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 202,
+    "x2": 192,
+    "y1": 24,
+    "y2": 24,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -58344,15 +59454,15 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        187,
+        182,
         24,
       ],
       [
-        197,
+        192,
         17,
       ],
       [
-        197,
+        192,
         31,
       ],
     ],
@@ -58365,7 +59475,7 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -58483,26 +59593,6 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     ],
   },
   {
-    "cx": 216,
-    "cy": 24,
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "circle",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "r": 17,
-  },
-  {
-    "cx": 216,
-    "cy": 24,
-    "fill": 2,
-    "fillRgb": "rgb(253, 253, 253)",
-    "op": "circle",
-    "outline": 2,
-    "outlineRgb": "rgb(253, 253, 253)",
-    "r": 14,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -58580,25 +59670,14 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 48,
   },
   {
-    "fill": 5,
-    "fillRgb": "rgb(77, 77, 77)",
-    "op": "polygon",
-    "outline": 5,
-    "outlineRgb": "rgb(77, 77, 77)",
-    "points": [
-      [
-        188,
-        100,
-      ],
-      [
-        191,
-        88,
-      ],
-      [
-        200,
-        97,
-      ],
-    ],
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 206,
+    "x2": 185,
+    "y1": 82,
+    "y2": 103,
   },
   {
     "fill": 5,
@@ -58608,18 +59687,69 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        187,
+        178,
+        110,
+      ],
+      [
+        180,
+        98,
+      ],
+      [
+        190,
+        108,
+      ],
+    ],
+  },
+  {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 202,
+    "x2": 192,
+    "y1": 24,
+    "y2": 24,
+  },
+  {
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "polygon",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "points": [
+      [
+        182,
         24,
       ],
       [
-        197,
+        192,
         17,
       ],
       [
-        197,
+        192,
         31,
       ],
     ],
+  },
+  {
+    "cx": 216,
+    "cy": 24,
+    "fill": 5,
+    "fillRgb": "rgb(77, 77, 77)",
+    "op": "circle",
+    "outline": 5,
+    "outlineRgb": "rgb(77, 77, 77)",
+    "r": 17,
+  },
+  {
+    "cx": 216,
+    "cy": 24,
+    "fill": 2,
+    "fillRgb": "rgb(253, 253, 253)",
+    "op": "circle",
+    "outline": 2,
+    "outlineRgb": "rgb(253, 253, 253)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -58814,6 +59944,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 96,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 34,
+    "x2": 55,
+    "y1": 130,
+    "y2": 151,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -58821,16 +59961,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        52,
-        148,
+        62,
+        158,
       ],
       [
-        40,
-        145,
+        50,
+        156,
       ],
       [
-        49,
-        136,
+        60,
+        146,
       ],
     ],
   },
@@ -59217,6 +60357,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 96,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 120,
+    "x2": 120,
+    "y1": 58,
+    "y2": 48,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -59225,15 +60375,15 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "points": [
       [
         120,
-        43,
+        38,
       ],
       [
         127,
-        53,
+        48,
       ],
       [
         113,
-        53,
+        48,
       ],
     ],
   },
@@ -59245,7 +60395,7 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -59440,6 +60590,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 96,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 206,
+    "x2": 185,
+    "y1": 82,
+    "y2": 103,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -59447,16 +60607,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        188,
-        100,
+        178,
+        110,
       ],
       [
-        191,
-        88,
+        180,
+        98,
       ],
       [
-        200,
-        97,
+        190,
+        108,
       ],
     ],
   },
@@ -59651,6 +60811,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 96,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 206,
+    "x2": 185,
+    "y1": 82,
+    "y2": 103,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -59658,16 +60828,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        188,
-        100,
+        178,
+        110,
       ],
       [
-        191,
-        88,
+        180,
+        98,
       ],
       [
-        200,
-        97,
+        190,
+        108,
       ],
     ],
   },
@@ -59679,7 +60849,7 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -59884,6 +61054,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 144,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 34,
+    "x2": 55,
+    "y1": 130,
+    "y2": 151,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -59891,16 +61071,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        52,
-        148,
+        62,
+        158,
       ],
       [
-        40,
-        145,
+        50,
+        156,
       ],
       [
-        49,
-        136,
+        60,
+        146,
       ],
     ],
   },
@@ -59912,7 +61092,7 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -60107,6 +61287,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 144,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 34,
+    "x2": 55,
+    "y1": 130,
+    "y2": 151,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -60114,16 +61304,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        52,
-        148,
+        62,
+        158,
       ],
       [
-        40,
-        145,
+        50,
+        156,
       ],
       [
-        49,
-        136,
+        60,
+        146,
       ],
     ],
   },
@@ -60498,6 +61688,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 144,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 206,
+    "x2": 185,
+    "y1": 82,
+    "y2": 103,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -60505,16 +61705,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        188,
-        100,
+        178,
+        110,
       ],
       [
-        191,
-        88,
+        180,
+        98,
       ],
       [
-        200,
-        97,
+        190,
+        108,
       ],
     ],
   },
@@ -60526,7 +61726,7 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -60721,6 +61921,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 144,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 206,
+    "x2": 185,
+    "y1": 82,
+    "y2": 103,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -60728,16 +61938,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        188,
-        100,
+        178,
+        110,
       ],
       [
-        191,
-        88,
+        180,
+        98,
       ],
       [
-        200,
-        97,
+        190,
+        108,
       ],
     ],
   },
@@ -60922,6 +62132,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 192,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 34,
+    "x2": 55,
+    "y1": 130,
+    "y2": 151,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -60929,16 +62149,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        52,
-        148,
+        62,
+        158,
       ],
       [
-        40,
-        145,
+        50,
+        156,
       ],
       [
-        49,
-        136,
+        60,
+        146,
       ],
     ],
   },
@@ -61133,6 +62353,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 192,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 34,
+    "x2": 55,
+    "y1": 130,
+    "y2": 151,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -61140,16 +62370,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        52,
-        148,
+        62,
+        158,
       ],
       [
-        40,
-        145,
+        50,
+        156,
       ],
       [
-        49,
-        136,
+        60,
+        146,
       ],
     ],
   },
@@ -61161,7 +62391,7 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "op": "circle",
     "outline": 11,
     "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
+    "r": 14,
   },
   {
     "align": "center",
@@ -61279,16 +62509,6 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     ],
   },
   {
-    "cx": 120,
-    "cy": 168,
-    "fill": 11,
-    "fillRgb": "rgb(237, 237, 237)",
-    "op": "circle",
-    "outline": 11,
-    "outlineRgb": "rgb(237, 237, 237)",
-    "r": 16,
-  },
-  {
     "fill": -1,
     "fillRgb": "color#-1",
     "op": "polygon",
@@ -61364,6 +62584,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "w": 1,
     "x": 96,
     "y": 192,
+  },
+  {
+    "cx": 120,
+    "cy": 168,
+    "fill": 11,
+    "fillRgb": "rgb(237, 237, 237)",
+    "op": "circle",
+    "outline": 11,
+    "outlineRgb": "rgb(237, 237, 237)",
+    "r": 14,
   },
   {
     "align": "center",
@@ -61558,6 +62788,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 192,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 206,
+    "x2": 185,
+    "y1": 82,
+    "y2": 103,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -61565,16 +62805,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        188,
-        100,
+        178,
+        110,
       ],
       [
-        191,
-        88,
+        180,
+        98,
       ],
       [
-        200,
-        97,
+        190,
+        108,
       ],
     ],
   },
@@ -62119,6 +63359,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "y": 240,
   },
   {
+    "color": 5,
+    "op": "line",
+    "rgb": "rgb(77, 77, 77)",
+    "thickness": 3,
+    "x1": 34,
+    "x2": 55,
+    "y1": 130,
+    "y2": 151,
+  },
+  {
     "fill": 5,
     "fillRgb": "rgb(77, 77, 77)",
     "op": "polygon",
@@ -62126,16 +63376,16 @@ exports[`ascent render > Rectangle: fresh board fills a background, draws tile b
     "outlineRgb": "rgb(77, 77, 77)",
     "points": [
       [
-        52,
-        148,
+        62,
+        158,
       ],
       [
-        40,
-        145,
+        50,
+        156,
       ],
       [
-        49,
-        136,
+        60,
+        146,
       ],
     ],
   },

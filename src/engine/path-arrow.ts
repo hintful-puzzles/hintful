@@ -10,10 +10,11 @@
  *   middles, pointing the way the path runs. It sits across the two squares'
  *   shared side, so a game that draws each square's half of a line under its
  *   clip draws the whole head from both squares, each keeping its half; it
- *   goes over the grid line there, which would cut it in two. On a line
- *   that runs through the squares (Wordtrail's) it is drawn on the line;
- *   between two discs that leave little of a line to see (Ascent's numbers)
- *   it is drawn alone.
+ *   goes over the grid line there, which would cut it in two. Wordtrail draws
+ *   it on its line, which runs on through the squares.
+ * - {@link drawPathArrow}: the same head with a thin shaft behind it,
+ *   filling the gap between two discs, for a link with no line through the
+ *   squares (Ascent's, between the discs its numbers sit on).
  * - {@link drawPathStart}: the ring round a path's first square, which a
  *   line's arrow alone does not tell from its last.
  *
@@ -75,8 +76,41 @@ export function drawPathHead(
   drawArrowHead(dr, tip, ux, uy, length, pathHeadWidth(ts), color);
 }
 
-/** How thick the ring round a path's first square is on tile `ts`. */
-const pathStartThickness = (ts: number): number => Math.max(2, Math.round(ts / 14));
+/** How thick the ring round a path's first square, and an arrow's shaft, are
+ * on tile `ts`: thin, so a short shaft is longer than it is wide. */
+const pathStrokeThickness = (ts: number): number => Math.max(2, Math.round(ts / 14));
+
+/**
+ * A whole arrow on the link from the middle `a` of one square to the middle
+ * `b` of the next, filling the gap between two discs of radius `inset` on
+ * them: a thin shaft from the edge of `a`'s disc, and the head with its tip
+ * on the edge of `b`'s. On a diagonal link the gap is longer, so the shaft is
+ * too and the head sits by its own square: two diagonals crossing at a
+ * corner read as a cross of two arrows, not one blot of two heads.
+ */
+export function drawPathArrow(
+  dr: GameDrawing,
+  ts: number,
+  a: Point,
+  b: Point,
+  color: number,
+  inset: number,
+): void {
+  const len = Math.hypot(b.x - a.x, b.y - a.y);
+  const ux = (b.x - a.x) / len;
+  const uy = (b.y - a.y) / len;
+  const length = pathHeadLength(ts);
+  const at = (d: number): Point => ({ x: a.x + ux * d, y: a.y + uy * d });
+  const base = at(len - inset - length);
+  const tail = at(inset);
+  dr.drawLine(
+    { x: Math.round(tail.x), y: Math.round(tail.y) },
+    { x: Math.round(base.x), y: Math.round(base.y) },
+    color,
+    pathStrokeThickness(ts),
+  );
+  drawArrowHead(dr, at(len - inset), ux, uy, length, pathHeadWidth(ts), color);
+}
 
 /** The ring round a path's first square, centered at `center`: `color`
  * round a disc of radius `inside` in `surface`, which the square's own
@@ -89,6 +123,6 @@ export function drawPathStart(
   color: number,
   surface: number,
 ): void {
-  dr.drawCircle(center, inside + pathStartThickness(ts), color, color);
+  dr.drawCircle(center, inside + pathStrokeThickness(ts), color, color);
   dr.drawCircle(center, inside, surface, surface);
 }

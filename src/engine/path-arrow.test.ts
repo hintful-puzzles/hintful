@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  drawPathArrow,
   drawPathHead,
   drawPathStart,
   pathHeadLength,
@@ -48,6 +49,28 @@ describe("the path arrow", () => {
     // Half the head each side of the side at x = 20.
     expect(tip[0] - 20).toBe(20 - base[0][0]);
     expect(base[0][1]).toBe(-base[1][1]);
+  });
+
+  it.each([
+    ["straight", { x: 0, y: 0 }, { x: 40, y: 0 }],
+    ["diagonal", { x: 0, y: 0 }, { x: 40, y: 40 }],
+  ])("a %s link's whole arrow fills the gap between the discs, shaft into head", (_way, a, b) => {
+    const dr = new RecordingDrawing([WHITE, BLACK]);
+    const inset = 12;
+    drawPathArrow(dr, 40, a, b, 1, inset);
+    const [shaft] = opsOfKind(dr.ops, "line");
+    const [head] = opsOfKind(dr.ops, "polygon");
+    const from = (x: number, y: number) => Math.hypot(x - a.x, y - a.y);
+    const len = from(b.x, b.y);
+    // Within the pixel the points are rounded to.
+    const near = (got: number, want: number) =>
+      expect(Math.abs(got - want)).toBeLessThanOrEqual(1);
+    // The shaft leaves `a`'s disc, and the head's tip touches `b`'s.
+    near(from(shaft.x1, shaft.y1), inset);
+    near(from(...head.points[0]), len - inset);
+    // The shaft runs on to the head's base: no gap between them.
+    const [, s1, s2] = head.points;
+    near(from(shaft.x2, shaft.y2), from((s1[0] + s2[0]) / 2, (s1[1] + s2[1]) / 2));
   });
 
   it("is a head wider than a line a phone's tile draws, and longer than a stroke", () => {

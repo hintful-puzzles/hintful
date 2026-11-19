@@ -153,21 +153,32 @@ change. What draws a direction:
 
 ## Ascent on the engine's arrow (2026-11-19)
 
-Between two consecutive numbers the link is now the engine's head alone,
-pointing to the higher, and 1 wears the start ring; the last number keeps a
-plain disc, told by the head into it. A line the player draws, which has no
-direction until numbers are on it, stays a bar.
+Between two consecutive numbers the link is the engine's whole arrow
+(`drawPathArrow`): a shaft as thin as the start ring's stroke and the
+engine's head, filling the gap between the two numbers' discs, now 0.3 of a
+tile (were a third) so the arrow is twice the head's length. 1 wears the
+start ring, drawn over the shaft out of it; the last number keeps a plain
+disc, told by the arrow into it. A line the player draws, which has no
+direction until numbers are on it, stays a bar. Arrows are drawn after each
+square's outline, which would cut them where they cross a side.
 
-Compared in the app against the bars, side by side (Orthogonal, Classic,
-Hexagon; light and dark; 390 px wide). Two shapes were tried and dropped:
+Compared in the app against the bars (Orthogonal, Classic, Hexagon; light
+and dark; 390 px wide). What was tried and dropped:
 
-- **The head on the full line**, as Wordtrail draws it: the number discs
-  leave a third of a tile of line between them, so the line showed as a
-  stub past the tip, a pin through the head.
-- **A shaft ending in the head** (`drawDirectedLine`, removed): the discs
-  leave about four pixels of shaft, which on a hexagon's slanted link read
-  as a notch in the head.
+- **The head on the full line**, as Wordtrail draws it: the line showed only
+  as a stub past the tip, a pin through the head.
+- **A thick shaft ending in the head**: about four pixels of it showed,
+  which on a hexagon's slant read as a notch.
+- **The head alone**, pushed once: on a hexagon's slanted links the heads
+  floated near where three cells meet, joined to neither number, and looked
+  like tabs on the outline (the owner, and a design review). A thin shaft
+  gives each one an axis from number to number.
+- **The whole arrow centered on the shared side**, the review's proposal:
+  on a Classic board two diagonals crossing at one corner put both heads on
+  the corner, a blot. Filling the gap between the discs instead keeps a
+  straight or hexagonal link's arrow where the proposal put it, and moves a
+  diagonal's head next to its own number.
 
-Both looked cut by the grid: a head sits across the side, and Ascent drew
-each square's outline after its lines. Heads are now drawn after the
-outline, as Wordtrail's already were (its grid is drawn first).
+Not taken from the review: dimming the arrows in the dark scheme. They wear
+the path's strong gray, chosen to stand off both surfaces; a dimmer path is
+a decision about the path's color, not the arrow's.

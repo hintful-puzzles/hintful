@@ -166,8 +166,12 @@ describe("ascent render", () => {
     const heads = new Map<string, number[]>();
     for (const o of opsOfKind(rec.ops, "polygon"))
       if (o.fill === COL_PATH && o.points.length === 3) {
+        // The tip touches the square it points to; a tile back from it along
+        // the arrow is the square it leaves, whatever the link's length.
         const [tip, s1, s2] = o.points;
-        const from = nearest((s1[0] + s2[0]) / 2, (s1[1] + s2[1]) / 2);
+        const back = [(s1[0] + s2[0]) / 2 - tip[0], (s1[1] + s2[1]) / 2 - tip[1]];
+        const k = ds.tileSize / Math.hypot(back[0], back[1]);
+        const from = nearest(tip[0] + back[0] * k, tip[1] + back[1] * k);
         const to = nearest(tip[0], tip[1]);
         heads.set(`${from}>${to}`, [state.grid[from], state.grid[to]]);
       }
