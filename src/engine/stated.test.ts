@@ -283,6 +283,18 @@ describe("a stated clause", () => {
     ).toThrow(/no values term/);
   });
 
+  it("says a list of words a game supplies as they are, as a list or alternatives", () => {
+    const say = (ws: readonly string[]): string =>
+      statedSentence(
+        { look: "only {ws} {ws: fits | fit}", move: "it is {either ws}" },
+        cx({ terms: { ws } }),
+      ).text;
+    expect(say(["FRIDGE"])).toBe("Only FRIDGE fits, so it is FRIDGE.");
+    expect(say(["BEAR", "STAR"])).toBe(
+      "Only BEAR and STAR fit, so it is BEAR or STAR.",
+    );
+  });
+
   it("says how a move answers its look, a bare move or an evident look alone, and an aim served unless judged", () => {
     expect(
       statedSentence(

@@ -201,7 +201,7 @@ const scalar = (s: Sort): boolean => s.k === "num" || s.k === "elem" || s.k === 
 
 /** The sort a supplied term of a kind is checked as: an element or a set of
  * them is a cell's to the checker, which asks only that it be elements. */
-function suppliedSort(kind: SuppliedKind): Sort {
+function suppliedSort(kind: Exclude<SuppliedKind, "words">): Sort {
   const cell: Sort = { k: "elem", e: "cell" };
   switch (kind) {
     case "flag":
@@ -4644,7 +4644,13 @@ function clueCall(args: readonly Expr[], scope: Scope, env: Env, out: Out): Val 
 function checkStated(
   id: string,
   says: Says,
-  variants: readonly { sorts: ReadonlyMap<string, Sort> }[],
+  /** Each variant's terms by sort, and the terms the game supplies as words
+   * (`{ supplied: words }`), which have none: said as a list, as
+   * alternatives or by how many. */
+  variants: readonly {
+    sorts: ReadonlyMap<string, Sort>;
+    words?: readonly string[];
+  }[],
   factSorts: ReadonlyMap<string, Sort> | null,
   units: ReadonlySet<string> = new Set(),
   /** A planner's step that decides elements of several sorts names one of
@@ -4670,6 +4676,7 @@ function checkStated(
     clauses: StatedClauses,
     sorts: ReadonlyMap<string, Sort>,
     roles: ReadonlyMap<string, ReadonlySet<string> | null>,
+    words: ReadonlySet<string>,
   ): void => {
     for (const [part, src] of Object.entries(clauses) as [string, string][]) {
       let slots: ClauseSlot[];
@@ -4679,7 +4686,13 @@ function checkStated(
         throw new CompileError(`${id}: says ${where}${part}: ${(e as Error).message}`);
       }
       const plain = (name: string, inner: boolean): void => {
-        if (STATED_WORDS.has(name) || isNum(sorts.get(name)) || units.has(name)) return;
+        if (
+          STATED_WORDS.has(name) ||
+          isNum(sorts.get(name)) ||
+          units.has(name) ||
+          words.has(name)
+        )
+          return;
         if (inner && STATED_INNER_WORDS.has(name)) return;
         throw new CompileError(
           `${id}: says ${where}${part} says {${name}}, which is no number or unit term and no word of the lexicon`,
@@ -4754,6 +4767,7 @@ function checkStated(
         w.clauses,
         new Map([...variants[i].sorts, ...own]),
         rolesOf(v.marks),
+        new Set(variants[i].words),
       );
   if (says.fact !== null && factSorts !== null) {
     const sorts = new Map([...variants.flatMap((v) => [...v.sorts]), ...factSorts]);
@@ -4762,7 +4776,13 @@ function checkStated(
       ...rolesOf(says.fact.marks),
     ]);
     for (const [j, w] of says.fact.words.entries())
-      check(`fact ${wording(says.fact.words, j)}`, w.clauses, sorts, roles);
+      check(
+        `fact ${wording(says.fact.words, j)}`,
+        w.clauses,
+        sorts,
+        roles,
+        new Set(variants.flatMap((v) => v.words ?? [])),
+      );
   }
 }
 
@@ -6867,6 +6887,8 @@ function techniqueFunction(
       terms: string[];
       marks: string[];
       sorts: Map<string, Sort>;
+      /** The terms the game supplies as words, which have no sort. */
+      words: string[];
       /** Whether a firing carries the `wording` that held. */
       worded: boolean;
       /** The fields of the terms and marks the game supplies. */
@@ -7006,6 +7028,7 @@ function techniqueFunction(
       for (const [i, v] of variants.entries()) {
         const fields = { terms: [] as string[], marks: [] as string[] };
         const supplied = { terms: [] as string[], marks: [] as string[] };
+        const words: string[] = [];
         const sorts = new Map<string, Sort>();
         // A term read inside an arm is not in scope in another.
         const inArm: Shared = { made: new Map(shared.made) };
@@ -7038,6 +7061,14 @@ function techniqueFunction(
           group: "terms" | "marks",
           name: string,
         ): string => {
+          // Words are no sort the checker has: said as they are, and read by
+          // nothing else.
+          if (kind === "words") {
+            fields[group].push(`${name}: readonly string[];`);
+            supplied[group].push(`${name}: readonly string[];`);
+            words.push(name);
+            return `${name}: []`;
+          }
           const sort = suppliedSort(kind);
           fields[group].push(`${name}: ${tsType(sort)};`);
           if (kind !== "several") supplied[group].push(`${name}: ${tsType(sort)};`);
@@ -7161,7 +7192,14 @@ function techniqueFunction(
           `${arms ? "" : "const "}_says = { ${arms ? `arm: ${JSON.stringify(v.name)}, ` : ""}terms: { ${terms.join(", ")} }, marks: { ${marks.join(", ")} }${wording}${own}${t.says.witness ? ", witness: _w" : ""}${t.says.reads ? ", reads: _r" : ""} };`,
         );
         if (arms) body.close();
-        saysFields.variants.push({ name: v.name, ...fields, sorts, worded, supplied });
+        saysFields.variants.push({
+          name: v.name,
+          ...fields,
+          sorts,
+          words,
+          worded,
+          supplied,
+        });
       }
       if (arms)
         body.emit(

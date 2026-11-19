@@ -148,22 +148,38 @@ Each step SHALL ring every edge its move decides, between the two letters
 and clear of both. A step that reads one letter SHALL outline it; a step
 that reads the words of a length SHALL stripe their letters. Its sentence
 SHALL say why those edges are forced, from the board, in no more than 120
-characters.
+characters, and SHALL name the words it reasons from, in capitals, where
+they are one or two.
 
 #### Scenario: One way on from a letter
 
 - **WHEN** a letter has no line and one edge left that can take one
 - **THEN** the hint outlines it and says "The outlined letter has just one neighbor it can still join, so this edge must be a line."
 
-#### Scenario: The words through a letter agree
+#### Scenario: The one word through a letter
 
-- **WHEN** every word that still fits through a letter runs along or away from the same edges
-- **THEN** the hint outlines it, rings those edges, and says "Every word that still fits through the outlined letter agrees on these edges, so they must be as shown."
+- **WHEN** one word, PAVILION, still fits through a letter and decides edges
+- **THEN** the hint outlines the letter, rings those edges, and says "Only PAVILION still fits through the outlined letter, so these edges must be as shown."
+
+#### Scenario: Two words through a letter agree
+
+- **WHEN** two words, AVION and PAVILION, still fit through a letter and run along or away from the same edges
+- **THEN** the hint outlines it, rings those edges, and says "Only AVION and PAVILION still fit through the outlined letter and agree on these edges, so they must be as shown."
+
+#### Scenario: More words through a letter agree
+
+- **WHEN** three or more words still fit through a letter and run along or away from the same edges
+- **THEN** the hint says "Every word that still fits through the outlined letter agrees on these edges, so they must be as shown."
 
 #### Scenario: The only word of a length
 
-- **WHEN** one trail still fits the one six-letter word listed
-- **THEN** the hint stripes its letters and says "The striped letters spell the only 6-letter word that still fits, so these edges must be as shown."
+- **WHEN** one trail still fits the one six-letter word listed, FRIDGE
+- **THEN** the hint stripes its letters and says "The striped letters spell FRIDGE, the only 6-letter word that still fits, so these edges must be as shown."
+
+#### Scenario: The only two words of a length
+
+- **WHEN** two trails still fit the two eight-letter words listed, INITIATE and REACTION
+- **THEN** the hint says "The striped letters spell INITIATE and REACTION, the only 8-letter words still fitting, so this edge must be as shown."
 
 ### Requirement: Hint: The techniques are tried easiest first, and decide only what is forced
 

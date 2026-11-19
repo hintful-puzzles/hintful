@@ -176,7 +176,7 @@ export interface EdgeHintSpec<
    * `supplied` (the module's `SuppliedById`), by technique: the domino of the
    * spot a leg decides, which differs by leg and which no firing's binding
    * holds, or the hubs a trial breaks. */
-  supplied?: SuppliedHooks<Supplied, Marked, State>;
+  supplied?: SuppliedHooks<Supplied, Marked, State, Says>;
   /** The width of the board, to name a cell's point in a stated clause. */
   width?(state: State): number;
   /** What a stated clause's outlines and terms are drawn on, where it is not
@@ -316,13 +316,15 @@ export function describedEdgeHint<
       ) as Kind;
       const clauses = stated[rung]?.step?.[says.wording ?? 0];
       const hooks = spec.supplied as
-        | Readonly<Record<string, (marked: Marked, state: State) => SuppliedOf>>
+        | Readonly<
+            Record<string, (marked: Marked, state: State, terms: object) => SuppliedOf>
+          >
         | undefined;
       legs.forEach(({ move, highlights, marked }, leg) => {
         let words: Sentence;
         if (clauses !== undefined) {
           const ring = (spec.ring as NonNullable<typeof spec.ring>)(marked);
-          const own = hooks?.[technique]?.(marked, state) ?? {};
+          const own = hooks?.[technique]?.(marked, state, says.terms) ?? {};
           // Whether the firing decides more than one element: it has several
           // legs, or its one leg rings several.
           const several =

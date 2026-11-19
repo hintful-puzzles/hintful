@@ -12,7 +12,11 @@
 import { describedEdgeHint } from "../../engine/described-edge-hint.ts";
 import { EDGE, trackEdgeStep } from "../../engine/edge-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { STATED } from "../../generated/games/wordtrail/wordtrail.compiled.ts";
+import type { Point } from "../../engine/types.ts";
+import {
+  STATED,
+  type SuppliedById,
+} from "../../generated/games/wordtrail/wordtrail.compiled.ts";
 import {
   type WordtrailRung,
   type WordtrailSays,
@@ -25,6 +29,7 @@ import {
   type WordtrailMove,
   type WordtrailState,
 } from "./state.ts";
+import { letterChar } from "./trails.ts";
 
 /** A step draws nothing beyond its words' marks and the move it asks for. */
 export type WordtrailHighlights = Record<string, never>;
@@ -33,6 +38,18 @@ export type WordtrailHighlights = Record<string, never>;
 interface Fired {
   edges: number[];
 }
+
+/** The words trails spell, by their clue indices, in capitals as the board
+ * draws its letters, alphabetical. */
+const spelled = (state: WordtrailState, trails: readonly number[]): string[] =>
+  trails
+    .map((k) =>
+      state.trails[k]
+        .map((i) => letterChar(state.letters[i]))
+        .join("")
+        .toUpperCase(),
+    )
+    .sort();
 
 /** The plan from the player's lines and crosses. */
 export const { hint: wordtrailHint, judgeMove: wordtrailJudgeMove } = describedEdgeHint<
@@ -43,7 +60,9 @@ export const { hint: wordtrailHint, judgeMove: wordtrailJudgeMove } = describedE
   WordtrailWalkContext,
   WordtrailSays,
   WordtrailRung,
-  number
+  number,
+  Point,
+  SuppliedById
 >({
   name: "wordtrail hint",
   walk: (state) => wordtrailWalk(state),
@@ -61,6 +80,15 @@ export const { hint: wordtrailHint, judgeMove: wordtrailJudgeMove } = describedE
     ];
   },
   stated: STATED,
+  // The words the firing's trails spell, as the board writes its letters.
+  supplied: {
+    onlyWord: (_marked, state, { trails }) => ({
+      terms: { trailWords: spelled(state, trails) },
+    }),
+    onlyLength: (_marked, state, { trails }) => ({
+      terms: { trailWords: spelled(state, trails) },
+    }),
+  },
   ringKind: EDGE,
   ring: ({ edges }) => edges,
   width: (state) => state.w,

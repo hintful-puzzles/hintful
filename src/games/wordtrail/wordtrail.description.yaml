@@ -196,16 +196,23 @@ techniques:
         (allRun(T, x, y) implies place(edge(x, y), 1))
         and (allRun(T, x, y) or place(edge(x, y), 2)))
     says:
+      # The trails' words are named where there are two at most: three of
+      # eight letters run past the line.
       terms:
         c: c
         count: "|T|"
+        trails: "T"
+        trailWords: { supplied: words }
         multi: { supplied: several }
       marks:
         outline: "{c}"
       wordings:
         - when: "count = 1"
-          look: "only one word still fits through {outline c: the outlined letter}"
+          look: "only {trailWords} still fits through {outline c: the outlined letter}"
           move: "{ring: this edge | these edges} must be as shown"
+        - when: "count = 2"
+          look: "only {trailWords} still fit through {outline c: the outlined letter} and agree on {ring: this edge | these edges}"
+          move: "{if multi: they | it} must be as shown"
         - look: "every word that still fits through {outline c: the outlined letter} agrees on {ring: this edge | these edges}"
           move: "{if multi: they | it} must be as shown"
   # The trails of n letters still allowed, as many as the list has words of
@@ -226,15 +233,23 @@ techniques:
         (follows(k, x, y) implies place(edge(x, y), 1))
         and (follows(k, x, y) or place(edge(x, y), 2)))
     says:
+      # The words are named where there are two at most, as `onlyWord`'s are;
+      # "still fitting" keeps two of eight letters and "these edges" within
+      # the line.
       terms:
         len: "len(j)"
         n: "num(j)"
+        trails: "T"
+        trailWords: { supplied: words }
         multi: { supplied: several }
       marks:
         stripes: "{x in cells where exists k in T: pos(k, x) > 0}"
       wordings:
         - when: "n = 1"
-          look: "{stripes: the striped letters} spell the only {len}-letter word that still fits"
+          look: "{stripes: the striped letters} spell {trailWords}, the only {len}-letter word that still fits"
+          move: "{ring: this edge | these edges} must be as shown"
+        - when: "n = 2"
+          look: "{stripes: the striped letters} spell {trailWords}, the only {len}-letter words still fitting"
           move: "{ring: this edge | these edges} must be as shown"
         - look: "{stripes: the striped letters} spell the only {spelled n} {len}-letter words that still fit"
           move: "{ring: this edge | these edges} must be as shown"

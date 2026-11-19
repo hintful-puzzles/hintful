@@ -360,9 +360,16 @@ type SaidMarksJson = Partial<
 >;
 
 /** What a term only the game's code can know is, which the module types for
- * the game's hook to return; `several` is the engine's, whether the step
+ * the game's hook to return; `words` is a list of words said as they are (the
+ * words Wordtrail's trails spell); `several` is the engine's, whether the step
  * decides more than one element over all its legs. */
-export type SuppliedKind = "flag" | "number" | "element" | "elements" | "several";
+export type SuppliedKind =
+  | "flag"
+  | "number"
+  | "element"
+  | "elements"
+  | "words"
+  | "several";
 
 /** A rule's break clause as a description states it (`DescriptionJson.breaks`). */
 export interface BreakJson {

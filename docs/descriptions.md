@@ -1494,12 +1494,18 @@ and clues in one kind (Tracks') can number them by the board's width, and a
 supplied term then holds those numbers. **A term or mark only the game's own
 code can supply** (Dominosa's leg names the domino it decides, which no
 binding holds for every leg) is declared by its kind: `{ supplied: flag }`, `number`, `element` or
-`elements` in `terms`, `{ supplied: elements }` in `marks`. The compiled module
-writes a placeholder for it and types what each technique is supplied
+`elements` in `terms`, `{ supplied: elements }` in `marks`. **`{ supplied:
+words }`** is a list of words said as they are, by `{term}` as a list, by
+`{either term}` as alternatives and by `{term: one | several}` by how many:
+what the language cannot state, as the words Wordtrail's trails spell. The
+compiled module writes a placeholder for it and types what each technique is supplied
 (`SuppliedById`), and the game's hook returns exactly that, so a term left
 out, or a technique, does not compile: `describedEdgeHint`'s `supplied`, one
 function a technique (`SuppliedHooks`), or a reason callback that spreads it
-over what the technique says. A wording's `when` cannot
+over what the technique says. The hook is told the firing's stated terms
+besides the leg, so **the description states the set and the game only
+names its members** (Wordtrail's `trails: "T"`, which its hook spells): a
+read stays the description's. A wording's `when` cannot
 read one, for the wording is chosen before the game supplies it; choose by
 `{if term: …}` in the clause. Where the game re-reads a term the description
 can state (Tracks adds the rim's sides to the sides a square is shut by), the

@@ -658,10 +658,11 @@ describe("a stated clause names only what its technique states", () => {
             count: { supplied: "number" },
             at: { supplied: "element" },
             hubs: { supplied: "elements" },
+            names: { supplied: "words" },
             multi: { supplied: "several" },
           },
           marks: { outline: "{c}", stripes: { supplied: "elements" } },
-          look: "{if many: {outline hubs: the outlined hubs} | {outline at: this one}} take {count}",
+          look: "{if many: {outline hubs: the outlined hubs} | {outline at: this one}} take {count} of {either names}",
           move: "{ring} must be {if multi: lines | a line}",
           ...says,
         });
@@ -670,7 +671,7 @@ describe("a stated clause names only what its technique states", () => {
         const code = supplying({});
         const supplied = code.slice(code.indexOf("export interface XSupplied {"));
         expect(supplied.slice(0, supplied.indexOf("}\n"))).toContain(
-          "terms: { many: boolean; count: number; at: number; hubs: readonly number[]; };",
+          "terms: { many: boolean; count: number; at: number; hubs: readonly number[]; names: readonly string[]; };",
         );
         expect(supplied).toContain("marks: { stripes: readonly number[]; };");
         expect(supplied.slice(0, supplied.indexOf("}\n"))).not.toContain("multi");

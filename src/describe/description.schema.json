@@ -27,7 +27,7 @@
       ]
     },
     "saidTerm": {
-      "description": "A formula over the binding, or a term only the game's code can know, by its kind: the game's hook for the technique returns it (`SuppliedById` in the compiled module), and a wording's `when` cannot read it. `several` is the engine's: whether the step decides more than one element, over all its legs.",
+      "description": "A formula over the binding, or a term only the game's code can know, by its kind: the game's hook for the technique returns it (`SuppliedById` in the compiled module), and a wording's `when` cannot read it. `words` is a list of words said as they are: `{term}` as a list, `{either term}` as alternatives, `{term: one | several}` by how many. `several` is the engine's: whether the step decides more than one element, over all its legs.",
       "oneOf": [
         { "$ref": "#/$defs/formula" },
         {
@@ -35,7 +35,9 @@
           "additionalProperties": false,
           "required": ["supplied"],
           "properties": {
-            "supplied": { "enum": ["flag", "number", "element", "elements", "several"] }
+            "supplied": {
+              "enum": ["flag", "number", "element", "elements", "words", "several"]
+            }
           }
         }
       ]

@@ -1,0 +1,6 @@
+# Tasks
+
+- [x] 1.1 Read how a `says` term is declared, typed and filled (`description.ts` `StepTermKind`, `compile.ts`, the edge hint's narration); decide in a `design.md` how a game supplies a term from a firing's bindings, and whether any other game wants one
+- [x] 1.2 Add the supplied term; a guard that a description declaring one compiles only with the game supplying it, seen failing (tsc refused Wordtrail's hint with the `onlyLength` hook planted out; the compiler test's `{either names}` failed before `checkStated` held word lists apart from units)
+- [x] 1.3 Wordtrail's `onlyWord` and `onlyLength` name their words; re-pin with `npm run hint-scan`, and update Wordtrail's `Hint` scenarios in a spec delta (the pins still fire their kinds, so only the sentence snapshot moved; the scenarios are in `add-wordtrail`'s delta, which is not yet archived, so there is no `wordtrail` spec for this change to modify)
+- [x] 1.4 Run the app: ask for each rung's hint and read the sentence against the board (2026-11-19, the pin boards: "Only BITCHY and ITCH still fit through the outlined letter and agree on these edges" and "The striped letters spell FRIDGE, …", each word read along its trail and the rings matching; `oneWay` unchanged)

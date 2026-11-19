@@ -58,9 +58,20 @@ interface SaysOf {
 
 /** A game's hooks for what its techniques declare `supplied`, one a technique
  * (`Supplied` is the compiled module's `SuppliedById`): each returns every
- * term and mark its technique declares, so one left out does not compile. */
-export type SuppliedHooks<Supplied, Marked, State> = {
-  readonly [K in keyof Supplied]: (marked: Marked, state: State) => Supplied[K];
+ * term and mark its technique declares, so one left out does not compile.
+ * It is told the firing's stated terms (`Says`, the module's `SaysById`), for
+ * what the game makes of a set the description states: the words Wordtrail's
+ * trails spell. */
+export type SuppliedHooks<Supplied, Marked, State, Says = unknown> = {
+  readonly [K in keyof Supplied]: (
+    marked: Marked,
+    state: State,
+    terms: K extends keyof Says
+      ? Says[K] extends { terms: infer T }
+        ? T
+        : unknown
+      : unknown,
+  ) => Supplied[K];
 };
 
 /** What a hook returns, as the engine reads it whatever the technique. */

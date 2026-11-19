@@ -292,6 +292,9 @@ function colored<E>(
     if (either) throw new Error(`stated clause: {either ${name}} is no values term`);
     return Narration.verbatim(t);
   }
+  // A list of words the game supplies (`{ supplied: words }`), said as they are.
+  if (Array.isArray(t) && t.length > 0 && t.every((w) => typeof w === "string"))
+    return Narration.verbatim((either ? joinOr : joinWith)(t as string[]));
   const values =
     (name === "struck" || name === "struckOr") && cx.struck
       ? [...new Set(cx.struck)].sort((a, b) => a - b).map(cx.value)
