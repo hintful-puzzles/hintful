@@ -57,7 +57,7 @@ export function answerCount(length: number): number {
 /** Each list's words of `length` letters, in order, split once. */
 const split = new Map<string, readonly string[]>();
 function wordsOf(
-  name: "answers" | "guesses",
+  name: "answers" | "common" | "guesses",
   list: Readonly<Record<number, string>>,
   length: number,
 ): readonly string[] {
@@ -76,6 +76,10 @@ function wordsOf(
 /** Every answer of `length` letters, in alphabetical order. */
 export const answerWords = (length: number): readonly string[] =>
   wordsOf("answers", ANSWERS, length);
+
+/** Every common word of `length` letters, in alphabetical order. */
+export const commonWords = (length: number): readonly string[] =>
+  wordsOf("common", COMMON, length);
 
 /** Every accepted guess of `length` letters, in alphabetical order. */
 export const guessWords = (length: number): readonly string[] =>

@@ -1105,6 +1105,12 @@ Exemplars: [`dominosa/index.ts`](../src/games/dominosa/index.ts) for pieces,
   keeps the player's choice while open (`components/reference-filter.ts`).
   List everything the player may want; a word that cannot win is still a
   guess, so Wordguess lists its whole answer list and rules out the rest.
+  Never list only what the board allows: finding those is the puzzle, so
+  Wordtrail lists every word it counts and leaves the narrowing to "Fits".
+- **Group a list too long to show whole.** A section's `group` names it
+  ("5 letters"); the panel then shows one group at a time, with a row of
+  them above the filters, each row counted under the other's choice.
+  Wordtrail groups by length; a list of tens leaves `group: null`.
 - **Showing it is help.** The midend marks the game helped the first time it
   hands a model out, so the timer reads "with help", as a hint does. Keep it
   behind the panel; never fetch it for the board's own use.

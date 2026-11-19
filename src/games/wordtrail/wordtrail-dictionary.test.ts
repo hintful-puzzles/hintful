@@ -11,6 +11,7 @@ import { edgeBetween, squareEdges } from "../../engine/square-edges.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { ReferenceItem } from "../../engine/types.ts";
+import { commonWords } from "../../engine/word-list/index.ts";
 import { dictionary } from "./dictionary.ts";
 import { wordtrailGame } from "./index.ts";
 import { COL_SPOTLIGHT, layout } from "./render.ts";
@@ -37,7 +38,7 @@ const items = (state: WordtrailState): ReferenceItem[] =>
   reference(state).sections.flatMap((s) => s.items);
 
 describe("wordtrail dictionary", () => {
-  it("lists every word a trail spells, once, under its length", () => {
+  it("lists every common word of each asked length, once, a group a length", () => {
     const { state } = deal("dictionary list");
     const model = reference(state);
     expect(dictionary.title).toBe("Dictionary");
@@ -46,16 +47,24 @@ describe("wordtrail dictionary", () => {
       ["Fits", ["outstanding"]],
       ["Found", ["placed"]],
     ]);
+    const lengths = [...new Set(state.lengths)];
+    expect([...new Set(model.sections.map((s) => s.group))]).toEqual(
+      lengths.map((n) => `${n} letters`),
+    );
+    for (const s of model.sections) {
+      expect(s.items.every((i) => `${i.key.length} letters` === s.group)).toBe(true);
+      expect(s.items.every((i) => i.label[0] === s.heading)).toBe(true);
+    }
+    expect(items(state).map((i) => i.key)).toEqual(
+      lengths.flatMap((n) => commonWords(n)),
+    );
+    // Every word a trail spells fits a bare board, and no other word does.
     const words = new Set(state.trails.map((t) => spell(state.letters, t)));
-    expect(
-      items(state)
-        .map((i) => i.key)
-        .sort(),
-    ).toEqual([...words].sort());
-    expect(model.sections.map((s) => s.items[0]?.key.length)).toEqual([
-      ...new Set(state.lengths),
-    ]);
-    expect(items(state).every((i) => i.status === "outstanding")).toBe(true);
+    const fits = items(state).filter((i) => i.status === "outstanding");
+    expect(fits.map((i) => i.key).sort()).toEqual([...words].sort());
+    expect(items(state).length).toBeGreaterThan(fits.length);
+    const other = items(state).find((i) => !words.has(i.key));
+    expect(other?.status).toBe("ruledOut");
   });
 
   it("rules a word out where a cross cuts its only trail, and back in on undo", () => {
@@ -126,11 +135,15 @@ describe("wordtrail dictionary", () => {
 describe("wordtrail dictionary spotlight", () => {
   it("outlines the selected word's letters, and a press on the board ends it", () => {
     const { state, id } = deal("spotlight");
-    const word = items(state)[0].key;
+    const word = items(state).find((i) => i.status === "outstanding")?.key ?? "";
     const lit = renderScenario({ game: wordtrailGame, id, selectReference: word });
     expect(lit.recording.ops.some((op) => paintsWith(op, COL_SPOTLIGHT))).toBe(true);
     const plain = renderScenario({ game: wordtrailGame, id });
     expect(plain.recording.ops.some((op) => paintsWith(op, COL_SPOTLIGHT))).toBe(false);
+    // A word no trail spells has nowhere to light.
+    const nowhere = items(state).find((i) => i.status === "ruledOut")?.key ?? "";
+    const dark = renderScenario({ game: wordtrailGame, id, selectReference: nowhere });
+    expect(dark.recording.ops.some((op) => paintsWith(op, COL_SPOTLIGHT))).toBe(false);
 
     const ui = { ...wordtrailGame.newUi(state), spotlight: word };
     const ts = 48;

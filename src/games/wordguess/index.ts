@@ -253,6 +253,7 @@ function reference(s: WordguessState, _ui: WordguessUi): ReferenceModel {
     filters: [{ label: "Fits", statuses: ["outstanding"] }],
     sections: [...byLetter].map(([letter, group]) => ({
       heading: letter,
+      group: null,
       items: group.map((word) => ({
         key: word,
         label: word.toUpperCase(),

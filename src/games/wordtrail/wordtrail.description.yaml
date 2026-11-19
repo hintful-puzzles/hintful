@@ -49,12 +49,14 @@ help:
     the way its arrows point, spell a word of a listed length, and the list
     shows it in the same color.
 
-    **Dictionary** opens a list, for each length the list asks for, of
-    every word some trail of the letters spells. A word you have drawn is
-    ticked, and one your lines and crosses leave no trail for is grayed and
-    marked with a red cross. Search it, or press **Fits** for the words still to place or
-    **Found** for those you have drawn. Pick a word to outline the letters of
-    each trail that still spells it; a press on the board clears the outline.
+    **Dictionary** opens every word the game counts, A to Z, one length at
+    a time: press a length to see its words. A word you have drawn is
+    ticked, and one no trail of the letters spells, or whose trails your
+    lines and crosses rule out, is grayed and marked with a red cross.
+    Search it, or press **Fits** for the words still to place or **Found**
+    for those you have drawn; each length's button then counts only those.
+    Pick a word to outline the letters of each trail that still spells it;
+    a press on the board clears the outline.
   hints: |-
     **Hint** explains the next step rather than simply making it. It reasons
     only from the lines and crosses you have drawn, so it carries on from
@@ -65,7 +67,7 @@ help:
 
     A hint knows every trail on the board that spells a word of a length the
     list has, and rules out each one your lines and crosses don't allow:
-    those are the words the dictionary shows. A step names the words it
+    those are the words the dictionary leaves uncrossed. A step names the words it
     reasons from where its sentence has room, and counts them where it has
     not; with the dictionary open, it marks them there either way. Its
     steps:

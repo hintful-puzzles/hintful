@@ -15,7 +15,6 @@ design is open.
 
 ## What Changes
 
-To be settled before implementation, starting with the consultation below.
 The owner's starting points:
 
 - Wordtrail's dictionary lists every word it could hold, not only those the
@@ -41,13 +40,48 @@ The owner's starting points:
   every Crossing player sees and makes it count as help: a player-visible
   change for the owner to confirm, with its cost stated.
 
+The consultation's answers, and what was taken, are in `design.md`. The
+Wordtrail half and the panel's length row are built in this change; the
+Crossing half waits on the questions below.
+
+## Questions for the owner
+
+1. **Crossing: which marks leave the main screen?** Today the list strikes
+   through a placed clue, reds a duplicate, and (with the `fit-highlight`
+   preference, on by default) colors each clue a click would place and
+   grays the rest whenever a square is selected; none of it counts as help.
+   - (a) Your starting point: the list is marked by hand only, and every
+     automatic mark moves into a reference panel's filters. Cost: every
+     Crossing player loses all of it unless they open the panel, which marks
+     the solve "with help"; a hand-marking gesture is needed on the list
+     (a click already picks a clue up, so the right button), and hand marks
+     go into the save format.
+   - (b) The consultant's, and my recommendation: strike-through and red
+     stay automatic, being bookkeeping a paper solver does anyway; only the
+     fit coloring (and perhaps the held clue's ghosted runs) moves into the
+     panel as a "Fits the selected square" filter, since on Easy it plays
+     "only one number fits this run" for the player. Cost: players lose the
+     fit coloring unless they open the panel and take help; the
+     `fit-highlight` preference is retired. An optional hand tick can come
+     later.
+   - (c) Nothing leaves the main screen; Crossing only gains the panel.
+     Costs no one anything, and changes little.
+2. **Help at the filter, not the panel?** Opening a reference marks the
+   solve "with help" today, in all three reference games. The consultant
+   proposes counting help only when a board-derived filter ("Fits") is
+   first pressed or an item spotlighted, so a plain dictionary is free, as a
+   paper one is; the "Fits" count would then stay hidden until pressed.
+   Cost: fewer solves read "with help" for Wordguess and Dominosa players
+   too, and Dominosa's list (all statuses) would need its own reading.
+
 ## Capabilities
 
 ### New Capabilities
 
 ### Modified Capabilities
 
-- `ts-engine`, `app-shell`: the reference model's filters, if they compose.
+- `ts-engine`, `app-shell`: a reference model may group its sections, and
+  the panel shows one group at a time.
 - `wordtrail`: the dictionary's list and filters.
 - `crossing`: a reference aid; the number list's automatic marks.
 

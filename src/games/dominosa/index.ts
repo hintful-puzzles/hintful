@@ -524,7 +524,7 @@ function reference(state: DominosaState, ui: DominosaUi): ReferenceModel {
     instructions: "Tap a domino to highlight where it can go.",
     search: false,
     filters: [],
-    sections: [{ heading: null, items }],
+    sections: [{ heading: null, group: null, items }],
     selected,
     hinted: [],
   };

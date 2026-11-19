@@ -420,9 +420,12 @@ export interface ReferenceItem {
   status: "outstanding" | "placed" | "conflict" | "ruledOut";
 }
 
-/** A run of a reference's items under an optional heading. */
+/** A run of a reference's items under an optional heading, in an optional
+ * group: where a model names groups, the panel shows one group at a time,
+ * for a list too long to show whole. */
 export interface ReferenceSection {
   heading: string | null;
+  group: string | null;
   items: ReferenceItem[];
 }
 

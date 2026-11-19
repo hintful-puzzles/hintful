@@ -21,7 +21,11 @@ import { customElement, state } from "lit/decorators.js";
 import type { ReferenceItem, ReferenceModel } from "../engine/types.ts";
 import { puzzleContext } from "../puzzle/contexts.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
-import { narrowReference } from "./reference-filter.ts";
+import {
+  type FilterButton,
+  narrowReference,
+  type ReferenceView,
+} from "./reference-filter.ts";
 
 import "@awesome.me/webawesome/dist/components/button/button.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
@@ -50,12 +54,11 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
   @state()
   private selectedKey: string | null = null;
 
-  /** The search text and the pressed filter (`0`, "All"): the panel's view of
-   * the list, never the game's, kept while open and reset for another game. */
+  /** The search text, the pressed group and the pressed filter (`0`, "All"):
+   * the panel's view of the list, never the game's, kept while open and reset
+   * for another game. */
   @state()
-  private query = "";
-  @state()
-  private pressed = 0;
+  private view: ReferenceView = { query: "", group: 0, filter: 0 };
 
   /** Which (puzzle, move, hint step) the current `model` was fetched for, so
    * we refetch once per change of the board or of the hint's marked items
@@ -69,8 +72,7 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
     const at = `${puzzle.currentMove}\n${puzzle.activeHintExplanation}`;
     if (this.fetchedPuzzle !== puzzle || this.fetchedFor !== at) {
       if (this.fetchedPuzzle !== puzzle) {
-        this.query = "";
-        this.pressed = 0;
+        this.view = { query: "", group: 0, filter: 0 };
       }
       this.fetchedPuzzle = puzzle;
       this.fetchedFor = at;
@@ -122,7 +124,7 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
     const title = this.puzzle?.referenceTitle;
     if (model === null || !title) return nothing;
     const hinted = new Set(model.hinted);
-    const { sections, buttons } = narrowReference(model, this.query, this.pressed);
+    const { sections, groups, buttons } = narrowReference(model, this.view);
     return html`
       <div class="panel" role="region" aria-label=${title}>
         <header>
@@ -141,9 +143,12 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
                 aria-label="Search the ${title.toLowerCase()}"
                 autocomplete="off"
                 spellcheck="false"
-                .value=${this.query}
+                .value=${this.view.query}
                 @input=${(e: Event) => {
-                  this.query = (e.target as HTMLInputElement).value;
+                  this.view = {
+                    ...this.view,
+                    query: (e.target as HTMLInputElement).value,
+                  };
                 }}
                 @keydown=${(e: KeyboardEvent) => {
                   // Typed letters are the search's, never the board's keys.
@@ -152,23 +157,12 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
               />`
             : nothing
         }
-        ${
-          buttons.length === 0
-            ? nothing
-            : html`<div class="filters" role="group" aria-label="Show">
-                ${buttons.map(
-                  (b, i) => html`<button
-                    class="filter"
-                    aria-pressed=${i === this.pressed}
-                    @click=${() => {
-                      this.pressed = i;
-                    }}
-                  >
-                    ${b.label} <span class="count">${b.count}</span>
-                  </button>`,
-                )}
-              </div>`
-        }
+        ${this.renderRow(groups, "Group", (group) => {
+          this.view = { ...this.view, group };
+        })}
+        ${this.renderRow(buttons, "Show", (filter) => {
+          this.view = { ...this.view, filter };
+        })}
         <div class="sections">
           ${sections.map(
             (section) => html`
@@ -181,6 +175,27 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
         </div>
       </div>
     `;
+  }
+
+  /** A row of buttons, one pressed, each with its count; nothing where the
+   * model asks for none. */
+  private renderRow(
+    row: readonly FilterButton[],
+    label: string,
+    press: (i: number) => void,
+  ) {
+    if (row.length === 0) return nothing;
+    return html`<div class="filters" role="group" aria-label=${label}>
+      ${row.map(
+        (b, i) => html`<button
+          class="filter"
+          aria-pressed=${b.pressed}
+          @click=${() => press(i)}
+        >
+          ${b.label} <span class="count">${b.count}</span>
+        </button>`,
+      )}
+    </div>`;
   }
 
   private renderItem(item: ReferenceItem, hinted: boolean) {
