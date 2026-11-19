@@ -1,6 +1,2 @@
-# Deltas are written when the work is done: both halves modify
-# `build-pipeline` ("A commit runs the per-game work of the games it stages"
-# and what the hooks mirror).
 schema: spec-driven
 created: 2026-11-19
-skip_specs: true

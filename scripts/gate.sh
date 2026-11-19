@@ -70,6 +70,38 @@ elif [ "${GATE_PRECOMMIT:-}" = "1" ]; then
 elif [ "${GATE_KEEP_GOING:-}" = "1" ]; then
   changed=$(git diff --name-only --no-renames HEAD; git ls-files --others --exclude-standard)
 fi
+# **A commit is tested as it will be committed.** Every step below reads the
+# working tree, so a staged path whose working-tree copy differs from the
+# staged one would be judged on a file the commit does not carry: a moved test
+# whose imports were fixed after staging passed the hook and broke `main`.
+# Testing the index itself would mean stashing the rest around the run, which
+# rewrites the author's tree and loses work when the hook is interrupted; a
+# refusal costs nothing. A staged deletion of a file still on disk differs too.
+# A partial stage (`git add -p`) is refused with the rest.
+if [ "${GATE_PRECOMMIT:-}" = "1" ] && [ -z "${GATE_SINCE:-}" ] && [ -n "$changed" ]; then
+  unstaged=$(git diff --name-only --no-renames)
+  # `|| true` and `if`: under `set -e` a grep that finds nothing would end
+  # the gate without a word.
+  differs=$(
+    printf '%s\n' "$unstaged" | grep -Fx -e "$changed" || true
+    git diff --cached --name-only --no-renames --diff-filter=D |
+      while read -r f; do if [ -e "$f" ]; then echo "$f"; fi; done
+  )
+  if [ -n "$differs" ]; then
+    echo "✗ these staged files differ in the working tree, and the gate tests the"
+    echo "  working tree, so it would test what the commit does not carry:"
+    printf '%s\n' "$differs" | sed 's/^/    /'
+    echo "  Stage them as they stand (\`git add\`), or restore them to what is staged."
+    exit 1
+  fi
+  # A tracked file the commit does not stage is read as it stands too. It may
+  # be another session's work, so it is named, not refused.
+  others=$(printf '%s\n' "$unstaged" | grep -vFx -e "$changed" | grep . || true)
+  if [ -n "$others" ]; then
+    echo "! the gate also reads these unstaged changes, which the commit does not carry:"
+    printf '%s\n' "$others" | head -10 | sed 's/^/    /'
+  fi
+fi
 # Whether every changed path is one no test and no build reads: section 1d
 # says why these, and what holds the list to that.
 doc_only() {
@@ -546,8 +578,9 @@ fi
 # **A hook's run is held to a ceiling of CPU time** (`build-pipeline`, "A
 # hook's run is held to a ceiling"), so a commit costs about a minute and a
 # push a few, whatever they select. `test-cost.ts fit` prices the plan from
-# what the last runs recorded and keeps the cheapest files that fit; a commit
-# leaves the rest to the push, and a push to CI, which runs everything. The
+# what the last runs recorded and keeps the cheapest files that fit, beside
+# the staged test files, which run whatever they cost; both hooks leave the
+# rest to CI, which runs everything. The
 # suite's own budget applies where the whole suite runs: CI and `npm run gate`.
 whole_suite=""
 if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
@@ -571,8 +604,8 @@ if [ "$plan" != "ALL" ]; then
   fi
 fi
 if [ "${GATE_PRECOMMIT:-}" = "1" ] && [ -z "${GATE_SINCE:-}" ]; then
-  echo "  The push runs the cases of the games this commit does not stage, and CI"
-  echo "  runs everything. \`npm run gate\` runs everything here."
+  echo "  CI runs the cases of the games this commit does not stage, and everything"
+  echo "  else; \`npm run gate\` runs everything here."
 fi
 
 # --- 1f. The source scans, ahead of everything that builds a board. ~6s. ---

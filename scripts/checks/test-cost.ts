@@ -15,8 +15,8 @@
  *
  * reads a plan `select-tests.ts` printed and prints the part of it that fits
  * the hook's ceiling, from the costs the last runs recorded. What a commit
- * leaves out is the push's (the list in {@link DEFERRED}), and what a push
- * leaves out is CI's, which runs everything.
+ * leaves out is CI's, and a push's that is asked to run tests (the list in
+ * {@link DEFERRED}); what a push leaves out is CI's, which runs everything.
  *
  * **Every cost is in reference seconds**: CPU seconds scaled by how much
  * slower or faster this machine runs `cpu-unit.ts`'s workload than the
@@ -61,7 +61,7 @@ const NEAR = 0.9;
 const CACHE = "node_modules/.cache/test-cost";
 /** The costs each file last recorded on this machine. */
 const RECORD = path.join(CACHE, "costs.json");
-/** The files a commit hook left to the push, one per line. */
+/** The files a commit hook left out, one per line. */
 const DEFERRED = path.join(CACHE, "deferred");
 
 const TREATMENTS =
@@ -312,6 +312,11 @@ function predicted(
  * runs, and records; so does a test file a commit stages, which is what the
  * author just wrote. The rest is taken cheapest first while it fits, so the
  * most files run, and a commit writes what it left out to {@link DEFERRED}.
+ *
+ * The ceiling is the rest's alone. Charged with the files that run anyway, a
+ * commit that staged dear tests ran nothing else: a game's commit staging
+ * 142 s of its own tests left a 0.02 s snapshot of that game's capabilities to
+ * CI, which found the capability the commit had removed.
  */
 function fitPlan(role: "commit" | "push", text: string): string {
   const plan = readPlan(role, text);
@@ -334,11 +339,12 @@ function fitPlan(role: "commit" | "push", text: string): string {
     i.cost === null || plan.staged.includes(i.file);
   const fitted: Plan = { scope: plan.scope, whole: [], narrow: [], staged: [] };
   const left: typeof items = [];
-  let spent = 0;
+  let forced = 0;
   for (const item of items.filter(alwaysRuns)) {
     fitted[item.kind].push(item.file);
-    spent += item.cost ?? 0;
+    forced += item.cost ?? 0;
   }
+  let spent = 0;
   const rest = items
     .filter((i) => !alwaysRuns(i))
     .sort((a, b) => (a.cost ?? 0) - (b.cost ?? 0));
@@ -351,19 +357,19 @@ function fitPlan(role: "commit" | "push", text: string): string {
   }
   const unmeasured = items.filter((i) => i.cost === null).length;
   process.stderr.write(
-    `${spent > ceiling ? "!" : "✓"} this ${role}'s tests should cost ${spent.toFixed(0)} s ` +
-      `of CPU, of its ceiling of ${ceiling.toFixed(0)}` +
-      (unmeasured > 0
-        ? `, besides ${unmeasured} file(s) no run here has measured`
+    `✓ this ${role}'s selected tests should cost ${spent.toFixed(0)} s of CPU, ` +
+      `of its ceiling of ${ceiling.toFixed(0)}` +
+      (forced > 0
+        ? `, beside ${forced.toFixed(0)} s of the test files it stages`
         : "") +
-      (spent > ceiling ? ": the test files it stages run whatever they cost" : "") +
+      (unmeasured > 0 ? `, and ${unmeasured} file(s) no run here has measured` : "") +
       ".\n",
   );
   if (left.length > 0) {
     const leftCost = left.reduce((sum, i) => sum + (i.cost ?? 0), 0);
     process.stderr.write(
       `  ${left.length} file(s), ${leftCost.toFixed(0)} s, are left to ` +
-        `${role === "commit" ? "the push" : "the Gate workflow in CI"}. The dearest:\n` +
+        `${role === "commit" ? "CI (and to `GATE_PUSH_TESTS=1 git push`)" : "the Gate workflow in CI"}. The dearest:\n` +
         left
           .slice(-5)
           .reverse()

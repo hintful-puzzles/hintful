@@ -3,32 +3,39 @@
 **Index against working tree: refuse, do not stash.** Testing the index
 exactly would mean `git stash --keep-index` around the gate, which rewrites
 the author's working tree and has lost work in other projects when a hook is
-interrupted. A refusal costs nothing: before the prefix, compare each staged
-path's index blob with its working-tree file; if any differ, stop and list
-them, saying to stage or restore them. An untracked file the commit does not
-name is not a difference. Weigh one exception: a partial stage made on
-purpose (`git add -p`) is refused too, and the author can still commit it
-with the difference set aside.
+interrupted. A refusal costs nothing: before the prefix, list each staged path
+that `git diff` (index against working tree) also lists, and each staged
+deletion still on disk, and stop. A partial stage made on purpose
+(`git add -p`) is refused too. An untracked file is not a difference. An
+unstaged edit to a tracked file the commit does not stage is named and not
+refused: it may be another session's, and refusing it would block every commit
+beside it. The gate still reads it, so a commit that depends on it passes here
+and fails in CI; naming it is what the author gets.
 
-**Why `capability-surface` was missed: find out first.** Candidates, to be
-told apart by running `node scripts/checks/select-tests.ts` against the
-paths d62d12921 staged:
+**Why `capability-surface` was missed: the cost fit, not the selector.**
+Reproduced by checking out d62d12921, `git reset --soft` to its parent, and
+running `select-tests.ts` on that index: the plan selects
+`capability-surface.test.ts` (narrow, scope dominosa, guess, wordguess,
+wordtrail), and so it does `move-judge-games.test.ts`. Narrowed to that scope
+the file fails on that tree (`-"findMistakes"`). None of the three candidates
+the proposal named was the cause. `test-cost.ts fit commit` charged the
+commit's staged test files (142 s) against the 90 s ceiling, so no room was
+left, and every other selected file, the 0.02 s snapshot included, was "left
+to the push", which since the push stopped running tests by default means left
+to CI. The fit kept 11 files of 283.
 
-- the snapshot test reads games through a channel `reach.ts` does not walk,
-  so no plan selects it for a game path;
-- it is selected `narrow`, but its cases are not titled per game, so a
-  narrowed run executes none of them;
-- it was selected and the agent's own scoped run, not the hook, is what
-  missed it (then the hook was right and only the doc needs a line).
+The fix: the staged files run outside the ceiling, and the ceiling is the
+rest's. Replayed on the same plan the fit keeps 257 files, both guards among
+them, and leaves the dearest 26 (451 s) to CI. A commit now costs its staged
+tests plus at most the ceiling. Selecting by guard kind (a "records something
+per game" list) was not needed: the cheapest-first fit already takes a cheap
+per-game guard first once it has room.
 
-The fix follows the cause. Whatever it is, see the hook refuse a planted
-`Game` capability removal in a game-only commit before trusting it.
-
-**The two engine guards.** `move-judge-games` and `wrong-entry-check`
-refused Wordguess only on an engine commit. If `derive-guard-ledgers` lands
-first, their tables may be gone; check again then.
+**The two engine guards.** `move-judge-games` was dropped by the same fit;
+`wrong-entry-check` was staged in d62d12921 and ran whole. If
+`derive-guard-ledgers` lands first, their tables may be gone; check again then.
 
 ## Risks
 
-- Running more per-game work on a game commit lengthens it. Measure the
-  commit's time before and after on a game-only commit, under load.
+- Running more per-game work on a game commit lengthens it. Measured on the
+  planted Solo and Loopy commit, under load (`tasks.md` 2.3).

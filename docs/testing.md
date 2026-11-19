@@ -675,10 +675,18 @@ and their reasons.
   the files the working tree changed, and names them.
 - **Each hook's run has a ceiling of CPU time** (`test-cost.ts`'s `BUDGET`).
   Before any test runs, the hook prices its plan from what the last runs
-  recorded here and keeps the cheapest files that fit, and a test file the
-  commit stages always runs. A commit leaves the rest to the push, which then
-  runs its whole plan; a push leaves the rest to CI and names it. The first
-  run on a machine records everything it runs.
+  recorded here and keeps the cheapest files that fit. A test file the commit
+  stages always runs, outside the ceiling: charged against it, a game's dear
+  tests once crowded out the cheap guard on that game's own capabilities. A
+  hook names what it leaves out, which is CI's (and `GATE_PUSH_TESTS=1 git
+  push`'s, which runs a commit's leftovers whole). The first run on a machine
+  records everything it runs.
+- **A commit is tested as it will be committed.** Every check reads the
+  working tree, so the commit hook refuses a staged file that differs there
+  (edited after `git add`, part-staged with `git add -p`, or deleted from the
+  index but still on disk) and names it. Unstaged edits to files the commit
+  does not stage are named and allowed; the gate reads them as they stand, so
+  a commit that depends on one passes here and fails in CI.
 - **Per-game work** is a game's own test files and the cases a cross-game
   guard titles `<id>: …`, and it is nearly all of the suite's time.
 - **A commit to the engine tests no game's boards.** It runs the engine's own
