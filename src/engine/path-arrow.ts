@@ -6,15 +6,12 @@
  *
  * - {@link drawArrowHead}: the filled head, the one shape. A hint's move
  *   arrow (`draw.ts`'s `drawMoveArrow`) wears it too.
- * - {@link drawPathHead}: the head on a path's link between two squares'
- *   middles, pointing the way the path runs. It sits across the two squares'
- *   shared side, so a game that draws each square's half of a line under its
- *   clip draws the whole head from both squares, each keeping its half; it
- *   goes over the grid line there, which would cut it in two. Wordtrail draws
- *   it on its line, which runs on through the squares.
- * - {@link drawPathArrow}: the same head with a thin shaft behind it,
- *   filling the gap between two discs, for a link with no line through the
- *   squares (Ascent's, between the discs its numbers sit on).
+ * - {@link drawPathArrow}: a path's link between two squares, a thin shaft
+ *   and the head, filling the gap between the discs the squares' numbers or
+ *   letters sit on (Ascent's, Wordtrail's). It crosses the squares' shared
+ *   side, so a game that draws each square under its own clip draws the
+ *   whole arrow from both squares, each keeping its part; draw it after the
+ *   grid line there, which would cut it in two.
  * - {@link drawPathStart}: the ring round a path's first square, which a
  *   line's arrow alone does not tell from its last.
  *
@@ -55,30 +52,10 @@ export const pathHeadLength = (ts: number): number => Math.max(5, Math.round(ts 
 /** How wide a path's arrowhead is across its base on tile `ts`. */
 export const pathHeadWidth = (ts: number): number => Math.max(7, Math.round(ts * 0.3));
 
-/**
- * The arrowhead of a path's line from the middle `a` of one square to the
- * middle `b` of the next, at the middle of the line: centered on the
- * squares' shared side, so it is clear of letters or numbers on the squares.
- */
-export function drawPathHead(
-  dr: GameDrawing,
-  ts: number,
-  a: Point,
-  b: Point,
-  color: number,
-): void {
-  const len = Math.hypot(b.x - a.x, b.y - a.y);
-  const ux = (b.x - a.x) / len;
-  const uy = (b.y - a.y) / len;
-  const length = pathHeadLength(ts);
-  const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-  const tip = { x: mid.x + (ux * length) / 2, y: mid.y + (uy * length) / 2 };
-  drawArrowHead(dr, tip, ux, uy, length, pathHeadWidth(ts), color);
-}
-
 /** How thick the ring round a path's first square, and an arrow's shaft, are
  * on tile `ts`: thin, so a short shaft is longer than it is wide. */
-const pathStrokeThickness = (ts: number): number => Math.max(2, Math.round(ts / 14));
+export const pathStrokeThickness = (ts: number): number =>
+  Math.max(2, Math.round(ts / 14));
 
 /**
  * A whole arrow on the link from the middle `a` of one square to the middle

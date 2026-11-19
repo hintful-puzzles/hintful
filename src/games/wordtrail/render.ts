@@ -5,10 +5,9 @@
  *
  * The grid is a loop over the squares that repaints only the ones whose
  * packed key changed (docs/rendering.md § "The tile cache and the diff
- * key"). A square draws its own half of each of its four sides: the line
- * from its middle to the side and its half of a cross on the side. Its
- * letter sits on a disc over the lines, so a word reads as letters strung
- * on a line. The list has no tiles, and repaints whole when what it shows
+ * key"). A square draws its own part of each of its four sides: of the
+ * arrow across the side from its letter's disc to the next, and of a cross
+ * on the side. The list has no tiles, and repaints whole when what it shows
  * changes (§ "A cue with no tile to live in").
  */
 
@@ -40,14 +39,17 @@ import {
   type EdgeMistake,
   LINE,
 } from "../../engine/line-drawing.ts";
-import { drawPathHead, drawPathStart } from "../../engine/path-arrow.ts";
+import {
+  drawPathArrow,
+  drawPathStart,
+  pathStrokeThickness,
+} from "../../engine/path-arrow.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import {
   DX,
   DY,
   type EdgeLayout,
   edgeBetween,
-  reverse,
   type SquareEdges,
   squareCenter,
   squareEdges,
@@ -274,16 +276,16 @@ function drawTile(
   const cx = px + half;
   const cy = py + half;
   const tone = ((square >> K_TONE) & 3) as WinTone;
-  const thick = Math.max(2, Math.floor(ts / 7));
   const side = (k: number): number => (sides >>> (k * SIDE_BITS)) & 0xff;
-  // The arrowhead of the line across side `k`, pointing out of the square
-  // or into it. It sits across the side, so the square beside draws the
-  // rest of it.
-  const head = (k: number, out: boolean, color: number): void => {
+  // The letter's disc, which the lines' arrows fill the gaps between.
+  const disc = Math.floor(ts * 0.3);
+  // The arrow of the line across side `k`, pointing out of the square or
+  // into it. It crosses the side, so the square beside draws the rest of it.
+  const arrow = (k: number, out: boolean, color: number): void => {
     const there = { x: cx + DX[k] * ts, y: cy + DY[k] * ts };
     const here = { x: cx, y: cy };
-    if (out) drawPathHead(dr, ts, here, there, color);
-    else drawPathHead(dr, ts, there, here, color);
+    if (out) drawPathArrow(dr, ts, here, there, color, disc);
+    else drawPathArrow(dr, ts, there, here, color, disc);
   };
   const body: Rect = { x: px + 1, y: py + 1, w: ts - 1, h: ts - 1 };
 
@@ -335,27 +337,8 @@ function drawTile(
     );
   };
 
-  // The lines, each from the middle to its side. Two that run straight
-  // through are one stroke, as two round ends overlapping there darken their
-  // soft edges into a knob.
-  type Stroke = { k: number; color: number; weight: number };
-  const segmentsOf = (strokes: readonly Stroke[]) => {
-    const [p, q] = strokes;
-    return strokes.length === 2 &&
-      q.k === reverse(p.k) &&
-      p.color === q.color &&
-      p.weight === q.weight
-      ? [{ from: sideEnd(p.k), to: sideEnd(q.k), color: p.color, weight: p.weight }]
-      : strokes.map(({ k, color, weight }) => ({
-          from: { x: cx, y: cy },
-          to: sideEnd(k),
-          color,
-          weight,
-        }));
-  };
-
-  // The step's edges, under the player's own: each asked one at the weight
-  // of a laid line.
+  // The step's edges, under the player's own: each asked line the arrow a
+  // laid one would be.
   const small = Math.max(2, Math.floor(ts / 8));
   const hintCross = Math.max(2, ts >> 4);
   drawEdgeHints(dr, hints, COL_HINT_EVIDENCE, {
@@ -363,12 +346,8 @@ function drawTile(
       for (let k = 0; k < 4; k++) if (sides & (1 << k)) cross(k, ink, small, hintCross);
     },
     line: (sides, ink) => {
-      const strokes: Stroke[] = [];
       for (let k = 0; k < 4; k++)
-        if (sides & (1 << k)) strokes.push({ k, color: ink, weight: thick });
-      for (const { from, to } of segmentsOf(strokes)) dr.drawLine(from, to, ink, thick);
-      for (let k = 0; k < 4; k++)
-        if (sides & (1 << k)) head(k, (hintOut & (1 << k)) !== 0, ink);
+        if (sides & (1 << k)) arrow(k, (hintOut & (1 << k)) !== 0, ink);
     },
     // A ring sits between the two letters, clear of both.
     ring: (d, shape) => {
@@ -392,34 +371,41 @@ function drawTile(
     if ((s & 3) === CROSS) cross(k, s & S_WRONG ? COL_ERROR : COL_RULED_OUT, small, 1);
   }
 
-  const strokes: Stroke[] = [];
+  // Each line an arrow, in the drag's ink where the drag lays it; a line the
+  // drag would lift has no direction left to show, so a plain stroke from
+  // under the letter to the side.
+  let outColor = -1;
   for (let k = 0; k < 4; k++) {
     const s = side(k);
-    let color = -1;
-    if (s & S_DRAG_ADD) color = COL_DRAG_ADD;
-    else if (s & S_DRAG_REMOVE) color = COL_DRAG_REMOVE;
-    else if ((s & 3) === LINE)
-      color = s & S_WRONG || s & S_ERROR ? COL_ERROR : COL_LINE;
-    if (color >= 0) strokes.push({ k, color, weight: thick });
+    if ((s & 3) === LINE) {
+      const color =
+        s & S_DRAG_ADD
+          ? COL_DRAG_ADD
+          : s & S_WRONG || s & S_ERROR
+            ? COL_ERROR
+            : COL_LINE;
+      arrow(k, (s & S_OUT) !== 0, color);
+      if (s & S_OUT) outColor = color;
+    } else if (s & S_DRAG_REMOVE)
+      dr.drawLine(
+        { x: cx, y: cy },
+        sideEnd(k),
+        COL_DRAG_REMOVE,
+        pathStrokeThickness(ts),
+      );
   }
-  for (const { from, to, color, weight } of segmentsOf(strokes))
-    dr.drawLine(from, to, color, weight);
-  for (const { k, color } of strokes)
-    if ((side(k) & 3) === LINE) head(k, (side(k) & S_OUT) !== 0, color);
 
   // The letter, on a disc of the square's own surface over the lines, so
   // it reads whatever runs under it; a word's first letter ringed in the
   // ink of the line out of it.
   const letter = state.letters[y * state.w + x];
-  const disc = Math.floor(ts * 0.3);
   const surface = tone
     ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
     : square & F_WORD
       ? COL_WORD
       : COL_CELL;
-  const out = strokes.find(({ k }) => side(k) & S_OUT);
-  if (square & F_START && out)
-    drawPathStart(dr, ts, { x: cx, y: cy }, disc, out.color, surface);
+  if (square & F_START && outColor >= 0)
+    drawPathStart(dr, ts, { x: cx, y: cy }, disc, outColor, surface);
   else dr.drawCircle({ x: cx, y: cy }, disc, surface, surface);
   dr.drawText(
     { x: cx, y: cy },

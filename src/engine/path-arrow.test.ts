@@ -1,14 +1,13 @@
 /**
- * The path arrow's geometry: its head points the way the path runs, sits
- * across the two squares' shared side, and is as large at a phone's tile as
- * it needs to be read. A game's frame test sees it drawn; this holds where
+ * The path arrow's geometry: it points the way the path runs, fills the gap
+ * between the two squares' discs, and its head is as large at a phone's tile
+ * as it needs to be read. A game's frame test sees it drawn; this holds where
  * it points, which a frame's snapshot only records.
  */
 
 import { describe, expect, it } from "vitest";
 import {
   drawPathArrow,
-  drawPathHead,
   drawPathStart,
   pathHeadLength,
   pathHeadWidth,
@@ -19,14 +18,21 @@ import type { Color } from "./types.ts";
 const BLACK: Color = [0, 0, 0];
 const WHITE: Color = [1, 1, 1];
 
-/** The head drawn for a link from `a` to `b` on tile `ts`: its tip and its
- * base's two corners. */
-function headOf(ts: number, a: { x: number; y: number }, b: { x: number; y: number }) {
+type At = { x: number; y: number };
+
+/** The arrow drawn for a link from `a` to `b` on a 40-pixel tile with discs
+ * of radius `inset`: its shaft, its head's tip and its base's two corners. */
+function arrowOf(a: At, b: At, inset = 12) {
   const dr = new RecordingDrawing([WHITE, BLACK]);
-  drawPathHead(dr, ts, a, b, 1);
+  drawPathArrow(dr, 40, a, b, 1, inset);
+  const [shaft] = opsOfKind(dr.ops, "line");
   const [head] = opsOfKind(dr.ops, "polygon");
-  return { tip: head.points[0], base: head.points.slice(1) };
+  return { shaft, tip: head.points[0], base: head.points.slice(1) };
 }
+
+/** Within the pixel the points are rounded to. */
+const near = (got: number, want: number) =>
+  expect(Math.abs(got - want)).toBeLessThanOrEqual(1);
 
 describe("the path arrow", () => {
   it.each([
@@ -35,41 +41,30 @@ describe("the path arrow", () => {
     ["down", { x: 0, y: 0 }, { x: 0, y: 40 }],
     ["up", { x: 0, y: 40 }, { x: 0, y: 0 }],
   ])("points %s, the way the line runs", (_way, a, b) => {
-    const { tip, base } = headOf(40, a, b);
-    // How far a point is from the link's middle toward `b`: the tip is past
-    // the middle, and the base's corners behind it.
-    const along = ([x, y]: readonly [number, number]) =>
-      ((x - (a.x + b.x) / 2) * (b.x - a.x) + (y - (a.y + b.y) / 2) * (b.y - a.y)) / 40;
-    expect(along(tip)).toBeGreaterThan(0);
-    for (const corner of base) expect(along(corner)).toBeLessThan(0);
+    const { shaft, tip } = arrowOf(a, b);
+    const toB = (x: number, y: number) => Math.hypot(x - b.x, y - b.y);
+    expect(toB(...tip)).toBeLessThan(toB(shaft.x1, shaft.y1));
   });
 
-  it("sits across the squares' shared side, centered on it", () => {
-    const { tip, base } = headOf(40, { x: 0, y: 0 }, { x: 40, y: 0 });
-    // Half the head each side of the side at x = 20.
-    expect(tip[0] - 20).toBe(20 - base[0][0]);
-    expect(base[0][1]).toBe(-base[1][1]);
+  it("sits across a straight link's shared side, centered on it", () => {
+    const { shaft, tip } = arrowOf({ x: 0, y: 0 }, { x: 40, y: 0 });
+    // As far past the side at x = 20 as its tail is short of it.
+    expect(tip[0] - 20).toBe(20 - shaft.x1);
   });
 
   it.each([
     ["straight", { x: 0, y: 0 }, { x: 40, y: 0 }],
     ["diagonal", { x: 0, y: 0 }, { x: 40, y: 40 }],
-  ])("a %s link's whole arrow fills the gap between the discs, shaft into head", (_way, a, b) => {
-    const dr = new RecordingDrawing([WHITE, BLACK]);
+  ])("a %s link's arrow fills the gap between the discs, shaft into head", (_way, a, b) => {
     const inset = 12;
-    drawPathArrow(dr, 40, a, b, 1, inset);
-    const [shaft] = opsOfKind(dr.ops, "line");
-    const [head] = opsOfKind(dr.ops, "polygon");
+    const { shaft, tip, base } = arrowOf(a, b, inset);
     const from = (x: number, y: number) => Math.hypot(x - a.x, y - a.y);
     const len = from(b.x, b.y);
-    // Within the pixel the points are rounded to.
-    const near = (got: number, want: number) =>
-      expect(Math.abs(got - want)).toBeLessThanOrEqual(1);
     // The shaft leaves `a`'s disc, and the head's tip touches `b`'s.
     near(from(shaft.x1, shaft.y1), inset);
-    near(from(...head.points[0]), len - inset);
+    near(from(...tip), len - inset);
     // The shaft runs on to the head's base: no gap between them.
-    const [, s1, s2] = head.points;
+    const [s1, s2] = base;
     near(from(shaft.x2, shaft.y2), from((s1[0] + s2[0]) / 2, (s1[1] + s2[1]) / 2));
   });
 

@@ -49,21 +49,11 @@ exports[`wordtrail frame > draws the board 1`] = `
     "color": 3,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
-    "thickness": 6,
-    "x1": 36,
-    "x2": 61,
+    "thickness": 3,
+    "x1": 70,
+    "x2": 60,
     "y1": 36,
     "y2": 36,
-  },
-  {
-    "color": 3,
-    "op": "line",
-    "rgb": "rgb(0, 0, 0)",
-    "thickness": 6,
-    "x1": 36,
-    "x2": 36,
-    "y1": 36,
-    "y2": 61,
   },
   {
     "fill": 3,
@@ -73,20 +63,30 @@ exports[`wordtrail frame > draws the board 1`] = `
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
-        55,
+        50,
         36,
       ],
       [
-        65,
+        60,
         29,
       ],
       [
-        65,
+        60,
         43,
       ],
     ],
   },
   {
+    "color": 3,
+    "op": "line",
+    "rgb": "rgb(0, 0, 0)",
+    "thickness": 3,
+    "x1": 36,
+    "x2": 36,
+    "y1": 50,
+    "y2": 60,
+  },
+  {
     "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
@@ -95,15 +95,15 @@ exports[`wordtrail frame > draws the board 1`] = `
     "points": [
       [
         36,
-        65,
+        70,
       ],
       [
         29,
-        55,
+        60,
       ],
       [
         43,
-        55,
+        60,
       ],
     ],
   },
@@ -181,8 +181,8 @@ exports[`wordtrail frame > draws the board 1`] = `
     "color": 3,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
-    "thickness": 6,
-    "x1": 84,
+    "thickness": 3,
+    "x1": 70,
     "x2": 60,
     "y1": 36,
     "y2": 36,
@@ -195,15 +195,15 @@ exports[`wordtrail frame > draws the board 1`] = `
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
-        55,
+        50,
         36,
       ],
       [
-        65,
+        60,
         29,
       ],
       [
-        65,
+        60,
         43,
       ],
     ],
@@ -392,10 +392,10 @@ exports[`wordtrail frame > draws the board 1`] = `
     "color": 3,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
-    "thickness": 6,
+    "thickness": 3,
     "x1": 36,
     "x2": 36,
-    "y1": 84,
+    "y1": 50,
     "y2": 60,
   },
   {
@@ -407,15 +407,15 @@ exports[`wordtrail frame > draws the board 1`] = `
     "points": [
       [
         36,
-        65,
+        70,
       ],
       [
         29,
-        55,
+        60,
       ],
       [
         43,
-        55,
+        60,
       ],
     ],
   },

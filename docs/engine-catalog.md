@@ -1644,11 +1644,10 @@ in a game's frames that no call to these helpers drew.
   tile it crosses under its own clip.
 - **`path-arrow.ts` for which way a path runs between squares**: the
   one arrowhead (`drawArrowHead`, which `drawMoveArrow` wears too), a
-  link's head across the squares' shared side for a line that runs on
-  through them (`drawPathHead`, Wordtrail's), a whole arrow filling the gap
-  between two discs for a link that does not (`drawPathArrow`, Ascent's),
-  and the ring on a path's first square (`drawPathStart`). Draw either
-  arrow after the grid line it crosses. A game showing a path's direction
+  link's whole arrow, a thin shaft and the head filling the gap between the
+  discs its squares' numbers or letters sit on (`drawPathArrow`), and the
+  ring on a path's first square (`drawPathStart`). Draw the arrow after the
+  grid line it crosses. A game showing a path's direction
   draws it with these and no shape of its own, so it reads alike in every
   game (owner, 2026-11-19).
 

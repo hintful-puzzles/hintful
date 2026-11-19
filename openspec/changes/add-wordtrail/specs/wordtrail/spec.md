@@ -258,10 +258,11 @@ longest length SHALL be drawn in the error color.
 
 ### Requirement: Look: Each line wears the engine's arrow, and a word's first letter its start mark
 
-Each line SHALL be drawn with the engine's arrow, its head across the side
-between the two letters, pointing to the next letter, the drag's preview and
-a hint's asked lines included. A letter with a line out and none in SHALL
-wear the engine's start mark.
+Each line SHALL be drawn as the engine's arrow, a thin shaft and the head
+filling the gap between the two letters' discs and pointing to the next
+letter, the drag's preview and a hint's asked lines included. A line the drag
+would lift SHALL be a plain stroke in the drag's removing ink. A letter with a
+line out and none in SHALL wear the engine's start mark.
 
 #### Scenario: A word's start and direction are drawn
 

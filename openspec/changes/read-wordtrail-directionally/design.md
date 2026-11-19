@@ -179,6 +179,13 @@ and dark; 390 px wide). What was tried and dropped:
   straight or hexagonal link's arrow where the proposal put it, and moves a
   diagonal's head next to its own number.
 
+**Wordtrail moved onto the same arrow** once the owner saw both side by
+side: its thick line with a head on it read as a pin through the head, and a
+hint's asked line as a blot inside its ring. Its letter discs were already
+0.3 of a tile, so its arrows are Ascent's to the pixel; a line the drag would
+lift, which has no direction to show, is a plain stroke of the shaft's
+weight. With no game left drawing a head on a line, `drawPathHead` is gone.
+
 Not taken from the review: dimming the arrows in the dark scheme. They wear
 the path's strong gray, chosen to stand off both surfaces; a dimmer path is
 a decision about the path's color, not the arrow's.
