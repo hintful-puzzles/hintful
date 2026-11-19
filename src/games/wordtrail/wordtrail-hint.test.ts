@@ -32,13 +32,13 @@ const pinned = describeHintPins({
   game: wordtrailGame,
   params: [{ w: 5, h: 5, words: 4, diff: DIFF_NORMAL }],
   pins: {
-    /** Held on 99 of 107 positions walked. */
-    onlyWord: "5x5n4dn:3467,1il2gelchai1tylrkibwork1",
-    /** Held on 100 of 107 positions walked. */
+    /** Held on 73 of 83 positions walked. */
+    onlyWord: "5x5n4dn:3358,1awr2ypewialtan1cit1cot1",
+    /** Held on 80 of 83 positions walked. */
     onlyLength: {
-      id: "5x5n4dn:3445,ge3seev1cooa1iwth1sp3",
+      id: "5x5n4dn:3445,eak1tw2ge1per2ow2dlig1",
       moves:
-        '[{"kind":"edges","changes":[{"edge":0,"mark":1,"from":0},{"edge":20,"mark":2},{"edge":21,"mark":1,"from":1},{"edge":5,"mark":2},{"edge":26,"mark":2}]},{"kind":"edges","changes":[{"edge":27,"mark":2},{"edge":6,"mark":1,"from":8},{"edge":28,"mark":1,"from":13},{"edge":10,"mark":2}]},{"kind":"edges","changes":[{"edge":14,"mark":2}]},{"kind":"edges","changes":[{"edge":33,"mark":1,"from":18}]}]',
+        '[{"kind":"edges","changes":[{"edge":0,"mark":1,"from":0},{"edge":1,"mark":1,"from":1},{"edge":20,"mark":1,"from":5}]},{"kind":"edges","changes":[{"edge":7,"mark":1,"from":8},{"edge":28,"mark":2},{"edge":24,"mark":1,"from":9}]},{"kind":"edges","changes":[{"edge":16,"mark":1,"from":21}]}]',
     },
   },
 });

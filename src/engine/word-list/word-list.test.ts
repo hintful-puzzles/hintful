@@ -1,15 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../random/index.ts";
-import { ANSWERS, GUESSES } from "./data.ts";
+import { ANSWERS, COMMON, GUESSES } from "./data.ts";
 import {
   answerCount,
+  commonSpan,
   drawAnswer,
-  type GuessSpan,
-  guessSpan,
   isAnswer,
+  isCommon,
   isGuess,
-  narrowGuesses,
+  narrowCommon,
   WORD_LENGTHS,
+  type WordSpan,
 } from "./index.ts";
 
 function words(list: Readonly<Record<number, string>>, length: number): string[] {
@@ -17,17 +18,29 @@ function words(list: Readonly<Record<number, string>>, length: number): string[]
 }
 
 describe("word-list", () => {
-  it("holds sorted, distinct, lowercase words of each length, answers among guesses", () => {
+  it("holds sorted, distinct, lowercase words of each length, answers among common words among guesses", () => {
     expect(WORD_LENGTHS).toEqual([3, 4, 5, 6, 7, 8]);
     for (const length of WORD_LENGTHS) {
-      for (const list of [ANSWERS, GUESSES]) {
+      for (const list of [ANSWERS, COMMON, GUESSES]) {
         const all = words(list, length);
         expect(list[length].length).toBe(all.length * length);
         expect(all.every((w) => /^[a-z]+$/.test(w))).toBe(true);
         expect(all.every((w, i) => i === 0 || all[i - 1] < w)).toBe(true);
       }
-      expect(words(ANSWERS, length).every(isGuess)).toBe(true);
+      expect(words(ANSWERS, length).every(isCommon)).toBe(true);
+      expect(words(COMMON, length).every(isGuess)).toBe(true);
     }
+  });
+
+  it("counts a common word and its plural, but no obscure, rude or abbreviated word", () => {
+    for (const word of ["cats", "walked", "gland"]) expect(isCommon(word)).toBe(true);
+    // REE is SCOWL size 80; BITCHY is excluded, BITCHES with BITCH, its
+    // lemma; MPH is an abbreviation and XII a numeral.
+    for (const word of ["ree", "bitchy", "bitches", "mph", "xii"]) {
+      expect(isCommon(word)).toBe(false);
+    }
+    // A player may still type them as a guess.
+    expect(isGuess("ree")).toBe(true);
   });
 
   it("finds every listed word, at both ends, and no near miss", () => {
@@ -49,14 +62,14 @@ describe("word-list", () => {
     expect(isAnswer("cranes")).toBe(false);
   });
 
-  it("narrows a length's guesses a letter at a time to exactly those that begin so", () => {
+  it("narrows a length's common words a letter at a time to exactly those that begin so", () => {
     const spell = (word: string, length: number) => {
-      let span: GuessSpan | null = guessSpan(length);
-      for (const letter of word) span = span && narrowGuesses(span, letter);
+      let span: WordSpan | null = commonSpan(length);
+      for (const letter of word) span = span && narrowCommon(span, letter);
       return span;
     };
     for (const length of WORD_LENGTHS) {
-      const all = words(GUESSES, length);
+      const all = words(COMMON, length);
       for (const prefix of [
         "c",
         "cr",
@@ -73,7 +86,7 @@ describe("word-list", () => {
       // Every letter matched: the one word, and nothing past it.
       const whole = spell(all[7], length);
       expect(whole && all.slice(whole.lo, whole.hi)).toEqual([all[7]]);
-      expect(whole && narrowGuesses(whole, "a")).toBeNull();
+      expect(whole && narrowCommon(whole, "a")).toBeNull();
     }
     expect(spell("crane", 5)).not.toBeNull();
     expect(spell("cranx", 5)).toBeNull();

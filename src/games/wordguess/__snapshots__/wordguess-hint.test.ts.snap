@@ -9,7 +9,7 @@ exports[`wordguess: pinned hint positions > says, at each pin 1`] = `
   "notHere": "The striped row did not score A and O in place, so they are not where they were guessed: the struck letters are out.",
   "onlyAnswer": "WHOA is the only common word that fits every score, so guess it in the ringed squares.",
   "onlyPlace": "The striped row found A, and only the outlined slot can still hold it, so the struck letters are out.",
-  "opening": "Nothing is scored yet. Guess TALE in the ringed squares: at most 289 of the 1401 common words will be left.",
+  "opening": "Nothing is scored yet. Guess TALE in the ringed squares: at most 289 of the 1399 common words will be left.",
   "probe": "228 common words fit every score, and LUST is one. Guess it in the ringed squares: it may win, or leave at most 31.",
   "split": "36 common words fit every score. Guess SLAT in the ringed squares: it can't win, but at most 9 will be left.",
 }

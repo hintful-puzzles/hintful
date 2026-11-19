@@ -26,4 +26,4 @@
 ## Open with the owner
 
 - The click near an edge (`design.md` § "The drag"): built as recommended, so play it and say if it is not obviously good.
-- From the session that filed this: hints can now name rare and rude words of the full guess list (BITCHY came up, and is in a pinned sentence now); should such words be left unnamed?
+- ~~Hints naming rare and rude words~~: answered 2026-11-19. Wordtrail judges by the common words, and BITCHY and words like it are excluded (`add-wordtrail` `design.md` § "Decisions made in the build").

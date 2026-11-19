@@ -78,11 +78,23 @@ guess list; a deal takes a few milliseconds at every preset.
 
 ## Decisions made in the build
 
-- **A piece of lines that spells any word of the guess list is colored, and
-  written into the list.** Wend ticks only the hidden answer's words. Here
-  a board has one division against the whole guess list, so a word that is
-  not the answer's is shown for what the lines spell, and the player finds
-  it out when it leaves letters no word can take.
+- **A piece of lines that spells any common word is colored, and written
+  into the list.** Wend ticks only the hidden answer's words. Here a board
+  has one division against the common words, so a word that is not the
+  answer's is shown for what the lines spell, and the player finds it out
+  when it leaves letters no word can take.
+- **Wordtrail judges by the common words, not the guesses** (owner,
+  2026-11-19, after REE came up in play). The guesses are what Wordguess
+  accepts typed, SCOWL size 80, and a board or hint showing one read as
+  obscure. The common words are SCOWL size 40, the answers' size, with
+  plurals and other forms, and without abbreviations, numerals, regional,
+  informal or offensive words (`scripts/word-list.ts`). A smaller list makes
+  a division unique more often, so Easy finishes more draws and Normal deals
+  in more tries: at most 177 at 4×4 Normal (was 50) and 1405 at 3×3 Normal
+  (was 328), 24 seeds a cell, every cell under 100 ms. An old board still
+  loads and still has one answer, as fewer words can make no second one.
+  BITCHY, found named in a hint, and the words like it are out of the
+  answers and the common words (`word-list-exclude.txt`).
 - **No alias.** The catalog's aliases hold no trademarks of the word games
   (Wordguess has none); the All-the-puzzles page names Wend under related
   puzzles, as it names Wordle.

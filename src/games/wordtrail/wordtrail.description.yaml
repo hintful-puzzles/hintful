@@ -8,6 +8,9 @@ help:
     letter is in exactly one word. The list below the board says how long the words
     are: one word for each length listed. The dark squares hold no letter.
 
+    The words are everyday English, plurals and other forms included: no
+    rare words, abbreviations or names.
+
     Every puzzle has exactly one solution, and none needs a guess.
   controls: |-
     Drag from letter to letter to draw a word along the trail you pass, in

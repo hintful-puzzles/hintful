@@ -109,6 +109,10 @@ const PINNED: Readonly<Record<string, readonly string[]>> = {
     "2x3da:6f2b3c5b4_4b5c1b2f1",
     "2x3di:3c5b4a2d4b2_2b5d2a1b1c6",
   ],
+  // An outlined slot, which a plan paints only where it places a letter's
+  // copies; the seeded deal's answer stopped reaching it when the answers
+  // were trimmed (2026-11-19). The board of the hint's `copiesPlaced` pin.
+  wordguess: ["4g6:b19d44b2"],
   // A ringed cell and a ringed tally set.
   subsets: ["4x4n4de:_,_RL,10R,_,_,9D,_,_D,_URD,_,_DL,_,_,4R,_,5UL"],
   // A striped piece.

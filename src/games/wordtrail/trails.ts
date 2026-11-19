@@ -4,15 +4,15 @@
  * read, and the generator's test of a board's uniqueness.
  *
  * A trail is squares side by side, none twice, whose letters read from its
- * first square spell an accepted guess (`engine/word-list`) as long as one
- * of the listed lengths. A word reads one way, so squares that spell a word
- * both ways round (SIP and PIS) are two trails, one each way.
+ * first square spell a common word (`engine/word-list`) as long as one of
+ * the listed lengths. A word reads one way, so squares that spell a word
+ * both ways round (TUB and BUT) are two trails, one each way.
  */
 
 import {
-  type GuessSpan,
-  guessSpan,
-  narrowGuesses,
+  commonSpan,
+  narrowCommon,
+  type WordSpan,
 } from "../../engine/word-list/index.ts";
 
 /** A trail, its squares in reading order. */
@@ -48,12 +48,12 @@ export function trailsOf(
   const out: Trail[] = [];
   const path: number[] = [];
   const on = new Uint8Array(w * h);
-  // Each wanted length's guesses that begin with the path's letters.
-  const extend = (i: number, spans: readonly GuessSpan[]): void => {
+  // Each wanted length's words that begin with the path's letters.
+  const extend = (i: number, spans: readonly WordSpan[]): void => {
     const letter = letterChar(letters[i]);
-    const next: GuessSpan[] = [];
+    const next: WordSpan[] = [];
     for (const span of spans) {
-      const narrowed = narrowGuesses(span, letter);
+      const narrowed = narrowCommon(span, letter);
       if (narrowed !== null) next.push(narrowed);
     }
     if (next.length === 0) return;
@@ -68,7 +68,7 @@ export function trailsOf(
     path.pop();
     on[i] = 0;
   };
-  const start = wanted.map(guessSpan);
+  const start = wanted.map(commonSpan);
   for (let i = 0; i < w * h; i++) if (letters[i] !== 0) extend(i, start);
   return out;
 }

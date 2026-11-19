@@ -151,14 +151,22 @@ describe("wordtrail desc", () => {
   });
 
   it.each([
-    "sip",
-    "pis",
+    "tub",
+    "but",
   ])("reads squares that spell a word both ways as two trails, laid as %s", (laid) => {
     const letters = Uint8Array.from(laid, (c) => c.charCodeAt(0) - 96);
     const spelled = trailsOf(3, 1, letters, [3]).map((t) =>
       Array.from(t, (i) => letterChar(letters[i])).join(""),
     );
-    expect(spelled.sort()).toEqual(["pis", "sip"]);
+    expect(spelled.sort()).toEqual(["but", "tub"]);
+  });
+
+  it("counts a common word and its plural, and not a rare word", () => {
+    const spelled = (laid: string): number => {
+      const letters = Uint8Array.from(laid, (c) => c.charCodeAt(0) - 96);
+      return trailsOf(laid.length, 1, letters, [laid.length]).length;
+    };
+    expect([spelled("cat"), spelled("cats"), spelled("ree")]).toEqual([1, 1, 0]);
   });
 
   it("has an answer, each line the way its word reads, which the ladder finds", () => {

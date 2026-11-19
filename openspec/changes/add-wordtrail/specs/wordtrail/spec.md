@@ -4,8 +4,8 @@
 
 A board SHALL be a grid of letters and dark squares, and word lengths that
 sum to its letters. It SHALL be solved when the player's lines between
-letters side by side divide the letters into paths, each spelling a word of
-the word list, one for each listed length. A path MAY run beside itself, as
+letters side by side divide the letters into paths, each spelling a common
+word, one for each listed length. A path MAY run beside itself, as
 a U through a two-by-two block does. A cross SHALL count as no line, so
 lines alone finish a board.
 
@@ -44,6 +44,25 @@ edge it has one on. A cross the answer agrees with SHALL NOT be a mistake.
 
 - **WHEN** on the same board a line runs from the D up to the N, where GLAND reads from the N down to the D
 - **THEN** that edge is reported as a mistake
+
+### Requirement: Rules: A word is a common word
+
+A word on the board SHALL be one of the word list's common words
+(`isCommon`): an answer's size or more common, its plurals and other forms
+included, and no abbreviation, numeral, regional, informal or rude word. The
+board SHALL count no other word, the hint SHALL name no other, and a word
+the player may type into Wordguess but that is not common SHALL count as no
+word here.
+
+#### Scenario: A rare word is no word
+
+- **WHEN** squares read R, E, E side by side on a board listing a 3-letter word
+- **THEN** they are no trail, and REE is written into no slot
+
+#### Scenario: A plural is a word
+
+- **WHEN** squares read C, A, T, S side by side on a board listing a 4-letter word
+- **THEN** they are a trail
 
 ### Requirement: Params: A Wordtrail params string may leave out its word count and its difficulty
 
@@ -94,15 +113,15 @@ by the word list the app ships.
 - **WHEN** `46,namedlgo3p` is read for a four by three board
 - **THEN** it is refused
 
-### Requirement: Generation: A board's answer words are the answer list's, and its division is unique against the guess list
+### Requirement: Generation: A board's answer words are the answer list's, and its division is unique against the common words
 
 The generator SHALL lay a path for each length on a grid, write a different
 word of the answer list along each, and darken the squares left over. It
-SHALL refuse a draw where an answer word read backwards is a guess, whose
-direction no reasoning could decide. It SHALL keep a board only where the
-ladder, capped at the tier asked for, finishes it and the tier below does
-not, so that its one division into words of the guess list, each read one
-way, is reached by reasoning alone.
+SHALL refuse a draw where an answer word read backwards is a common word,
+whose direction no reasoning could decide. It SHALL keep a board only where
+the ladder, capped at the tier asked for, finishes it and the tier below
+does not, so that its one division into common words, each read one way,
+is reached by reasoning alone.
 
 #### Scenario: Every board dealt needs exactly its tier
 
@@ -236,7 +255,7 @@ not need.
 
 Each letter SHALL sit on a disc of its square's surface drawn over the
 lines, so a line shows only between letters. The list of lengths below the
-grid SHALL write each piece of lines that spells a word of the guess list,
+grid SHALL write each piece of lines that spells a common word,
 read the way its lines run, into a slot of its length as it reads. A closed
 loop or a piece longer than the longest length SHALL be drawn in the error
 color.
@@ -254,8 +273,8 @@ color.
 
 #### Scenario: A word is written the way it was drawn
 
-- **WHEN** on `3x2n1de:3,pis3` lines run S to I to P, and on another such board P to I to S
-- **THEN** the first writes SIP into the list and the second PIS
+- **WHEN** on `3x2n1de:3,but3` lines run T to U to B, and on another such board B to U to T
+- **THEN** the first writes TUB into the list and the second BUT
 
 ### Requirement: Look: Each word drawn wears a color of its own
 

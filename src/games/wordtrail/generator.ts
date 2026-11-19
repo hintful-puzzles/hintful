@@ -12,7 +12,7 @@ import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { squareEdges } from "../../engine/square-edges.ts";
-import { drawAnswer, isGuess } from "../../engine/word-list/index.ts";
+import { drawAnswer, isCommon } from "../../engine/word-list/index.ts";
 import { solveWordtrail } from "./solver.ts";
 import {
   encodeDesc,
@@ -96,8 +96,8 @@ export function newWordtrailDesc(
     // Such a word's trail reads as a word either way round, so no deduction
     // could say which way its lines run: the ladder would refuse the board
     // after its whole run.
-    if (words.some((word) => isGuess([...word].reverse().join("")))) {
-      drawRejected("a word that is a guess read backwards");
+    if (words.some((word) => isCommon([...word].reverse().join("")))) {
+      drawRejected("a word that is a word read backwards");
       continue;
     }
     for (const [j, trail] of laid.entries())

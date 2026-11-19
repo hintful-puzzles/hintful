@@ -47,3 +47,39 @@ sperm
 # Crude
 turd
 junkie
+
+# Found 2026-11-19, after BITCHY came up in a hint: the answers that begin
+# with or contain a word the filters name (most, like ASSET and SCRAPE, are
+# innocent and stay), and a list of rude words checked against the answers.
+# A word here takes the forms SCOWL lists with it (`scripts/word-list.ts`).
+
+# Built on a filtered word
+bitchy
+booby
+fagot
+hickey
+molester
+mongrel
+moronic
+smutty
+vaginal
+enslave
+slavery
+
+# Insults on a person, or on a person's mind
+cretin
+fatty
+hag
+lunatic
+redneck
+
+# Sexual
+condom
+lewd
+raunchy
+stripper
+
+# Crude, or a person's harm
+crappy
+damn
+suicide

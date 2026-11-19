@@ -24,9 +24,16 @@
  *   SCOWL lists as another's inflection or under an informal usage note:
  *   2of12 keeps plurals with senses of their own ("books"), and an answer
  *   that is a plural or a past tense reads as a trick.
- * - The offensive filter, answers only (the owner, 2026-11-18): SCOWL's own
- *   `offensive-*` and `vulgar-*` usage notes, LDNOOBW's English list, and
- *   `word-list-exclude.txt` beside this script, for what both miss.
+ * - Common words: every word of SCOWL size 40 or less at the answers'
+ *   variant level, inflections included, less the offensive filter and
+ *   SCOWL's informal notes; the answers are among them. Wordtrail judges a
+ *   board by these, so neither the board nor a hint shows a word as obscure
+ *   as REE (owner, 2026-11-19), and a plural a player draws still counts.
+ * - The offensive filter, on the answers and the common words (the owner,
+ *   2026-11-18): SCOWL's own `offensive-*` and `vulgar-*` usage notes,
+ *   LDNOOBW's English list, and `word-list-exclude.txt` beside this script,
+ *   for what both miss. A word goes with every form SCOWL lists on one line
+ *   with it, so excluding a word excludes its plural too.
  */
 
 import { execFileSync } from "node:child_process";
@@ -57,6 +64,7 @@ const MIN_LENGTH = 3;
 const MAX_LENGTH = 8;
 const GUESS_SIZE = 80;
 const ANSWER_SIZE = 40;
+const COMMON_SIZE = 40;
 /** SCOWL's variant levels, in order from 0. */
 const VARIANT_LEVELS = " .=?v~V-@x";
 /** A guess may be up to `V`, "acceptable"; an answer up to `.`, "include". */
@@ -92,7 +100,19 @@ interface ScowlWord {
   informal: boolean;
   /** Listed as another word's inflection on some line. */
   inflection: boolean;
+  /** The lemmas of the lines it is listed on, itself included where it is
+   * one: its family, which the offensive filter takes whole. */
+  lemmas: Set<string>;
+  /** The size of its lines that list it as a word, not as an abbreviation,
+   * a numeral or an affix, nor of Australia's or Britain's alone; Infinity
+   * where none does. FEM is size 40 as an abbreviation and 80 as a word. */
+  plainSize: number;
 }
+
+/** SCOWL's parts of speech that are not a word a player would spell. */
+const NOT_A_WORD = /<(abbr|x|pre|suf)>/;
+/** SCOWL's regions whose words an American list leaves out. */
+const OTHER_REGION = /^\d+ (AU|GB)\b/;
 
 /** The lowest variant level among a `VARIANT-INFO` field's spellings. */
 function variantLevel(info: string): number {
@@ -126,6 +146,8 @@ function bareWord(word: string): string | null {
  * [: DERIVED, ...]`, and its size is the first, lowest, of its sizes.
  */
 function readScowl(text: string, into: Map<string, ScowlWord>): void {
+  // A line whose lemma is `-` goes on with the line before's.
+  let previous: string | null = null;
   for (const raw of lines(text)) {
     const line = raw.replace(/\s*#.*$/, "");
     if (!/^\d/.test(line)) continue;
@@ -158,16 +180,23 @@ function readScowl(text: string, into: Map<string, ScowlWord>): void {
         words.push([word, formLevel, true]);
       }
     }
+    const lemmaWord: string | null = lemma.trim() === "-" ? previous : bareWord(lemma);
+    previous = lemmaWord;
+    const plainWord = !NOT_A_WORD.test(lemmaInfo) && !OTHER_REGION.test(fields[0]);
     for (const [word, wordLevel, inflection] of words) {
       const bare = bareWord(word);
       if (bare === null || !/^[a-z]+$/.test(bare)) continue;
       const known = into.get(bare);
+      const lemmas = known?.lemmas ?? new Set<string>();
+      if (lemmaWord !== null) lemmas.add(lemmaWord);
       into.set(bare, {
         size: Math.min(size, known?.size ?? size),
         variantLevel: Math.min(wordLevel, known?.variantLevel ?? wordLevel),
         offensive: offensive || (known?.offensive ?? false),
         informal: informal || (known?.informal ?? false),
         inflection: inflection || (known?.inflection ?? false),
+        lemmas,
+        plainSize: Math.min(plainWord ? size : Infinity, known?.plainSize ?? Infinity),
       });
     }
   }
@@ -223,28 +252,39 @@ async function main(): Promise<void> {
       .filter((w) => w !== ""),
   );
 
+  // A usage note sits on a lemma's first line, so a form listed on a line
+  // after it is judged by its lemma's.
+  const filtered = (word: string, entry: ScowlWord): boolean =>
+    [word, ...entry.lemmas].some(
+      (w) => ldnoobw.has(w) || ours.has(w) || (scowl.get(w)?.offensive ?? false),
+    );
+
   const guesses = new Set<string>();
   const answers = new Set<string>();
+  const common = new Set<string>();
   for (const [word, entry] of scowl) {
     if (entry.size <= GUESS_SIZE && entry.variantLevel <= GUESS_VARIANT_LEVEL) {
       guesses.add(word);
     }
-    if (
-      entry.size <= ANSWER_SIZE &&
+    const plain =
+      entry.plainSize <= COMMON_SIZE &&
       entry.variantLevel <= ANSWER_VARIANT_LEVEL &&
-      twoOfTwelve.has(word) &&
-      !entry.offensive &&
       !entry.informal &&
-      !entry.inflection &&
-      !ldnoobw.has(word) &&
-      !ours.has(word)
+      !filtered(word, entry);
+    if (plain) common.add(word);
+    if (
+      plain &&
+      entry.plainSize <= ANSWER_SIZE &&
+      twoOfTwelve.has(word) &&
+      !entry.inflection
     ) {
       answers.add(word);
     }
   }
-  for (const word of answers) guesses.add(word);
+  for (const word of common) guesses.add(word);
 
   const answerLists = byLength(answers);
+  const commonLists = byLength(common);
   const guessLists = byLength(guesses);
   const out = `// Generated by \`node scripts/word-list.ts\`, which says what the lists are and
 // where they come from. Do not edit; rerun the script.
@@ -254,13 +294,16 @@ async function main(): Promise<void> {
 
 export const ANSWERS: Readonly<Record<number, string>> = ${literal(answerLists)};
 
+export const COMMON: Readonly<Record<number, string>> = ${literal(commonLists)};
+
 export const GUESSES: Readonly<Record<number, string>> = ${literal(guessLists)};
 `;
   writeFileSync(join(root, "src/engine/word-list/data.ts"), out);
   for (let length = MIN_LENGTH; length <= MAX_LENGTH; length++) {
     const a = (answerLists.get(length) ?? "").length / length;
+    const c = (commonLists.get(length) ?? "").length / length;
     const g = (guessLists.get(length) ?? "").length / length;
-    console.log(`${length} letters: ${a} answers, ${g} guesses`);
+    console.log(`${length} letters: ${a} answers, ${c} common, ${g} guesses`);
   }
 }
 

@@ -72,14 +72,18 @@ const DECLARED: Record<string, Declared[]> = {
       why: "an edge beside the play area's frame: an edge ends at a vertex at each end",
     },
   ],
-  wordtrail: [
-    // Yellow, the first word's color, is pale enough that its letters take
-    // ink.
-    {
-      pair: [wordtrail.COL_TEXT, wordtrail.COL_HUE_TEXT],
-      why: "one letter, in ink on an open disc and in ink on a pale yellow filled one",
-    },
-  ],
+  // The first two words' colors, yellow and violet, are pale enough in the
+  // light scheme that their letters take ink, as an open letter's does.
+  wordtrail: (
+    [
+      [wordtrail.COL_TEXT, wordtrail.COL_HUE_TEXT],
+      [wordtrail.COL_TEXT, wordtrail.COL_HUE_TEXT + 1],
+      [wordtrail.COL_HUE_TEXT, wordtrail.COL_HUE_TEXT + 1],
+    ] as [number, number][]
+  ).map((pair) => ({
+    pair,
+    why: "one letter, in ink on an open disc or on a word's colored disc, which says what word it is in",
+  })),
 };
 
 const key = ([a, b]: readonly [number, number]): string =>
