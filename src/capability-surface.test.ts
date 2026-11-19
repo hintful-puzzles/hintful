@@ -36,6 +36,7 @@ import {
   capabilitySets,
   OPTIONAL_GAME_MEMBERS,
 } from "./engine/testing/enrollment.ts";
+import { expectLedger } from "./engine/testing/ledger.ts";
 import { registerAllGames } from "./games/index.ts";
 
 beforeAll(registerAllGames);
@@ -72,7 +73,12 @@ describe("capability surface", () => {
     const empty = capabilitySets()
       .filter((c) => c.ui.length === 0)
       .map((c) => c.id);
-    expect(empty).toEqual(Object.keys(NO_UI_STATE).sort());
+    expectLedger(empty, NO_UI_STATE, {
+      table: "NO_UI_STATE",
+      file: "src/capability-surface.test.ts",
+      found: "games whose `newUi` returns no fields",
+      add: "add it with why nothing is carried between moves",
+    });
   });
 
   it("derives membership from the object, not from a name", () => {

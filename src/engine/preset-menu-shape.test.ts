@@ -12,6 +12,7 @@ import { paramsError } from "./params.ts";
 import { MENU_LINES, MENU_SECTION_LINES } from "./preset-grid.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { rulesetField } from "./ruleset.ts";
+import { expectLedger } from "./testing/ledger.ts";
 import { leafPresets, rectangleShortfall, takesRectangles } from "./testing/presets.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
@@ -142,7 +143,12 @@ describe("a tiered game's menu is a grid", () => {
         !held.has(t) &&
         leaves.some((l) => paramsError(g, withTier(g, l.params, t), true) === null),
     );
-    expect(missing.sort()).toEqual(Object.keys(TIERS_NOT_OFFERED[id] ?? {}).sort());
+    expectLedger(missing, TIERS_NOT_OFFERED[id] ?? {}, {
+      table: `TIERS_NOT_OFFERED.${id}`,
+      file: "src/engine/preset-menu-shape.test.ts",
+      found: "tiers a menu board accepts that no menu board offers",
+      add: "offer the tier on the menu, or add it with why the menu leaves it out",
+    });
   });
 
   it("looked at the tiered games", () => {

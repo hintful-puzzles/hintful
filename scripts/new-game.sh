@@ -169,13 +169,13 @@ What is left to do, and the copy does none of it:
      It names every guard that refuses the game, with the guide section the
      guard cites, all on its first run. Records kept by hand refuse a new
      game at once:
-       - help/puzzles.md: its row (help-coverage.test.ts)
        - the snapshots of capability-surface.test.ts and
          params-stability.test.ts (run each with -u and read the diff)
        - its icons and its spec, steps 5 and 6 below
   2. Replace the puzzle. ${PUZZLE}
      The catalog entry is the puzzle's too: its name, description,
-     objective, aliases and family.
+     objective, aliases, family, and the puzzles it is similar to, which
+     the All-the-puzzles help page lists.
      ${ROLES} is
      drawn by the copy; one the puzzle's hint never names goes, with its
      line in the legend (warm-repaint.test.ts holds the two together).

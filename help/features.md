@@ -59,8 +59,7 @@ tuned or turned off in the
 the hold time and the audio feedback.
 
 **In puzzles that have no use for a right-click, these gestures are switched
-off** — Ball Sort, Cube, Fifteen, Filling, Flip, Flood, Inertia, Pegs, Slide, Sokoban, Target,
-Untangle and Wordguess. There, holding your finger still simply presses; you can rest a
+off**: {{no-right-click-games}}. There, holding your finger still simply presses; you can rest a
 finger on a peg while you decide where to jump it, and the drag still works when
 you move. A mouse's right button does what the left one does.
 
@@ -337,11 +336,11 @@ shows the board's size as it was dealt.
 
 Turning your device never changes a game you're in the middle of: the next new
 game fits the new shape. A few boards are always dealt the way you chose them,
-because turned they would be a different puzzle: Same Game and Bricks, where
-things fall downward; Slide, whose exit is always on the right; and the grid
-types in Loopy and Ascent that become a different grid on their side, and the
-grids of triangles in Cube, which no Cube grid matches on its side. Square
-boards, like every Latin square, are the same either way round.
+because turned they would be a different puzzle: in Same Game, for one, things
+fall downward, and some of Loopy's grid types become a different grid on their
+side. A puzzle none of whose boards turn says why on its help page, under *Not
+in this game*. Square boards, like every Latin square, are the same either way
+round.
 
 ## Filling in all the pencil marks {#mark-all}
 

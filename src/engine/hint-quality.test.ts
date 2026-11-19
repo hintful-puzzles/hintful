@@ -434,7 +434,10 @@ describe("hint narration form, cross-game", () => {
             if (DEDUCTIVE.has(name) && !exemptByForm(step)) {
               expect(
                 NECESSITY.test(step.explanation) || (IDIOMS[name]?.(step) ?? false),
-                `${at} — no necessity modal (and no declared idiom)`,
+                `${at} — no necessity modal. Say what the board forces ` +
+                  "(must, cannot, has to); a game whose hint narrates moves and " +
+                  "deduces nothing goes in NARRATES_MOVES, and a wording the " +
+                  "owner endorsed in IDIOMS (src/engine/hint-quality.test.ts)",
               ).toBe(true);
             }
 

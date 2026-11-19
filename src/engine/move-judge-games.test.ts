@@ -6,14 +6,18 @@
  * is not judged. A verdict names a technique as a player calls it, never by
  * its id, and every name a description declares reads as words.
  *
- * And which hinting games do not judge a move is a ledger, one reason each,
- * so a game whose builder supplies `judgeMove` cannot leave it unwired.
+ * A game whose rules make no move wrong says so (`notApplicable.findMistakes`)
+ * and judges none. Which other hinting games do not judge a move is a ledger,
+ * one reason each, so a game whose builder supplies `judgeMove` cannot leave
+ * it unwired.
  */
 import { describe, expect, it } from "vitest";
 import { verdictOf } from "./move-judge.ts";
+import { sectionState } from "./sections.ts";
 import { dealt } from "./testing/dealt.ts";
-import { REGISTERED_GAME_COUNT } from "./testing/enrollment.ts";
+import { type AnyGame, REGISTERED_GAME_COUNT } from "./testing/enrollment.ts";
 import { HINT_GAMES } from "./testing/hint-games.ts";
+import { expectLedger } from "./testing/ledger.ts";
 
 /** Every compiled description's names, by its module's path. */
 const NAMED = import.meta.glob<Readonly<Record<string, string>>>(
@@ -25,33 +29,21 @@ const NAMED = import.meta.glob<Readonly<Record<string, string>>>(
 const ID = /\b[a-z]+[A-Z]\w*\b|\w\.\w/;
 
 const OWN_SOLVER = "its hint is its own solver's, not the engine's walk";
-const NOT_MARKS = "its moves are not marks a deduction makes";
 const HIDDEN = "its answer is hidden, so no probe is forced";
 
-/** The hinting games with no `judgeMove`, and why (`check-the-last-move`'s
+/** A game whose rules make no move wrong (`notApplicable.findMistakes`) makes
+ * no move a deduction forces either, so it has nothing to judge. */
+const judgesNothing = (game: AnyGame): boolean =>
+  sectionState(game, "findMistakes").kind === "notApplicable";
+
+/** The other hinting games with no `judgeMove`, and why (`check-the-last-move`'s
  * proposal, "Which games"). */
 const UNJUDGED: Readonly<Record<string, string>> = {
   ascent: OWN_SOLVER,
-  ballsort: NOT_MARKS,
   blackbox: HIDDEN,
-  cube: NOT_MARKS,
-  fifteen: NOT_MARKS,
-  flip: NOT_MARKS,
-  flood: NOT_MARKS,
   guess: HIDDEN,
-  inertia: NOT_MARKS,
   mines: OWN_SOLVER,
-  netslide: NOT_MARKS,
-  numgame: NOT_MARKS,
-  pegs: NOT_MARKS,
-  samegame: NOT_MARKS,
-  sixteen: NOT_MARKS,
-  slide: NOT_MARKS,
-  sokoban: NOT_MARKS,
-  twiddle: NOT_MARKS,
   undead: OWN_SOLVER,
-  untangle: NOT_MARKS,
-  wordguess: HIDDEN,
 };
 
 const DIRECT = /^Your last move follows from (?!the board)/;
@@ -78,10 +70,26 @@ describe("judgeMove", () => {
   });
 
   it("is wired in every hinting game but the ledger's", () => {
-    const unjudged = HINT_GAMES.filter(([, g]) => g.judgeMove === undefined).map(
-      ([id]) => id,
+    const judging = HINT_GAMES.filter(([, g]) => !judgesNothing(g));
+    expect(judging.length).toBeGreaterThan(40);
+    expectLedger(
+      judging.filter(([, g]) => g.judgeMove === undefined).map(([id]) => id),
+      UNJUDGED,
+      {
+        table: "UNJUDGED",
+        file: "src/engine/move-judge-games.test.ts",
+        found: "hinting games with a mistake check and no `judgeMove`",
+        add: "wire `judgeMove`, or add it with why no move of its is forced",
+      },
     );
-    expect(unjudged).toEqual(Object.keys(UNJUDGED).sort());
+  });
+
+  it("judges no move in a game whose rules make none wrong", () => {
+    const nothing = HINT_GAMES.filter(([, g]) => judgesNothing(g));
+    expect(nothing.length).toBeGreaterThan(10);
+    expect(
+      nothing.filter(([, g]) => g.judgeMove !== undefined).map(([id]) => id),
+    ).toEqual([]);
   });
 
   for (const [id, game] of HINT_GAMES) {

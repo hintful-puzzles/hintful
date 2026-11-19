@@ -25,6 +25,7 @@ import {
   REGISTERED_GAMES,
 } from "./testing/enrollment.ts";
 import { gatePresets } from "./testing/hint-games.ts";
+import { expectLedger } from "./testing/ledger.ts";
 
 const UNTIERED = REGISTERED_GAMES.filter(([, game]) => game.difficulty === undefined);
 
@@ -97,7 +98,17 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
     const deducing = UNTIERED.filter(
       ([, game]) => game.finishesByDeduction !== nothingToDeduce,
     );
-    expect(Object.keys(NOT_FINISHED).sort()).toEqual(deducing.map(([id]) => id));
+    expectLedger(
+      deducing.map(([id]) => id),
+      NOT_FINISHED,
+      {
+        table: "NOT_FINISHED",
+        file: "src/engine/untiered-load.test.ts",
+        found: "untiered games with a `finishesByDeduction` of their own",
+        add: "add a game ID it reads that deduction does not finish",
+        value: '"<params>:<desc>"',
+      },
+    );
     for (const [id, game] of deducing) {
       const gameId = NOT_FINISHED[id] as string;
       const sep = gameId.indexOf(":");

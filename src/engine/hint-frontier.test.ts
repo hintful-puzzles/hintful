@@ -8,6 +8,7 @@ import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.t
 import { dealt } from "./testing/dealt.ts";
 import { enrolledIn, membersNotMentioning } from "./testing/enrollment.ts";
 import { HINT_GAMES } from "./testing/hint-games.ts";
+import { expectLedger } from "./testing/ledger.ts";
 import { planContinuity } from "./testing/plan-continuity.ts";
 import { boardWidth, leafPresets } from "./testing/presets.ts";
 import type { Point } from "./types.ts";
@@ -276,7 +277,12 @@ describe("hint plans continue from their previous step where they can", () => {
     const ids = HINT_GAMES.map(([id]) => id);
     const without = new Set(membersNotMentioning(ids, "new HintFrontier"));
     const direct = ids.filter((id) => !without.has(id) && !FRONTIER_GAMES.includes(id));
-    expect(direct.sort()).toEqual(Object.keys(OWN_FRONTIER).sort());
+    expectLedger(direct, OWN_FRONTIER, {
+      table: "OWN_FRONTIER",
+      file: "src/engine/hint-frontier.test.ts",
+      found: "hint games that build a `new HintFrontier` outside the candidate plans",
+      add: "plan through the candidate plans, or add it naming the test that measures its continuity",
+    });
   });
 
   it("walks both readings of every game that offers the choice", () => {

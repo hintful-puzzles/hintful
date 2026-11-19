@@ -338,6 +338,8 @@ export const wordguessGame: Game<
   validateParams,
   paramConfig,
   notApplicable: {
+    findMistakes:
+      "A guess is a question about the hidden word and its colors are the answer, so no guess can be wrong, only less telling.",
     transposeParams:
       "Your guesses run down the board in the order you made them, so there is no grid to turn.",
   },

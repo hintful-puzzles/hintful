@@ -24,6 +24,7 @@ import { presetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
 import { SQUARE_GRID, sectionState } from "./sections.ts";
 import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
+import { expectLedger } from "./testing/ledger.ts";
 import type { AnyGame, AnyParams } from "./testing/params-corpus.ts";
 import type { Size } from "./types.ts";
 
@@ -131,7 +132,15 @@ describe("portrait by default", () => {
     const ledger = Object.entries(WIDE_BY_NATURE).flatMap(([id, e]) =>
       e.params.map((p) => `${id}:${p}`),
     );
-    expect([...new Set(wide)].sort()).toEqual(ledger.sort());
+    const missing = [...new Set(wide)].filter((b) => !ledger.includes(b)).sort();
+    const stale = ledger.filter((b) => !wide.includes(b)).sort();
+    expect(
+      { missing, stale },
+      "WIDE_BY_NATURE (src/engine/orientation.test.ts): a board in `missing` " +
+        "draws wider than tall; make it taller, or add its encoded params to its " +
+        "game's `params` with why no taller board is the same puzzle. Remove each " +
+        "board in `stale` from its game's `params`.",
+    ).toEqual({ missing: [], stale: [] });
   });
 });
 
@@ -194,7 +203,13 @@ describe("turning a board on its side", () => {
         }
       }
     }
-    expect([...uneven].sort()).toEqual(Object.keys(UNEVEN_FRAME).sort());
+    expectLedger([...uneven], UNEVEN_FRAME, {
+      table: "UNEVEN_FRAME",
+      file: "src/engine/orientation.test.ts",
+      found:
+        "turning games whose turned board does not exchange its drawn width and height",
+      add: "make `computeSize` exchange them exactly, or add it naming what is drawn along one side only",
+    });
     // Every turning game was checked on a board the exchange could get wrong.
     expect(TURNING.map(([id]) => id).filter((id) => !nonSquare.has(id))).toEqual([]);
   });

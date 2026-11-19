@@ -33,6 +33,7 @@ import {
   resumeStride,
   SEARCH_REACH_GAMES,
 } from "./testing/hint-games.ts";
+import { expectLedger } from "./testing/ledger.ts";
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
@@ -478,7 +479,12 @@ if (SHARE_LATIN.length > 0)
 if (FIRST_SHARE) {
   describe("the games excused the walk's promise are derived, and each is accounted for", () => {
     it("every game that plans by searching has a ledger entry, and nothing else does", () => {
-      expect(BOUNDED_SEARCH_HINTS).toEqual(Object.keys(SEARCH_REACH).sort());
+      expectLedger(BOUNDED_SEARCH_HINTS, SEARCH_REACH, {
+        table: "SEARCH_REACH",
+        file: "src/engine/hint-resume.test.ts",
+        found: "games whose hint refuses a search out of its reach",
+        add: "add it with why the reach is the puzzle's limit and which test walks its largest board",
+      });
     });
   });
 }

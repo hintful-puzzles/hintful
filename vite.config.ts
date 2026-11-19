@@ -28,6 +28,7 @@ import {
   type Transform,
 } from "./vite-plugins/extra-pages.ts";
 import { gameCodeLoader } from "./vite-plugins/game-code.ts";
+import { withGameLists } from "./vite-plugins/game-lists.ts";
 import { withHintMarks } from "./vite-plugins/hint-marks.ts";
 import { withNotApplicable } from "./vite-plugins/not-applicable.ts";
 import { withNoteControls } from "./vite-plugins/note-controls.ts";
@@ -557,6 +558,7 @@ export default defineConfig(async ({ command, mode }) => {
             // Our own help pages, served at /help/...
             sources: "help/*.md",
             transforms: [
+              withGameLists,
               renderMarkdown({
                 html: true, // allow HTML tags in markdown
                 linkify: true,

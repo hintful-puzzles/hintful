@@ -159,7 +159,9 @@ it("every cell member paints its cell background through drawCellBackground", ()
   // one, which no frame can show.
   expect(
     membersNotMentioning(cellMembers, "drawCellBackground("),
-    "carry the note-taking Ui but draw the highlight by hand",
+    "carry the note-taking Ui but draw the highlight by hand: paint it with " +
+      "drawCellBackground, or, if the selection is not a cell, add the game to " +
+      "NOT_A_CELL (src/engine/note-taking-cell-render.test.ts) with what it is",
   ).toEqual([]);
 });
 

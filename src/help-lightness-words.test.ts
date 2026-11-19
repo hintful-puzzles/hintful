@@ -78,7 +78,11 @@ describe("a lightness a help page names is pinned in the palette", () => {
       const excused = NOT_A_PIECE[id]?.[kind];
       if (!named) {
         it(`${id}: no stale ${kind} excuse`, () => {
-          expect(excused).toBeUndefined();
+          expect(
+            excused,
+            `its help no longer says "${kind}": remove NOT_A_PIECE.${id}.${kind} ` +
+              "(src/help-lightness-words.test.ts)",
+          ).toBeUndefined();
         });
         continue;
       }
@@ -89,7 +93,13 @@ describe("a lightness a help page names is pinned in the palette", () => {
         // Exactly one of the two: pinned, or excused with what the word means.
         expect(
           pinned,
-          `${id}: "${WORDS[kind].exec(page)?.[0]}" (${excused ?? "no excuse"})`,
+          excused === undefined
+            ? `${id}: its help says "${WORDS[kind].exec(page)?.[0]}" and no color ` +
+                "is pinned for it. Pin the piece's color, or add " +
+                `\`${kind}: "<what the word means>"\` to NOT_A_PIECE.${id} ` +
+                "(src/help-lightness-words.test.ts)"
+            : `${id}: NOT_A_PIECE.${id}.${kind} excuses a color that is ` +
+                "pinned: remove the excuse (src/help-lightness-words.test.ts)",
         ).toBe(excused === undefined);
       });
     }

@@ -36,6 +36,7 @@
     "agent-diagnostics": "sh scripts/agent-diagnostics.sh",
     "pregame": "node scripts/describe.ts --quiet",
     "game": "node scripts/game.ts",
+    "game-id": "node scripts/game-id.ts",
     "prehint-scan": "node scripts/describe.ts --quiet",
     "hint-scan": "node scripts/hint-scan.ts",
     "predeal-walk": "node scripts/describe.ts --quiet",

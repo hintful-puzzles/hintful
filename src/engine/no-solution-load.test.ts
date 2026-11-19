@@ -16,6 +16,7 @@ import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,
 } from "./testing/enrollment.ts";
+import { expectLedger } from "./testing/ledger.ts";
 
 const UNCHECKED = REGISTERED_GAMES.filter(
   ([, game]) => game.findMistakes === undefined,
@@ -90,14 +91,31 @@ describe("a board with no solution, in a game with no mistake check", () => {
   it("has one pinned for every such game, refused exactly where the game proves it", () => {
     expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(57);
     expect(UNCHECKED.length).toBeGreaterThanOrEqual(11);
-    expect(Object.keys(REFUSED).sort()).toEqual(PROVING.map(([id]) => id));
-    expect(
-      [
-        ...Object.keys(REFUSED),
-        ...Object.keys(LET_THROUGH),
-        ...Object.keys(ALWAYS_SOLVABLE),
-      ].sort(),
-    ).toEqual(UNCHECKED.map(([id]) => id));
+    expectLedger(
+      PROVING.map(([id]) => id),
+      REFUSED,
+      {
+        table: "REFUSED",
+        file: "src/engine/no-solution-load.test.ts",
+        found: "games with no mistake check that implement `hasNoSolution`",
+        add: "add a game ID with no solution that its `hasNoSolution` proves",
+        value: '"<params>:<desc>"',
+      },
+    );
+    const unproving = UNCHECKED.filter(([, game]) => game.hasNoSolution === undefined);
+    expectLedger(
+      unproving.map(([id]) => id),
+      { ...LET_THROUGH, ...ALWAYS_SOLVABLE },
+      {
+        table: "LET_THROUGH or ALWAYS_SOLVABLE",
+        file: "src/engine/no-solution-load.test.ts",
+        found: "games with neither a mistake check nor `hasNoSolution`",
+        add:
+          "implement `hasNoSolution`, add a game ID with no solution that loads " +
+          "to LET_THROUGH, or add it to ALWAYS_SOLVABLE with why no board of it " +
+          "lacks a solution",
+      },
+    );
   });
 
   it("is refused where the game proves it has none", () => {

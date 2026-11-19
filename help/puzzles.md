@@ -3,75 +3,7 @@
 Every puzzle in Hintful Puzzles, with a link to play it and a link to its
 instructions. The last column names puzzles you may know it as elsewhere.
 
-<!-- this table is manually generated for now -->
-
-| Puzzle                   | Instructions     | Similar/related puzzles[\*](#tm)                                                |
-|--------------------------|------------------|---------------------------------------------------------------------------------|
-| [ABCD](../abcd)          | [help](abcd)     | ABC-Kombi                                                                       |
-| [Adjacent](../adjacent)  | [help](adjacent) |                                                                                 |
-| [Ascent](../ascent)      | [help](ascent)   | Hidato®, Hidoku, King's Journey, Numbrix                                        |
-| [Ball Sort](../ballsort) | [help](ballsort) | Water Sort, Color Sort                                                          |
-| [Black Box](../blackbox) | [help](blackbox) |                                                                                 |
-| [Boats](../boats)        | [help](boats)    | Battleships Solitaire, Bimaru, Marinespiel                                      |
-| [Bricks](../bricks)      | [help](bricks)   | Tawamurenga                                                                     |
-| [Bridges](../bridges)    | [help](bridges)  | Hashiwokakero (橋をかけろ)                                                           |
-| [Clusters](../clusters)  | [help](clusters) | Kurasuta (クラスター)                                                                |
-| [Crossing](../crossing)  | [help](crossing) | Nansuke, Number Skeleton                                                        |
-| [Cube](../cube)          | [help](cube)     |                                                                                 |
-| [Dominosa](../dominosa)  | [help](dominosa) |                                                                                 |
-| [Fifteen](../fifteen)    | [help](fifteen)  | (classic sliding tile puzzle)                                                   |
-| [Filling](../filling)    | [help](filling)  | Fillomino                                                                       |
-| [Flip](../flip)          | [help](flip)     |                                                                                 |
-| [Flood](../flood)        | [help](flood)    |                                                                                 |
-| [Galaxies](../galaxies)  | [help](galaxies) | Tentai Show, Spiral                                                             |
-| [Group](../group)        | [help](group)    |                                                                                 |
-| [Guess](../guess)        | [help](guess)    | Mastermind®                                                                     |
-| [Inertia](../inertia)    | [help](inertia)  |                                                                                 |
-| [Keen](../keen)          | [help](keen)     | KenKen®, Mathdoku                                                               |
-| [Light Up](../lightup)   | [help](lightup)  | Akari                                                                           |
-| [Loopy](../loopy)        | [help](loopy)    | Slitherlink                                                                     |
-| [Magnets](../magnets)    | [help](magnets)  | Magnete                                                                         |
-| [Map](../map)            | [help](map)      |                                                                                 |
-| [Mathrax](../mathrax)    | [help](mathrax)  |                                                                                 |
-| [Mines](../mines)        | [help](mines)    | Minesweeper                                                                     |
-| [Mosaic](../mosaic)      | [help](mosaic)   | ArtMosaico, Cuenta y Sombera, Komsu Karala, Majipiku, Voisimage, etc.           |
-| [Net](../net)            | [help](net)      | FreeNet, NetWalk                                                                |
-| [Netslide](../netslide)  | [help](netslide) |                                                                                 |
-| [Norinori](../norinori)  | [help](norinori) |                                                                                 |
-| [Palisade](../palisade)  | [help](palisade) | Five Cells                                                                      |
-| [Path](../path)          | [help](path)     | Zip, Numberlink, Arukone, Flow Free®                                            |
-| [Pattern](../pattern)    | [help](pattern)  | Nonograms, Picross®                                                             |
-| [Pearl](../pearl)        | [help](pearl)    | Masyu                                                                           |
-| [Pegs](../pegs)          | [help](pegs)     | Peg Solitaire (classic marble jumping puzzle)                                   |
-| [Range](../range)        | [help](range)    | Kurodoko (黒どこ), Kuromasu                                                        |
-| [Rectangles](../rect)    | [help](rect)     | Shikaku, Patches                                                                |
-| [Rome](../rome)          | [help](rome)     | Arrows, Roma                                                                    |
-| [Salad](../salad)        | [help](salad)    | ABC End View, Nanbaboru (ナンバーボール), Number Ball                                  |
-| [Same Game](../samegame) | [help](samegame) | Chain Shot, Clickomania, Mahki                                                  |
-| [Seismic](../seismic)    | [help](seismic)  | Hakyuu, Ripple Effect, Tectonic, Suguru                                         |
-| [Separate](../separate)  | [help](separate) |                                                                                 |
-| [Signpost](../signpost)  | [help](signpost) | Arrow Path, Arrows, Pfeilpfad                                                   |
-| [Singles](../singles)    | [help](singles)  | Hitori (一人)                                                                     |
-| [Sixteen](../sixteen)    | [help](sixteen)  |                                                                                 |
-| [Slant](../slant)        | [help](slant)    | Gokigen Naname (ごきげんななめ)                                                        |
-| [Slide](../slide)        | [help](slide)    | Klotski                                                                         |
-| [Sokoban](../sokoban)    | [help](sokoban)  | Sokoban (倉庫番)                                                                   |
-| [Solo](../solo)          | [help](solo)     | Sudoku, Diagonal (X) Sudoku, Hexdoku, Jigsaw Sudoku, Killer Sudoku, Mega Sudoku |
-| [Spokes](../spokes)      | [help](spokes)   |                                                                                 |
-| [Star Battle](../starbattle) | [help](starbattle) | Queens, Two Not Touch |
-| [Sticks](../sticks)      | [help](sticks)   | Tatebo-Yokobo (タテボーヨコボー)                                                        |
-| [Subsets](../subsets)    | [help](subsets)  | Sabusettorinku (サブセットリンク)                                                       |
-| [Target](../numgame)     | [help](numgame)  | Countdown numbers round, Digits                                                 |
-| [Tents](../tents)        | [help](tents)    |                                                                                 |
-| [Towers](../towers)      | [help](towers)   | Skyscrapers                                                                     |
-| [Tracks](../tracks)      | [help](tracks)   |                                                                                 |
-| [Twiddle](../twiddle)    | [help](twiddle)  |                                                                                 |
-| [Undead](../undead)      | [help](undead)   | Haunted Mirror Maze, Spukschloss                                                |
-| [Unequal](../unequal)    | [help](unequal)  | Futoshiki (ふと指揮)                                                              |
-| [Unruly](../unruly)      | [help](unruly)   | Tohu-Wa-Vohu, Binairo, Tic-Tac-Logic                                            |
-| [Untangle](../untangle)  | [help](untangle) | Planarity                                                                       |
-| [Wordguess](../wordguess) | [help](wordguess) | Wordle®, Lingo                                                                 |
-| [Wordtrail](../wordtrail) | [help](wordtrail) | Wend                                                                           |
+{{puzzle-list}}
 
 {.puzzles-list}
 

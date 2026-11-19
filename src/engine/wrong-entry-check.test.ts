@@ -68,6 +68,7 @@ import {
 } from "./testing/enrollment.ts";
 import { gatePresets } from "./testing/hint-games.ts";
 import { GESTURE_KINDS, randomGesture } from "./testing/input-probe.ts";
+import { expectLedger } from "./testing/ledger.ts";
 import { inSweep, itOverWholeSweep } from "./testing/slow.ts";
 
 const GESTURES = 180;
@@ -265,8 +266,15 @@ describe("Check & save names a wrong entry", () => {
 
   it("made a wrong entry in every game but the ones it says it cannot", () => {
     const none = ran.filter(([id, game]) => sweep(id, game).wrongEntries === 0);
-    expect(none.map(([id]) => id)).toEqual(
-      Object.keys(UNREACHED).filter(inSweep).sort(),
+    expectLedger(
+      none.map(([id]) => id),
+      Object.fromEntries(Object.entries(UNREACHED).filter(([id]) => inSweep(id))),
+      {
+        table: "UNREACHED",
+        file: "src/engine/wrong-entry-check.test.ts",
+        found: "games in which no gesture made a wrong entry",
+        add: "find why the gestures enter nothing the answer contradicts, or add it with why no entry of the game can be wrong",
+      },
     );
   });
 

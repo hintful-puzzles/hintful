@@ -88,7 +88,7 @@ const SETS: Record<string, [number, number]> = {
   guess: [6, 15],
   samegame: [1, 9],
   map: [2, 5],
-  mines: [2, 9],
+  mines: [4, 11],
 };
 
 function worstPair(entries: OKLCH[]): { d: number; i: number; j: number } {

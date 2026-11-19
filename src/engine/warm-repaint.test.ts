@@ -32,6 +32,7 @@ import "../games/index.ts";
 import type { MarkRole } from "./hint-words.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import type { AnyGame } from "./testing/input-probe.ts";
+import { expectLedger } from "./testing/ledger.ts";
 import {
   type RepaintRun,
   repaintDifferential,
@@ -252,7 +253,11 @@ describe("a warm frame matches a fresh one", () => {
       const r = repaintDifferential(game, id, PINNED_EVENTS, board);
       expect(r.mismatch, `${board}: ${JSON.stringify(r.mismatch)}`).toBeNull();
       const adds = [...r.reached.marks].filter((p) => !run.reached.marks.has(p));
-      expect(adds, `${board} paints nothing the seeded run does not`).not.toEqual([]);
+      expect(
+        adds,
+        `${board} paints nothing the seeded run does not: remove it from ` +
+          "PINNED (src/engine/warm-repaint.test.ts)",
+      ).not.toEqual([]);
       return r;
     });
 
@@ -261,7 +266,8 @@ describe("a warm frame matches a fresh one", () => {
       if (pin) {
         expect(
           run.reached.mistaken,
-          "the seeded run checks a wrong board: drop its pin",
+          "the seeded run checks a wrong board: remove its entry from WRONG " +
+            "(src/engine/warm-repaint.test.ts)",
         ).toBe(0);
         const r = repaintDifferential(game, id, PINNED_EVENTS, pin.board, pin.moves);
         expect(r.mismatch, `${pin.board}: ${JSON.stringify(r.mismatch)}`).toBeNull();
@@ -272,7 +278,11 @@ describe("a warm frame matches a fresh one", () => {
       } else {
         expect(
           run.reached.mistaken,
-          "finds mistakes, painted none on a warm frame: pin a wrong board",
+          "finds mistakes, painted none on a warm frame. Pin a wrong board in " +
+            `WRONG (src/engine/warm-repaint.test.ts): \`${id}: { board: ` +
+            '"<params>:<desc>", moves: [<the moves that make it wrong>] },`, ' +
+            "the board from `npm run game-id -- " +
+            `${id} --seed <any>\``,
         ).toBeGreaterThan(0);
       }
     }
@@ -300,8 +310,14 @@ describe("a warm frame matches a fresh one", () => {
     const missing = [...asked]
       .filter((p) => roleOf(p) in legend && !painted.has(p))
       .sort();
-    expect(missing, "marks the renderer can paint that no run painted").toEqual(
-      Object.keys(excused).sort(),
-    );
+    expectLedger(missing, excused, {
+      table: `UNREACHED.${id}`,
+      file: "src/engine/warm-repaint.test.ts",
+      found: "marks the renderer can paint that no run painted",
+      add:
+        `pin a board whose hint paints it in PINNED.${id} ` +
+        `(\`npm run game-id -- ${id} --seed <any>\` prints one), or add the ` +
+        "mark with why the hint never draws it",
+    });
   });
 });

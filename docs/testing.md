@@ -269,10 +269,10 @@ literals, hint wording, note vocabulary) are checked by guards outside
 - **It names every refusal at once**, each with the guide sections the
   refusing guard cites. A guard that cites none says what it asks in its
   header.
-- **A game it has never seen is refused by two records kept by hand**: its
-  row in `help/puzzles.md`, and the snapshots of `capability-surface.test.ts`
-  and `params-stability.test.ts`, which you write again with
-  `npx vitest run <file> -u` after reading the diff.
+- **A game it has never seen is refused by the records kept by hand**: the
+  snapshots of `capability-surface.test.ts` and `params-stability.test.ts`,
+  which you write again with `npx vitest run <file> -u` after reading the
+  diff, and the ledgers of § "What a game owes the cross-game guards".
 - **Green here is a commit's verdict and not the gate's.** It ends by saying
   what it did not run: the other games' cases, the floors over the whole
   collection, the later boards of each kind that CI walks, the gate's checks
@@ -327,8 +327,9 @@ a mid-plan hint frame.
 When a check needs the running app, choose the board so the frame is one
 press deep, and do not walk in from a default board. Scan seeds in a
 throwaway vitest file for a board whose first press is the frame under test,
-print its game ID, and open `/<game>.html?id=<id>` (`routing.ts` reads `type`
-and `id` off the query string).
+or print one seed's board with `npm run game-id -- <game> [<params>] --seed
+<n>`, and open `/<game>.html?id=<id>` (`routing.ts` reads `type` and `id`
+off the query string).
 
 ### Watching an offline update
 
@@ -819,6 +820,14 @@ reads; no list is edited. What each asks of the game's author:
 - **A new `Ui` or draw-state field**, or a new optional `Game` method, moves
   [`capability-surface.test.ts`](../src/capability-surface.test.ts)'s
   snapshot. Re-baseline with `vitest run <path> -u` and say so in the change.
+- **A ledger entry**, where the game is an exception a guard cannot read off
+  it: a board no input breaks once solved, a frame drawn wider along one
+  side. The failure names the table, its file and the line to add, and an
+  entry that no longer applies fails until its line goes. Before adding one,
+  ask whether the game already says it: a game whose rules make no move wrong
+  declares `notApplicable.findMistakes`, and every guard that asks about a
+  wrong or forced move reads that. A pinned board is written as `params:desc`,
+  printed by `npm run game-id -- <game> [<params>] --seed <any>`.
 - **An exported function inserted directly above another** strands the second
   one's doc comment on the first.
   [`asset-integrity.test.ts`](../src/asset-integrity.test.ts) scans every
@@ -844,9 +853,13 @@ For the author of a new cross-game guard. The normative form is the
    array is green.
 3. **State exceptions as a ledger in the guard, never as the enrollment
    key**: one entry per member with its reason, asserted equal to what the
-   derivation found. Exemplars: `input-parity.test.ts`'s `NO_KEYBOARD`,
-   `hint-quality.test.ts`'s `NARRATES_MOVES`, `contract-surface.test.ts`'s
-   `NO_CONSUMER`. An empty ledger meant to stay empty is a real assertion. An
+   derivation found, with `expectLedger`
+   ([`testing/ledger.ts`](../src/engine/testing/ledger.ts)), so a porter who
+   has never seen the guard is told which table to open and what to write.
+   Exemplars: `position-status.test.ts`'s `UNBREAKABLE`,
+   `move-judge-games.test.ts`'s `UNJUDGED`. First ask whether the game
+   already states the fact, in a member's presence or a `notApplicable`
+   reason, and read that instead. An empty ledger meant to stay empty is a real assertion. An
    excuse that the game has no such section is not an entry: it is the game's
    `notApplicable` reason, read with `sectionState`
    ([`mechanics.md`](./mechanics.md) § "Contract sections, and what makes a

@@ -34,6 +34,7 @@
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { capabilitySets } from "./engine/testing/enrollment.ts";
+import { expectLedger } from "./engine/testing/ledger.ts";
 import { registerAllGames } from "./games/index.ts";
 
 beforeAll(registerAllGames);
@@ -131,7 +132,13 @@ describe("a game that finds mistakes has a test that paints them", () => {
     const uncovered = offers
       .filter((id) => !isCovered(testSources.get(id) ?? []))
       .sort();
-    expect(uncovered).toEqual([...NO_OVERLAY_TEST].sort());
+    expectLedger(uncovered, Object.fromEntries(NO_OVERLAY_TEST.map((id) => [id, id])), {
+      table: "NO_OVERLAY_TEST",
+      file: "src/mistake-overlay-coverage.test.ts",
+      found: "games with `findMistakes` and no test that paints the overlay",
+      add: 'paint the overlay in its own test (docs/rendering.md § "Prove the overlay repaints"); the list only shrinks',
+      value: null,
+    });
   });
 
   it("keeps the ledger free of games that do not offer mistakes at all", () => {

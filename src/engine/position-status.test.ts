@@ -45,6 +45,7 @@ import {
   probePoints,
   targetPoints,
 } from "./testing/input-probe.ts";
+import { expectLedger } from "./testing/ledger.ts";
 
 beforeAll(registerAllGames);
 
@@ -196,7 +197,12 @@ describe("a game's status is judged from the board alone", () => {
         });
       if (oneMoves || !breaksWithin([], 3)) unbroken.push(id);
     }
-    expect(unbroken.sort()).toEqual(Object.keys(UNBREAKABLE).sort());
+    expectLedger(unbroken, UNBREAKABLE, {
+      table: "UNBREAKABLE",
+      file: "src/engine/position-status.test.ts",
+      found: "games whose solved board no input took off its solution",
+      add: "find the latch that keeps the board solved, or add it with the rule that lets no move break a solved board",
+    });
     expect(walked).toBeGreaterThanOrEqual(40);
   });
 

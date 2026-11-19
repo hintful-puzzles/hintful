@@ -21,6 +21,7 @@ import "../games/index.ts";
 import { resolvePalette } from "../engine/color/color-mkhighlight.ts";
 import { REGION_FILLS } from "../engine/color/colors.ts";
 import { getTsGame } from "../engine/registry.ts";
+import { expectLedger } from "../engine/testing/ledger.ts";
 import { inSweep } from "../engine/testing/slow.ts";
 import type { Color } from "../engine/types.ts";
 import * as inertia from "../games/inertia/render.ts";
@@ -102,7 +103,12 @@ describe("neighbors stand apart in the dark scheme", () => {
         .filter((p) => !atMargin(p))
         .map((p) => `${p.kind}:${p.a}:${p.b}`)
         .sort();
-      expect(close).toEqual(Object.keys(CLOSE_ON_PURPOSE[id] ?? {}).sort());
+      expectLedger(close, CLOSE_ON_PURPOSE[id] ?? {}, {
+        table: `CLOSE_ON_PURPOSE.${id}`,
+        file: "src/puzzle/neighbor-contrast.test.ts",
+        found: "palette pairs drawn side by side closer than the dark floor",
+        add: "pull the two colors apart in the dark scheme, or add the pair with why it is close on purpose",
+      });
     });
   }
 

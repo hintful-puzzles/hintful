@@ -57,15 +57,6 @@ const CONTINUING: readonly string[] = DRIVING.filter((id) => {
 });
 
 /**
- * The games planning through `deduceHintPlan` without a continuing ladder, each
- * with why. Asserted as an exact set, so a game that moves on fails here until
- * its entry goes, and a new one is not left out in silence.
- */
-const NOT_CONTINUING: Record<string, string> = {
-  ascent: "it takes the frontier itself, and hint-frontier.test.ts measures it",
-};
-
-/**
  * The share of the positions where a plan could continue that it left
  * anyway. With the frontier planted off it was 6% at the least (3 of 48) and
  * 96% at the most, most games over 20% (2026-10-22), so the bound sits
@@ -78,9 +69,19 @@ describe("ladder hint plans continue from their latest step where they can", () 
     expect(CONTINUING).toContain("crossing");
   });
 
-  it("accounts for every game on deduceHintPlan that does not", () => {
-    const off = mentioning("deduceHintPlan(").filter((id) => !CONTINUING.includes(id));
-    expect(off.sort()).toEqual(Object.keys(NOT_CONTINUING).sort());
+  // A game that builds its own frontier continues by it, and
+  // `hint-frontier.test.ts`'s `OWN_FRONTIER` accounts for it.
+  it("finds every game on deduceHintPlan continuing, or taking the frontier itself", () => {
+    const own = mentioning("new HintFrontier");
+    expect(own.length).toBeGreaterThan(0);
+    const off = mentioning("deduceHintPlan(").filter(
+      (id) => !CONTINUING.includes(id) && !own.includes(id),
+    );
+    expect(
+      off,
+      "plans through deduceHintPlan with neither a continuing ladder nor a " +
+        "frontier of its own: drive the ladder with `continuing`",
+    ).toEqual([]);
   });
 
   for (const id of CONTINUING) {

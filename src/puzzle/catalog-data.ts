@@ -72,6 +72,17 @@ export interface PuzzleData {
    * per-game subtitle, nearly unique per game.
    */
   family: PuzzleFamily;
+  /**
+   * The puzzles a reader may know this one as elsewhere, as the "All the
+   * puzzles" help page shows them (`game-lists.ts`): markdown,
+   * with a trademark marked ® and a name in its own script beside it.
+   *
+   * Not `aliases`, which are what a player types into search: plain
+   * spellings, and names of the puzzle itself only. This names related
+   * puzzles too (Killer Sudoku beside Solo), and a search for one should not
+   * find the other.
+   */
+  similar?: string;
   // Whether a game is a draft is not here: the home screen reads it from the
   // game's own contract sections, computed at build time
   // (`vite-plugins/draft-puzzles.ts`).
@@ -85,6 +96,7 @@ export const puzzleCatalog = {
       "Place letters according to the numbers. Identical letters cannot touch.",
     collection: "unreleased",
     family: "numbers",
+    similar: "ABC-Kombi",
   },
   adjacent: {
     name: "Adjacent",
@@ -101,6 +113,7 @@ export const puzzleCatalog = {
     objective: "Place each number once to create a path.",
     collection: "unreleased",
     family: "lines",
+    similar: "Hidato®, Hidoku, King's Journey, Numbrix",
   },
   ballsort: {
     name: "Ball Sort",
@@ -109,6 +122,7 @@ export const puzzleCatalog = {
     objective: "Pour balls between tubes until each tube holds one color.",
     collection: "own",
     family: "moves",
+    similar: "Water Sort, Color Sort",
   },
   blackbox: {
     name: "Black Box",
@@ -124,6 +138,7 @@ export const puzzleCatalog = {
     objective: "Find the fleet in the grid.",
     collection: "unreleased",
     family: "objects",
+    similar: "Battleships Solitaire, Bimaru, Marinespiel",
   },
   bricks: {
     name: "Bricks",
@@ -131,6 +146,7 @@ export const puzzleCatalog = {
     objective: "Shade cells in the hexagonal grid, each one supported from below.",
     collection: "unreleased",
     family: "shading",
+    similar: "Tawamurenga",
   },
   bridges: {
     name: "Bridges",
@@ -139,6 +155,7 @@ export const puzzleCatalog = {
     objective: "Connect all the islands with a network of bridges.",
     collection: "original",
     family: "lines",
+    similar: "Hashiwokakero (橋をかけろ)",
   },
   clusters: {
     name: "Clusters",
@@ -146,6 +163,7 @@ export const puzzleCatalog = {
     objective: "Fill in the grid with red and blue clusters, with all dead ends given.",
     collection: "unreleased",
     family: "shading",
+    similar: "Kurasuta (クラスター)",
   },
   crossing: {
     name: "Crossing",
@@ -154,6 +172,7 @@ export const puzzleCatalog = {
     objective: "Place each number from the list into the crossword.",
     collection: "unreleased",
     family: "numbers",
+    similar: "Nansuke, Number Skeleton",
   },
   cube: {
     name: "Cube",
@@ -177,6 +196,7 @@ export const puzzleCatalog = {
     objective: "Slide the tiles around to arrange them into order.",
     collection: "original",
     family: "rearranging",
+    similar: "(classic sliding tile puzzle)",
   },
   filling: {
     name: "Filling",
@@ -185,6 +205,7 @@ export const puzzleCatalog = {
     objective: "Mark every square with the area of its containing region.",
     collection: "original",
     family: "regions",
+    similar: "Fillomino",
   },
   flip: {
     name: "Flip",
@@ -208,6 +229,7 @@ export const puzzleCatalog = {
     objective: "Divide the grid into rotationally symmetric regions around dots.",
     collection: "original",
     family: "regions",
+    similar: "Tentai Show, Spiral",
   },
   group: {
     name: "Group",
@@ -223,6 +245,7 @@ export const puzzleCatalog = {
     objective: "Guess the hidden combination of colors.",
     collection: "original",
     family: "hidden",
+    similar: "Mastermind®",
   },
   inertia: {
     name: "Inertia",
@@ -238,6 +261,7 @@ export const puzzleCatalog = {
     objective: "Complete the latin square in accordance with the arithmetic clues.",
     collection: "original",
     family: "latin",
+    similar: "KenKen®, Mathdoku",
   },
   lightup: {
     name: "Light Up",
@@ -246,6 +270,7 @@ export const puzzleCatalog = {
     objective: "Place bulbs to light up all the squares.",
     collection: "original",
     family: "objects",
+    similar: "Akari",
   },
   loopy: {
     name: "Loopy",
@@ -254,6 +279,7 @@ export const puzzleCatalog = {
     objective: "Draw a single closed loop, given clues about number of adjacent edges.",
     collection: "original",
     family: "lines",
+    similar: "Slitherlink",
   },
   magnets: {
     name: "Magnets",
@@ -261,6 +287,7 @@ export const puzzleCatalog = {
     objective: "Place magnets to satisfy the clues and avoid like poles touching.",
     collection: "original",
     family: "objects",
+    similar: "Magnete",
   },
   map: {
     name: "Map",
@@ -283,6 +310,7 @@ export const puzzleCatalog = {
     objective: "Find all the mines without treading on any of them.",
     collection: "original",
     family: "hidden",
+    similar: "Minesweeper",
   },
   mosaic: {
     name: "Mosaic",
@@ -292,6 +320,7 @@ export const puzzleCatalog = {
       "Fill in the grid given clues about the number of nearby shaded squares.",
     collection: "original",
     family: "shading",
+    similar: "ArtMosaico, Cuenta y Sombera, Komsu Karala, Majipiku, Voisimage, etc.",
   },
   net: {
     name: "Net",
@@ -300,6 +329,7 @@ export const puzzleCatalog = {
     objective: "Rotate each tile to reassemble the network.",
     collection: "original",
     family: "rearranging",
+    similar: "FreeNet, NetWalk",
   },
   netslide: {
     name: "Netslide",
@@ -324,6 +354,7 @@ export const puzzleCatalog = {
     objective: "Combine the numbers with + − × ÷ to make the target.",
     collection: "own",
     family: "numbers",
+    similar: "Countdown numbers round, Digits",
   },
   palisade: {
     name: "Palisade",
@@ -332,6 +363,7 @@ export const puzzleCatalog = {
     objective: "Divide the grid into equal-sized areas in accordance with the clues.",
     collection: "original",
     family: "regions",
+    similar: "Five Cells",
   },
   path: {
     name: "Path",
@@ -341,6 +373,7 @@ export const puzzleCatalog = {
       "Draw one line through the numbers in order, or join each pair of like numbers, so that the lines fill the grid and never cross.",
     collection: "own",
     family: "lines",
+    similar: "Zip, Numberlink, Arukone, Flow Free®",
   },
   pattern: {
     name: "Pattern",
@@ -350,6 +383,7 @@ export const puzzleCatalog = {
       "Fill in the pattern in the grid, given only the lengths of runs of black squares.",
     collection: "original",
     family: "shading",
+    similar: "Nonograms, Picross®",
   },
   pearl: {
     name: "Pearl",
@@ -359,6 +393,7 @@ export const puzzleCatalog = {
       "Draw a single closed loop, given clues about corner and straight squares.",
     collection: "original",
     family: "lines",
+    similar: "Masyu",
   },
   pegs: {
     name: "Pegs",
@@ -367,6 +402,7 @@ export const puzzleCatalog = {
     objective: "Jump pegs over each other to remove all but one.",
     collection: "original",
     family: "moves",
+    similar: "Peg Solitaire (classic marble jumping puzzle)",
   },
   range: {
     name: "Range",
@@ -376,6 +412,7 @@ export const puzzleCatalog = {
       "Place black squares to limit the visible distance from each numbered cell.",
     collection: "original",
     family: "shading",
+    similar: "Kurodoko (黒どこ), Kuromasu",
   },
   rect: {
     name: "Rectangles",
@@ -385,6 +422,7 @@ export const puzzleCatalog = {
       "Divide the grid into rectangles, each holding one clue and the size or shape it asks for.",
     collection: "original",
     family: "regions",
+    similar: "Shikaku, Patches",
   },
   rome: {
     name: "Rome",
@@ -392,6 +430,7 @@ export const puzzleCatalog = {
     objective: "Fill the grid with arrows leading to a goal.",
     collection: "unreleased",
     family: "lines",
+    similar: "Arrows, Roma",
   },
   salad: {
     name: "Salad",
@@ -399,6 +438,7 @@ export const puzzleCatalog = {
     objective: "Place each character once per row and column, leaving some empty.",
     collection: "unreleased",
     family: "latin",
+    similar: "ABC End View, Nanbaboru (ナンバーボール), Number Ball",
   },
   samegame: {
     name: "Same Game",
@@ -407,6 +447,7 @@ export const puzzleCatalog = {
     objective: "Clear the grid by removing touching groups of the same color squares.",
     collection: "original",
     family: "moves",
+    similar: "Chain Shot, Clickomania, Mahki",
   },
   seismic: {
     name: "Seismic",
@@ -415,6 +456,7 @@ export const puzzleCatalog = {
     objective: "Place numbers in each area, spacing equal numbers far enough apart.",
     collection: "unreleased",
     family: "numbers",
+    similar: "Hakyuu, Ripple Effect, Tectonic, Suguru",
   },
   separate: {
     name: "Separate",
@@ -429,6 +471,7 @@ export const puzzleCatalog = {
     objective: "Connect the squares into a path following the arrows.",
     collection: "original",
     family: "lines",
+    similar: "Arrow Path, Arrows, Pfeilpfad",
   },
   singles: {
     name: "Singles",
@@ -437,6 +480,7 @@ export const puzzleCatalog = {
     objective: "Shade the right set of duplicate numbers.",
     collection: "original",
     family: "shading",
+    similar: "Hitori (一人)",
   },
   sixteen: {
     name: "Sixteen",
@@ -451,6 +495,7 @@ export const puzzleCatalog = {
     objective: "Draw a maze of slanting lines that matches the clues.",
     collection: "original",
     family: "lines",
+    similar: "Gokigen Naname (ごきげんななめ)",
   },
   slide: {
     name: "Slide",
@@ -458,6 +503,7 @@ export const puzzleCatalog = {
     objective: "Slide the blocks to let the key block out.",
     collection: "original",
     family: "rearranging",
+    similar: "Klotski",
   },
   sokoban: {
     name: "Sokoban",
@@ -465,6 +511,7 @@ export const puzzleCatalog = {
     objective: "Push all the barrels into the target squares.",
     collection: "original",
     family: "moves",
+    similar: "Sokoban (倉庫番)",
   },
   solo: {
     name: "Solo",
@@ -473,6 +520,8 @@ export const puzzleCatalog = {
     objective: "Fill the grid so every row, column and block has one of each digit.",
     collection: "original",
     family: "latin",
+    similar:
+      "Sudoku, Diagonal (X) Sudoku, Hexdoku, Jigsaw Sudoku, Killer Sudoku, Mega Sudoku",
   },
   spokes: {
     name: "Spokes",
@@ -489,6 +538,7 @@ export const puzzleCatalog = {
       "Place stars so that every row, column and region holds the same number and no two touch.",
     collection: "own",
     family: "objects",
+    similar: "Queens, Two Not Touch",
   },
   sticks: {
     name: "Sticks",
@@ -497,6 +547,7 @@ export const puzzleCatalog = {
     objective: "Fill in the grid with horizontal and vertical line segments.",
     collection: "unreleased",
     family: "lines",
+    similar: "Tatebo-Yokobo (タテボーヨコボー)",
   },
   subsets: {
     name: "Subsets",
@@ -504,6 +555,7 @@ export const puzzleCatalog = {
     objective: "Place each set once, in accordance with the subset clues.",
     collection: "unreleased",
     family: "numbers",
+    similar: "Sabusettorinku (サブセットリンク)",
   },
   tents: {
     name: "Tents",
@@ -520,6 +572,7 @@ export const puzzleCatalog = {
     objective: "Complete the latin square of towers in accordance with the clues.",
     collection: "original",
     family: "latin",
+    similar: "Skyscrapers",
   },
   tracks: {
     name: "Tracks",
@@ -543,6 +596,7 @@ export const puzzleCatalog = {
     objective: "Place ghosts, vampires and zombies to match what the mirrors see.",
     collection: "original",
     family: "objects",
+    similar: "Haunted Mirror Maze, Spukschloss",
   },
   unequal: {
     name: "Unequal",
@@ -551,6 +605,7 @@ export const puzzleCatalog = {
     objective: "Complete the latin square in accordance with the > signs.",
     collection: "original",
     family: "latin",
+    similar: "Futoshiki (ふと指揮)",
   },
   unruly: {
     name: "Unruly",
@@ -558,6 +613,7 @@ export const puzzleCatalog = {
     objective: "Fill the grid with blocks and discs, avoiding runs of three.",
     collection: "original",
     family: "shading",
+    similar: "Tohu-Wa-Vohu, Binairo, Tic-Tac-Logic",
   },
   untangle: {
     name: "Untangle",
@@ -566,6 +622,7 @@ export const puzzleCatalog = {
     objective: "Reposition the points so that the lines do not cross.",
     collection: "original",
     family: "rearranging",
+    similar: "Planarity",
   },
   wordguess: {
     name: "Wordguess",
@@ -574,6 +631,7 @@ export const puzzleCatalog = {
     objective: "Find the hidden word in a few guesses.",
     collection: "own",
     family: "hidden",
+    similar: "Wordle®, Lingo",
   },
   wordtrail: {
     name: "Wordtrail",
@@ -583,6 +641,7 @@ export const puzzleCatalog = {
       "Divide the letters into words, each traced through letters side by side.",
     collection: "own",
     family: "lines",
+    similar: "Wend",
   },
 } as const satisfies Record<string, PuzzleData>;
 

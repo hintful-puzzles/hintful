@@ -204,7 +204,10 @@ describe("no two unrelated marks are one color and one shape", () => {
       );
       expect(
         found,
-        `${id}: slots drawn as one mark in one color, against those declared\n${shown.join("\n")}`,
+        `${id}: slots drawn as one mark in one color, against those declared in ` +
+          `DECLARED.${id} (src/puzzle/mark-collisions.test.ts). Tell the marks ` +
+          "apart, or declare the pair with why it may look the same; remove a " +
+          `declaration nothing collides with.\n${shown.join("\n")}`,
       ).toEqual(declared);
     });
   }

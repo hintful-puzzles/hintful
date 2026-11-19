@@ -13,6 +13,7 @@
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import { getTsGame } from "../engine/registry.ts";
+import { expectLedger } from "../engine/testing/ledger.ts";
 import { puzzleCatalog } from "./catalog-data.ts";
 
 /**
@@ -131,7 +132,13 @@ describe("a params string upstream's encoder writes", () => {
       .filter((id) => catalog[id].collection !== "own")
       .sort();
     expect(upstream.length).toBeGreaterThanOrEqual(57);
-    expect(Object.keys(UPSTREAM).sort()).toEqual(upstream);
+    expectLedger(upstream, UPSTREAM, {
+      table: "UPSTREAM",
+      file: "src/puzzle/upstream-params.test.ts",
+      found: 'catalog games with an upstream (`collection` not "own")',
+      add: "copy the params strings upstream's `encode_params` writes for its presets",
+      value: '["<params>", …]',
+    });
   });
 
   for (const [id, strings] of Object.entries(UPSTREAM)) {

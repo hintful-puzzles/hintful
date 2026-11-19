@@ -60,6 +60,7 @@ import { WING_PLACEHOLDER } from "./engine/wing.ts";
 import { registerAllGames } from "./games/index.ts";
 import { puzzleDataMap, puzzleIds } from "./puzzle/catalog.ts";
 import { type CommandPuzzle, commandList } from "./puzzle/command-list.ts";
+import { insertGameLists, NO_RIGHT_CLICK } from "./puzzle/game-lists.ts";
 
 beforeAll(registerAllGames);
 
@@ -69,12 +70,16 @@ const skeletons = import.meta.glob<string>("./skeleton/*/skeleton.description.ya
   eager: true,
 });
 
-// The hand-maintained "All the puzzles" table, whose rows link `../<puzzleId>`.
-const puzzlesPage = import.meta.glob<string>("../help/puzzles.md", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-})["../help/puzzles.md"];
+// The "All the puzzles" page, whose table rows link `../<puzzleId>`, as the
+// build renders its source.
+const puzzlesPage = insertGameLists(
+  import.meta.glob<string>("../help/puzzles.md", {
+    query: "?raw",
+    import: "default",
+    eager: true,
+  })["../help/puzzles.md"],
+  [],
+);
 
 describe("help page coverage", () => {
   // A description that carries help is a cataloged game's, at its path; the
@@ -366,12 +371,9 @@ describe("every game's page has the one skeleton", () => {
 });
 
 describe("the All-the-puzzles page lists the whole collection", () => {
-  // `help/puzzles.md` says of itself "this table is manually generated for now",
-  // and a hand-maintained list of 57 games with nothing checking it drifted
-  // exactly as you would expect: it was missing six — crossing, group, seismic,
-  // separate, slide and sokoban — when this test was written. Four of those are
-  // upstream *unfinished* puzzles this project finished and ships, which is
-  // precisely the kind of game a reader would not know to look for.
+  // The table is built from the catalog (`puzzle/game-lists.ts`), so
+  // what this reads is that the page still asks for it, and the builder still
+  // writes a row per game.
   const listed = [
     ...puzzlesPage.matchAll(/^\|\s*\[[^\]]+]\(\.\.\/([a-z0-9]+)\)/gm),
   ].map((m) => m[1]);
@@ -809,26 +811,29 @@ describe("every player-facing capability is documented somewhere", () => {
 
 describe("the populations the help asserts are derived, not trusted", () => {
   /*
-   * `features.md` is allowed to name games in one place — the puzzles whose
-   * touch right-click gestures are switched off — precisely because that list
-   * is `ignoresSecondaryButton`, and this holds the prose to the flag.
+   * `features.md` names the puzzles whose touch right-click gestures are
+   * switched off, and the build writes the names from `ignoresSecondaryButton`
+   * (`vite-plugins/game-lists.ts`). This reads the sentence as the build
+   * renders it.
    *
    * The rule the help follows is "state the property, do not hand-maintain the
-   * population". A named population a test *derives* cannot rot; one a human
-   * maintains will, which is what the ban is actually about.
+   * population": a named population the build derives cannot rot.
    */
   it("names exactly the puzzles whose secondary-button gestures are off", () => {
-    const flagged = registeredGameIds()
-      .filter((id) => getTsGame(id)?.ignoresSecondaryButton === true)
-      .map((id) => puzzleDataMap[id]?.name ?? id)
-      .sort();
+    const flaggedIds = registeredGameIds().filter(
+      (id) => getTsGame(id)?.ignoresSecondaryButton === true,
+    );
+    const flagged = flaggedIds.map((id) => puzzleDataMap[id]?.name ?? id).sort();
     expect(
       flagged.length,
       "no game declares the flag — derivation is vacuous",
     ).toBeGreaterThan(0);
+    expect(featuresPage, `the page writes ${NO_RIGHT_CLICK} for them`).toContain(
+      NO_RIGHT_CLICK,
+    );
 
-    const paragraph = /have no use for a right-click[^.]*?—([^.]*)\./s.exec(
-      featuresPage ?? "",
+    const paragraph = /have no use for a right-click[^.]*?:([^.]*)\./s.exec(
+      insertGameLists(featuresPage ?? "", flaggedIds),
     )?.[1];
     expect(paragraph, "the §Right mouse sentence naming them has moved").toBeDefined();
     const named = (paragraph ?? "")
