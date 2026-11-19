@@ -1007,6 +1007,17 @@ describe("crossing number-list placement", () => {
     // With nothing selected, every clue some run can take fits.
     const loose = numbers.model(state, newUi()).sections.flatMap((s) => s.items);
     expect(loose.every((i) => i.status === "outstanding")).toBe(true);
+
+    // Taking a fitting number from the reference writes it in, as a click on
+    // the list does; one that fits neither run is picked up.
+    const fit = items.find((i) => i.status === "outstanding");
+    const misfit = items.find((i) => i.status === "ruledOut");
+    if (!fit || !misfit) throw new Error("the fixture has both");
+    const taken = numbers.select(state, { ...ui, cursor: { ...ui.cursor } }, fit.key);
+    expect(taken).toMatchObject({ kind: "place", number: Number(fit.key) });
+    const held = { ...ui, cursor: { ...ui.cursor } };
+    expect(numbers.select(state, held, misfit.key)).toBe(UI_UPDATE);
+    expect(held.heldNumber).toBe(Number(misfit.key));
   });
 
   it("paints the two dimensions at equal perceived strength", () => {

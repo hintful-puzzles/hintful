@@ -1124,11 +1124,14 @@ Exemplars: [`dominosa/index.ts`](../src/games/dominosa/index.ts) for pieces,
 - **Share the definition of "still fits" with the hint.** Wordtrail's list
   and its hint read one compiled `fitting`, so a word the panel offers is
   one the hint may reason from.
-- **`select(ui, key)` spotlights by mutating the `Ui`** and reports
-  whether anything changed; `false` skips the repaint. It may do something
-  else to the `Ui` the game owns: Wordguess writes the word into its working
-  row and leaves nothing selected, and the panel refetches after a
-  selection to show what the game kept.
+- **`select(state, ui, key)` answers as `interpretMove` does.** Spotlighting
+  mutates the `Ui` and returns `UI_UPDATE`; `null` skips the repaint. It may
+  do something else to the `Ui` the game owns: Wordguess writes the word into
+  its working row and leaves nothing selected, and the panel refetches after
+  a selection to show what the game kept. Where the item is one a click on
+  the board would play, return the move: Crossing writes a fitting number in
+  through the same `takeNumber` its list click calls, and the midend plays
+  it as the player's own.
 - **Having `reference` is having the control.** The panel is the generic
   [`components/reference-panel.ts`](../src/components/reference-panel.ts),
   beside the board in a landscape window and under it in a tall one

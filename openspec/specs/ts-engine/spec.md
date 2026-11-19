@@ -535,12 +535,12 @@ SHALL report that no mistakes were checked.
 ### Requirement: The engine surface exposes an opt-in per-game reference-aid capability
 
 The engine surface SHALL expose an optional per-game reference aid: a
-read-only inventory, derived from the board, and a way to spotlight one item.
+read-only inventory, derived from the board, and a way to select one item.
 `Game` SHALL define it as one optional hook carrying the aid's `title`, what
 it is in this game; `model(state, ui)`, giving instructions and sections of
 items, each outstanding, placed, in conflict or ruled out; `watches(ui)`;
-and `select(ui, key)`, which spotlights `key`, or clears it for null, by
-mutating `Ui`, and says whether anything changed.
+and `select(state, ui, key)`, answered as `interpretMove` is: a move,
+`UI_UPDATE`, or null.
 
 #### Scenario: A game exposing a reference is discoverable through the surface
 
@@ -562,22 +562,28 @@ state, so the app fetches the model again when it changes without a move.
 - **THEN** the next state change the midend sends carries the new `watches`
   value, and a game without a reference aid sends none
 
-### Requirement: The midend surfaces the reference aid without touching the history
+### Requirement: The midend surfaces the reference aid, and plays a selection's move as the player's
 
 The `Midend` SHALL report `referenceTitle` in its static attributes, the aid's
 title or null when the game has none, and SHALL provide `getReference()`,
 returning the game's model or null, and `selectReference(key)`.
-`selectReference` SHALL call the aid's `select(ui, key)` and, on a `true`
-return, take the repaint path of a `UI_UPDATE`: it SHALL NOT create a move, add
-an undo entry, alter the move log, or be serialized into a save.
+`selectReference` SHALL call the aid's `select`. On `UI_UPDATE` it SHALL take
+the repaint path of a `UI_UPDATE`, adding no move. On a move it SHALL play
+the move as the player's own input, as a click making it would.
 
 #### Scenario: Selecting a reference item repaints without a history entry
 
 - **WHEN** the app calls `selectReference(key)` on a game whose `select`
-  reports a change
+  answers `UI_UPDATE`
 - **THEN** the board repaints with that item spotlighted, and no move is added:
   the move log, undo and redo availability, and any later save are
   byte-for-byte what they were before the call
+
+#### Scenario: A selection that is a move
+
+- **WHEN** the app calls `selectReference(key)` on a game whose `select`
+  answers a move
+- **THEN** the move is played, and undo is available
 
 ### Requirement: Absence has one spelling
 

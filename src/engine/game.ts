@@ -61,7 +61,7 @@ export type SolveResult<Move> =
  * narrates. */
 /** A game's reference aid ({@link Game.reference}). One object, so a game
  * cannot have a model without a name or a selection. */
-export interface ReferenceAid<State, Ui> {
+export interface ReferenceAid<State, Ui, Move = never> {
   /** What the aid is in this game ("Dominoes", "Dictionary"): the toggle's
    * label and the panel's title. Static, since the toggle shows it before the
    * model is fetched, and a fetched model counts as help. */
@@ -73,10 +73,12 @@ export interface ReferenceAid<State, Ui> {
    * model again when it changes, as it does after a move, so a spotlight a
    * board press clears, or Crossing's selected square, shows at once. */
   watches(ui: Ui): string;
-  /** Spotlight an item on the board, or clear it for null, by mutating `Ui`
-   * in place: a `UI_UPDATE`-shaped change the midend repaints but never
-   * records as a move. Returns whether anything changed. */
-  select(ui: Ui, key: string | null): boolean;
+  /** The player picked an item, or cleared the pick for null: answered as
+   * `interpretMove` answers an input. Spotlighting an item mutates `ui` and
+   * returns `UI_UPDATE`; `null` is "nothing changed". A move is played as the
+   * player's own, so an item the board already has a place for (Crossing's
+   * number, with a square selected) goes in as a click on the list would. */
+  select(state: State, ui: Ui, key: string | null): Move | UiUpdate | null;
 }
 
 /** What a check says of a move ({@link Game.judgeMove}): whether a deduction
@@ -806,7 +808,7 @@ export interface Game<
   /** The game's **reference aid**: a checklist of its fixed inventory of
    * pieces, or its dictionary, with the player's found status. Presence makes
    * the app show a toggle, labeled with its `title`. */
-  reference?: ReferenceAid<State, Ui>;
+  reference?: ReferenceAid<State, Ui, Move>;
 
   /** Render the state as plain text for the share dialog. Returns `null`
    * when *these particular* params have no text rendering, which having the

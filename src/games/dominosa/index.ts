@@ -530,16 +530,20 @@ function reference(state: DominosaState, ui: DominosaUi): ReferenceModel {
   };
 }
 
-function selectReference(ui: DominosaUi, key: string | null): boolean {
+function selectReference(
+  _state: DominosaState,
+  ui: DominosaUi,
+  key: string | null,
+): UiUpdate | null {
   let di: number | null = null;
   if (key !== null) {
     const pair = pairFromKey(key);
-    if (pair === null) return false;
+    if (pair === null) return null;
     di = DINDEX(pair[0], pair[1]);
   }
-  if (ui.highlightPair === di) return false;
+  if (ui.highlightPair === di) return null;
   ui.highlightPair = di;
-  return true;
+  return UI_UPDATE;
 }
 
 /** Dominosa's difficulty contract (`engine/difficulty.ts`). A `solveNumbers`

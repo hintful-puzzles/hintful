@@ -13,6 +13,7 @@ import {
   puzzleDescError,
   validateDesc,
 } from "../../engine/desc-error.ts";
+import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
@@ -359,7 +360,7 @@ describe("dominosa reference aid", () => {
     const { desc } = newDominosaDesc(p, randomNew("ref-dismiss"));
     const state = newState(p, desc);
     const ui = dominosaGame.newUi(state);
-    dominosaGame.reference?.select(ui, "1-3");
+    dominosaGame.reference?.select(state, ui, "1-3");
     expect(ui.highlightPair).not.toBeNull();
 
     // Tap between squares 0 and 1 (ds=null ⇒ PREFERRED_TILE_SIZE): places that
@@ -385,7 +386,7 @@ describe("dominosa reference aid", () => {
     const solved = dominosaGame.executeMove(state, r.move);
     expect(dominosaGame.status(solved)).toBe("solved");
 
-    dominosaGame.reference?.select(ui, "1-3");
+    dominosaGame.reference?.select(state, ui, "1-3");
     dominosaGame.changedState?.(ui, null, state);
     expect(ui.highlightPair).not.toBeNull();
     dominosaGame.changedState?.(ui, state, solved);
@@ -398,13 +399,13 @@ describe("dominosa reference aid", () => {
     const state = newState(p, desc);
     const ui = dominosaGame.newUi(state);
 
-    expect(dominosaGame.reference?.select(ui, "2-5")).toBe(true);
+    expect(dominosaGame.reference?.select(state, ui, "2-5")).toBe(UI_UPDATE);
     expect(ui.highlightPair).toBe(DINDEX(2, 5));
-    // Re-selecting the same pair is a no-op (returns false, no repaint).
-    expect(dominosaGame.reference?.select(ui, "2-5")).toBe(false);
+    // Re-selecting the same pair is a no-op (no repaint).
+    expect(dominosaGame.reference?.select(state, ui, "2-5")).toBeNull();
     expect(dominosaGame.reference?.model(state, ui).selected).toBe("2-5");
     // Clearing.
-    expect(dominosaGame.reference?.select(ui, null)).toBe(true);
+    expect(dominosaGame.reference?.select(state, ui, null)).toBe(UI_UPDATE);
     expect(ui.highlightPair).toBeNull();
     expect(dominosaGame.reference?.model(state, ui).selected).toBeNull();
   });

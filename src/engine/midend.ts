@@ -1116,6 +1116,17 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       this.uiUpdated();
       return true;
     }
+    this.playMove(move, joins);
+    // One pointer event can pass over several targets: ask again until it has
+    // no more.
+    if (dragging && sweepPending(this.ui)) this.interpret(x, y, button);
+    return true;
+  }
+
+  /** Play `move` as the player's own: checked against the hint's plan,
+   * committed, joined to the gesture's earlier marks where `joins`. A move
+   * that leaves the board as it was is a `Ui` change only. */
+  private playMove(move: Move, joins: boolean): void {
     // Classify the move against the plan with the PRE-move state (the
     // established `hintKeepTrack` contract — a game may itself apply the
     // move to reason about its result, e.g. Sixteen's slide), then
@@ -1127,8 +1138,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const next = this.game.executeMove(prev, move);
     if (this.leftAsItWas(prev, next)) {
       this.uiUpdated();
-      if (dragging && sweepPending(this.ui)) this.interpret(x, y, button);
-      return true;
+      return;
     }
     this.gestureRecorded = true;
     // The marks the move brings are judged by no step: the step is asked
@@ -1166,11 +1176,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
           this.activeHint.index === idxBefore;
       }
     }
-    // A drag's later marks join its first in the history, and one pointer
-    // event can pass over several targets: ask again until it has no more.
+    // A drag's later marks join its first in the history.
     this.commitMove(next, move, joins, brought);
-    if (dragging && sweepPending(this.ui)) this.interpret(x, y, button);
-    return true;
   }
 
   /**
@@ -1640,9 +1647,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   selectReference(key: string | null): void {
     if (!this.game.reference) return;
     this.press = null;
-    if (this.game.reference.select(this.ui, key)) {
-      this.afterTransition();
-    }
+    const made = this.game.reference.select(this.state, this.ui, key);
+    if (made === null) return;
+    if (made === UI_UPDATE) this.afterTransition();
+    else this.playMove(made, false);
   }
 
   /** Advance the plan past its current step; the plan clears when the

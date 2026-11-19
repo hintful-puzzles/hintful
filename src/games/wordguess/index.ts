@@ -268,17 +268,21 @@ function reference(s: WordguessState, _ui: WordguessUi): ReferenceModel {
 }
 
 /** Write `key`, a word of the list, into the working row, as if typed. */
-function selectReference(ui: WordguessUi, key: string | null): boolean {
-  if (key === null || key.length !== ui.entries.length) return false;
+function selectReference(
+  _s: WordguessState,
+  ui: WordguessUi,
+  key: string | null,
+): UiUpdate | null {
+  if (key === null || key.length !== ui.entries.length) return null;
   const letters = valuesOf(key);
-  if (letters.every((v, i) => ui.entries[i] === v)) return false;
+  if (letters.every((v, i) => ui.entries[i] === v)) return null;
   letters.forEach((v, i) => {
     ui.entries[i] = v;
   });
   ui.ready = true;
   ui.refused = false;
   restCursor(ui, -1);
-  return true;
+  return UI_UPDATE;
 }
 
 // --- the Ui that outlives a save --------------------------------------------

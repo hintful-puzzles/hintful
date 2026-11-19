@@ -85,10 +85,10 @@ function refGame(): typeof fakeGame {
         hinted: [],
       }),
       watches: (ui: RefUi) => ui.pick ?? "",
-      select: (ui: RefUi, key: string | null) => {
-        if (ui.pick === key) return false;
+      select: (_s: unknown, ui: RefUi, key: string | null) => {
+        if (ui.pick === key) return null;
         ui.pick = key;
-        return true;
+        return UI_UPDATE;
       },
     },
   };
@@ -374,7 +374,7 @@ describe("Midend completion: the status is the position's, the history is the en
           throw new Error("not fetched");
         },
         watches: () => "",
-        select: () => true,
+        select: () => UI_UPDATE,
       },
     });
     win();
@@ -2009,6 +2009,22 @@ describe("Midend hint plan lifecycle", () => {
     // …but added no history entry: move counters are unchanged.
     expect(lastMoveCounts()).toEqual(before);
     expect(before.canUndo).toBe(false);
+  });
+
+  it("plays a move a reference selection answers with, as the player's own", () => {
+    const base = refGame();
+    const d = driveMidend({
+      ...base,
+      reference: { ...base.reference, select: () => ({ type: "inc" }) },
+    } as unknown as typeof fakeGame);
+    d.midend.newGameFromId("t3:g3-0");
+    expect(d.last("game-state-change")?.canUndo).toBe(false);
+    d.midend.selectReference("a");
+    const s = d.last("game-state-change");
+    expect({ current: s?.currentMove, canUndo: s?.canUndo }).toEqual({
+      current: 1,
+      canUndo: true,
+    });
   });
 
   it("sends the Ui the reference watches, so the panel fetches again on a Ui change", () => {

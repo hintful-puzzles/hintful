@@ -25,7 +25,7 @@ help:
 
     ### The Numbers panel
 
-    **Numbers** opens the list again, beside the board, with a search box. Press **Fits** to see only the numbers that fit a run through the selected square, the ones a click would place there; with no square selected, the numbers some run can still take. **Placed** shows those already written in. Tap a number to pick it up, as on the list under the board. Opening the panel counts as help, as a hint does, because finding which numbers fit is the puzzle.
+    **Numbers** opens the list again, beside the board, with a search box. Press **Fits** to see only the numbers that fit a run through the selected square, the ones a click would place there; with no square selected, the numbers some run can still take. **Placed** shows those already written in. Tap a number to take it as on the list under the board: one that fits the selected square is written in, and any other is picked up. Opening the panel counts as help, as a hint does, because finding which numbers fit is the puzzle.
 
     The auto-advance and the highlighting of the runs through the selected square can be switched off in the game's preferences.
   origins: |-

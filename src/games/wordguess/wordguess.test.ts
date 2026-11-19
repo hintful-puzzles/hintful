@@ -311,7 +311,7 @@ describe("the dictionary", () => {
   it("writes a struck word into the row as readily as one that fits", () => {
     const s = play(board("cigar"), "crane");
     const ui = wordguessGame.newUi(s);
-    expect(wordguessGame.reference?.select(ui, "moist")).toBe(true);
+    expect(wordguessGame.reference?.select(s, ui, "moist")).toBe(UI_UPDATE);
     expect(wordOf(ui.entries)).toBe("moist");
     expect(ui.ready).toBe(true);
   });
@@ -319,11 +319,11 @@ describe("the dictionary", () => {
   it("writes a tapped word into the working row, ready to go, and makes no move", () => {
     const s = play(board("cigar"), "crane");
     const ui = wordguessGame.newUi(s);
-    expect(wordguessGame.reference?.select(ui, "cigar")).toBe(true);
+    expect(wordguessGame.reference?.select(s, ui, "cigar")).toBe(UI_UPDATE);
     expect(wordOf(ui.entries)).toBe("cigar");
     expect(ui.ready).toBe(true);
     // The word already in the row: nothing to change.
-    expect(wordguessGame.reference?.select(ui, "cigar")).toBe(false);
+    expect(wordguessGame.reference?.select(s, ui, "cigar")).toBeNull();
     expect(press(s, ui, SUBMIT).result).toEqual({
       type: "guess",
       letters: valuesOf("cigar"),

@@ -67,7 +67,7 @@ import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newCrossingDesc } from "./generator.ts";
 import { narrateCrossing } from "./hint.ts";
-import { numbers } from "./numbers.ts";
+import { numbers, placementChanges, takeNumber } from "./numbers.ts";
 import {
   type CrossingDrawState,
   type CrossingHint,
@@ -125,12 +125,6 @@ function keyDigit(button: number): number | "clear" | null {
   return null;
 }
 
-/** Would writing a number that fits run `r` change anything? Every filled cell
- * already agrees with it, so only an empty cell makes it a real move. */
-function placementChanges(state: CrossingState, r: number): boolean {
-  return state.puzzle.runs[r].cells.some((i) => state.grid[i] === 0);
-}
-
 function interpretMove(
   state: CrossingState,
   ui: CrossingUi,
@@ -149,29 +143,7 @@ function interpretMove(
   // --- the clue list (fork): pick a number up, or place it straight away ----
   if (!onBoard && button === LEFT_BUTTON) {
     const l = numberAtPoint(ts, w, h, state.puzzle.numbers, point.x, point.y);
-    if (l >= 0) {
-      // With a cell selected, clicking a number that fits its run writes it in
-      // at once — the whole point of the aid.
-      if (ui.cursor.visible && !ui.pencilMode) {
-        const placed = placedRuns(state.puzzle, state.grid);
-        const run = runForNumber(
-          state.puzzle,
-          state.grid,
-          placed,
-          ui.cursor.x,
-          ui.cursor.y,
-          l,
-          ui.dir,
-        );
-        if (run >= 0 && placementChanges(state, run)) {
-          ui.heldNumber = null;
-          return { kind: "place", run, number: l };
-        }
-      }
-      // Otherwise hold it (clicking the held one again puts it back).
-      ui.heldNumber = ui.heldNumber === l ? null : l;
-      return UI_UPDATE;
-    }
+    if (l >= 0) return takeNumber(state, ui, l);
   }
 
   if (onBoard) {

@@ -7,13 +7,14 @@
  * it lives behind the panel, where it counts as help.
  */
 
-import type { ReferenceAid } from "../../engine/game.ts";
+import { type ReferenceAid, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import type {
   ReferenceItem,
   ReferenceModel,
   ReferenceSection,
 } from "../../engine/types.ts";
 import {
+  type CrossingMove,
   type CrossingState,
   type CrossingUi,
   numberAvailableTo,
@@ -52,7 +53,7 @@ function model(state: CrossingState, ui: CrossingUi): ReferenceModel {
   });
   return {
     instructions: square
-      ? "The numbers that fit a run through the selected square. Tap one to pick it up."
+      ? "The numbers that fit a run through the selected square. Tap one that fits to write it in."
       : "Select a square to see the numbers that fit its runs. Tap one to pick it up.",
     search: true,
     filters: [
@@ -65,16 +66,52 @@ function model(state: CrossingState, ui: CrossingUi): ReferenceModel {
   };
 }
 
-/** Pick the number up, as a click on the list does: the board shows every
- * run that can take it, and a click on one writes it in. */
-function select(ui: CrossingUi, key: string | null): boolean {
-  const held = key === null ? null : Number(key);
-  if (ui.heldNumber === held) return false;
-  ui.heldNumber = held;
-  return true;
+/** Would writing a number that fits run `r` change anything? Every filled cell
+ * already agrees with it, so only an empty cell makes it a real move. */
+export function placementChanges(state: CrossingState, r: number): boolean {
+  return state.puzzle.runs[r].cells.some((i) => state.grid[i] === 0);
 }
 
-export const numbers: ReferenceAid<CrossingState, CrossingUi> = {
+/**
+ * Listed number `l` taken, from the list under the board or from the
+ * reference alike: with a square selected for digit entry and a run through
+ * it that takes `l`, `l` is written into that run; otherwise it is picked up,
+ * or put down where it was held. In pencil mode a click only holds it.
+ */
+export function takeNumber(
+  state: CrossingState,
+  ui: CrossingUi,
+  l: number,
+): CrossingMove | UiUpdate {
+  if (ui.cursor.visible && !ui.pencilMode) {
+    const placed = placedRuns(state.puzzle, state.grid);
+    const { x, y } = ui.cursor;
+    const run = runForNumber(state.puzzle, state.grid, placed, x, y, l, ui.dir);
+    if (run >= 0 && placementChanges(state, run)) {
+      ui.heldNumber = null;
+      return { kind: "place", run, number: l };
+    }
+  }
+  ui.heldNumber = ui.heldNumber === l ? null : l;
+  return UI_UPDATE;
+}
+
+function select(
+  state: CrossingState,
+  ui: CrossingUi,
+  key: string | null,
+): CrossingMove | UiUpdate | null {
+  if (key === null) {
+    if (ui.heldNumber === null) return null;
+    ui.heldNumber = null;
+    return UI_UPDATE;
+  }
+  const l = Number(key);
+  if (!Number.isInteger(l) || l < 0 || l >= state.puzzle.numbers.length) return null;
+  return takeNumber(state, ui, l);
+}
+
+export const numbers: ReferenceAid<CrossingState, CrossingUi, CrossingMove> = {
   title: "Numbers",
   model,
   watches: (ui) =>

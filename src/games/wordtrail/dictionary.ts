@@ -8,7 +8,7 @@
  * hint names is one the dictionary shows as fitting.
  */
 
-import type { ReferenceAid } from "../../engine/game.ts";
+import { type ReferenceAid, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import type {
   ReferenceItem,
   ReferenceModel,
@@ -66,10 +66,14 @@ function model(state: WordtrailState, ui: WordtrailUi): ReferenceModel {
   };
 }
 
-function select(ui: WordtrailUi, key: string | null): boolean {
-  if (ui.spotlight === key) return false;
+function select(
+  _state: WordtrailState,
+  ui: WordtrailUi,
+  key: string | null,
+): UiUpdate | null {
+  if (ui.spotlight === key) return null;
   ui.spotlight = key;
-  return true;
+  return UI_UPDATE;
 }
 
 export const dictionary: ReferenceAid<WordtrailState, WordtrailUi> = {
