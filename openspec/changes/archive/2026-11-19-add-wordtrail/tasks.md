@@ -10,4 +10,4 @@
 ## 2. Close
 
 - [x] 2.1 `npm run test:hint-sweeps` if shared code changed (628 passed); push
-- [ ] 2.2 The owner's acceptance in the running app; archive
+- [x] 2.2 The owner's acceptance in the running app (2026-11-19, after the directed lines, the per-word colors and the common words); archive

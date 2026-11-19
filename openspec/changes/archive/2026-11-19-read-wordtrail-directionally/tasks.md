@@ -21,9 +21,9 @@
 ## 3. Close
 
 - [x] 3.1 Play it in the app: draw IGN from the I, then A-L-I onto it, and see ALIGN; mouse, touch, keyboard; light and dark; a phone. Played on `4x3n2de:45,namedlgo3p`: by mouse A-N-D, then G-L-A onto it, read GLAND (the preview shows the arrows mid-drag; a hint's asked lines carry theirs); by touch P-O-E-M; by keyboard a run whose arrows follow the cursor; a click's three states (right, turned, lifted); the board at phone width in dark. Ascent is checked again with 1.6
-- [ ] 3.2 `npm run test:hint-sweeps` (628 passed with the engine and Wordtrail parts); commit, push; archive after `add-wordtrail` is archived (this change's Wordtrail requirements are edited in that change's delta)
+- [x] 3.2 `npm run test:hint-sweeps` (628 passed with the engine and Wordtrail parts); commit, push; archive after `add-wordtrail` is archived (this change's Wordtrail requirements are edited in that change's delta)
 
 ## Open with the owner
 
-- The click near an edge (`design.md` § "The drag"): built as recommended, so play it and say if it is not obviously good.
+- ~~The click near an edge~~: built as recommended, and accepted with the rest of Wordtrail by the owner (2026-11-19).
 - ~~Hints naming rare and rude words~~: answered 2026-11-19. Wordtrail judges by the common words, and BITCHY and words like it are excluded (`add-wordtrail` `design.md` § "Decisions made in the build").
