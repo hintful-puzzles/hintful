@@ -111,6 +111,33 @@ describe("npm run describe bounds a wording's length", () => {
   });
 });
 
+describe("npm run describe reads a word the game supplies at the word list's lengths", () => {
+  const terms = { w: { supplied: "words" } } as const;
+
+  it("takes long: that only the list's longest words need", () => {
+    expect(
+      messages({
+        terms,
+        look: `{outline} spells {w}, ${"so ".repeat(15)}`,
+        move: "{ring} must go",
+        long: "Planted: a wording that runs past the line only with long words, for the check.",
+      }),
+    ).toEqual([]);
+  });
+
+  it("measures the shortest sentence with a word of the list's shortest length", () => {
+    const found = messages({
+      terms,
+      // 121 characters with a word of three letters, 119 with one of one.
+      look: `{outline} spells {w}, ${"so ".repeat(23)}s`,
+      move: "{ring} must go",
+    });
+    expect(found.join("\n")).toMatch(
+      /runs to 121 characters at its shortest.*spells www,/,
+    );
+  });
+});
+
 describe("npm run describe reads a clause term at the length of the steps it speaks", () => {
   /** A step whose look says another step's move, `reason`, in place. */
   const findings = (reason: string) =>

@@ -1697,10 +1697,11 @@ tens of seconds and hears only the forms its boards reach.
   game's hint legend may teach ("the marked corner") is left to the walk,
   which knows the legend.
 - **A wording past the limit at its shortest reading** (one-digit numbers,
-  one-member lists, the shortest noun a game says) is long on every board,
-  and needs `long:` with the reason it needs the room, or a shorter form. A
-  `long:` on wordings that all fit at their longest reading (two digits, three
-  members) is refused. Between the two, the hint walk decides
+  one-member lists, the shortest noun a game says, a supplied word at the
+  word list's shortest length) is long on every board, and needs `long:`
+  with the reason it needs the room, or a shorter form. A `long:` on
+  wordings that all fit at their longest reading (two digits, three
+  members, a supplied word at the list's longest length) is refused. Between the two, the hint walk decides
   (docs/hints.md § "Keep the narration terse"). `long:` sits on a wording, or
   on a part (`says`, an arm, `fact`, a step) to cover its wordings; the
   sentence carries it (`Sentence.long`), so the walk needs no ledger entry

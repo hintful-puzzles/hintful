@@ -1,5 +1,0 @@
-# Deltas are written when the work is done, modifying `described-ladder`
-# (what the describe step refuses) where a requirement changes.
-schema: spec-driven
-created: 2026-11-19
-skip_specs: true

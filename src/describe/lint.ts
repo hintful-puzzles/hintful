@@ -21,6 +21,7 @@ import {
   parseClause,
 } from "../engine/stated-clauses.ts";
 import { judge } from "../engine/testing/hint-reference.ts";
+import { WORD_LENGTHS } from "../engine/word-list/index.ts";
 import {
   adjectiveDefect,
   IS_OUT,
@@ -295,6 +296,29 @@ interface Spoken {
 
 const NO_CLAUSES: Spoken = { shortest: {}, longest: {} };
 
+/** A word the game supplies is one of the word list's, so it reads at the
+ * list's shortest and longest lengths, and a list of them at one word and at
+ * three. */
+const SHORT_WORD = "w".repeat(WORD_LENGTHS[0] ?? 1);
+const LONG_WORD = "w".repeat(WORD_LENGTHS.at(-1) ?? 1);
+const LONG_WORDS = `${LONG_WORD}, ${LONG_WORD} and ${LONG_WORD}`;
+
+/** What the terms a wording's game supplies as words print, by name, laid
+ * over `spoken`: `lists` say several words, `single` one. */
+function withSuppliedWords(
+  spoken: Spoken,
+  lists: readonly string[],
+  single: readonly string[],
+): Spoken {
+  if (lists.length + single.length === 0) return spoken;
+  const shortest = { ...spoken.shortest };
+  const longest = { ...spoken.longest };
+  for (const name of [...lists, ...single]) shortest[name] = SHORT_WORD;
+  for (const name of lists) longest[name] = LONG_WORDS;
+  for (const name of single) longest[name] = LONG_WORD;
+  return { shortest, longest };
+}
+
 const withWords = (p: Prints, words: Readonly<Record<string, string>>): Prints => ({
   ...p,
   words: { ...p.words, ...words },
@@ -420,7 +444,11 @@ function wordingsIn(
   const technique = (id: string, t: StatedTechnique): void => {
     const says = parseTechnique("", id, t).says;
     if (says === null) return;
-    for (const v of says.variants) for (const w of v.words) out.push({ where: id, w });
+    for (const v of says.variants) {
+      const lists = v.terms.filter((x) => x.supplied === "words").map((x) => x.name);
+      const spoken = withSuppliedWords(NO_CLAUSES, lists, []);
+      for (const w of v.words) out.push({ where: id, w, spoken });
+    }
     for (const w of says.fact?.words ?? []) out.push({ where: id, w });
   };
   if (isLibrary(file))
@@ -431,9 +459,12 @@ function wordingsIn(
   const steps = "steps" in file ? (file.steps ?? {}) : {};
   const parsed = stepsOf(steps, (_, src) => parse(src));
   const spoken = spokenOf(parsed);
-  for (const s of parsed)
+  for (const s of parsed) {
+    const words = s.terms.filter((t) => t.kind === "word").map((t) => t.name);
+    const said = withSuppliedWords(spoken.get(s.id) ?? NO_CLAUSES, [], words);
     for (const w of s.words)
-      out.push({ where: "", w, moveRing: s.ring === "move", spoken: spoken.get(s.id) });
+      out.push({ where: "", w, moveRing: s.ring === "move", spoken: said });
+  }
   return out;
 }
 
