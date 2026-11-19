@@ -39,13 +39,12 @@ import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { newCrossingDesc } from "./generator.ts";
 import { crossingGame } from "./index.ts";
+import { numbers } from "./numbers.ts";
 import {
   COL_ACROSS,
-  COL_ACROSSFIT,
   COL_CELL,
   COL_DONE,
   COL_DOWN,
-  COL_DOWNFIT,
   COL_ERROR,
   COL_FLASH,
   COL_FLASH_LEAD,
@@ -957,7 +956,7 @@ describe("crossing number-list placement", () => {
     expect(ghostDigits(dr)).toEqual([]);
   });
 
-  it("splits the list by where each clue could go from the selected cell", () => {
+  it("leaves the list plain and lets the reference say what fits the selected cell", () => {
     const state = newState(P5, FIX.desc);
     const textColors = (ui: CrossingUi): Map<string, number> => {
       const dr = paintWith(state, ui);
@@ -991,26 +990,23 @@ describe("crossing number-list placement", () => {
     const activeLen = puzzle.runs[puzzle.acrossRun[cell]].cells.length;
     const crossLen = puzzle.runs[puzzle.downRun[cell]].cells.length;
 
+    // The list under the board does not say which clues fit: that is the
+    // reference aid's, behind the panel that counts as help.
     const colors = textColors(ui);
-    for (const [text, color] of colors) {
-      if (text.length === activeLen) {
-        // Fits the horizontal run through the cell (dir is "across" here).
-        expect(color).toBe(COL_ACROSSFIT);
-      } else if (text.length === crossLen) {
-        // Fits the vertical run instead — still one click from being placed,
-        // so it takes that dimension's color rather than being dimmed away.
-        expect(color).toBe(COL_DOWNFIT);
-      } else {
-        expect(color).toBe(COL_DONE);
-      }
-    }
-    // Both directions really are represented (the cell is a crossing).
-    expect([...colors.values()]).toContain(COL_ACROSSFIT);
-    if (activeLen !== crossLen) expect([...colors.values()]).toContain(COL_DOWNFIT);
+    expect(colors.size).toBeGreaterThan(0);
+    for (const c of colors.values()) expect(c).toBe(COL_TEXT);
 
-    // The preference turns the whole aid off.
-    const off = textColors({ ...ui, fitHighlight: false });
-    for (const c of off.values()) expect(c).toBe(COL_TEXT);
+    // The aid's "Fits" is a clue of either run's length, on a bare board.
+    const items = numbers.model(state, ui).sections.flatMap((s) => s.items);
+    expect(items).toHaveLength(puzzle.numbers.length);
+    for (const item of items) {
+      const fits = item.label.length === activeLen || item.label.length === crossLen;
+      expect(item.status, item.label).toBe(fits ? "outstanding" : "ruledOut");
+    }
+    expect(items.some((i) => i.status === "ruledOut")).toBe(true);
+    // With nothing selected, every clue some run can take fits.
+    const loose = numbers.model(state, newUi()).sections.flatMap((s) => s.items);
+    expect(loose.every((i) => i.status === "outstanding")).toBe(true);
   });
 
   it("paints the two dimensions at equal perceived strength", () => {
@@ -1042,18 +1038,13 @@ describe("crossing number-list placement", () => {
       return colorToOKLCH([r, g, b]);
     };
 
-    for (const [across, down] of [
-      [COL_ACROSS, COL_DOWN],
-      [COL_ACROSSFIT, COL_DOWNFIT],
-    ]) {
-      const [la, ca] = oklch(painted(across));
-      const [ld, cd] = oklch(painted(down));
-      expect(la).toBeCloseTo(ld, 2); // same lightness
-      expect(ca).toBeCloseTo(cd, 2); // same colorfulness
-    }
+    const [la, ca] = oklch(painted(COL_ACROSS));
+    const [ld, cd] = oklch(painted(COL_DOWN));
+    expect(la).toBeCloseTo(ld, 2); // same lightness
+    expect(ca).toBeCloseTo(cd, 2); // same colorfulness
   });
 
-  it("keeps the board wash and the list coloring on separate preferences", () => {
+  it("washes the runs through the selected cell under its preference", () => {
     const state = newState(P5, FIX.desc);
     const puzzle = state.puzzle;
     let cell = -1;
@@ -1064,24 +1055,9 @@ describe("crossing number-list placement", () => {
       ...newUi(),
       cursor: newCursor(cell % 5, Math.floor(cell / 5), true),
     };
-    const listColored = (ui: CrossingUi): boolean =>
-      paintWith(state, ui).ops.some(
-        (o) =>
-          o.op === "text" && (o.color === COL_ACROSSFIT || o.color === COL_DOWNFIT),
-      );
-
     expect(washedCells(paintWith(state, base))).toBeGreaterThan(0);
-    expect(listColored(base)).toBe(true);
-
-    // The board wash goes without taking the list coloring with it…
     const noRuns = { ...base, highlightRuns: false };
     expect(washedCells(paintWith(state, noRuns))).toBe(0);
-    expect(listColored(noRuns)).toBe(true);
-
-    // …and vice versa.
-    const noList = { ...base, fitHighlight: false };
-    expect(washedCells(paintWith(state, noList))).toBeGreaterThan(0);
-    expect(listColored(noList)).toBe(false);
   });
 
   it("washes both runs through a cell selected for pencil marks, list uncolored", () => {
@@ -1146,7 +1122,6 @@ describe("crossing number-list placement", () => {
       );
     expect(listInks(dr).length).toBe(puzzle.numbers.length);
     for (const c of listInks(dr)) expect(c).toBe(COL_TEXT);
-    expect(listInks(paintWith(state, digitEntry))).toContain(COL_ACROSSFIT);
 
     // The wash is under the same preference as a digit-entry selection's.
     const washOff = { ...penciling, highlightRuns: false };

@@ -601,7 +601,12 @@ export const dominosaGame: Game<
   findMistakes,
   clearMistakes,
   revealOne,
-  reference: { title: "Dominoes", model: reference, select: selectReference },
+  reference: {
+    title: "Dominoes",
+    model: reference,
+    watches: (ui) => `${ui.highlightPair}`,
+    select: selectReference,
+  },
   hint: dominosaHint,
   judgeMove: dominosaJudgeMove,
   hintMarks: {

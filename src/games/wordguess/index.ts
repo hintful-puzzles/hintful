@@ -354,7 +354,13 @@ export const wordguessGame: Game<
   requestKeys,
   keyStatus,
   statusbarText,
-  reference: { title: "Dictionary", model: reference, select: selectReference },
+  reference: {
+    title: "Dictionary",
+    model: reference,
+    // The model reads only the board: a selection writes into the row.
+    watches: () => "",
+    select: selectReference,
+  },
 
   solve(_orig, curr) {
     return { ok: true, move: { type: "guess", letters: curr.answer.slice() } };

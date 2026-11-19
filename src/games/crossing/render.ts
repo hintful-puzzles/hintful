@@ -92,7 +92,6 @@ import {
   type CrossingUi,
   numberAvailableTo,
   placedRuns,
-  runForNumber,
   validateBoard,
 } from "./state.ts";
 
@@ -101,7 +100,7 @@ export const PREFERRED_TILE_SIZE = 40;
 // --- palette ----------------------------------------------------------------
 
 export const COL_OUTERBG = 0; // the board around the grid, and the clue list's
-/** A clue that is used up or fits nowhere in the selection, grayed back. */
+/** A clue that is used up, grayed back. */
 export const COL_DONE = 1;
 /** The surface of an empty square. */
 export const COL_CELL = 2;
@@ -124,10 +123,8 @@ export const COL_GHOST = 11;
  * is marked by a shape — the hues below are reserved for saying *direction*. */
 export const COL_HELD = 12;
 /**
- * Two hues, one per dimension, each filling a run on the board and inking a
- * clue in the list: **blue = horizontal, amber = vertical**,
- * everywhere and always. A run washed blue and a clue written in blue are
- * saying the same thing, so the list needs no legend. Tying the hue to the
+ * Two hues, one per dimension, each filling a run on the board: **blue =
+ * horizontal, amber = vertical**, everywhere and always. Tying the hue to the
  * dimension rather than to "the run being filled" keeps it stable — otherwise
  * toggling the fill direction would swap every color on screen.
  *
@@ -136,21 +133,19 @@ export const COL_HELD = 12;
  */
 export const COL_ACROSS = 13;
 export const COL_DOWN = 14;
-export const COL_ACROSSFIT = 15;
-export const COL_DOWNFIT = 16;
 /** A hint's evidence — the run(s) it reasons over, and the listed numbers that
  * still fit them. The ring on the square(s) it acts on, and on the clue it
  * writes in, is the engine's (`GameDrawing.drawRing`). */
-export const COL_HINT_CELL = 17;
+export const COL_HINT_CELL = 15;
 /**
  * A placed digit sitting **on** a run highlight.
  *
- * The run colors are the same values the clue list inks its numbers in, so the
- * highlight is a *strong* fill — light under a dark scheme, dark under a light
- * one — and `COL_TEXT` is exactly the wrong ink on it in both. This is `PAPER`,
- * which adapts the other way round from ink and is therefore right in both.
+ * The run colors are a *strong* fill — light under a dark scheme, dark under
+ * a light one — and `COL_TEXT` is exactly the wrong ink on it in both. This is
+ * `PAPER`, which adapts the other way round from ink and is therefore right in
+ * both.
  */
-export const COL_RUNTEXT = 18;
+export const COL_RUNTEXT = 16;
 /**
  * **Type here** — the selected square's wash, on an empty square and under a
  * placed digit alike, and its notes triangle. Also the completion wave's dim
@@ -168,12 +163,12 @@ export const COL_RUNTEXT = 18;
  * anyway: blue and amber are the two run directions, red is an error, and the
  * hint's marks take the engine's colors.
  */
-export const COL_SELECTED = 19;
+export const COL_SELECTED = 17;
 /** The cursor's corners on a wall: paper, which reads on the wall's strong
  * fill in both schemes. */
-export const COL_WALLCURSOR = 20;
-export const COL_FLASH_LEAD = 21;
-export const NCOLORS = 22;
+export const COL_WALLCURSOR = 18;
+export const COL_FLASH_LEAD = 19;
+export const NCOLORS = 20;
 
 export function colors(background: Color): Color[] {
   const out: Color[] = new Array(NCOLORS);
@@ -196,21 +191,11 @@ export function colors(background: Color): Color[] {
   // Not `HELD`: green is a hint's outline, and blue would say "across" round a
   // down clue. Held is a box, not a color — see `COL_HELD`'s declaration.
   out[COL_HELD] = INK;
-  // **One color per direction**, on the board and in the clue list alike, so
-  // the player never has to learn a link between a dark square and light text;
-  // the digit that lands on a highlighted square switches to
-  // {@link COL_RUNTEXT} instead. Matching the pair's perceived strength (in
-  // OKLCH, not RGB) is the palette's job, pinned by `colors.test.ts`.
-  //
-  // The board slot and the list slot hold the same value on purpose. They stay
-  // two indices because they are two surfaces, and a future scheme wanting to
-  // separate them again should not have to re-derive which is which;
-  // `scripts/checks/color-collide.test.ts` reports the pair, and this is the
-  // note that says it is meant.
+  // **One color per direction**; the digit that lands on a highlighted square
+  // switches to {@link COL_RUNTEXT}. Matching the pair's perceived strength
+  // (in OKLCH, not RGB) is the palette's job, pinned by `colors.test.ts`.
   out[COL_ACROSS] = BLUE_BOLD;
-  out[COL_ACROSSFIT] = BLUE_BOLD;
   out[COL_DOWN] = ORANGE_BOLD;
-  out[COL_DOWNFIT] = ORANGE_BOLD;
   out[COL_RUNTEXT] = PAPER;
   // Not CURSOR: this one is drawn on a wall, which is ink, and the role's
   // green does not read there. The paper's tone is the wall's opposite.
@@ -868,8 +853,7 @@ export function redraw(
   const hintNumbers = new Set(marks.of("outline", LISTED));
   const hintNumberTarget = marks.of("ring", LISTED)[0] ?? null;
 
-  // The held clue number, previewed in every run that can still take it, and —
-  // when a cell is selected — the list dimmed to the numbers that still fit it.
+  // The held clue number, previewed in every run that can still take it.
   const placed = placedRuns(puzzle, state.grid);
   const ghost = new Uint8Array(w * h);
   const acrossWash = new Uint8Array(w * h);
@@ -984,52 +968,22 @@ export function redraw(
     evidenceColor: COL_HINT_CELL,
   });
 
-  // The number panel. Each clue reads as one of: held, already written in
-  // (struck off), duplicated, fits the run being filled, fits the *crossing*
-  // run instead, or cannot go here at all.
-  const colorClass = (l: number): number => {
-    if (done[l] > 1) return 2;
-    if (done[l] === 1) return 1; // already on the board — struck off
-    if (ui.fitHighlight && selCell >= 0 && !ui.pencilMode) {
-      // A clue that fits either run through the selected cell is one click
-      // from being placed there, and takes that run's color. In pencil mode a
-      // click only holds the clue, so the list promises nothing. *Which* run is
-      // asked of `runForNumber`, the function the click itself goes through,
-      // so the color can never name one run while a click sends the clue to
-      // the other: both runs often admit a clue, and the tie is settled by how
-      // much of each is already written, not by the fill direction.
-      const r = runForNumber(
-        puzzle,
-        state.grid,
-        placed,
-        ui.cursor.x,
-        ui.cursor.y,
-        l,
-        ui.dir,
-      );
-      if (r >= 0) return runs[r].horizontal ? 0 : 4;
-      return 3;
-    }
-    return 5;
-  };
-  // 0 across-fit · 1 placed (struck) · 2 duplicated · 3 nowhere here
-  // · 4 down-fit · 5 no selection. Held is not among them: it is a box drawn
-  // round the clue, so it rides in `panelState` as its own bit.
-  const CLASS_COLOR = [
-    COL_ACROSSFIT,
-    COL_DONE,
-    COL_ERROR,
-    COL_DONE,
-    COL_DOWNFIT,
-    COL_TEXT,
-  ];
+  // The number panel keeps the bookkeeping a paper solver does by hand: a
+  // clue written in is struck off, and one written in twice is an error.
+  // Which clues fit the selected square is a deduction, so it is the
+  // reference aid's (`numbers.ts`), behind the panel that counts as help.
+  const colorClass = (l: number): number => (done[l] > 1 ? 2 : done[l] === 1 ? 1 : 0);
+  // 0 not yet written in · 1 placed (struck) · 2 duplicated. Held is not among
+  // them: it is a box drawn round the clue, so it rides in `panelState` as its
+  // own bit.
+  const CLASS_COLOR = [COL_TEXT, COL_DONE, COL_ERROR];
 
   // The hint's half of the evidence: the numbers the deduction reasons over
   // are boxed in the evidence color, and the one a whole-run placement writes
   // in is boxed in the target color — the same two colors the board uses, so
   // the words ("only one number left fits this run") point at something the
-  // player can see. The box leaves the fit-highlight ink alone, so the two
-  // aids stay legible together.
+  // player can see. The box leaves the clue's ink alone, so a struck or
+  // duplicated clue stays legible inside it.
   const hintClass = (l: number): number =>
     l === hintNumberTarget ? 2 : hintNumbers.has(l) ? 1 : 0;
   /**

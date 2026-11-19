@@ -69,6 +69,10 @@ export interface ReferenceAid<State, Ui> {
   /** The checklist, derived from the board as the player has it, never from
    * the solution. Pure. `ui` lets it echo the spotlighted item (`selected`). */
   model(state: State, ui: Ui): ReferenceModel;
+  /** The part of `ui` that `model` reads, as a string: the panel fetches the
+   * model again when it changes, as it does after a move, so a spotlight a
+   * board press clears, or Crossing's selected square, shows at once. */
+  watches(ui: Ui): string;
   /** Spotlight an item on the board, or clear it for null, by mutating `Ui`
    * in place: a `UI_UPDATE`-shaped change the midend repaints but never
    * records as a move. Returns whether anything changed. */

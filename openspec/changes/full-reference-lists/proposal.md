@@ -46,6 +46,10 @@ Crossing half waits on the questions below.
 
 ## Questions for the owner
 
+Answered 2026-11-19: **(b)** for Crossing, so only the fit coloring moves
+into the panel and the held clue's ghost stays; and help stays counted when
+the panel first shows.
+
 1. **Crossing: which marks leave the main screen?** Today the list strikes
    through a placed clue, reds a duplicate, and (with the `fit-highlight`
    preference, on by default) colors each clue a click would place and

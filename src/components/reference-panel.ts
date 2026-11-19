@@ -69,7 +69,7 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
   protected override updated() {
     const puzzle = this.puzzle;
     if (!puzzle) return;
-    const at = `${puzzle.currentMove}\n${puzzle.activeHintExplanation}`;
+    const at = `${puzzle.currentMove}\n${puzzle.activeHintExplanation}\n${puzzle.referenceWatch}`;
     if (this.fetchedPuzzle !== puzzle || this.fetchedFor !== at) {
       if (this.fetchedPuzzle !== puzzle) {
         this.view = { query: "", group: 0, filter: 0 };

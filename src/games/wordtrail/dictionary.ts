@@ -75,5 +75,6 @@ function select(ui: WordtrailUi, key: string | null): boolean {
 export const dictionary: ReferenceAid<WordtrailState, WordtrailUi> = {
   title: "Dictionary",
   model,
+  watches: (ui) => ui.spotlight ?? "",
   select,
 };

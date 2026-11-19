@@ -917,12 +917,13 @@ describe("crossing hint — the frame", () => {
       const size = midend.size({ w: 600, h: 900 });
       const ts = size.w / (params.w + 1);
       if (showHint) expect(midend.hint()).toBeNull();
-      midend.redraw(new RecordingDrawing(palette));
+      const before = new RecordingDrawing(palette);
+      midend.redraw(before);
       clickCell(midend, params.w, cell.y * params.w + cell.x, ts);
 
       const frame = new RecordingDrawing(palette);
       midend.redraw(frame);
-      return { frame, ts };
+      return { before, frame, ts };
     };
 
     const { step } = hinted("hint-dismiss");
@@ -950,13 +951,15 @@ describe("crossing hint — the frame", () => {
     // which is the whole gain from ringing rather than filling.
     expect(selectionFill(hintUp.frame.ops, target, hintUp.ts)).toBe(true);
     expect(selectionFill(plain.frame.ops, target, plain.ts)).toBe(true);
-    // ...and only the hinted frame carries the ring. The count covers the clue
-    // list too: a whole-run placement rings the number it writes in, as it
-    // rings the square it writes it into.
-    const rings =
-      (step.highlights?.targets.length ?? 0) +
-      (step.highlights?.numberTarget == null ? 0 : 1);
-    expectRing(hintUp.frame.ops, { rings });
+    // ...and only the hinted frame carries the ring. A whole-run placement
+    // also rings the number it writes in, in the clue list, which the click
+    // leaves as it was: that ring was painted with the hint and is not
+    // painted again.
+    const listRing = step.highlights?.numberTarget == null ? 0 : 1;
+    expectRing(hintUp.frame.ops, { rings: step.highlights?.targets.length ?? 0 });
+    expectRing(hintUp.before.ops, {
+      rings: (step.highlights?.targets.length ?? 0) + listRing,
+    });
     expect(ringsOf(plain.frame.ops)).toHaveLength(0);
   });
 

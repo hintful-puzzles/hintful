@@ -698,15 +698,8 @@ export interface CrossingUi {
    * `puzzle.numbers`), or `null`. While one is held it is previewed in every
    * run that can still take it, and clicking such a run places it. */
   heldNumber: number | null;
-  /** Preference (default on): color the clue list by where each clue could go
-   * from the selected cell — its dimension's ink if it fits one of the two runs
-   * through that cell, dimmed if it fits neither. Pure bookkeeping over the
-   * player's own entries — see {@link numberFitsRun}. */
-  fitHighlight: boolean;
   /** Preference (default on): wash the two runs through the selected cell on
-   * the board, each in its dimension's hue. Independent of
-   * {@link CrossingUi.fitHighlight} — some players want to know which clues are
-   * live without the board being tinted, and vice versa. */
+   * the board, each in its dimension's hue. */
   highlightRuns: boolean;
   /** Preference (default on, a deliberate divergence — the game's own
    * documentation asks for it): entering a digit moves the selection to the next
@@ -729,7 +722,6 @@ export function newUi(_state: CrossingState): CrossingUi {
     cursorFromKeyboard: false,
     dir: "across",
     heldNumber: null,
-    fitHighlight: true,
     highlightRuns: true,
     autoAdvance: true,
     pencilSticky: true,

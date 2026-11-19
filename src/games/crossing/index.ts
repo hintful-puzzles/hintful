@@ -67,6 +67,7 @@ import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newCrossingDesc } from "./generator.ts";
 import { narrateCrossing } from "./hint.ts";
+import { numbers } from "./numbers.ts";
 import {
   type CrossingDrawState,
   type CrossingHint,
@@ -809,17 +810,9 @@ export const crossingGame: Game<
   },
   requestKeys: (): KeyLabel[] => digitKeys(9),
   textFormat,
+  reference: numbers,
 
   prefs: [
-    {
-      kw: "fit-highlight",
-      name: "Color the clue list by where each number could go from the selected square",
-      type: "boolean",
-      get: (ui) => ui.fitHighlight,
-      set: (ui, v) => {
-        ui.fitHighlight = v;
-      },
-    },
     {
       kw: "highlight-runs",
       name: "Highlight the across and down numbers running through the selected square",

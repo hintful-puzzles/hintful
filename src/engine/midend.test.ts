@@ -84,6 +84,7 @@ function refGame(): typeof fakeGame {
         selected: ui.pick,
         hinted: [],
       }),
+      watches: (ui: RefUi) => ui.pick ?? "",
       select: (ui: RefUi, key: string | null) => {
         if (ui.pick === key) return false;
         ui.pick = key;
@@ -372,6 +373,7 @@ describe("Midend completion: the status is the position's, the history is the en
         model: () => {
           throw new Error("not fetched");
         },
+        watches: () => "",
         select: () => true,
       },
     });
@@ -2007,6 +2009,19 @@ describe("Midend hint plan lifecycle", () => {
     // …but added no history entry: move counters are unchanged.
     expect(lastMoveCounts()).toEqual(before);
     expect(before.canUndo).toBe(false);
+  });
+
+  it("sends the Ui the reference watches, so the panel fetches again on a Ui change", () => {
+    const d = driveMidend(refGame());
+    d.midend.newGameFromId("t3:g3-0");
+    expect(d.last("game-state-change")?.referenceWatch).toBe("");
+    d.midend.selectReference("b");
+    expect(d.last("game-state-change")?.referenceWatch).toBe("b");
+
+    const plain = driveMidend(fakeGame);
+    plain.midend.newGameFromId("t3:g3-0");
+    expect(plain.last("game-state-change")).not.toBeNull();
+    expect(plain.last("game-state-change")?.referenceWatch).toBeUndefined();
   });
 });
 

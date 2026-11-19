@@ -2908,6 +2908,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // and its state cannot disagree about which games have the mode.
       pencilMode: (this.ui as { pencilMode?: unknown } | null)?.pencilMode === true,
       ...(this.game.encodeUi ? { uiState: this.game.encodeUi(this.ui) } : {}),
+      ...(this.game.reference
+        ? { referenceWatch: this.game.reference.watches(this.ui) }
+        : {}),
       ...(this.game.keyStatus ? { keyStatus: this.game.keyStatus(this.state) } : {}),
     });
   }

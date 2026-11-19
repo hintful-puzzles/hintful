@@ -159,6 +159,9 @@ export type NotifyGameStateChange = {
    * persisted `Ui` costs nothing at all.
    */
   uiState?: string;
+  /** `ReferenceAid.watches` for the `Ui`, left out for a game without a
+   * reference aid. */
+  referenceWatch?: string;
   /** `Game.keyStatus` for the board on screen, left out for a game without
    * the hook. */
   keyStatus?: KeyStatus[];

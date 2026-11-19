@@ -1114,6 +1114,10 @@ Exemplars: [`dominosa/index.ts`](../src/games/dominosa/index.ts) for pieces,
 - **Showing it is help.** The midend marks the game helped the first time it
   hands a model out, so the timer reads "with help", as a hint does. Keep it
   behind the panel; never fetch it for the board's own use.
+- **`watches(ui)` names the `Ui` the model reads.** The midend sends it with
+  each state change and the panel fetches the model again when it changes,
+  so a spotlight a board press clears, or Crossing's "Fits" for the selected
+  square, shows without a move. Return `""` when the model reads none.
 - **A hint step names items with `HintStep.reference`**, by key; the midend
   passes them on as the model's `hinted`, and the panel colors them as the
   hint. Wordtrail's step names the words its sentence reasons from.
@@ -1150,6 +1154,10 @@ still take it, click to write it in as one move. It needs no engine seam;
   matching its pattern against the player's own entries (length, digits,
   unused). Testing whether crossing entries can be satisfied is constraint
   propagation, which is the puzzle, and belongs to `hint()`.
+- **The list on the board does bookkeeping only**: striking off what is
+  placed, marking what is placed twice, as a paper solver would. Showing
+  which pieces fit a square is a deduction, so it is a reference aid's
+  filter, behind the panel that counts as help: Crossing's `numbers.ts`.
 - **Check what a gesture already means before borrowing an interaction from
   another game.** A grammar where left accepts a preview and right cycles
   alternatives does not move to a game where both buttons are spent.

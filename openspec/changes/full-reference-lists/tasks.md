@@ -18,6 +18,10 @@
 - [x] 2.2 Help page and `docs/mechanics.md` § "The reference aid" say what the list holds and how the rows compose.
 - [x] 2.3 Run the app: both rows, the counts, a search across groups, a spotlight, an eight-letter group's render time, and a phone-sized window. Measured 2026-11-19 on the dev server, under load: 3,647 five-letter chips render in about 0.3 s and 7,281 eight-letter ones in about 0.5 s after the group press; a move with either showing raised no long task.
 
-## 3. Crossing (waits on the owner's answer to `proposal.md` § "Questions for the owner")
+## 3. Crossing (the owner's answer: only the fit coloring moves; help stays counted on opening)
 
-- [ ] 3.1 Filled in from the owner's answer.
+- [x] 3.1 `ReferenceAid.watches(ui)`: the midend sends it with each state change, and the panel fetches the model again when it changes, so the model can follow a `Ui`-only change (Crossing's selected square; Wordtrail's spotlight cleared by a board press). Each aid declares it; a midend test covers the message.
+- [x] 3.2 `crossing/numbers.ts`: the Numbers aid, its "Fits" the selected square's runs (`runForNumber`) or, with none, any run's; selecting a number holds it.
+- [x] 3.3 The list under the board keeps strike-through and red only; the `fit-highlight` preference and the two list-only colors go. Tests and snapshots follow; the hint frame's list ring is counted in the frame that paints it.
+- [x] 3.4 Help page, `docs/mechanics.md`, spec deltas.
+- [x] 3.5 Run the app: the panel follows the selection, "Fits" narrows to the selected square's runs, a number picked up from the panel previews and places, the list strikes it off.
