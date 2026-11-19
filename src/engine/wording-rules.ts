@@ -1,7 +1,7 @@
 /**
  * The rules a hint's words are held to, in one copy: the render applies them
  * as it builds a sentence (`hint-words.ts`), the hint tests as they walk one
- * (`testing/hint-reference.ts`, `hint-retired-phrases.test.ts`), and the
+ * (`testing/hint-reference.ts`, `describe/hint-retired-phrases.test.ts`), and the
  * describe compiler to every wording a description states, when it compiles
  * (`describe/lint.ts`). It imports nothing: the describe script runs it under
  * Node's type stripping.

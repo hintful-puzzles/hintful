@@ -9,18 +9,21 @@
  * population is derived (`HINT_GAMES`), so a game that joins is held at once.
  */
 import { describe, expect, it } from "vitest";
-import { loadDescriptionFile } from "../describe/load.ts";
 import {
   engineCodeLinesMatching,
   SCANNED_ENGINE_FILES,
-} from "./testing/engine-source.ts";
-import { codeLinesMatching, SCANNED_SOURCE_FILES } from "./testing/enrollment.ts";
-import { HINT_GAMES } from "./testing/hint-games.ts";
+} from "../engine/testing/engine-source.ts";
+import {
+  codeLinesMatching,
+  SCANNED_SOURCE_FILES,
+} from "../engine/testing/enrollment.ts";
+import { HINT_GAMES } from "../engine/testing/hint-games.ts";
 import {
   IS_OUT,
   KEEPS_IS_OUT_FAMILY,
   RETIRED_PHRASE as RETIRED,
-} from "./wording-rules.ts";
+} from "../engine/wording-rules.ts";
+import { loadDescriptionFile } from "./load.ts";
 
 /** Loopy's preference label, which names a setting and not a hint step; a
  * label is the player's to be asked about, so it is left as it is. */

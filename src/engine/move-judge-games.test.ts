@@ -51,6 +51,7 @@ const UNJUDGED: Readonly<Record<string, string>> = {
   twiddle: NOT_MARKS,
   undead: OWN_SOLVER,
   untangle: NOT_MARKS,
+  wordguess: HIDDEN,
 };
 
 const DIRECT = /^Your last move follows from (?!the board)/;
