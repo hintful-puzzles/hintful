@@ -1643,11 +1643,12 @@ in a game's frames that no call to these helpers drew.
 - `drawMoveArrow`: a hint's arrow from one tile to another, drawn by each
   tile it crosses under its own clip.
 - **`path-arrow.ts` for which way a path runs between squares**: the
-  one arrowhead (`drawArrowHead`, which `drawMoveArrow` wears too), a line
-  with its head across the squares' shared side (`drawDirectedLine`,
-  `drawPathHead`), and the ring on a path's first square (`drawPathStart`).
-  A game showing a path's direction draws it with these and no shape of its
-  own, so it reads alike in every game (owner, 2026-11-19).
+  one arrowhead (`drawArrowHead`, which `drawMoveArrow` wears too), a
+  link's head across the squares' shared side (`drawPathHead`), drawn after
+  the grid line there, and the ring on a path's first square
+  (`drawPathStart`). A game showing a path's direction draws it with these
+  and no shape of its own, so it reads alike in every game (owner,
+  2026-11-19): Wordtrail on its lines, Ascent between its numbers.
 
 When you extract a shape, check whether its dimensions were drifting too.
 An extraction that leaves the emitted op order unchanged moves no render

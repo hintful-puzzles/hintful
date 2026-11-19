@@ -10,6 +10,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { randomNew } from "../../engine/random/index.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -25,6 +26,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
+import { newAscentDesc } from "./generator.ts";
 import type { AscentRung } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-marks.ts";
 import { ascentGame } from "./index.ts";
@@ -37,6 +39,8 @@ import {
   COL_GRID,
   COL_HINT_CELL,
   COL_LOWLIGHT,
+  COL_PATH,
+  cellCenter,
 } from "./render.ts";
 import {
   type AscentMove,
@@ -45,6 +49,7 @@ import {
   MODE_HEXAGON,
   MODE_ORTHOGONAL,
   MODE_RECT,
+  newAscentState,
 } from "./state.ts";
 
 function id(p: AscentParams, seed: string): string {
@@ -130,6 +135,54 @@ describe("ascent render", () => {
     ).toBe(true);
     expect(ops.some((o) => o.op === "text")).toBe(true);
     expect(ops).toMatchSnapshot();
+  });
+
+  it.each([
+    ["Orthogonal", MODE_ORTHOGONAL],
+    ["Classic", MODE_RECT],
+    ["Hexagon", MODE_HEXAGON],
+  ])("%s: each link of a solved path points to the higher number, and 1 is ringed", (_mode, mode) => {
+    const p = { ...RECT, mode };
+    const start = newAscentState(p, newAscentDesc(p, randomNew("render-arrows")).desc);
+    const solved = ascentGame.solve?.(start, start);
+    if (!solved?.ok) throw new Error("solve failed");
+    const state = ascentGame.executeMove(start, solved.move);
+    const ds = ascentGame.newDrawState(state, 48);
+    const rec = new RecordingDrawing(ascentGame.colors(DEFAULT_BACKGROUND));
+    ascentGame.redraw?.(rec, ds, null, state, 1, ascentGame.newUi(state), 0, NO_FLASH);
+
+    const cells = [...state.grid.keys()].filter((i) => state.grid[i] >= 0);
+    const middle = (i: number) =>
+      cellCenter(i, state.w, state.mode, ds.tileSize, ds.offsetX, ds.offsetY);
+    const nearest = (x: number, y: number) =>
+      cells.reduce((best, i) => {
+        const c = middle(i);
+        const b = middle(best);
+        return Math.hypot(c.cx - x, c.cy - y) < Math.hypot(b.cx - x, b.cy - y)
+          ? i
+          : best;
+      });
+    // Each head once, though every square it crosses draws it.
+    const heads = new Map<string, number[]>();
+    for (const o of opsOfKind(rec.ops, "polygon"))
+      if (o.fill === COL_PATH && o.points.length === 3) {
+        const [tip, s1, s2] = o.points;
+        const from = nearest((s1[0] + s2[0]) / 2, (s1[1] + s2[1]) / 2);
+        const to = nearest(tip[0], tip[1]);
+        heads.set(`${from}>${to}`, [state.grid[from], state.grid[to]]);
+      }
+    expect(heads.size).toBe(state.last);
+    for (const [n, next] of heads.values()) expect(next).toBe(n + 1);
+
+    const one = middle(state.grid.indexOf(0));
+    expect(
+      opsOfKind(rec.ops, "circle").some(
+        (c) =>
+          c.fill === COL_PATH &&
+          c.cx === Math.round(one.cx) &&
+          c.cy === Math.round(one.cy),
+      ),
+    ).toBe(true);
   });
 
   it("Edges: draws arrow clues around the border", () => {

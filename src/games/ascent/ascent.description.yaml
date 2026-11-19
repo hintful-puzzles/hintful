@@ -521,6 +521,8 @@ help:
 
     To remove numbers, right-click or right-drag a number (on a touch screen, a long press, or hold and then drag).
 
+    Between two neighboring numbers in sequence, an arrow points from the lower to the higher, and 1 is ringed, so the path's direction can be read without comparing numbers.
+
     It's also possible to draw a path while the numbers inside the path are still unknown. Left-click and drag across cells to draw a line, starting from an empty cell (a drag starting from a number places numbers instead). Right-click or right-drag to clear the line going through a cell.
 
     If a path has only a single number, the endpoints will display one or two smaller numbers, which represent the numbers which are valid for this cell.

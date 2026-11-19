@@ -415,7 +415,7 @@ describe("ascent edge-drag guide line", () => {
 });
 
 describe("ascent typed-number line preview", () => {
-  it("draws the connecting line for a typed preview before it commits", () => {
+  it("draws the connecting link for a typed preview before it commits", () => {
     const p = mk(6, 5, 1, MODE_RECT);
     const { desc } = newAscentDesc(p, randomNew("preview-line"));
     const state = newAscentState(p, desc);
@@ -449,7 +449,9 @@ describe("ascent typed-number line preview", () => {
     }
     expect(cellB).toBeGreaterThanOrEqual(0);
 
-    const countHighlightLines = (typing: boolean): number => {
+    // A link between consecutive numbers is an arrowhead; between anything
+    // else, a line.
+    const countLinks = (typing: boolean): number => {
       const ui = ascentGame.newUi(state);
       if (typing) {
         ui.typingCell = cellB;
@@ -458,11 +460,15 @@ describe("ascent typed-number line preview", () => {
       const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);
       const rec = new RecordingDrawing(ascentGame.colors([0.83, 0.83, 0.83]));
       ascentGame.redraw?.(rec, ds, null, state, 1, ui, 0, NO_FLASH);
-      return rec.ops.filter((o) => o.op === "line" && o.color === COL_PATH).length;
+      return rec.ops.filter(
+        (o) =>
+          (o.op === "line" && o.color === COL_PATH) ||
+          (o.op === "polygon" && o.fill === COL_PATH),
+      ).length;
     };
 
-    // The preview must add at least one line in the board's own path color.
-    expect(countHighlightLines(true)).toBeGreaterThan(countHighlightLines(false));
+    // The preview must add at least one link in the board's own path color.
+    expect(countLinks(true)).toBeGreaterThan(countLinks(false));
   });
 });
 

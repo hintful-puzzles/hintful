@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  drawDirectedLine,
+  drawPathHead,
   drawPathStart,
   pathHeadLength,
   pathHeadWidth,
@@ -18,14 +18,13 @@ import type { Color } from "./types.ts";
 const BLACK: Color = [0, 0, 0];
 const WHITE: Color = [1, 1, 1];
 
-/** The head drawn for a line from `a` to `b` on tile `ts`: its tip and its
+/** The head drawn for a link from `a` to `b` on tile `ts`: its tip and its
  * base's two corners. */
 function headOf(ts: number, a: { x: number; y: number }, b: { x: number; y: number }) {
   const dr = new RecordingDrawing([WHITE, BLACK]);
-  drawDirectedLine(dr, ts, a, b, 1, 4);
-  const [line] = opsOfKind(dr.ops, "line");
+  drawPathHead(dr, ts, a, b, 1);
   const [head] = opsOfKind(dr.ops, "polygon");
-  return { line, tip: head.points[0], base: head.points.slice(1) };
+  return { tip: head.points[0], base: head.points.slice(1) };
 }
 
 describe("the path arrow", () => {
@@ -35,9 +34,8 @@ describe("the path arrow", () => {
     ["down", { x: 0, y: 0 }, { x: 0, y: 40 }],
     ["up", { x: 0, y: 40 }, { x: 0, y: 0 }],
   ])("points %s, the way the line runs", (_way, a, b) => {
-    const { line, tip, base } = headOf(40, a, b);
-    expect([line.x1, line.y1, line.x2, line.y2]).toEqual([a.x, a.y, b.x, b.y]);
-    // How far a point is from the line's middle toward `b`: the tip is past
+    const { tip, base } = headOf(40, a, b);
+    // How far a point is from the link's middle toward `b`: the tip is past
     // the middle, and the base's corners behind it.
     const along = ([x, y]: readonly [number, number]) =>
       ((x - (a.x + b.x) / 2) * (b.x - a.x) + (y - (a.y + b.y) / 2) * (b.y - a.y)) / 40;

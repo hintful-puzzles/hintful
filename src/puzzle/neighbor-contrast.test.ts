@@ -36,10 +36,6 @@ import { schemeOf } from "./scheme-palettes.ts";
 
 /** `kind:a:b` to what the pair is, per game. */
 const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
-  ascent: {
-    "mark:12:2":
-      "an endpoint disc's ring, which the disc itself carries in the dark scheme",
-  },
   fifteen: {
     "mark:2:4":
       "a tile's lit bevel edge on its lifted face; the shadow edge carries the bevel",

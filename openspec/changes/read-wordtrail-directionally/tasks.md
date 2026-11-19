@@ -7,7 +7,7 @@
 - [x] 1.3 The keyboard path and Ctrl+arrow lay direction; the click near an edge as `design.md` recommends
 - [x] 1.4 Survey every game that draws a direction along a path or link (screenshots in the app); record in `design.md` which share one shape
 - [x] 1.5 The engine's arrow for a directed line, and a path's start mark, in a module of its own (`engine/path-arrow.ts`, its test); legible at a phone's tile size, light and dark (seen in Wordtrail at 390 px wide, dark)
-- [ ] 1.6 Ascent onto the engine's arrow, compared side by side with today's in the app (the owner found it unclear): its path today is undirected bars, its direction only in the numbers (`design.md` § "The survey"), so this is adding an arrow on each link of its path from the lower number to the higher, and a start mark on 1 in place of the ring 1 and the last share. Pegs' and Sokoban's hint arrows already wear the engine's head; Galaxies is recorded as a later candidate
+- [x] 1.6 Ascent onto the engine's arrow, compared side by side with today's in the app (the owner found it unclear): its path today is undirected bars, its direction only in the numbers (`design.md` § "The survey"), so this is adding an arrow on each link of its path from the lower number to the higher, and a start mark on 1 in place of the ring 1 and the last share. Pegs' and Sokoban's hint arrows already wear the engine's head; Galaxies is recorded as a later candidate. As built: heads alone, drawn over the grid line (`design.md` § "Ascent on the engine's arrow"); the help says so, and the `ascent` spec delta
 
 ## 2. Wordtrail
 

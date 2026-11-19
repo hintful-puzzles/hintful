@@ -139,10 +139,10 @@ change. What draws a direction:
   from one square to another. It now wears the engine's head
   (`path-arrow.ts`'s `drawArrowHead`), unchanged pixel for pixel (Pegs' hint
   snapshot fails when the head is planted wider).
-- **Ascent's path shows no direction**: it is undirected bars between
-  squares' middles, its direction only in the numbers on them, and 1 and the
-  last number ringed alike. Its `drawArrow` is the Edges mode's border clue
-  tab, not the path. Moving its path onto the engine's arrow is task 1.6.
+- **Ascent's path showed no direction**: undirected bars between squares'
+  middles, its direction only in the numbers on them, and 1 and the last
+  number ringed alike. Its `drawArrow` is the Edges mode's border clue tab,
+  not the path. Task 1.6 moved it onto the engine's arrow (below).
 - **Galaxies' arrow** points from a square to its dot, which may be several
   squares away, and stops short of the dot: a line and two head strokes. A
   candidate for `drawArrowHead` later; it is not a path between neighbors.
@@ -150,3 +150,24 @@ change. What draws a direction:
   Signpost's and Rome's arrows (a clue in one square), Unequal's and the
   edge-clue Latin games' signs, Inertia's aim out of one square, Netslide's
   and Sixteen's slide buttons, and Twiddle's turn arrow.
+
+## Ascent on the engine's arrow (2026-11-19)
+
+Between two consecutive numbers the link is now the engine's head alone,
+pointing to the higher, and 1 wears the start ring; the last number keeps a
+plain disc, told by the head into it. A line the player draws, which has no
+direction until numbers are on it, stays a bar.
+
+Compared in the app against the bars, side by side (Orthogonal, Classic,
+Hexagon; light and dark; 390 px wide). Two shapes were tried and dropped:
+
+- **The head on the full line**, as Wordtrail draws it: the number discs
+  leave a third of a tile of line between them, so the line showed as a
+  stub past the tip, a pin through the head.
+- **A shaft ending in the head** (`drawDirectedLine`, removed): the discs
+  leave about four pixels of shaft, which on a hexagon's slanted link read
+  as a notch in the head.
+
+Both looked cut by the grid: a head sits across the side, and Ascent drew
+each square's outline after its lines. Heads are now drawn after the
+outline, as Wordtrail's already were (its grid is drawn first).

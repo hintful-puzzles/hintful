@@ -6,11 +6,14 @@
  *
  * - {@link drawArrowHead}: the filled head, the one shape. A hint's move
  *   arrow (`draw.ts`'s `drawMoveArrow`) wears it too.
- * - {@link drawDirectedLine}: a path's line between two squares' middles with
- *   the head on it, pointing the way the path runs. The head sits across the
- *   two squares' shared side, so a game that draws each square's half of a
- *   line under its clip draws the whole head from both squares, each keeping
- *   its half.
+ * - {@link drawPathHead}: the head on a path's link between two squares'
+ *   middles, pointing the way the path runs. It sits across the two squares'
+ *   shared side, so a game that draws each square's half of a line under its
+ *   clip draws the whole head from both squares, each keeping its half; it
+ *   goes over the grid line there, which would cut it in two. On a line
+ *   that runs through the squares (Wordtrail's) it is drawn on the line;
+ *   between two discs that leave little of a line to see (Ascent's numbers)
+ *   it is drawn alone.
  * - {@link drawPathStart}: the ring round a path's first square, which a
  *   line's arrow alone does not tell from its last.
  *
@@ -70,20 +73,6 @@ export function drawPathHead(
   const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
   const tip = { x: mid.x + (ux * length) / 2, y: mid.y + (uy * length) / 2 };
   drawArrowHead(dr, tip, ux, uy, length, pathHeadWidth(ts), color);
-}
-
-/** A path's line from the middle `a` of one square to the middle `b` of the
- * next, `thickness` thick, with its arrowhead pointing to `b`. */
-export function drawDirectedLine(
-  dr: GameDrawing,
-  ts: number,
-  a: Point,
-  b: Point,
-  color: number,
-  thickness: number,
-): void {
-  dr.drawLine(a, b, color, thickness);
-  drawPathHead(dr, ts, a, b, color);
 }
 
 /** How thick the ring round a path's first square is on tile `ts`. */

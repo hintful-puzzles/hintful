@@ -29,6 +29,7 @@ import { drawRectCorners, glyphFont, strokeScaledPolygon } from "../../engine/dr
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { drawPathHead, drawPathStart } from "../../engine/path-arrow.ts";
 import { ringContentBox, textBox } from "../../engine/ring.ts";
 import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
@@ -215,6 +216,10 @@ export interface AscentDrawState {
   oldnum: Int32Array;
   oldpath: Int32Array;
   path: Int32Array;
+  /** Each cell's line toward the next number (`1 << dir`), where its path's
+   * arrowhead points, and as last drawn. */
+  out: Int32Array;
+  oldout: Int32Array;
   prevhints: Int32Array;
   nexthints: Int32Array;
   oldpositions: Int32Array;
@@ -263,6 +268,8 @@ export function newAscentDrawState(
     oldnum: new Int32Array(s).fill(-0x7fff),
     oldpath: new Int32Array(s).fill(-1),
     path: new Int32Array(s),
+    out: new Int32Array(s),
+    oldout: new Int32Array(s),
     prevhints: new Int32Array(s).fill(-0x7fff),
     nexthints: new Int32Array(s).fill(-0x7fff),
     oldpositions: new Int32Array(s).fill(-3),
@@ -639,11 +646,13 @@ export function redrawAscent(
       else pathline |= FLAG_ERROR;
       lines++;
     }
+    let out = 0;
     if (single && n < state.last && positions[n + 1] >= 0) {
       const i2 = positions[n + 1];
-      if (isNear(i, i2, w, state.mode))
-        pathline |= 1 << findDirection(i, i2, w, movement);
-      else pathline |= FLAG_ERROR;
+      if (isNear(i, i2, w, state.mode)) {
+        out = 1 << findDirection(i, i2, w, movement);
+        pathline |= out;
+      } else pathline |= FLAG_ERROR;
       lines++;
     }
     if (n === 0 || n === state.last) lines++;
@@ -651,6 +660,7 @@ export function redrawAscent(
     if (state.path && state.path[i] & ~FLAG_COMPLETE) pathline |= FLAG_USER;
 
     ds.path[i] = pathline;
+    ds.out[i] = out;
   }
 
   /* Deliberate divergence: preview the connecting line for a *typed* number
@@ -667,6 +677,8 @@ export function redrawAscent(
       if (j < 0 || !isNear(pc, j, w, state.mode)) continue;
       ds.path[pc] |= 1 << findDirection(pc, j, w, movement);
       ds.path[j] |= 1 << findDirection(j, pc, w, movement);
+      if (nb > typingN) ds.out[pc] |= 1 << findDirection(pc, j, w, movement);
+      else ds.out[j] |= 1 << findDirection(j, pc, w, movement);
     }
   }
 
@@ -683,12 +695,13 @@ export function redrawAscent(
       dirty = true;
       ds.oldnum[i] = n;
     }
-    if (ds.oldpath[i] !== ds.path[i]) {
+    if (ds.oldpath[i] !== ds.path[i] || ds.oldout[i] !== ds.out[i]) {
       dirty = true;
       for (let i2 = Math.max(0, i - (w + 1)); i2 < w * h && i2 < i + w + 1; i2++) {
         if (isNear(i, i2, w, state.mode)) ds.colors[i2] = -1;
       }
       ds.oldpath[i] = ds.path[i];
+      ds.oldout[i] = ds.out[i];
     }
     if (
       isNumberEdge(n) &&
@@ -756,6 +769,28 @@ export function redrawAscent(
           : COL_PATH;
     }
     return ink;
+  };
+  const middle = (i: number): Point => {
+    const c = cellCenter(i, w, state.mode, tileSize, ds.offsetX, ds.offsetY);
+    return { x: Math.round(c.cx), y: Math.round(c.cy) };
+  };
+  /** The arrowheads the square being drawn owes, drawn over its outline: a
+   * head sits across a side, so the grid line there would cut it in two. */
+  const heads: (() => void)[] = [];
+  /** Cell `p`'s part of the line to its neighbor `q`. Where the numbers on
+   * them say which way the path runs it is the engine's arrowhead alone:
+   * the two numbers' discs leave too little of a line between them to show
+   * beside it. A line with no direction runs from `p`'s middle to `end`. */
+  const link = (p: number, q: number, end: Point, color: number): void => {
+    const [from, to] =
+      ds.out[p] & (1 << findDirection(p, q, w, movement))
+        ? [p, q]
+        : ds.out[q] & (1 << findDirection(q, p, w, movement))
+          ? [q, p]
+          : [-1, -1];
+    if (from < 0)
+      thickLine(dr, ds.thickness, middle(p).x, middle(p).y, end.x, end.y, color);
+    else heads.push(() => drawPathHead(dr, tileSize, middle(from), middle(to), color));
   };
   const r = hexR(tileSize);
   for (let i = 0; i < w * h; i++) {
@@ -834,28 +869,21 @@ export function redrawAscent(
       for (const corner of cutCorners(tx, ty, tileSize, cut))
         dr.drawPolygon(corner, COL_MIDLIGHT, COL_MIDLIGHT);
 
+    heads.length = 0;
     if (ui.typingCell !== i) {
       const linecolor = ds.path[i] & FLAG_USER ? COL_LINE : COL_PATH;
 
       if (!hex) {
+        // A diagonal line from the row above or below crosses this square's
+        // corner.
         for (let dy = -1; dy <= 1; dy += 2) {
           const i2 = i + w * dy;
           if (i2 < 0 || i2 >= w * h) continue;
-          const tx2 = (i2 % w) * tileSize + ds.offsetX + Math.trunc(tileSize / 2);
-          const ty2 =
-            Math.trunc(i2 / w) * tileSize + ds.offsetY + Math.trunc(tileSize / 2);
           for (let dir = 0; dir < movement.dircount; dir++) {
             if (!movement.dirs[dir].dy || !movement.dirs[dir].dx) continue;
-            if (ds.path[i2] & (1 << dir))
-              thickLine(
-                dr,
-                ds.thickness,
-                tx2 + movement.dirs[dir].dx * tileSize,
-                ty2 + movement.dirs[dir].dy * tileSize,
-                tx2,
-                ty2,
-                ds.path[i2] & FLAG_USER ? COL_LINE : COL_PATH,
-              );
+            if (!(ds.path[i2] & (1 << dir))) continue;
+            const j = i2 + w * movement.dirs[dir].dy + movement.dirs[dir].dx;
+            link(i2, j, middle(j), ds.path[i2] & FLAG_USER ? COL_LINE : COL_PATH);
           }
         }
       }
@@ -870,11 +898,11 @@ export function redrawAscent(
         const nc = cellCenter(i2, w, state.mode, tileSize, ds.offsetX, ds.offsetY);
         const ex = hex ? (cx + nc.cx) / 2 : nc.cx;
         const ey = hex ? (cy + nc.cy) / 2 : nc.cy;
-        thickLine(dr, ds.thickness, tx1, ty1, ex, ey, linecolor);
+        link(i, i2, { x: ex, y: ey }, linecolor);
       }
 
-      /* Circle on the beginning/end of the path, over the line into it, so
-       * the number on it is read against the disc. */
+      /* The engine's start mark on the path's first number, over the line out
+       * of it; the last is told by the arrow into it. */
       if (
         (sn === 0 || sn === state.last) &&
         (state.immutable[i] || positions[sn] !== CELL_MULTIPLE)
@@ -882,9 +910,10 @@ export function redrawAscent(
         if (fn & NUMBER_FLAG_MOVE) {
           dr.drawCircle(center, tileSize * 0.4, COL_LOWLIGHT, COL_LOWLIGHT);
           dr.drawCircle(center, tileSize * 0.3, COL_HIGHLIGHT, COL_HIGHLIGHT);
+        } else if (sn === 0) {
+          drawPathStart(dr, tileSize, center, tileSize * 0.3, COL_PATH, COL_HIGHLIGHT);
         } else {
-          // Ringed, so the disc is told from a lifted cell as from a plain one.
-          dr.drawCircle(center, Math.trunc(tileSize / 3), COL_HIGHLIGHT, COL_GRID);
+          dr.drawCircle(center, Math.trunc(tileSize / 3), color, color);
         }
       } else if (ds.path[i] & ~FLAG_COMPLETE) {
         dr.drawCircle(center, Math.trunc(ds.thickness / 2), linecolor, linecolor);
@@ -899,7 +928,7 @@ export function redrawAscent(
         const nc = cellCenter(i2, w, state.mode, tileSize, ds.offsetX, ds.offsetY);
         const ex = hex ? (cx + nc.cx) / 2 : nc.cx;
         const ey = hex ? (cy + nc.cy) / 2 : nc.cy;
-        thickLine(dr, ds.thickness, tx1, ty1, ex, ey, COL_PATH);
+        link(i, i2, { x: ex, y: ey }, COL_PATH);
       }
     }
 
@@ -976,6 +1005,8 @@ export function redrawAscent(
         const sy = k >= 2 ? 1 : -1;
         dr.drawRect({ x: corner.x, y: corner.y, w: 1, h: 1 }, cornerInk(i, sx, sy));
       });
+
+    for (const head of heads) head();
 
     /* Light circle on possible endpoints. */
     if (state.grid[i] === NUMBER_EMPTY && (sn === 0 || sn === state.last)) {
