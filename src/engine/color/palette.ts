@@ -254,13 +254,13 @@ export function playerEntryColor(background: Color): Color {
  * blue pencil mark), and so is {@link REGION_DONE}, which Filling paints
  * beside a selected cell. */
 export function highlightWash(background: Color): Color {
-  // The dark value is authored so the cell sinks, as it does in the light
-  // scheme. Derived, it rises to the lightness of `givenSurface`, and a
-  // selected entry reads as a given. It sinks below `surfaceGrid` too, far
-  // enough that the line beside a selected cell still shows.
+  // The dark value is authored, and told by hue as the light one is: a deep
+  // amber. Derived, it rises to the lightness of `givenSurface`, and a
+  // selected entry reads as a given; a near-black sinks to the grid line's
+  // lightness and is barely told from a plain dark cell.
   return token(
     [0.86 * background[0], 0.8 * background[1], 0.5 * background[2]],
-    [0.01, 0.01, 0.01],
+    [0.36, 0.25, 0.09],
   );
 }
 
