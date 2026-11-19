@@ -206,7 +206,9 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
             ? html`<wa-icon class="badge" name="check" library="system"></wa-icon>`
             : item.status === "conflict"
               ? html`<wa-icon class="badge warn" name="warning" library="system"></wa-icon>`
-              : nothing
+              : item.status === "ruledOut"
+                ? html`<wa-icon class="badge out" name="xmark" library="system"></wa-icon>`
+                : nothing
         }
       </button>
     `;
@@ -347,10 +349,12 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
       border-color: var(--wa-color-danger-border-normal);
       color: var(--wa-color-danger-text-normal);
     }
+    /* Grayed as a placed item is, its mark a red cross where a placed one's is
+       a green tick: a strike through every word of a long list made it
+       unreadable. */
     .chip.ruledOut {
       color: var(--wa-color-text-quiet);
-      border-style: dashed;
-      text-decoration: line-through;
+      background: var(--wa-color-neutral-fill-quiet);
     }
     /* After the statuses, so a word the hint names reads as the hint's even
        where it is placed or ruled out. */
@@ -368,7 +372,8 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
       background: var(--wa-color-surface-raised);
       border-radius: 50%;
     }
-    .badge.warn {
+    .badge.warn,
+    .badge.out {
       color: var(--wa-color-danger-fill-loud);
     }
   `;

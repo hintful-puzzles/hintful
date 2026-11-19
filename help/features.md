@@ -405,8 +405,8 @@ keep asking is *which ones haven't I placed yet*. Those get a ::reference::
 reference panel, its button named for what it holds (Dominosa's is
 **Dominoes**): a checklist of the whole set, marking off each piece you've
 placed and flagging any you've placed more than once. The word puzzles get a
-**Dictionary** there instead, with the words your play has ruled out struck
-through, a search box, and buttons that narrow the list, such as **Fits** for
+**Dictionary** there instead, with the words your play has ruled out grayed
+and marked with a red cross, a search box, and buttons that narrow the list, such as **Fits** for
 the words that still could go. While a hint is shown, the panel marks the
 items the hint reasons from.
 

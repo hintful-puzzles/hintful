@@ -181,7 +181,7 @@ nothing selected in the list.
 
 #### Scenario: A word that cannot win, chosen to split the rest
 
-- **WHEN** CRANE has scored against CIGAR and the player taps a struck word
+- **WHEN** CRANE has scored against CIGAR and the player taps a ruled-out word
 - **THEN** the working row spells it, ready to submit
 
 ### Requirement: Hint: The suggested guess is counted, not argued

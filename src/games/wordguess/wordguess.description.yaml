@@ -49,8 +49,9 @@ help:
       body: |-
         **Dictionary** opens a list of every word the hidden word could
         have been drawn from, A to Z, with those that no longer fit every
-        score struck through. Search it, or press **Fits** to see only the
-        words that still could be the answer. Tap any word, struck or not,
+        score grayed and marked with a red cross. Search it, or press
+        **Fits** to see only the words that still could be the answer. Tap
+        any word, crossed or not,
         to write it into the row you are filling, then submit it as if you
         had typed it: a word that cannot win is sometimes the guess that
         tells you most.
