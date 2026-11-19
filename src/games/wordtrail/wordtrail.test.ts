@@ -50,7 +50,7 @@ import {
   type WordtrailMove,
   type WordtrailState,
 } from "./state.ts";
-import { letterChar } from "./trails.ts";
+import { letterChar, trailsOf } from "./trails.ts";
 
 const P = { w: 4, h: 3, words: 2, diff: DIFF_EASY };
 const DESC = "45,namedlgo3p";
@@ -119,6 +119,17 @@ describe("wordtrail desc", () => {
     expect(new Set(s.trails.map((t) => t.join()))).toHaveLength(s.trails.length);
     expect(keys.length).toBe(s.trails.length);
     expect(spelled.every((w) => w.length === 4 || w.length === 5)).toBe(true);
+  });
+
+  it.each([
+    "sip",
+    "pis",
+  ])("reads a trail that spells a word both ways as the common one, laid as %s", (laid) => {
+    const letters = Uint8Array.from(laid, (c) => c.charCodeAt(0) - 96);
+    const spelled = trailsOf(3, 1, letters, [3]).map((t) =>
+      Array.from(t, (i) => letterChar(letters[i])).join(""),
+    );
+    expect(spelled).toEqual(["sip"]);
   });
 
   it("has an answer, which the ladder finds", () => {

@@ -6,12 +6,14 @@
  * A trail is squares side by side, none twice, whose letters read from its
  * first square spell an accepted guess (`engine/word-list`) as long as one
  * of the listed lengths. A trail that spells a word both ways round is one
- * trail: the division is the same.
+ * trail: the division is the same. It reads the way that spells a common
+ * word where only one way does.
  */
 
 import {
   type GuessSpan,
   guessSpan,
+  isAnswer,
   narrowGuesses,
 } from "../../engine/word-list/index.ts";
 
@@ -46,7 +48,9 @@ export function trailsOf(
   const wanted = [...new Set(lengths)];
   const longest = Math.max(...wanted);
   const out: Trail[] = [];
-  const seen = new Set<string>();
+  // Each trail's place in `out`, by its squares either way round.
+  const seen = new Map<string, number>();
+  const spell = (t: Trail): string => t.map((i) => letterChar(letters[i])).join("");
   const path: number[] = [];
   const on = new Uint8Array(w * h);
   // Each wanted length's guesses that begin with the path's letters.
@@ -64,9 +68,14 @@ export function trailsOf(
       const forward = path.join(",");
       const backward = path.toReversed().join(",");
       const key = forward < backward ? forward : backward;
-      if (!seen.has(key)) {
-        seen.add(key);
+      const at = seen.get(key);
+      if (at === undefined) {
+        seen.set(key, out.length);
         out.push(path.slice());
+      } else if (isAnswer(spell(path)) && !isAnswer(spell(out[at]))) {
+        // A trail that spells a word both ways round reads as the common one
+        // (SIP, not PIS): the board's list and the hint say it that way.
+        out[at] = path.slice();
       }
     }
     if (path.length < longest) {

@@ -211,3 +211,14 @@ or a piece longer than the longest length SHALL be drawn in the error color.
 
 - **WHEN** lines join only P-O-E
 - **THEN** the list is empty
+
+### Requirement: Look: A word that reads both ways is said as the common one
+
+A piece that spells a word of the guess list both ways round SHALL be
+written into the list, and named by a hint, as the word of the answer list
+where only one of the two is.
+
+#### Scenario: A word that reads both ways is written as the common one
+
+- **WHEN** on `3x2n1de:3,pis3` lines join P-I-S, which reads PIS (a guess) one way and SIP (an answer) the other
+- **THEN** SIP is written into the list's three-letter slot
