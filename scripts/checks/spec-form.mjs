@@ -6,16 +6,22 @@
  * main spec as written, so this is what refuses the words of the change.
  *
  * The length of a requirement is the validator's to bound, and
- * `openspec validate --strict` beside this in the gate does.
+ * `openspec validate --strict` beside this in the gate does; but it names a
+ * long one by its index (`requirements[3]`), and an archive merges many at
+ * once. So this names each one over the limit by its file, line and title, in
+ * the main specs and in every open change's deltas, as the validator counts
+ * (`ruleChars` in `spec-parse.mjs`).
  *
  * A change id is taken by reference: a backticked token that names a
  * directory under `openspec/changes/` or its archive. A capability's own name
  * is not one, though a change may share it.
  */
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { capabilityNames, parseSpec, specPath } from "./spec-parse.mjs";
 
 const ARCHIVE = "openspec/changes/archive";
+/** The longest requirement `openspec validate --strict` passes. */
+const LONGEST = 500;
 const DATED = /^\d{4}-\d{2}-\d{2}-(.+)$/;
 const DATE = /\b20\d\d-\d\d-\d\d\b/;
 
@@ -42,6 +48,22 @@ for (const capability of capabilities) {
   });
 }
 
+const deltas = readdirSync("openspec/changes")
+  .filter((name) => name !== "archive")
+  .flatMap((change) => {
+    const dir = `openspec/changes/${change}/specs`;
+    return existsSync(dir) ? readdirSync(dir).map((c) => `${dir}/${c}/spec.md`) : [];
+  })
+  .filter((path) => existsSync(path));
+for (const path of [...capabilities.map(specPath), ...deltas]) {
+  for (const r of parseSpec(readFileSync(path, "utf8")).requirements) {
+    if (r.chars > LONGEST)
+      failures.push(
+        `${path}:${r.line}: ${r.chars} characters, over the validator's ${LONGEST}: ${r.title}`,
+      );
+  }
+}
+
 // An archive read that came back empty would pass every spec.
 if (capabilities.length === 0 || requirements === 0 || changeIds.size < 100) {
   console.error(
@@ -54,7 +76,8 @@ if (failures.length > 0) {
   console.error(
     "  A requirement states what must hold, in the present tense, with at most one\n" +
       "  sentence of reason. When it was decided, by which change and what it replaced\n" +
-      "  are the archive's; a reason a session needs is in the guide under docs/.",
+      "  are the archive's; a reason a session needs is in the guide under docs/.\n" +
+      "  A long requirement moves its examples into scenarios, or is split in two.",
   );
   process.exit(1);
 }

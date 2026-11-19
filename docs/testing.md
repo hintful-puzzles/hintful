@@ -255,9 +255,11 @@ blocks at any indent.
 Run `npm run game -- <id>` while you write a game, after each concern you
 change. It takes about a minute and runs what a commit staging the game
 would, with the other games' cases skipped; its header in
-[`scripts/game.ts`](../scripts/game.ts) lists the steps. Its node checks read
-the whole tree, so a refusal there may be another file's, and they read the
-game's files whether git tracks them yet or not.
+[`scripts/game.ts`](../scripts/game.ts) lists the steps. It starts with
+`npm run fast-checks` (§ "What runs when"), so it formats every file the
+work changed, the engine's included, and its checks read the whole tree:
+a refusal there may be another file's, and they read files git does not
+track yet.
 
 Do not take a green `vitest run src/games/<game>` as the game's coverage. Its
 input paths, save round-trip, params codec and its source text (color
@@ -665,6 +667,12 @@ and their reasons.
 | The push hook | every push | The gate's fast checks and no test. Asked with `GATE_PUSH_TESTS=1`, it also runs what the commits left out: the own tests and the cross-game cases of every game that reaches a path the push carries (nothing, when every commit was a game's own or documentation), up to its own ceiling. |
 | CI | every push | Everything but the games' deep tiers. Never canceled by a newer push. |
 
+- **Before a commit, `npm run fast-checks`** runs the gate's fast checks
+  past every refusal, in under a minute, and names each one with the command
+  that reruns it. The gate stops at the first, so a commit that owes four
+  learns of them in four gated attempts. It first writes the fixes with one
+  right answer (formatting, import order, a game spec's subject order) into
+  the files the working tree changed, and names them.
 - **Each hook's run has a ceiling of CPU time** (`test-cost.ts`'s `BUDGET`).
   Before any test runs, the hook prices its plan from what the last runs
   recorded here and keeps the cheapest files that fit, and a test file the

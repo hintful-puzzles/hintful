@@ -20,6 +20,7 @@
     "test:run": "vitest run --passWithNoTests",
     "diff": "vitest run --passWithNoTests -c scripts/checks/diff.vitest.config.mts",
     "gate": "sh scripts/gate.sh",
+    "fast-checks": "GATE_KEEP_GOING=1 sh scripts/gate.sh",
     "test:hint-sweeps": "vitest run src/engine/hint-text-convention.test.ts src/engine/hint-quality.test.ts src/engine/hint-walk-fingerprint.test.ts src/engine/hint-frontier.test.ts src/engine/ladder-continuity.test.ts src/engine/hint-resume.test.ts",
     "test:slow": "PUZZLES_SLOW_TESTS=1 vitest run --passWithNoTests",
     "test:shuffle": "vitest run --passWithNoTests --sequence.shuffle.files=true",

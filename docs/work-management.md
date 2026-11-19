@@ -198,11 +198,12 @@ Two rules make a sweep across the collection affordable:
   delta's words into the main spec, so the requirement has to read as the
   rule that holds, with no mention of the change that made it
   (`openspec/config.yaml`, the rules for `specs`).
-- **Put a game's spec back in order before committing the archive.**
-  Archiving appends an added requirement to the end of the spec, and the
-  gate refuses the commit until
-  `node scripts/checks/spec-subjects.mjs --fix` has restored the order of its
-  subjects ([`new-game.md`](./new-game.md) § "What a game's spec holds").
+- **Run `npm run fast-checks` before committing the archive.** Archiving
+  appends an added requirement to the end of a game's spec, which it puts
+  back in subject order ([`new-game.md`](./new-game.md) § "What a game's spec
+  holds"), and it names every merged requirement over the validator's length
+  by file, line and title, so the archive's first gated commit is the one
+  that lands.
 - **No script of ours writes into a change directory.** Archiving renames it.
 
 ## Pushing and deploying

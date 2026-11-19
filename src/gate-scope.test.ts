@@ -157,11 +157,13 @@ describe("the gate's per-commit scopings stay safe", () => {
     // source file beside a docs edit, or moves one into `docs/`. A filter on
     // the kind of change is how a deletion drops out, and rename detection is
     // how the path a file left does.
-    // Two listings, a push's and a commit's, and the shortcut reads either.
+    // Three listings, a push's, a commit's and `npm run fast-checks`'s. The
+    // shortcut reads the first two, and the third scopes biome.
     const listings = [...gateScript.matchAll(/changed=\$\(git diff ([^)]*)\)/g)];
     expect(listings.map((m) => m[1])).toEqual([
       '--name-only --no-renames "$GATE_SINCE" HEAD',
       "--cached --name-only --no-renames",
+      "--name-only --no-renames HEAD; git ls-files --others --exclude-standard",
     ]);
   });
 

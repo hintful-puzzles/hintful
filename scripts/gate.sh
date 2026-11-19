@@ -18,7 +18,9 @@
 #      prefix rather than in vitest; see the documentation-only shortcut below
 #      for why, and `src/gate-scope.test.ts` for what enforces it. The prefix
 #      ends with the vitest files that only read source (step 1f), run as a
-#      pass of their own so that a failure there arrives in seconds.
+#      pass of their own so that a failure there arrives in seconds. Every
+#      step of it goes through `step` (section 0b), which is what lets
+#      `npm run fast-checks` run the same list without stopping.
 #   2. Heavy checks — `vitest run` and `vite build`. They share no inputs or
 #      outputs, so on a machine with spare cores they run concurrently and the
 #      gate wall-clock is ~max(vitest, build) instead of their sum (~40s off the
@@ -47,11 +49,14 @@ set -e
 
 # --- 0a. Which paths is this run about, and is there anything to run? ---
 #
-# Three roles run this script, and two of them are about a set of paths. A
+# Four roles run this script, and three of them are about a set of paths. A
 # commit's are the staged ones (`.husky/pre-commit` sets GATE_PRECOMMIT). A
 # push's are everything between the commit the remote has and `HEAD`
 # (`.husky/pre-push` passes that commit as GATE_SINCE, beside GATE_PRECOMMIT).
-# CI and a manual `npm run gate` set neither and are about the whole tree.
+# `npm run fast-checks` (GATE_KEEP_GOING, section 0b) is about every path the
+# working tree changed, staged or not, untracked included, since that is what
+# the next commit is made of. CI and a manual `npm run gate` set none of these
+# and are about the whole tree.
 #
 # The set is every path changed in any way: a deleted file by its path, and a
 # moved one by both (`--no-renames` lists the path it left beside the one it
@@ -62,6 +67,8 @@ if [ -n "${GATE_SINCE:-}" ]; then
   changed=$(git diff --name-only --no-renames "$GATE_SINCE" HEAD)
 elif [ "${GATE_PRECOMMIT:-}" = "1" ]; then
   changed=$(git diff --cached --name-only --no-renames)
+elif [ "${GATE_KEEP_GOING:-}" = "1" ]; then
+  changed=$(git diff --name-only --no-renames HEAD; git ls-files --others --exclude-standard)
 fi
 # Whether every changed path is one no test and no build reads: section 1d
 # says why these, and what holds the list to that.
@@ -131,6 +138,66 @@ fi
 # Fail-safe and near-free (one `ps` scan), so it costs a clean box nothing.
 sh "$(dirname -- "$0")/reap-orphaned-workers.sh" || true
 
+# --- 0b. How a step of the fast prefix runs. ---
+#
+# The gate stops at the first refusal, so a commit that owes four fixes
+# learned of them one gated attempt at a time: a word game's last commit took
+# eight attempts over forty minutes, every refusal a check of seconds.
+# `npm run fast-checks` sets GATE_KEEP_GOING and runs the same steps, through
+# the same function, past every refusal, and ends by naming each one with the
+# command that reproduces it; it then stops before the tests and the build.
+# One list, two ways of running it: a second copy would drift from this one.
+#
+# Where a refusal has one right answer and a fixer, the keep-going run applies
+# it first (`fix`), to files the working tree has changed, and names each file
+# it wrote. The gate itself never writes.
+#
+# A step that needs an earlier one keeps its place after it; the steps that
+# every other reads (the descriptions' modules) are not steps, and a failure
+# there ends the keep-going run as it ends the gate.
+refused=""
+step_as() {
+  reproducer=$1
+  shift
+  if [ "${GATE_KEEP_GOING:-}" != "1" ]; then
+    # The refusal is where a session learns the command exists.
+    "$@" || {
+      step_rc=$?
+      echo ""
+      echo "✗ the gate stops at its first refusal. \`npm run fast-checks\` names every one at once"
+      echo "  and writes the fixes that have one right answer."
+      exit $step_rc
+    }
+    return 0
+  fi
+  step_log=$(mktemp)
+  step_start=$(date +%s)
+  if "$@" >"$step_log" 2>&1; then
+    echo "✓ $(($(date +%s) - step_start))s  $reproducer"
+  else
+    echo "✗ $(($(date +%s) - step_start))s  $reproducer"
+    # Its passes and notes would bury the refusal: the validator prints a
+    # line for each of a hundred specs.
+    grep -vE '^[[:space:]]*(✓|ℹ)' "$step_log" | sed 's/^/    /' || true
+    refused="$refused  $reproducer
+"
+  fi
+  rm -f "$step_log"
+}
+step() { step_as "$*" "$@"; }
+# `fix <files> <command>...`: run a fixer and name each of the files it changed.
+sums() { for f in "$@"; do [ -f "$f" ] && cksum "$f"; done; }
+fix() {
+  [ "${GATE_KEEP_GOING:-}" = "1" ] || return 0
+  fix_files=$1
+  shift
+  # shellcheck disable=SC2086 # newline-separated paths, no globs.
+  fix_before=$(sums $fix_files)
+  "$@" >/dev/null 2>&1 || true
+  # shellcheck disable=SC2086
+  sums $fix_files | grep -vxF -e "$fix_before" | sed "s|^[0-9]* [0-9]* |✎ fixed by $2: |" || true
+}
+
 # --- 1. Fast fail-fast prefix. ---
 #
 # Every description's compiled module, which the typechecks, the guards, the
@@ -144,7 +211,7 @@ node scripts/describe.ts --quiet
 # beside it and declares the same bin, and which of the two npm links there is
 # an accident of install order. 5.x stays for its programmatic API — see the
 # madge section of metrics.sh for the ten packages that need it.
-npm run -s tsc -- -b --noEmit
+step npm run -s tsc -- -b --noEmit
 # The build-side TypeScript — `vite.config.ts`, `vitest.config.ts`,
 # `vite-plugins/` and the advisory checks under `scripts/checks/` — is a second
 # project because it runs in Node, and `tsconfig.json` is deliberately
@@ -153,10 +220,10 @@ npm run -s tsc -- -b --noEmit
 # `include`, and the first pass over it found a dead `output.validate` (a rollup
 # option rolldown neither declares nor reads) and a `defineConfig` overload
 # failure. Same strictness, different runtime.
-npm run -s tsc -- --noEmit -p tsconfig.node.json
+step npm run -s tsc -- --noEmit -p tsconfig.node.json
 # A file in neither project above is checked by nothing, and neither compiler
 # run can say so, since each reports on the files it was given. ~3s.
-node scripts/checks/typescript-projects.mjs
+step node scripts/checks/typescript-projects.mjs
 
 # Biome checks lint rules AND formatting AND import order in one read-only pass
 # (the `check`/`ci` form — not `lint`, which misses formatting; not
@@ -168,10 +235,22 @@ node scripts/checks/typescript-projects.mjs
 # CI and a manual `npm run gate` leave the toggle unset and check the WHOLE tree:
 # that is the backstop for a --no-verify bypass and the thing that forces a
 # tree-wide reformat when biome itself is upgraded. Do not scope those down.
+# The keep-going run takes the files the working tree changed, which the next
+# commit stages, and writes biome's safe fixes into them first.
 if [ "${GATE_BIOME_STAGED:-}" = "1" ]; then
-  npx biome check --staged --no-errors-on-unmatched
+  step npx biome check --staged --no-errors-on-unmatched
+elif [ "${GATE_KEEP_GOING:-}" = "1" ]; then
+  biome_files=$(printf '%s\n' "$changed" | while read -r f; do [ -f "$f" ] && echo "$f"; done || true)
+  if [ -n "$biome_files" ]; then
+    # shellcheck disable=SC2086 # newline-separated paths, no globs.
+    fix "$biome_files" npx biome check --write --no-errors-on-unmatched \
+      --files-ignore-unknown=true $biome_files
+    # shellcheck disable=SC2086
+    step_as "npx biome check <the $(printf '%s\n' "$biome_files" | wc -l | tr -d ' ') changed files>" \
+      npx biome check --no-errors-on-unmatched --files-ignore-unknown=true $biome_files
+  fi
 else
-  npx biome ci .
+  step npx biome ci .
 fi
 
 # The local-feedback corpus still APPLIES — not its result. ~0.2s, no tests run.
@@ -190,7 +269,7 @@ fi
 #
 # If this fails, re-anchor the case on surrounding text — and take the prompt to
 # decide whether it still states the defect it claims to.
-node scripts/feedback-probe.mjs --verify
+step node scripts/feedback-probe.mjs --verify
 
 # --- 1b. Every word this project writes is spelled the American way. ~1s. ---
 #
@@ -201,7 +280,7 @@ node scripts/feedback-probe.mjs --verify
 # vitest — and `src/gate-scope.test.ts` forbids a test from reading `docs/` or
 # `openspec/` at all, which is exactly where a British spelling would otherwise
 # creep back in unchecked.
-node scripts/checks/spelling.mjs
+step node scripts/checks/spelling.mjs
 
 # --- 1b-ii. The engine catalog names every shared helper there is. ~0s. ---
 #
@@ -214,7 +293,7 @@ node scripts/checks/spelling.mjs
 # Here for the same reason as the spelling guard directly above — this reads
 # `docs/`, and deleting a catalog entry is a documentation-only commit, so it
 # has to be ahead of the shortcut and cannot be a vitest file.
-node scripts/checks/engine-catalog.mjs
+step node scripts/checks/engine-catalog.mjs
 
 # --- 1b-iii. A change id cited in prose still resolves. ~0s. ---
 #
@@ -227,7 +306,7 @@ node scripts/checks/engine-catalog.mjs
 # Here, with the two guards above, for the same three reasons: it reads `docs/`,
 # a rename is a documentation-only commit, and `src/gate-scope.test.ts` forbids
 # a vitest file from reading that root at all.
-node scripts/checks/change-citations.mjs
+step node scripts/checks/change-citations.mjs
 
 # --- 1b-iii-a. The brief every session loads stays short. ~0s. ---
 #
@@ -236,7 +315,7 @@ node scripts/checks/change-citations.mjs
 # rule now says the guide it binds, and this is what holds when that is not
 # followed. Here for the reason the guards above are: editing the file is a
 # documentation-only commit.
-node scripts/checks/brief-size.mjs
+step node scripts/checks/brief-size.mjs
 
 # --- 1b-iii-b. A guide's opening names its sections, and a citation lands. ~0s. ---
 #
@@ -245,7 +324,7 @@ node scripts/checks/brief-size.mjs
 # cited by its heading's text, which nothing else resolves when the heading is
 # reworded. Here for the reason the guards above are: a guide edit is a
 # documentation-only commit.
-node scripts/checks/guide-sections.mjs
+step node scripts/checks/guide-sections.mjs
 
 # --- 1b-iv. No test's every assertion sits behind a condition. ~1s. ---
 #
@@ -259,7 +338,7 @@ node scripts/checks/guide-sections.mjs
 # fail-fast, and a vacuity report should arrive before ten minutes of vitest
 # rather than after. It proves itself on every run (seven fixtures, ~1 ms): a
 # guard about tests that cannot fail may not be one.
-node scripts/checks/vacuous-assertions.mjs
+step node scripts/checks/vacuous-assertions.mjs
 
 # --- 1b-v. Nothing exports something no other file imports. ~2s. ---
 #
@@ -272,7 +351,7 @@ node scripts/checks/vacuous-assertions.mjs
 # shells out to `git ls-files` and parses the tree with the TypeScript compiler
 # API, which is build-side work, and it is two seconds against ten minutes of
 # vitest.
-node scripts/checks/unused-exports.mjs
+step node scripts/checks/unused-exports.mjs
 
 # --- 1b-vi. Absence has one spelling. ~7s. ---
 #
@@ -282,7 +361,7 @@ node scripts/checks/unused-exports.mjs
 # `=== undefined` behind it, always false, and the typechecker accepts it. The dearest step
 # in the prefix, because that half reads types and so builds a program over the
 # whole tree; build-side work for the same reason as the step above.
-node scripts/checks/absence-spelling.mjs
+step node scripts/checks/absence-spelling.mjs
 
 # --- 1c. The specs and every open change parse and validate. ~1s. ---
 #
@@ -299,8 +378,14 @@ node scripts/checks/absence-spelling.mjs
 # the loss silently, and this line would still print a cheerful pass. `npx`
 # resolves the pinned devDependency, which is why the version is a fact the repo
 # states rather than a property of the machine.
-node scripts/checks/openspec-version.mjs
-npx --no-install openspec validate --all --strict
+#
+# The keep-going run first puts each game's spec in subject order (section
+# 1c-000): `--fix` moves whole requirements and changes no word, and doing it
+# here means the lines the checks below report are where the reader finds them.
+fix "$(ls openspec/specs/*/spec.md openspec/changes/*/specs/*/spec.md 2>/dev/null)" \
+  node scripts/checks/spec-subjects.mjs --fix
+step node scripts/checks/openspec-version.mjs
+step npx --no-install openspec validate --all --strict
 
 # --- 1c-0. A spec holds rules, not the story of a change. ~0s. ---
 #
@@ -310,7 +395,7 @@ npx --no-install openspec validate --all --strict
 # refuses a date and a change id, the two marks of a history that can be
 # resolved rather than guessed at. Here because archiving is a
 # documentation-only commit.
-node scripts/checks/spec-form.mjs
+step node scripts/checks/spec-form.mjs
 
 # --- 1c-00. A requirement cited by its title is still there. ~0s. ---
 #
@@ -318,7 +403,7 @@ node scripts/checks/spec-form.mjs
 # title, and a title changes whenever a change restates the requirement. Here
 # for the reason the change-citation guard is: it reads `docs/`, and a rename
 # is a documentation-only commit.
-node scripts/checks/spec-citations.mjs
+step node scripts/checks/spec-citations.mjs
 
 # --- 1c-000. A game's spec holds its subjects, in one order. ~0s. ---
 #
@@ -327,7 +412,8 @@ node scripts/checks/spec-citations.mjs
 # appends the requirements a delta adds, which puts a spec out of order, and
 # archiving is a documentation-only commit, so the check is here and reads the
 # recorded surface of each `Game` where a test would have read the object.
-node scripts/checks/spec-subjects.mjs
+# The keep-going run has applied its `--fix` ahead of section 1c.
+step node scripts/checks/spec-subjects.mjs
 
 # --- 1c-i. The deploy's build-only run. ---
 #
@@ -506,8 +592,8 @@ fi
 # `select-tests.ts --verify` sits here for the neighboring reason: the plan is
 # only as good as the walk under it, and a walk that went blind to a coupling
 # would report a narrow plan that looks like health. ~1s.
-node scripts/checks/source-scans.ts --verify
-node scripts/checks/select-tests.ts --verify
+step node scripts/checks/source-scans.ts --verify
+step node scripts/checks/select-tests.ts --verify
 # Every vitest pass below appends what each test file cost in CPU time to one
 # log (`scripts/checks/test-cost.ts`), read once the suite has run.
 TEST_COST_RUN=$(mktemp)
@@ -523,18 +609,31 @@ run_tests() {
     return
   fi
   tests_rc=0
-  # shellcheck disable=SC2086 # the lists are newline-separated paths, no globs.
+  # shellcheck disable=SC2046,SC2086 # the lists are newline-separated paths, no globs.
   if [ -n "$whole" ]; then
     GATE_TEST_PASS=$1 $NICE_TESTS npx vitest run --passWithNoTests \
       --update=none $(printf '%s ' $whole) || tests_rc=$?
   fi
-  # shellcheck disable=SC2086
+  # shellcheck disable=SC2046,SC2086
   if [ -n "$narrow" ]; then
     GATE_TEST_PASS=$1 GATE_GAME_SCOPE=$scope $NICE_TESTS npx vitest run \
       --passWithNoTests --update=none $(printf '%s ' $narrow) || tests_rc=$?
   fi
   return $tests_rc
 }
+# The keep-going run's plan is `ALL`, since it sets none of the hooks' toggles,
+# and it ends here: the tests and the build are what the commit is for.
+if [ "${GATE_KEEP_GOING:-}" = "1" ]; then
+  step_as "GATE_TEST_PASS=scan npx vitest run --update=none" run_tests scan
+  echo ""
+  if [ -z "$refused" ]; then
+    echo "✓ every fast check of the gate passes. The commit runs the tests and the build."
+    exit 0
+  fi
+  echo "✗ refused by $(printf '%s' "$refused" | grep -c .) of the gate's fast checks; each refusal is above, and each reruns with:"
+  printf '%s' "$refused"
+  exit 1
+fi
 if ! run_tests scan; then
   echo ""
   echo "pre-commit gate failed in the source scans (the main vitest pass and vite build did not start)"

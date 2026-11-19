@@ -7,11 +7,10 @@
  * one game, what a commit staging that game would run, and nothing of any
  * other game's:
  *
- *   1. the typecheck, both projects;
- *   2. biome over the game's directory, read-only;
- *   3. the gate's node checks that read a game's source or its spec in
- *      seconds (`CHEAP_CHECKS`);
- *   4. every test file that reaches the game (`gameTestFiles`), with the run
+ *   1. every fast check of the gate, past each refusal, over what the working
+ *      tree changed (`npm run fast-checks`): the game's work often touches an
+ *      engine or describe file too, and the commit checks those as well;
+ *   2. every test file that reaches the game (`gameTestFiles`), with the run
  *      scoped to the game exactly as the commit hook scopes it
  *      (`src/engine/testing/game-scope.ts`): a guard's case titled for another
  *      game is skipped, and so is a floor over the whole collection.
@@ -28,7 +27,8 @@
  * **It ends by saying what it did not run**, counted from the run where it
  * can be, because a green result here is a commit's and not the gate's.
  *
- * It writes nothing in the repository.
+ * It writes in the repository only the fast checks' mechanical fixes, to
+ * files the working tree has changed, and names each one.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -191,48 +191,17 @@ function reportRefusal(refusal: Refusal): void {
 
 const started = Date.now();
 console.log(
-  `The verdict on ${id}: the typecheck, biome, and every test that reads it.\n`,
+  `The verdict on ${id}: the gate's fast checks, and every test that reads it.\n`,
 );
 
-const typed = passes("npm", ["run", "-s", "typecheck"]);
-const formatted = passes("npx", ["biome", "check", `src/games/${id}`]);
-/**
- * The gate's checks that read a game's own source or its spec and cost
- * seconds: each first spoke at Star Battle's commit, after the commit's
- * wait. They read the whole tree, so a refusal may be another game's.
- */
-const CHEAP_CHECKS: [name: string, command: string, args: string[]][] = [
-  ["absence spelling", "node", ["scripts/checks/absence-spelling.mjs"]],
-  ["unused exports", "node", ["scripts/checks/unused-exports.mjs"]],
-  ["the game specs' subjects", "node", ["scripts/checks/spec-subjects.mjs"]],
-  [
-    "openspec, strict",
-    "npx",
-    ["--no-install", "openspec", "validate", "--all", "--strict", "--no-interactive"],
-  ],
-];
-const checked = CHEAP_CHECKS.map(([name, command, args]) => {
-  // Its output only where it refuses: a pass is a line of the summary. A
-  // check that lists tracked files reads the game's untracked ones too
-  // (`scripts/checks/listed-files.mjs`), so a game not yet added is read.
-  const run = spawnSync(command, args, {
-    cwd: ROOT,
-    encoding: "utf8",
-    env: { ...process.env, GAME_VERDICT_UNTRACKED: id },
-  });
-  if (run.status !== 0) process.stdout.write(`${run.stdout}${run.stderr}`);
-  return [name, run.status === 0] as const;
-});
+const fast = passes("npm", ["run", "-s", "fast-checks"]);
 const files = gameTestFiles(id);
 const run = files.length === 0 ? null : runTests(files);
 
 console.log(`\n${"─".repeat(72)}`);
-console.log(`${typed ? "✓" : "✗"} typecheck${typed ? "" : ": its errors are above"}`);
 console.log(
-  `${formatted ? "✓" : "✗"} biome over src/games/${id}${formatted ? "" : ": `npm run check` fixes what it can"}`,
+  `${fast ? "✓" : "✗"} the gate's fast checks${fast ? "" : ": each refusal, and its command, is above"}`,
 );
-for (const [name, passed] of checked)
-  console.log(`${passed ? "✓" : "✗"} ${name}${passed ? "" : ": its refusal is above"}`);
 if (run === null) {
   console.log(
     files.length === 0
@@ -268,17 +237,11 @@ if (run === null) {
     "  - The second and later boards of each kind in a cross-game sweep, which CI",
   );
   console.log("    walks. One guard, wide: npx vitest run <its file>");
-  console.log(
-    "  - The gate's checks that read no game (spelling, the guides, the citations)",
-  );
-  console.log("    and the production build. The commit hook runs them.");
+  console.log("  - The production build. The commit hook runs it.");
   console.log(
     '  - The app. docs/new-game.md § "The acceptance gate" says what to look at.',
   );
 }
 console.log(`\n${Math.round((Date.now() - started) / 1000)} s.`);
 
-const cheap = checked.every(([, passed]) => passed);
-process.exit(
-  typed && formatted && cheap && run !== null && run.refusals.length === 0 ? 0 : 1,
-);
+process.exit(fast && run !== null && run.refusals.length === 0 ? 0 : 1);

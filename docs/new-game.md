@@ -410,8 +410,8 @@ uniquely solvable at exactly its stated difficulty" as a property test
 
 A game, or a change to one, is done when all of these hold:
 
-- [ ] `npm run game -- <gameId>` is green: the typecheck, the game's own
-      tests and every cross-game guard's cases for it
+- [ ] `npm run game -- <gameId>` is green: the gate's fast checks, the
+      game's own tests and every cross-game guard's cases for it
       ([`testing.md`](./testing.md) § "A game's verdict in one command"). It
       says what it leaves to the push and to the app.
 - [ ] The interface risks were checked before starting (§ "Before you start").

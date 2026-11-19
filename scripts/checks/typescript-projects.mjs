@@ -20,7 +20,7 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const tsc = join(repoRoot, "node_modules", "typescript-7", "bin", "tsc");
 
 const gate = readFileSync(join(repoRoot, "scripts", "gate.sh"), "utf8");
-const projects = [...gate.matchAll(/^npm run -s tsc -- (.*)$/gm)].map(
+const projects = [...gate.matchAll(/^step npm run -s tsc -- (.*)$/gm)].map(
   ([, args]) => /-p (\S+)/.exec(args)?.[1] ?? "tsconfig.json",
 );
 if (projects.length < 2) {

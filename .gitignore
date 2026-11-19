@@ -4,6 +4,9 @@
 .agents/skills/
 .claude/skills/openspec-*
 .claude/scheduled_tasks.lock
+# A machine's own Claude Code settings. Here and not only in a global ignore,
+# because biome reads this file and no other.
+.claude/settings.local.json
 .vscode/
 .antigravitycli/
 

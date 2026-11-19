@@ -988,10 +988,11 @@ check reads.
 ### Requirement: One command gives a game its verdict
 
 The repository SHALL provide `npm run game -- <id>` (`scripts/game.ts`), which
-runs the typecheck, biome over the game's directory, and every test file that
-reaches a path of the game, less the other games' own, scoped to the game as
-the per-commit hook scopes a commit that stages it. It SHALL run every step
-whatever an earlier one found, and SHALL write nothing in the repository.
+runs every fast check of the gate over what the working tree changed (`npm run
+fast-checks`), and every test file that reaches a path of the game, less the
+other games' own, scoped to the game as the per-commit hook scopes a commit
+that stages it. It SHALL run every step whatever an earlier one found, and
+SHALL write in the repository only the fast checks' mechanical fixes.
 
 #### Scenario: A game owes three guards something
 
@@ -1004,11 +1005,18 @@ whatever an earlier one found, and SHALL write nothing in the repository.
 - **WHEN** the command is given an id with no directory under `src/games/`
 - **THEN** it says so and runs nothing
 
+#### Scenario: A game's work touches an engine file
+
+- **WHEN** a game's work leaves an engine file it changed unformatted, and
+  the command is run
+- **THEN** the file is formatted and named, as the commit would have refused it
+
 ### Requirement: The verdict reads a game's files before git tracks them
 
-The verdict command's checks that list the files git tracks SHALL read the
-game's files git does not track yet as well, and the gate's SHALL NOT, since
-an untracked file is left out of a commit.
+The gate's fast checks run ahead of a commit (`npm run fast-checks`, and the
+verdict command through it) SHALL read the files git does not track yet as
+well as those it tracks, and the gate's SHALL NOT, since an untracked file is
+left out of a commit.
 
 #### Scenario: A game not yet added to git
 
