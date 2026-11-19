@@ -542,7 +542,7 @@
         "space": ["name", "family", "sizes", "freedom"],
         "position": ["space", "moves", "finish"],
         "moves": ["position"],
-        "techniques": ["space", "tiers", "answer"]
+        "techniques": ["space", "answer"]
       },
       "additionalProperties": false,
       "properties": {

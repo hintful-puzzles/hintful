@@ -137,7 +137,10 @@ research tools all read through it; the app never does.
   reader meets the prose rules beside the formal ones. A rules section is
   whole or absent; the schema says what each part requires.
 - **Only a library, a description with techniques and a planning game's
-  description compile.**
+  description compile.** A game whose hint deduces nothing but whose steps
+  should compile writes `techniques: []` (Wordguess), and needs no `tiers`
+  for it. `npm run describe` names a description with `steps` that does not
+  compile, at `--quiet` too, and without `--quiet` every other one it skips.
 - **A clue revealed during play is a dealt clue**: a guess's score, an
   opened square's number, a fired laser. The game builds `Dealt` from its
   state on each hint and solve, and nothing declares where a clue came from,

@@ -108,8 +108,7 @@ freedom: { kind: query }
 deal:
   answer: a word of the list, at random
 # Nothing is deduced: the hint only suggests a guess, counted, which its
-# steps say. The steps compile from here all the same.
-tiers: [Normal]
+# steps say.
 techniques: []
 # A step's one reference is the ringed squares of the working row, where
 # the suggested guess goes. A guess is chosen by what it leaves, and ends on

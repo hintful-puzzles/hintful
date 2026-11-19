@@ -45,8 +45,18 @@ const sources = new Map(
 const written: string[] = [];
 const steep: string[] = [];
 const wanted = new Set<string>();
+const skipped: string[] = [];
 for (const [f, file] of sources) {
-  if (!compiles(file)) continue;
+  if (!compiles(file)) {
+    // Steps with nothing to compile them into are almost certainly a
+    // techniques list cut by mistake, so they are named even at --quiet.
+    if ("steps" in file && file.steps !== undefined)
+      console.warn(
+        `${f}: has steps but no techniques, so it does not compile; write \`techniques: []\` for a game with none`,
+      );
+    else skipped.push(f);
+    continue;
+  }
   const out = compiledPath(f);
   wanted.add(out);
   const code = compileSource(f, sources);
@@ -71,6 +81,9 @@ const removed = globSync(`${GENERATED}/**/*.compiled.ts`, { cwd: root }).filter(
 for (const f of removed) rmSync(`${root}${f}`);
 
 if (!quiet) for (const line of written) console.log(line);
+if (!quiet)
+  for (const f of skipped)
+    console.log(`${f}: not compiled, a help page or rules with no techniques`);
 for (const f of removed) console.log(`removed ${f}: no description compiles to it`);
 if (!quiet || written.length + removed.length > 0)
   console.log(
