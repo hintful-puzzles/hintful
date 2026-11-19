@@ -1,12 +1,12 @@
 /**
- * A non-blocking, responsive "reference aid" panel — a checklist of a game's
- * fixed inventory of pieces with the player's found status, and click-to-
- * spotlight of a piece's candidate placements on the board.
+ * A non-blocking, responsive "reference aid" panel: a game's inventory of
+ * pieces, or its dictionary, with each item's status on the board, and a
+ * click that spotlights an item.
  *
  * Generic over the game: it renders whatever `Game.reference()` returns
- * (`ReferenceModel`) and echoes clicks back through `Puzzle.selectReference`.
- * Dominosa is the first (and currently only) game that exposes a reference; the
- * panel is only ever mounted when `puzzle.hasReference` is true.
+ * (`ReferenceModel`), its title and words included, and echoes clicks back
+ * through `Puzzle.selectReference`. It is only ever mounted when
+ * `puzzle.hasReference` is true.
  *
  * Presentation is deliberately NOT a modal: it is a region of the puzzle
  * screen's grid (`puzzle/layout.ts`), so the board stays visible and
@@ -17,12 +17,20 @@ import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import type { ReferenceModel } from "../engine/types.ts";
+import type { ReferenceItem, ReferenceModel } from "../engine/types.ts";
 import { puzzleContext } from "../puzzle/contexts.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
 
 import "@awesome.me/webawesome/dist/components/button/button.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
+
+/** What an item's tooltip adds to its label for its status. */
+const STATUS_WORDS: Readonly<Record<ReferenceItem["status"], string>> = {
+  outstanding: "",
+  placed: ", placed",
+  conflict: ", placed more than once",
+  ruledOut: ", ruled out",
+};
 
 @customElement("reference-panel")
 export class ReferencePanel extends SignalWatcher(LitElement) {
@@ -40,18 +48,19 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
   @state()
   private selectedKey: string | null = null;
 
-  /** Which (puzzle, move) the current `model` was fetched for, so we refetch
-   * exactly once per board change rather than on every render. */
+  /** Which (puzzle, move, hint step) the current `model` was fetched for, so
+   * we refetch once per change of the board or of the hint's marked items
+   * rather than on every render. */
   private fetchedPuzzle?: Puzzle;
-  private fetchedMove = -1;
+  private fetchedFor = "";
 
   protected override updated() {
     const puzzle = this.puzzle;
     if (!puzzle) return;
-    const move = puzzle.currentMove;
-    if (this.fetchedPuzzle !== puzzle || this.fetchedMove !== move) {
+    const at = `${puzzle.currentMove}\n${puzzle.activeHintExplanation}`;
+    if (this.fetchedPuzzle !== puzzle || this.fetchedFor !== at) {
       this.fetchedPuzzle = puzzle;
-      this.fetchedMove = move;
+      this.fetchedFor = at;
       void this.refresh(puzzle);
     }
   }
@@ -74,7 +83,12 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
   private async handleItem(key: string) {
     const next = this.selectedKey === key ? null : key;
     this.selectedKey = next; // instant feedback
-    await this.puzzle?.selectReference(next);
+    const puzzle = this.puzzle;
+    if (!puzzle) return;
+    await puzzle.selectReference(next);
+    // The game decides what a selection leaves selected: Wordguess writes the
+    // word into its row and keeps nothing selected in the list.
+    await this.refresh(puzzle);
   }
 
   /** Clear the board spotlight and deselect the chip (an external quick-clear,
@@ -89,48 +103,60 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
     // Register the reactive dependency so a board change re-renders (and
     // `updated` refetches the found status).
     void this.puzzle?.currentMove;
+    void this.puzzle?.activeHintExplanation;
 
-    const items = this.model?.items ?? [];
+    const model = this.model;
+    if (model === null) return nothing;
+    const hinted = new Set(model.hinted);
     return html`
-      <div class="panel" role="region" aria-label="Domino reference">
+      <div class="panel" role="region" aria-label=${model.title}>
         <header>
-          <span class="title">Dominoes</span>
+          <span class="title">${model.title}</span>
           <wa-button appearance="plain" size="small" @click=${this.handleClose}>
             <wa-icon name="xmark" library="system" label="Close reference"></wa-icon>
           </wa-button>
         </header>
-        <p class="hint">Tap a domino to highlight where it can go.</p>
-        <div class="grid">
-          ${items.map((item) => {
-            const [a, b] = item.pips ?? [];
-            const selected = this.selectedKey === item.key;
-            return html`
-              <button
-                  class="chip ${item.status} ${selected ? "selected" : ""}"
-                  aria-pressed=${selected}
-                  title="Domino ${item.label}${
-                    item.status === "placed"
-                      ? " — placed"
-                      : item.status === "conflict"
-                        ? " — placed more than once"
-                        : ""
-                  }"
-                  @click=${() => this.handleItem(item.key)}
-              >
-                <span class="half">${item.pips ? a : item.label}</span>
-                ${item.pips ? html`<span class="half">${b}</span>` : nothing}
-                ${
-                  item.status === "placed"
-                    ? html`<wa-icon class="badge" name="check" library="system"></wa-icon>`
-                    : item.status === "conflict"
-                      ? html`<wa-icon class="badge warn" name="warning" library="system"></wa-icon>`
-                      : nothing
-                }
-              </button>
-            `;
-          })}
+        <p class="hint">${model.instructions}</p>
+        <div class="sections">
+          ${model.sections.map(
+            (section) => html`
+              ${section.heading === null ? nothing : html`<h3>${section.heading}</h3>`}
+              <div class="grid">
+                ${section.items.map((item) => this.renderItem(item, hinted.has(item.key)))}
+              </div>
+            `,
+          )}
         </div>
       </div>
+    `;
+  }
+
+  private renderItem(item: ReferenceItem, hinted: boolean) {
+    const [a, b] = item.pips ?? [];
+    const selected = this.selectedKey === item.key;
+    // The name, not only the tooltip, so a screen reader hears the status.
+    const described = `${item.label}${STATUS_WORDS[item.status]}${hinted ? ", in the hint" : ""}`;
+    return html`
+      <button
+          class="chip ${item.status} ${selected ? "selected" : ""} ${hinted ? "hinted" : ""}"
+          aria-pressed=${selected}
+          aria-label=${described}
+          title=${described}
+          @click=${() => this.handleItem(item.key)}
+      >
+        ${
+          item.pips
+            ? html`<span class="half">${a}</span><span class="half">${b}</span>`
+            : html`<span class="word">${item.label}</span>`
+        }
+        ${
+          item.status === "placed"
+            ? html`<wa-icon class="badge" name="check" library="system"></wa-icon>`
+            : item.status === "conflict"
+              ? html`<wa-icon class="badge warn" name="warning" library="system"></wa-icon>`
+              : nothing
+        }
+      </button>
     `;
   }
 
@@ -169,9 +195,18 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
       color: var(--wa-color-text-quiet);
     }
 
-    .grid {
+    .sections {
       flex: 1 1 auto;
       overflow-y: auto;
+    }
+    h3 {
+      margin: var(--wa-space-xs) 0 var(--wa-space-2xs);
+      font-size: var(--wa-font-size-smaller);
+      font-weight: var(--wa-font-weight-semibold);
+      color: var(--wa-color-text-quiet);
+    }
+
+    .grid {
       display: flex;
       flex-wrap: wrap;
       gap: var(--wa-space-2xs);
@@ -201,6 +236,11 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
       border-inline-start: var(--wa-border-width-s) solid
         var(--wa-color-neutral-border-normal);
     }
+    .chip .word {
+      padding: 0.25em 0.5em;
+      font-weight: var(--wa-font-weight-semibold);
+      letter-spacing: 0.05em;
+    }
     .chip:hover {
       border-color: var(--wa-color-brand-border-normal);
     }
@@ -217,6 +257,18 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
     .chip.conflict {
       border-color: var(--wa-color-danger-border-normal);
       color: var(--wa-color-danger-text-normal);
+    }
+    .chip.ruledOut {
+      color: var(--wa-color-text-quiet);
+      border-style: dashed;
+      text-decoration: line-through;
+    }
+    /* After the statuses, so a word the hint names reads as the hint's even
+       where it is placed or ruled out. */
+    .chip.hinted {
+      border-color: var(--app-color-hint-border);
+      background: var(--app-color-hint-surface);
+      color: var(--wa-color-text-normal);
     }
     .badge {
       position: absolute;

@@ -1084,17 +1084,33 @@ does".
 
 ## The reference aid
 
-A game whose core bookkeeping is "which pieces have I used?" can offer a
-checklist panel of the fixed piece inventory with found status, where
-clicking a piece spotlights its candidate placements. It is opened from the
+A game whose core bookkeeping is "which pieces have I used?", or a word game
+whose player needs the words the board allows, can offer a checklist panel:
+the fixed inventory, or the dictionary, with each item's status, where
+clicking an item spotlights its candidate placements. It is opened from the
 Game controls panel and does not block play. The requirement is the
 reference-aid one in [`ts-engine`](../openspec/specs/ts-engine/spec.md).
-Exemplar: [`dominosa/index.ts`](../src/games/dominosa/index.ts).
+Exemplars: [`dominosa/index.ts`](../src/games/dominosa/index.ts) for pieces,
+[`wordtrail/dictionary.ts`](../src/games/wordtrail/dictionary.ts) for words.
 
 - **`reference(state, ui): ReferenceModel` returns the checklist, derived
-  only from the player's own placements**, never from the solution.
+  only from the player's own placements**, never from the solution. It
+  carries its own title and instructions, and its items in sections, each
+  with a heading or none.
+- **Showing it is help.** The midend marks the game helped the first time it
+  hands a model out, so the timer reads "with help", as a hint does. Keep it
+  behind the panel; never fetch it for the board's own use.
+- **A hint step names items with `HintStep.reference`**, by key; the midend
+  passes them on as the model's `hinted`, and the panel colors them as the
+  hint. Wordtrail's step names the words its sentence reasons from.
+- **Share the definition of "still fits" with the hint.** Wordtrail's list
+  and its hint read one compiled `fitting`, so a word the panel offers is
+  one the hint may reason from.
 - **`selectReference(ui, key)` spotlights by mutating the `Ui`** and reports
-  whether anything changed; `false` skips the repaint.
+  whether anything changed; `false` skips the repaint. It may do something
+  else to the `Ui` the game owns: Wordguess writes the word into its working
+  row and leaves nothing selected, and the panel refetches after a
+  selection to show what the game kept.
 - **Having `reference` is having the control.** The panel is the generic
   [`components/reference-panel.ts`](../src/components/reference-panel.ts),
   beside the board in a landscape window and under it in a tall one

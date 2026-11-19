@@ -210,15 +210,31 @@ asks of it.
 - **WHEN** a drag runs from the L of the middle row down into the dark square below it
 - **THEN** no move is made
 
+### Requirement: Controls: Wordtrail's dictionary lists the words the board can spell
+
+Wordtrail's reference SHALL be titled "Dictionary" and list, under a heading
+for each listed length, every common word some trail on the board spells,
+alphabetically, each once. A word SHALL be placed where a drawn piece spells
+it, ruled out where no trail of it fits the player's lines and crosses, and
+outstanding otherwise. Selecting a word SHALL spotlight the letters of its
+trails that still fit, until the board is touched.
+
+#### Scenario: A crossed edge rules a word out
+
+- **WHEN** the only trail spelling TAN runs across an edge the player has
+  crossed
+- **THEN** TAN is shown ruled out, and an undo of the cross shows it
+  outstanding again
+
 ### Requirement: Hint: A step rings the edges it decides and outlines or stripes what it reads
 
-Each step SHALL ring every edge its move decides, between the two letters
-and clear of both, and draw each line it asks for with its arrow, the way
-the word reads. A step that reads one letter SHALL outline it; a step that
-reads the words of a length SHALL stripe their letters. Its sentence SHALL
-say why those edges are forced, from the board, in no more than 120
-characters, and SHALL name the words it reasons from, in capitals, where
-they are one or two.
+Each step SHALL ring every edge its move decides, clear of both letters,
+and draw each line it asks for with its arrow, the way the word reads. A
+step that reads one letter SHALL outline it; one that reads the words of a
+length SHALL stripe their letters. Its sentence SHALL say why those edges
+are forced, from the board, in at most 120 characters, naming the words it
+reasons from in capitals where it has room and counting them where not, and
+the step SHALL name them as its reference items.
 
 #### Scenario: The one word through a letter
 
@@ -232,8 +248,8 @@ they are one or two.
 
 #### Scenario: More words through a letter agree
 
-- **WHEN** three or more words still fit through a letter and run along or away from the same edges
-- **THEN** the hint says "Every word that still fits through the outlined letter agrees on these edges, so they must be as shown."
+- **WHEN** three short words, ANT, TAN and NAB, still fit through a letter and agree on an edge
+- **THEN** the hint says "Only ANT, NAB and TAN still fit through the outlined letter and agree on this edge, so it must be as shown.", and where the words would run the sentence past its length it counts them instead: "Just 5 words still fit through the outlined letter and agree on these edges, so they must be as shown."
 
 #### Scenario: The only word of a length
 

@@ -67,11 +67,19 @@ function refGame(): typeof fakeGame {
     ...fakeGame,
     newUi: (): RefUi => ({ pick: null }),
     reference: (_s: unknown, ui: RefUi) => ({
-      items: [
-        { key: "a", label: "a", status: "outstanding" as const },
-        { key: "b", label: "b", status: "placed" as const },
+      title: "Things",
+      instructions: "Tap a thing.",
+      sections: [
+        {
+          heading: null,
+          items: [
+            { key: "a", label: "a", status: "outstanding" as const },
+            { key: "b", label: "b", status: "placed" as const },
+          ],
+        },
       ],
       selected: ui.pick,
+      hinted: [],
     }),
     selectReference: (ui: RefUi, key: string | null) => {
       if (ui.pick === key) return false;
@@ -1064,6 +1072,17 @@ describe("Midend timer", () => {
     expect(readout(h)).toEqual({ seconds: 0, assisted: true });
   });
 
+  it("says a time was helped once its reference is shown, and not before", () => {
+    const h = harness(refGame());
+    h.m.newGame();
+    h.m.selectReference("a");
+    expect(readout(h)).toEqual({ seconds: 0, assisted: false });
+    h.m.getReference();
+    expect(readout(h)).toEqual({ seconds: 0, assisted: true });
+    h.m.newGame();
+    expect(readout(h)).toEqual({ seconds: 0, assisted: false });
+  });
+
   it("waits on a board the game says holds it, and resumes when it no longer does", () => {
     // A Mines death in miniature: below zero the board is "dead" but ongoing.
     const h = harness({ ...fakeGame, timerHolds: (s) => s.count < 0 });
@@ -1938,8 +1957,25 @@ describe("Midend hint plan lifecycle", () => {
     m.newGameFromId("t3:g3-0");
     expect(m.getStaticProperties().hasReference).toBe(true);
     const model = m.getReference();
-    expect(model?.items.map((i) => i.key)).toEqual(["a", "b"]);
+    expect(model?.sections[0].items.map((i) => i.key)).toEqual(["a", "b"]);
     expect(model?.selected).toBeNull();
+    expect(model?.hinted).toEqual([]);
+  });
+
+  it("getReference names the displayed hint step's reference items as hinted", () => {
+    const step = {
+      move: { type: "inc" },
+      rung: "r",
+      explanation: "x",
+      reference: ["b"],
+    };
+    const m = new Midend({
+      ...refGame(),
+      hint: () => ({ ok: true, steps: [step] }),
+    } as unknown as typeof fakeGame);
+    m.newGameFromId("t3:g3-0");
+    expect(m.hint()).toBeNull();
+    expect(m.getReference()?.hinted).toEqual(["b"]);
   });
 
   it("selectReference repaints and spotlights but records no move", () => {

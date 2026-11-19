@@ -15,7 +15,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { isAnswer } from "../../engine/word-list/index.ts";
 import { wordguessGame } from "./index.ts";
-import { answerRect, centerOf, tileRect } from "./render.ts";
+import { centerOf, tileRect } from "./render.ts";
 import {
   ABSENT,
   decodeParams,
@@ -220,36 +220,24 @@ describe("input", () => {
       letters: valuesOf("crane"),
     });
   });
-  it("rules a letter out of a tapped answer slot, and back in", () => {
+  it("changes one letter where a tap on the working row puts the frame", () => {
     const s = board("cigar");
     const ui = wordguessGame.newUi(s);
     const ds = preferredDrawState(wordguessGame, s);
-    const at = centerOf(answerRect(s.params, ds.tileSize, 2));
+    typeWord(s, ui, "cranx");
+    const at = centerOf(tileRect(ds.tileSize, 0, 4));
     expect(wordguessGame.interpretMove(s, ui, ds, at, LEFT_BUTTON)).toBe(UI_UPDATE);
-    expect(ui.pencilMode).toBe(true);
     // A second press on the same slot changes nothing, so it is declined, and
     // the release after a press does nothing.
     expect(wordguessGame.interpretMove(s, ui, ds, at, LEFT_BUTTON)).toBeNull();
     expect(wordguessGame.interpretMove(s, ui, ds, at, LEFT_RELEASE)).toBeNull();
-    const { state } = press(s, ui, "q".charCodeAt(0));
-    expect(state.ruledOut[2]).toBe(1 << 17);
-    expect(press(state, ui, "q".charCodeAt(0)).state.ruledOut[2]).toBe(0);
-    // A tap on the working row goes back to typing.
-    const tile = centerOf(tileRect(ds.tileSize, 0, 0));
-    wordguessGame.interpretMove(s, ui, ds, tile, LEFT_BUTTON);
-    expect(ui.pencilMode).toBe(false);
+    press(s, ui, "k".charCodeAt(0));
+    expect(wordOf(ui.entries)).toBe("crank");
   });
-  it("keeps a half-written word across a mark and a save", () => {
+  it("keeps a half-written word across a save", () => {
     const s = board("cigar");
     const ui = wordguessGame.newUi(s);
     typeWord(s, ui, "cr");
-    const marked = wordguessGame.executeMove(s, {
-      type: "mark",
-      marks: [{ pos: 0, letter: 1 }],
-      ruledOut: true,
-    });
-    wordguessGame.changedState?.(ui, s, marked);
-    expect(wordOf(ui.entries.slice(0, 2))).toBe("cr");
     const encoded = wordguessGame.encodeUi?.(ui) ?? "";
     expect(encoded).toBe("cr...");
     const back = wordguessGame.newUi(s);
@@ -269,14 +257,13 @@ describe("input", () => {
       letters: valuesOf("crane"),
     });
   });
-  it("sends the word on Enter wherever the frame is, and never enters Marks mode", () => {
+  it("sends the word on Enter wherever the frame is", () => {
     const s = board("cigar");
     const ui = wordguessGame.newUi(s);
     typeWord(s, ui, "crnae");
     ui.cursor.x = 2;
     expect(press(s, ui, CURSOR_SELECT).result).toBe(UI_UPDATE);
     expect(ui.refused).toBe(true);
-    expect(ui.pencilMode).toBe(false);
     for (let i = 0; i < 5; i++) press(s, ui, CLEAR_BUTTON);
     typeWord(s, ui, "crane");
     ui.cursor.x = 0;
@@ -284,9 +271,6 @@ describe("input", () => {
       type: "guess",
       letters: valuesOf("crane"),
     });
-    ui.pencilMode = true;
-    expect(press(s, ui, CURSOR_SELECT).result).toBe(UI_UPDATE);
-    expect(ui.pencilMode).toBe(false);
   });
   it("moves the cursor onto the submit position only when the row may go", () => {
     const s = board("cigar");
@@ -298,17 +282,36 @@ describe("input", () => {
   });
 });
 
-describe("Check & save", () => {
-  it("names a slot whose answer letter is ruled out, never the letter", () => {
-    const s = wordguessGame.executeMove(board("cigar"), {
-      type: "mark",
-      marks: [
-        { pos: 1, letter: 9 },
-        { pos: 1, letter: 1 },
-      ],
-      ruledOut: true,
+describe("the dictionary", () => {
+  const words = (s: WordguessState) =>
+    (wordguessGame.reference?.(s, wordguessGame.newUi(s))?.sections ?? []).flatMap(
+      (x) => x.items.map((i) => i.key),
+    );
+
+  it("lists the common words that fit every score, and counts them", () => {
+    const s = play(board("cigar"), "crane");
+    const listed = words(s);
+    expect(listed).toContain("cigar");
+    expect(listed).not.toContain("crane");
+    for (const w of listed)
+      expect(score(valuesOf("crane"), valuesOf(w))).toEqual(s.rows[0].marks);
+    const heading = wordguessGame.reference?.(s, wordguessGame.newUi(s))?.sections[0]
+      .heading;
+    expect(heading).toBe(`${listed.length} common words fit every score`);
+  });
+
+  it("writes a tapped word into the working row, ready to go, and makes no move", () => {
+    const s = play(board("cigar"), "crane");
+    const ui = wordguessGame.newUi(s);
+    expect(wordguessGame.selectReference?.(ui, "cigar")).toBe(true);
+    expect(wordOf(ui.entries)).toBe("cigar");
+    expect(ui.ready).toBe(true);
+    // The word already in the row: nothing to change.
+    expect(wordguessGame.selectReference?.(ui, "cigar")).toBe(false);
+    expect(press(s, ui, SUBMIT).result).toEqual({
+      type: "guess",
+      letters: valuesOf("cigar"),
     });
-    expect(wordguessGame.findMistakes?.(s)).toEqual([{ pos: 1 }]);
   });
 });
 

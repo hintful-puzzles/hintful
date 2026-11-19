@@ -512,7 +512,7 @@ function reference(state: DominosaState, ui: DominosaUi): ReferenceModel {
       const count = placed[TRI(hi) + lo];
       items.push({
         key: pairKey(lo, hi),
-        label: `${lo}–${hi}`,
+        label: `Domino ${lo}–${hi}`,
         pips: [lo, hi],
         status: count === 0 ? "outstanding" : count === 1 ? "placed" : "conflict",
       });
@@ -520,8 +520,13 @@ function reference(state: DominosaState, ui: DominosaUi): ReferenceModel {
 
   const selected =
     ui.highlightPair === null ? null : pairKey(...indexToPair(ui.highlightPair));
-  // A triangular table: row `hi` has `hi+1` entries; `n+1` is its widest row.
-  return { items, selected, columns: n + 1 };
+  return {
+    title: "Dominoes",
+    instructions: "Tap a domino to highlight where it can go.",
+    sections: [{ heading: null, items }],
+    selected,
+    hinted: [],
+  };
 }
 
 function selectReference(ui: DominosaUi, key: string | null): boolean {

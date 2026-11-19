@@ -20,6 +20,7 @@ import {
   ERROR,
   FLASH,
   FLASH_LEAD,
+  GOAL,
   HINT_OUTLINE,
   INK,
   RULED_OUT,
@@ -58,6 +59,7 @@ import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { WordtrailHighlights } from "./hint.ts";
 import { withChanges, wordtrailLines } from "./moves.ts";
+import { fittingTrails } from "./solver.ts";
 import {
   LINE_BACK,
   type WordtrailMove,
@@ -65,7 +67,7 @@ import {
   type WordtrailState,
   type WordtrailUi,
 } from "./state.ts";
-import { letterChar } from "./trails.ts";
+import { letterChar, spell } from "./trails.ts";
 
 export const PREFERRED_TILE_SIZE = 48;
 
@@ -98,6 +100,9 @@ const COL_HUE = 14;
 const HUES = 9;
 /** The first of the letters on each word color's disc, a slot a color. */
 export const COL_HUE_TEXT = COL_HUE + HUES;
+/** The outline round the letters of the word the dictionary spotlights:
+ * Dominosa's spotlight color, so a reference's spotlight reads alike. */
+export const COL_SPOTLIGHT = COL_HUE_TEXT + HUES;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -119,6 +124,7 @@ export function colors(defaultBackground: Color): Color[] {
     out[COL_HUE + k] = FREE[k];
     out[COL_HUE_TEXT + k] = FREE_TEXT[k];
   }
+  out[COL_SPOTLIGHT] = GOAL;
   return out;
 }
 
@@ -209,12 +215,26 @@ function piecesOf(state: WordtrailState, edges: Uint8Array): Pieces {
   return { root, broken, words };
 }
 
+/** The squares of the trails spelling `word` that still fit. */
+function spotlitSquares(state: WordtrailState, word: string): Set<number> {
+  const out = new Set<number>();
+  for (const k of fittingTrails(state))
+    if (spell(state.letters, state.trails[k]) === word)
+      for (const i of state.trails[k]) out.add(i);
+  return out;
+}
+
+/** The words the drawn pieces spell, read the way their lines run. */
+export const wordsDrawn = (state: WordtrailState): Set<string> =>
+  new Set(piecesOf(state, state.edges).words.values());
+
 // --- draw state -------------------------------------------------------------
 
 // Word 0, the square: the cursor, whether it is dark, whether the hint
 // stripes it, the win flash's tone, the sides of the hint's outline it draws
-// (`hint-mark.ts`'s side bits), whether a word starts here, and its word's
-// color past `COL_HUE`, plus one, or 0 where its piece spells no word.
+// (`hint-mark.ts`'s side bits), whether a word starts here, its word's
+// color past `COL_HUE`, plus one, or 0 where its piece spells no word, and
+// the sides of the dictionary's spotlight it draws.
 const F_CURSOR = 1 << 0;
 const F_DARK = 1 << 1;
 const F_STRIPES = 1 << 3;
@@ -222,6 +242,7 @@ const K_TONE = 4;
 const K_OUTLINE = 6;
 const F_START = 1 << 10;
 const K_HUE = 11;
+const K_SPOT = 15;
 
 // Word 1, the sides: eight bits a side, by direction.
 const SIDE_BITS = 8;
@@ -319,6 +340,24 @@ function drawTile(
     { box: body, outer: 0, inner: Math.max(2, ts >> 4) },
     (square >> K_OUTLINE) & 0xf,
     COL_HINT_EVIDENCE,
+  );
+  // The dictionary's spotlight, inside where the hint's outline would be, so
+  // a letter can wear both.
+  const spotInset = Math.max(2, ts >> 4) + 2;
+  drawMarkSides(
+    dr,
+    {
+      box: {
+        x: body.x + spotInset,
+        y: body.y + spotInset,
+        w: body.w - 2 * spotInset,
+        h: body.h - 2 * spotInset,
+      },
+      outer: 0,
+      inner: Math.max(2, ts >> 4),
+    },
+    (square >> K_SPOT) & 0xf,
+    COL_SPOTLIGHT,
   );
 
   const sideEnd = (d: number): Point => ({
@@ -576,6 +615,10 @@ export function redraw(
   const striped = new Set(named.of("stripes", CELL).map((c) => c.y * w + c.x));
   const inEvidence = (x: number, y: number): boolean =>
     x >= 0 && x < w && y >= 0 && y < h && evidence.has(y * w + x);
+  const spotlit =
+    ui.spotlight === null ? new Set<number>() : spotlitSquares(state, ui.spotlight);
+  const inSpotlight = (x: number, y: number): boolean =>
+    x >= 0 && x < w && y >= 0 && y < h && spotlit.has(y * w + x);
   const asked = hint?.move.kind === "edges" ? hint.move.changes : [];
   const hintWords = edgeHintWords(g, stepEdgeHints(named, asked));
   // The square each asked line runs from, by its edge.
@@ -595,7 +638,8 @@ export function redraw(
         (striped.has(i) ? F_STRIPES : 0) |
         // The win flash sweeps the letters; a dark square never lights.
         (letters[i] === 0 ? 0 : flash.win(sweepStep(x, y)) << K_TONE) |
-        (inEvidence(x, y) ? outlineSides(x, y, inEvidence) << K_OUTLINE : 0);
+        (inEvidence(x, y) ? outlineSides(x, y, inEvidence) << K_OUTLINE : 0) |
+        (inSpotlight(x, y) ? outlineSides(x, y, inSpotlight) << K_SPOT : 0);
       let sides = 0;
       let hintOut = 0;
       let ins = 0;

@@ -534,20 +534,20 @@ SHALL report that no mistakes were checked.
 
 ### Requirement: The engine surface exposes an opt-in per-game reference-aid capability
 
-The engine surface SHALL expose an optional per-game reference aid: a read-only
-checklist of a puzzle's fixed inventory of pieces with found or outstanding
-status, and a way to spotlight one item on the board. The `Game` interface
-SHALL define two optional hooks: `reference(state, ui): ReferenceModel`, and
-`selectReference(ui, key): boolean`, which spotlights the item `key`, or clears
-the spotlight when `key` is null, by mutating `Ui`, and returns whether
-anything changed.
+The engine surface SHALL expose an optional per-game reference aid: a
+read-only inventory, derived from the board, and a way to spotlight one item.
+`Game` SHALL define two optional hooks: `reference(state, ui)`, giving the
+panel's title, instructions and sections of items, each outstanding, placed,
+in conflict or ruled out; and `selectReference(ui, key)`, which spotlights
+`key`, or clears it for null, by mutating `Ui`, and says whether anything
+changed.
 
 #### Scenario: A game exposing a reference is discoverable through the surface
 
 - **WHEN** the active game defines `reference` and the app queries static
   attributes
 - **THEN** `hasReference` is true and `getReference()` returns the game's
-  model, whose `items` reflect the current board and whose `selected` matches
+  model, whose items reflect the current board and whose `selected` matches
   the spotlighted key
 
 ### Requirement: The midend surfaces the reference aid without touching the history
@@ -1524,3 +1524,26 @@ part of this one's save.
 
 - **WHEN** Undo has brought back a board and a move is made on it
 - **THEN** Redo at its last position returns to no other board
+
+### Requirement: A reference shown counts as help
+
+`getReference()` SHALL mark the board as helped, as a hint shown does, in
+every game with a reference aid, for the reference is fetched only to be
+shown. The board's time SHALL then read as assisted until a new board.
+
+#### Scenario: Dominosa's list opened
+
+- **WHEN** a Dominosa player opens the reference and then finishes the board
+- **THEN** the timer reports the board as assisted
+
+### Requirement: A hint step may name reference items
+
+A `HintStep` MAY carry the keys of reference items its reasoning reads.
+While such a step is displayed, `getReference()` SHALL return those keys as
+the model's `hinted` items, and none otherwise.
+
+#### Scenario: The words through a letter
+
+- **WHEN** a Wordtrail step reasons from the words still fitting through a
+  letter and the panel is open
+- **THEN** the panel's model names those words' keys as hinted

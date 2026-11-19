@@ -81,8 +81,6 @@ const CHECKED = REGISTERED_GAMES.filter(
 const UNREACHED: Record<string, string> = {
   guess:
     "A row of pegs is a probe and never a claim, and what the player claims is a rule-out, which leaves a solved board solved.",
-  wordguess:
-    "A guessed word is a probe and never a claim, and what the player claims is a rule-out, which leaves a solved board solved.",
 };
 
 interface Swept {

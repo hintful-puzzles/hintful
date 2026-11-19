@@ -403,7 +403,13 @@ step is worked out from the board with them on it.
 Some puzzles are about placing a known set of pieces, where the question you
 keep asking is *which ones haven't I placed yet*. Those get a ::reference::
 reference panel: a checklist of the whole set, marking off each piece you've
-placed and flagging any you've placed more than once.
+placed and flagging any you've placed more than once. The word puzzles get a
+dictionary there instead: the words that could be the answer, with the ones your
+marks have ruled out struck through. While a hint is shown, the panel marks the
+items the hint reasons from.
+
+The panel is help: once you have opened it, the time you finish in says
+so, as it does after a hint.
 
 Picking an item in the panel highlights where on the board it could still go.
 Closing the panel deliberately **keeps** that highlight, because on a small
@@ -500,10 +506,10 @@ moves.
 
 When you solve the board, the time appears in the message that congratulates
 you. If the app helped on that board, the message says so beside the time. A
-hint counts as help, and so does the solver, and so does a
-[check](#checking) that found something: a mistake, or a position there is no
-way on from. A check that finds nothing wrong does not count, so saving a sound
-board is always free.
+hint counts as help, and so does the solver, and so does opening the
+[reference panel](#reference), and so does a [check](#checking) that found
+something: a mistake, or a position there is no way on from. A check that finds
+nothing wrong does not count, so saving a sound board is always free.
 
 ## Autosave {#autosave}
 

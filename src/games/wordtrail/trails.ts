@@ -21,6 +21,10 @@ export type Trail = readonly number[];
 /** A letter, 1 for a to 26 for z, as the board holds it. */
 export const letterChar = (letter: number): string => String.fromCharCode(96 + letter);
 
+/** The word `trail` spells on `letters`, in lowercase. */
+export const spell = (letters: Uint8Array, trail: Trail): string =>
+  trail.map((i) => letterChar(letters[i])).join("");
+
 /** The squares beside square `i` on a `w` × `h` grid, up, down, left, right. */
 export function neighbors(w: number, h: number, i: number): number[] {
   const x = i % w;

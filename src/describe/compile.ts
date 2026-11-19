@@ -7470,9 +7470,10 @@ function places(e: Expr, env: Env): boolean {
 
 // --- modules ----------------------------------------------------------------
 
-/** What a module needs from the runtime, as an import line: of the helpers
- * the compiler used, those its code still names, since a set compiled and
- * then read another way (`linkedAggregate`) is never written. */
+/** What a module needs from the runtime, as an import line: of the types and
+ * the helpers the compiler used, those its code still names, since a set
+ * compiled and then read another way (`linkedAggregate`) is never written,
+ * and a description with no techniques fires nothing. */
 function runtimeImport(
   used: ReadonlySet<string>,
   clueTypes: readonly string[],
@@ -7481,15 +7482,15 @@ function runtimeImport(
   body: string,
 ): string {
   const named = (n: string): boolean =>
-    n.startsWith("type ") || new RegExp(`\\b${n}\\b`).test(body);
+    new RegExp(`\\b${n.replace(/^type /, "")}\\b`).test(body);
   const names = [
     ...clueTypes.map((t) => `type ${t}`),
     "type Fire",
     "type GridSpace",
     "type Marks",
     ...(regions ? ["type Partition"] : []),
-    ...[...used].filter(named).sort(),
-  ];
+    ...[...used].sort(),
+  ].filter(named);
   const line = `import { ${names.join(", ")} } from "${runtime}";`;
   // Read once a module: under Vitest each read of `import.meta.env` is a
   // lookup, and in the stale-read guard's condition, in every binding, it

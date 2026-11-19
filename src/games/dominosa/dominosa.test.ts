@@ -22,6 +22,7 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import type { ReferenceModel } from "../../engine/types.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newDominosaDesc } from "./generator.ts";
 import { dominosaGame } from "./index.ts";
@@ -311,6 +312,7 @@ describe("dominosa findMistakes + solve", () => {
 
 describe("dominosa reference aid", () => {
   const dominoKey = (a: number, b: number) => (a <= b ? `${a}-${b}` : `${b}-${a}`);
+  const itemsOf = (m?: ReferenceModel) => m?.sections.flatMap((s) => s.items);
 
   it("lists every domino, and status tracks placed / outstanding / conflict", () => {
     const p = { n: 5, diff: DIFF_TRIVIAL, tall: false };
@@ -320,8 +322,8 @@ describe("dominosa reference aid", () => {
 
     const empty = dominosaGame.reference?.(state, ui);
     expect(empty).toBeDefined();
-    expect(empty?.items.length).toBe(DCOUNT(p.n));
-    expect(empty?.items.every((i) => i.status === "outstanding")).toBe(true);
+    expect(itemsOf(empty)?.length).toBe(DCOUNT(p.n));
+    expect(itemsOf(empty)?.every((i) => i.status === "outstanding")).toBe(true);
     expect(empty?.selected).toBeNull();
 
     // Place one solution domino → its pair reads "placed", the rest outstanding.
@@ -330,9 +332,9 @@ describe("dominosa reference aid", () => {
     const key = dominoKey(state.numbers[cA], state.numbers[cB]);
     const placed = dominosaGame.executeMove(state, { type: "domino", d1: cA, d2: cB });
     const afterPlace = dominosaGame.reference?.(placed, ui);
-    const placedItem = afterPlace?.items.find((i) => i.key === key);
+    const placedItem = itemsOf(afterPlace)?.find((i) => i.key === key);
     expect(placedItem?.status).toBe("placed");
-    expect(afterPlace?.items.filter((i) => i.status === "placed").length).toBe(1);
+    expect(itemsOf(afterPlace)?.filter((i) => i.status === "placed").length).toBe(1);
 
     // Two disjoint adjacent pairs of the same value → that item is "conflict".
     const two = twoDisjointPairs(state);
@@ -346,7 +348,9 @@ describe("dominosa reference aid", () => {
       s = dominosaGame.executeMove(s, { type: "domino", d1: two[1][0], d2: two[1][1] });
       const conflictKey = dominoKey(state.numbers[two[0][0]], state.numbers[two[0][1]]);
       const model = dominosaGame.reference?.(s, ui);
-      expect(model?.items.find((i) => i.key === conflictKey)?.status).toBe("conflict");
+      expect(itemsOf(model)?.find((i) => i.key === conflictKey)?.status).toBe(
+        "conflict",
+      );
     }
   });
 

@@ -367,7 +367,8 @@ score, keys, picture, hint and the routing of taps and keys onto these, and
 chooses what a value typed onto a full row that cannot go does (`FullRow`).
 A hint that rules values out keeps track of the player's marks through
 `ruleOutProgress` and drops those already made with `pendingRuleOuts`.
-Exemplars: `guess/index.ts`, `wordguess/index.ts`.
+Exemplar: `guess/index.ts`; `wordguess/index.ts` uses the working row alone,
+its dictionary standing in for an answer row.
 
 ### `grid/index.ts` — planar-grid geometry (upstream `grid.c`)
 

@@ -30,7 +30,7 @@ import {
   type WordtrailMove,
   type WordtrailState,
 } from "./state.ts";
-import { letterChar } from "./trails.ts";
+import { spell } from "./trails.ts";
 
 /** A step draws nothing beyond its words' marks and the move it asks for. */
 export type WordtrailHighlights = Record<string, never>;
@@ -41,16 +41,12 @@ interface Fired {
 }
 
 /** The words trails spell, by their clue indices, in capitals as the board
- * draws its letters, alphabetical. */
+ * draws its letters, alphabetical, each once: two trails of one word are
+ * one word to the player. */
 const spelled = (state: WordtrailState, trails: readonly number[]): string[] =>
-  trails
-    .map((k) =>
-      state.trails[k]
-        .map((i) => letterChar(state.letters[i]))
-        .join("")
-        .toUpperCase(),
-    )
-    .sort();
+  [
+    ...new Set(trails.map((k) => spell(state.letters, state.trails[k]).toUpperCase())),
+  ].sort();
 
 /** The plan from the player's lines and crosses. */
 export const { hint: wordtrailHint, judgeMove: wordtrailJudgeMove } = describedEdgeHint<
@@ -70,22 +66,25 @@ export const { hint: wordtrailHint, judgeMove: wordtrailJudgeMove } = describedE
   // The whole ladder, from the Easy rungs up.
   tiers: { lowest: () => DIFF_NORMAL, count: DIFF_NORMAL + 1 },
   done: (_marks, ctx) => ctx.complete(),
-  step: ({ taken, ctx }) => {
+  step: ({ taken, says, ctx }, state) => {
     const changes = ctx.decided(taken);
     return [
       {
         move: { kind: "edges", changes },
         highlights: {},
         marked: { edges: changes.map((c) => c.edge) },
+        // The dictionary's keys are the words in lowercase.
+        reference: spelled(state, says.terms.trails).map((word) => word.toLowerCase()),
       },
     ];
   },
   stated: STATED,
   // The words the firing's trails spell, as the board writes its letters.
   supplied: {
-    onlyWord: (_marked, state, { trails }) => ({
-      terms: { trailWords: spelled(state, trails) },
-    }),
+    onlyWord: (_marked, state, { trails }) => {
+      const words = spelled(state, trails);
+      return { terms: { trailWords: words, wordCount: words.length } };
+    },
     onlyLength: (_marked, state, { trails }) => ({
       terms: { trailWords: spelled(state, trails) },
     }),

@@ -1339,6 +1339,28 @@ export function inputAnswers(game: AnyGame, id: string): InputAnswers {
         }
       }
     }
+  // Random keys spell no move in a game whose move is a word: the opening
+  // hint's own gesture, sent as these inputs, makes one in any game with a hint.
+  const { hint, hintGesture } = game;
+  if (hint && hintGesture) {
+    rewind();
+    const { state, ui } = b.live();
+    const res = hint(state, undefined, ui);
+    const step = res.ok ? res.steps[0] : undefined;
+    if (step !== undefined) {
+      const ds = game.newDrawState(state, tileSize);
+      const gesture = hintGesture(state, ui, ds, step.move, step);
+      run(
+        gesture.flatMap((a) => {
+          if (a.kind === "key") return [key(a.code)];
+          const bt = buttons[a.button === "primary" ? 0 : 1];
+          return a.kind === "click"
+            ? click(bt, a.at)
+            : drag(bt, a.from, a.through ?? [], a.to);
+        }),
+      );
+    }
+  }
   return {
     ...out,
     inputs,

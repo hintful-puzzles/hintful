@@ -48,6 +48,12 @@ help:
     A trail you have drawn takes a color of its own once its letters, read
     the way its arrows point, spell a word of a listed length, and the list
     shows it in the same color.
+
+    The reference panel is a dictionary: for each length the list asks for,
+    every word some trail of the letters spells. A word you have drawn is
+    ticked, and one your lines and crosses leave no trail for is struck
+    through. Pick a word to outline the letters of each trail that still
+    spells it; a press on the board clears the outline.
   hints: |-
     **Hint** explains the next step rather than simply making it. It reasons
     only from the lines and crosses you have drawn, so it carries on from
@@ -57,7 +63,10 @@ help:
     {{hint-marks}}
 
     A hint knows every trail on the board that spells a word of a length the
-    list has, and rules out each one your lines and crosses don't allow. Its
+    list has, and rules out each one your lines and crosses don't allow:
+    those are the words the dictionary shows. A step names the words it
+    reasons from where its sentence has room, and counts them where it has
+    not; with the dictionary open, it marks them there either way. Its
     steps:
 
     - **The words through a letter.** Every letter is in some word, so where
@@ -203,13 +212,15 @@ techniques:
         and (allRun(T, x, y) implies (x = end1(edge(x, y)) or place(edge(x, y), 3)))
         and (allRun(T, x, y) or place(edge(x, y), 2)))
     says:
-      # The trails' words are named where there are two at most: three of
-      # eight letters run past the line.
+      # The trails' words, each once, are named wherever the sentence has
+      # room, and counted where it has not: the dictionary marks them either
+      # way.
       terms:
         c: c
         count: "|T|"
         trails: "T"
         trailWords: { supplied: words }
+        wordCount: { supplied: number }
         multi: { supplied: several }
       marks:
         outline: "{c}"
@@ -217,10 +228,7 @@ techniques:
         - when: "count = 1"
           look: "only {trailWords} still fits through {outline c: the outlined letter}"
           move: "{ring: this edge | these edges} must be as shown"
-        - when: "count = 2"
-          look: "only {trailWords} still fit through {outline c: the outlined letter} and agree on {ring: this edge | these edges}"
-          move: "{if multi: they | it} must be as shown"
-        - look: "every word that still fits through {outline c: the outlined letter} agrees on {ring: this edge | these edges}"
+        - look: "{fit: only {trailWords} | just {numeral wordCount} words} still {trailWords: fits | fit} through {outline c: the outlined letter} and {trailWords: agrees | agree} on {ring: this edge | these edges}"
           move: "{if multi: they | it} must be as shown"
   # The trails of n letters still allowed, as many as the list has words of
   # n letters: each is one of them. Two that share a square make the marks

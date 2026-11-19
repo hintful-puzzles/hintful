@@ -143,11 +143,12 @@ export interface EdgeHintSpec<
   reads?(taken: Taken, ctx: Ctx): readonly number[];
   /** A firing's legs, one move each, with their highlights and what each leg's
    * words are told of them. A firing is one step unless it is a journey of
-   * edges, one leg an edge: the legs after the first continue it. */
+   * edges, one leg an edge: the legs after the first continue it. A leg's
+   * `reference` is its step's (`HintStep.reference`). */
   step(
     fired: Fired<Says[keyof Says & string], Ctx>,
     state: State,
-  ): { move: Move; highlights: H; marked: Marked }[];
+  ): { move: Move; highlights: H; marked: Marked; reference?: readonly string[] }[];
   /** Each kind of step's words as the description states them, and the flag
    * terms it declares `several`: the compiled module's `STATED`. A technique
    * none of whose kinds it states is said by `say`. Stating a kind needs the
@@ -320,7 +321,7 @@ export function describedEdgeHint<
             Record<string, (marked: Marked, state: State, terms: object) => SuppliedOf>
           >
         | undefined;
-      legs.forEach(({ move, highlights, marked }, leg) => {
+      legs.forEach(({ move, highlights, marked, reference }, leg) => {
         let words: Sentence;
         if (clauses !== undefined) {
           const ring = (spec.ring as NonNullable<typeof spec.ring>)(marked);
@@ -401,6 +402,7 @@ export function describedEdgeHint<
           explanation: words.text,
           words,
           highlights,
+          ...(reference === undefined ? {} : { reference }),
           ...(leg > 0 ? { continuesPrevious: true } : {}),
         });
       });

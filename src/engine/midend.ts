@@ -277,7 +277,8 @@ export interface EngineCore {
   /** Check the board as Check & save does: its mistakes, then whether the
    * hint calls it a dead end. Displays what it finds; never shows a hint. */
   check(): CheckVerdict;
-  /** The active game's reference-aid model, or null when it has none. */
+  /** The active game's reference-aid model, or null when it has none. It is
+   * asked for only to be shown, and showing it counts as help. */
   getReference(): ReferenceModel | null;
   /** Spotlight (or clear) a reference item by mutating Ui, repainting like
    * a `UI_UPDATE`; no move/history/save. No-op without a reference aid. */
@@ -524,7 +525,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** The next transition is the Solve command's, which does not celebrate. */
   private pendingSolve = false;
   /** The app has told the player something about this board that they had not
-   * worked out: a hint shown, mistakes found, or a dead end named. A check
+   * worked out: a hint shown, mistakes found, a dead end named, or a
+   * reference shown. A check
    * that finds nothing tells them only to carry on, and does not count. With
    * `cheated`, what makes a time read as assisted; saved alongside it. */
   private helped = false;
@@ -1626,9 +1628,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.requestRedraw();
   }
 
+  /** Only an open panel asks for the reference, so a reference fetched is a
+   * reference shown, and the board counts as helped. */
   getReference(): ReferenceModel | null {
     if (!this.game.reference) return null;
-    return this.game.reference(this.state, this.ui);
+    const model = this.game.reference(this.state, this.ui);
+    if (!this.helped) this.markHelped();
+    return { ...model, hinted: this.displayedHintStep?.reference ?? [] };
   }
 
   selectReference(key: string | null): void {

@@ -1,13 +1,8 @@
 /**
- * Wordguess's hint.
- *
- * Its two halves are held to different standards, as Guess's are. Every
- * **mark** it places is a firing of a technique the description states, each
- * checked sound by the soundness checker, so here each is pinned on a
- * position. Every **guess** sentence quotes counts, so those are recounted
- * from scratch, by `state.ts`'s own score. And a player who does nothing but
- * follow the hint must win inside the rows on every preset, measured over
- * every answer.
+ * Wordguess's hint: one step, a guess. Its sentence quotes counts, so those
+ * are recounted from scratch, by `state.ts`'s own score, and agree with the
+ * dictionary's. And a player who does nothing but follow the hint must win
+ * inside the rows on every preset, measured over every answer.
  */
 import { describe, expect, it } from "vitest";
 import { GAME_OVER } from "../../engine/hint-refusal.ts";
@@ -18,12 +13,7 @@ import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { deepBudget, itSlow } from "../../engine/testing/slow.ts";
 import { answerWords, guessWords } from "../../engine/word-list/index.ts";
-import {
-  type WordguessHighlights,
-  wordguessHint,
-  wordguessHintKeepTrack,
-  wordguessRefreshHintStep,
-} from "./hint.ts";
+import { dictionaryWords, wordguessHint, wordguessHintKeepTrack } from "./hint.ts";
 import { wordguessGame } from "./index.ts";
 import {
   decodeParams,
@@ -78,6 +68,8 @@ describe("a guess's sentence quotes counts that are true", () => {
       const word = wordOf(move.letters);
       expect(refusal(state, move.letters)).toBeNull();
       const allowed = answers.filter((a) => fits(state, a));
+      // The dictionary lists exactly the words the sentence counts.
+      expect(dictionaryWords(state)).toEqual({ words: allowed, common: true });
       const parts = new Map<string, number>();
       for (const a of allowed) {
         if (a === word) continue;
@@ -141,62 +133,23 @@ describe("a player who follows the hint wins inside the rows", () => {
 describe("the plan", () => {
   const p = defaultParams();
 
-  it("teaches a mark only once, and not one the player already made", () => {
-    // CRANE against MOUSE: only the E scores, in place.
-    let state = withAnswer(p, "mouse");
-    state = play(state, "crane");
-    const first = plan(state)[0];
-    expect(first.rung).toBe("inPlace");
-    const marks = (first.move as Extract<WordguessMove, { type: "mark" }>).marks;
-    expect(marks).toHaveLength(25);
-    expect(marks.every((m) => m.pos === 4)).toBe(true);
-    expect(first.explanation).toMatch(/scored E in place/);
-
-    const marked = wordguessGame.executeMove(state, {
-      type: "mark",
-      marks: [{ pos: 4, letter: 1 }],
-      ruledOut: true,
-    });
-    const again = plan(marked)[0].move as Extract<WordguessMove, { type: "mark" }>;
-    expect(again.marks).not.toContainEqual({ pos: 4, letter: 1 });
-    expect(again.marks).toHaveLength(24);
-  });
-
-  it("ends every plan with a guess, and reads nothing but the rows", () => {
+  it("is one guess, and reads nothing but the rows", () => {
     // HOUSE and MOUSE score CRANE alike.
     const plans = ["mouse", "house"].map((w) => plan(play(withAnswer(p, w), "crane")));
     // A step's words hold functions, so the plans are compared by their data.
     const data = (steps: ReturnType<typeof plan>) =>
       steps.map(({ words: _, ...rest }) => rest);
     expect(data(plans[0])).toEqual(data(plans[1]));
-    expect(plans[0].at(-1)?.move.type).toBe("guess");
+    expect(plans[0]).toHaveLength(1);
+    expect(plans[0][0].move.type).toBe("guess");
   });
 
-  it("follows a player's marks by hand, and drops what they already did", () => {
+  it("is completed by its guess, and dropped by another", () => {
     const state = play(withAnswer(p, "mouse"), "crane");
     const step = plan(state)[0];
-    const one: WordguessMove = {
-      type: "mark",
-      marks: [{ pos: 4, letter: 1 }],
-      ruledOut: true,
-    };
-    expect(wordguessHintKeepTrack(one, step, state)).toBe("onTrack");
-    const after = wordguessGame.executeMove(state, one);
-    const refreshed = wordguessRefreshHintStep(step, after);
-    const left = refreshed?.move as Extract<WordguessMove, { type: "mark" }>;
-    expect(left.marks).toHaveLength(24);
-    expect((refreshed?.highlights as WordguessHighlights).marked).toHaveLength(24);
-    expect(wordguessRefreshHintStep(step, state)).toBe(step);
-    expect(wordguessHintKeepTrack(left, step, after)).toBe("completed");
-    expect(
-      wordguessRefreshHintStep(step, wordguessGame.executeMove(after, left)),
-    ).toBeNull();
-    const elsewhere: WordguessMove = {
-      type: "mark",
-      marks: [{ pos: 0, letter: 1 }],
-      ruledOut: true,
-    };
-    expect(wordguessHintKeepTrack(elsewhere, step, state)).toBe("off");
+    expect(wordguessHintKeepTrack(step.move, step)).toBe("completed");
+    const other: WordguessMove = { type: "guess", letters: valuesOf("house") };
+    expect(wordguessHintKeepTrack(other, step)).toBe("off");
   });
 
   it("refuses a lost game as over", () => {
@@ -209,9 +162,8 @@ describe("the plan", () => {
 
 /**
  * Each rung pinned on a position that speaks it. The hint's own guesses are
- * chosen to split the words, and the rungs about a repeated letter fire only
- * on a row a player would more likely enter, so the scan's second line plays
- * a word of its own on every other row.
+ * chosen to split the words, so the scan's second line plays a word of its
+ * own on every other row.
  */
 describeHintPins({
   game: wordguessGame,
@@ -219,63 +171,25 @@ describeHintPins({
   seeds: 8,
   maxSteps: 60,
   stray: (s, turn, hinted): WordguessMove | null => {
-    if (hinted?.type === "mark" || s.rows.length % 2 === 0) return hinted;
+    if (s.rows.length % 2 === 0) return hinted;
     const words = answerWords(s.params.len);
     const word = words[(turn * 7919 + s.rows.length * 104_729) % words.length];
     const letters = valuesOf(word);
     return refusal(s, letters) === null ? { type: "guess", letters } : hinted;
   },
   pins: {
-    /** Held on 101 of 674 positions walked. */
-    inPlace: {
-      id: "4g6:c97b5898",
-      moves: [{ type: "guess", letters: [1, 5, 15, 14] }],
-    },
-    /** Held on 286 of 674 positions walked. */
-    absent: { id: "4g6:721ba8ae", moves: [{ type: "guess", letters: [1, 5, 15, 14] }] },
-    /** Held on 248 of 674 positions walked. */
-    notHere: {
-      id: "4g6:721ba8ae",
-      moves:
-        '[{"type":"guess","letters":[1,5,15,14]},{"type":"mark","marks":[{"pos":0,"letter":5},{"pos":1,"letter":5},{"pos":2,"letter":5},{"pos":3,"letter":5},{"pos":0,"letter":14},{"pos":1,"letter":14},{"pos":2,"letter":14},{"pos":3,"letter":14}],"ruledOut":true}]',
-    },
-    /** Held on 46 of 674 positions walked. */
-    onlyPlace: {
-      id: "4g6:0d2bbae4",
-      moves:
-        '[{"type":"guess","letters":[1,5,15,14]},{"type":"mark","marks":[{"pos":2,"letter":1},{"pos":2,"letter":2},{"pos":2,"letter":3},{"pos":2,"letter":4},{"pos":2,"letter":5},{"pos":2,"letter":6},{"pos":2,"letter":7},{"pos":2,"letter":8},{"pos":2,"letter":9},{"pos":2,"letter":10},{"pos":2,"letter":11},{"pos":2,"letter":12},{"pos":2,"letter":13},{"pos":2,"letter":14},{"pos":2,"letter":16},{"pos":2,"letter":17},{"pos":2,"letter":18},{"pos":2,"letter":19},{"pos":2,"letter":20},{"pos":2,"letter":21},{"pos":2,"letter":22},{"pos":2,"letter":23},{"pos":2,"letter":24},{"pos":2,"letter":25},{"pos":2,"letter":26}],"ruledOut":true},{"type":"mark","marks":[{"pos":0,"letter":5},{"pos":1,"letter":5},{"pos":3,"letter":5},{"pos":0,"letter":14},{"pos":1,"letter":14},{"pos":3,"letter":14}],"ruledOut":true},{"type":"mark","marks":[{"pos":0,"letter":1}],"ruledOut":true},{"type":"guess","letters":[8,1,22,5]},{"type":"mark","marks":[{"pos":0,"letter":22},{"pos":1,"letter":22},{"pos":3,"letter":22}],"ruledOut":true},{"type":"mark","marks":[{"pos":0,"letter":8},{"pos":1,"letter":1}],"ruledOut":true}]',
-    },
-    /** Held on 49 of 674 positions walked. */
-    copiesPlaced: {
-      id: "4g6:b19d44b2",
-      moves:
-        '[{"type":"guess","letters":[1,5,15,14]},{"type":"mark","marks":[{"pos":1,"letter":1},{"pos":1,"letter":2},{"pos":1,"letter":3},{"pos":1,"letter":4},{"pos":1,"letter":6},{"pos":1,"letter":7},{"pos":1,"letter":8},{"pos":1,"letter":9},{"pos":1,"letter":10},{"pos":1,"letter":11},{"pos":1,"letter":12},{"pos":1,"letter":13},{"pos":1,"letter":14},{"pos":1,"letter":15},{"pos":1,"letter":16},{"pos":1,"letter":17},{"pos":1,"letter":18},{"pos":1,"letter":19},{"pos":1,"letter":20},{"pos":1,"letter":21},{"pos":1,"letter":22},{"pos":1,"letter":23},{"pos":1,"letter":24},{"pos":1,"letter":25},{"pos":1,"letter":26}],"ruledOut":true},{"type":"mark","marks":[{"pos":0,"letter":1},{"pos":2,"letter":1},{"pos":3,"letter":1},{"pos":0,"letter":14},{"pos":2,"letter":14},{"pos":3,"letter":14},{"pos":0,"letter":15},{"pos":2,"letter":15},{"pos":3,"letter":15}],"ruledOut":true},{"type":"guess","letters":[18,5,5,4]},{"type":"mark","marks":[{"pos":0,"letter":4},{"pos":2,"letter":4},{"pos":3,"letter":4},{"pos":0,"letter":18},{"pos":2,"letter":18},{"pos":3,"letter":18}],"ruledOut":true},{"type":"mark","marks":[{"pos":2,"letter":5}],"ruledOut":true}]',
-    },
-    /** Held on 6 of 674 positions walked. */
-    lettersFill: {
-      id: "4g6:43e3cc94",
-      moves:
-        '[{"type":"guess","letters":[1,5,15,14]},{"type":"mark","marks":[{"pos":0,"letter":1},{"pos":1,"letter":1},{"pos":2,"letter":1},{"pos":3,"letter":1}],"ruledOut":true},{"type":"mark","marks":[{"pos":1,"letter":5},{"pos":2,"letter":15},{"pos":3,"letter":14}],"ruledOut":true},{"type":"guess","letters":[18,5,5,4]},{"type":"mark","marks":[{"pos":0,"letter":18},{"pos":1,"letter":18},{"pos":2,"letter":18},{"pos":3,"letter":18}],"ruledOut":true},{"type":"mark","marks":[{"pos":2,"letter":5},{"pos":3,"letter":4}],"ruledOut":true}]',
-    },
-    /** Held on 233 of 674 positions walked. */
     onlyAnswer: {
       id: "4g6:0d2bbae4",
-      moves:
-        '[{"type":"guess","letters":[1,5,15,14]},{"type":"mark","marks":[{"pos":2,"letter":1},{"pos":2,"letter":2},{"pos":2,"letter":3},{"pos":2,"letter":4},{"pos":2,"letter":5},{"pos":2,"letter":6},{"pos":2,"letter":7},{"pos":2,"letter":8},{"pos":2,"letter":9},{"pos":2,"letter":10},{"pos":2,"letter":11},{"pos":2,"letter":12},{"pos":2,"letter":13},{"pos":2,"letter":14},{"pos":2,"letter":16},{"pos":2,"letter":17},{"pos":2,"letter":18},{"pos":2,"letter":19},{"pos":2,"letter":20},{"pos":2,"letter":21},{"pos":2,"letter":22},{"pos":2,"letter":23},{"pos":2,"letter":24},{"pos":2,"letter":25},{"pos":2,"letter":26}],"ruledOut":true},{"type":"mark","marks":[{"pos":0,"letter":5},{"pos":1,"letter":5},{"pos":3,"letter":5},{"pos":0,"letter":14},{"pos":1,"letter":14},{"pos":3,"letter":14}],"ruledOut":true},{"type":"mark","marks":[{"pos":0,"letter":1}],"ruledOut":true}]',
+      moves: [{ type: "guess", letters: [1, 5, 15, 14] }],
     },
-    /** Held on 64 of 674 positions walked. */
     opening: "4g6:c97b5898",
-    /** Held on 247 of 674 positions walked. */
     probe: {
       id: "4g6:7149f871",
-      moves:
-        '[{"type":"guess","letters":[1,5,15,14]},{"type":"mark","marks":[{"pos":0,"letter":1},{"pos":1,"letter":1},{"pos":2,"letter":1},{"pos":3,"letter":1},{"pos":0,"letter":5},{"pos":1,"letter":5},{"pos":2,"letter":5},{"pos":3,"letter":5},{"pos":0,"letter":14},{"pos":1,"letter":14},{"pos":2,"letter":14},{"pos":3,"letter":14},{"pos":0,"letter":15},{"pos":1,"letter":15},{"pos":2,"letter":15},{"pos":3,"letter":15}],"ruledOut":true}]',
+      moves: [{ type: "guess", letters: [1, 5, 15, 14] }],
     },
-    /** Held on 130 of 674 positions walked. */
     split: {
       id: "4g6:721ba8ae",
-      moves:
-        '[{"type":"guess","letters":[1,5,15,14]},{"type":"mark","marks":[{"pos":0,"letter":5},{"pos":1,"letter":5},{"pos":2,"letter":5},{"pos":3,"letter":5},{"pos":0,"letter":14},{"pos":1,"letter":14},{"pos":2,"letter":14},{"pos":3,"letter":14}],"ruledOut":true},{"type":"mark","marks":[{"pos":0,"letter":1},{"pos":2,"letter":15}],"ruledOut":true}]',
+      moves: [{ type: "guess", letters: [1, 5, 15, 14] }],
     },
   },
 });
@@ -284,31 +198,13 @@ describe("the hint frame", () => {
   const p = defaultParams();
   const id = `${encodeParams(p, true)}:${encodeDesc(valuesOf("mouse"))}`;
 
-  it("stripes the row it reads and strikes the letters it rules out", () => {
-    const res = renderScenario({
-      game: wordguessGame,
-      id,
-      moves: [{ type: "guess", letters: valuesOf("crane") }],
-      showHint: true,
-    });
-    const step = res.hint;
-    expect(step?.rung).toBe("inPlace");
-    const hl = step?.highlights as WordguessHighlights;
-    expect(hl.line).toEqual([0]);
-    const ops = res.recording.ops;
-    // A strike is two strokes, an X, and the board draws no other line.
-    expect(opsOfKind(ops, "line")).toHaveLength(2 * hl.marked.length);
-    expectRing(ops, { rings: 0 });
-    // The striped row is hatched a tile at a time, and nothing else is.
-    expect(opsOfKind(ops, "hatch")).toHaveLength(p.len);
-  });
-
-  it("rings the squares a suggested guess goes in", () => {
+  it("rings the squares a suggested guess goes in, and draws nothing else", () => {
     const res = renderScenario({ game: wordguessGame, id, moves: [], showHint: true });
     expect(res.hint?.rung).toBe("opening");
     const ops = res.recording.ops;
     expectRing(ops, { rings: p.len });
     expect(opsOfKind(ops, "line")).toHaveLength(0);
+    expect(opsOfKind(ops, "hatch")).toHaveLength(0);
   });
 });
 

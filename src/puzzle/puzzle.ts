@@ -562,6 +562,12 @@ export class Puzzle {
     return text ? [{ text, ref: null }] : [];
   }
 
+  /** The displayed hint step's sentence, or "" with none: what tells the
+   * reference panel that the step whose items it marks has changed. */
+  public get activeHintExplanation(): string {
+    return this._activeHintExplanation.get();
+  }
+
   /** The reference of the hint's words whose marks are flashing, or `null`
    * between flashes. */
   public get hintFlashing(): number | null {

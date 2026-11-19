@@ -250,6 +250,17 @@ export function answerOf(
   return Array.from(solving.edges, (m) => (m === LINE || m === LINE_BACK ? m : OPEN));
 }
 
+/** The trails, by index, that the board's lines and crosses still allow as
+ * words: the description's `fitting`, the hint's own reading of "still
+ * fits", for each listed length. */
+export function fittingTrails(board: WordtrailBoard): Set<number> {
+  const { geo, m } = deduction(board);
+  const dealt = dealtOf(board);
+  return new Set(
+    [...new Set(board.lengths)].flatMap((n) => wordtrail.fitting(m, geo.sp, dealt, n)),
+  );
+}
+
 /** What the hint's steps are built from besides the technique's terms. */
 export interface WordtrailWalkContext {
   /** Whether the lines already are the answer. */

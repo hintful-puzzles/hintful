@@ -89,7 +89,8 @@ export type WordtrailMove =
   | { kind: "edges"; changes: readonly EdgeChange[] }
   | { kind: "answer"; edges: readonly EdgeCode[] };
 
-export type WordtrailUi = LineDrawingUi;
+/** The engine's line drawing, and the word the dictionary spotlights. */
+export type WordtrailUi = LineDrawingUi & { spotlight: string | null };
 
 // --- params -----------------------------------------------------------------
 

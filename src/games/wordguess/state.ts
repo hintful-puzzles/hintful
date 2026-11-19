@@ -1,17 +1,12 @@
 /**
  * Wordguess's state, params and types, its desc codec and its score.
  *
- * A letter is a number, `a` = 1 to `z` = 26, so the working row and the
- * answer row's rule-outs are `code-rows.ts`'s. The working row lives in the
- * `Ui`; the state holds the scored rows, the hidden answer, the row being
- * played and the rule-outs.
+ * A letter is a number, `a` = 1 to `z` = 26, so the working row is
+ * `code-rows.ts`'s. The working row lives in the `Ui`; the state holds the
+ * scored rows and the hidden answer.
  */
 
-import {
-  type RuleOutMistake,
-  ruleOutMistakes,
-  type WorkingRow,
-} from "../../engine/code-rows.ts";
+import type { WorkingRow } from "../../engine/code-rows.ts";
 import {
   DESC_OUT_OF_RANGE,
   type DescParse,
@@ -95,21 +90,10 @@ export interface WordguessState {
   readonly rows: readonly ScoredRow[];
   /** The hidden answer, a letter a slot. */
   readonly answer: readonly number[];
-  /** The answer row's rule-outs (`code-rows.ts`). */
-  readonly ruledOut: Int32Array;
 }
 
-/** One answer-row mark, as a move carries it. */
-export interface LetterMark {
-  pos: number;
-  letter: number;
-}
-
-/** Submit a word, or set answer-row marks. JSON-safe, so the default move codec
- * serves. A mark move *sets* each mark, so a hint's step is idempotent. */
-export type WordguessMove =
-  | { type: "guess"; letters: number[] }
-  | { type: "mark"; marks: LetterMark[]; ruledOut: boolean };
+/** Submit a word. JSON-safe, so the default move codec serves. */
+export type WordguessMove = { type: "guess"; letters: number[] };
 
 export interface WordguessUi extends WorkingRow {
   params: WordguessParams;
@@ -219,7 +203,6 @@ export function newState(p: WordguessParams, desc: string): WordguessState {
     params: p,
     rows: [],
     answer: descValue(parseDesc(p, desc)),
-    ruledOut: new Int32Array(p.len),
   };
 }
 
@@ -278,10 +261,4 @@ export function outcome(s: WordguessState): number {
 export function status(s: WordguessState): GameStatus {
   const o = outcome(s);
   return o > 0 ? "solved" : o < 0 ? "lost" : "ongoing";
-}
-
-export type WordguessMistake = RuleOutMistake;
-
-export function findMistakes(s: WordguessState): readonly WordguessMistake[] {
-  return outcome(s) !== 0 ? [] : ruleOutMistakes(s.ruledOut, s.answer);
 }

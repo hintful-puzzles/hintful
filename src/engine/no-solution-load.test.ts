@@ -69,6 +69,11 @@ const LET_THROUGH: Record<string, string> = {
   slide: "6x7m25:w7md1ad1w2d5d1ad2w2a2d1aw2ad5d1efewa3efew6,4,4,23",
 };
 
+/** Games no board of which lacks a solution, each with why. */
+const ALWAYS_SOLVABLE: Record<string, string> = {
+  wordguess: "the desc is a word of the list, and guessing that word wins",
+};
+
 /** What loading says of `gameId`, which the game must read as an unfinished
  * board: a refusal for its shape, or for being solved, would prove nothing. */
 function loading(game: AnyGame, gameId: string) {
@@ -86,9 +91,13 @@ describe("a board with no solution, in a game with no mistake check", () => {
     expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(57);
     expect(UNCHECKED.length).toBeGreaterThanOrEqual(11);
     expect(Object.keys(REFUSED).sort()).toEqual(PROVING.map(([id]) => id));
-    expect([...Object.keys(REFUSED), ...Object.keys(LET_THROUGH)].sort()).toEqual(
-      UNCHECKED.map(([id]) => id),
-    );
+    expect(
+      [
+        ...Object.keys(REFUSED),
+        ...Object.keys(LET_THROUGH),
+        ...Object.keys(ALWAYS_SOLVABLE),
+      ].sort(),
+    ).toEqual(UNCHECKED.map(([id]) => id));
   });
 
   it("is refused where the game proves it has none", () => {
@@ -98,7 +107,9 @@ describe("a board with no solution, in a game with no mistake check", () => {
   });
 
   it("loads where the game has no proof", () => {
-    const unproving = UNCHECKED.filter(([, game]) => game.hasNoSolution === undefined);
+    const unproving = UNCHECKED.filter(
+      ([id, game]) => game.hasNoSolution === undefined && !(id in ALWAYS_SOLVABLE),
+    );
     expect(unproving.map(([id]) => id)).toEqual(Object.keys(LET_THROUGH).sort());
     for (const [id, game] of unproving) {
       expect(loading(game, LET_THROUGH[id] as string), id).toBeNull();

@@ -9,16 +9,22 @@
  */
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, SolveResult } from "../../engine/game.ts";
+import {
+  type Game,
+  type SolveResult,
+  UI_UPDATE,
+  type UiUpdate,
+} from "../../engine/game.ts";
 import {
   type EdgeMistake,
   edgeMistakes,
   lineDrawing,
 } from "../../engine/line-drawing.ts";
 import { transposeDimensions } from "../../engine/params.ts";
-import { newCursor } from "../../engine/pointer.ts";
+import { isMouseDown, newCursor } from "../../engine/pointer.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
-import type { GameStatus } from "../../engine/types.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
+import { reference, selectReference } from "./dictionary.ts";
 import { newWordtrailDesc } from "./generator.ts";
 import {
   type WordtrailHighlights,
@@ -60,7 +66,7 @@ import {
 } from "./state.ts";
 
 function newUi(_state: WordtrailState): WordtrailUi {
-  return { cursor: newCursor(), drag: null };
+  return { cursor: newCursor(), drag: null, spotlight: null };
 }
 
 // --- input ------------------------------------------------------------------
@@ -78,6 +84,22 @@ const input = lineDrawing<
 /** The right button's drag, which crosses every edge it passes. Not a `Game`
  * member, so the test of it imports it from here. */
 export const crossDrag = input.crossDrag;
+
+/** A press on the board ends the dictionary's spotlight, and repaints where
+ * it does nothing else, so the outline goes. */
+function interpretMove(
+  state: WordtrailState,
+  ui: WordtrailUi,
+  ds: WordtrailDrawState,
+  p: Point,
+  button: number,
+): WordtrailMove | null | UiUpdate {
+  const dismissed = isMouseDown(button) && ui.spotlight !== null;
+  if (dismissed) ui.spotlight = null;
+  return (
+    input.interpretMove(state, ui, ds, p, button) ?? (dismissed ? UI_UPDATE : null)
+  );
+}
 
 // --- the answer -------------------------------------------------------------
 
@@ -126,7 +148,7 @@ export const wordtrailGame: Game<
   newState,
   newUi,
 
-  interpretMove: input.interpretMove,
+  interpretMove,
   executeMove,
   status,
 
@@ -139,6 +161,8 @@ export const wordtrailGame: Game<
       mistakes.map((m) => m.edge),
     ),
   textFormat,
+  reference,
+  selectReference,
 
   hint: wordtrailHint,
   judgeMove: wordtrailJudgeMove,

@@ -407,25 +407,36 @@ export interface PuzzleStaticAttributes {
   paletteScheme: PaletteScheme;
 }
 
-/** One entry in a game's reference aid: a piece from the puzzle's fixed
- * inventory with the player's found status. Plain data (crosses the Comlink
- * worker boundary). `key` is a stable id the panel echoes back to
- * `selectReference`; `label` is the text/accessible rendering; `pips` is
- * optional face-value data for a domino-style pip render; `status` is derived
- * purely from the player's own placements. */
+/** One entry in a game's reference aid: a piece from the puzzle's inventory,
+ * or a word of its dictionary, with its status on the board. Plain data
+ * (crosses the Comlink worker boundary). `key` is a stable id the panel echoes
+ * back to `selectReference`; `label` is the text/accessible rendering; `pips`
+ * is optional face-value data for a domino-style pip render; `status` is
+ * derived from the board as the player has it, never from the solution:
+ * `ruledOut` is an item the player's own marks no longer leave room for. */
 export interface ReferenceItem {
   key: string;
   label: string;
   pips?: readonly number[];
-  status: "outstanding" | "placed" | "conflict";
+  status: "outstanding" | "placed" | "conflict" | "ruledOut";
 }
 
-/** A game's reference-aid model: the full inventory checklist plus the
- * currently spotlighted key. `columns` is an optional layout hint. */
-export interface ReferenceModel {
+/** A run of a reference's items under an optional heading. */
+export interface ReferenceSection {
+  heading: string | null;
   items: ReferenceItem[];
+}
+
+/** A game's reference-aid model: the panel's title and its line of
+ * instructions, the items in sections, the spotlighted key, and the keys the
+ * displayed hint step reads (`HintStep.reference`), which the midend fills
+ * in: a game returns `hinted: []`. */
+export interface ReferenceModel {
+  title: string;
+  instructions: string;
+  sections: ReferenceSection[];
   selected: string | null;
-  columns?: number;
+  hinted: readonly string[];
 }
 
 /**

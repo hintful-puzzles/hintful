@@ -3,21 +3,13 @@
  * scored a letter at a time: in place, elsewhere in the word, or not there.
  *
  * Guess's shape (`code-rows.ts`): the working row lives in the `Ui` and is
- * edited through the shared mechanic, and the answer row's rule-outs are moves.
- * This file is the `Game` object and the routing of taps and keys onto it; the
- * board and the score are [`state.ts`](./state.ts).
+ * edited through the shared mechanic, and a guess is the one move. This file
+ * is the `Game` object, the routing of taps and keys onto it, and the
+ * dictionary; the board and the score are [`state.ts`](./state.ts).
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
-import {
-  enterValue,
-  isRuledOut,
-  restCursor,
-  rubOut,
-  ruledOutAt,
-  selectedSlot,
-  withRuleOuts,
-} from "../../engine/code-rows.ts";
+import { rejectMove } from "../../engine/assert-never.ts";
+import { enterValue, restCursor, rubOut } from "../../engine/code-rows.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
@@ -31,19 +23,16 @@ import {
   LEFT_BUTTON,
   moveCursor,
   newCursor,
-  PENCIL_MODE_BUTTON,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { KeyLabel, KeyStatus, Point } from "../../engine/types.ts";
+import type { KeyLabel, KeyStatus, Point, ReferenceModel } from "../../engine/types.ts";
 import {
+  dictionaryWords,
   WORDGUESS_RUNGS,
   wordguessHint,
   wordguessHintKeepTrack,
-  wordguessRefreshHintStep,
 } from "./hint.ts";
 import {
-  answerRect,
-  answerSlotAt,
   COL_ELSEWHERE,
   COL_IN_PLACE,
   centerOf,
@@ -62,11 +51,9 @@ import {
   defaultParams,
   ELSEWHERE,
   encodeParams,
-  findMistakes,
   IN_PLACE,
   letterOf,
   menu,
-  NLETTERS,
   newDesc,
   newState,
   outcome,
@@ -75,7 +62,7 @@ import {
   score,
   status,
   validateParams,
-  type WordguessMistake,
+  valuesOf,
   type WordguessMove,
   type WordguessParams,
   type WordguessState,
@@ -91,7 +78,6 @@ function newUi(state: WordguessState): WordguessUi {
     entries: new Array(state.params.len).fill(0),
     cursor: newCursor(),
     ready: false,
-    pencilMode: false,
     refused: false,
   };
 }
@@ -102,9 +88,7 @@ const readyIn =
   (letters: readonly number[]): boolean =>
     refusal(s, letters) === null;
 
-/** A fresh, empty working row whenever a guess is scored or taken back. A mark
- * leaves the row alone, so ruling a letter out does not throw away the word
- * the player was writing. */
+/** A fresh, empty working row whenever a guess is scored or taken back. */
 function changedState(
   ui: WordguessUi,
   prev: WordguessState | null,
@@ -184,19 +168,6 @@ function send(ui: WordguessUi): WordguessMove | UiUpdate | null {
   return UI_UPDATE;
 }
 
-function toggleMark(s: WordguessState, pos: number, letter: number): WordguessMove {
-  const out = isRuledOut(s.ruledOut, pos, letter);
-  return { type: "mark", marks: [{ pos, letter }], ruledOut: !out };
-}
-
-function clearMarks(s: WordguessState, pos: number): WordguessMove | null {
-  const marks = ruledOutAt(s.ruledOut, pos, NLETTERS).map((letter) => ({
-    pos,
-    letter,
-  }));
-  return marks.length > 0 ? { type: "mark", marks, ruledOut: false } : null;
-}
-
 function interpretMove(
   from: WordguessState,
   ui: WordguessUi,
@@ -208,53 +179,29 @@ function interpretMove(
   const { len } = from.params;
   const ready = readyIn(from);
 
-  // A press selects a slot of the working row or of the answer row, and the row
-  // it is in decides what a letter does. The selection is all a tap does, so it
-  // is made on the press, and the drag and release that follow do nothing.
+  // A press selects a slot of the working row. The selection is all a tap
+  // does, so it is made on the press, and the drag and release that follow do
+  // nothing.
   if (button === LEFT_BUTTON) {
-    const working = workingSlotAt(from, ds.tileSize, p.x, p.y);
-    const answer = answerSlotAt(from.params, ds.tileSize, p.x, p.y);
-    const slot = working >= 0 ? working : answer;
+    const slot = workingSlotAt(from, ds.tileSize, p.x, p.y);
     if (slot < 0) return null;
-    const notes = working < 0;
-    if (ui.cursor.visible && ui.cursor.x === slot && ui.pencilMode === notes)
-      return null;
+    if (ui.cursor.visible && ui.cursor.x === slot) return null;
     ui.cursor.x = slot;
     ui.cursor.visible = true;
-    ui.pencilMode = notes;
     return UI_UPDATE;
   }
   if (isMouseDrag(button) || isMouseRelease(button)) return null;
 
-  if (button === PENCIL_MODE_BUTTON) {
-    ui.pencilMode = !ui.pencilMode;
-    if (ui.pencilMode && ui.cursor.x >= len) ui.cursor.x = len - 1;
-    return UI_UPDATE;
-  }
   if (isCursorMove(button)) {
-    const maxcur = len + (ui.ready && !ui.pencilMode ? 1 : 0);
+    const maxcur = len + (ui.ready ? 1 : 0);
     return moveCursor(ui.cursor, button, maxcur, 1) ? UI_UPDATE : null;
   }
-  if (button === SUBMIT_BUTTON) return send(ui);
-  if (button === CURSOR_SELECT) {
-    // Enter after a word sends it, wherever the frame is: a player types a
-    // word and presses Enter. Unlike Guess's Enter on a slot, it never switches
-    // Marks on, which would turn the next word typed into rule-outs; in Marks
-    // mode it goes back to typing.
-    if (ui.pencilMode) {
-      ui.pencilMode = false;
-      restCursor(ui);
-      return UI_UPDATE;
-    }
-    return send(ui);
-  }
+  // Enter after a word sends it, wherever the frame is: a player types a word
+  // and presses Enter.
+  if (button === SUBMIT_BUTTON || button === CURSOR_SELECT) return send(ui);
 
   const letter = letterFrom(button);
   if (letter !== null) {
-    if (ui.pencilMode) {
-      const slot = selectedSlot(ui);
-      return slot >= 0 ? toggleMark(from, slot, letter) : UI_UPDATE;
-    }
     // A letter is the game's even where the row has no room for it: declined,
     // it would fall through to the app's one-letter shortcuts, and an N typed
     // past the end of a word would deal a new game.
@@ -262,10 +209,6 @@ function interpretMove(
     return UI_UPDATE;
   }
   if (isEraseKey(button)) {
-    if (ui.pencilMode) {
-      const slot = selectedSlot(ui);
-      return slot >= 0 ? clearMarks(from, slot) : null;
-    }
     if (!rubOut(ui, ready)) return null;
     ui.refused = false;
     return UI_UPDATE;
@@ -276,16 +219,53 @@ function interpretMove(
 // --- moves ------------------------------------------------------------------
 
 function executeMove(s: WordguessState, m: WordguessMove): WordguessState {
-  if (m.type === "mark") {
-    const marks = m.marks.map(({ pos, letter }) => ({ pos, value: letter }));
-    return { ...s, ruledOut: withRuleOuts(s.ruledOut, marks, m.ruledOut, NLETTERS) };
-  }
-  if (m.type !== "guess") return assertNever(m, "wordguess: executeMove");
+  if (m.type !== "guess") rejectMove(m, "wordguess");
   if (outcome(s) !== 0) throw new Error("No guesses once the game is over");
   const why = refusal(s, m.letters);
   if (why !== null) throw new Error(`Illegal guess ${wordOf(m.letters)}: ${why}`);
   const row = { letters: m.letters.slice(), marks: score(m.letters, s.answer) };
   return { ...s, rows: [...s.rows, row] };
+}
+
+// --- the dictionary ---------------------------------------------------------
+
+/** The words the hint counts, which a tap writes into the working row. */
+function reference(s: WordguessState, _ui: WordguessUi): ReferenceModel {
+  const { words, common } = dictionaryWords(s);
+  const n = words.length;
+  const count = `${n} ${common ? "common " : ""}${n === 1 ? "word fits" : "words fit"} every score`;
+  return {
+    title: "Dictionary",
+    instructions: "Tap a word to write it into the row you are filling.",
+    sections: [
+      {
+        heading: common ? count : `No common word fits: ${count}`,
+        items: words.map((word) => ({
+          key: word,
+          label: word.toUpperCase(),
+          status: "outstanding",
+        })),
+      },
+    ],
+    // A word written in is the row's, edited from there as typed letters
+    // are, so nothing stays selected in the list.
+    selected: null,
+    hinted: [],
+  };
+}
+
+/** Write `key`, a word of the list, into the working row, as if typed. */
+function selectReference(ui: WordguessUi, key: string | null): boolean {
+  if (key === null || key.length !== ui.entries.length) return false;
+  const letters = valuesOf(key);
+  if (letters.every((v, i) => ui.entries[i] === v)) return false;
+  letters.forEach((v, i) => {
+    ui.entries[i] = v;
+  });
+  ui.ready = true;
+  ui.refused = false;
+  restCursor(ui, -1);
+  return true;
 }
 
 // --- the Ui that outlives a save --------------------------------------------
@@ -330,8 +310,7 @@ export const wordguessGame: Game<
   WordguessState,
   WordguessMove,
   WordguessUi,
-  WordguessDrawState,
-  WordguessMistake
+  WordguessDrawState
 > = {
   id: "wordguess",
 
@@ -359,14 +338,11 @@ export const wordguessGame: Game<
   executeMove,
   finishesByDeduction: nothingToDeduce,
   status,
-  findMistakes,
-  // Every letter of a wrong slot comes back, so the clearing does not say
-  // which rule-out was the answer's letter, as the check does not.
-  clearMistakes: (state, mistakes) =>
-    mistakes.flatMap(({ pos }) => clearMarks(state, pos) ?? []),
   requestKeys,
   keyStatus,
   statusbarText,
+  reference,
+  selectReference,
 
   solve(_orig, curr) {
     return { ok: true, move: { type: "guess", letters: curr.answer.slice() } };
@@ -375,28 +351,15 @@ export const wordguessGame: Game<
   hintRungs: WORDGUESS_RUNGS,
   hintMarks: {
     roles: {
-      ring: "the squares of the row you are writing, when the step suggests a guess: *the ringed squares* the word goes in.",
-      strike:
-        "a letter in the answer row: *the struck letters*, the ones the step rules out of their slots.",
-      outline:
-        "an answer slot, in a second color: *the outlined slot*, one whose letters the step already knows and leans on.",
-      stripes: "a scored row: *the striped row* the step reads.",
+      ring: "the squares of the row you are writing: *the ringed squares* the suggested word goes in.",
     },
   },
   hintKeepTrack: wordguessHintKeepTrack,
-  refreshHintStep: wordguessRefreshHintStep,
-  // A tap selects a slot, and the row it is in decides whether a letter key
-  // types the letter or rules it out of the answer.
+  // A tap selects a square of the row being written, and a letter key types
+  // the letter there.
   hintGesture(state, ui, ds, m): readonly PointerAction[] {
     const letterKey = (v: number) => key(letterOf(v).toUpperCase().charCodeAt(0));
     const ts = ds.tileSize;
-    if (m.type === "mark") {
-      return m.marks.flatMap((mark) => [
-        click(centerOf(answerRect(state.params, ts, mark.pos))),
-        letterKey(mark.letter),
-      ]);
-    }
-    if (m.type !== "guess") return [];
     const typed = m.letters.flatMap((v, pos) =>
       ui.entries[pos] === v
         ? []

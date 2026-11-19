@@ -130,8 +130,9 @@ export interface WorkingRow {
    */
   cursor: GridCursor;
   /** Notes mode: a value key rules the value out of the cursor's answer slot
-   * instead of entering it in the working row. */
-  pencilMode: boolean;
+   * instead of entering it in the working row. Absent in a member with no
+   * answer row, whose `Ui` then reads to the engine as taking no notes. */
+  pencilMode?: boolean;
   /** Whether the row as it stands may be submitted. */
   ready: boolean;
 }
@@ -167,7 +168,7 @@ export function selectedSlot(row: WorkingRow): number {
 export function restCursor(row: WorkingRow, kept = 0): void {
   const n = row.entries.length;
   const open = firstOpen(row);
-  const full = row.pencilMode ? n - 1 : row.ready ? n : kept;
+  const full = row.pencilMode === true ? n - 1 : row.ready ? n : kept;
   if (open < 0 && full < 0) row.cursor.visible = false;
   else row.cursor.x = open >= 0 ? open : full;
 }

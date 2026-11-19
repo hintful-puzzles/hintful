@@ -1,63 +1,34 @@
 /**
- * Wordguess's hint, in Guess's two halves (`docs/hints-search.md` § "A hidden
- * answer: marks for what is proved, a count for the guess").
- *
- * **What the scored rows prove** is deduction: each conclusion is an
- * answer-row rule-out ("not this letter, in this slot"), placed as a move. The
- * techniques are `wordguess.description.yaml`'s, compiled, each reading the
- * scored rows, rebuilt here from the state on each hint, and the marks earlier
- * firings made; each is checked sound against the rules.
- *
- * **What to guess next** is a probe, not a deduction: the last step of every
- * plan is a word that fits every score, chosen to leave the fewest words
- * whatever it scores, and its sentence claims only what was counted.
+ * Wordguess's hint: what to guess next, a probe and not a deduction. The plan
+ * is one step, a word chosen to leave the fewest words whatever it scores, and
+ * its sentence claims only what was counted (`docs/hints-search.md` § "A
+ * hidden answer: marks for what is proved, a count for the guess"). The words
+ * it counts are the dictionary's ({@link dictionaryWords}).
  *
  * Nothing here reads `state.answer`. The hint knows what the player knows.
  */
 
-import {
-  pendingRuleOuts,
-  type RuleOut,
-  ruleOutProgress,
-} from "../../engine/code-rows.ts";
-import { describedSpace, type GridSpace } from "../../engine/describe-runtime.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { GAME_OVER } from "../../engine/hint-refusal.ts";
-import type { MarkKind, Relation, Sentence } from "../../engine/hint-words.ts";
-import {
-  CellMarks,
-  compiledRung,
-  describedLadder,
-  type Ladder,
-  ladderTechniques,
-  runLadder,
-  TIERS as SCALE,
-} from "../../engine/ladder-runtime.ts";
+import type { Relation, Sentence } from "../../engine/hint-words.ts";
 import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { answerWords, guessWords } from "../../engine/word-list/index.ts";
 import * as wordguess from "../../generated/games/wordguess/wordguess.compiled.ts";
-import { LETTER, ROW, SLOT, SQUARE } from "./hint-marks.ts";
+import { SQUARE } from "./hint-marks.ts";
 import {
   IN_PLACE,
-  type LetterMark,
-  letterOf,
   NLETTERS,
   outcome,
   refusal,
   type ScoredRow,
   valuesOf,
   type WordguessMove,
-  type WordguessParams,
   type WordguessState,
 } from "./state.ts";
 
-/** Why a step's letters are out, or which guess it is: the step of
- * `wordguess.description.yaml` that says it, with its terms. */
+/** Which guess a step suggests: the step of `wordguess.description.yaml`
+ * that says it, with its terms. */
 type Reason =
-  | { kind: "inPlace" | "absent" | "notHere" }
-  | { kind: "onlyPlace" | "copiesPlaced"; letter: number; n: number }
-  | { kind: "lettersFill" }
   | { kind: "onlyAnswer"; word: string; common: boolean }
   | { kind: "opening"; word: string; fitting: number; worst: number }
   | {
@@ -69,93 +40,28 @@ type Reason =
     };
 
 /** What a step rests on: its {@link Reason}'s kind. */
-export const WORDGUESS_RUNGS = [
-  "inPlace",
-  "absent",
-  "notHere",
-  "onlyPlace",
-  "copiesPlaced",
-  "lettersFill",
-  "onlyAnswer",
-  "opening",
-  "probe",
-  "split",
-] as const;
+export const WORDGUESS_RUNGS = ["onlyAnswer", "opening", "probe", "split"] as const;
 export type WordguessRung = (typeof WORDGUESS_RUNGS)[number];
 
-/** What a step points at. */
+/** What a step points at: the working row's squares the guess goes in,
+ * ringed. */
 export interface WordguessHighlights {
-  /** The scored rows the sentence reads ("the striped row"), hatched. */
-  line: number[];
-  /** Answer slots whose letters the step leans on, outlined. */
-  slots: number[];
-  /** Answer-row letters the step rules out, struck. */
-  marked: LetterMark[];
-  /** The working row's squares a suggested guess goes in, ringed. */
   squares: number[];
 }
 
-const speak = wordguess.voice<number | LetterMark>({
-  kind: SQUARE as MarkKind<number | LetterMark>,
-  kinds: {
-    row: ROW as MarkKind<number | LetterMark>,
-    slots: SLOT as MarkKind<number | LetterMark>,
-    struck: LETTER as MarkKind<number | LetterMark>,
-  },
-  value: (n) => letterOf(n).toUpperCase(),
-});
+const speak = wordguess.voice<number>({ kind: SQUARE, value: (n) => String(n) });
 
-/** The letters of `marks`, each once, in alphabetical order. */
-const lettersIn = (marks: readonly LetterMark[]): number[] =>
-  [...new Set(marks.map((m) => m.letter))].sort((a, b) => a - b);
-
-/** A step's sentence. The deductions say "so" only as the judging that found
- * every rival lost allows (`judged`); a probe is not forced, and counts. */
-function say(
-  r: Reason,
-  m: WordguessHighlights,
-  letters: number[],
-  judged: Relation | null,
-): Sentence {
-  const ring = m.squares;
-  const several = m.marked.length > 1;
-  const stripes = { row: m.line };
-  const strike = { struck: m.marked };
-  const marks = { stripes, outline: { slots: m.slots }, strike };
-  const proved = (): Relation => {
-    if (judged === null) throw new Error(`wordguess: a ${r.kind} step with no judging`);
-    return judged;
-  };
+/** A step's sentence. Only the one word that fits is argued, as the judging
+ * that found every rival lost allows (`judged`); a probe counts. */
+function say(r: Reason, ring: number[], judged: Relation | null): Sentence {
   switch (r.kind) {
-    case "inPlace":
-    case "absent":
-    case "notHere":
-      return speak.sentence(r.kind, {
-        ring,
-        terms: { several, letters },
-        marks: { stripes, strike },
-        relation: proved(),
-      });
-    case "onlyPlace":
-    case "copiesPlaced":
-      return speak.sentence(r.kind, {
-        ring,
-        terms: { several, letter: r.letter, n: r.n },
-        marks,
-        relation: proved(),
-      });
-    case "lettersFill":
-      return speak.sentence(r.kind, {
-        ring,
-        terms: { several },
-        marks: { stripes, strike },
-        relation: proved(),
-      });
     case "onlyAnswer":
+      if (judged === null)
+        throw new Error("wordguess: an onlyAnswer step with no judging");
       return speak.sentence(r.kind, {
         ring,
         terms: { word: r.word, common: r.common },
-        relation: proved(),
+        relation: judged,
       });
     case "opening":
       return speak.sentence(r.kind, {
@@ -169,112 +75,6 @@ function say(
         terms: { word: r.word, common: r.common, fitting: r.fitting, worst: r.worst },
       });
   }
-}
-
-// --- the described ladder ------------------------------------------------
-
-/** What a firing reads, and why it rules its letters out. */
-interface Firing {
-  reason: Reason;
-  /** The scored rows it reads, by index. */
-  rows: number[];
-  /** The answer slots whose marks it leans on. */
-  slots: number[];
-}
-
-/** The scored rows as the description reads them: a clue at the board a row. */
-const dealtOf = (rows: readonly ScoredRow[]): wordguess.Dealt => ({
-  score: {
-    n: rows.length,
-    peg: rows.map((r) => r.letters),
-    mark: rows.map((r) => r.marks),
-  },
-});
-
-/** The answer row as the description's space: a slot a cell. */
-const spaceOf = (p: WordguessParams): GridSpace =>
-  describedSpace(wordguess.units, p.len, 1);
-
-/** The rows whose scores `lettersFill` adds up: for each letter some row
- * scored, the first row to score the most copies of it. */
-function fillingRows(rows: readonly ScoredRow[]): number[] {
-  const best = new Map<number, { n: number; row: number }>();
-  rows.forEach(({ letters, marks }, k) => {
-    const found = new Map<number, number>();
-    letters.forEach((v, i) => {
-      if (marks[i] > 0) found.set(v, (found.get(v) ?? 0) + 1);
-    });
-    for (const [v, n] of found) {
-      if (n > (best.get(v)?.n ?? 0)) best.set(v, { n, row: k });
-    }
-  });
-  return [...new Set([...best.values()].map((b) => b.row))].sort((a, b) => a - b);
-}
-
-function wordguessLadder(rows: readonly ScoredRow[]): Ladder {
-  const dealt = dealtOf(rows);
-  const row = (k: number, reason: Reason, slots: number[] = []): Firing => ({
-    reason,
-    rows: [k],
-    slots,
-  });
-  return describedLadder(wordguess, dealt, {
-    inPlace: compiledRung(wordguess.inPlace, dealt, ({ k }) =>
-      row(k, { kind: "inPlace" }),
-    ),
-    absent: compiledRung(wordguess.absent, dealt, ({ k }) =>
-      row(k, { kind: "absent" }),
-    ),
-    notHere: compiledRung(wordguess.notHere, dealt, ({ k }) =>
-      row(k, { kind: "notHere" }),
-    ),
-    onlyPlace: compiledRung(wordguess.onlyPlace, dealt, ({ k, d, n, S }) =>
-      row(k, { kind: "onlyPlace", letter: d, n }, [...S]),
-    ),
-    copiesPlaced: compiledRung(wordguess.copiesPlaced, dealt, ({ k, d, n, P }) =>
-      row(k, { kind: "copiesPlaced", letter: d, n }, [...P]),
-    ),
-    lettersFill: compiledRung(
-      wordguess.lettersFill,
-      dealt,
-      (): Firing => ({
-        reason: { kind: "lettersFill" },
-        rows: fillingRows(rows),
-        slots: [],
-      }),
-    ),
-  });
-}
-
-/** One firing of the ladder: why, and the letters it rules out. */
-interface Proved extends Firing {
-  marks: LetterMark[];
-}
-
-/** Every letter but none, as a candidate mask: bits `1..26`. */
-const ALL_LETTERS = ((1 << (NLETTERS + 1)) - 1) & ~1;
-
-/**
- * Everything the scored rows prove, from every letter possible in every slot:
- * the hint's knowledge, independent of what the player has marked. The
- * firings come in the ladder's order, one a pass, as Guess's do.
- */
-function proved(p: WordguessParams, rows: readonly ScoredRow[]): Proved[] {
-  const m = new CellMarks(spaceOf(p), ALL_LETTERS, new Uint8Array(p.len));
-  m.seed(m.grid);
-  m.budget = stepBudget("wordguess hint");
-  const firings: Proved[] = [];
-  let group = -1;
-  m.recorder = (rec) => {
-    if (rec.group !== group) {
-      group = rec.group;
-      firings.push({ ...(rec.reason as Firing), marks: [] });
-    }
-    firings[firings.length - 1].marks.push({ pos: rec.x, letter: rec.n });
-  };
-  const { entries } = wordguessLadder(rows);
-  runLadder(m, ladderTechniques(m, entries, { [SCALE]: 0 }, {}));
-  return firings;
 }
 
 // --- the probe -----------------------------------------------------------
@@ -679,6 +479,29 @@ function chooseProbe(state: WordguessState): Probe | null {
   return toProbe(guesses, s, false, rare.length);
 }
 
+// --- the dictionary ------------------------------------------------------
+
+/**
+ * The words the hint counts, in alphabetical order: the common words that
+ * would have scored every row as it scored, or every word of the list that
+ * would once no common word does (`common` false). What the dictionary
+ * lists, so the panel and the hint's count agree.
+ */
+export function dictionaryWords(state: WordguessState): {
+  words: string[];
+  common: boolean;
+} {
+  const { len } = state.params;
+  const answers = encode(answerWords(len));
+  const common = fittingIn(answers, state.rows, len).map((i) => answers.words[i]);
+  if (common.length > 0) return { words: common, common: true };
+  const guesses = encode(guessWords(len));
+  return {
+    words: fittingIn(guesses, state.rows, len).map((i) => guesses.words[i]),
+    common: false,
+  };
+}
+
 // --- the plan ------------------------------------------------------------
 
 export function wordguessHint(
@@ -686,50 +509,12 @@ export function wordguessHint(
 ): HintResult<WordguessMove, WordguessHighlights, WordguessRung> {
   // Out of guesses, or the answer shown by Solve: the status is lost.
   if (outcome(state) !== 0) return { ok: false, error: GAME_OVER };
-  const board = state.ruledOut.slice();
-  const steps: HintStep<WordguessMove, WordguessHighlights, WordguessRung>[] = [];
-
-  for (const f of proved(state.params, state.rows)) {
-    // A mark the player has already made is not taught again
-    // (`docs/hints.md` § "Show only what the board does not already say").
-    const place = f.marks.filter((m) => !(board[m.pos] & (1 << m.letter)));
-    if (place.length === 0) continue;
-    for (const m of place) board[m.pos] |= 1 << m.letter;
-    const highlights: WordguessHighlights = {
-      line: f.rows,
-      slots: f.slots,
-      marked: place,
-      squares: [],
-    };
-    // Each rule-out's rival is that letter standing in that slot, which the
-    // firing proved from the scores cannot be the answer's.
-    const relation = claimRelation(judgeRivals(place, 0, () => "lost").claim);
-    const words = say(
-      f.reason,
-      highlights,
-      termLetters(f, place, state.rows),
-      relation,
-    );
-    steps.push({
-      move: { type: "mark", marks: place, ruledOut: true },
-      rung: f.reason.kind,
-      explanation: words.text,
-      words,
-      highlights,
-    });
-  }
-
   // The answer is a word of the list (`state.ts`'s desc parser refuses any
   // other) and fits every score, so some word always does.
   const probe = chooseProbe(state);
   if (!probe) throw new Error("wordguess hint: no word fits the scores");
   const letters = valuesOf(probe.word);
-  const highlights: WordguessHighlights = {
-    line: [],
-    slots: [],
-    marked: [],
-    squares: letters.map((_, pos) => pos),
-  };
+  const squares = letters.map((_, pos) => pos);
   const reason = probeReason(probe);
   // When one word fits, every other word of its list was found to misfit a
   // score: each is a rival guess, and lost.
@@ -737,36 +522,15 @@ export function wordguessHint(
     reason.kind === "onlyAnswer"
       ? claimRelation(judgeRivals(["every other word"], 0, () => "lost").claim)
       : null;
-  const words = say(reason, highlights, [], judged);
-  steps.push({
+  const words = say(reason, squares, judged);
+  const step: HintStep<WordguessMove, WordguessHighlights, WordguessRung> = {
     move: { type: "guess", letters },
     rung: reason.kind,
     explanation: words.text,
     words,
-    highlights,
-  });
-  return { ok: true, steps };
-}
-
-/** The letters a deduction's sentence names: those it rules out, or, for a
- * letter scored in place, the letters that settle their slots. */
-function termLetters(
-  f: Proved,
-  place: readonly LetterMark[],
-  rows: readonly ScoredRow[],
-): number[] {
-  const said =
-    f.reason.kind === "inPlace"
-      ? [...new Set(place.map((m) => m.pos))].map((pos) => rows[f.rows[0]].letters[pos])
-      : lettersIn(place);
-  // In the order the striped row shows them, so the eye follows along it.
-  const row = f.rows.length === 1 ? rows[f.rows[0]].letters : null;
-  if (row === null) return said;
-  const at = (v: number) => {
-    const i = row.indexOf(v);
-    return i < 0 ? row.length : i;
+    highlights: { squares },
   };
-  return [...new Set(said)].sort((a, b) => at(a) - at(b) || a - b);
+  return { ok: true, steps: [step] };
 }
 
 function probeReason(probe: Probe): Reason {
@@ -778,47 +542,11 @@ function probeReason(probe: Probe): Reason {
   return { kind, word: word.toUpperCase(), common, fitting, worst };
 }
 
-const asRuleOuts = (marks: readonly LetterMark[]): RuleOut[] =>
-  marks.map(({ pos, letter }) => ({ pos, value: letter }));
-
-/** `state` is the board *before* `m` (the midend classifies a move before it
- * applies it). */
+/** The guess the step asks for, sent whole, completes it; any other is off. */
 export function wordguessHintKeepTrack(
   m: WordguessMove,
   step: HintStep<WordguessMove>,
-  state: WordguessState,
 ): HintTrackVerdict {
   const want = step.move;
-  if (want.type === "guess") {
-    if (m.type !== "guess") return "off";
-    return m.letters.every((v, i) => v === want.letters[i]) ? "completed" : "off";
-  }
-  if (m.type !== "mark" || !m.ruledOut) return "off";
-  return ruleOutProgress(state.ruledOut, asRuleOuts(want.marks), asRuleOuts(m.marks));
-}
-
-/** Drop the marks a stored step would set that are already on the board. */
-export function wordguessRefreshHintStep(
-  step: HintStep<WordguessMove, WordguessHighlights>,
-  state: WordguessState,
-): HintStep<WordguessMove, WordguessHighlights> | null {
-  const move = step.move;
-  if (move.type !== "mark") return step;
-  const live = pendingRuleOuts(state.ruledOut, asRuleOuts(move.marks)).map(
-    ({ pos, value }) => ({ pos, letter: value }),
-  );
-  if (live.length === 0) return null;
-  if (live.length === move.marks.length) return step;
-  const hl = step.highlights as WordguessHighlights;
-  // The words keep naming what is still struck.
-  const keep = new Set(live.map((m) => LETTER.key(m)));
-  const words = step.words?.narrow(
-    (role, kind, key) => role !== "strike" || kind !== LETTER.name || keep.has(key),
-  );
-  return {
-    ...step,
-    move: { ...move, marks: live },
-    highlights: { ...hl, marked: live },
-    ...(words ? { words, explanation: words.text } : {}),
-  };
+  return m.letters.every((v, i) => v === want.letters[i]) ? "completed" : "off";
 }

@@ -91,6 +91,8 @@ export type GuessMove =
 
 /** The working row's pegs are `entries`, edited through `code-rows.ts`. */
 export interface GuessUi extends WorkingRow {
+  /** Guess rules colors out of its answer row in notes mode. */
+  pencilMode: boolean;
   params: GuessParams;
   /** Live holds, length `npegs`. */
   holds: boolean[];

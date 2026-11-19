@@ -84,6 +84,10 @@ export interface HintStep<Move, Highlights = unknown, Rung extends string = stri
    * exception. */
   words?: Sentence;
   highlights?: Highlights;
+  /** The keys of the reference items the step reasons from (Wordtrail's
+   * words), which an open reference panel marks while the step is shown
+   * (`ReferenceModel.hinted`). */
+  reference?: readonly string[];
   /** True when this step is the continuation of the journey the
    * previous step previewed (e.g. the "then to column 5" leg of
    * "Working on tile 10: move it to row 2, then column 5"). The midend counts
