@@ -38,7 +38,14 @@ import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectDragRepeatsThePress } from "../../engine/testing/sweep-probe.ts";
 import type { Point } from "../../engine/types.ts";
 import { crossDrag, wordtrailGame } from "./index.ts";
-import { COL_DARK, COL_ERROR, centerOf, layout, newDrawState } from "./render.ts";
+import {
+  COL_DARK,
+  COL_ERROR,
+  centerOf,
+  layout,
+  newDrawState,
+  PREFERRED_TILE_SIZE,
+} from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -371,6 +378,41 @@ describe("wordtrail frame", () => {
       moves: [draw([1, 0, 4]), set(1, CROSS)],
     });
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("gives each word drawn a color of its own, on its letters and in the list", () => {
+    const start = newState(P, DESC);
+    /** Each square's letter disc's fill: the smallest circle at its middle. */
+    const discs = (...paths: (readonly number[])[]) => {
+      const { recording } = renderScenario({
+        game: wordtrailGame,
+        id: ID,
+        moves: [draw(...paths)],
+      });
+      const circles = recording.ops.flatMap((op) => (op.op === "circle" ? [op] : []));
+      const fillAt = (i: number): number => {
+        const c = centerOf(start, PREFERRED_TILE_SIZE, i);
+        const here = circles.filter(
+          (o) => o.cx === Math.round(c.x) && o.cy === Math.round(c.y),
+        );
+        return here.reduce((a, b) => (b.r < a.r ? b : a)).fill;
+      };
+      const rects = new Set(
+        recording.ops.flatMap((op) => (op.op === "rect" ? [op.color] : [])),
+      );
+      return { fillAt, rects };
+    };
+    const one = (fills: number[]): number => {
+      expect(new Set(fills).size).toBe(1);
+      return fills[0];
+    };
+    const plain = one(GLAND.map(discs(POEM).fillAt));
+    const both = discs(POEM, GLAND);
+    const poem = one(POEM.map(both.fillAt));
+    const gland = one(GLAND.map(both.fillAt));
+    expect(new Set([plain, poem, gland]).size).toBe(3);
+    // The list's slots wear them too.
+    expect([both.rects.has(poem), both.rects.has(gland)]).toEqual([true, true]);
   });
 
   it("draws the dark squares", () => {

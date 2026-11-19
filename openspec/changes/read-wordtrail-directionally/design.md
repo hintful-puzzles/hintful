@@ -83,8 +83,8 @@ direction), Signpost's in its own render, and others that draw arrows
   drawing the same thing move too, or are recorded here with the reason
   they keep their own.
 
-Not Wend's look: no colored word bands; the board's fill for a finished word
-already says it is done.
+Not Wend's look: no colored word bands. Each finished word does take a
+color of its own (below), on its letters' discs rather than a band.
 
 ## As built (2026-11-19)
 
@@ -185,6 +185,19 @@ hint's asked line as a blot inside its ring. Its letter discs were already
 0.3 of a tile, so its arrows are Ascent's to the pixel; a line the drag would
 lift, which has no direction to show, is a plain stroke of the shaft's
 weight. With no game left drawing a head on a line, `drawPathHead` is gone.
+
+**Each word a color of its own** (owner, 2026-11-19, with Wend's board
+beside ours: every word wore one purple fill, so they all looked the same).
+A word takes the ten-color set's member by its slot in the list, so the
+board and the list agree: its letters sit on discs of the color, with the
+set's text color for each, and its arrows and start ring wear it, the ring
+held a stroke clear of the disc so it does not merge into it. The squares
+keep the plain surface; a fill of the color under a colored disc was two
+signals for one fact. The first nine are used, as Path uses them, since
+the set's gray reads as a dark square; a board of more than nine words
+takes them round again. A word's color follows its slot, so drawing a word
+of the same length earlier in reading order can move another's color: the
+price of the list and the board agreeing without a stored assignment.
 
 Not taken from the review: dimming the arrows in the dark scheme. They wear
 the path's strong gray, chosen to stand off both surfaces; a dimmer path is

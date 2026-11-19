@@ -11,6 +11,7 @@
  * changes (§ "A cue with no tile to live in").
  */
 
+import { FREE, FREE_TEXT } from "../../engine/color/colors.ts";
 import {
   CURSOR,
   cellSurface,
@@ -21,7 +22,6 @@ import {
   FLASH_LEAD,
   HINT_OUTLINE,
   INK,
-  REGION_DONE,
   RULED_OUT,
   surfaceGrid,
   wallFill,
@@ -89,10 +89,15 @@ const COL_CURSOR = 9;
 export const COL_HINT_EVIDENCE = 10;
 const COL_FLASH = 11;
 const COL_FLASH_LEAD = 12;
-/** A trail of the player's that spells a word: settled, as a closed region
- * is. */
-const COL_WORD = 13;
-const COL_TEXT = 14;
+export const COL_TEXT = 13;
+/** The first of the words' colors, which tell the words drawn apart, each
+ * its own on the board and in the list (owner, 2026-11-19): the ten-color
+ * set's first nine, as Path's pairs take them, since its gray reads as a
+ * dark square. A board of more words than that takes them round again. */
+const COL_HUE = 14;
+const HUES = 9;
+/** The first of the letters on each word color's disc, a slot a color. */
+export const COL_HUE_TEXT = COL_HUE + HUES;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -109,8 +114,11 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_FLASH] = FLASH;
   out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_WORD] = REGION_DONE;
   out[COL_TEXT] = INK;
+  for (let k = 0; k < HUES; k++) {
+    out[COL_HUE + k] = FREE[k];
+    out[COL_HUE_TEXT + k] = FREE_TEXT[k];
+  }
   return out;
 }
 
@@ -203,17 +211,17 @@ function piecesOf(state: WordtrailState, edges: Uint8Array): Pieces {
 
 // --- draw state -------------------------------------------------------------
 
-// Word 0, the square: the cursor, whether it is dark, whether its piece
-// spells a word, whether the hint stripes it, the win flash's tone, the
-// sides of the hint's outline it draws (`hint-mark.ts`'s side bits), and
-// whether a word starts here.
+// Word 0, the square: the cursor, whether it is dark, whether the hint
+// stripes it, the win flash's tone, the sides of the hint's outline it draws
+// (`hint-mark.ts`'s side bits), whether a word starts here, and its word's
+// color past `COL_HUE`, plus one, or 0 where its piece spells no word.
 const F_CURSOR = 1 << 0;
 const F_DARK = 1 << 1;
-const F_WORD = 1 << 2;
 const F_STRIPES = 1 << 3;
 const K_TONE = 4;
 const K_OUTLINE = 6;
 const F_START = 1 << 10;
+const K_HUE = 11;
 
 // Word 1, the sides: eight bits a side, by direction.
 const SIDE_BITS = 8;
@@ -298,14 +306,10 @@ function drawTile(
     dr.drawUpdate({ x: px, y: py, w: ts, h: ts });
     return;
   }
-  dr.drawRect(
-    body,
-    tone
-      ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-      : square & F_WORD
-        ? COL_WORD
-        : COL_CELL,
-  );
+  const surface = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_CELL;
+  // The word's color, or -1 where the square's piece spells none.
+  const hue = ((square >> K_HUE) & 0xf) - 1;
+  dr.drawRect(body, surface);
   if (square & F_STRIPES) dr.drawHatch(body, hatchPeriod(ts));
 
   // The hint's outline, inside the square and under the lines and crosses
@@ -383,7 +387,9 @@ function drawTile(
           ? COL_DRAG_ADD
           : s & S_WRONG || s & S_ERROR
             ? COL_ERROR
-            : COL_LINE;
+            : hue >= 0
+              ? COL_HUE + hue
+              : COL_LINE;
       arrow(k, (s & S_OUT) !== 0, color);
       if (s & S_OUT) outColor = color;
     } else if (s & S_DRAG_REMOVE)
@@ -395,22 +401,27 @@ function drawTile(
       );
   }
 
-  // The letter, on a disc of the square's own surface over the lines, so
-  // it reads whatever runs under it; a word's first letter ringed in the
-  // ink of the line out of it.
+  // The letter, on a disc over the lines, so it reads whatever runs under
+  // it: the square's own surface, or its word's color. A word's first
+  // letter is ringed in the ink of the line out of it, clear of a colored
+  // disc by a stroke's width so the ring does not merge into it.
   const letter = state.letters[y * state.w + x];
-  const surface = tone
-    ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-    : square & F_WORD
-      ? COL_WORD
-      : COL_CELL;
+  const center = { x: cx, y: cy };
   if (square & F_START && outColor >= 0)
-    drawPathStart(dr, ts, { x: cx, y: cy }, disc, outColor, surface);
-  else dr.drawCircle({ x: cx, y: cy }, disc, surface, surface);
+    drawPathStart(
+      dr,
+      ts,
+      center,
+      hue >= 0 ? disc + pathStrokeThickness(ts) : disc,
+      outColor,
+      surface,
+    );
+  const fill = hue >= 0 ? COL_HUE + hue : surface;
+  dr.drawCircle(center, disc, fill, fill);
   dr.drawText(
-    { x: cx, y: cy },
+    center,
     glyphFont(Math.floor(ts * 0.42)),
-    COL_TEXT,
+    hue >= 0 ? COL_HUE_TEXT + hue : COL_TEXT,
     letterChar(letter).toUpperCase(),
   );
 
@@ -469,16 +480,18 @@ function listLayout(state: WordtrailState, ts: number): { box: number; slots: Sl
   }
 }
 
-/** Each listed word's slot's word: the words spelled on the board, by
- * length, the first in reading order first; "" where none fills it. */
-function listedWords(state: WordtrailState, pieces: Pieces): string[] {
-  const byLength = new Map<number, string[]>();
-  for (const [, word] of [...pieces.words].sort(([a], [b]) => a - b)) {
+/** Each listed word's slot's piece, by root: the words spelled on the board,
+ * by length, the first in reading order first; -1 where none fills it. A
+ * word's color is its slot's, so it is the same on the board and in the
+ * list. */
+function listedRoots(state: WordtrailState, pieces: Pieces): number[] {
+  const byLength = new Map<number, number[]>();
+  for (const [root, word] of [...pieces.words].sort(([a], [b]) => a - b)) {
     const list = byLength.get(word.length) ?? [];
-    list.push(word);
+    list.push(root);
     byLength.set(word.length, list);
   }
-  return state.lengths.map((n) => byLength.get(n)?.shift() ?? "");
+  return state.lengths.map((n) => byLength.get(n)?.shift() ?? -1);
 }
 
 function drawList(
@@ -499,18 +512,19 @@ function drawList(
   const { box, slots } = listLayout(state, ts);
   slots.forEach(({ length, at }, s) => {
     const word = words[s];
+    const hue = s % HUES;
     for (let k = 0; k < length; k++) {
       const r: Rect = { x: at.x + k * box, y: at.y, w: box, h: box };
       dr.drawRect(r, COL_GRID);
       dr.drawRect(
         { x: r.x + 1, y: r.y + 1, w: box - 2, h: box - 2 },
-        word === "" ? COL_CELL : COL_WORD,
+        word === "" ? COL_CELL : COL_HUE + hue,
       );
       if (word !== "")
         dr.drawText(
           { x: r.x + box / 2, y: r.y + box / 2 },
           glyphFont(Math.floor(box * 0.6)),
-          COL_TEXT,
+          COL_HUE_TEXT + hue,
           word[k].toUpperCase(),
         );
     }
@@ -550,6 +564,10 @@ export function redraw(
   const dragged = new Map(drag.map((c) => [c.edge, c.mark]));
   const pieces = piecesOf(state, edges);
   const wrong = new Set(mistakes?.map((m) => m.edge));
+  const listed = listedRoots(state, pieces);
+  const hueOf = new Map(
+    listed.flatMap((root, s) => (root < 0 ? [] : [[root, s % HUES]])),
+  );
 
   // The displayed step's marks, read from its words and from nowhere else:
   // the kinds read here are the kinds a sentence may name.
@@ -573,7 +591,7 @@ export function redraw(
       const square =
         (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y ? F_CURSOR : 0) |
         (letters[i] === 0 ? F_DARK : 0) |
-        (pieces.words.has(pieces.root[i]) ? F_WORD : 0) |
+        (((hueOf.get(pieces.root[i]) ?? -1) + 1) << K_HUE) |
         (striped.has(i) ? F_STRIPES : 0) |
         // The win flash sweeps the letters; a dark square never lights.
         (letters[i] === 0 ? 0 : flash.win(sweepStep(x, y)) << K_TONE) |
@@ -623,10 +641,10 @@ export function redraw(
     }
   }
 
-  const listed = listedWords(state, pieces);
-  const key = listed.join(",");
+  const words = listed.map((root) => pieces.words.get(root) ?? "");
+  const key = words.join(",");
   if (ds.list !== key) {
-    drawList(dr, ds, state, listed);
+    drawList(dr, ds, state, words);
     ds.list = key;
   }
 }

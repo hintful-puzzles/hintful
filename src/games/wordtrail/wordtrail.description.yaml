@@ -42,9 +42,9 @@ help:
     together does the same without moving, and holding Shift alone crosses
     out or clears the edge in that direction.
 
-    A trail you have drawn is filled with color once its letters, read the
-    way its arrows point, spell a word of a listed length, and the list
-    shows it.
+    A trail you have drawn takes a color of its own once its letters, read
+    the way its arrows point, spell a word of a listed length, and the list
+    shows it in the same color.
   hints: |-
     **Hint** explains the next step rather than simply making it. It reasons
     only from the lines and crosses you have drawn, so it carries on from

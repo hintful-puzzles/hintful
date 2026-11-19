@@ -21,6 +21,7 @@ import * as mosaic from "../games/mosaic/render.ts";
 import * as path from "../games/path/render.ts";
 import * as sticks from "../games/sticks/render.ts";
 import * as untangle from "../games/untangle/render.ts";
+import * as wordtrail from "../games/wordtrail/render.ts";
 import { puzzleIds } from "./catalog.ts";
 import { alike, frameMarks, markCollisions } from "./mark-collisions.ts";
 
@@ -69,6 +70,14 @@ const DECLARED: Record<string, Declared[]> = {
     {
       pair: [untangle.COL_LINE, untangle.COL_OUTLINE],
       why: "an edge beside the play area's frame: an edge ends at a vertex at each end",
+    },
+  ],
+  wordtrail: [
+    // Yellow, the first word's color, is pale enough that its letters take
+    // ink.
+    {
+      pair: [wordtrail.COL_TEXT, wordtrail.COL_HUE_TEXT],
+      why: "one letter, in ink on an open disc and in ink on a pale yellow filled one",
     },
   ],
 };

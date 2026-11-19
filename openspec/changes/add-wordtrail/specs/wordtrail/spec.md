@@ -235,16 +235,17 @@ not need.
 ### Requirement: Look: The letters sit on discs over the lines, and the words drawn fill the list
 
 Each letter SHALL sit on a disc of its square's surface drawn over the
-lines, so a line shows only between letters. A piece of lines that spells a
-word of the guess list, read the way its lines run, SHALL color its squares,
-and the list of lengths below the grid SHALL write each such word into a
-slot of its length as it reads. A closed loop or a piece longer than the
-longest length SHALL be drawn in the error color.
+lines, so a line shows only between letters. The list of lengths below the
+grid SHALL write each piece of lines that spells a word of the guess list,
+read the way its lines run, into a slot of its length as it reads. A closed
+loop or a piece longer than the longest length SHALL be drawn in the error
+color.
 
 #### Scenario: A word drawn is written into the list
 
 - **WHEN** on `4x3n2de:45,namedlgo3p` lines run P to O to E to M
 - **THEN** POEM is written into the list's four-letter slot
+
 
 #### Scenario: Letters that are not yet a word stay out of the list
 
@@ -255,6 +256,17 @@ longest length SHALL be drawn in the error color.
 
 - **WHEN** on `3x2n1de:3,pis3` lines run S to I to P, and on another such board P to I to S
 - **THEN** the first writes SIP into the list and the second PIS
+
+### Requirement: Look: Each word drawn wears a color of its own
+
+Each word written into the list SHALL take a color of the collection's
+ten-color set by its slot, the same on its letters' discs, its arrows and
+start mark, and its slot's boxes, so the words drawn are told apart.
+
+#### Scenario: Two words drawn wear two colors
+
+- **WHEN** on `4x3n2de:45,namedlgo3p` lines run P to O to E to M and G to L to A to N to D
+- **THEN** the two words' letters, arrows and list slots each wear their own color, and no square of either keeps the plain surface's disc
 
 ### Requirement: Look: Each line wears the engine's arrow, and a word's first letter its start mark
 

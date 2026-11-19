@@ -120,7 +120,7 @@ exports[`wordtrail frame > draws the board 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 14,
+    "color": 13,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -229,9 +229,19 @@ exports[`wordtrail frame > draws the board 1`] = `
     "r": 14,
   },
   {
+    "cx": 84,
+    "cy": 36,
+    "fill": 2,
+    "fillRgb": "rgb(194, 194, 194)",
+    "op": "circle",
+    "outline": 2,
+    "outlineRgb": "rgb(194, 194, 194)",
+    "r": 14,
+  },
+  {
     "align": "center",
     "baseline": "mathematical",
-    "color": 14,
+    "color": 13,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -301,7 +311,7 @@ exports[`wordtrail frame > draws the board 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 14,
+    "color": 13,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -351,7 +361,7 @@ exports[`wordtrail frame > draws the board 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 14,
+    "color": 13,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -432,7 +442,7 @@ exports[`wordtrail frame > draws the board 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 14,
+    "color": 13,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -482,7 +492,7 @@ exports[`wordtrail frame > draws the board 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 14,
+    "color": 13,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -532,7 +542,7 @@ exports[`wordtrail frame > draws the board 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 14,
+    "color": 13,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -582,7 +592,7 @@ exports[`wordtrail frame > draws the board 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 14,
+    "color": 13,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -716,7 +726,7 @@ exports[`wordtrail frame > draws the board 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 14,
+    "color": 13,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
