@@ -671,16 +671,15 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     anchor: "mark-all",
     why: "a toolbar button with no keyboard equivalent a touch player can reach",
   },
-  reference: { kind: "features", anchor: "reference", why: "the reference panel" },
+  reference: {
+    kind: "features",
+    anchor: "reference",
+    why: "the reference panel, its search and filters, and picking an item",
+  },
   rulesOut: {
     kind: "features",
     anchor: "rules-out",
     why: "a preference that makes the marks a placement rules out",
-  },
-  selectReference: {
-    kind: "features",
-    anchor: "reference",
-    why: "picking an item highlights where it can go — same section",
   },
   ignoresSecondaryButton: {
     kind: "features",

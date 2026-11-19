@@ -1093,10 +1093,18 @@ reference-aid one in [`ts-engine`](../openspec/specs/ts-engine/spec.md).
 Exemplars: [`dominosa/index.ts`](../src/games/dominosa/index.ts) for pieces,
 [`wordtrail/dictionary.ts`](../src/games/wordtrail/dictionary.ts) for words.
 
-- **`reference(state, ui): ReferenceModel` returns the checklist, derived
-  only from the player's own placements**, never from the solution. It
-  carries its own title and instructions, and its items in sections, each
-  with a heading or none.
+- **`Game.reference` is one object: `title`, `model` and `select`.** The
+  title names what the aid is ("Dominoes", "Dictionary"); it labels the
+  toggle, which shows before any model is fetched, and titles the panel.
+- **`model(state, ui): ReferenceModel` returns the checklist, derived only
+  from the player's own placements**, never from the solution: its
+  instructions, and its items in sections, each with a heading or none.
+- **Ask the panel for a search box and filters; never filter in the
+  game.** `search: true` and `filters: [{ label, statuses }]` are all a game
+  writes: the panel draws "All" and the filters with their counts, and
+  keeps the player's choice while open (`components/reference-filter.ts`).
+  List everything the player may want; a word that cannot win is still a
+  guess, so Wordguess lists its whole answer list and rules out the rest.
 - **Showing it is help.** The midend marks the game helped the first time it
   hands a model out, so the timer reads "with help", as a hint does. Keep it
   behind the panel; never fetch it for the board's own use.
@@ -1106,7 +1114,7 @@ Exemplars: [`dominosa/index.ts`](../src/games/dominosa/index.ts) for pieces,
 - **Share the definition of "still fits" with the hint.** Wordtrail's list
   and its hint read one compiled `fitting`, so a word the panel offers is
   one the hint may reason from.
-- **`selectReference(ui, key)` spotlights by mutating the `Ui`** and reports
+- **`select(ui, key)` spotlights by mutating the `Ui`** and reports
   whether anything changed; `false` skips the repaint. It may do something
   else to the `Ui` the game owns: Wordguess writes the word into its working
   row and leaves nothing selected, and the panel refetches after a

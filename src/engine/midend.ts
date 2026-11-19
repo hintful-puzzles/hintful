@@ -573,7 +573,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       canSolve: this.game.solve !== undefined,
       canHint: this.game.hint !== undefined,
       canCheck: this.game.findMistakes !== undefined || this.game.hint !== undefined,
-      hasReference: this.game.reference !== undefined,
+      referenceTitle: this.game.reference?.title ?? null,
       canMarkAll: this.game.markAll !== undefined,
       ignoresSecondaryButton: this.game.ignoresSecondaryButton ?? false,
       wantsStatusbar: this.game.statusbarText !== undefined,
@@ -1632,15 +1632,15 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * reference shown, and the board counts as helped. */
   getReference(): ReferenceModel | null {
     if (!this.game.reference) return null;
-    const model = this.game.reference(this.state, this.ui);
+    const model = this.game.reference.model(this.state, this.ui);
     if (!this.helped) this.markHelped();
     return { ...model, hinted: this.displayedHintStep?.reference ?? [] };
   }
 
   selectReference(key: string | null): void {
-    if (!this.game.selectReference) return;
+    if (!this.game.reference) return;
     this.press = null;
-    if (this.game.selectReference(this.ui, key)) {
+    if (this.game.reference.select(this.ui, key)) {
       this.afterTransition();
     }
   }

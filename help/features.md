@@ -402,10 +402,12 @@ step is worked out from the board with them on it.
 
 Some puzzles are about placing a known set of pieces, where the question you
 keep asking is *which ones haven't I placed yet*. Those get a ::reference::
-reference panel: a checklist of the whole set, marking off each piece you've
+reference panel, its button named for what it holds (Dominosa's is
+**Dominoes**): a checklist of the whole set, marking off each piece you've
 placed and flagging any you've placed more than once. The word puzzles get a
-dictionary there instead: the words that could be the answer, with the ones your
-marks have ruled out struck through. While a hint is shown, the panel marks the
+**Dictionary** there instead, with the words your play has ruled out struck
+through, a search box, and buttons that narrow the list, such as **Fits** for
+the words that still could go. While a hint is shown, the panel marks the
 items the hint reasons from.
 
 The panel is help: once you have opened it, the time you finish in says

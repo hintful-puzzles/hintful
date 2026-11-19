@@ -47,10 +47,13 @@ help:
         board names the word if you run out of guesses.
     - heading: The dictionary
       body: |-
-        The reference panel is a dictionary: the common words that fit
-        every score so far, or, once no common word does, every word of the
-        list that fits. Tap a word to write it into the row you are filling,
-        then submit it as if you had typed it.
+        **Dictionary** opens a list of every word the hidden word could
+        have been drawn from, A to Z, with those that no longer fit every
+        score struck through. Search it, or press **Fits** to see only the
+        words that still could be the answer. Tap any word, struck or not,
+        to write it into the row you are filling, then submit it as if you
+        had typed it: a word that cannot win is sometimes the guess that
+        tells you most.
     - heading: The words
       body: |-
         A guess may be any of about 100,000 English words, from Kevin
@@ -61,7 +64,7 @@ help:
   hints: |-
     **Next hint** suggests a word to guess in the ringed squares, reading
     only your scored guesses, and tells you how many common words still fit
-    every score, which are the words the dictionary lists, and the most that
+    every score, which are the words the dictionary's **Fits** shows, and the most that
     could be left after it.
 
     {{hint-marks}}

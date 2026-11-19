@@ -24,7 +24,7 @@ import { transposeDimensions } from "../../engine/params.ts";
 import { isMouseDown, newCursor } from "../../engine/pointer.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
-import { reference, selectReference } from "./dictionary.ts";
+import { dictionary } from "./dictionary.ts";
 import { newWordtrailDesc } from "./generator.ts";
 import {
   type WordtrailHighlights,
@@ -161,8 +161,7 @@ export const wordtrailGame: Game<
       mistakes.map((m) => m.edge),
     ),
   textFormat,
-  reference,
-  selectReference,
+  reference: dictionary,
 
   hint: wordtrailHint,
   judgeMove: wordtrailJudgeMove,

@@ -170,7 +170,7 @@ export class Puzzle {
       canSolve,
       canHint,
       canCheck,
-      hasReference,
+      referenceTitle,
       canMarkAll,
       ignoresSecondaryButton,
       wantsStatusbar,
@@ -187,7 +187,7 @@ export class Puzzle {
     this.canSolve = canSolve;
     this.canHint = canHint;
     this.canCheck = canCheck;
-    this.hasReference = hasReference;
+    this.referenceTitle = referenceTitle;
     this.canMarkAll = canMarkAll;
     this.ignoresSecondaryButton = ignoresSecondaryButton;
     this.wantsStatusbar = wantsStatusbar;
@@ -354,7 +354,7 @@ export class Puzzle {
   public readonly canSolve: boolean;
   public readonly canHint: boolean;
   public readonly canCheck: boolean;
-  public readonly hasReference: boolean;
+  public readonly referenceTitle: string | null;
   public readonly canMarkAll: boolean;
   public readonly ignoresSecondaryButton: boolean;
   public readonly wantsStatusbar: boolean;

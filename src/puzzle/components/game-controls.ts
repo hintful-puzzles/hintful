@@ -102,7 +102,7 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
     return (
       this.noteKey !== null ||
       this.puzzle?.canMarkAll === true ||
-      this.puzzle?.hasReference === true
+      this.puzzle?.referenceTitle != null
     );
   }
 
@@ -165,12 +165,16 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
                     : nothing
                 }
                 ${
-                  puzzle.hasReference
+                  puzzle.referenceTitle !== null
                     ? html`
                       <wa-button class="stacked" data-command="toggle-reference">
                         <span class="stack">
                           <wa-icon name="reference"></wa-icon>
-                          <span>${this.referenceOpen ? "Hide reference" : "Reference"}</span>
+                          <span>${
+                            this.referenceOpen
+                              ? `Hide ${puzzle.referenceTitle.toLowerCase()}`
+                              : puzzle.referenceTitle
+                          }</span>
                         </span>
                       </wa-button>`
                     : nothing

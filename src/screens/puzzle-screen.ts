@@ -91,7 +91,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   swapMouseButtons = false; // MouseButtonToggle current value
 
   /** Whether the (non-blocking) reference panel is docked open. Only meaningful
-   * for a game whose `hasReference` is true (the toggle button only shows then). */
+   * for a game whose `referenceTitle` is not null (the toggle button only shows then). */
   @state()
   private referenceOpen = false;
 
@@ -1396,7 +1396,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     if (event.key === "Escape") {
       const panel = this.shadowRoot?.querySelector("reference-panel");
       if (panel) panel.clearSelection();
-      else if (this.puzzle?.hasReference) void this.puzzle.selectReference(null);
+      else if (this.puzzle?.referenceTitle != null)
+        void this.puzzle.selectReference(null);
     }
     // If a key event arrives at the document when nothing else is focused,
     // focus the puzzle and redirect the event to it.

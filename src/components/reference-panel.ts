@@ -3,10 +3,11 @@
  * pieces, or its dictionary, with each item's status on the board, and a
  * click that spotlights an item.
  *
- * Generic over the game: it renders whatever `Game.reference()` returns
- * (`ReferenceModel`), its title and words included, and echoes clicks back
- * through `Puzzle.selectReference`. It is only ever mounted when
- * `puzzle.hasReference` is true.
+ * Generic over the game: it renders whatever the game's reference model is
+ * (`ReferenceModel`), under the aid's title, narrowed by the search box and
+ * filter buttons the model asks for (`reference-filter.ts`), and echoes clicks
+ * back through `Puzzle.selectReference`. It is only ever mounted when
+ * `puzzle.referenceTitle` is not null.
  *
  * Presentation is deliberately NOT a modal: it is a region of the puzzle
  * screen's grid (`puzzle/layout.ts`), so the board stays visible and
@@ -20,6 +21,7 @@ import { customElement, state } from "lit/decorators.js";
 import type { ReferenceItem, ReferenceModel } from "../engine/types.ts";
 import { puzzleContext } from "../puzzle/contexts.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
+import { narrowReference } from "./reference-filter.ts";
 
 import "@awesome.me/webawesome/dist/components/button/button.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
@@ -48,6 +50,13 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
   @state()
   private selectedKey: string | null = null;
 
+  /** The search text and the pressed filter (`0`, "All"): the panel's view of
+   * the list, never the game's, kept while open and reset for another game. */
+  @state()
+  private query = "";
+  @state()
+  private pressed = 0;
+
   /** Which (puzzle, move, hint step) the current `model` was fetched for, so
    * we refetch once per change of the board or of the hint's marked items
    * rather than on every render. */
@@ -59,6 +68,10 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
     if (!puzzle) return;
     const at = `${puzzle.currentMove}\n${puzzle.activeHintExplanation}`;
     if (this.fetchedPuzzle !== puzzle || this.fetchedFor !== at) {
+      if (this.fetchedPuzzle !== puzzle) {
+        this.query = "";
+        this.pressed = 0;
+      }
       this.fetchedPuzzle = puzzle;
       this.fetchedFor = at;
       void this.refresh(puzzle);
@@ -106,19 +119,58 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
     void this.puzzle?.activeHintExplanation;
 
     const model = this.model;
-    if (model === null) return nothing;
+    const title = this.puzzle?.referenceTitle;
+    if (model === null || !title) return nothing;
     const hinted = new Set(model.hinted);
+    const { sections, buttons } = narrowReference(model, this.query, this.pressed);
     return html`
-      <div class="panel" role="region" aria-label=${model.title}>
+      <div class="panel" role="region" aria-label=${title}>
         <header>
-          <span class="title">${model.title}</span>
+          <span class="title">${title}</span>
           <wa-button appearance="plain" size="small" @click=${this.handleClose}>
-            <wa-icon name="xmark" library="system" label="Close reference"></wa-icon>
+            <wa-icon name="xmark" library="system" label="Close ${title.toLowerCase()}"></wa-icon>
           </wa-button>
         </header>
         <p class="hint">${model.instructions}</p>
+        ${
+          model.search
+            ? html`<input
+                class="search"
+                type="search"
+                placeholder="Search"
+                aria-label="Search the ${title.toLowerCase()}"
+                autocomplete="off"
+                spellcheck="false"
+                .value=${this.query}
+                @input=${(e: Event) => {
+                  this.query = (e.target as HTMLInputElement).value;
+                }}
+                @keydown=${(e: KeyboardEvent) => {
+                  // Typed letters are the search's, never the board's keys.
+                  if (e.key !== "Escape") e.stopPropagation();
+                }}
+              />`
+            : nothing
+        }
+        ${
+          buttons.length === 0
+            ? nothing
+            : html`<div class="filters" role="group" aria-label="Show">
+                ${buttons.map(
+                  (b, i) => html`<button
+                    class="filter"
+                    aria-pressed=${i === this.pressed}
+                    @click=${() => {
+                      this.pressed = i;
+                    }}
+                  >
+                    ${b.label} <span class="count">${b.count}</span>
+                  </button>`,
+                )}
+              </div>`
+        }
         <div class="sections">
-          ${model.sections.map(
+          ${sections.map(
             (section) => html`
               ${section.heading === null ? nothing : html`<h3>${section.heading}</h3>`}
               <div class="grid">
@@ -192,6 +244,43 @@ export class ReferencePanel extends SignalWatcher(LitElement) {
     .hint {
       margin: 0 0 var(--wa-space-xs);
       font-size: var(--wa-font-size-smaller);
+      color: var(--wa-color-text-quiet);
+    }
+
+    .search {
+      box-sizing: border-box;
+      width: 100%;
+      margin: 0 0 var(--wa-space-xs);
+      padding: var(--wa-space-2xs) var(--wa-space-xs);
+      border: var(--wa-border-width-s) solid var(--wa-color-neutral-border-normal);
+      border-radius: var(--wa-border-radius-m);
+      background: var(--wa-color-surface-default);
+      color: var(--wa-color-text-normal);
+      font: inherit;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--wa-space-2xs);
+      margin: 0 0 var(--wa-space-xs);
+    }
+    .filter {
+      padding: var(--wa-space-3xs) var(--wa-space-xs);
+      border: var(--wa-border-width-s) solid var(--wa-color-neutral-border-normal);
+      border-radius: var(--wa-border-radius-pill);
+      background: var(--wa-color-surface-default);
+      color: var(--wa-color-text-normal);
+      cursor: pointer;
+      font: inherit;
+      font-size: var(--wa-font-size-smaller);
+    }
+    .filter[aria-pressed="true"] {
+      border-color: var(--wa-color-brand-border-loud);
+      background: var(--wa-color-brand-fill-quiet);
+      color: var(--wa-color-brand-on-quiet);
+    }
+    .filter .count {
+      font-variant-numeric: tabular-nums;
       color: var(--wa-color-text-quiet);
     }
 

@@ -320,7 +320,7 @@ describe("dominosa reference aid", () => {
     const state = newState(p, desc);
     const ui = dominosaGame.newUi(state);
 
-    const empty = dominosaGame.reference?.(state, ui);
+    const empty = dominosaGame.reference?.model(state, ui);
     expect(empty).toBeDefined();
     expect(itemsOf(empty)?.length).toBe(DCOUNT(p.n));
     expect(itemsOf(empty)?.every((i) => i.status === "outstanding")).toBe(true);
@@ -331,7 +331,7 @@ describe("dominosa reference aid", () => {
     const [cA, cB] = pairs[0];
     const key = dominoKey(state.numbers[cA], state.numbers[cB]);
     const placed = dominosaGame.executeMove(state, { type: "domino", d1: cA, d2: cB });
-    const afterPlace = dominosaGame.reference?.(placed, ui);
+    const afterPlace = dominosaGame.reference?.model(placed, ui);
     const placedItem = itemsOf(afterPlace)?.find((i) => i.key === key);
     expect(placedItem?.status).toBe("placed");
     expect(itemsOf(afterPlace)?.filter((i) => i.status === "placed").length).toBe(1);
@@ -347,7 +347,7 @@ describe("dominosa reference aid", () => {
       });
       s = dominosaGame.executeMove(s, { type: "domino", d1: two[1][0], d2: two[1][1] });
       const conflictKey = dominoKey(state.numbers[two[0][0]], state.numbers[two[0][1]]);
-      const model = dominosaGame.reference?.(s, ui);
+      const model = dominosaGame.reference?.model(s, ui);
       expect(itemsOf(model)?.find((i) => i.key === conflictKey)?.status).toBe(
         "conflict",
       );
@@ -359,7 +359,7 @@ describe("dominosa reference aid", () => {
     const { desc } = newDominosaDesc(p, randomNew("ref-dismiss"));
     const state = newState(p, desc);
     const ui = dominosaGame.newUi(state);
-    dominosaGame.selectReference?.(ui, "1-3");
+    dominosaGame.reference?.select(ui, "1-3");
     expect(ui.highlightPair).not.toBeNull();
 
     // Tap between squares 0 and 1 (ds=null ⇒ PREFERRED_TILE_SIZE): places that
@@ -385,7 +385,7 @@ describe("dominosa reference aid", () => {
     const solved = dominosaGame.executeMove(state, r.move);
     expect(dominosaGame.status(solved)).toBe("solved");
 
-    dominosaGame.selectReference?.(ui, "1-3");
+    dominosaGame.reference?.select(ui, "1-3");
     dominosaGame.changedState?.(ui, null, state);
     expect(ui.highlightPair).not.toBeNull();
     dominosaGame.changedState?.(ui, state, solved);
@@ -398,15 +398,15 @@ describe("dominosa reference aid", () => {
     const state = newState(p, desc);
     const ui = dominosaGame.newUi(state);
 
-    expect(dominosaGame.selectReference?.(ui, "2-5")).toBe(true);
+    expect(dominosaGame.reference?.select(ui, "2-5")).toBe(true);
     expect(ui.highlightPair).toBe(DINDEX(2, 5));
     // Re-selecting the same pair is a no-op (returns false, no repaint).
-    expect(dominosaGame.selectReference?.(ui, "2-5")).toBe(false);
-    expect(dominosaGame.reference?.(state, ui).selected).toBe("2-5");
+    expect(dominosaGame.reference?.select(ui, "2-5")).toBe(false);
+    expect(dominosaGame.reference?.model(state, ui).selected).toBe("2-5");
     // Clearing.
-    expect(dominosaGame.selectReference?.(ui, null)).toBe(true);
+    expect(dominosaGame.reference?.select(ui, null)).toBe(true);
     expect(ui.highlightPair).toBeNull();
-    expect(dominosaGame.reference?.(state, ui).selected).toBeNull();
+    expect(dominosaGame.reference?.model(state, ui).selected).toBeNull();
   });
 
   it("boxes a selected pair's candidate cells in COL_REFERENCE (and nowhere without one)", () => {

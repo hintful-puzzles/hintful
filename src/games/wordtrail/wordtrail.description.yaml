@@ -49,11 +49,12 @@ help:
     the way its arrows point, spell a word of a listed length, and the list
     shows it in the same color.
 
-    The reference panel is a dictionary: for each length the list asks for,
+    **Dictionary** opens a list, for each length the list asks for, of
     every word some trail of the letters spells. A word you have drawn is
     ticked, and one your lines and crosses leave no trail for is struck
-    through. Pick a word to outline the letters of each trail that still
-    spells it; a press on the board clears the outline.
+    through. Search it, or press **Fits** for the words still to place or
+    **Found** for those you have drawn. Pick a word to outline the letters of
+    each trail that still spells it; a press on the board clears the outline.
   hints: |-
     **Hint** explains the next step rather than simply making it. It reasons
     only from the lines and crosses you have drawn, so it carries on from

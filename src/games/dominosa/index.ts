@@ -521,8 +521,9 @@ function reference(state: DominosaState, ui: DominosaUi): ReferenceModel {
   const selected =
     ui.highlightPair === null ? null : pairKey(...indexToPair(ui.highlightPair));
   return {
-    title: "Dominoes",
     instructions: "Tap a domino to highlight where it can go.",
+    search: false,
+    filters: [],
     sections: [{ heading: null, items }],
     selected,
     hinted: [],
@@ -600,8 +601,7 @@ export const dominosaGame: Game<
   findMistakes,
   clearMistakes,
   revealOne,
-  reference,
-  selectReference,
+  reference: { title: "Dominoes", model: reference, select: selectReference },
   hint: dominosaHint,
   judgeMove: dominosaJudgeMove,
   hintMarks: {

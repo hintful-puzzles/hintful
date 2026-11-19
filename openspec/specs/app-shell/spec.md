@@ -964,11 +964,11 @@ shown by the slot being filled and reported as a pressed button.
 
 Everything that depends on the game in play SHALL be in the Game controls
 panel and nowhere else, in this order in every game: its keys, the note
-toggle, and its own commands (Fill or Update marks, Reference). Each SHALL be
-present by what the game is, so that no game is listed: the keys and the note
-toggle by the keys the game asks for, mark-all by a `markAll` hook, Reference
-by a `reference` hook. A player does not know to look in a menu for something
-only one game has.
+toggle, and its own commands (Fill or Update marks, the reference). Each SHALL
+be present by what the game is, so that no game is listed: the keys and the
+note toggle by the keys the game asks for, mark-all by a `markAll` hook, the
+reference by a reference aid. A player does not know to look in a menu for
+something only one game has.
 
 #### Scenario: A game with mark-all
 
@@ -979,7 +979,7 @@ only one game has.
 #### Scenario: A game with a reference
 
 - **WHEN** the screen renders for Dominosa
-- **THEN** the Reference toggle is in the Game controls panel and not in the
+- **THEN** the Dominoes toggle is in the Game controls panel and not in the
   Menu
 
 ### Requirement: The Menu holds nothing that depends on the game
@@ -1214,17 +1214,19 @@ the press has been acknowledged.
 
 ### Requirement: The app shell shows a non-blocking, responsive reference panel
 
-The app shell SHALL render a reference control only when `hasReference` is
-true, where "Everything that depends on the game is in the Game controls"
-puts it. Activating it SHALL toggle a `<reference-panel>` open and closed like
+The app shell SHALL render a reference control only when `referenceTitle` is
+not null, where "Everything that depends on the game is in the Game controls"
+puts it, labeled with that title, and "Hide" and the title while the panel
+is open. Activating it SHALL toggle a `<reference-panel>` open and closed like
 a disclosure, not a one-shot modal. The panel SHALL be non-blocking and SHALL
 keep the board visible and interactive while open, in both of its layouts.
 
 #### Scenario: The control appears only for a reference-bearing game
 
-- **WHEN** the active game reports `hasReference` true
-- **THEN** a reference toggle is shown in the Game controls panel; for a game
-  reporting false, no such control is shown
+- **WHEN** the active game reports `referenceTitle` "Dictionary"
+- **THEN** a toggle labeled "Dictionary" is shown in the Game controls panel,
+  reading "Hide dictionary" while the panel is open; for a game reporting
+  null, no such control is shown
 
 #### Scenario: The panel keeps the board interactive and updates live
 
@@ -1235,12 +1237,13 @@ keep the board visible and interactive while open, in both of its layouts.
 
 ### Requirement: The reference panel renders each item and selects on a click
 
-The panel SHALL show the model's title and instructions, and its sections
-in order under their headings. It SHALL render each item with status-distinct
-styling, drawing `pips` as piece faces when present and `label` otherwise,
-mark the hint's items in the hint's color, and follow the board live. A click
-SHALL toggle the item's selection and call `selectReference` with its key, or
-`null` when deselecting, its feedback not waiting on the model's refresh.
+The panel SHALL show the aid's title, the model's instructions, and its
+sections in order under their headings. It SHALL render each item with
+status-distinct styling, drawing `pips` as piece faces when present and
+`label` otherwise, mark the hint's items in the hint's color, and follow the
+board live. A click SHALL toggle the item's selection and call
+`selectReference` with its key, or `null` when deselecting, its feedback not
+waiting on the model's refresh.
 
 #### Scenario: Clicking an item spotlights it on the still-visible board
 
@@ -1563,3 +1566,19 @@ written from the declared bound; a refusal SHALL still name the field alone.
 - **WHEN** a player opens Ball Sort's Custom dialog
 - **THEN** the colors field reads "Colors (up to 10)"
 - **AND** asking for 11 is refused with "Colors must be at most 10."
+
+### Requirement: The reference panel searches and filters as its model asks
+
+Where the model asks, the panel SHALL show a search box, which keeps the
+items whose label contains its text, case ignored. Where the model declares
+filters, the panel SHALL show "All" and each filter as buttons, one pressed,
+each with the count of items it shows, and keep the items the pressed one
+shows. A section left empty SHALL be hidden. The search and the pressed
+filter SHALL be kept while the panel is open and reset for another game.
+
+#### Scenario: Narrowing a dictionary
+
+- **WHEN** a Wordguess player with one row scored presses "Fits" and types
+  "ci" in the search box
+- **THEN** the panel lists only the words that fit every score and contain
+  "ci", under their letters' headings

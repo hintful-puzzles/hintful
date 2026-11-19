@@ -13,7 +13,7 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { isAnswer } from "../../engine/word-list/index.ts";
+import { answerWords, isAnswer } from "../../engine/word-list/index.ts";
 import { wordguessGame } from "./index.ts";
 import { centerOf, tileRect } from "./render.ts";
 import {
@@ -283,31 +283,47 @@ describe("input", () => {
 });
 
 describe("the dictionary", () => {
-  const words = (s: WordguessState) =>
-    (wordguessGame.reference?.(s, wordguessGame.newUi(s))?.sections ?? []).flatMap(
-      (x) => x.items.map((i) => i.key),
-    );
+  const model = (s: WordguessState) => {
+    const m = wordguessGame.reference?.model(s, wordguessGame.newUi(s));
+    if (!m) throw new Error("wordguess has no dictionary");
+    return m;
+  };
+  const items = (s: WordguessState) => model(s).sections.flatMap((x) => x.items);
 
-  it("lists the common words that fit every score, and counts them", () => {
+  it("lists every answer word A to Z, striking those that no longer fit", () => {
     const s = play(board("cigar"), "crane");
-    const listed = words(s);
-    expect(listed).toContain("cigar");
-    expect(listed).not.toContain("crane");
-    for (const w of listed)
-      expect(score(valuesOf("crane"), valuesOf(w))).toEqual(s.rows[0].marks);
-    const heading = wordguessGame.reference?.(s, wordguessGame.newUi(s))?.sections[0]
-      .heading;
-    expect(heading).toBe(`${listed.length} common words fit every score`);
+    const m = model(s);
+    expect(wordguessGame.reference?.title).toBe("Dictionary");
+    expect(m.search).toBe(true);
+    expect(m.filters).toEqual([{ label: "Fits", statuses: ["outstanding"] }]);
+    expect(items(s).map((i) => i.key)).toEqual([...answerWords(5)].sort());
+    expect(m.sections.map((x) => x.heading)).toEqual(
+      m.sections.map((x) => x.items[0].key[0].toUpperCase()),
+    );
+    const fits = (w: string) =>
+      score(valuesOf("crane"), valuesOf(w)).join() === s.rows[0].marks.join();
+    for (const i of items(s))
+      expect(i.status, i.key).toBe(fits(i.key) ? "outstanding" : "ruledOut");
+    expect(items(s).find((i) => i.key === "cigar")?.status).toBe("outstanding");
+    expect(items(s).find((i) => i.key === "crane")?.status).toBe("ruledOut");
+  });
+
+  it("writes a struck word into the row as readily as one that fits", () => {
+    const s = play(board("cigar"), "crane");
+    const ui = wordguessGame.newUi(s);
+    expect(wordguessGame.reference?.select(ui, "moist")).toBe(true);
+    expect(wordOf(ui.entries)).toBe("moist");
+    expect(ui.ready).toBe(true);
   });
 
   it("writes a tapped word into the working row, ready to go, and makes no move", () => {
     const s = play(board("cigar"), "crane");
     const ui = wordguessGame.newUi(s);
-    expect(wordguessGame.selectReference?.(ui, "cigar")).toBe(true);
+    expect(wordguessGame.reference?.select(ui, "cigar")).toBe(true);
     expect(wordOf(ui.entries)).toBe("cigar");
     expect(ui.ready).toBe(true);
     // The word already in the row: nothing to change.
-    expect(wordguessGame.selectReference?.(ui, "cigar")).toBe(false);
+    expect(wordguessGame.reference?.select(ui, "cigar")).toBe(false);
     expect(press(s, ui, SUBMIT).result).toEqual({
       type: "guess",
       letters: valuesOf("cigar"),

@@ -58,33 +58,37 @@ function recordingDrawing() {
   return { dr, ops: dr.ops };
 }
 
-/** A fake game that exposes the reference-aid hooks over a tiny mutable Ui,
- * for the midend's `hasReference`/`getReference`/`selectReference` paths. The
+/** A fake game that exposes a reference aid over a tiny mutable Ui, for the
+ * midend's `referenceTitle`/`getReference`/`selectReference` paths. The
  * fake's other members ignore `ui`, so the widened Ui type is a test-only cast. */
 function refGame(): typeof fakeGame {
   type RefUi = { pick: string | null };
   const g = {
     ...fakeGame,
     newUi: (): RefUi => ({ pick: null }),
-    reference: (_s: unknown, ui: RefUi) => ({
+    reference: {
       title: "Things",
-      instructions: "Tap a thing.",
-      sections: [
-        {
-          heading: null,
-          items: [
-            { key: "a", label: "a", status: "outstanding" as const },
-            { key: "b", label: "b", status: "placed" as const },
-          ],
-        },
-      ],
-      selected: ui.pick,
-      hinted: [],
-    }),
-    selectReference: (ui: RefUi, key: string | null) => {
-      if (ui.pick === key) return false;
-      ui.pick = key;
-      return true;
+      model: (_s: unknown, ui: RefUi) => ({
+        instructions: "Tap a thing.",
+        search: false,
+        filters: [],
+        sections: [
+          {
+            heading: null,
+            items: [
+              { key: "a", label: "a", status: "outstanding" as const },
+              { key: "b", label: "b", status: "placed" as const },
+            ],
+          },
+        ],
+        selected: ui.pick,
+        hinted: [],
+      }),
+      select: (ui: RefUi, key: string | null) => {
+        if (ui.pick === key) return false;
+        ui.pick = key;
+        return true;
+      },
     },
   };
   return g as unknown as typeof fakeGame;
@@ -363,7 +367,13 @@ describe("Midend completion: the status is the position's, the history is the en
   it("plays on through a hover and a change of reference", () => {
     const { h, frame, win } = watching({
       hover: () => UI_UPDATE,
-      selectReference: () => true,
+      reference: {
+        title: "Things",
+        model: () => {
+          throw new Error("not fetched");
+        },
+        select: () => true,
+      },
     });
     win();
     expect(h.m.processHover({ x: 0, y: 0 })).toBe(true);
@@ -1951,11 +1961,11 @@ describe("Midend hint plan lifecycle", () => {
     });
   });
 
-  it("hasReference reflects the reference hook; getReference returns its model", () => {
-    expect(new Midend(fakeGame).getStaticProperties().hasReference).toBe(false);
+  it("referenceTitle names the reference aid; getReference returns its model", () => {
+    expect(new Midend(fakeGame).getStaticProperties().referenceTitle).toBeNull();
     const m = new Midend(refGame());
     m.newGameFromId("t3:g3-0");
-    expect(m.getStaticProperties().hasReference).toBe(true);
+    expect(m.getStaticProperties().referenceTitle).toBe("Things");
     const model = m.getReference();
     expect(model?.sections[0].items.map((i) => i.key)).toEqual(["a", "b"]);
     expect(model?.selected).toBeNull();

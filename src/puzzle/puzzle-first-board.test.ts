@@ -10,7 +10,7 @@ const ATTRS: PuzzleStaticAttributes = {
   canSolve: true,
   canHint: true,
   canCheck: true,
-  hasReference: true,
+  referenceTitle: "Dominoes",
   canMarkAll: true,
   ignoresSecondaryButton: false,
   wantsStatusbar: true,

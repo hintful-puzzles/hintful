@@ -59,6 +59,22 @@ export type SolveResult<Move> =
  * applies to (i.e. the state after every earlier step of the plan).
  * The current step is what the renderer displays and the status bar
  * narrates. */
+/** A game's reference aid ({@link Game.reference}). One object, so a game
+ * cannot have a model without a name or a selection. */
+export interface ReferenceAid<State, Ui> {
+  /** What the aid is in this game ("Dominoes", "Dictionary"): the toggle's
+   * label and the panel's title. Static, since the toggle shows it before the
+   * model is fetched, and a fetched model counts as help. */
+  readonly title: string;
+  /** The checklist, derived from the board as the player has it, never from
+   * the solution. Pure. `ui` lets it echo the spotlighted item (`selected`). */
+  model(state: State, ui: Ui): ReferenceModel;
+  /** Spotlight an item on the board, or clear it for null, by mutating `Ui`
+   * in place: a `UI_UPDATE`-shaped change the midend repaints but never
+   * records as a move. Returns whether anything changed. */
+  select(ui: Ui, key: string | null): boolean;
+}
+
 /** What a check says of a move ({@link Game.judgeMove}): whether a deduction
  * reached it, and the words that name it. It marks nothing on the board. */
 export interface MoveVerdict {
@@ -783,19 +799,10 @@ export interface Game<
    * without it shows the answer whole there instead. Pure. */
   revealOne?(state: State, solved: State): Move | null;
 
-  /** Build the game's **reference aid**: a checklist of the puzzle's
-   * fixed inventory of pieces with the player's found status, derived
-   * purely from the current state (never the solution). Pure. Presence
-   * of this hook makes the app show a reference toggle button; absent ⇒
-   * no reference aid. `ui` is passed so the model can echo the currently
-   * spotlighted piece (`selected`). */
-  reference?(state: State, ui: Ui): ReferenceModel;
-  /** Spotlight a reference item on the board (or clear it when `key` is
-   * null) by mutating `Ui` in place — a `UI_UPDATE`-shaped change the
-   * midend repaints but never records as a move. Returns whether
-   * anything changed (false ⇒ the midend skips the repaint). Present iff
-   * `reference` is. */
-  selectReference?(ui: Ui, key: string | null): boolean;
+  /** The game's **reference aid**: a checklist of its fixed inventory of
+   * pieces, or its dictionary, with the player's found status. Presence makes
+   * the app show a toggle, labeled with its `title`. */
+  reference?: ReferenceAid<State, Ui>;
 
   /** Render the state as plain text for the share dialog. Returns `null`
    * when *these particular* params have no text rendering, which having the

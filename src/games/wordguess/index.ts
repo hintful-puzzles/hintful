@@ -26,6 +26,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, KeyStatus, Point, ReferenceModel } from "../../engine/types.ts";
+import { answerWords } from "../../engine/word-list/index.ts";
 import {
   dictionaryWords,
   WORDGUESS_RUNGS,
@@ -229,24 +230,35 @@ function executeMove(s: WordguessState, m: WordguessMove): WordguessState {
 
 // --- the dictionary ---------------------------------------------------------
 
-/** The words the hint counts, which a tap writes into the working row. */
+/**
+ * Every word the game can draw at this length, A to Z, those that no longer
+ * fit every score ruled out: a guess that cannot win may still split the
+ * rest best, so the whole list is the player's to choose from. Where no
+ * answer fits, the other words that do are listed too, so "Fits" holds the
+ * words the hint counts.
+ */
 function reference(s: WordguessState, _ui: WordguessUi): ReferenceModel {
-  const { words, common } = dictionaryWords(s);
-  const n = words.length;
-  const count = `${n} ${common ? "common " : ""}${n === 1 ? "word fits" : "words fit"} every score`;
+  const fitting = new Set(dictionaryWords(s).words);
+  const words = [...new Set([...answerWords(s.params.len), ...fitting])].sort();
+  const byLetter = new Map<string, string[]>();
+  for (const word of words) {
+    const letter = word[0].toUpperCase();
+    const group = byLetter.get(letter);
+    if (group) group.push(word);
+    else byLetter.set(letter, [word]);
+  }
   return {
-    title: "Dictionary",
     instructions: "Tap a word to write it into the row you are filling.",
-    sections: [
-      {
-        heading: common ? count : `No common word fits: ${count}`,
-        items: words.map((word) => ({
-          key: word,
-          label: word.toUpperCase(),
-          status: "outstanding",
-        })),
-      },
-    ],
+    search: true,
+    filters: [{ label: "Fits", statuses: ["outstanding"] }],
+    sections: [...byLetter].map(([letter, group]) => ({
+      heading: letter,
+      items: group.map((word) => ({
+        key: word,
+        label: word.toUpperCase(),
+        status: fitting.has(word) ? "outstanding" : "ruledOut",
+      })),
+    })),
     // A word written in is the row's, edited from there as typed letters
     // are, so nothing stays selected in the list.
     selected: null,
@@ -341,8 +353,7 @@ export const wordguessGame: Game<
   requestKeys,
   keyStatus,
   statusbarText,
-  reference,
-  selectReference,
+  reference: { title: "Dictionary", model: reference, select: selectReference },
 
   solve(_orig, curr) {
     return { ok: true, move: { type: "guess", letters: curr.answer.slice() } };

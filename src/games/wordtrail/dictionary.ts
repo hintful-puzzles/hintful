@@ -6,13 +6,14 @@
  * hint names is one the dictionary shows as fitting.
  */
 
+import type { ReferenceAid } from "../../engine/game.ts";
 import type { ReferenceItem, ReferenceModel } from "../../engine/types.ts";
 import { wordsDrawn } from "./render.ts";
 import { fittingTrails } from "./solver.ts";
 import type { WordtrailState, WordtrailUi } from "./state.ts";
 import { spell } from "./trails.ts";
 
-export function reference(state: WordtrailState, ui: WordtrailUi): ReferenceModel {
+function model(state: WordtrailState, ui: WordtrailUi): ReferenceModel {
   const fitting = fittingTrails(state);
   const drawn = wordsDrawn(state);
   const fits = new Set<string>();
@@ -23,8 +24,12 @@ export function reference(state: WordtrailState, ui: WordtrailUi): ReferenceMode
     if (fitting.has(k)) fits.add(word);
   });
   return {
-    title: "Dictionary",
     instructions: "The words the letters can spell. Tap one to see where it can go.",
+    search: true,
+    filters: [
+      { label: "Fits", statuses: ["outstanding"] },
+      { label: "Found", statuses: ["placed"] },
+    ],
     sections: [...new Set(state.lengths)].map((n) => {
       const count = state.lengths.filter((m) => m === n).length;
       const items: ReferenceItem[] = [...all]
@@ -49,8 +54,14 @@ export function reference(state: WordtrailState, ui: WordtrailUi): ReferenceMode
   };
 }
 
-export function selectReference(ui: WordtrailUi, key: string | null): boolean {
+function select(ui: WordtrailUi, key: string | null): boolean {
   if (ui.spotlight === key) return false;
   ui.spotlight = key;
   return true;
 }
+
+export const dictionary: ReferenceAid<WordtrailState, WordtrailUi> = {
+  title: "Dictionary",
+  model,
+  select,
+};

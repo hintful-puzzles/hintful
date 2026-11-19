@@ -11,7 +11,7 @@ import { edgeBetween, squareEdges } from "../../engine/square-edges.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { ReferenceItem } from "../../engine/types.ts";
-import { reference } from "./dictionary.ts";
+import { dictionary } from "./dictionary.ts";
 import { wordtrailGame } from "./index.ts";
 import { COL_SPOTLIGHT, layout } from "./render.ts";
 import {
@@ -31,14 +31,21 @@ function deal(seed: string): { state: WordtrailState; id: string } {
   return { state: newState(P, desc), id: `${encodeParams(P, true)}:${desc}` };
 }
 
+const reference = (state: WordtrailState) =>
+  dictionary.model(state, wordtrailGame.newUi(state));
 const items = (state: WordtrailState): ReferenceItem[] =>
-  reference(state, wordtrailGame.newUi(state)).sections.flatMap((s) => s.items);
+  reference(state).sections.flatMap((s) => s.items);
 
 describe("wordtrail dictionary", () => {
   it("lists every word a trail spells, once, under its length", () => {
     const { state } = deal("dictionary list");
-    const model = reference(state, wordtrailGame.newUi(state));
-    expect(model.title).toBe("Dictionary");
+    const model = reference(state);
+    expect(dictionary.title).toBe("Dictionary");
+    expect(model.search).toBe(true);
+    expect(model.filters.map((f) => [f.label, f.statuses])).toEqual([
+      ["Fits", ["outstanding"]],
+      ["Found", ["placed"]],
+    ]);
     const words = new Set(state.trails.map((t) => spell(state.letters, t)));
     expect(
       items(state)

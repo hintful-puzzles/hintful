@@ -394,10 +394,9 @@ export interface PuzzleStaticAttributes {
   /** The game supports "fill all pencil marks" (upstream's `M` key). Gates
    * the toolbar mark-all button. */
   canMarkAll: boolean;
-  /** The game offers a reference aid (the `reference` hook) — a checklist
-   * of its fixed inventory with found status. Gates the toolbar reference
-   * button. */
-  hasReference: boolean;
+  /** The title of the game's reference aid (`Game.reference`), which labels
+   * its toggle, or null when it has none. */
+  referenceTitle: string | null;
   /** The game has no action of its own for the secondary button, so the view
    * does not detect one from a long press or a two-finger tap, and the bar
    * offers no toggle — see `Game.ignoresSecondaryButton`. */
@@ -427,13 +426,22 @@ export interface ReferenceSection {
   items: ReferenceItem[];
 }
 
-/** A game's reference-aid model: the panel's title and its line of
- * instructions, the items in sections, the spotlighted key, and the keys the
- * displayed hint step reads (`HintStep.reference`), which the midend fills
- * in: a game returns `hinted: []`. */
+/** A filter the reference panel offers beside "All": the items whose status
+ * is one of `statuses`. */
+export interface ReferenceFilter {
+  label: string;
+  statuses: readonly ReferenceItem["status"][];
+}
+
+/** A game's reference-aid model: the panel's line of instructions, whether it
+ * offers a search box and which filters, the items in sections, the
+ * spotlighted key, and the keys the displayed hint step reads
+ * (`HintStep.reference`), which the midend fills in: a game returns
+ * `hinted: []`. The panel's title is the aid's own (`ReferenceAid.title`). */
 export interface ReferenceModel {
-  title: string;
   instructions: string;
+  search: boolean;
+  filters: readonly ReferenceFilter[];
   sections: ReferenceSection[];
   selected: string | null;
   hinted: readonly string[];
