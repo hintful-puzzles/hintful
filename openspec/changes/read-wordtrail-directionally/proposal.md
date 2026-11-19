@@ -34,6 +34,10 @@ both ways) goes once direction is the board's.
 - **Trails are directed.** A trail that spells a word both ways is two
   trails, one each way. The ladder decides a line only with its direction:
   every trail through a letter must agree on both.
+- **The engine draws the arrows** (the owner, 2026-11-19): one primitive for
+  a directed line and a path's start, which Wordtrail uses and Ascent moves
+  onto (its direction was unclear), with any other game that draws the
+  same thing.
 - **The engine's line drawing takes a `directed` rule**, which a game sets
   (Wordtrail) or leaves off (Path, Pearl, the edges skeleton): a framework
   capability, not Wordtrail's own input.

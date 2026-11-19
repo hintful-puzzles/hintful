@@ -14,6 +14,11 @@ A game drawing lines with the engine's drag MAY declare its lines directed. Each
 - **WHEN** a directed game's drag starts on the first square of a run and leaves it by an edge the run does not take
 - **THEN** the drag stops before the next square, as a drag stops where a square would take too many lines
 
+#### Scenario: A directed line is drawn with the engine's arrow
+
+- **WHEN** a directed game draws a line, or a game shows which way a path runs between two squares
+- **THEN** it is drawn with the engine's arrow, pointing the way it reads, and a path's first square with the engine's start mark
+
 #### Scenario: An undirected game is unchanged
 
 - **WHEN** Pearl's or Path's lines are drawn

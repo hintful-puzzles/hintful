@@ -57,14 +57,31 @@ read directionally, and no answer word reversed is a guess, so the answer's
 directions are forced. Re-run the deal walk's census: how many boards a
 preset costs at both tiers, against today's (`add-wordtrail` § 1.2).
 
-## The look
+## The look: the engine's arrows
 
-Our own marks, not Wend's: a small ring or dot on a word's first letter,
-and a chevron on each line pointing the way it reads, both in the line's ink
-and drawn for unfinished fragments too. The list writes each word as read.
-Check light and dark, touch, keyboard, and a phone.
+The owner asked (2026-11-19) for **proper arrows, drawn by the engine**, the
+same in every game that shows which way a path runs, and named Ascent's as
+unclear. Today each game draws its own: Ascent's polygons in
+`games/ascent/render.ts` (`drawArrow`, and however its path shows
+direction), Signpost's in its own render, and others that draw arrows
+(`grep -liE "arrowhead|drawArrow|chevron" src/games src/engine`). So:
 
-## Not doing
+- **Survey first**, with a subagent if it spans many games: every game that
+  shows a direction along a path or a link (not a clue's fixed arrow, like
+  Unequal's signs, unless it reads the same), how each draws it, and a
+  screenshot of each in the app. Say in this file which share one shape.
+- **One engine primitive** for a directed line between two squares: the
+  line with an arrowhead (or chevron) at a fixed point along it, sized by
+  the tile, legible at a phone's tile size, in light and dark, and a start
+  mark for a path's first square. Its own module under `src/engine/`, with
+  a render-scenario test.
+- **Wordtrail uses it** for every line, fragments included. The list writes
+  each word as read.
+- **Ascent moves onto it** where its direction is drawn, and is checked in
+  the app against today's, side by side: the owner found it unclear, so the
+  result must read better, not only the same. Other games the survey finds
+  drawing the same thing move too, or are recorded here with the reason
+  they keep their own.
 
-Wend's colored word bands are its look, and the board's region fill for a
-finished word already says the word is done.
+Not Wend's look: no colored word bands; the board's fill for a finished word
+already says it is done.
