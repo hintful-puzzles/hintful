@@ -187,6 +187,15 @@ describe("the gate's per-commit scopings stay safe", () => {
     ).toEqual([]);
   });
 
+  it("runs the research tools' guards in CI, since a commit may skip them", () => {
+    // `research/` is on the skip list, and its tools import `src/`: a change
+    // there that breaks one is caught by CI's step for their guards or by
+    // nothing. The step's script names the config whose glob finds them.
+    expect(gateWorkflow, "CI no longer runs the research guards").toMatch(
+      /^\s*run: npm run test:research-guards\s*$/m,
+    );
+  });
+
   it("keeps GATE_PRECOMMIT a hook-only toggle, so CI is still the backstop", () => {
     // The second scoping in this gate that narrows a local run rather than
     // the branch: the toggle lets a hook skip other games' cases

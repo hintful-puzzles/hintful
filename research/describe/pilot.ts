@@ -12,6 +12,7 @@ import {
 } from "../../src/describe/description.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { RetryLimitExceeded } from "../../src/engine/retry-limit.ts";
+import { say } from "../progress.ts";
 import type { Binding } from "./bindings.ts";
 import { describedLibrary, type Instance, instantiate } from "./description.ts";
 
@@ -76,8 +77,10 @@ export function onlyGames(): string[] | null {
   return process.env["PILOT_GAMES"]?.split(",") ?? null;
 }
 
-/** A line of progress, to a log a long run can be watched by. */
+/** A line of progress, on screen and to `PILOT_LOG` when it names a file. */
 export function progress(text: string): void {
+  const line = `${new Date().toISOString().slice(11, 19)} ${text}`;
+  say(line);
   const log = process.env["PILOT_LOG"];
-  if (log) appendFileSync(log, `${new Date().toISOString().slice(11, 19)} ${text}\n`);
+  if (log) appendFileSync(log, `${line}\n`);
 }

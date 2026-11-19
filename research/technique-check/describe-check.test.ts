@@ -30,6 +30,7 @@ import {
   libraryFingerprint,
   soundnessKey,
 } from "../../src/describe/soundness.ts";
+import { say as print } from "../progress.ts";
 import {
   checkTechnique,
   hasAnswer,
@@ -70,7 +71,7 @@ const SHARD = ((s) => {
 const lines: string[] = [];
 /** A result line, and to `CHECK_LOG` as it comes, for a long run's watching. */
 const say = (s: string): void => {
-  console.log(s);
+  print(s);
   lines.push(s);
   const log = process.env["CHECK_LOG"];
   if (log) appendFileSync(log, `${s}\n`);

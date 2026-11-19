@@ -464,9 +464,13 @@ fi
 # **The allowlist is provable, and it is proved.** These paths are read by no
 # test and are not build inputs — `openspec/` is already covered by the
 # `validate --all --strict` above, and `docs/` and `AGENTS.md` are read by
-# nothing at all. `research/` holds development tools run by hand, in Python,
-# which no test, build or gate step loads. `src/gate-scope.test.ts` asserts that, by scanning for any
-# glob, file read or import naming them, so the day a test starts reading
+# nothing at all. `research/` holds development tools in TypeScript, run by
+# hand: the prefix's typecheck compiles them (`tsconfig.node.json`), which a
+# documentation-only commit still runs, and their quick guards run in CI's
+# workflow beside the gate, since they import `src/`, which a change can break
+# them through. No test or build of the gate's loads them.
+# `src/gate-scope.test.ts` asserts that, by scanning for any glob, file read or
+# import naming them, so the day a test starts reading
 # `docs/` this path stops being safe *and says so*. It takes the list from the
 # pattern in `doc_only` above, so there is no second copy to fall behind. `help/` is
 # deliberately absent: it is both a `vite build` input and

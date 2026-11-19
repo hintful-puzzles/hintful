@@ -19,7 +19,12 @@ planning game's rules are the engine's
 [`engine/position-runtime.ts`](../src/engine/position-runtime.ts), the
 engine's because the engine and games import nothing above them. The
 development tools that also read a description's rules, the interpreter and
-the soundness checkers, are under [`research/`](../research/).
+the soundness checkers, are under [`research/`](../research/): the gate
+compiles them, and CI runs their quick guards, each file named
+`*.guard.test.ts` (`npm run test:research-guards`), so a change to
+`src/describe/` that breaks a tool fails there. A long run prints a line of
+progress as it goes through `research/progress.ts`, since vitest shows no
+`console` output from a file until it ends.
 
 ## What every game does
 
@@ -1853,7 +1858,7 @@ the check. What a small board cannot cover:
   guard of the mirrors that bring it there, by the engine's `sightEntry`,
   `sightAhead` and `sightTurn`. Walking every mirror layout whole, as
   `beam` is, made 298,240 ways at order 4 and ran z3 out of memory.
-  `sightline.test.ts` holds the two readings equal on every layout of two
+  `sightline.guard.test.ts` holds the two readings equal on every layout of two
   small boards.
 - **`linked(k)` and `through(c, E)` are read as reach**, as `connected` is:
   over the points, each step along a diagonal its square holds, and over

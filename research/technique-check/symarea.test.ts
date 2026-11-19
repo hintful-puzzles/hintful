@@ -14,7 +14,8 @@
  * an edge is its two cells' indices, lower first.
  */
 import { it } from "vitest";
-import { fixed, pad, type ResultRow, say, show, tup, writeResults } from "./pzl.ts";
+import { say } from "../progress.ts";
+import { fixed, pad, type ResultRow, show, tup, writeResults } from "./pzl.ts";
 
 const results = new Map<string, ResultRow[]>();
 

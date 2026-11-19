@@ -15,6 +15,7 @@ import { mosaicGame } from "../../src/games/mosaic/index.ts";
 import { seismicGame } from "../../src/games/seismic/index.ts";
 import { starbattleGame } from "../../src/games/starbattle/index.ts";
 import { unrulyGame } from "../../src/games/unruly/index.ts";
+import { say } from "../progress.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a walk over any tiered game.
 type AnyGame = any;
@@ -50,7 +51,8 @@ it("tiers", () => {
     }
   } else
     for (const [name, g] of GAMES.filter(([n]) => only === null || only.includes(n)))
-      for (const [tier] of (difficultyTiers(g) ?? []).entries())
+      for (const [tier] of (difficultyTiers(g) ?? []).entries()) {
+        say(`${name} tier ${tier}: ${lines.length} boards so far`);
         for (const base of [
           g.defaultParams(),
           ...(name === "unruly" ? [{ ...g.defaultParams(), unique: true }] : []),
@@ -62,6 +64,7 @@ it("tiers", () => {
             const params = g.encodeParams(p, true);
             lines.push([name, params, desc, verdicts(g, p, desc)].join("\t"));
           }
+      }
   writeFileSync(out, `${lines.join("\n")}\n`);
-  console.log(`${lines.length} boards`);
+  say(`${lines.length} boards`);
 });

@@ -3,7 +3,7 @@
  * techniques of the sources a candidate inherits, by default every library
  * its family places and every other game of its family, or those `FROM`
  * names, comma-separated. Writes `results-inherit-<game>.txt`. The two
- * guards beside it run whenever the file does.
+ * guards beside it run whenever the file does, and in CI's research guards.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -16,8 +16,10 @@ import {
   isLibrary,
   loadDescription,
   parseTechnique,
+  withEveryVariation,
 } from "../../src/describe/description.ts";
 import { loadDescriptionFile } from "../../src/describe/load.ts";
+import { say as print } from "../progress.ts";
 import {
   checkInherited,
   familySources,
@@ -89,6 +91,33 @@ it("a technique reading a clue the candidate does not deal is not in its words",
   ).not.toBeTypeOf("string");
 });
 
+it("every library technique a game places is in that game's words", () => {
+  // The report files a compiler refusal as "not in its words", so a contract
+  // the compiler gains can empty a report without a sound: a game's own
+  // placements are the techniques certain to be in its words.
+  const placed = new Set(
+    files
+      .filter(isFormal)
+      .flatMap((g) =>
+        (withEveryVariation(g).techniques ?? []).flatMap((t) =>
+          "use" in t ? [`${g.game} ${t.use}`] : [],
+        ),
+      ),
+  );
+  expect(placed.size).toBeGreaterThan(20);
+  const refused = [...placed].flatMap((pair) => {
+    const [name, use] = pair.split(" ");
+    const [library, id] = use.split(".");
+    const lib = libraries.find((l) => l.library === library);
+    const source = lib === undefined ? null : sourceOf(lib);
+    const stated = source?.techniques.find(([t]) => t === id)?.[1];
+    if (source === null || stated === undefined) return [`${pair}: in no library`];
+    const json = inCandidateWords(game(name), source, id, stated, libraries);
+    return typeof json === "string" ? [`${pair}: ${json}`] : [];
+  });
+  expect(refused).toEqual([]);
+});
+
 const word = (v: Inherited): string => {
   switch (v.kind) {
     case "unstated":
@@ -120,7 +149,7 @@ it.skipIf(process.env["CANDIDATE"] === undefined)(
           });
     const lines: string[] = [];
     const say = (s: string): void => {
-      console.log(s);
+      print(s);
       lines.push(s);
     };
     const table: string[] = [];

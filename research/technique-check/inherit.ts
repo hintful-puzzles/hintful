@@ -47,6 +47,16 @@ export interface Source {
   techniques: readonly (readonly [string, StatedTechnique])[];
 }
 
+/** A technique's reading, without its words: soundness reads none, and the
+ * compiler refuses a technique's words where the candidate has a step of its
+ * name, as Solo has Latin's `set`. */
+const reading = (t: StatedTechnique): StatedTechnique => ({
+  on: t.on,
+  for: t.for,
+  premise: t.premise,
+  conclude: t.conclude,
+});
+
 /** What `file` states of its own, or `null` where it states nothing. A
  * technique a game places from a library is the library's, not the game's. */
 export function sourceOf(file: DescriptionFile): Source | null {
@@ -55,19 +65,12 @@ export function sourceOf(file: DescriptionFile): Source | null {
       name: file.library,
       define: {},
       names: {},
-      techniques: Object.entries(file.techniques),
+      techniques: Object.entries(file.techniques).map(([id, t]) => [id, reading(t)]),
     };
   if (!isFormal(file)) return null;
   const every = withEveryVariation(file);
   const own = (every.techniques ?? []).flatMap((t) =>
-    "use" in t
-      ? []
-      : [
-          [
-            t.id,
-            { on: t.on, for: t.for, premise: t.premise, conclude: t.conclude },
-          ] as const,
-        ],
+    "use" in t ? [] : [[t.id, reading(t)] as const],
   );
   if (own.length === 0) return null;
   return {

@@ -8,6 +8,7 @@
  * beside it, keeping the lines of pairs not run.
  */
 import { it } from "vitest";
+import { say } from "../progress.ts";
 import * as N from "./numbers_loops.ts";
 import {
   bindingOf,
@@ -17,7 +18,6 @@ import {
   pad,
   pairsToRun,
   type ResultRow,
-  say,
   showBinding,
   type Technique,
   writeResults,

@@ -9,6 +9,7 @@
  */
 import { readFileSync } from "node:fs";
 import { it } from "vitest";
+import { say } from "../progress.ts";
 import * as L from "./ladders.ts";
 import * as L2 from "./ladders2.ts";
 import {
@@ -19,7 +20,6 @@ import {
   pad,
   pairsToRun,
   type ResultRow,
-  say,
   showBinding,
   type Technique,
   writeResults,

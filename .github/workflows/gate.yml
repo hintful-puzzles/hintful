@@ -63,3 +63,11 @@ jobs:
         run: npm ci
       - name: Run the gate
         run: npm run gate
+      # The research tools import `src/describe/` and the engine, so a change
+      # there can break them, and no hook runs their tests: a commit touching
+      # only `research/` takes the documentation-only path. Their guards
+      # (`research/vitest.guards.config.ts`) run here instead, even when the gate
+      # failed, so one run gives both verdicts.
+      - name: Run the research tools' guards
+        if: ${{ success() || failure() }}
+        run: npm run test:research-guards

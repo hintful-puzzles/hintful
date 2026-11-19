@@ -15,8 +15,9 @@ It is run by hand and not by the gate, which compiles it
 npx vitest run -c research/describe/vitest.config.ts [file filter]
 ```
 
-`PILOT_SEEDS=n` sets the boards dealt per params, and `PILOT_LOG=<file>`
-writes a line of progress per board.
+`PILOT_SEEDS=n` sets the boards dealt per params. A run prints a line of
+progress per board as it goes, and `PILOT_LOG=<file>` writes the lines to a
+file too.
 
 | Run | What it does |
 | --- | --- |

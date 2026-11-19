@@ -15,12 +15,12 @@
  * bitmask over the cells in reading order.
  */
 import { it } from "vitest";
+import { say } from "../progress.ts";
 import {
   fixed,
   pad,
   pairsToRun,
   type ResultRow,
-  say,
   show,
   tup,
   writeResults,

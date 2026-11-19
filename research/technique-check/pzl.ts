@@ -820,11 +820,6 @@ export function pairsToRun(all: readonly string[]): string[] {
   return named.length > 0 ? named : [...all];
 }
 
-/** Print a line as it is reached, past vitest's console capture. */
-export function say(line: string): void {
-  process.stdout.write(`${line}\n`);
-}
-
 /** Python's `{x:n}` on a string: left-aligned in n columns. */
 export function pad(s: string, n: number): string {
   return s.padEnd(n);

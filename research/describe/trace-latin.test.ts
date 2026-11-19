@@ -25,6 +25,7 @@ import { starbattleGame } from "../../src/games/starbattle/index.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
 import { unequalGame } from "../../src/games/unequal/index.ts";
 import { unrulyGame } from "../../src/games/unruly/index.ts";
+import { say } from "../progress.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a walk over any Latin game.
 type AnyGame = any;
@@ -77,7 +78,8 @@ it("trace", () => {
   const only = process.env["TRACE_GAMES"]?.split(",") ?? null;
   const lines: string[] = [];
   for (const [name, g] of GAMES.filter(([n]) => only === null || only.includes(n)))
-    for (const p of [g.defaultParams(), ...presets(g), ...(EXTRA[name] ?? [])])
+    for (const p of [g.defaultParams(), ...presets(g), ...(EXTRA[name] ?? [])]) {
+      say(`${name} ${g.encodeParams(p, true)}: ${lines.length} lines so far`);
       for (let s = 0; s < SEEDS; s++) {
         const { desc } = g.newDesc(p, randomNew(`trace ${name} ${s}`));
         lines.push(`${name} ${g.encodeParams(p, true)} ${s}: ${desc}`);
@@ -98,6 +100,7 @@ it("trace", () => {
           state = next;
         }
       }
+    }
   writeFileSync(out, `${lines.join("\n")}\n`);
-  console.log(`${lines.length} lines`);
+  say(`${lines.length} lines`);
 });

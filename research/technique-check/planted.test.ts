@@ -5,6 +5,7 @@
  * its checker has been seen to fail (CLAUDE.md, "Method").
  */
 import { expect, it } from "vitest";
+import { say } from "../progress.ts";
 import * as L from "./ladders.ts";
 import * as L2 from "./ladders2.ts";
 import type { Edge } from "./numbers_loops.ts";
@@ -21,7 +22,6 @@ import {
   Or,
   pad,
   range,
-  say,
   sum,
   Technique,
   tup,

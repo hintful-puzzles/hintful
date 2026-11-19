@@ -4,6 +4,7 @@
  * each with a planted defect of its own (task 3.2).
  */
 import { it, expect as vitestExpect } from "vitest";
+import { say } from "../progress.ts";
 import {
   And,
   Atom,
@@ -28,7 +29,6 @@ import {
   pad,
   Reach,
   type SetLike,
-  say,
   Technique,
   tup,
   unionOver,

@@ -18,6 +18,7 @@ import { it } from "vitest";
 import { markKeys } from "../../src/engine/hint-words.ts";
 import { dealt } from "../../src/engine/testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "../../src/engine/testing/hint-games.ts";
+import { say } from "../progress.ts";
 
 const id = process.env["DUMP_GAME"] ?? "";
 const out = process.env["DUMP_OUT"] ?? "";
@@ -38,7 +39,7 @@ it(`dumps every hint plan of ${id}`, () => {
   const rungs = new Map<string, number>();
   for (const { title, params } of gatePresets(game))
     for (let n = 0; n < deals; n++) {
-      process.stderr.write(`dump ${id}: ${title} board ${n + 1} of ${deals}\n`);
+      say(`dump ${id}: ${title} board ${n + 1} of ${deals}`);
       const { desc, aux } = dealt(game, params, n);
       const start = game.newState(params, desc);
       const solved = game.solve?.(start, start, aux);

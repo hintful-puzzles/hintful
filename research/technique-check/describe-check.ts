@@ -69,6 +69,7 @@ import {
 } from "../../src/engine/describe-runtime.ts";
 import { type GridType, gridNew } from "../../src/engine/grid/index.ts";
 import { blocks } from "../describe/space.ts";
+import { say } from "../progress.ts";
 import { asZ3, type B, fresh, type I, Z3 } from "./pzl.ts";
 
 type Bx = B | boolean;
@@ -3625,8 +3626,7 @@ async function checkWithin(
       (run.model === true || process.env["CHECK_MODEL"])
         ? modelLines(solver, board, `${t.id} at ${key}`)
         : undefined;
-    if (model !== undefined && process.env["CHECK_MODEL"])
-      console.log(model.join("\n"));
+    if (model !== undefined && process.env["CHECK_MODEL"]) say(model.join("\n"));
     solver.pop();
     if (r === "unknown") stop();
     if (r !== "unsat")

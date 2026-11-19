@@ -21,6 +21,18 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["research/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "error"
+          }
+        }
+      }
+    }
+  ],
   "formatter": {
     "formatWithErrors": true,
     "indentStyle": "space",

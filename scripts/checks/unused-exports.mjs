@@ -138,7 +138,7 @@ const KEPT_UNUSED = {
   "src/engine/describe-runtime.ts::sightTurn":
     "read by research/technique-check/describe-check.ts, which walks a sightline a step at a time with the game's own turn",
   "src/engine/describe-runtime.ts::sightSets":
-    "read by research/technique-check/sightline.test.ts, which holds the checker's sightline equal to it on every small layout",
+    "read by research/technique-check/sightline.guard.test.ts, which holds the checker's sightline equal to it on every small layout",
   "src/games/netslide/state.ts::dealtOf":
     "read by research/technique-check/boards/netslide.ts, which deals the dead-end checker its boards as the game does",
 };
