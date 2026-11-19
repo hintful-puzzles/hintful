@@ -20,7 +20,7 @@
  * those sizes for a game with tiers and lists the slow ones.
  *
  * **`DEAL_WALK_CELLS` deals the params it names and nothing else**, or the
- * game's presets where it is `presets`, each
+ * game's presets where one of them is `presets`, each
  * `DEAL_WALK_SEEDS` times whatever they take, a size `validateParams` refuses
  * included, which is how the sizes each side of a line are counted before the
  * line is drawn or kept. A named cell is dealt as the app deals it, by
@@ -180,9 +180,11 @@ function walk(id: string, statePath: string): void {
   const named: Params[] | null =
     CELLS === null
       ? null
-      : CELLS.join(" ") === "presets"
-        ? (leafPresets(game) as { params: Params }[]).map((p) => p.params)
-        : CELLS.map((cell) => game.decodeParams(cell) as Params);
+      : CELLS.flatMap((cell) =>
+          cell === "presets"
+            ? (leafPresets(game) as { params: Params }[]).map((p) => p.params)
+            : [game.decodeParams(cell) as Params],
+        );
   const asked: Rung[][] | null =
     named?.map((params) => [{ params, climbing: false }]) ?? null;
   state.ladders = [];

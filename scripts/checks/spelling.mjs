@@ -105,7 +105,7 @@ if (hits.length) {
   );
   for (const h of hits) console.error(`  ${h}`);
   console.error(
-    "fold them with scripts/checks/spelling-fold.mjs, or add a quotation allowance to spelling-table.mjs",
+    "respell each in its file (`node scripts/checks/spelling-fold.mjs < <file>` prints the file respelled, to compare against), or add a quotation allowance to spelling-table.mjs",
   );
   process.exit(1);
 }
