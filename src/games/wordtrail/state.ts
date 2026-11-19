@@ -4,11 +4,11 @@
  * The board is a letter on each square or a dark square, and the list of the
  * words' lengths, which the desc gives and play never changes, and a mark on
  * every edge between two squares that share a side: nothing yet, a line
- * (the two letters are one straight after the other in a word), or a cross
- * saying they are not. A move only writes edges.
+ * (the two letters are one straight after the other in a word, read the
+ * way it runs), or a cross saying they are not. A move only writes edges.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
+import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import {
   DESC_OUT_OF_RANGE,
   type DescParse,
@@ -69,16 +69,25 @@ export interface WordtrailState {
   /** Every trail of the letters that spells a word of a listed length
    * (`trails.ts`). Shared between states. */
   trails: readonly Trail[];
-  /** An {@link EdgeMark} per edge, indexed as `engine/square-edges.ts`
+  /** An {@link EdgeCode} per edge, indexed as `engine/square-edges.ts`
    * numbers them. An edge beside a dark square stays open. */
   edges: Uint8Array;
 }
 
-/** A move sets edges to marks: the edges a drag or a key changed, or every
- * edge for a solve. */
+/** What an edge holds: `OPEN`, `CROSS`, `LINE` for a line read from the
+ * edge's first square (`square-edges.ts`'s `a`) to its second, and
+ * {@link LINE_BACK} for one read the other way. */
+export type EdgeCode = EdgeMark | typeof LINE_BACK;
+/** A line read from the edge's second square to its first. */
+export const LINE_BACK = 3;
+
+/** A move sets edges: the edges a drag or a key changed, each line with the
+ * square it runs from, or every edge's code for a solve. A line change with
+ * no square it runs from, as a save from before lines had a direction
+ * holds, is refused. */
 export type WordtrailMove =
   | { kind: "edges"; changes: readonly EdgeChange[] }
-  | { kind: "solve"; edges: readonly EdgeMark[] };
+  | { kind: "answer"; edges: readonly EdgeCode[] };
 
 export type WordtrailUi = LineDrawingUi;
 
@@ -217,14 +226,30 @@ function cloneState(s: WordtrailState): WordtrailState {
   return { ...s, edges: s.edges.slice() };
 }
 
+/** The code `change` writes on its edge. */
+export function codeOf(state: WordtrailState, change: EdgeChange): EdgeCode {
+  const { edge, mark, from } = change;
+  if (mark !== LINE) return mark;
+  const g = squareEdges(state.w, state.h);
+  if (from === g.a[edge]) return LINE;
+  if (from === g.b[edge]) return LINE_BACK;
+  return rejectMove(change, "wordtrail: a line with no square it runs from");
+}
+
+/** The square the line on edge `e` runs from, which holds a line. */
+export function lineFrom(state: WordtrailState, e: number): number {
+  const g = squareEdges(state.w, state.h);
+  return state.edges[e] === LINE_BACK ? g.b[e] : g.a[e];
+}
+
 /** A move's board. Pure: `s` is left as it was. */
 export function executeMove(s: WordtrailState, move: WordtrailMove): WordtrailState {
   const next = cloneState(s);
-  if (move.kind === "solve") {
+  if (move.kind === "answer") {
     next.edges.set(move.edges);
   } else if (move.kind === "edges") {
-    for (const { edge, mark } of move.changes)
-      if (!isDarkEdge(s, edge)) next.edges[edge] = mark;
+    for (const change of move.changes)
+      if (!isDarkEdge(s, change.edge)) next.edges[change.edge] = codeOf(s, change);
   } else {
     return assertNever(move, "wordtrail: executeMove");
   }
@@ -233,25 +258,32 @@ export function executeMove(s: WordtrailState, move: WordtrailMove): WordtrailSt
 
 // --- text format ------------------------------------------------------------
 
-/** The letters in capitals and `#` for a dark square, with `-` and `|` for
- * lines and `x` for crosses between them, and the lengths below. */
+/** The letters in capitals and `#` for a dark square, with `>`, `<`, `v`
+ * and `^` for lines the way they read and `x` for crosses between them, and
+ * the lengths below. */
 export function textFormat(s: WordtrailState): string {
   const { w, h, letters, edges } = s;
   const g = squareEdges(w, h);
   const join = (e: number, line: string): string =>
-    edges[e] === LINE ? line : edges[e] === CROSS ? "x" : " ";
+    edges[e] === LINE
+      ? line[0]
+      : edges[e] === LINE_BACK
+        ? line[1]
+        : edges[e] === CROSS
+          ? "x"
+          : " ";
   let out = "";
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       out += letters[i] === 0 ? "#" : letterChar(letters[i]).toUpperCase();
-      if (x < w - 1) out += join(g.around[i * 4 + RIGHT], "-");
+      if (x < w - 1) out += join(g.around[i * 4 + RIGHT], "><");
     }
     out += "\n";
     if (y === h - 1) break;
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      out += join(g.around[i * 4 + DOWN], "|");
+      out += join(g.around[i * 4 + DOWN], "v^");
       if (x < w - 1) out += " ";
     }
     out += "\n";

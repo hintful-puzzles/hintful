@@ -1,3 +1,6 @@
-ok  wordtrail  oneWay                         current: recorded src/games/wordtrail/wordtrail.description.yaml#oneWay 59a299dbd49a999d
-ok  wordtrail  onlyWord                       current: recorded src/games/wordtrail/wordtrail.description.yaml#onlyWord 6d9a39d1ec2bcc05
-ok  wordtrail  onlyLength                     current: recorded src/games/wordtrail/wordtrail.description.yaml#onlyLength 4b5fb746bbbe562c
+ok  wordtrail  onlyWord                       3  sound    (want sound   )     9 queries    1.7s
+ok  wordtrail  onlyWord (planted)             3  unsound  (want unsound )     1 queries    0.3s   at cell 0
+ok  src/games/wordtrail/wordtrail.description.yaml#onlyWord: recorded sound, proved whole on all 1 boards
+ok  wordtrail  onlyLength                     3  sound    (want sound   )     2 queries  104.1s
+ok  wordtrail  onlyLength (planted)           3  unsound  (want unsound )     1 queries    0.3s   at clue words 0
+ok  src/games/wordtrail/wordtrail.description.yaml#onlyLength: recorded sound, proved whole on all 1 boards

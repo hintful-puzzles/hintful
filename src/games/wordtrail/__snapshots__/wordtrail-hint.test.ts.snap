@@ -2,8 +2,7 @@
 
 exports[`wordtrail: pinned hint positions > says, at each pin 1`] = `
 {
-  "oneWay": "The outlined letter has just one neighbor it can still join, so this edge must be a line.",
-  "onlyLength": "The striped letters spell FRIDGE, the only 6-letter word that still fits, so these edges must be as shown.",
+  "onlyLength": "The striped letters spell SCOOT, the only 5-letter word that still fits, so these edges must be as shown.",
   "onlyWord": "Only BITCHY and ITCH still fit through the outlined letter and agree on these edges, so they must be as shown.",
 }
 `;

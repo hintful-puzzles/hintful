@@ -6,17 +6,19 @@
  * The board below is small enough to solve by eye: GLAND and POEM, where
  * NAME along the top is a word that does not fit. Edges are numbered as
  * `engine/square-edges.ts` numbers them: the nine across first, in reading
- * order of their left square, then the eight up and down.
+ * order of their left square, then the eight up and down. Squares are
+ * numbered in reading order, 0 to 11. A line reads the way it is drawn: G
+ * to L to A to N to D, and P up to O up to E and left to M.
  *
- *     N A M E      N-A M-E
- *                  | |   |
- *     D L G O      D L-G O
- *                        |
+ *     N A M E      N<A M<E
+ *                  v ^   ^
+ *     D L G O      D L<G O
+ *                        ^
  *     # # # P      # # # P
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
-import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
+import { CROSS, type EdgeChange, LINE, OPEN } from "../../engine/line-drawing.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -28,7 +30,7 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
-import { pointAtEdge, squareEdges } from "../../engine/square-edges.ts";
+import { edgeBetween, pointAtEdge, squareEdges } from "../../engine/square-edges.ts";
 import type { AnyGame } from "../../engine/testing/input-probe.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
@@ -45,6 +47,7 @@ import {
   encodeDesc,
   encodeParams,
   executeMove,
+  LINE_BACK,
   newState,
   validateParams,
   type WordtrailMove,
@@ -55,12 +58,34 @@ import { letterChar, trailsOf } from "./trails.ts";
 const P = { w: 4, h: 3, words: 2, diff: DIFF_EASY };
 const DESC = "45,namedlgo3p";
 const ID = `${encodeParams(P, true)}:${DESC}`;
-/** The answer's lines, as edges: GLAND and POEM. */
-const ANSWER = [0, 2, 4, 9, 10, 12, 16];
+const G = squareEdges(P.w, P.h);
+/** The answer's words, each its squares in reading order: GLAND and POEM. */
+const GLAND = [6, 5, 1, 0, 4];
+const POEM = [11, 7, 3, 2];
 
-const set = (edge: number, mark: 0 | 1 | 2): WordtrailMove => ({
+/** The lines along `path`, each running the way the path does. */
+const along = (path: readonly number[]): EdgeChange[] =>
+  path.slice(1).map((j, k) => ({
+    edge: edgeBetween(G, path[k], j),
+    mark: LINE,
+    from: path[k],
+  }));
+
+/** The move drawing each of `paths`. */
+const draw = (...paths: (readonly number[])[]): WordtrailMove => ({
+  kind: "edges",
+  changes: paths.flatMap(along),
+});
+
+const set = (edge: number, mark: typeof OPEN | typeof CROSS): WordtrailMove => ({
   kind: "edges",
   changes: [{ edge, mark }],
+});
+
+/** The edges a move makes, sorted, as a test compares them. */
+const sorted = (changes: EdgeChange[]): WordtrailMove => ({
+  kind: "edges",
+  changes: changes.sort((a, b) => a.edge - b.edge),
 });
 
 describe("wordtrail params", () => {
@@ -114,27 +139,27 @@ describe("wordtrail desc", () => {
       Array.from(t, (i) => letterChar(s.letters[i])).join(""),
     );
     expect(spelled).toEqual(expect.arrayContaining(["name", "gland", "poem"]));
-    // Each trail once, whichever way round it was found.
-    const keys = s.trails.map((t) => [...t].sort((a, b) => a - b).join());
     expect(new Set(s.trails.map((t) => t.join()))).toHaveLength(s.trails.length);
-    expect(keys.length).toBe(s.trails.length);
     expect(spelled.every((w) => w.length === 4 || w.length === 5)).toBe(true);
   });
 
   it.each([
     "sip",
     "pis",
-  ])("reads a trail that spells a word both ways as the common one, laid as %s", (laid) => {
+  ])("reads squares that spell a word both ways as two trails, laid as %s", (laid) => {
     const letters = Uint8Array.from(laid, (c) => c.charCodeAt(0) - 96);
     const spelled = trailsOf(3, 1, letters, [3]).map((t) =>
       Array.from(t, (i) => letterChar(letters[i])).join(""),
     );
-    expect(spelled).toEqual(["sip"]);
+    expect(spelled.sort()).toEqual(["pis", "sip"]);
   });
 
-  it("has an answer, which the ladder finds", () => {
+  it("has an answer, each line the way its word reads, which the ladder finds", () => {
     const answer = answerOf(newState(P, DESC));
-    expect(answer?.flatMap((m, e) => (m === LINE ? [e] : []))).toEqual(ANSWER);
+    const expected = new Array<number>(G.edgeCount).fill(OPEN);
+    for (const { edge, from } of along(GLAND).concat(along(POEM)))
+      expected[edge] = from === G.a[edge] ? LINE : LINE_BACK;
+    expect(answer).toEqual(expected);
   });
 });
 
@@ -158,76 +183,74 @@ describe("wordtrail input", () => {
     return made;
   }
 
-  it("a drag through letters lays a line along the edges it passes", () => {
-    const move = play(start, [
-      [LEFT_BUTTON, at(0)],
-      [LEFT_DRAG, at(1)],
-      [LEFT_DRAG, at(5)],
-      [LEFT_RELEASE, at(5)],
+  /** A drag through the squares `path`. */
+  const dragThrough = (state: WordtrailState, path: number[]) =>
+    play(state, [
+      [LEFT_BUTTON, at(path[0])],
+      ...path.slice(1).map((i): [number, Point] => [LEFT_DRAG, at(i)]),
+      [LEFT_RELEASE, at(path[path.length - 1])],
     ]);
-    expect(move).toEqual({
-      kind: "edges",
-      changes: [
-        { edge: 0, mark: LINE },
-        { edge: 10, mark: LINE },
-      ],
-    });
+
+  it("a drag through letters lays a line along each edge it passes, the way it passes it", () => {
+    expect(dragThrough(start, [0, 1, 5])).toEqual(sorted(along([0, 1, 5])));
+    expect(dragThrough(start, [5, 1, 0])).toEqual(sorted(along([5, 1, 0])));
   });
 
   it("a drag drawn back over its end takes back the step", () => {
-    const move = play(start, [
-      [LEFT_BUTTON, at(0)],
-      [LEFT_DRAG, at(1)],
-      [LEFT_DRAG, at(2)],
-      [LEFT_DRAG, at(1)],
-      [LEFT_RELEASE, at(1)],
-    ]);
-    expect(move).toEqual({ kind: "edges", changes: [{ edge: 0, mark: LINE }] });
+    expect(dragThrough(start, [0, 1, 2, 1])).toEqual(draw([0, 1]));
+  });
+
+  it("a fragment drawn first is joined at its front: A-N-D, then G-L-A onto it", () => {
+    const and = executeMove(start, draw([1, 0, 4]));
+    expect(dragThrough(and, [6, 5, 1])).toEqual(sorted(along([6, 5, 1])));
+    const gland = executeMove(and, draw([6, 5, 1]));
+    expect(wordtrailGame.findMistakes?.(gland)).toEqual([]);
+  });
+
+  it("a drag from a word's first letter by another edge, or into its last letter, stops", () => {
+    const and = executeMove(start, draw([1, 0, 4]));
+    // From the A, the word's first letter, on to the M.
+    expect(dragThrough(and, [1, 2])).toBeNull();
+    // From the L into the D, which has its line in already.
+    expect(dragThrough(and, [5, 4])).toBeNull();
   });
 
   it("a drag stops at a dark square, at a cross, and where a letter has its two lines", () => {
-    expect(
-      play(start, [
-        [LEFT_BUTTON, at(5)],
-        [LEFT_DRAG, at(9)],
-        [LEFT_RELEASE, at(9)],
-      ]),
-    ).toBeNull();
+    expect(dragThrough(start, [5, 9])).toBeNull();
     const crossed = executeMove(start, set(1, CROSS));
-    expect(
-      play(crossed, [
-        [LEFT_BUTTON, at(0)],
-        [LEFT_DRAG, at(3)],
-        [LEFT_RELEASE, at(3)],
-      ]),
-    ).toEqual(set(0, LINE));
-    // The A has a line left and a line down, so one from the M stops.
-    const full = executeMove(start, {
-      kind: "edges",
-      changes: [0, 10].map((edge) => ({ edge, mark: LINE })),
-    });
-    expect(
-      play(full, [
-        [LEFT_BUTTON, at(2)],
-        [LEFT_DRAG, at(1)],
-        [LEFT_RELEASE, at(1)],
-      ]),
-    ).toBeNull();
+    expect(dragThrough(crossed, [0, 3])).toEqual(draw([0, 1]));
+    // The A has a line in from the N and one out down, so one from the M stops.
+    const full = executeMove(start, draw([0, 1, 5]));
+    expect(dragThrough(full, [2, 1])).toBeNull();
   });
 
-  it("a click by an edge lays or lifts its line, and a right click crosses it", () => {
-    const p = pointAtEdge(squareEdges(start.w, start.h), layout(TS), 11);
+  it("a click by an edge lays a line down, turns it round, then lifts it; a right click crosses it", () => {
+    const p = pointAtEdge(G, layout(TS), 11);
     const click = (state: WordtrailState, down: number, up: number) =>
       play(state, [
         [down, p],
         [up, p],
       ]);
-    expect(click(start, LEFT_BUTTON, LEFT_RELEASE)).toEqual(set(11, LINE));
-    const lined = executeMove(start, set(11, LINE));
-    expect(click(lined, LEFT_BUTTON, LEFT_RELEASE)).toEqual(set(11, OPEN));
+    expect(click(start, LEFT_BUTTON, LEFT_RELEASE)).toEqual(draw([2, 6]));
+    const down = executeMove(start, draw([2, 6]));
+    expect(click(down, LEFT_BUTTON, LEFT_RELEASE)).toEqual(draw([6, 2]));
+    const up = executeMove(start, draw([6, 2]));
+    expect(click(up, LEFT_BUTTON, LEFT_RELEASE)).toEqual(set(11, OPEN));
     expect(click(start, RIGHT_BUTTON, RIGHT_RELEASE)).toEqual(set(11, CROSS));
     // A line takes no cross.
-    expect(click(lined, RIGHT_BUTTON, RIGHT_RELEASE)).toBeNull();
+    expect(click(down, RIGHT_BUTTON, RIGHT_RELEASE)).toBeNull();
+  });
+
+  it("a click beside a word's last letter carries the word on", () => {
+    // P up to O: a click by the edge from the O to the G draws O to G.
+    const po = executeMove(start, draw([11, 7]));
+    const p = pointAtEdge(G, layout(TS), 5);
+    expect(
+      play(po, [
+        [LEFT_BUTTON, p],
+        [LEFT_RELEASE, p],
+      ]),
+    ).toEqual(draw([7, 6]));
   });
 
   it("a right-button drag crosses each edge it passes, as a right click would", () => {
@@ -239,7 +262,7 @@ describe("wordtrail input", () => {
   });
 
   it("an edge beside a dark square takes nothing a click asks of it", () => {
-    const p = pointAtEdge(squareEdges(start.w, start.h), layout(TS), 14);
+    const p = pointAtEdge(G, layout(TS), 14);
     expect(
       play(start, [
         [LEFT_BUTTON, p],
@@ -265,13 +288,7 @@ describe("wordtrail input", () => {
         start,
         keys([CURSOR_SELECT, CURSOR_SELECT, CURSOR_DOWN, CURSOR_RIGHT, CURSOR_SELECT]),
       ),
-    ).toEqual({
-      kind: "edges",
-      changes: [
-        { edge: 3, mark: LINE },
-        { edge: 9, mark: LINE },
-      ],
-    });
+    ).toEqual(sorted(along([0, 4, 5])));
     expect(play(start, keys([CURSOR_SELECT, CURSOR_RIGHT | MOD_SHFT]))).toEqual(
       set(0, CROSS),
     );
@@ -280,11 +297,8 @@ describe("wordtrail input", () => {
 
 describe("wordtrail completion", () => {
   const start = newState(P, DESC);
-  const lines = (state: WordtrailState, edges: readonly number[]): WordtrailState =>
-    executeMove(state, {
-      kind: "edges",
-      changes: edges.map((edge) => ({ edge, mark: LINE })),
-    });
+  const lines = (state: WordtrailState, ...paths: (readonly number[])[]) =>
+    executeMove(state, draw(...paths));
 
   it("the solve move finishes the board", () => {
     const solved = wordtrailGame.solve?.(start, start);
@@ -293,19 +307,28 @@ describe("wordtrail completion", () => {
   });
 
   it("is reached by lines alone, with nothing crossed out", () => {
-    expect(wordtrailGame.status(lines(start, ANSWER.slice(1)))).toBe("ongoing");
-    expect(wordtrailGame.status(lines(start, ANSWER))).toBe("solved");
+    expect(wordtrailGame.status(lines(start, GLAND, POEM.slice(1)))).toBe("ongoing");
+    expect(wordtrailGame.status(lines(start, GLAND, POEM))).toBe("solved");
+  });
+
+  it("is not reached by a word drawn backwards", () => {
+    expect(wordtrailGame.status(lines(start, GLAND, POEM.toReversed()))).toBe(
+      "ongoing",
+    );
   });
 
   it("is not reached by a division whose trails are not all words", () => {
     // NAME along the top, and DLGOP below it.
-    expect(wordtrailGame.status(lines(start, [0, 1, 2, 3, 4, 5, 16]))).toBe("ongoing");
+    expect(wordtrailGame.status(lines(start, [0, 1, 2, 3], [4, 5, 6, 7, 11]))).toBe(
+      "ongoing",
+    );
   });
 
-  it("a line the answer lacks and a cross on one it has are mistakes", () => {
-    const right = lines(start, [9]);
+  it("a line the answer lacks, one the wrong way round and a cross on one it has are mistakes", () => {
+    const right = lines(start, [0, 4]);
     expect(wordtrailGame.findMistakes?.(right)).toEqual([]);
-    expect(wordtrailGame.findMistakes?.(lines(right, [1]))).toEqual([{ edge: 1 }]);
+    expect(wordtrailGame.findMistakes?.(lines(right, [1, 2]))).toEqual([{ edge: 1 }]);
+    expect(wordtrailGame.findMistakes?.(lines(start, [4, 0]))).toEqual([{ edge: 9 }]);
     expect(wordtrailGame.findMistakes?.(executeMove(right, set(10, CROSS)))).toEqual([
       { edge: 10 },
     ]);
@@ -315,19 +338,28 @@ describe("wordtrail completion", () => {
 });
 
 describe("wordtrail save", () => {
-  it("a saved game loads with its lines and crosses", () => {
+  it("a saved game loads with its lines, the way they run, and its crosses", () => {
     const { midend } = renderScenario({
       game: wordtrailGame,
       id: ID,
-      moves: [set(9, LINE), set(1, CROSS)],
+      moves: [draw([0, 4]), draw([2, 1]), set(2, CROSS)],
     });
     const loaded = new Midend(wordtrailGame);
     expect(loaded.loadGame(midend.saveGame())).toBeNull();
     expect(loaded.formatAsText()).toBe(
-      ["N AxM E", "|      ", "D L G O", "       ", "# # # P", "Words: 4, 5", ""].join(
+      ["N A<MxE", "v      ", "D L G O", "       ", "# # # P", "Words: 4, 5", ""].join(
         "\n",
       ),
     );
+  });
+
+  it("refuses a line with no direction, as a save from before lines had one holds", () => {
+    expect(() =>
+      executeMove(newState(P, DESC), {
+        kind: "edges",
+        changes: [{ edge: 9, mark: LINE }],
+      }),
+    ).toThrow(/wordtrail/);
   });
 });
 
@@ -336,7 +368,7 @@ describe("wordtrail frame", () => {
     const { recording } = renderScenario({
       game: wordtrailGame,
       id: ID,
-      moves: [set(0, LINE), set(9, LINE), set(1, CROSS)],
+      moves: [draw([1, 0, 4]), set(1, CROSS)],
     });
     expect(recording.ops).toMatchSnapshot();
   });
@@ -347,21 +379,22 @@ describe("wordtrail frame", () => {
   });
 
   it("draws a loop red once it closes, and not before", () => {
-    const red = (edges: number[]): boolean =>
+    // The engine's drag never closes one; a solve or a save could.
+    const red = (path: number[]): boolean =>
       renderScenario({
         game: wordtrailGame,
         id: ID,
-        moves: edges.map((e) => set(e, LINE)),
+        moves: [draw(path)],
       }).recording.ops.some((op) => paintsWith(op, COL_ERROR));
-    expect(red([0, 9, 10])).toBe(false);
-    expect(red([0, 9, 10, 3])).toBe(true);
+    expect(red([0, 1, 5, 4])).toBe(false);
+    expect(red([0, 1, 5, 4, 0])).toBe(true);
   });
 
   it("draws a mistake red, and rings a hint's edges", () => {
     const wrong = renderScenario({
       game: wordtrailGame,
       id: ID,
-      moves: [set(1, LINE)],
+      moves: [draw([1, 2])],
       showMistakes: true,
     });
     expect(wrong.mistakeCount).toBe(1);
@@ -372,20 +405,21 @@ describe("wordtrail frame", () => {
     expect(ringsOf(hinted.recording.ops).length).toBeGreaterThan(0);
   });
 
-  it("writes each word drawn into the list, and only a word", () => {
-    const listed = (edges: number[]): string[] =>
+  it("writes each word drawn into the list as it reads, and only a word", () => {
+    const listed = (path: number[]): string[] =>
       renderScenario({
         game: wordtrailGame,
         id: ID,
-        moves: edges.map((e) => set(e, LINE)),
+        moves: [draw(path)],
       })
         .recording.ops.flatMap((op) => (op.op === "text" ? [op.text] : []))
         .filter((t) => t.length === 1);
     // The board's twelve letters less its three dark squares, and the list's
     // letters once a word is drawn.
-    expect(listed([])).toHaveLength(9);
-    expect(listed([2, 12, 16])).toHaveLength(9 + 4);
-    // P-O-E, not yet POEM.
-    expect(listed([12, 16])).toHaveLength(9);
+    expect(listed([0])).toHaveLength(9);
+    expect(listed(POEM)).toEqual([..."NAMEDLGOP", ..."POEM"]);
+    // P-O-E, not yet POEM; and MEOP, which is POEM backwards.
+    expect(listed(POEM.slice(0, 3))).toHaveLength(9);
+    expect(listed(POEM.toReversed())).toHaveLength(9);
   });
 });

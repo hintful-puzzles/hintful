@@ -85,3 +85,68 @@ direction), Signpost's in its own render, and others that draw arrows
 
 Not Wend's look: no colored word bands; the board's fill for a finished word
 already says it is done.
+
+## As built (2026-11-19)
+
+**What an edge holds: a `from` beside the mark.** `EdgeMark` stays three
+values, and `LineRules.directed.from(state, e)` says which square a line
+runs from; `EdgeChange.from` carries it in a move. Two line values would
+have put an `isLine` test in place of every `=== LINE` in Path, Pearl, the
+edges skeleton and `edge-hint.ts`, for games that never have a direction.
+Wordtrail stores the direction in its own edge code (`LINE` from the edge's
+first square, `LINE_BACK = 3` from its second), so `edgeMistakes` compares
+codes whole: anything not `OPEN` or `CROSS` is a line, and a line whose code
+differs from the answer's is a mistake. Path's and Pearl's codes are 0 to 2,
+so they read as before.
+
+**The drag** checks each step on the board as it would be left: at most one
+line in and one out of each of the step's two squares, and no run closing on
+itself (followed forward from the square, it comes back). A hint's line is a
+two-square drag from its square, since a click may lay it the other way.
+The click is as recommended, still open with the owner (`tasks.md`).
+
+**Old saves are refused by their lines**: a line change with no `from`
+throws in `executeMove` (`codeOf`), and the solve move is renamed `answer`
+because its edge array cannot tell the old from the new. An old save that
+only crossed edges still loads, and means what it did. An old shared link's
+board still loads: its desc did not change. Where one of its words reads as
+a guess backwards, the ladder cannot decide those lines' direction, so the
+hint stalls there and the mistake check sees no answer. Today's generator
+deals no such board.
+
+**The ladder lost `oneWay`.** A letter with one neighbor left must join it,
+but its word may start or end there, so the rung would place a line with no
+direction. `onlyWord` covers the same letter once the trails through it
+agree. The value on an edge is `range(1, 3)`, 1 read from `end1` to `end2`,
+3 the other way, 2 none; `runs(x, y)` and directed `follows` compare a
+square with `end1(edge(x, y))`, so the language needed nothing new. Both
+rungs were checked sound again (`CHECK_GAMES=wordtrail`, 117 s).
+
+**The deal census** (`npm run deal-walk`, 24 seeds a cell, with the reverse
+refusal; `add-wordtrail` § 1.2 is the baseline): every preset at both tiers
+deals quickly, in at most 50 tries, and so do 3×3 Easy (7) and 8×8 Normal
+(15). The tail is 3×3 Normal, at most 328 tries where it was 1031: the
+reverse refusal rejects most draws there (926 of them) before the ladder
+runs. A word that reads as a guess backwards is refused before the ladder,
+which could never finish such a board.
+
+## The survey of direction drawing (2026-11-19)
+
+No game drew an arrowhead on a path between two squares before this
+change. What draws a direction:
+
+- **Pegs' and Sokoban's hint arrows** (`draw.ts`'s `drawMoveArrow`): a move
+  from one square to another. It now wears the engine's head
+  (`path-arrow.ts`'s `drawArrowHead`), unchanged pixel for pixel (Pegs' hint
+  snapshot fails when the head is planted wider).
+- **Ascent's path shows no direction**: it is undirected bars between
+  squares' middles, its direction only in the numbers on them, and 1 and the
+  last number ringed alike. Its `drawArrow` is the Edges mode's border clue
+  tab, not the path. Moving its path onto the engine's arrow is task 1.6.
+- **Galaxies' arrow** points from a square to its dot, which may be several
+  squares away, and stops short of the dot: a line and two head strokes. A
+  candidate for `drawArrowHead` later; it is not a path between neighbors.
+- **Keep their own**, being clues or controls and not a path's direction:
+  Signpost's and Rome's arrows (a clue in one square), Unequal's and the
+  edge-clue Latin games' signs, Inertia's aim out of one square, Netslide's
+  and Sixteen's slide buttons, and Twiddle's turn arrow.

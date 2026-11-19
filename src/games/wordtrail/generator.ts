@@ -2,7 +2,8 @@
  * Wordtrail's generator: choose the words' lengths, lay a common word of
  * each length as a random trail on the grid, leave the squares no word
  * covers dark, and keep the board only if the ladder finishes it, which
- * proves that the letters divide into words only one way.
+ * proves that the letters divide into words only one way, each read only
+ * one way.
  */
 
 import { drawRejected } from "../../engine/deal-census.ts";
@@ -11,7 +12,7 @@ import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { squareEdges } from "../../engine/square-edges.ts";
-import { drawAnswer } from "../../engine/word-list/index.ts";
+import { drawAnswer, isGuess } from "../../engine/word-list/index.ts";
 import { solveWordtrail } from "./solver.ts";
 import {
   encodeDesc,
@@ -90,6 +91,13 @@ export function newWordtrailDesc(
     const words = laid.map((trail) => drawAnswer(trail.length, rng));
     if (new Set(words).size < words.length) {
       drawRejected("a word drawn twice");
+      continue;
+    }
+    // Such a word's trail reads as a word either way round, so no deduction
+    // could say which way its lines run: the ladder would refuse the board
+    // after its whole run.
+    if (words.some((word) => isGuess([...word].reverse().join("")))) {
+      drawRejected("a word that is a guess read backwards");
       continue;
     }
     for (const [j, trail] of laid.entries())

@@ -8,8 +8,9 @@
 import { describe, expect, it } from "vitest";
 import { EDGE } from "../../engine/edge-hint.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
-import { CROSS, LINE } from "../../engine/line-drawing.ts";
+import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { squareEdges } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
@@ -18,6 +19,7 @@ import { wordtrailGame } from "./index.ts";
 import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
+  codeOf,
   DIFF_EASY,
   DIFF_NORMAL,
   executeMove,
@@ -30,15 +32,13 @@ const pinned = describeHintPins({
   game: wordtrailGame,
   params: [{ w: 5, h: 5, words: 4, diff: DIFF_NORMAL }],
   pins: {
-    /** Held on 99 of 149 positions walked. */
-    oneWay: "5x5n4dn:3448,1hoboah1wog1byr1fusk1fur1",
-    /** Held on 135 of 149 positions walked. */
+    /** Held on 99 of 107 positions walked. */
     onlyWord: "5x5n4dn:3467,1il2gelchai1tylrkibwork1",
-    /** Held on 144 of 149 positions walked. */
+    /** Held on 100 of 107 positions walked. */
     onlyLength: {
-      id: "5x5n4dn:3467,thag1rfnirid1fa1gef1yane1",
+      id: "5x5n4dn:3445,ge3seev1cooa1iwth1sp3",
       moves:
-        '[{"kind":"edges","changes":[{"edge":16,"mark":1}]},{"kind":"edges","changes":[{"edge":1,"mark":1},{"edge":21,"mark":2}]},{"kind":"edges","changes":[{"edge":25,"mark":1}]},{"kind":"edges","changes":[{"edge":26,"mark":2}]},{"kind":"edges","changes":[{"edge":8,"mark":1}]},{"kind":"edges","changes":[{"edge":29,"mark":1},{"edge":28,"mark":2},{"edge":11,"mark":1}]}]',
+        '[{"kind":"edges","changes":[{"edge":0,"mark":1,"from":0},{"edge":20,"mark":2},{"edge":21,"mark":1,"from":1},{"edge":5,"mark":2},{"edge":26,"mark":2}]},{"kind":"edges","changes":[{"edge":27,"mark":2},{"edge":6,"mark":1,"from":8},{"edge":28,"mark":1,"from":13},{"edge":10,"mark":2}]},{"kind":"edges","changes":[{"edge":14,"mark":2}]},{"kind":"edges","changes":[{"edge":33,"mark":1,"from":18}]}]',
     },
   },
 });
@@ -67,8 +67,12 @@ describe("wordtrail hint plans", () => {
           if (step.move.kind !== "edges") throw new Error("a step marks edges");
           // The line `hint-quality.test.ts` draws for every game's sentences.
           expect(step.explanation.length, step.explanation).toBeLessThanOrEqual(120);
-          for (const { edge, mark } of step.move.changes)
-            expect(mark === LINE, step.explanation).toBe(answer?.[edge] === LINE);
+          // Each line the way the answer's runs, and a cross where it has none.
+          for (const change of step.move.changes)
+            expect(
+              change.mark === LINE ? codeOf(state, change) : OPEN,
+              step.explanation,
+            ).toBe(answer?.[change.edge]);
           state = executeMove(state, step.move);
         }
       }
@@ -103,7 +107,7 @@ describe("wordtrail hint plans", () => {
   });
 
   it("a move the step does not ask for drops it", () => {
-    const { state, step } = pinned("oneWay");
+    const { state, step } = pinned("onlyWord");
     if (step.move.kind !== "edges") throw new Error("a step marks edges");
     const { edge } = step.move.changes[0];
     expect(
@@ -116,6 +120,25 @@ describe("wordtrail hint plans", () => {
   });
 });
 
+describe("wordtrail hint tracking by direction", () => {
+  it("keeps a step whose line is laid the way it asks, and drops it laid the other way", () => {
+    const { state, step } = pinned("onlyWord");
+    if (step.move.kind !== "edges") throw new Error("a step marks edges");
+    const line = step.move.changes.find((c) => c.mark === LINE);
+    if (line?.from === undefined) throw new Error("the pinned step lays a line");
+    const g = squareEdges(state.w, state.h);
+    const other = g.a[line.edge] === line.from ? g.b[line.edge] : g.a[line.edge];
+    const judge = (from: number) =>
+      wordtrailGame.hintKeepTrack?.(
+        { kind: "edges", changes: [{ ...line, from }] },
+        { ...step, move: structuredClone(step.move) },
+        state,
+      );
+    expect(judge(line.from)).not.toBe("off");
+    expect(judge(other)).toBe("off");
+  });
+});
+
 describe("wordtrail hint frame", () => {
   it("rings the edges a step decides and outlines the letter it reads", () => {
     const { recording, step } = renderPinnedHint(wordtrailGame, pinned("onlyWord"));
@@ -123,11 +146,6 @@ describe("wordtrail hint frame", () => {
     // Each of an edge's two squares draws its half of the edge's one ring.
     expectRing(recording.ops, { rings: 2 * stepMarks(step).of("ring", EDGE).length });
     expect(recording.ops.some((op) => paintsWith(op, COL_HINT_EVIDENCE))).toBe(true);
-    expect(stepMarks(step).of("outline", CELL)).toHaveLength(1);
-  });
-
-  it("outlines the letter with one way on", () => {
-    const { step } = renderPinnedHint(wordtrailGame, pinned("oneWay"));
     expect(stepMarks(step).of("outline", CELL)).toHaveLength(1);
   });
 

@@ -66,6 +66,48 @@ exports[`wordtrail frame > draws the board 1`] = `
     "y2": 61,
   },
   {
+    "fill": 3,
+    "fillRgb": "rgb(0, 0, 0)",
+    "op": "polygon",
+    "outline": 3,
+    "outlineRgb": "rgb(0, 0, 0)",
+    "points": [
+      [
+        55,
+        36,
+      ],
+      [
+        65,
+        29,
+      ],
+      [
+        65,
+        43,
+      ],
+    ],
+  },
+  {
+    "fill": 3,
+    "fillRgb": "rgb(0, 0, 0)",
+    "op": "polygon",
+    "outline": 3,
+    "outlineRgb": "rgb(0, 0, 0)",
+    "points": [
+      [
+        36,
+        65,
+      ],
+      [
+        29,
+        55,
+      ],
+      [
+        43,
+        55,
+      ],
+    ],
+  },
+  {
     "cx": 36,
     "cy": 36,
     "fill": 2,
@@ -144,6 +186,37 @@ exports[`wordtrail frame > draws the board 1`] = `
     "x2": 60,
     "y1": 36,
     "y2": 36,
+  },
+  {
+    "fill": 3,
+    "fillRgb": "rgb(0, 0, 0)",
+    "op": "polygon",
+    "outline": 3,
+    "outlineRgb": "rgb(0, 0, 0)",
+    "points": [
+      [
+        55,
+        36,
+      ],
+      [
+        65,
+        29,
+      ],
+      [
+        65,
+        43,
+      ],
+    ],
+  },
+  {
+    "cx": 84,
+    "cy": 36,
+    "fill": 3,
+    "fillRgb": "rgb(0, 0, 0)",
+    "op": "circle",
+    "outline": 3,
+    "outlineRgb": "rgb(0, 0, 0)",
+    "r": 17,
   },
   {
     "cx": 84,
@@ -324,6 +397,27 @@ exports[`wordtrail frame > draws the board 1`] = `
     "x2": 36,
     "y1": 84,
     "y2": 60,
+  },
+  {
+    "fill": 3,
+    "fillRgb": "rgb(0, 0, 0)",
+    "op": "polygon",
+    "outline": 3,
+    "outlineRgb": "rgb(0, 0, 0)",
+    "points": [
+      [
+        36,
+        65,
+      ],
+      [
+        29,
+        55,
+      ],
+      [
+        43,
+        55,
+      ],
+    ],
   },
   {
     "cx": 36,

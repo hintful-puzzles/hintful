@@ -258,9 +258,12 @@ game declares `LineRules` (`mark`, `takes`, `loops`, and `fixed` for an edge
 the board owns, as Path's walls) and its saved move;
 `dragPreview` gives its render the drag as it would be released, and
 `hintGesture` the clicks that make a step's edges. `edgeMistakes` is the
-mistake check of a game that stores a mark per edge. Adopting it:
+mistake check of a game that stores a mark per edge. A game whose lines run
+one way declares `directed`, and its `EdgeChange`s carry the square a line
+runs from; it stores that in its own edge code, which `edgeMistakes`
+compares whole. Draw such a line with `path-arrow.ts`. Adopting it:
 [`input.md`](./input.md) § "The line drag". Exemplars: `skeleton/edges/`,
-`path/`, `pearl/`.
+`path/`, `pearl/`, and `wordtrail/` for directed lines.
 
 ### `border-grid.ts` — the shared border-marking mechanic
 
@@ -1639,6 +1642,12 @@ in a game's frames that no call to these helpers drew.
   for a cell that is not a square, where `hint-mark.ts`'s bands cannot go.
 - `drawMoveArrow`: a hint's arrow from one tile to another, drawn by each
   tile it crosses under its own clip.
+- **`path-arrow.ts` for which way a path runs between squares**: the
+  one arrowhead (`drawArrowHead`, which `drawMoveArrow` wears too), a line
+  with its head across the squares' shared side (`drawDirectedLine`,
+  `drawPathHead`), and the ring on a path's first square (`drawPathStart`).
+  A game showing a path's direction draws it with these and no shape of its
+  own, so it reads alike in every game (owner, 2026-11-19).
 
 When you extract a shape, check whether its dimensions were drifting too.
 An extraction that leaves the emitted op order unchanged moves no render

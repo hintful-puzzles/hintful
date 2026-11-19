@@ -80,6 +80,10 @@ export function stepEdgeHints(
  * the edges either side of the move. A step left part-made shrinks to the rest:
  * its move becomes `moveOf` of what is left, and its words drop the rings on
  * the edges made, which re-renders every word that counts them.
+ *
+ * `codeOf` is what the game stores for a change, where that is not its mark:
+ * a directed game's line holds its direction too (`line-drawing.ts`'s
+ * `edgeMistakes`), so a line laid the other way is a different change.
  */
 export function trackEdgeStep<M>(
   step: HintStep<M>,
@@ -87,6 +91,7 @@ export function trackEdgeStep<M>(
   before: ArrayLike<number>,
   after: ArrayLike<number>,
   moveOf: (left: EdgeChange[]) => M,
+  codeOf: (change: EdgeChange) => number = (change) => change.mark,
 ): HintTrackVerdict {
   const { verdict, left } = trackTargets({
     targets: asked,
@@ -96,8 +101,8 @@ export function trackEdgeStep<M>(
       (e) => after[e],
     ),
     key: (t) => t.edge,
-    want: (t) => t.mark,
-    holds: (t) => after[t.edge] === t.mark,
+    want: codeOf,
+    holds: (t) => after[t.edge] === codeOf(t),
   });
   if (verdict === "onTrack") {
     step.move = moveOf(left);

@@ -202,10 +202,10 @@ const WRONG: Readonly<Record<string, { board: string; moves: readonly unknown[] 
     board: "5g6:f17e0471a6",
     moves: [{ type: "mark", marks: [{ pos: 1, letter: 9 }], ruledOut: true }],
   },
-  // GLAND and POEM, with a line joining the A of NAME to its M.
+  // GLAND and POEM, with a line from the A of NAME to its M.
   wordtrail: {
     board: "4x3n2de:45,namedlgo3p",
-    moves: [{ kind: "edges", changes: [{ edge: 1, mark: 1 }] }],
+    moves: [{ kind: "edges", changes: [{ edge: 1, mark: 1, from: 1 }] }],
   },
 };
 

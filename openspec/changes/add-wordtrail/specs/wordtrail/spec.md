@@ -5,14 +5,24 @@
 A board SHALL be a grid of letters and dark squares, and word lengths that
 sum to its letters. It SHALL be solved when the player's lines between
 letters side by side divide the letters into paths, each spelling a word of
-the word list end to end, one for each listed length. A path MAY run beside
-itself, as a U through a two-by-two block does. A cross SHALL count as no
-line, so lines alone finish a board.
+the word list, one for each listed length. A path MAY run beside itself, as
+a U through a two-by-two block does. A cross SHALL count as no line, so
+lines alone finish a board.
 
 #### Scenario: The answer's lines solve the board
 
-- **WHEN** on `4x3n2de:45,namedlgo3p` lines join G-L-A-N-D and P-O-E-M
+- **WHEN** on `4x3n2de:45,namedlgo3p` lines run G to L to A to N to D and P to O to E to M
 - **THEN** the board is solved
+
+### Requirement: Rules: A line runs one way, and a word reads the way its lines run
+
+Each line SHALL run one way, from a letter to the next in reading order,
+and a path SHALL spell its word read from its first letter along its lines.
+
+#### Scenario: A word drawn backwards does not solve the board
+
+- **WHEN** on the same board lines run G-L-A-N-D and M to E to O to P
+- **THEN** the board is not solved, since MEOP is no word
 
 #### Scenario: A division into pieces that are not all words does not
 
@@ -22,12 +32,17 @@ line, so lines alone finish a board.
 ### Requirement: Rules: A mistake is a line the answer lacks or a cross on one it has
 
 `findMistakes` SHALL report a line on an edge the board's one answer has no
-line on, and a cross on an edge it has one on. A cross the answer agrees
-with SHALL NOT be a mistake.
+line on, a line running the other way from the answer's, and a cross on an
+edge it has one on. A cross the answer agrees with SHALL NOT be a mistake.
 
 #### Scenario: A line joining the A of NAME to its M is a mistake
 
 - **WHEN** on `4x3n2de:45,namedlgo3p` a line is drawn between the A and the M of the top row
+- **THEN** that edge is reported as a mistake
+
+#### Scenario: A line the wrong way round is a mistake
+
+- **WHEN** on the same board a line runs from the D up to the N, where GLAND reads from the N down to the D
 - **THEN** that edge is reported as a mistake
 
 ### Requirement: Params: A Wordtrail params string may leave out its word count and its difficulty
@@ -83,9 +98,11 @@ by the word list the app ships.
 
 The generator SHALL lay a path for each length on a grid, write a different
 word of the answer list along each, and darken the squares left over. It
-SHALL keep a board only where the ladder, capped at the tier asked for,
-finishes it and the tier below does not, so that its one division into
-words of the guess list is reached by reasoning alone.
+SHALL refuse a draw where an answer word read backwards is a guess, whose
+direction no reasoning could decide. It SHALL keep a board only where the
+ladder, capped at the tier asked for, finishes it and the tier below does
+not, so that its one division into words of the guess list, each read one
+way, is reached by reasoning alone.
 
 #### Scenario: Every board dealt needs exactly its tier
 
@@ -94,8 +111,10 @@ words of the guess list is reached by reasoning alone.
 
 ### Requirement: Generation: Easy reasons one letter at a time, and Normal also by the lengths
 
-Easy SHALL use the techniques that read one letter: the one way on from a
-letter, and the words that still fit through a letter. Normal SHALL add the
+Easy SHALL use the technique that reads one letter: the words that still fit
+through a letter. No technique SHALL decide a line without its direction, as
+a letter's one way on would, since a player can draw no such line. Normal
+SHALL add the
 words of a length: where the trails still fitting a listed length are as
 many as the words of it, they are all of them.
 
@@ -107,9 +126,11 @@ many as the words of it, they are all of them.
 ### Requirement: Solver: The ladder is the description's, and Solve plays its answer
 
 The solver SHALL be the ladder `wordtrail.description.yaml` states, run to
-a fixpoint, and Solve SHALL play the lines of the answer it reaches. Every
-trail of letters that spells a word of a listed length SHALL be dealt to the
-ladder with the board, which is how a technique reads the word list.
+a fixpoint, and Solve SHALL play the lines of the answer it reaches, each
+the way it runs. Every trail of letters that spells a word of a listed
+length SHALL be dealt to the ladder with the board, which is how a technique
+reads the word list; letters that spell a word each way round are two
+trails.
 
 #### Scenario: Solve finishes the board
 
@@ -118,24 +139,44 @@ ladder with the board, which is how a technique reads the word list.
 
 ### Requirement: Controls: Wordtrail draws as the engine's line drag does
 
-A press and drag SHALL lay a line along each edge between the letters it
-passes, a rook move at a time, taking back the steps it retraces over its
-end, as the engine's line drag does; a left click near an edge SHALL lay or
-lift its line, and a right click SHALL cross it or clear its cross; a right
-drag SHALL cross each edge it passes. The keyboard SHALL be the engine's:
-the arrows move a cursor, Enter starts and ends a line the arrows carry, and
-Shift with an arrow crosses that edge.
+Wordtrail's lines SHALL be the engine's directed lines. A press and drag
+SHALL lay a line along each edge between the letters it passes, each running
+the way the drag passed it, a rook move at a time, taking back the steps it
+retraces over its end; a drag from a word's last letter SHALL carry it on,
+and one ending on a word's first letter SHALL join onto its front. A right click
+SHALL cross an edge or clear its cross, and a right drag SHALL cross each
+edge it passes.
 
 #### Scenario: A drag lays a line through the letters it passes
 
 - **WHEN** on `4x3n2de:45,namedlgo3p` a drag runs from the N to the A and down to the L
-- **THEN** lines are laid between the N and the A and between the A and the L
+- **THEN** lines are laid from the N to the A and from the A to the L
+
+#### Scenario: A fragment drawn first is joined at its front
+
+- **WHEN** on the same board a drag draws A-N-D, and a second drag runs from the G through the L to the A
+- **THEN** the lines read G, L, A, N, D, and the list writes GLAND
+
+### Requirement: Controls: A click and the keys lay a line with its direction
+
+A left click near an edge SHALL lay a line carrying a word on where it is
+beside a word's end, and otherwise pointing right or down; a click on a line
+pointing right or down SHALL turn it round where it fits so, and otherwise
+lift it. The keyboard SHALL be the engine's: the arrows move a cursor, Enter
+starts and ends a line the arrows carry, Ctrl with an arrow lays a line
+pointing the way the cursor moves, and Shift with an arrow crosses that edge.
+
+#### Scenario: A click lays, turns, then lifts a line
+
+- **WHEN** on `4x3n2de:45,namedlgo3p` the edge between the N and the A is clicked three times
+- **THEN** a line runs from the N to the A, then from the A to the N, then there is none
 
 ### Requirement: Controls: A dark square takes no line, and a word ends at two
 
-A drag SHALL stop at a dark square, at a cross, and where a letter already
-has its two lines. An edge beside a dark square SHALL take nothing a click or
-key asks of it.
+A drag SHALL stop at a dark square, at a cross, where a letter already has
+its two lines, and where a letter would get a second line in or a second
+line out. An edge beside a dark square SHALL take nothing a click or key
+asks of it.
 
 #### Scenario: A drag into a dark square stops
 
@@ -145,16 +186,12 @@ key asks of it.
 ### Requirement: Hint: A step rings the edges it decides and outlines or stripes what it reads
 
 Each step SHALL ring every edge its move decides, between the two letters
-and clear of both. A step that reads one letter SHALL outline it; a step
-that reads the words of a length SHALL stripe their letters. Its sentence
-SHALL say why those edges are forced, from the board, in no more than 120
+and clear of both, and draw each line it asks for with its arrow, the way
+the word reads. A step that reads one letter SHALL outline it; a step that
+reads the words of a length SHALL stripe their letters. Its sentence SHALL
+say why those edges are forced, from the board, in no more than 120
 characters, and SHALL name the words it reasons from, in capitals, where
 they are one or two.
-
-#### Scenario: One way on from a letter
-
-- **WHEN** a letter has no line and one edge left that can take one
-- **THEN** the hint outlines it and says "The outlined letter has just one neighbor it can still join, so this edge must be a line."
 
 #### Scenario: The one word through a letter
 
@@ -183,8 +220,9 @@ they are one or two.
 
 ### Requirement: Hint: The techniques are tried easiest first, and decide only what is forced
 
-The hint SHALL try one way on, then the words through a letter, then the
-words of a length, and SHALL take the first that fires. The words through a
+The hint SHALL try the words through a letter, then the words of a length,
+and SHALL take the first that fires. A line SHALL be decided only with its
+direction, where every fitting word reads the same way along it. The words through a
 letter SHALL cross an edge only where it ends every fitting word there and
 the letter is not yet filled, so the board carries no cross a player would
 not need.
@@ -192,33 +230,40 @@ not need.
 #### Scenario: A plan leads a dealt board to its answer
 
 - **WHEN** the hint is asked again and again on a dealt board and each step is applied
-- **THEN** the board is solved, and no step lays a line the answer lacks
+- **THEN** the board is solved, and no step lays a line the answer lacks or runs one the other way
 
 ### Requirement: Look: The letters sit on discs over the lines, and the words drawn fill the list
 
 Each letter SHALL sit on a disc of its square's surface drawn over the
 lines, so a line shows only between letters. A piece of lines that spells a
-word of the guess list SHALL color its squares, and the list of lengths below
-the grid SHALL write each such word into a slot of its length. A closed loop
-or a piece longer than the longest length SHALL be drawn in the error color.
+word of the guess list, read the way its lines run, SHALL color its squares,
+and the list of lengths below the grid SHALL write each such word into a
+slot of its length as it reads. A closed loop or a piece longer than the
+longest length SHALL be drawn in the error color.
 
 #### Scenario: A word drawn is written into the list
 
-- **WHEN** on `4x3n2de:45,namedlgo3p` lines join P-O-E-M
+- **WHEN** on `4x3n2de:45,namedlgo3p` lines run P to O to E to M
 - **THEN** POEM is written into the list's four-letter slot
 
 #### Scenario: Letters that are not yet a word stay out of the list
 
-- **WHEN** lines join only P-O-E
+- **WHEN** lines run only P to O to E, or M to E to O to P
 - **THEN** the list is empty
 
-### Requirement: Look: A word that reads both ways is said as the common one
+#### Scenario: A word is written the way it was drawn
 
-A piece that spells a word of the guess list both ways round SHALL be
-written into the list, and named by a hint, as the word of the answer list
-where only one of the two is.
+- **WHEN** on `3x2n1de:3,pis3` lines run S to I to P, and on another such board P to I to S
+- **THEN** the first writes SIP into the list and the second PIS
 
-#### Scenario: A word that reads both ways is written as the common one
+### Requirement: Look: Each line wears the engine's arrow, and a word's first letter its start mark
 
-- **WHEN** on `3x2n1de:3,pis3` lines join P-I-S, which reads PIS (a guess) one way and SIP (an answer) the other
-- **THEN** SIP is written into the list's three-letter slot
+Each line SHALL be drawn with the engine's arrow, its head across the side
+between the two letters, pointing to the next letter, the drag's preview and
+a hint's asked lines included. A letter with a line out and none in SHALL
+wear the engine's start mark.
+
+#### Scenario: A word's start and direction are drawn
+
+- **WHEN** on `4x3n2de:45,namedlgo3p` lines run P to O to E to M
+- **THEN** each of the three lines has its arrowhead pointing on toward M, and the P is ringed

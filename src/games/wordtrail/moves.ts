@@ -11,18 +11,31 @@ import {
   CROSS,
   type EdgeChange,
   type EdgeMark,
+  LINE,
   type LineRules,
 } from "../../engine/line-drawing.ts";
-import { isDarkEdge, type WordtrailState } from "./state.ts";
+import {
+  codeOf,
+  isDarkEdge,
+  LINE_BACK,
+  lineFrom,
+  type WordtrailState,
+} from "./state.ts";
 
-/** A word runs through a letter at most once, in and out, and never closes
- * a loop; an edge beside a dark square is the board's, which the drag meets
- * as it meets a cross. */
+/** A word runs through a letter at most once, in and out, reads from its
+ * first letter on, and never closes a loop; an edge beside a dark square is
+ * the board's, which the drag meets as it meets a cross. */
 export const wordtrailLines: LineRules<WordtrailState> = {
-  mark: (state, e) => (isDarkEdge(state, e) ? CROSS : (state.edges[e] as EdgeMark)),
+  mark: (state, e) =>
+    isDarkEdge(state, e)
+      ? CROSS
+      : state.edges[e] === LINE_BACK
+        ? LINE
+        : (state.edges[e] as EdgeMark),
   takes: (state, i) => (state.letters[i] === 0 ? 0 : 2),
   loops: false,
   fixed: (state, e) => isDarkEdge(state, e),
+  directed: { from: lineFrom },
 };
 
 /** The edges of `state` with `changes` made. */
@@ -31,7 +44,7 @@ export function withChanges(
   changes: readonly EdgeChange[],
 ): Uint8Array {
   const edges = state.edges.slice();
-  for (const { edge, mark } of changes)
-    if (!isDarkEdge(state, edge)) edges[edge] = mark;
+  for (const change of changes)
+    if (!isDarkEdge(state, change.edge)) edges[change.edge] = codeOf(state, change);
   return edges;
 }

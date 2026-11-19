@@ -4,14 +4,6 @@
 # unsound.
 
 techniques:
-  # A letter with a line already read as having one way on: it may be the
-  # end of its word.
-  oneWay:
-    for: >-
-      c in cells where open(c) and lines(c) <= 1,
-      U = {y in adj4(c) where value(edge(c, y)) != 2 and value(edge(c, y)) != 1}
-      where |U| = 0 or (|U| = 1 and not known(edge(c, first(U))))
-    conclude: "|U| = 1 and place(edge(c, first(U)), 1)"
   # The trails of a length counted with one more than the list has: all of
   # them taken as words.
   onlyLength:

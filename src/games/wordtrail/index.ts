@@ -88,7 +88,7 @@ function status(s: WordtrailState): GameStatus {
 function solve(orig: WordtrailState): SolveResult<WordtrailMove> {
   const edges = answerOf(orig);
   if (edges === null) return { ok: false, error: NO_SOLUTION };
-  return { ok: true, move: { kind: "solve", edges } };
+  return { ok: true, move: { kind: "answer", edges } };
 }
 
 /** No edge of a board the ladder cannot finish is a mistake: it has no

@@ -1,5 +1,6 @@
 /** Shared `GameDrawing` primitives. */
 import type { GameDrawing } from "./game.ts";
+import { drawArrowHead } from "./path-arrow.ts";
 import { MARK_EDGE_PX } from "./ring.ts";
 import type { DrawTextOptions, Point, Rect } from "./types.ts";
 
@@ -308,12 +309,7 @@ export function drawMoveArrow(
   const head = Math.max(4, Math.floor(ts / 4));
   const base = at(tip, -head);
   dr.drawLine(at(a, Math.floor(ts / 3)), base, color, Math.max(2, Math.floor(ts / 12)));
-  const side = (k: number): Point => ({
-    x: Math.round(base.x - uy * k),
-    y: Math.round(base.y + ux * k),
-  });
-  const half = Math.floor(head / 2);
-  dr.drawPolygon([tip, side(half), side(-half)], color, color);
+  drawArrowHead(dr, tip, ux, uy, head, 2 * Math.floor(head / 2), color);
 }
 
 /**

@@ -40,28 +40,28 @@ import {
   type EdgeMistake,
   LINE,
 } from "../../engine/line-drawing.ts";
+import { drawPathHead, drawPathStart } from "../../engine/path-arrow.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import {
-  DOWN,
   DX,
   DY,
   type EdgeLayout,
-  LEFT,
-  RIGHT,
+  edgeBetween,
   reverse,
+  type SquareEdges,
   squareCenter,
   squareEdges,
-  UP,
 } from "../../engine/square-edges.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { WordtrailHighlights } from "./hint.ts";
 import { withChanges, wordtrailLines } from "./moves.ts";
-import type {
-  WordtrailMove,
-  WordtrailParams,
-  WordtrailState,
-  WordtrailUi,
+import {
+  LINE_BACK,
+  type WordtrailMove,
+  type WordtrailParams,
+  type WordtrailState,
+  type WordtrailUi,
 } from "./state.ts";
 import { letterChar } from "./trails.ts";
 
@@ -149,22 +149,28 @@ interface Pieces {
   words: Map<number, string>;
 }
 
+/** Whether `code` is a line, either way. */
+const isLine = (code: number): boolean => code === LINE || code === LINE_BACK;
+
+/** The square the line `code` on edge `e` runs from. */
+const fromOf = (g: SquareEdges, e: number, code: number): number =>
+  code === LINE_BACK ? g.b[e] : g.a[e];
+
 /**
  * The pieces `edges` make. A piece spells a word where it is a trail of the
- * board, one of those that spell a word, read either way round; it is
- * broken where its lines close a loop or it is longer than every listed
- * word.
+ * board, one of those that spell a word, its lines running the way the
+ * trail reads; it is broken where its lines close a loop or it is longer
+ * than every listed word.
  */
 function piecesOf(state: WordtrailState, edges: Uint8Array): Pieces {
   const { w, h, letters, lengths, trails } = state;
   const g = squareEdges(w, h);
   const dsf = new Dsf(g.cells);
-  for (let e = 0; e < g.edgeCount; e++)
-    if (edges[e] === LINE) dsf.merge(g.a[e], g.b[e]);
+  for (let e = 0; e < g.edgeCount; e++) if (isLine(edges[e])) dsf.merge(g.a[e], g.b[e]);
   const root = new Int32Array(g.cells);
   const lines = new Int32Array(g.cells);
   for (let i = 0; i < g.cells; i++) root[i] = dsf.canonify(i);
-  for (let e = 0; e < g.edgeCount; e++) if (edges[e] === LINE) lines[root[g.a[e]]]++;
+  for (let e = 0; e < g.edgeCount; e++) if (isLine(edges[e])) lines[root[g.a[e]]]++;
   const longest = Math.max(...lengths);
   const broken = new Set<number>();
   for (let i = 0; i < g.cells; i++) {
@@ -177,18 +183,15 @@ function piecesOf(state: WordtrailState, edges: Uint8Array): Pieces {
     const r = root[trail[0]];
     if (dsf.size(r) !== trail.length || lines[r] !== trail.length - 1) continue;
     // A trail is a piece where its squares are one piece of its length whose
-    // lines are the trail's own.
+    // lines are the trail's own, each running the way the trail reads.
     let own = true;
     for (let k = 0; own && k + 1 < trail.length; k++) {
       const a = trail[k];
       const b = trail[k + 1];
       if (root[a] !== r || root[b] !== r) own = false;
       else {
-        const e =
-          g.around[
-            a * 4 + (b === a + 1 ? RIGHT : b === a - 1 ? LEFT : b > a ? DOWN : UP)
-          ];
-        own = edges[e] === LINE;
+        const e = edgeBetween(g, a, b);
+        own = isLine(edges[e]) && fromOf(g, e, edges[e]) === a;
       }
     }
     if (own) words.set(r, Array.from(trail, (i) => letterChar(letters[i])).join(""));
@@ -199,28 +202,33 @@ function piecesOf(state: WordtrailState, edges: Uint8Array): Pieces {
 // --- draw state -------------------------------------------------------------
 
 // Word 0, the square: the cursor, whether it is dark, whether its piece
-// spells a word, whether the hint stripes it, the win flash's tone, and the
-// sides of the hint's outline it draws (`hint-mark.ts`'s side bits).
+// spells a word, whether the hint stripes it, the win flash's tone, the
+// sides of the hint's outline it draws (`hint-mark.ts`'s side bits), and
+// whether a word starts here.
 const F_CURSOR = 1 << 0;
 const F_DARK = 1 << 1;
 const F_WORD = 1 << 2;
 const F_STRIPES = 1 << 3;
 const K_TONE = 4;
 const K_OUTLINE = 6;
+const F_START = 1 << 10;
 
-// Word 1, the sides: seven bits a side, by direction.
-const SIDE_BITS = 7;
-// The side's mark in bits 0-1, then whether it is the board's rim, whether
-// its line breaks a rule, whether Check & Save found it wrong, and what the
-// drag would do to it.
+// Word 1, the sides: eight bits a side, by direction.
+const SIDE_BITS = 8;
+// The side's mark in bits 0-1 (`LINE` for a line either way), then whether
+// it is the board's rim, whether its line breaks a rule, whether Check &
+// Save found it wrong, what the drag would do to it, and whether its line
+// runs out of the square.
 const S_RIM = 1 << 2;
 const S_ERROR = 1 << 3;
 const S_WRONG = 1 << 4;
 const S_DRAG_ADD = 1 << 5;
 const S_DRAG_REMOVE = 1 << 6;
+const S_OUT = 1 << 7;
 
-// Word 2, the hint on the sides: `edge-hint.ts`'s word.
-const WORDS = 3;
+// Word 2, the hint on the sides: `edge-hint.ts`'s word. Word 3, the sides
+// whose asked line runs out of the square, a bit a side.
+const WORDS = 4;
 
 export interface WordtrailDrawState {
   started: boolean;
@@ -256,6 +264,7 @@ function drawTile(
   square: number,
   sides: number,
   hints: number,
+  hintOut: number,
 ): void {
   const ts = ds.tileSize;
   const b = border(ts);
@@ -266,8 +275,16 @@ function drawTile(
   const cy = py + half;
   const tone = ((square >> K_TONE) & 3) as WinTone;
   const thick = Math.max(2, Math.floor(ts / 7));
-  const side = (k: number): number =>
-    (sides >> (k * SIDE_BITS)) & ((1 << SIDE_BITS) - 1);
+  const side = (k: number): number => (sides >>> (k * SIDE_BITS)) & 0xff;
+  // The arrowhead of the line across side `k`, pointing out of the square
+  // or into it. It sits across the side, so the square beside draws the
+  // rest of it.
+  const head = (k: number, out: boolean, color: number): void => {
+    const there = { x: cx + DX[k] * ts, y: cy + DY[k] * ts };
+    const here = { x: cx, y: cy };
+    if (out) drawPathHead(dr, ts, here, there, color);
+    else drawPathHead(dr, ts, there, here, color);
+  };
   const body: Rect = { x: px + 1, y: py + 1, w: ts - 1, h: ts - 1 };
 
   // The square's own box: its top and left grid lines and its surface.
@@ -350,6 +367,8 @@ function drawTile(
       for (let k = 0; k < 4; k++)
         if (sides & (1 << k)) strokes.push({ k, color: ink, weight: thick });
       for (const { from, to } of segmentsOf(strokes)) dr.drawLine(from, to, ink, thick);
+      for (let k = 0; k < 4; k++)
+        if (sides & (1 << k)) head(k, (hintOut & (1 << k)) !== 0, ink);
     },
     // A ring sits between the two letters, clear of both.
     ring: (d, shape) => {
@@ -385,9 +404,12 @@ function drawTile(
   }
   for (const { from, to, color, weight } of segmentsOf(strokes))
     dr.drawLine(from, to, color, weight);
+  for (const { k, color } of strokes)
+    if ((side(k) & 3) === LINE) head(k, (side(k) & S_OUT) !== 0, color);
 
   // The letter, on a disc of the square's own surface over the lines, so
-  // it reads whatever runs under it.
+  // it reads whatever runs under it; a word's first letter ringed in the
+  // ink of the line out of it.
   const letter = state.letters[y * state.w + x];
   const disc = Math.floor(ts * 0.3);
   const surface = tone
@@ -395,7 +417,10 @@ function drawTile(
     : square & F_WORD
       ? COL_WORD
       : COL_CELL;
-  dr.drawCircle({ x: cx, y: cy }, disc, surface, surface);
+  const out = strokes.find(({ k }) => side(k) & S_OUT);
+  if (square & F_START && out)
+    drawPathStart(dr, ts, { x: cx, y: cy }, disc, out.color, surface);
+  else dr.drawCircle({ x: cx, y: cy }, disc, surface, surface);
   dr.drawText(
     { x: cx, y: cy },
     glyphFont(Math.floor(ts * 0.42)),
@@ -547,9 +572,13 @@ export function redraw(
   const striped = new Set(named.of("stripes", CELL).map((c) => c.y * w + c.x));
   const inEvidence = (x: number, y: number): boolean =>
     x >= 0 && x < w && y >= 0 && y < h && evidence.has(y * w + x);
-  const hintWords = edgeHintWords(
-    g,
-    stepEdgeHints(named, hint?.move.kind === "edges" ? hint.move.changes : []),
+  const asked = hint?.move.kind === "edges" ? hint.move.changes : [];
+  const hintWords = edgeHintWords(g, stepEdgeHints(named, asked));
+  // The square each asked line runs from, by its edge.
+  const askedFrom = new Map(
+    asked.flatMap((c) =>
+      c.mark === LINE && c.from !== undefined ? [[c.edge, c.from]] : [],
+    ),
   );
 
   for (let y = 0; y < h; y++) {
@@ -564,6 +593,9 @@ export function redraw(
         (letters[i] === 0 ? 0 : flash.win(sweepStep(x, y)) << K_TONE) |
         (inEvidence(x, y) ? outlineSides(x, y, inEvidence) << K_OUTLINE : 0);
       let sides = 0;
+      let hintOut = 0;
+      let ins = 0;
+      let outs = 0;
       const hints = hintWords[i];
       for (let k = 0; k < 4; k++) {
         const e = g.around[i * 4 + k];
@@ -571,28 +603,37 @@ export function redraw(
           sides |= S_RIM << (k * SIDE_BITS);
           continue;
         }
+        if (askedFrom.get(e) === i) hintOut |= 1 << k;
         const was = dragged.get(e);
+        const line = isLine(edges[e]);
+        const out = line && fromOf(g, e, edges[e]) === i;
+        if (out) outs++;
+        else if (line) ins++;
         const s =
-          edges[e] |
-          (edges[e] === LINE && pieces.broken.has(pieces.root[i]) ? S_ERROR : 0) |
+          (line ? LINE : edges[e]) |
+          (out ? S_OUT : 0) |
+          (line && pieces.broken.has(pieces.root[i]) ? S_ERROR : 0) |
           (wrong.has(e) && was === undefined ? S_WRONG : 0) |
           (was === LINE ? S_DRAG_ADD : 0) |
-          (was !== undefined && was !== LINE && state.edges[e] === LINE
+          (was !== undefined && was !== LINE && isLine(state.edges[e])
             ? S_DRAG_REMOVE
             : 0);
         sides |= s << (k * SIDE_BITS);
       }
+      const keyed = square | (outs > 0 && ins === 0 ? F_START : 0);
       const at = i * WORDS;
       if (
-        ds.cache[at] === square &&
+        ds.cache[at] === keyed &&
         ds.cache[at + 1] === sides &&
-        ds.cache[at + 2] === hints
+        ds.cache[at + 2] === hints &&
+        ds.cache[at + 3] === hintOut
       )
         continue;
-      drawTile(dr, ds, state, x, y, square, sides, hints);
-      ds.cache[at] = square;
+      drawTile(dr, ds, state, x, y, keyed, sides, hints, hintOut);
+      ds.cache[at] = keyed;
       ds.cache[at + 1] = sides;
       ds.cache[at + 2] = hints;
+      ds.cache[at + 3] = hintOut;
     }
   }
 

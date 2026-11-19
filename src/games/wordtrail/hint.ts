@@ -24,6 +24,7 @@ import {
   wordtrailWalk,
 } from "./solver.ts";
 import {
+  codeOf,
   DIFF_NORMAL,
   executeMove,
   type WordtrailMove,
@@ -94,8 +95,8 @@ export const { hint: wordtrailHint, judgeMove: wordtrailJudgeMove } = describedE
   width: (state) => state.w,
 });
 
-/** Judge a move against the step on show by what it did to the edges, which
- * a solve never makes a step of. */
+/** Judge a move against the step on show by what it did to the edges, a
+ * line by the way it runs too, which a solve never makes a step of. */
 export function wordtrailKeepTrack(
   move: WordtrailMove,
   step: HintStep<WordtrailMove>,
@@ -108,5 +109,6 @@ export function wordtrailKeepTrack(
     state.edges,
     executeMove(state, move).edges,
     (changes): WordtrailMove => ({ kind: "edges", changes }),
+    (change) => codeOf(state, change),
   );
 }

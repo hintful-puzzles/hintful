@@ -3,8 +3,8 @@
  * compiled, on the engine's marks and runner (`engine/ladder-runtime.ts`),
  * and the answer check its rules compile to.
  *
- * The answer is on the edges between squares side by side, each a line or
- * none; a cross, an edge beside a dark square and an edge no line will take
+ * The answer is on the edges between squares side by side, each a line,
+ * which runs one way, or none; a cross, an edge beside a dark square and an edge no line will take
  * are all "none". The board is dealt as the description reads it: its dark
  * squares, its lengths, and every trail of its letters that spells a word
  * (`trails.ts`), which is how a technique reads the word list.
@@ -35,15 +35,17 @@ import {
   TIERS as SCALE,
   type Taken,
 } from "../../engine/ladder-runtime.ts";
-import { CROSS, type EdgeMark, LINE, OPEN } from "../../engine/line-drawing.ts";
+import { CROSS, type EdgeChange, LINE, OPEN } from "../../engine/line-drawing.ts";
 import { type SquareEdges, squareEdges } from "../../engine/square-edges.ts";
 import * as wordtrail from "../../generated/games/wordtrail/wordtrail.compiled.ts";
-import { DIFF_NORMAL } from "./state.ts";
+import { DIFF_NORMAL, type EdgeCode, LINE_BACK } from "./state.ts";
 import type { Trail } from "./trails.ts";
 
-/** What the description reads an edge as holding. */
-const LINED = 1;
+/** What the description reads an edge as holding: a line read from the
+ * space's first end of the edge, none, or a line read from its second. */
+const FORTH = 1;
 const NONE = 2;
+const BACK = 3;
 
 /** The rungs, easiest first: the ladder's techniques. */
 export const WORDTRAIL_RUNGS = wordtrail.SAYS_KINDS;
@@ -75,6 +77,23 @@ interface Geometry {
   /** The game's edge for each of the space's. */
   toGame: Int32Array;
 }
+
+/** The space's value for the game's edge `e` holding `code`, or 0 for an
+ * open edge. */
+function spaceValue(geo: Geometry, e: number, code: number): number {
+  if (code === CROSS) return NONE;
+  if (code !== LINE && code !== LINE_BACK) return 0;
+  const from = code === LINE ? geo.g.a[e] : geo.g.b[e];
+  return from === geo.sp.edgeEnds[2 * geo.toSp[e]] ? FORTH : BACK;
+}
+
+/** The square a line the space holds as `v` on its edge `se` runs from. */
+const spaceFrom = (geo: Geometry, se: number, v: number): number =>
+  geo.sp.edgeEnds[2 * se + (v === FORTH ? 0 : 1)];
+
+/** The game's code for its edge `e` holding a line from square `from`. */
+const lineCode = (geo: Geometry, e: number, from: number): EdgeCode =>
+  from === geo.g.a[e] ? LINE : LINE_BACK;
 
 function geometryOf(w: number, h: number): Geometry {
   const sp = describedSpace(wordtrail.units, w, h);
@@ -149,39 +168,49 @@ interface Deduction {
 const darkEdge = (board: WordtrailBoard, g: SquareEdges, e: number): boolean =>
   board.letters[g.a[e]] === 0 || board.letters[g.b[e]] === 0;
 
-/** The marks `board` holds as the description reads them: a line, none for
- * a cross or an edge beside a dark square, and nothing for an open edge. */
+/** The marks `board` holds as the description reads them: a line the way
+ * it runs, none for a cross or an edge beside a dark square, and nothing
+ * for an open edge. */
 function deduction(board: WordtrailBoard): Deduction {
   const geo = geometryOf(board.w, board.h);
   const grid = new Uint8Array(geo.sp.edges.length);
-  for (let e = 0; e < geo.g.edgeCount; e++) {
-    if (darkEdge(board, geo.g, e) || board.edges[e] === CROSS) grid[geo.toSp[e]] = NONE;
-    else if (board.edges[e] === LINE) grid[geo.toSp[e]] = LINED;
-  }
-  const m = new CellMarks(geo.sp, rangeMask(LINED, NONE), grid, null, "edge");
+  for (let e = 0; e < geo.g.edgeCount; e++)
+    grid[geo.toSp[e]] = darkEdge(board, geo.g, e)
+      ? NONE
+      : spaceValue(geo, e, board.edges[e]);
+  const m = new CellMarks(geo.sp, rangeMask(FORTH, BACK), grid, null, "edge");
   m.seed(grid);
   return { geo, m, ladder: wordtrailLadder(board) };
 }
 
-/** Write the marks back onto `board`: a line, a cross where the marks say
- * none beside two letters, and open where they say nothing. */
+/** Write the marks back onto `board`: a line the way it runs, a cross where
+ * the marks say none beside two letters, and open where they say nothing. */
 function writeBack(d: Deduction, board: WordtrailBoard): void {
-  const { g, toSp } = d.geo;
-  for (let e = 0; e < g.edgeCount; e++) {
-    if (darkEdge(board, g, e)) continue;
-    const v = d.m.grid[toSp[e]];
-    board.edges[e] = v === LINED ? LINE : v === NONE ? CROSS : OPEN;
+  const { geo } = d;
+  for (let e = 0; e < geo.g.edgeCount; e++) {
+    if (darkEdge(board, geo.g, e)) continue;
+    const se = geo.toSp[e];
+    const v = d.m.grid[se];
+    board.edges[e] =
+      v === FORTH || v === BACK
+        ? lineCode(geo, e, spaceFrom(geo, se, v))
+        : v === NONE
+          ? CROSS
+          : OPEN;
   }
 }
 
 /** Whether the lines divide the letters into words of the listed lengths,
- * by the rules the description compiles to. A cross and an open edge are
- * the same here, so a player need cross nothing out to finish. */
+ * each read the way its lines run, by the rules the description compiles
+ * to. A cross and an open edge are the same here, so a player need cross
+ * nothing out to finish. */
 export function isComplete(board: WordtrailBoard): boolean {
   const geo = geometryOf(board.w, board.h);
   const g = new Uint8Array(geo.sp.edges.length).fill(NONE);
-  for (let e = 0; e < geo.g.edgeCount; e++)
-    if (board.edges[e] === LINE) g[geo.toSp[e]] = LINED;
+  for (let e = 0; e < geo.g.edgeCount; e++) {
+    const v = spaceValue(geo, e, board.edges[e]);
+    if (v === FORTH || v === BACK) g[geo.toSp[e]] = v;
+  }
   return wordtrail.isAnswer(g, geo.sp, dealtOf(board));
 }
 
@@ -208,17 +237,17 @@ export function solveWordtrail(
   return isComplete(board) ? "solved" : "unsolved";
 }
 
-/** The lines of a board's answer, or `null` where the ladder does not reach
- * one. */
+/** The lines of a board's answer, each the way it runs, or `null` where the
+ * ladder does not reach one. */
 export function answerOf(
   board: Omit<WordtrailBoard, "edges">,
-): readonly EdgeMark[] | null {
+): readonly EdgeCode[] | null {
   const solving: WordtrailBoard = {
     ...board,
     edges: new Uint8Array(squareEdges(board.w, board.h).edgeCount),
   };
   if (solveWordtrail(solving, DIFF_NORMAL) !== "solved") return null;
-  return Array.from(solving.edges, (m) => (m === LINE ? LINE : OPEN));
+  return Array.from(solving.edges, (m) => (m === LINE || m === LINE_BACK ? m : OPEN));
 }
 
 /** What the hint's steps are built from besides the technique's terms. */
@@ -228,8 +257,8 @@ export interface WordtrailWalkContext {
   /** The game's edge for one of the space's. */
   edgeOf(spaceEdge: number): number;
   /** The edges a taken firing decides, as the game numbers them, each with
-   * the mark it makes. */
-  decided(taken: Taken): { edge: number; mark: typeof LINE | typeof CROSS }[];
+   * the mark it makes and a line with the square it runs from. */
+  decided(taken: Taken): EdgeChange[];
 }
 
 /**
@@ -256,13 +285,19 @@ export function wordtrailWalk(state: WordtrailBoard): {
       // A firing that reads an edge from both its squares decides it from
       // each: the one change.
       decided: (taken) => {
-        const out = new Map<number, typeof LINE | typeof CROSS>();
-        for (let i = 0; i < taken.facts.length; i += 3)
+        const out = new Map<number, EdgeChange>();
+        for (let i = 0; i < taken.facts.length; i += 3) {
+          const se = taken.facts[i + 1];
+          const v = taken.facts[i + 2];
+          const edge = geo.toGame[se];
           out.set(
-            geo.toGame[taken.facts[i + 1]],
-            taken.facts[i + 2] === LINED ? LINE : CROSS,
+            edge,
+            v === NONE
+              ? { edge, mark: CROSS }
+              : { edge, mark: LINE, from: spaceFrom(geo, se, v) },
           );
-        return Array.from(out, ([edge, mark]) => ({ edge, mark }));
+        }
+        return [...out.values()];
       },
     },
   };

@@ -664,7 +664,9 @@ builds `interpretMove` and `crossDrag`. `move` turns the edges a release
 changes into the game's own saved move, so Pearl keeps its op pairs. Export
 `crossDrag` and add it to `drag-marks.test.ts`
 (§ "A mark outside the verbs that drags"). Exemplars:
-[`path/`](../src/games/path/) and [`pearl/`](../src/games/pearl/).
+[`path/`](../src/games/path/) and [`pearl/`](../src/games/pearl/), and
+[`wordtrail/`](../src/games/wordtrail/) for lines that run one way, whose
+saved move must refuse a line with no direction.
 
 Tracks' rail drag is not this one: it commits each edge as the pointer
 passes it, through the sweep, and its square drag fills one row or column.

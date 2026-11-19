@@ -11,6 +11,7 @@ import {
   CROSS,
   type EdgeChange,
   type EdgeMark,
+  edgeMistakes,
   LINE,
   type LineDrawingUi,
   type LineRules,
@@ -315,5 +316,175 @@ describe("the keys", () => {
   it("Shift+arrow crosses the edge", () => {
     const { moves } = press(board(), [CURSOR_RIGHT | MOD_SHFT]);
     expect(moves[0]).toEqual([{ edge: edge(0, 1), mark: CROSS }]);
+  });
+});
+
+describe("directed lines", () => {
+  interface Directed extends Board {
+    from: number[];
+  }
+
+  /** A board whose lines run along each of `runs`, each in its order. */
+  function runs(...paths: number[][]): Directed {
+    const s = { ...board(), from: new Array<number>(g.edgeCount).fill(-1) };
+    for (const p of paths)
+      for (let k = 1; k < p.length; k++) {
+        s.edges[edge(p[k - 1], p[k])] = LINE;
+        s.from[edge(p[k - 1], p[k])] = p[k - 1];
+      }
+    return s;
+  }
+
+  const input = lineDrawing<Directed, LineDrawingUi, null, readonly EdgeChange[]>(
+    {
+      mark: (s, e) => s.edges[e],
+      takes: () => 2,
+      loops: false,
+      directed: { from: (s, e) => s.from[e] },
+    },
+    {
+      layout: () => ({ tile: TILE, border: 0 }),
+      move: (_s, changes) => changes,
+    },
+  );
+
+  function dragOn(state: Directed, cells: number[]) {
+    const ui = newUi();
+    input.interpretMove(state, ui, null, center(cells[0]), LEFT_BUTTON);
+    for (const c of cells.slice(1))
+      input.interpretMove(state, ui, null, center(c), LEFT_DRAG);
+    return input.interpretMove(
+      state,
+      ui,
+      null,
+      center(cells.at(-1) ?? 0),
+      LEFT_RELEASE,
+    );
+  }
+
+  /** The lines along `path`, each running the way the path does. */
+  const laid = (...path: number[]): EdgeChange[] =>
+    path
+      .slice(1)
+      .map((j, k) => ({ edge: edge(path[k], j), mark: LINE, from: path[k] }) as const)
+      .sort((a, b) => a.edge - b.edge);
+
+  it("lays each line the way the drag passed it", () => {
+    expect(dragOn(runs(), [2, 1, 0])).toEqual(laid(2, 1, 0));
+  });
+
+  it("carries a run on from its end", () => {
+    expect(dragOn(runs([0, 1]), [0, 1, 2])).toEqual(laid(1, 2));
+  });
+
+  it("joins a run at its front: I-G-N, then A-L-I onto the I, reads A-L-I-G-N", () => {
+    expect(dragOn(runs([3, 4, 5]), [1, 0, 3])).toEqual(laid(1, 0, 3));
+  });
+
+  it("stops a drag setting off from a run's first square by another edge", () => {
+    expect(dragOn(runs([3, 4, 5]), [3, 0, 1])).toBe(UI_UPDATE);
+  });
+
+  it("stops a drag that would meet a run head to head", () => {
+    expect(dragOn(runs([3, 4, 5]), [2, 5])).toBe(UI_UPDATE);
+    // It keeps what it drew before the square.
+    expect(dragOn(runs([3, 4, 5]), [0, 1, 2, 5])).toEqual(laid(0, 1, 2));
+  });
+
+  it("stops a drag that would close a run on itself", () => {
+    expect(dragOn(runs([0, 1, 4, 3]), [3, 0])).toBe(UI_UPDATE);
+  });
+
+  it("takes up a run's lines dragged back along them, either way", () => {
+    const off = [
+      { edge: edge(0, 1), mark: OPEN },
+      { edge: edge(1, 2), mark: OPEN },
+    ];
+    expect(dragOn(runs([0, 1, 2]), [0, 1, 2])).toEqual(off);
+    expect(dragOn(runs([0, 1, 2]), [2, 1, 0])).toEqual(off);
+  });
+
+  it("is the same from the keyboard", () => {
+    const ui = newUi();
+    ui.cursor.visible = true;
+    const moves = [CURSOR_SELECT, CURSOR_DOWN, CURSOR_RIGHT, CURSOR_SELECT].map((k) =>
+      input.interpretMove(runs(), ui, null, { x: 0, y: 0 }, k),
+    );
+    expect(moves.at(-1)).toEqual(laid(0, 3, 4));
+  });
+
+  it("Ctrl+arrow lays a line the way the cursor moves", () => {
+    const ui = newUi();
+    ui.cursor.visible = true;
+    input.interpretMove(runs(), ui, null, { x: 0, y: 0 }, CURSOR_RIGHT);
+    const move = input.interpretMove(
+      runs(),
+      ui,
+      null,
+      { x: 0, y: 0 },
+      CURSOR_LEFT | MOD_CTRL,
+    );
+    expect(move).toEqual(laid(1, 0));
+  });
+
+  describe("the click", () => {
+    /** A click near the edge between squares `i` and `i + 1`. */
+    function clickRight(state: Directed, i: number) {
+      const ui = newUi();
+      const p = {
+        x: (i % W) * TILE + TILE - 1,
+        y: Math.floor(i / W) * TILE + TILE / 2,
+      };
+      input.interpretMove(state, ui, null, p, LEFT_BUTTON);
+      return input.interpretMove(state, ui, null, p, LEFT_RELEASE);
+    }
+
+    it("points a line right or down beside no run", () => {
+      expect(clickRight(runs(), 0)).toEqual(laid(0, 1));
+    });
+
+    it("carries a run on from its end, and joins one at its front", () => {
+      expect(clickRight(runs([2, 1]), 0)).toEqual(laid(1, 0));
+      expect(clickRight(runs([1, 0]), 1)).toEqual(laid(2, 1));
+    });
+
+    it("turns a line pointing right round, and takes one pointing left up", () => {
+      expect(clickRight(runs([0, 1]), 0)).toEqual(laid(1, 0));
+      expect(clickRight(runs([1, 0]), 0)).toEqual([{ edge: edge(0, 1), mark: OPEN }]);
+    });
+
+    it("takes a line up where it cannot turn round", () => {
+      // The line from 3 into 0 and on to 1: turned round, 0 would have two
+      // lines out.
+      expect(clickRight(runs([3, 0, 1]), 0)).toEqual([
+        { edge: edge(0, 1), mark: OPEN },
+      ]);
+    });
+  });
+
+  it("is laid by a hint as a drag from its square", () => {
+    expect(input.hintGesture(runs(), null, laid(1, 0))).toEqual([
+      {
+        kind: "drag",
+        button: "primary",
+        from: center(1),
+        through: undefined,
+        to: center(0),
+      },
+    ]);
+  });
+
+  it("is revealed where it runs the other way round", () => {
+    expect(input.revealLine(runs([1, 0]), runs([0, 1]))).toEqual(laid(0, 1));
+  });
+});
+
+describe("edgeMistakes", () => {
+  it("counts a directed game's line the wrong way round as a mistake", () => {
+    // A game storing a line from its edge's second square as 3.
+    expect(edgeMistakes([LINE, 3, CROSS, OPEN], [3, 3, LINE, LINE])).toEqual([
+      { edge: 0 },
+      { edge: 2 },
+    ]);
   });
 });

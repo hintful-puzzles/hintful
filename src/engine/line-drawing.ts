@@ -27,10 +27,21 @@
  * A game declares what is the puzzle's ({@link LineRules}): what an edge
  * holds, how many lines a square takes, and whether a drag may close a loop.
  * Its saved move stays its own, made from the edges a release changes.
+ *
+ * A game may declare its lines directed ({@link LineRules.directed}), as
+ * Wordtrail's words read from their first letter: each line runs from one
+ * square to the next. A drag lays its lines the way it passes them, a
+ * square takes at most one line in and one out, and no run of lines closes
+ * on itself. So a drag from the end of a run carries it on, one that ends on
+ * a run's first square joins onto its front, and one that sets off from a
+ * run's first square, or would meet a run head to head, stops before the
+ * square as it stops where a square would take too many lines. A click and
+ * Ctrl+arrow lay a line with a direction too ({@link lineDrawing}'s
+ * `clickLine`).
  */
 
 import { UI_UPDATE, type UiUpdate } from "./game.ts";
-import { click, type PointerAction } from "./hint-gesture.ts";
+import { click, drag as dragGesture, type PointerAction } from "./hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -59,6 +70,7 @@ import {
   edgeMiddle,
   pointAtEdge,
   squareAt,
+  squareCenter,
   squareEdges,
 } from "./square-edges.ts";
 import {
@@ -85,6 +97,9 @@ export type EdgeMark = typeof OPEN | typeof LINE | typeof CROSS;
 export interface EdgeChange {
   readonly edge: number;
   readonly mark: EdgeMark;
+  /** In a directed game, the square a line it lays runs from; absent for a
+   * line without direction, an open edge and a cross. */
+  readonly from?: number;
 }
 
 /** What is the puzzle's about drawing its lines. */
@@ -105,6 +120,11 @@ export interface LineRules<S extends Board> {
    * step and not at the press, so a game can take the way the drag sets off
    * as the way it means to redraw. Absent, a drag replaces nothing. */
   restarts?(state: S, i: number, toward: number): readonly number[];
+  /** Present where the lines run one way: `from` is the square the line on
+   * edge `e` runs from, asked only of an edge holding a line. A square then
+   * takes at most one line in and one out, whatever {@link takes} allows,
+   * and no run of lines closes on itself. */
+  directed?: { from(state: S, e: number): number };
 }
 
 interface Board {
@@ -143,15 +163,21 @@ export interface EdgeMistake {
  * The edges marked against `answer`, the lines of a board's one answer: a line
  * it does not have, and a cross on one it does. An open edge is never one
  * (docs/solver-and-generator.md § "Edge games flag set edges only").
+ *
+ * Each edge holds a game's own code: `OPEN`, `CROSS`, and anything else a
+ * line, which is `LINE` but for a directed game that stores which way its
+ * line runs in the code. A line is against the answer where the answer holds
+ * another code there, so a line the wrong way round is a mistake.
  */
 export function edgeMistakes(
   marks: ArrayLike<number>,
   answer: ArrayLike<number>,
 ): EdgeMistake[] {
+  const isLine = (code: number) => code !== OPEN && code !== CROSS;
   const out: EdgeMistake[] = [];
   for (let edge = 0; edge < marks.length; edge++) {
-    if (marks[edge] === LINE && answer[edge] !== LINE) out.push({ edge });
-    if (marks[edge] === CROSS && answer[edge] === LINE) out.push({ edge });
+    if (isLine(marks[edge]) && answer[edge] !== marks[edge]) out.push({ edge });
+    if (marks[edge] === CROSS && isLine(answer[edge])) out.push({ edge });
   }
   return out;
 }
@@ -162,10 +188,33 @@ function marksOf<S extends Board>(rules: LineRules<S>, state: S): EdgeMark[] {
   return Array.from({ length: g.edgeCount }, (_, e) => rules.mark(state, e));
 }
 
+/** The square each edge's line runs from in `state`, or -1 for an edge
+ * with no line or a game whose lines have no direction. */
+function fromsOf<S extends Board>(
+  rules: LineRules<S>,
+  state: S,
+  marks: readonly EdgeMark[],
+): number[] {
+  const { directed } = rules;
+  return marks.map((m, e) => (directed && m === LINE ? directed.from(state, e) : -1));
+}
+
+/** `marks` and `froms` with `changes` made. */
+function applyChanges(
+  marks: EdgeMark[],
+  froms: number[],
+  changes: readonly EdgeChange[],
+): void {
+  for (const c of changes) {
+    marks[c.edge] = c.mark;
+    froms[c.edge] = c.from ?? -1;
+  }
+}
+
 /**
  * The edges a drag through `cells` sets: a line along every edge it passes,
  * keeping the lines already there, or, where it passes only lines, every one
- * taken up.
+ * taken up. A directed game's line runs the way the drag passed it.
  */
 function dragChanges<S extends Board>(
   rules: LineRules<S>,
@@ -173,14 +222,18 @@ function dragChanges<S extends Board>(
   cells: readonly number[],
 ): EdgeChange[] {
   const g = squareEdges(state.w, state.h);
-  const passed = new Set<number>();
+  // Each edge passed, and the square the drag passed it from.
+  const passed = new Map<number, number>();
   for (let k = 1; k < cells.length; k++)
-    passed.add(edgeBetween(g, cells[k - 1], cells[k]));
-  const lays = [...passed].some((e) => rules.mark(state, e) !== LINE);
+    passed.set(edgeBetween(g, cells[k - 1], cells[k]), cells[k - 1]);
+  const lays = [...passed.keys()].some((e) => rules.mark(state, e) !== LINE);
   const out: EdgeChange[] = [];
-  for (const edge of passed) {
-    const mark = lays ? LINE : OPEN;
-    if (rules.mark(state, edge) !== mark) out.push({ edge, mark });
+  for (const [edge, from] of passed) {
+    if (!lays) {
+      if (rules.mark(state, edge) !== OPEN) out.push({ edge, mark: OPEN });
+    } else if (rules.mark(state, edge) !== LINE) {
+      out.push(rules.directed ? { edge, mark: LINE, from } : { edge, mark: LINE });
+    }
   }
   return out.sort((x, y) => x.edge - y.edge);
 }
@@ -212,12 +265,13 @@ export function dragPreview<S extends Board>(
         rules.mark(state, edgeBetween(g, drag.cells[k - 1], drag.cells[k])) !== LINE;
     if (!lays) return [];
   }
-  const marks = new Map<number, EdgeMark>(replaces.map((e) => [e, OPEN]));
+  const changes = new Map<number, EdgeChange>(
+    replaces.map((edge) => [edge, { edge, mark: OPEN }]),
+  );
   for (const c of dragChanges(seenBy(rules, drag), state, drag.cells))
-    marks.set(c.edge, c.mark);
-  return [...marks]
-    .filter(([e, mark]) => rules.mark(state, e) !== mark)
-    .map(([edge, mark]) => ({ edge, mark }))
+    changes.set(c.edge, c);
+  return [...changes.values()]
+    .filter((c) => rules.mark(state, c.edge) !== c.mark)
     .sort((x, y) => x.edge - y.edge);
 }
 
@@ -232,16 +286,62 @@ function linesAt(state: Board, marks: readonly EdgeMark[], i: number): number {
   return n;
 }
 
-/** Whether a line can go on open edge `e`: it is not crossed out, and neither
- * square it joins has all the lines it takes. */
-function lineFits<S extends Board>(rules: LineRules<S>, state: S, e: number): boolean {
-  const mark = rules.mark(state, e);
-  if (mark !== OPEN) return mark === LINE;
+/** Whether the lines `marks` and `froms` hold obey a directed game's own
+ * rules at squares `at`: each takes at most one line in and one out, and no
+ * run of lines through it closes on itself. */
+function directedFits(
+  state: Board,
+  marks: readonly EdgeMark[],
+  froms: readonly number[],
+  at: readonly number[],
+): boolean {
+  const g = squareEdges(state.w, state.h);
+  /** The square square `i`'s one line out runs to, or -1; `null` where it
+   * has two lines in or two out. */
+  const next = (i: number): number | null => {
+    let ins = 0;
+    let to = -1;
+    for (let d = 0; d < 4; d++) {
+      const e = g.around[i * 4 + d];
+      if (e < 0 || marks[e] !== LINE) continue;
+      if (froms[e] !== i) ins++;
+      else if (to >= 0) return null;
+      else to = g.a[e] === i ? g.b[e] : g.a[e];
+    }
+    return ins > 1 ? null : to;
+  };
+  for (const i of at) {
+    let j = next(i);
+    if (j === null) return false;
+    // A run closes on itself where following its lines on comes back to
+    // where it set off. It runs through each square at most once.
+    for (let steps = 0; j >= 0 && steps < g.cells; steps++) {
+      if (j === i) return false;
+      const k = next(j);
+      if (k === null) return false;
+      j = k;
+    }
+  }
+  return true;
+}
+
+/** Whether the line `change` lays fits: its edge is not crossed out, and
+ * neither square it joins has all the lines it takes, or for a directed
+ * game, a line in or out already the way this one runs. */
+function lineFits<S extends Board>(
+  rules: LineRules<S>,
+  state: S,
+  change: EdgeChange,
+): boolean {
+  const e = change.edge;
+  if (rules.mark(state, e) === CROSS) return false;
   const g = squareEdges(state.w, state.h);
   const marks = marksOf(rules, state);
-  return [g.a[e], g.b[e]].every(
-    (i) => linesAt(state, marks, i) < rules.takes(state, i),
-  );
+  const froms = fromsOf(rules, state, marks);
+  const ends = [g.a[e], g.b[e]];
+  applyChanges(marks, froms, [change]);
+  if (ends.some((i) => linesAt(state, marks, i) > rules.takes(state, i))) return false;
+  return !rules.directed || directedFits(state, marks, froms, ends);
 }
 
 /**
@@ -301,8 +401,10 @@ function extendDrag<S extends Board>(
     const e = edgeBetween(g, at, next);
     if (view.mark(state, e) === CROSS) break;
     const marks = marksOf(view, state);
-    for (const c of dragChanges(view, state, [...cells, next])) marks[c.edge] = c.mark;
+    const froms = fromsOf(view, state, marks);
+    applyChanges(marks, froms, dragChanges(view, state, [...cells, next]));
     if ([at, next].some((i) => linesAt(state, marks, i) > view.takes(state, i))) break;
+    if (view.directed && !directedFits(state, marks, froms, [at, next])) break;
     cells.push(next);
     at = next;
   }
@@ -336,8 +438,9 @@ export interface LineDrawing<S, U, D, M> {
   ): readonly PointerAction[];
   /** `Game.clearMistakes` for the edges `edges`: each one opened, in one move. */
   clearEdges(state: S, edges: readonly number[]): M[];
-  /** `Game.revealOne`: the first line of `solved` that `state` does not draw.
-   * The crosses are the player's notes, never an element of the answer. */
+  /** `Game.revealOne`: the first line of `solved` that `state` does not draw,
+   * or draws the other way round. The crosses are the player's notes, never
+   * an element of the answer. */
   revealLine(state: S, solved: S): M | null;
 }
 
@@ -353,11 +456,60 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
 
   const fixed = (state: S, e: number): boolean => rules.fixed?.(state, e) ?? false;
 
-  /** A line on edge `e`, or the line taken off it. */
-  const toggleLine = (state: S, e: number): M | null => {
+  /** The first of `changes` that fits, as a move, or `null`. */
+  const firstFitting = (state: S, changes: readonly EdgeChange[]): M | null => {
+    const change = changes.find((c) => lineFits(rules, state, c));
+    return change ? moveOf(state, [change]) : null;
+  };
+
+  /**
+   * A click on edge `e`: a line, or the line taken off it. In a directed game
+   * a line laid beside a run's end carries the run on, and one laid beside a
+   * run's first square joins onto its front; anywhere else it points right
+   * or down. A click on a line that points right or down turns it round
+   * where it fits so; otherwise the click takes the line up.
+   */
+  const clickLine = (state: S, e: number): M | null => {
+    if (fixed(state, e)) return null;
+    const { directed } = rules;
+    const g = edges(state);
+    const [a, b] = [g.a[e], g.b[e]];
+    const off: EdgeChange = { edge: e, mark: OPEN };
+    if (rules.mark(state, e) === LINE) {
+      if (!directed || directed.from(state, e) !== a) return moveOf(state, [off]);
+      return firstFitting(state, [{ edge: e, mark: LINE, from: b }, off]);
+    }
+    if (!directed) return firstFitting(state, [{ edge: e, mark: LINE }]);
+    const runs = (i: number, out: boolean): boolean =>
+      [0, 1, 2, 3].some((d) => {
+        const f = g.around[i * 4 + d];
+        return (
+          f >= 0 &&
+          rules.mark(state, f) === LINE &&
+          (directed.from(state, f) === i) === out
+        );
+      });
+    // A run's end has a line in and none out; its first square the reverse.
+    const end = (i: number) => runs(i, false) && !runs(i, true);
+    const start = (i: number) => runs(i, true) && !runs(i, false);
+    const line = (from: number): EdgeChange => ({ edge: e, mark: LINE, from });
+    const ways = [
+      ...[a, b].filter(end).map(line),
+      ...[a, b].filter(start).map((i) => line(i === a ? b : a)),
+      line(a),
+      line(b),
+    ];
+    return firstFitting(state, ways);
+  };
+
+  /** Ctrl+arrow on edge `e` from the cursor's square `i`: the line taken up,
+   * or one laid, running from `i` in a directed game. */
+  const keyLine = (state: S, e: number, i: number): M | null => {
     if (fixed(state, e)) return null;
     if (rules.mark(state, e) === LINE) return moveOf(state, [{ edge: e, mark: OPEN }]);
-    return lineFits(rules, state, e) ? moveOf(state, [{ edge: e, mark: LINE }]) : null;
+    return firstFitting(state, [
+      rules.directed ? { edge: e, mark: LINE, from: i } : { edge: e, mark: LINE },
+    ]);
   };
 
   /** A cross on edge `e`, or the cross taken off it: nothing on a line. */
@@ -434,7 +586,7 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
       // A press released where it began is a click on the edge it was aimed
       // at, which is more controllable than where it was released.
       const e = drag.at ? aimedEdge(state, ds, drag.at) : null;
-      return (e !== null ? toggleLine(state, e) : null) ?? UI_UPDATE;
+      return (e !== null ? clickLine(state, e) : null) ?? UI_UPDATE;
     }
     if (button === RIGHT_RELEASE) {
       // A cross drag made its moves as it went; its release is not a click.
@@ -451,7 +603,7 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
         const e = edgeFromCursor(state, ui, button);
         if (e === null) return null;
         if (!(rawButton & MOD_CTRL)) return toggleCross(state, e);
-        const move = toggleLine(state, e);
+        const move = keyLine(state, e, ui.cursor.y * state.w + ui.cursor.x);
         if (move && !(rawButton & MOD_SHFT))
           moveCursor(ui.cursor, button, state.w, state.h);
         return move;
@@ -485,17 +637,25 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
     return null;
   }
 
+  // A directed line is a drag from its square, which a click may lay the
+  // other way round.
   const hintGesture = (
     state: S,
     ds: D,
     changes: readonly EdgeChange[],
   ): readonly PointerAction[] =>
-    changes.map(({ edge, mark }) =>
-      click(
-        pointAtEdge(edges(state), input.layout(ds), edge),
+    changes.map(({ edge, mark, from }) => {
+      const g = edges(state);
+      const layout = input.layout(ds);
+      if (mark === LINE && from !== undefined) {
+        const to = g.a[edge] === from ? g.b[edge] : g.a[edge];
+        return dragGesture(squareCenter(g, layout, from), squareCenter(g, layout, to));
+      }
+      return click(
+        pointAtEdge(g, layout, edge),
         mark === LINE ? "primary" : "secondary",
-      ),
-    );
+      );
+    });
 
   const clearEdges = (state: S, cleared: readonly number[]): M[] => {
     const move = moveOf(
@@ -507,8 +667,13 @@ export function lineDrawing<S extends Board, U extends LineDrawingUi, D, M>(
 
   const revealLine = (state: S, solved: S): M | null => {
     for (let e = 0; e < edges(state).edgeCount; e++) {
-      if (rules.mark(solved, e) === LINE && rules.mark(state, e) !== LINE)
-        return moveOf(state, [{ edge: e, mark: LINE }]);
+      if (rules.mark(solved, e) !== LINE) continue;
+      const from = rules.directed?.from(solved, e);
+      if (rules.mark(state, e) === LINE && from === rules.directed?.from(state, e))
+        continue;
+      return moveOf(state, [
+        from === undefined ? { edge: e, mark: LINE } : { edge: e, mark: LINE, from },
+      ]);
     }
     return null;
   };
