@@ -245,8 +245,11 @@ interface ClueSym {
   v: V;
   /** A clue at the board's fields, by name: a number, one an element by
    * element, or a list. */
-  fields?: ReadonlyMap<string, Nx | readonly Nx[] | Extract<V, { k: "list" }>>;
+  fields?: ReadonlyMap<string, ClueField>;
 }
+
+/** A board clue's field: a number, one an element by element, or a list. */
+type ClueField = Nx | readonly Nx[] | Extract<V, { k: "list" }>;
 
 /** The clues at the board each kind of them is checked with, each present
  * or not: two, so a technique comparing two is checked as one reading one. */
@@ -3658,6 +3661,18 @@ function modelLines(
     typeof x === "number" || typeof x === "boolean"
       ? String(x)
       : String(model.eval(x, true));
+  // A board clue sits nowhere, so what it says is only in its fields: a
+  // number, one per cell, or a list of the length it was dealt.
+  const field = (f: ClueField): string => {
+    if (isListV(f))
+      return `[${f.items
+        .slice(0, Math.max(Number(ev(f.len)), 0))
+        .map(ev)
+        .join(" ")}]`;
+    return Array.isArray(f)
+      ? `[${(f as readonly Nx[]).map(ev).join(" ")}]`
+      : ev(f as Nx);
+  };
   const rows = [
     `model of ${what}`,
     `answer ${board.ans.map(ev).join(" ")}`,
@@ -3666,7 +3681,13 @@ function modelLines(
       ([kind, cs]) =>
         `clue ${kind}: ${cs
           .filter((c) => ev(c.present) === "true")
-          .map((c) => `${c.at}:${c.v.k === "num" ? ev(c.v.v) : c.v.k}`)
+          .map((c) =>
+            c.fields === undefined
+              ? `${c.at}:${c.v.k === "num" ? ev(c.v.v) : c.v.k}`
+              : `{${[...c.fields]
+                  .map(([name, f]) => `${name}=${field(f)}`)
+                  .join(", ")}}`,
+          )
           .join(" ")}`,
     ),
     ...[...board.sizes].map(([n, v]) => `size ${n} = ${ev(v)}`),
