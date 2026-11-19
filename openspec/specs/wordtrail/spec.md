@@ -210,15 +210,21 @@ asks of it.
 - **WHEN** a drag runs from the L of the middle row down into the dark square below it
 - **THEN** no move is made
 
-### Requirement: Controls: Wordtrail's dictionary lists the words the board can spell
+### Requirement: Controls: Wordtrail's dictionary lists every word of the asked lengths
 
-Wordtrail's reference SHALL be titled "Dictionary" and list, by length, every
-common word some trail spells, A to Z, each once: placed where a drawn piece
-spells it, ruled out where no trail of it fits the player's lines and
-crosses, and outstanding otherwise. It SHALL ask for a search box, with a
-"Fits" filter for outstanding words and "Found" for placed ones. Selecting a
-word SHALL spotlight the letters of its trails that still fit, until the
-board is touched.
+Wordtrail's reference SHALL be titled "Dictionary" and list every common
+word of each length the board asks for, under letter headings, a group a
+length: placed where a drawn piece spells it, outstanding where a trail of
+it still fits the player's lines and crosses, and ruled out otherwise. It SHALL ask for a search box, with a "Fits" filter for
+outstanding words and "Found" for placed ones. Selecting a word SHALL
+spotlight the letters of its trails that still fit, until the board is
+touched.
+
+#### Scenario: A word no trail spells
+
+- **WHEN** the board asks for four-letter words and no trail spells ABLE
+- **THEN** ABLE is listed in the "4 letters" group, ruled out, and hidden
+  under "Fits"
 
 #### Scenario: A crossed edge rules a word out
 

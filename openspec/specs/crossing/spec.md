@@ -317,17 +317,14 @@ in a run through it SHALL place it immediately.
 Where both runs through the selected cell can take the clue, it SHALL be placed
 in the run whose squares are already the more written-in, and only a tie SHALL
 be settled by the current fill direction: a blank run admits every unused clue
-of its length and so is no evidence of which run the player meant. The clue
-list SHALL be colored by the same rule, so that the color a clue is written in
-always names the run a click would send it to.
+of its length and so is no evidence of which run the player meant.
 
 #### Scenario: A clue completes the partly-written run rather than the blank one
 
 - **WHEN** one run through the selected cell already carries digits the clue
   agrees with, the crossing run is blank, and both could take the clue
 - **THEN** the clue is written into the partly-written run, whichever way the
-  fill direction happens to be pointing, and the clue list shows it in that
-  run's color
+  fill direction happens to be pointing
 
 ### Requirement: Controls: A clue's availability is decided from the player's entries alone
 
@@ -371,16 +368,46 @@ a wall, a right-click, an arrow and Enter SHALL leave the clue held.
   take it is clicked
 - **THEN** the clue is written into the run and that square is selected
 
-### Requirement: Preferences: The board marking and the list coloring are separate preferences
+### Requirement: Controls: Crossing's reference lists the numbers and those that fit the selected square
+
+Crossing's reference SHALL be titled "Numbers" and list every clue number
+under its length: placed where it is written into one run, in conflict where
+it is written into more, outstanding where it fits, and ruled out otherwise.
+With a square selected for digit entry, a number SHALL fit where a click on
+the list would write it into a run through that square; with none, where
+some run can still take it. The reference SHALL follow the selection as it
+moves.
+
+#### Scenario: The numbers that fit a selected crossing
+
+- **WHEN** a square at the crossing of a five-square run and a two-square run
+  is selected on a bare board
+- **THEN** the reference shows every five- and two-digit number outstanding
+  and every other number ruled out
+
+### Requirement: Controls: Crossing's reference searches, filters and picks a number up
+
+Crossing's reference SHALL ask for a search box, with a "Fits" filter for
+outstanding numbers and "Placed" for placed ones and those in conflict.
+Selecting a number SHALL pick it up, as a click on the list under the board
+does.
+
+#### Scenario: Picking a number up from the reference
+
+- **WHEN** the player selects 54384 in the reference
+- **THEN** 54384 is held, the board previews it in every run that can take
+  it, and a click on such a run writes it in
+
+### Requirement: Preferences: Marking the runs on the board is a preference
 
 Marking the runs through the selected cell on the board (`highlight-runs`)
-and coloring the clue list by where each clue fits (`fit-highlight`) SHALL be
-separately available as preferences, both on by default.
+SHALL be available as a preference, on by default. The clue list SHALL NOT be
+colored by where each clue fits: that is the reference's "Fits".
 
-#### Scenario: The board marking and the list coloring are independent
+#### Scenario: The board marking follows its preference
 
 - **WHEN** the preference for marking runs on the board is turned off
-- **THEN** the board is no longer marked, and the clue list is still colored
+- **THEN** the board is no longer marked when a cell is selected
 
 ### Requirement: Hint: The hint names the technique, not the candidate elimination
 
@@ -624,26 +651,23 @@ by its direction.
 - **AND** its sentence names one as the across run and the other as the down
   run
 
-### Requirement: Look: Selecting a cell shows which clues fit its runs
+### Requirement: Look: Selecting a cell marks its runs and leaves the list plain
 
-Selecting a cell SHALL mark the runs through it on the board. Selecting it for
-digit entry SHALL also indicate which clues can still go in either run, since
-clicking one places it there; selecting it for pencil marks SHALL leave the
-clues uncolored. A clue already written into the grid SHALL remain
-distinguishable from one that merely cannot go in the selected run.
+Selecting a cell SHALL mark the runs through it on the board, and the clue
+list SHALL stay in its plain ink: which clues fit is the reference's to show.
+A clue already written into the grid SHALL remain struck off.
 
 #### Scenario: Both runs through the selected cell are answered for
 
 - **WHEN** a cell lying in both a horizontal and a vertical run is selected
 - **THEN** both runs are marked on the board, each in its direction's color,
-  and each clue is written in the color of the run it fits, or dimmed when it
-  fits neither
+  and every clue not yet written into the grid is in the plain ink
 
 #### Scenario: A clue on the board stays distinguishable from an unavailable one
 
 - **WHEN** one clue has been written into the grid and another simply cannot go
   in the selected run
-- **THEN** the two are shown differently
+- **THEN** the first is struck off and the second is in the plain ink
 
 #### Scenario: The same cell selected for pencil marks
 
@@ -670,13 +694,11 @@ digit.
 - **WHEN** a cell holding a digit is selected while pencil mode is on
 - **THEN** the cell shows the pencil selection
 
-### Requirement: Look: Across and down each have one color, on the board and in the list
+### Requirement: Look: Across and down each have one color
 
-Horizontal and vertical runs SHALL be distinguished by color, and the same two
-colors SHALL be used both to mark a run on the board and to write the clues
-that fit it, so that the correspondence needs no legend. The color SHALL denote
-the run's direction and not whether it is the one being filled, so that
-changing the fill direction does not change what any color means.
+Horizontal and vertical runs SHALL be distinguished by color. The color SHALL
+denote the run's direction and not whether it is the one being filled, so
+that changing the fill direction does not change what any color means.
 
 #### Scenario: Changing the fill direction leaves each run its color
 
@@ -772,9 +794,9 @@ SHALL never be lit. The selection SHALL be hidden while the flash runs.
 ### Requirement: Look: The number list sits below the grid and shows how often each clue is placed
 
 `redraw` SHALL draw pencil marks in an empty square and a number-list panel
-below the grid, with each clue colored by how many times it is placed. A clue
-that is used up, or fits nowhere in the selection, SHALL be drawn in the
-collection's color for a clue that is used up.
+below the grid, with each clue colored by how many times it is placed: plain
+ink where it is in no run, struck off in the used-up color where it is in
+one, and in the error color where it is in more.
 
 #### Scenario: A clue written into the grid is drawn as used up
 

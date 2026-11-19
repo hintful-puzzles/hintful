@@ -1572,9 +1572,9 @@ written from the declared bound; a refusal SHALL still name the field alone.
 Where the model asks, the panel SHALL show a search box, which keeps the
 items whose label contains its text, case ignored. Where the model declares
 filters, the panel SHALL show "All" and each filter as buttons, one pressed,
-each with the count of items it shows, and keep the items the pressed one
-shows. A section left empty SHALL be hidden. The search and the pressed
-filter SHALL be kept while the panel is open and reset for another game.
+and keep the items the pressed one shows. A section left empty SHALL be
+hidden. The search, the pressed group and the pressed filter SHALL be kept
+while the panel is open and reset for another game.
 
 #### Scenario: Narrowing a dictionary
 
@@ -1582,3 +1582,18 @@ filter SHALL be kept while the panel is open and reset for another game.
   "ci" in the search box
 - **THEN** the panel lists only the words that fit every score and contain
   "ci", under their letters' headings
+
+### Requirement: The reference panel shows one group at a time, and its rows compose
+
+Where the model puts its sections in groups, the panel SHALL show each
+group as a button, the first pressed, and only the pressed group's
+sections. Each button of the group row and of the filter row SHALL count the
+items it would show under the search and the other row's pressed button.
+
+#### Scenario: Two rows that compose
+
+- **WHEN** a Wordtrail player on a board asking for three- and five-letter
+  words presses "5 letters" and then "Fits"
+- **THEN** the panel lists only the five-letter words that fit, "Fits"
+  counts five-letter words, and "3 letters" counts the three-letter words
+  that fit
