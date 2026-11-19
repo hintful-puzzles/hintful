@@ -575,6 +575,15 @@ export const puzzleCatalog = {
     collection: "own",
     family: "hidden",
   },
+  wordtrail: {
+    name: "Wordtrail",
+    aliases: [],
+    description: "Word-path puzzle",
+    objective:
+      "Divide the letters into words, each traced through letters side by side.",
+    collection: "own",
+    family: "lines",
+  },
 } as const satisfies Record<string, PuzzleData>;
 
 /** Catalog ids, sorted — the display order the home screen and menus use. */

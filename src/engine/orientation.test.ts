@@ -55,6 +55,7 @@ const UNEVEN_FRAME: Record<string, string> = {
   boats: "The fleet is drawn in a panel below the grid.",
   crossing: "The list of numbers to place is drawn below the grid.",
   undead: "The monster counts are drawn in a band above the grid.",
+  wordtrail: "The list of word lengths is drawn below the grid.",
 };
 
 const TILE_SIZES = [17, 32];

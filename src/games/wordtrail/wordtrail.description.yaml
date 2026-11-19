@@ -1,0 +1,240 @@
+# yaml-language-server: $schema=../../describe/description.schema.json
+
+game: wordtrail
+help:
+  rules: |-
+    Divide the letters into words. Each word is a trail of letters side by
+    side, never diagonal, read from one end to the other, and every letter is
+    in exactly one word. The list below the board says how long the words
+    are: one word for each length listed. The dark squares hold no letter.
+
+    Every puzzle has exactly one solution, and none needs a guess.
+  controls: |-
+    Drag from letter to letter to draw a word along the trail you pass. To
+    change your mind mid-stroke, draw back along its end: the letters you
+    retrace are taken back. Undo takes a stroke back. A drag from the end of
+    a word you have drawn carries it on, and a drag that runs only along
+    lines you have drawn takes them up. A line stops where it would give a
+    letter more than two lines, run into a dark square, or close a loop. You
+    can also click near the edge between two letters to draw or remove a
+    line there.
+
+    Right-click the edge between two letters to cross it out, to mark that
+    you are sure they are not next to each other in a word, and keep the
+    button down and drag to cross out every edge you pass. Right-click it
+    again to clear the cross. You never need to cross anything out to
+    finish.
+
+    The keyboard can also be used. The arrow keys move a cursor. Press Enter
+    to start a word, move the cursor along the way you want it, and press
+    Enter again to draw it; Space, Escape, Backspace or Delete abandons it
+    instead. Holding Ctrl while pressing an arrow key draws or removes the
+    line in that direction and moves along it, holding Ctrl and Shift
+    together does the same without moving, and holding Shift alone crosses
+    out or clears the edge in that direction.
+
+    A trail you have drawn is filled with color once its letters spell a
+    word of a listed length, and the list shows it.
+  hints: |-
+    **Hint** explains the next step rather than simply making it. It reasons
+    only from the lines and crosses you have drawn, so it carries on from
+    wherever you are, as long as none of those is wrong; if one is, it asks
+    you to fix the highlighted mistakes first.
+
+    {{hint-marks}}
+
+    A hint knows every trail on the board that spells a word of a length the
+    list has, and rules out each one your lines and crosses don't allow. Its
+    steps:
+
+    - **A letter with one way on.** A letter with no line yet and only one
+      neighbor it could still join must join that one: no word is a single
+      letter.
+    - **The words through a letter.** Every letter is in some word, so where
+      every word that still fits through a letter runs the same way, so does
+      the answer.
+    - **The only words of a length.** Where only as many words of some length
+      still fit as the list asks for, they are all words.
+name: Wordtrail
+family: regions
+sizes:
+  w: { min: 1, max: 12 }
+  h: { min: 1, max: 12 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  units: []
+answer:
+  # The edge between two squares side by side: 1 a line, the two letters one
+  # straight after the other in a word, and 2 none.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  # Whether square c holds a letter.
+  open(c): "clue(block, c) = none"
+  # The lines square c has.
+  lines(c): "count(y in adj4(c) where value(edge(c, y)) = 1)"
+  # The squares the lines join to square c.
+  piece(c): "through(c, {e in edges where value(e) = 1})"
+  # How many letters trail k has.
+  size(k): "count(x in cells where pos(k, x) > 0)"
+  # Whether trail k runs from square x straight on to square y.
+  follows(k, x, y): >-
+    pos(k, x) > 0 and pos(k, y) > 0
+    and (pos(k, x) = pos(k, y) + 1 or pos(k, y) = pos(k, x) + 1)
+  # Whether the marks still allow trail k as a word: no edge it runs along
+  # is none, and no other edge at its squares is a line.
+  fits(k): >-
+    forall x in cells where pos(k, x) > 0, y in adj4(x):
+    (follows(k, x, y) implies value(edge(x, y)) != 2)
+    and (follows(k, x, y) or value(edge(x, y)) != 1)
+  # Whether the edge between squares a and b may still take a line: neither
+  # has its two lines, and a line there would not close a loop. A player
+  # sees each at a glance, so such an edge counts as decided, and no
+  # technique crosses it out.
+  live(a, b): >-
+    not known(edge(a, b)) and lines(a) < 2 and lines(b) < 2
+    and b not in piece(a)
+  # Whether every trail of T runs from square x on to square y.
+  allRun(T, x, y): "forall k in T: follows(k, x, y)"
+  # Whether square x has its two lines once every edge every trail of T
+  # runs along from it is one.
+  filled(T, x): >-
+    count(y in adj4(x) where value(edge(x, y)) = 1 or allRun(T, x, y)) >= 2
+  # Whether every trail of T, all of them words, holds square x and leaves
+  # it some way other than to square y, so that the edge between them is
+  # none: worth a cross only where x is not filled by the trails' lines.
+  noneRun(T, x, y): >-
+    (forall k in T: pos(k, x) > 0 and not follows(k, x, y))
+    and not filled(T, x)
+  # The trails of T together decide the live edge between squares x and y.
+  decides(T, x, y): "live(x, y) and (allRun(T, x, y) or noneRun(T, x, y))"
+  # The trails of n letters the marks still allow.
+  fitting(n): "{k in clues(trail) where size(k) = n and fits(k)}"
+shape:
+  # A dark square has no line.
+  - "forall c in cells where not open(c): lines(c) = 0"
+  # Each letter's word is a trail the deal lists: its lines are the trail's,
+  # and only the trail's.
+  - "forall c in cells where open(c): exists k in clues(trail): pos(k, c) > 0 and fits(k)"
+clues:
+  # A dark square, which holds no letter.
+  block: { at: cell, value: "range(0, 0)", means: "lines(at) = 0" }
+  # A square's letter, a = 1 to z = 26. What the letters spell is read
+  # through the trails.
+  letter: { at: cell, value: "range(1, 26)", means: "true" }
+  # A length and how many words of it the answer has. The list names each
+  # length once.
+  words:
+    at: board
+    fields:
+      len: { value: "range(3, 8)" }
+      num: { value: "range(1, 144)" }
+    means: >-
+      count(c in cells where open(c) and |piece(c)| = len(k)) = len(k) * num(k)
+  # A trail of letters side by side that, read from its square at 1, spells
+  # a word of the list as long as one the list of lengths has: pos(k, x) is
+  # square x's place along it, from 1, and 0 off it. Every such trail is
+  # dealt, each once, either way round.
+  trail:
+    at: board
+    fields:
+      pos: { at: cell, value: "range(0, 8)" }
+    # Its squares are a path: each place from 1 to its size held by one
+    # square open, each after the first beside the one before.
+    means: >-
+      (forall i in range(1, size(k)): count(x in cells where pos(k, x) = i) = 1)
+      and (forall x in cells where pos(k, x) > 0:
+        open(x) and (pos(k, x) = 1 or (exists y in adj4(x): pos(k, y) = pos(k, x) - 1)))
+rules:
+  # The list names each length once.
+  lengths: "forall k in clues(words), j in clues(words) where j != k: len(j) != len(k)"
+  # The lengths cover every letter.
+  total: "sum(k in clues(words) of len(k) * num(k)) = count(c in cells where open(c))"
+freedom: { kind: fill }
+deal:
+  answer: words of the common list laid at random as trails on the grid, the squares they leave dark
+  letter: the words' letters
+  words: every word's length
+  trail: every trail of the letters that spells a word of the list of a listed length
+tiers: [Easy, Normal]
+names:
+  oneWay: "a letter with one way on"
+  onlyWord: "the words through a letter"
+  onlyLength: "the only words of a length"
+techniques:
+  # A letter with no line and one neighbor left that a line may join it to:
+  # no word is one letter long, so it joins that one. One with none left
+  # makes the marks inconsistent.
+  - id: oneWay
+    tier: Easy
+    for: >-
+      c in cells where open(c) and lines(c) = 0,
+      U = {y in adj4(c) where value(edge(c, y)) != 2}
+      where |U| = 0 or (|U| = 1 and not known(edge(c, first(U))))
+    conclude: "|U| = 1 and place(edge(c, first(U)), 1)"
+    says:
+      terms: { c: c }
+      marks: { outline: "{c}", reads: "{c} + adj4(c)" }
+      look: "{outline c: the outlined letter} has just one neighbor it can still join"
+      move: "{ring: this edge} must be a line"
+  # Every letter is in a word: where every trail still allowed through
+  # square c runs the same way at a square, the word through c does. None
+  # left makes the marks inconsistent.
+  - id: onlyWord
+    tier: Easy
+    for: >-
+      c in cells where open(c),
+      T = {k in clues(trail) where pos(k, c) > 0 and fits(k)}
+      where |T| = 0
+      or (exists x in cells where pos(first(T), x) > 0, y in adj4(x): decides(T, x, y))
+    conclude: >-
+      |T| > 0
+      and (forall x in cells where pos(first(T), x) > 0, y in adj4(x)
+        where decides(T, x, y):
+        (allRun(T, x, y) implies place(edge(x, y), 1))
+        and (allRun(T, x, y) or place(edge(x, y), 2)))
+    says:
+      terms:
+        c: c
+        count: "|T|"
+        multi: { supplied: several }
+      marks:
+        outline: "{c}"
+      wordings:
+        - when: "count = 1"
+          look: "only one word still fits through {outline c: the outlined letter}"
+          move: "{ring: this edge | these edges} must be as shown"
+        - look: "every word that still fits through {outline c: the outlined letter} agrees on {ring: this edge | these edges}"
+          move: "{if multi: they | it} must be as shown"
+  # The trails of n letters still allowed, as many as the list has words of
+  # n letters: each is one of them. Two that share a square make the marks
+  # inconsistent. A search of the whole board where the rungs below look at
+  # one letter's trails.
+  - id: onlyLength
+    tier: Normal
+    for: >-
+      j in clues(words), T = fitting(len(j))
+      where |T| = num(j)
+      and (exists k in T, x in cells where pos(k, x) > 0, y in adj4(x):
+        decides({k}, x, y))
+    conclude: >-
+      (forall k in T, i in T where i != k, x in cells: pos(k, x) = 0 or pos(i, x) = 0)
+      and (forall k in T, x in cells where pos(k, x) > 0, y in adj4(x)
+        where decides({k}, x, y):
+        (follows(k, x, y) implies place(edge(x, y), 1))
+        and (follows(k, x, y) or place(edge(x, y), 2)))
+    says:
+      terms:
+        len: "len(j)"
+        n: "num(j)"
+        multi: { supplied: several }
+      marks:
+        stripes: "{x in cells where exists k in T: pos(k, x) > 0}"
+      wordings:
+        - when: "n = 1"
+          look: "{stripes: the striped letters} spell the only {len}-letter word that still fits"
+          move: "{ring: this edge | these edges} must be as shown"
+        - look: "{stripes: the striped letters} spell the only {spelled n} {len}-letter words that still fit"
+          move: "{ring: this edge | these edges} must be as shown"

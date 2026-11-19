@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`wordtrail: pinned hint positions > says, at each pin 1`] = `
+{
+  "oneWay": "The outlined letter has just one neighbor it can still join, so this edge must be a line.",
+  "onlyLength": "The striped letters spell the only 6-letter word that still fits, so these edges must be as shown.",
+  "onlyWord": "Every word that still fits through the outlined letter agrees on these edges, so they must be as shown.",
+}
+`;

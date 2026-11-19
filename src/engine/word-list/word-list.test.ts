@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../random/index.ts";
 import { ANSWERS, GUESSES } from "./data.ts";
-import { answerCount, drawAnswer, isAnswer, isGuess, WORD_LENGTHS } from "./index.ts";
+import {
+  answerCount,
+  drawAnswer,
+  type GuessSpan,
+  guessSpan,
+  isAnswer,
+  isGuess,
+  narrowGuesses,
+  WORD_LENGTHS,
+} from "./index.ts";
 
 function words(list: Readonly<Record<number, string>>, length: number): string[] {
   return list[length].match(new RegExp(`.{${length}}`, "g")) ?? [];
@@ -38,6 +47,36 @@ describe("word-list", () => {
     // A guess that is no answer: an inflection.
     expect(isGuess("cranes")).toBe(true);
     expect(isAnswer("cranes")).toBe(false);
+  });
+
+  it("narrows a length's guesses a letter at a time to exactly those that begin so", () => {
+    const spell = (word: string, length: number) => {
+      let span: GuessSpan | null = guessSpan(length);
+      for (const letter of word) span = span && narrowGuesses(span, letter);
+      return span;
+    };
+    for (const length of WORD_LENGTHS) {
+      const all = words(GUESSES, length);
+      for (const prefix of [
+        "c",
+        "cr",
+        "qu",
+        "zz",
+        "a",
+        all[all.length - 1].slice(0, 2),
+      ]) {
+        const span = spell(prefix, length);
+        const expected = all.filter((w) => w.startsWith(prefix));
+        if (expected.length === 0) expect(span).toBeNull();
+        else expect(all.slice(span?.lo, span?.hi)).toEqual(expected);
+      }
+      // Every letter matched: the one word, and nothing past it.
+      const whole = spell(all[7], length);
+      expect(whole && all.slice(whole.lo, whole.hi)).toEqual([all[7]]);
+      expect(whole && narrowGuesses(whole, "a")).toBeNull();
+    }
+    expect(spell("crane", 5)).not.toBeNull();
+    expect(spell("cranx", 5)).toBeNull();
   });
 
   it("deals the same answer from the same seed, and every answer it deals is one", () => {

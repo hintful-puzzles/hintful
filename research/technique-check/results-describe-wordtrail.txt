@@ -1,0 +1,3 @@
+ok  wordtrail  oneWay                         current: recorded src/games/wordtrail/wordtrail.description.yaml#oneWay 59a299dbd49a999d
+ok  wordtrail  onlyWord                       current: recorded src/games/wordtrail/wordtrail.description.yaml#onlyWord 6d9a39d1ec2bcc05
+ok  wordtrail  onlyLength                     current: recorded src/games/wordtrail/wordtrail.description.yaml#onlyLength 4b5fb746bbbe562c

@@ -1082,6 +1082,11 @@ export function loadDescription(
             throw new SyntaxError(
               `${json.game} clue ${kind} ${name}: a list is one a clue, at no element`,
             );
+          // `Dealt` holds the clues' count beside their fields, as `n`.
+          if (name === "n")
+            throw new SyntaxError(
+              `${json.game} clue ${kind} n: a field may not be named n, the count of the clues`,
+            );
           return [
             name,
             {

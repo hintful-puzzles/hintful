@@ -2639,5 +2639,36 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "refused",
     ],
   },
+  {
+    "drawState": [
+      "cache",
+      "list",
+      "started",
+      "tileSize",
+    ],
+    "id": "wordtrail",
+    "members": [
+      "animLength",
+      "clearMistakes",
+      "difficulty",
+      "findMistakes",
+      "hint",
+      "hintGesture",
+      "hintKeepTrack",
+      "hintMarks",
+      "hintRungs",
+      "judgeMove",
+      "paramConfig",
+      "preferredTileSize",
+      "solve",
+      "textFormat",
+      "transposeParams",
+      "validateParams",
+    ],
+    "ui": [
+      "cursor",
+      "drag",
+    ],
+  },
 ]
 `;

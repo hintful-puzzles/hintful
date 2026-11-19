@@ -1,0 +1,30 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A letter with a line already read as having one way on: it may be the
+  # end of its word.
+  oneWay:
+    for: >-
+      c in cells where open(c) and lines(c) <= 1,
+      U = {y in adj4(c) where value(edge(c, y)) != 2 and value(edge(c, y)) != 1}
+      where |U| = 0 or (|U| = 1 and not known(edge(c, first(U))))
+    conclude: "|U| = 1 and place(edge(c, first(U)), 1)"
+  # The trails of a length counted with one more than the list has: all of
+  # them taken as words.
+  onlyLength:
+    for: >-
+      j in clues(words), T = fitting(len(j))
+      where |T| = num(j) + 1
+      and (exists k in T, x in cells where pos(k, x) > 0, y in adj4(x):
+        decides({k}, x, y))
+  # An edge one trail through the letter runs along read as one every trail
+  # does.
+  onlyWord:
+    conclude: >-
+      |T| > 0
+      and (forall x in cells where pos(first(T), x) > 0, y in adj4(x)
+        where live(x, y) and (exists k in T: follows(k, x, y)):
+        place(edge(x, y), 1))

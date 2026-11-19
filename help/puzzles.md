@@ -71,6 +71,7 @@ instructions. The last column names puzzles you may know it as elsewhere.
 | [Unruly](../unruly)      | [help](unruly)   | Tohu-Wa-Vohu, Binairo, Tic-Tac-Logic                                            |
 | [Untangle](../untangle)  | [help](untangle) | Planarity                                                                       |
 | [Wordguess](../wordguess) | [help](wordguess) | Wordle®, Lingo                                                                 |
+| [Wordtrail](../wordtrail) | [help](wordtrail) | Wend                                                                           |
 
 {.puzzles-list}
 

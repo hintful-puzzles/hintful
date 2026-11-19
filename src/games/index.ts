@@ -84,6 +84,7 @@ import { unequalGame } from "./unequal/index.ts";
 import { unrulyGame } from "./unruly/index.ts";
 import { untangleGame } from "./untangle/index.ts";
 import { wordguessGame } from "./wordguess/index.ts";
+import { wordtrailGame } from "./wordtrail/index.ts";
 
 /**
  * Register every ported game. Idempotent: safe to call repeatedly, and
@@ -158,6 +159,7 @@ export function registerAllGames(): void {
   registerGame(untangleGame);
   registerGame(ballsortGame);
   registerGame(wordguessGame);
+  registerGame(wordtrailGame);
 }
 
 // Module-load side effect: importing this barrel populates the registry,

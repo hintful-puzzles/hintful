@@ -74,6 +74,49 @@ export const answerWords = (length: number): readonly string[] =>
 export const guessWords = (length: number): readonly string[] =>
   wordsOf("guesses", GUESSES, length);
 
+/**
+ * The accepted guesses of `length` letters that begin with the letters a
+ * search has matched so far: the run of them in the sorted list, from `lo`
+ * up to `hi`, the first `depth` letters of each matched. A search over a
+ * board spells a trail a letter at a time with {@link narrowGuesses}, and
+ * stops where no guess is left.
+ */
+export interface GuessSpan {
+  readonly length: number;
+  readonly lo: number;
+  readonly hi: number;
+  readonly depth: number;
+}
+
+/** Every accepted guess of `length` letters, none of their letters matched. */
+export function guessSpan(length: number): GuessSpan {
+  return { length, lo: 0, hi: (GUESSES[length] ?? "").length / length, depth: 0 };
+}
+
+/** The guesses of `span` whose next letter is `letter`, in lowercase, or
+ * `null` where none is. A span whose every letter is matched is one word. */
+export function narrowGuesses(span: GuessSpan, letter: string): GuessSpan | null {
+  const { length, depth } = span;
+  if (depth >= length) return null;
+  const words = GUESSES[length];
+  const at = (i: number): string => words[i * length + depth];
+  // The guesses of a span share their first `depth` letters, so they are
+  // sorted by the next one: two searches find the run that has `letter`.
+  const first = (above: (c: string) => boolean): number => {
+    let low = span.lo;
+    let high = span.hi;
+    while (low < high) {
+      const middle = (low + high) >>> 1;
+      if (above(at(middle))) high = middle;
+      else low = middle + 1;
+    }
+    return low;
+  };
+  const lo = first((c) => c >= letter);
+  const hi = first((c) => c > letter);
+  return lo < hi ? { length, lo, hi, depth: depth + 1 } : null;
+}
+
 /** A uniformly random answer of `length` letters. */
 export function drawAnswer(length: number, rs: RandomState): string {
   const count = answerCount(length);

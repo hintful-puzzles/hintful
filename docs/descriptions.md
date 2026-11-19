@@ -158,7 +158,14 @@ research tools all read through it; the app never does.
   `f(k)` whole, its length `|f(k)|`, and a member `nth(f(k), i)`, counted
   from 0 and -1 past the end. It compiles to an `Int32Array` a clue, and
   the checker deals each a length up to the longest line and members within
-  `value`'s range.
+  `value`'s range. A field may not be named `n`, which `Dealt` holds as
+  the count of the clues.
+- **A table the language cannot state is dealt as clues.** Wordtrail's word
+  list reaches its techniques as a board clue, `trail`, one for each path
+  of the letters that spells a word, with its squares' places in the cell
+  field `pos`. Its `means` states that a trail is a path: the checker deals
+  any values, and without it `onlyLength` was unsound on trails no path
+  could be.
 - **A clue that says nothing of the answer itself means `true`**, and the
   answer check reads nothing of it: Signpost's arrows, which its domain and
   its `to` read.

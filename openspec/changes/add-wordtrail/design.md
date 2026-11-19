@@ -40,6 +40,58 @@ table, and the corpus ruling counts a word list as a library table. A
 technique sound without the list stays sound with it, since the list only
 removes answers.
 
+**Superseded in the build (2026-11-19).** Wend lets a word run beside
+itself: a U through a two-by-two block joins three of its four pairs, and
+nothing in the rules forbids it. A division into words is therefore not a
+division into regions walled apart, and Palisade's and Separate's techniques,
+which take two squares side by side in one region as joined, are unsound
+here. Wordtrail's ladder is its own, with nothing inherited.
+
+## The ladder as built
+
+The word list reaches the description as a dealt board clue, `trail`: every
+path of the letters that spells a word of a listed length, each with a
+`pos` field giving each square's place on it (Crossing binds its sets of
+clues the same way). The clue's `means` states that a trail is a path, which
+the checker cannot otherwise know; without it `onlyLength` was unsound on a
+dealt set no path could be. Three techniques, each checked sound and each
+caught on a planted defect:
+
+- **oneWay** (Easy): a letter with no line and one edge left lays it.
+- **onlyWord** (Easy): the trails still fitting through a letter agree on
+  an edge. A line where all run along it; a cross only where every one holds
+  the letter, none runs along the edge, and the letter is not yet filled, so
+  a cross is laid only where it tells the player something.
+- **onlyLength** (Normal): where the trails still fitting a length are as
+  many as its listed words, they are all of them.
+
+The pocket rung (a run of open letters no listed length fits) was measured
+on 5×5 boards: onlyWord and onlyLength finish about 94% of unique boards,
+and the pocket adds a few points more. It is not built: the generator deals
+at the tier the ladder reaches, so a board it would have opened is dealt
+again, and a player loses nothing.
+
+Two tiers, Easy and Normal, as the ladder has two kinds of reasoning. The
+generator writes answer-list words along random paths and keeps a board the
+capped ladder finishes, so its one division is unique against the whole
+guess list; a deal takes a few milliseconds at every preset.
+
+## Decisions made in the build
+
+- **A piece of lines that spells any word of the guess list is colored, and
+  written into the list.** Wend ticks only the hidden answer's words. Here
+  a board has one division against the whole guess list, so a word that is
+  not the answer's is shown for what the lines spell, and the player finds
+  it out when it leaves letters no word can take.
+- **No alias.** The catalog's aliases hold no trademarks of the word games
+  (Wordguess has none); the All-the-puzzles page names Wend under related
+  puzzles, as it names Wordle.
+- **Sides two to eight**, the range the generation tests deal at both
+  tiers; a larger grid is left until a player asks for one.
+- **Input is the engine's line drag, with no override.** Wend's drag starts
+  a new word; here a drag carries a line, so one from the middle of a word
+  extends it and one retracing its end takes it back, as in Path and Pearl.
+
 ## Kind
 
 **An edges game**: the player joins letters into words, as Palisade's border
