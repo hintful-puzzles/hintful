@@ -19,10 +19,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { CURSOR_RIGHT } from "../engine/pointer.ts";
-import { getTsGame, registeredGameIds } from "../engine/registry.ts";
+import { REGISTERED_GAMES, REGISTERED_IDS } from "../engine/testing/enrollment.ts";
 import { type AnyGame, probeBoard } from "../engine/testing/input-probe.ts";
 import { inSweep } from "../engine/testing/slow.ts";
-import "../games/index.ts";
 import { bareCommand, chordCommand, SHORTCUTS, shortcutLabel } from "./shortcuts.ts";
 
 /** A `KeyboardEvent`-shaped object for the matchers, which read five fields. */
@@ -177,11 +176,8 @@ describe("a bare shortcut letter reaches the app in every game", () => {
     expect(bare.length).toBeGreaterThan(2);
   });
 
-  for (const id of registeredGameIds()) {
+  for (const [id, game] of REGISTERED_GAMES) {
     it(`${id}: declines the letters the app needs`, () => {
-      const game = getTsGame(id) as AnyGame | undefined;
-      expect(game, `${id} is registered but has no game object`).not.toBeNull();
-      if (!game) return;
       const { m, reset } = probeBoard(game, id);
 
       const claimed: string[] = [];
@@ -225,7 +221,7 @@ describe("a bare shortcut letter reaches the app in every game", () => {
   }
 
   it("swept every registered game", () => {
-    expect(swept).toBe(registeredGameIds().filter(inSweep).length);
+    expect(swept).toBe(REGISTERED_IDS.filter(inSweep).length);
     expect(Object.keys(found).sort()).toEqual(
       Object.keys(BINDS_A_SHORTCUT_LETTER).filter(inSweep).sort(),
     );

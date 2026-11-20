@@ -10,7 +10,6 @@
  * joins by declaring one.
  */
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { offeredOf, offeredValues } from "./config-narrowing.ts";
 import { difficultyItem, tierNames } from "./difficulty.ts";
 import type { Game, ParamConfigItem } from "./game.ts";
@@ -19,8 +18,8 @@ import { modifierItem } from "./modifier.ts";
 import { configNarrowing, onlyError, onlySentences } from "./only.ts";
 import { parametersMarkdown } from "./param-help.ts";
 import { paramsError } from "./params.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
 import { type Ruleset, rulesetItem } from "./ruleset.ts";
+import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { leafPresets } from "./testing/presets.ts";
 import type { ConfigDescription, ConfigItem, ConfigValues } from "./types.ts";
 
@@ -343,9 +342,8 @@ describe("a modifier says what it leaves, as a ruleset says what it offers", () 
 type AnyGame = Game<unknown, unknown, unknown>;
 
 /** Every game whose dialog narrows a field. */
-const narrowing = registeredGameIds().flatMap((id) => {
-  const g = getTsGame(id) as AnyGame | null;
-  if (!g) throw new Error(`${id} is not registered`);
+const narrowing = REGISTERED_GAMES.flatMap(([id, game]) => {
+  const g: AnyGame = game;
   const form = new Midend(g).getCustomParamsConfig();
   return form.narrowing ? [{ id, g, form }] : [];
 });

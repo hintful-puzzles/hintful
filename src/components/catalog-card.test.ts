@@ -5,9 +5,12 @@
  */
 import drafts from "virtual:draft-puzzles";
 import { describe, expect, it } from "vitest";
-import { getTsGame, registeredGameIds } from "../engine/registry.ts";
+import { getTsGame } from "../engine/registry.ts";
 import { draftSections } from "../engine/sections.ts";
-import "../games/index.ts";
+import {
+  REGISTERED_GAME_COUNT,
+  REGISTERED_GAMES,
+} from "../engine/testing/enrollment.ts";
 import "../test-setup/icons.ts";
 import type { CatalogCard } from "./catalog-card.ts";
 import "./catalog-card.ts";
@@ -23,11 +26,9 @@ async function card(missing: readonly string[]): Promise<CatalogCard> {
 
 describe("the draft label", () => {
   it("is built from the games' own sections, for every draft and no other game", () => {
-    const ids = registeredGameIds();
-    expect(ids.length).toBeGreaterThanOrEqual(57);
-    for (const id of ids) {
-      const game = getTsGame(id);
-      const missing = game === null ? [] : draftSections(game);
+    expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(57);
+    for (const [id, game] of REGISTERED_GAMES) {
+      const missing = draftSections(game);
       expect(`${id}: ${drafts[id] ?? []}`).toBe(`${id}: ${missing}`);
     }
     // Every game ships a hint, so the build may list no draft at all. The

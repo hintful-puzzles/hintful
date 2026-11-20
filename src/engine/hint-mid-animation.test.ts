@@ -10,12 +10,8 @@
  * take part in the settle.
  */
 import { describe, expect, it } from "vitest";
-import { Midend } from "./midend.ts";
-import { beginDealt } from "./testing/dealt.ts";
-import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
-
-/** Longer than any move's animation and flash, so one tick lands the move. */
-const LAND_S = 60;
+import { HINT_GAMES } from "./testing/hint-games.ts";
+import { LAND_S, walkBoards } from "./testing/hint-walk.ts";
 
 describe("a hint asked mid-animation shows the next step", () => {
   const animated: string[] = [];
@@ -24,10 +20,7 @@ describe("a hint asked mid-animation shows the next step", () => {
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: the step shown mid-animation outlives the landing`, () => {
       walked++;
-      const [first] = gatePresets(game);
-      expect(first, `${name}: no preset to walk`).toBeDefined();
-      const midend = new Midend(game);
-      expect(beginDealt(midend, game, first.params), first.title).toBeNull();
+      const [{ midend }] = walkBoards(game, true);
       if (midend.hint() !== null) return;
       const applied = midend.activeHintStep();
       expect(midend.executeHint(true)).toBeNull();

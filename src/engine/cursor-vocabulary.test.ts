@@ -27,11 +27,10 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import type { Game } from "./game.ts";
 import { CURSOR_RIGHT, newCursor } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
+import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 
 type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;
@@ -52,17 +51,16 @@ function isCursorShaped(v: unknown): boolean {
 }
 
 /** A fresh `Ui` per game, built through the game's own `newUi`. */
-function uis(): { id: string; ui: Record<string, unknown> }[] {
-  const out: { id: string; ui: Record<string, unknown> }[] = [];
-  for (const id of registeredGameIds()) {
-    const game = getTsGame(id) as AnyGame | undefined;
-    if (!game) throw new Error(`${id} is registered but has no game object`);
+function uis(): { id: string; game: AnyGame; ui: Record<string, unknown> }[] {
+  const out: { id: string; game: AnyGame; ui: Record<string, unknown> }[] = [];
+  for (const [id, game] of REGISTERED_GAMES) {
     const params = game.defaultParams();
     // The board is irrelevant — only the `Ui` `newUi` builds from it is — but
     // the seed is fixed so a failure names the same board every run.
     const desc = game.newDesc(params, randomNew(`cursor-vocab-${id}`)).desc;
     out.push({
       id,
+      game,
       ui: game.newUi(game.newState(params, desc)) as Record<string, unknown>,
     });
   }
@@ -79,7 +77,7 @@ describe("one keyboard-cursor vocabulary", () => {
   it("holds every cursor under one field, named the same everywhere", () => {
     const all = uis();
     // Vacuity: how many things did we look at?
-    expect(all.length).toBe(registeredGameIds().length);
+    expect(all.length).toBe(REGISTERED_GAME_COUNT);
     expect(all.length).toBeGreaterThanOrEqual(50);
 
     const misplaced: string[] = [];
@@ -104,11 +102,10 @@ describe("one keyboard-cursor vocabulary", () => {
     // across the collection.
     const stalled: string[] = [];
     let checked = 0;
-    for (const { id, ui } of uis()) {
+    for (const { id, game, ui } of uis()) {
       const cursor = ui[CURSOR_FIELD];
       if (!isCursorShaped(cursor)) continue;
       const c = cursor as { x: number; y: number; visible: boolean };
-      const game = getTsGame(id) as AnyGame;
       const params = game.defaultParams();
       const desc = game.newDesc(params, randomNew(`cursor-vocab-${id}`)).desc;
       const state = game.newState(params, desc);

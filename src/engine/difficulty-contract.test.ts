@@ -20,7 +20,6 @@
  * its tiers are*, so the enrollment and the list cannot disagree either.
  */
 import { describe, expect, it, vi } from "vitest";
-import "../games/index.ts";
 import * as answerSearch from "./answer-search.ts";
 import {
   cappedSolveFor,
@@ -36,8 +35,9 @@ import { Midend } from "./midend.ts";
 import { presetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
 import { randomNew } from "./random/index.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
+import { getTsGame } from "./registry.ts";
 import { dealRare, dealsPromptly, dealt } from "./testing/dealt.ts";
+import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { firstLeaf, leafPresets } from "./testing/presets.ts";
 import { itOverWholeSweep, SLOW_TESTS_ENABLED, seedBudget } from "./testing/slow.ts";
 
@@ -55,9 +55,7 @@ interface TieredGame {
 }
 
 /** Every registered game offering a difficulty choice, with its contract. */
-const registered = registeredGameIds()
-  .sort()
-  .map((id) => ({ id, game: getTsGame(id) as AnyGame }));
+const registered = REGISTERED_GAMES.map(([id, game]) => ({ id, game }));
 
 /** Each game's compiled module, by its path; a planning game's has no
  * `tiers`. */

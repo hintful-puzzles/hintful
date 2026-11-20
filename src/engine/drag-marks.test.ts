@@ -12,29 +12,28 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { noteVerbs } from "../games/net/index.ts";
 import { crossDrag as pathCrossDrag } from "../games/path/index.ts";
 import { crossDrag } from "../games/pearl/index.ts";
 import { markDrag } from "../games/slant/index.ts";
 import { PENCIL_MODE_BUTTON } from "./pointer.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
+import { getTsGame } from "./registry.ts";
+import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 import type { AnyGame } from "./testing/input-probe.ts";
 import { expectDragRepeatsThePress } from "./testing/sweep-probe.ts";
 
 const game = (id: string) => getTsGame(id) as unknown as AnyGame;
 
 describe("a clue's done mark is what its drag does", () => {
-  const declaring = () =>
-    registeredGameIds().filter((id) => getTsGame(id)?.doneClues !== undefined);
+  const declaring = () => REGISTERED_GAMES.filter(([, g]) => g.doneClues !== undefined);
 
   it("is not vacuous: games declare one", () => {
     expect(declaring().length).toBeGreaterThanOrEqual(2);
   });
-  it.each(declaring())("%s", (id) => {
-    const declared = getTsGame(id)?.doneClues;
+  it.each(declaring())("%s", (id, g) => {
+    const declared = g.doneClues;
     if (!declared) throw new Error(`${id} declares no doneClues`);
-    expectDragRepeatsThePress(game(id), id, declared);
+    expectDragRepeatsThePress(g, id, declared);
   });
 });
 

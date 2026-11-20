@@ -31,10 +31,13 @@
  * board, the game pins one with the moves that make it wrong ({@link WRONG}).
  */
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import type { MarkRole } from "./hint-words.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
 import { dealt } from "./testing/dealt.ts";
+import {
+  REGISTERED_GAME_COUNT,
+  REGISTERED_GAMES,
+  REGISTERED_IDS,
+} from "./testing/enrollment.ts";
 import type { AnyGame } from "./testing/input-probe.ts";
 import { expectLedger } from "./testing/ledger.ts";
 import { dealtBoards } from "./testing/presets.ts";
@@ -44,7 +47,6 @@ import {
 } from "./testing/repaint-differential.ts";
 import { FIRST_SHARE, ofThisShare } from "./testing/sweep-share.ts";
 
-const IDS = registeredGameIds().sort();
 const EVENTS = 60;
 /** Input events on a wrong board, before the walk of its hint's plan. */
 const WRONG_EVENTS = 20;
@@ -174,22 +176,25 @@ describe("a warm frame matches a fresh one", () => {
   // Checks that walk nothing, so the first share holds them for every share.
   if (FIRST_SHARE) {
     it("is not vacuous — the registry offered every game", () => {
-      expect(IDS.length).toBeGreaterThan(50);
+      expect(REGISTERED_GAME_COUNT).toBeGreaterThan(50);
     });
 
     it("pins and excuses only games it knows", () => {
-      expect(Object.keys(UNREACHED).filter((id) => !IDS.includes(id))).toEqual([]);
       expect(
-        Object.keys(WRONG).filter(
-          (id) =>
-            !IDS.includes(id) || typeof getTsGame(id)?.findMistakes !== "function",
-        ),
+        Object.keys(UNREACHED).filter((id) => !REGISTERED_IDS.includes(id)),
       ).toEqual([]);
+      const findsMistakes = new Set(
+        REGISTERED_GAMES.filter(([, g]) => typeof g.findMistakes === "function").map(
+          ([id]) => id,
+        ),
+      );
+      expect(Object.keys(WRONG).filter((id) => !findsMistakes.has(id))).toEqual([]);
     });
   }
 
-  it.each(ofThisShare(IDS))("%s: repaints every tile it must", (id) => {
-    const game = getTsGame(id) as AnyGame;
+  it.each(
+    ofThisShare(REGISTERED_GAMES),
+  )("%s: repaints every tile it must", (id, game) => {
     const run = repaintDifferential(game, id, EVENTS);
     expect(run.mismatch, JSON.stringify(run.mismatch)).toBeNull();
     expect(run.frames).toBeGreaterThan(EVENTS);

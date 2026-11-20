@@ -43,10 +43,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { BACKSPACE, DELETE, ESCAPE } from "./pointer.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
-import { type KeyLabel, PuzzleButton } from "./types.ts";
+import { REGISTERED_GAMES } from "./testing/enrollment.ts";
+import { PuzzleButton } from "./types.ts";
 
 /**
  * Sources as text, via Vite's `import.meta.glob` rather than `node:fs` —
@@ -95,11 +94,8 @@ const factModuleSources: Record<string, string> = import.meta.glob<string>(
  */
 function panelCodesByGame(): Map<string, Set<number>> {
   const byGame = new Map<string, Set<number>>();
-  for (const id of registeredGameIds()) {
-    const game = getTsGame(id) as
-      | { requestKeys?: (p: unknown) => KeyLabel[]; defaultParams: () => unknown }
-      | undefined;
-    if (!game?.requestKeys) continue;
+  for (const [id, game] of REGISTERED_GAMES) {
+    if (!game.requestKeys) continue;
     byGame.set(
       id,
       new Set(game.requestKeys(game.defaultParams()).map((k) => k.button)),

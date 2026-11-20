@@ -15,9 +15,9 @@ import { describe, expect, it } from "vitest";
 import { resolvePalette } from "./color/color-mkhighlight.ts";
 import { HINT_INK } from "./color/palette.ts";
 import type { MarkRole } from "./hint-words.ts";
-import { Midend } from "./index.ts";
-import { beginDealt } from "./testing/dealt.ts";
-import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
+import type { Midend } from "./index.ts";
+import { HINT_GAMES } from "./testing/hint-games.ts";
+import { walkHints } from "./testing/hint-walk.ts";
 import { type DrawOp, RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import type { Color } from "./types.ts";
@@ -73,40 +73,41 @@ function inkFaults(game: (typeof HINT_GAMES)[number][1]) {
   // One board of each entry of the slice: an ink is chosen by a mark's role
   // and the renderer branch that draws it, which another board of the same
   // params draws again.
-  for (const { params } of gatePresets(game)) {
-    const midend = new Midend(game);
-    if (beginDealt(midend, game, params)) continue;
-    midend.size({ w: 700, h: 700 });
-    for (const c of frame(midend).flatMap(colorsOf)) content.add(c);
-    if (midend.hint()) continue;
-    for (let step = 0; step < 4; step++) {
-      const refs = midend.activeHintStep()?.words?.refs;
-      if (!refs) break;
-      const shown = frame(midend);
-      const marks = refs.map((_, i) => {
-        midend.hideHintReference(i);
-        const gone = removed(shown, frame(midend));
-        midend.hideHintReference(null);
-        return gone;
-      });
-      // What no reference takes with it is the board's.
-      const marked = new Set(marks.flat());
-      for (const op of shown)
-        if (!marked.has(op)) for (const c of colorsOf(op)) content.add(c);
-      refs.forEach((ref, i) => {
-        for (const op of marks[i]) {
-          looked++;
-          for (const c of colorsOf(op)) {
-            const ink = role.get(c);
-            if (ink !== undefined && ink !== ref.role)
-              faults.add(`a ${ref.role} drawn in the ${ink} ink (index ${c})`);
-            else if (ink === undefined) outside.set(c, ref.role);
+  walkHints(
+    game,
+    { steps: 4 },
+    {
+      board({ midend }) {
+        for (const c of frame(midend).flatMap(colorsOf)) content.add(c);
+      },
+      shown(step, _, { midend }) {
+        const refs = step.words?.refs;
+        if (!refs) return;
+        const shown = frame(midend);
+        const marks = refs.map((_, i) => {
+          midend.hideHintReference(i);
+          const gone = removed(shown, frame(midend));
+          midend.hideHintReference(null);
+          return gone;
+        });
+        // What no reference takes with it is the board's.
+        const marked = new Set(marks.flat());
+        for (const op of shown)
+          if (!marked.has(op)) for (const c of colorsOf(op)) content.add(c);
+        refs.forEach((ref, i) => {
+          for (const op of marks[i]) {
+            looked++;
+            for (const c of colorsOf(op)) {
+              const ink = role.get(c);
+              if (ink !== undefined && ink !== ref.role)
+                faults.add(`a ${ref.role} drawn in the ${ink} ink (index ${c})`);
+              else if (ink === undefined) outside.set(c, ref.role);
+            }
           }
-        }
-      });
-      midend.executeHint();
-    }
-  }
+        });
+      },
+    },
+  );
   for (const [c, r] of outside)
     if (!content.has(c)) faults.add(`a ${r} drawn in index ${c}, used only for a hint`);
   return { faults: [...faults], looked };

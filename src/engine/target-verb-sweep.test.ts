@@ -11,7 +11,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { UI_UPDATE } from "./game.ts";
 import {
   LEFT_BUTTON,
@@ -21,7 +20,6 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "./pointer.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
 import {
   controlsMarkdown,
   interpretTargetVerbs,
@@ -32,7 +30,7 @@ import {
   type TargetVerbs,
   type TargetVerbUi,
 } from "./target-verb.ts";
-import type { AnyGame } from "./testing/input-probe.ts";
+import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { expectDragRepeatsThePress } from "./testing/sweep-probe.ts";
 import type { Point } from "./types.ts";
 
@@ -166,14 +164,13 @@ describe("the sweep, in the model", () => {
 
 describe("a game's declared sweep is what a drag does", () => {
   const sweeping = () =>
-    registeredGameIds().filter((id) => getTsGame(id)?.targetVerbs?.sweep !== undefined);
+    REGISTERED_GAMES.filter(([, g]) => g.targetVerbs?.sweep !== undefined);
 
   it("is not vacuous: games declare a sweep", () => {
     expect(sweeping().length).toBeGreaterThanOrEqual(2);
   });
 
-  it.each(sweeping())("%s", (id) => {
-    const game = getTsGame(id) as unknown as AnyGame;
+  it.each(sweeping())("%s", (id, game) => {
     if (!game.targetVerbs) throw new Error(`${id} declares no verbs`);
     expectDragRepeatsThePress(game, id, game.targetVerbs);
   });

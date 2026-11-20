@@ -19,10 +19,9 @@
 import { describe, expect, it } from "vitest";
 import { HINT_OUTLINE } from "./color/palette.ts";
 import { type HintMarkStyle, HintMarks, type MarkCell } from "./hint-mark.ts";
-import { Midend } from "./index.ts";
 import { NOTHING_TO_CLEAR, RING_MIN_ROUNDNESS } from "./ring.ts";
-import { beginDealt } from "./testing/dealt.ts";
-import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
+import { HINT_GAMES } from "./testing/hint-games.ts";
+import { walkHints } from "./testing/hint-walk.ts";
 import { outsideRings, ringCrossings, ringsOf } from "./testing/mark-shape.ts";
 import {
   type DrawOp,
@@ -80,20 +79,17 @@ function hintFrames(
 ): { ops: DrawOp[]; cell: number }[] {
   const palette = game.colors(DEFAULT_BACKGROUND);
   const frames: { ops: DrawOp[]; cell: number }[] = [];
-  for (const { params } of gatePresets(game)) {
-    const midend = new Midend(game);
-    if (beginDealt(midend, game, params)) continue;
-    const size = midend.size({ w: 700, h: 700 });
-    const cell = Math.min(size.w, size.h) / 20;
-    if (midend.hint()) continue;
-    for (let step = 0; step < 6; step++) {
-      const frame = new RecordingDrawing(palette);
-      midend.redraw(frame);
-      if (!midend.activeHintStep()) break;
-      frames.push({ ops: frame.ops, cell });
-      midend.executeHint();
-    }
-  }
+  walkHints(
+    game,
+    { steps: 6 },
+    {
+      shown(_, __, { midend, size }) {
+        const frame = new RecordingDrawing(palette);
+        midend.redraw(frame);
+        frames.push({ ops: frame.ops, cell: Math.min(size.w, size.h) / 20 });
+      },
+    },
+  );
   return frames;
 }
 

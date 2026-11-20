@@ -80,6 +80,7 @@ runs, and what a commit may leave to the push and to CI).
 | – How a cross-game guard finds its population | you are writing a cross-game guard, not a game |
 | – Slicing a preset sweep for the gate | you are writing a cross-game guard, not a game, and it walks boards |
 | – Deal through `dealt` | you are writing a cross-game guard, not a game, and it deals boards |
+| – Walk a midend's hints through `walkHints` | you are writing a cross-game guard on what pressing Hint shows or plays |
 | – One board of each kind, and the rest in the slow tier | you are writing a cross-game guard, not a game, and it could walk more of the same |
 | – A cross-game guard the hooks can narrow | you are writing a cross-game guard, not a game: its case titles and whole-sweep assertions |
 | – A sweep too long for one worker | a cross-game sweep alone would take more than half a CI run |
@@ -855,9 +856,10 @@ For the author of a new cross-game guard. The normative form is the
 1. **Derive the population from what the game is**: the object it registers,
    a method's presence, the `Ui` its `newUi` returns, its comment-stripped
    source. Ask through
-   [`testing/enrollment.ts`](../src/engine/testing/enrollment.ts). Never a
-   roster of opted-in names: a game left off one gets none of the guard,
-   silently.
+   [`testing/enrollment.ts`](../src/engine/testing/enrollment.ts), whose
+   `REGISTERED_GAMES` is "every game" for every guard; a guard does not read
+   the registry itself. Never a roster of opted-in names: a game left off one
+   gets none of the guard, silently.
 2. **Put a floor under the population you drew from**
    (`Enrollment.population`), not only under the set you filtered out of it.
    The gate passes `--passWithNoTests`, so a loop of `it()` over an empty
@@ -977,6 +979,19 @@ setting deals that one with `dealtAgain`, from the same seed.
   (`warm-repaint.test.ts`'s `searchBoards`), and a ledger held exact reads
   several boards and declares by meaning (`mark-collisions.test.ts`).
 - A game's own test deals as it likes.
+
+### Walk a midend's hints through `walkHints`
+
+For the author of a cross-game guard on what a player meets pressing Hint.
+Do not write the walk: hand `walkHints`
+([`testing/hint-walk.ts`](../src/engine/testing/hint-walk.ts)) a step limit
+and a visitor, called with each board, each step shown and each step played.
+It deals every board of the gate slice (or the first, for a code path every
+board reaches) into a fresh, sized, observed midend, and fails on a board the
+midend refuses, which a hand-written walk tended to skip in silence. A guard
+whose subject is not a press-read-apply loop (a repaint after a warm frame, a
+press mid-animation) takes its boards from `walkBoards` and drives the midend
+itself. A guard on `game.hint()` without a midend walks from `dealt`.
 
 ### One board of each kind, and the rest in the slow tier
 

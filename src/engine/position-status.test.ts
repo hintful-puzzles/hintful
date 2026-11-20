@@ -29,7 +29,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import {
   LEFT_BUTTON,
   LEFT_DRAG,
@@ -38,14 +37,8 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "./pointer.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
-import { workingRowExemption } from "./testing/enrollment.ts";
-import {
-  type AnyGame,
-  probeBoard,
-  probePoints,
-  targetPoints,
-} from "./testing/input-probe.ts";
+import { REGISTERED_GAMES, workingRowExemption } from "./testing/enrollment.ts";
+import { probeBoard, probePoints, targetPoints } from "./testing/input-probe.ts";
 import { expectLedger } from "./testing/ledger.ts";
 
 /** The names a game's own completion record goes by. */
@@ -81,17 +74,9 @@ const UNBREAKABLE: Record<string, string> = {
   samegame: "a solved board is empty, and an empty board has no group to remove",
 };
 
-function games(): [string, AnyGame][] {
-  return registeredGameIds().map((id) => {
-    const game = getTsGame(id) as AnyGame | undefined;
-    if (!game) throw new Error(`${id} is registered but has no game object`);
-    return [id, game];
-  });
-}
-
 describe("a game's status is judged from the board alone", () => {
   it("lets the player's input take a solved board off its solution", () => {
-    const population = games().filter(([, g]) => g.solve);
+    const population = REGISTERED_GAMES.filter(([, g]) => g.solve);
     // Vacuity: the population is derived; an empty one asserts nothing.
     expect(population.length).toBeGreaterThanOrEqual(40);
 
@@ -214,7 +199,7 @@ describe("a game's status is judged from the board alone", () => {
   });
 
   it("keeps no record of being solved or helped on the state", () => {
-    const all = games();
+    const all = REGISTERED_GAMES;
     expect(all.length).toBeGreaterThanOrEqual(50);
     const offenders: string[] = [];
     let solvedStates = 0;

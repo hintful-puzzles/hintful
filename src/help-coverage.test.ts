@@ -43,7 +43,7 @@ import {
   STICKY_PENCIL_PLACEHOLDER,
 } from "./engine/pencil-prefs.ts";
 import { expandPair, PAIR_NAMES } from "./engine/piece.ts";
-import { getTsGame, registeredGameIds } from "./engine/registry.ts";
+import { getTsGame } from "./engine/registry.ts";
 import { RULES_OUT_PLACEHOLDER } from "./engine/rules-out.ts";
 import {
   RULESETS_PLACEHOLDER,
@@ -51,11 +51,11 @@ import {
   rulesetsMarkdown,
 } from "./engine/ruleset.ts";
 import { CONTROLS_PLACEHOLDER, DONE_CLUES_PLACEHOLDER } from "./engine/target-verb.ts";
+import { REGISTERED_GAMES } from "./engine/testing/enrollment.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 import { itOverWholeSweep } from "./engine/testing/slow.ts";
 import { TOUCH_PLACEHOLDER } from "./engine/touch-help.ts";
 import { WING_PLACEHOLDER } from "./engine/wing.ts";
-import "./games/index.ts";
 import { puzzleDataMap, puzzleIds } from "./puzzle/catalog.ts";
 import { type CommandPuzzle, commandList } from "./puzzle/command-list.ts";
 import { insertGameLists, NO_RIGHT_CLICK } from "./puzzle/game-lists.ts";
@@ -817,9 +817,9 @@ describe("the populations the help asserts are derived, not trusted", () => {
    * population": a named population the build derives cannot rot.
    */
   it("names exactly the puzzles whose secondary-button gestures are off", () => {
-    const flaggedIds = registeredGameIds().filter(
-      (id) => getTsGame(id)?.ignoresSecondaryButton === true,
-    );
+    const flaggedIds = REGISTERED_GAMES.filter(
+      ([, g]) => g.ignoresSecondaryButton === true,
+    ).map(([id]) => id);
     const flagged = flaggedIds.map((id) => puzzleDataMap[id]?.name ?? id).sort();
     expect(
       flagged.length,
@@ -849,10 +849,9 @@ describe("the populations the help asserts are derived, not trusted", () => {
    * a hint that had honestly run out indistinguishable from a broken one.
    */
   it("explains the tier name as long as any game ships it", () => {
-    const shipping = registeredGameIds().filter((id) => {
-      const game = getTsGame(id);
-      return game && difficultyTiers(game)?.includes("Unreasonable");
-    });
+    const shipping = REGISTERED_GAMES.filter(([, game]) =>
+      difficultyTiers(game)?.includes("Unreasonable"),
+    );
     expect(
       shipping.length,
       "no game declares the tier — derivation is vacuous",

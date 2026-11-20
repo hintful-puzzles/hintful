@@ -48,12 +48,14 @@
  * board, from its seeded run or a pinned wrong board.
  */
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { Midend } from "./midend.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
 import { NOT_STARTED } from "./solve-failure.ts";
 import { beginDealt } from "./testing/dealt.ts";
-import { capabilitySets } from "./testing/enrollment.ts";
+import {
+  capabilitySets,
+  REGISTERED_GAME_COUNT,
+  REGISTERED_GAMES,
+} from "./testing/enrollment.ts";
 import { dealtBoards } from "./testing/presets.ts";
 import { SLOW_TESTS_ENABLED } from "./testing/slow.ts";
 
@@ -69,10 +71,7 @@ function mistakeGames(): [string, AnyGame][] {
       .filter((c) => c.members.includes("findMistakes"))
       .map((c) => c.id),
   );
-  return registeredGameIds()
-    .sort()
-    .filter((id) => offers.has(id))
-    .map((id): [string, AnyGame] => [id, getTsGame(id) as AnyGame]);
+  return REGISTERED_GAMES.filter(([id]) => offers.has(id));
 }
 
 const GAMES = mistakeGames();
@@ -101,7 +100,7 @@ describe("a board with nothing wrong on it reports no mistakes", () => {
   it("swept a populated registry", () => {
     // The vacuity floor this repo owes every derived sweep: an unpopulated
     // registry would make every case below iterate over nothing and pass.
-    expect(registeredGameIds().length).toBeGreaterThanOrEqual(50);
+    expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(50);
     expect(GAMES.length).toBeGreaterThanOrEqual(35);
   });
 

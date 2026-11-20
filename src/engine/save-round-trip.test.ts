@@ -17,7 +17,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import type { Game } from "./game.ts";
 import { Midend } from "./midend.ts";
 import {
@@ -32,9 +31,14 @@ import {
   RIGHT_BUTTON,
 } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
+import { getTsGame } from "./registry.ts";
 import { encodeSave } from "./save.ts";
 import { observeMidend } from "./testing/drive-midend.ts";
+import {
+  REGISTERED_GAME_COUNT,
+  REGISTERED_GAMES,
+  REGISTERED_IDS,
+} from "./testing/enrollment.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;
@@ -88,13 +92,8 @@ function play(
   return consumed;
 }
 
-const REGISTERED = registeredGameIds();
-
 describe("a saved game reloads in every ported game", () => {
-  for (const id of REGISTERED) {
-    const game = getTsGame(id);
-    if (!game) continue;
-
+  for (const [id, game] of REGISTERED_GAMES) {
     it(`${id}: play, save, load — the board survives and can still be drawn`, () => {
       const params = game.defaultParams();
       const desc = game.newDesc(params, randomNew(`save-${id}`)).desc;
@@ -146,7 +145,7 @@ describe("a saved game reloads in every ported game", () => {
   }
 
   it("the registry is populated, so the sweep above is not vacuous", () => {
-    expect(REGISTERED.length).toBeGreaterThan(25);
+    expect(REGISTERED_GAME_COUNT).toBeGreaterThan(25);
   });
 });
 
@@ -161,10 +160,7 @@ describe("a saved game reloads in every ported game", () => {
  * as a history with a hole in it that throws on every repaint.
  */
 describe("a save this build cannot play is refused, not half-applied", () => {
-  for (const id of REGISTERED) {
-    const game = getTsGame(id);
-    if (!game) continue;
-
+  for (const [id, game] of REGISTERED_GAMES) {
     it(`${id}: a foreign move in the log never corrupts the board`, () => {
       const params = game.defaultParams();
       const desc = game.newDesc(params, randomNew(`foreign-${id}`)).desc;
@@ -243,7 +239,7 @@ describe("a v1 save still loads", () => {
 
   it("names games that exist", () => {
     // Vacuity: a typo here would silently check nothing.
-    for (const id of SAMPLE) expect(registeredGameIds()).toContain(id);
+    for (const id of SAMPLE) expect(REGISTERED_IDS).toContain(id);
     expect(SAMPLE.length).toBeGreaterThanOrEqual(5);
   });
 

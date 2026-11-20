@@ -4,22 +4,16 @@
  * are all built from it.
  */
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { difficultyChoiceItem, difficultyTiers, withTier } from "./difficulty.ts";
 import type { Game, PresetMenu } from "./game.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
 import { presetGrid } from "./preset-grid.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
+import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
 type AnyGame = Game<unknown, unknown, unknown>;
-const ids = registeredGameIds();
-const game = (id: string): AnyGame => {
-  const g = getTsGame(id);
-  if (!g) throw new Error(`${id} is not registered`);
-  return g as AnyGame;
-};
+const GAMES: readonly [string, AnyGame][] = REGISTERED_GAMES;
 
 /** Each leaf preset, with its declared name if it has one. */
 function leaves(menu: PresetMenu<unknown>): { name: string | null; params: unknown }[] {
@@ -40,9 +34,9 @@ function sections(menu: TitledPresetMenu<unknown>): string[][] {
 
 describe("every paramConfig item says what it means", () => {
   it.each(
-    ids,
-  )("%s: a doc on every item, and a shared doc follows its partner", (id) => {
-    const config = game(id).paramConfig ?? [];
+    GAMES,
+  )("%s: a doc on every item, and a shared doc follows its partner", (id, g) => {
+    const config = g.paramConfig ?? [];
     config.forEach((item, i) => {
       if (typeof item.doc === "string") {
         expect(item.doc.trim(), `${id}: ${item.kw} has an empty doc`).not.toBe("");
@@ -55,8 +49,7 @@ describe("every paramConfig item says what it means", () => {
   // The help's "names every mode" guard, kept on the field: a choice that is a
   // word is a mode the player picks, and the doc beside it is where the page
   // says what it is, or the mode goes unexplained.
-  it.each(ids)("%s: a choices field's doc names each word choice", (id) => {
-    const g = game(id);
+  it.each(GAMES)("%s: a choices field's doc names each word choice", (id, g) => {
     const tiers = difficultyChoiceItem(g);
     for (const item of g.paramConfig ?? []) {
       if (item.type !== "choices" || item === tiers || typeof item.doc !== "string")
@@ -69,8 +62,9 @@ describe("every paramConfig item says what it means", () => {
     }
   });
 
-  it.each(ids)("%s: bounds are a range, and the defaults are inside them", (id) => {
-    const g = game(id);
+  it.each(
+    GAMES,
+  )("%s: bounds are a range, and the defaults are inside them", (id, g) => {
     for (const item of g.paramConfig ?? []) {
       if (item.type !== "string" || !item.bounds) continue;
       const { min, max } = item.bounds;
@@ -79,8 +73,8 @@ describe("every paramConfig item says what it means", () => {
     expect(paramsError(g, g.defaultParams(), true), `${id}: default params`).toBeNull();
   });
 
-  it.each(ids)("%s: the difficulty item is the engine's", (id) => {
-    const item = difficultyChoiceItem(game(id));
+  it.each(GAMES)("%s: the difficulty item is the engine's", (_id, g) => {
+    const item = difficultyChoiceItem(g);
     if (item === null) return;
     expect(item.label?.slot).toBe("tier");
     expect(item.name).toBe("Difficulty");
@@ -90,8 +84,7 @@ describe("every paramConfig item says what it means", () => {
 describe("one describer labels every params set", () => {
   let labeled = 0;
 
-  it.each(ids)("%s: every preset is valid and has a label of its own", (id) => {
-    const g = game(id);
+  it.each(GAMES)("%s: every preset is valid and has a label of its own", (id, g) => {
     const menu = presetMenu(g);
     const all = labels(menu);
     for (const title of [...all, ...sections(menu).flat()]) {
@@ -119,8 +112,7 @@ describe("one describer labels every params set", () => {
     }
   });
 
-  it.each(ids)("%s: a tiered game's label names the tier", (id) => {
-    const g = game(id);
+  it.each(GAMES)("%s: a tiered game's label names the tier", (id, g) => {
     const tiers = difficultyTiers(g);
     if (tiers === null) return;
     tiers.forEach((tier, i) => {
@@ -130,7 +122,7 @@ describe("one describer labels every params set", () => {
   });
 
   it("looked at the collection", () => {
-    expect(ids.length).toBeGreaterThan(50);
+    expect(REGISTERED_GAME_COUNT).toBeGreaterThan(50);
   });
 
   // A floor over every game's presets: a commit the hook narrows to a few

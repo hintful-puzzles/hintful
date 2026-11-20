@@ -15,7 +15,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { type HintStep, type HintTrackVerdict, UI_UPDATE } from "./game.ts";
 import {
   CURSOR_RIGHT,
@@ -28,7 +27,6 @@ import {
   RIGHT_BUTTON,
 } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
 import {
   controlsMarkdown,
   interpretTargetVerbs,
@@ -40,6 +38,7 @@ import {
   type TargetVerbUi,
   verbClicks,
 } from "./target-verb.ts";
+import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 import {
   type AnyGame,
   type BoardsReached,
@@ -353,9 +352,8 @@ describe("a geometry's pointAt is a point that addresses its target", () => {
   // a neighbor would play a step on the wrong square. Every target a press can
   // reach, found by sweeping the board, must come back from its own point.
   it.each(
-    registeredGameIds().filter((id) => getTsGame(id)?.targetVerbs),
-  )("%s: every target's point presses that target", (id) => {
-    const game = getTsGame(id) as unknown as AnyGame;
+    REGISTERED_GAMES.filter(([, g]) => g.targetVerbs),
+  )("%s: every target's point presses that target", (id, game) => {
     const geometry = game.targetVerbs?.geometry;
     if (!geometry) throw new Error(`${id} declares no verbs`);
     const params = game.defaultParams();
@@ -396,7 +394,7 @@ describe("a geometry's pointAt is a point that addresses its target", () => {
 
 describe("a game's declared verbs are what its buttons and keys do", () => {
   const declaring = () =>
-    registeredGameIds().filter((id) => getTsGame(id)?.targetVerbs !== undefined);
+    REGISTERED_GAMES.filter(([, g]) => g.targetVerbs !== undefined);
 
   it("is not vacuous — games declare verbs", () => {
     expect(declaring().length).toBeGreaterThanOrEqual(4);
@@ -453,9 +451,8 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
   };
 
   it.each(
-    registeredGameIds().filter((id) => getTsGame(id)?.targetVerbs),
-  )("%s: each key does at the cursor what its button does there", (id) => {
-    const game = getTsGame(id) as unknown as AnyGame;
+    REGISTERED_GAMES.filter(([, g]) => g.targetVerbs),
+  )("%s: each key does at the cursor what its button does there", (id, game) => {
     const verbs = game.targetVerbs;
     if (!verbs) throw new Error(`${id} declares no verbs`);
     const { geometry } = verbs;
@@ -581,12 +578,12 @@ describe("the marks a placement rules out are the right button's", () => {
    * button for them at all.
    */
   it("every game that brings them declares its right button as ruling out", () => {
-    const bringing = registeredGameIds().filter(
-      (id) => getTsGame(id)?.rulesOut !== undefined,
-    );
+    const bringing = REGISTERED_GAMES.filter(([, g]) => g.rulesOut !== undefined);
     expect(bringing.length, "no game brings the marks it rules out").toBeGreaterThan(0);
     expect(
-      bringing.filter((id) => !isRulingOut(getTsGame(id)?.targetVerbs?.secondary)),
+      bringing
+        .filter(([, g]) => !isRulingOut(g.targetVerbs?.secondary))
+        .map(([id]) => id),
     ).toEqual([]);
   });
 });

@@ -8,10 +8,9 @@
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { FLASH, FLASH_LEAD } from "./color/palette.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "./pointer.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
+import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { type AnyGame, probeBoard } from "./testing/input-probe.ts";
 import { RecordingDrawing, rgbLabel } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
@@ -29,14 +28,11 @@ import {
 
 /** The games a solved board can be reached in without playing one: those with
  * a solver. The others pin their flash in their own tests. */
-const solvable = registeredGameIds()
-  .sort()
-  .filter((id) => getTsGame(id)?.solve !== undefined);
+const solvable = REGISTERED_GAMES.filter(([, g]) => g.solve !== undefined);
 
 /** A solved board of `id`, and a painter of it from a draw state that has
  * never painted, so a tile cache hides nothing. */
-function solvedBoard(id: string): (flash: Flash) => string {
-  const game = getTsGame(id) as AnyGame;
+function solvedBoard(id: string, game: AnyGame): (flash: Flash) => string {
   const pb = probeBoard(game, id);
   pb.reset();
   if (pb.m.solve() !== null) {
@@ -64,17 +60,17 @@ function solvedBoard(id: string): (flash: Flash) => string {
 describe("the win flash, in every game", () => {
   it("has a population", () => {
     // Vacuity: derived from the registry, and nearly all of it.
-    expect(solvable.length).toBeGreaterThanOrEqual(registeredGameIds().length - 2);
+    expect(solvable.length).toBeGreaterThanOrEqual(REGISTERED_GAME_COUNT - 2);
   });
 
-  describe.each(solvable)("%s", (id) => {
+  describe.each(solvable)("%s", (id, game) => {
     let paint: (flash: Flash) => string;
     let settled: string;
     let frames: string[];
     const at = (seconds: number, still = false) =>
       paint(winFlashAt(seconds, paint, still));
     beforeAll(() => {
-      paint = solvedBoard(id);
+      paint = solvedBoard(id, game);
       settled = paint(NO_FLASH);
       // Instants across the flash, neither end among them.
       frames = Array.from({ length: 16 }, (_, i) => at((WIN_FLASH_S * (i + 1)) / 17));

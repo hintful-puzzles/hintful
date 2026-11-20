@@ -14,9 +14,8 @@
 import { describe, expect, it } from "vitest";
 import type { MarkRef } from "./hint-words.ts";
 import { LOOK_HERE } from "./midend.ts";
-import { beginDealt } from "./testing/dealt.ts";
-import { driveMidend } from "./testing/drive-midend.ts";
-import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
+import { HINT_GAMES } from "./testing/hint-games.ts";
+import { type WalkBoard, walkHints } from "./testing/hint-walk.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
@@ -45,51 +44,47 @@ describe("a hint's first beat shows where to look", () => {
   let walked = 0;
   for (const [id, game] of HINT_GAMES) {
     it(`${id}: one mark, then the whole step`, () => {
-      const observed = driveMidend(game);
-      const midend = observed.midend;
-      const [first] = gatePresets(game);
-      expect(first, `${id} has a board to deal`).toBeDefined();
-      if (beginDealt(midend, game, first.params)) return;
-      const status = () => observed.last("status-bar-change");
-      midend.size({ w: 600, h: 600 });
       const palette = game.colors(DEFAULT_BACKGROUND);
-      const frame = (): string => {
+      const frame = ({ midend }: WalkBoard): string => {
         const d = new RecordingDrawing(palette);
         midend.forceRedraw(d);
         return JSON.stringify(d.ops);
       };
-      const bare = frame();
-      for (let s = 0; s < STEPS; s++) {
-        if (midend.hint(true)) break;
-        const step = midend.activeHintStep();
-        if (!step) break;
-        const refs = step.words?.refs ?? [];
-        const looks = refs.length > 0 && step.continuesPrevious !== true;
-        expect(midend.hintLooking(), `${id} step ${s}: "${step.explanation}"`).toBe(
-          looks,
-        );
-        if (looks && step.words) {
-          walked++;
-          const one = marks(step.words.whereToLook().refs);
-          expect(one.size, `${id}: "${step.explanation}" looks at one mark`).toBe(1);
-          expect(midend.hintReferenceRoles()).toEqual([]);
-          expect(status()?.activeHintExplanation).toBe(LOOK_HERE);
-          expect(status()?.activeHintSpans).toBeUndefined();
-          const look = frame();
-          expect(look, `${id}: "${step.explanation}" draws its mark`).not.toBe(bare);
-          midend.explainHint();
-          expect(midend.hintLooking()).toBe(false);
-          expect(status()?.activeHintExplanation).toBe(step.explanation);
-          if (count(marks(refs)) > count(one))
-            expect(frame(), `${id}: "${step.explanation}" explains more`).not.toBe(
-              look,
+      let bare = "";
+      walkHints(
+        game,
+        { steps: STEPS, first: true, look: true },
+        {
+          board(b) {
+            bare = frame(b);
+          },
+          shown(step, s, b) {
+            const { midend } = b;
+            const status = () => b.observed.last("status-bar-change");
+            const refs = step.words?.refs ?? [];
+            const looks = refs.length > 0 && step.continuesPrevious !== true;
+            expect(midend.hintLooking(), `${id} step ${s}: "${step.explanation}"`).toBe(
+              looks,
             );
-        }
-        midend.executeHint();
-        // Let the move land, as a player's next press finds it: a game may
-        // draw a mark only on a settled board (Inertia's arrow).
-        midend.timer(60);
-      }
+            if (!looks || !step.words) return;
+            walked++;
+            const one = marks(step.words.whereToLook().refs);
+            expect(one.size, `${id}: "${step.explanation}" looks at one mark`).toBe(1);
+            expect(midend.hintReferenceRoles()).toEqual([]);
+            expect(status()?.activeHintExplanation).toBe(LOOK_HERE);
+            expect(status()?.activeHintSpans).toBeUndefined();
+            const look = frame(b);
+            expect(look, `${id}: "${step.explanation}" draws its mark`).not.toBe(bare);
+            midend.explainHint();
+            expect(midend.hintLooking()).toBe(false);
+            expect(status()?.activeHintExplanation).toBe(step.explanation);
+            if (count(marks(refs)) > count(one))
+              expect(frame(b), `${id}: "${step.explanation}" explains more`).not.toBe(
+                look,
+              );
+          },
+        },
+      );
     });
   }
 

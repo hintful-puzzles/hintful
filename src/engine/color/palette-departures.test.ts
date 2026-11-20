@@ -22,11 +22,9 @@
  * names would ask a reason of an assignment that departs from nothing.
  */
 import { describe, expect, it } from "vitest";
-import { registeredGameIds } from "../registry.ts";
-import { gameSourceFiles } from "../testing/enrollment.ts";
+import { gameSourceFiles, REGISTERED_IDS } from "../testing/enrollment.ts";
 import { colorToOKLCH } from "../testing/oklch.ts";
 import type { Color } from "../types.ts";
-import "../../games/index.ts";
 import * as colors from "./colors.ts";
 import * as palette from "./palette.ts";
 
@@ -104,7 +102,7 @@ describe("a departure from a shared role is stated at the assignment", () => {
     // including the ones that build their palette positionally, which the
     // first shape alone could not see.
     const games = new Set(all.map((a) => a.game));
-    expect([...games].sort()).toEqual(registeredGameIds().sort());
+    expect([...games].sort()).toEqual(REGISTERED_IDS);
     // Each meaning is found under its slot name, and found holding its role:
     // a name that matched nothing, or a value the comparison below could not
     // recognize, would leave that meaning unchecked or every game in breach.

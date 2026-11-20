@@ -61,7 +61,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { CLEAR_BUTTON, hasPencilArray } from "./key-labels.ts";
 import {
   CURSOR_DOWN,
@@ -81,8 +80,12 @@ import {
   MOD_MASK,
 } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
-import { workingRowGames } from "./testing/enrollment.ts";
+import {
+  REGISTERED_GAME_COUNT,
+  REGISTERED_GAMES,
+  REGISTERED_IDS,
+  workingRowGames,
+} from "./testing/enrollment.ts";
 import {
   type AnyGame,
   probeBoard as board,
@@ -93,8 +96,6 @@ import {
   unactionableClaims,
 } from "./testing/input-probe.ts";
 import { inSweep, itOverWholeSweep } from "./testing/slow.ts";
-
-const REGISTERED = registeredGameIds();
 
 /**
  * Games with no keyboard at all, each with the reason — and the reason must
@@ -185,9 +186,8 @@ describe("a game does not claim a button it did not act on", () => {
       expect(code > 0x7e).toBe(true);
     }
     // And not a code any game's own keypad offers.
-    for (const id of REGISTERED) {
-      const game = getTsGame(id) as AnyGame | undefined;
-      for (const k of game?.requestKeys?.(game.defaultParams()) ?? [])
+    for (const [id, game] of REGISTERED_GAMES) {
+      for (const k of game.requestKeys?.(game.defaultParams()) ?? [])
         expect(UNACTIONABLE, `${id}'s keypad offers a probe code`).not.toContain(
           k.button,
         );
@@ -197,10 +197,7 @@ describe("a game does not claim a button it did not act on", () => {
   const claimants: string[] = [];
   let sweptGames = 0;
 
-  for (const id of REGISTERED) {
-    const game = getTsGame(id) as AnyGame | undefined;
-    if (!game) continue;
-
+  for (const [id, game] of REGISTERED_GAMES) {
     it(`${id}: declines a code it cannot act on`, () => {
       const { claims: claimed, boardChanged } = unactionableClaims(game, id);
 
@@ -232,7 +229,7 @@ describe("a game does not claim a button it did not act on", () => {
   }
 
   it("swept every registered game, over codes that exist", () => {
-    expect(sweptGames).toBe(REGISTERED.filter(inSweep).length);
+    expect(sweptGames).toBe(REGISTERED_IDS.filter(inSweep).length);
     expect(UNACTIONABLE.length).toBeGreaterThan(1);
     expect(claimants.sort()).toEqual(
       Object.keys(CLAIMS_UNACTIONABLE).filter(inSweep).sort(),
@@ -262,10 +259,7 @@ describe("a long press cannot silently swallow a gesture", () => {
   const declared: string[] = [];
   const observed: string[] = [];
 
-  for (const id of REGISTERED) {
-    const game = getTsGame(id) as AnyGame | undefined;
-    if (!game) continue;
-
+  for (const [id, game] of REGISTERED_GAMES) {
     it(`${id}: declares ignoresSecondaryButton iff it has no secondary action`, () => {
       const { kind, evidence } = secondaryAction(game, id);
       const declares = game.ignoresSecondaryButton ?? false;
@@ -296,7 +290,7 @@ describe("a long press cannot silently swallow a gesture", () => {
     // Vacuity: a probe that observed nothing anywhere would declare all 57
     // games secondary-button-free and demand the flag on every one of them.
     expect(observed.length).toBeGreaterThan(0);
-    expect(observed.length).toBeLessThan(REGISTERED.length / 2);
+    expect(observed.length).toBeLessThan(REGISTERED_GAME_COUNT / 2);
   });
 
   it("found the games it claims to have found", () => {
@@ -308,10 +302,7 @@ describe("keyboard reachability is a recorded decision for every game", () => {
   const withKeyboard: string[] = [];
   const without: string[] = [];
 
-  for (const id of REGISTERED) {
-    const game = getTsGame(id) as AnyGame | undefined;
-    if (!game) continue;
-
+  for (const [id, game] of REGISTERED_GAMES) {
     it(`${id}: responds to a cursor key, or is on the exemption list`, () => {
       const { m, reset } = board(game, id);
       reset();
@@ -364,10 +355,9 @@ describe("every on-screen key a game offers reaches that game", () => {
   let panelKeys = 0;
   const offersKeypad = (game: AnyGame) =>
     (game.requestKeys?.(game.defaultParams()) ?? []).length > 0;
-  const offered = REGISTERED.filter((id) => {
-    const game = getTsGame(id) as AnyGame | undefined;
-    return !!game && offersKeypad(game);
-  });
+  const offered = REGISTERED_GAMES.filter(([, game]) => offersKeypad(game)).map(
+    ([id]) => id,
+  );
 
   /*
    * A game that *loses* its keypad has every on-screen key made unreachable at
@@ -377,10 +367,7 @@ describe("every on-screen key a game offers reaches that game", () => {
    * it should have a keypad, from what its board is, rather than a floor under
    * the population that stays green while one game drops out.
    */
-  for (const id of REGISTERED) {
-    const game = getTsGame(id) as AnyGame | undefined;
-    if (!game) continue;
-
+  for (const [id, game] of REGISTERED_GAMES) {
     it(`${id}: offers a keypad exactly when its entry needs one`, () => {
       const params = game.defaultParams();
       const state = game.newState(
@@ -407,15 +394,14 @@ describe("every on-screen key a game offers reaches that game", () => {
 
   it("the keypad ledger names only registered games, each with its reason", () => {
     for (const [id, why] of Object.entries(KEYPAD_WITHOUT_PENCIL)) {
-      expect(REGISTERED, `${id} is ledgered but not registered`).toContain(id);
+      expect(REGISTERED_IDS, `${id} is ledgered but not registered`).toContain(id);
       expect(TYPED_ROW.has(id), `${id} has a working row: remove its line`).toBe(false);
       expect(why.length, `${id}'s entry states no reason`).toBeGreaterThan(80);
     }
   });
 
-  for (const id of REGISTERED) {
-    const game = getTsGame(id) as AnyGame | undefined;
-    if (!game?.requestKeys) continue;
+  for (const [id, game] of REGISTERED_GAMES) {
+    if (!game.requestKeys) continue;
 
     it(`${id}: no on-screen key is inert`, () => {
       const { params, size, m, reset } = board(game, id);
@@ -504,9 +490,8 @@ describe("the keyboard can commit a move, not merely move a cursor", () => {
    * something up with a select and put it down with a second one, so asking
    * once scores every one of them deaf.
    */
-  for (const id of REGISTERED) {
-    const game = getTsGame(id) as AnyGame | undefined;
-    if (!game || id in NO_KEYBOARD) continue;
+  for (const [id, game] of REGISTERED_GAMES) {
+    if (id in NO_KEYBOARD) continue;
 
     it(`${id}: some keyboard-only sequence changes the board`, () => {
       const { params, m, reset } = board(game, id);

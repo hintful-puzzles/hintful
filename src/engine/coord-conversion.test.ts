@@ -20,8 +20,7 @@
  * fails, and so does an entry whose line is gone.
  */
 import { describe, expect, it } from "vitest";
-import { registeredGameIds } from "./registry.ts";
-import "../games/index.ts";
+import { REGISTERED_IDS } from "./testing/enrollment.ts";
 
 /** Every game's sources, and the engine's own, where a helper several games
  * share can hold the same second copy. `geometry.ts` is the conversion. */
@@ -133,7 +132,7 @@ describe("a game does not re-derive the pixel-to-cell conversion", () => {
 
   it("read the games, and sees each shape it looks for", () => {
     const games = new Set(Object.keys(sourceModules).map((path) => path.split("/")[2]));
-    for (const id of registeredGameIds()) expect(games).toContain(id);
+    for (const id of REGISTERED_IDS) expect(games).toContain(id);
     // The shapes, on lines written here: an unmatched pattern finds nothing
     // and every game passes.
     expect(ENDS_IN_TILE_DIVISION.test("(p.x - b) / ds.tileSize")).toBe(true);

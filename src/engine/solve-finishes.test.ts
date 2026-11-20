@@ -14,12 +14,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { LEFT_BUTTON, LEFT_RELEASE, RIGHT_BUTTON, RIGHT_RELEASE } from "./pointer.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
-import { type AnyGame, probeBoard, probePoints } from "./testing/input-probe.ts";
+import { REGISTERED_GAMES } from "./testing/enrollment.ts";
+import { probeBoard, probePoints } from "./testing/input-probe.ts";
 
-const solvable = registeredGameIds().filter((id) => getTsGame(id)?.solve !== undefined);
+const solvable = REGISTERED_GAMES.filter(([, g]) => g.solve !== undefined);
 
 /** How many positions each game is solved from, and how far into its play. */
 const TRIALS = 12;
@@ -31,8 +30,7 @@ describe("Solve leaves a solved board, or refuses", () => {
     expect(solvable.length).toBeGreaterThanOrEqual(40);
   });
 
-  it.each(solvable)("%s: from the deal and from positions played into", (id) => {
-    const game = getTsGame(id) as AnyGame;
+  it.each(solvable)("%s: from the deal and from positions played into", (id, game) => {
     const pb = probeBoard(game, id);
     const points = probePoints(pb.size);
     const keys = pb.m.requestKeys().map((k) => k.button);

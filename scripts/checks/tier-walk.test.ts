@@ -43,7 +43,6 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { expect, it } from "vitest";
-import "../../src/games/index.ts";
 import {
   cappedSolveFor,
   type DifficultyContract,
@@ -54,7 +53,7 @@ import {
 import type { Game, ParamConfigItem } from "../../src/engine/game.ts";
 import { paramsError } from "../../src/engine/params.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
-import { getTsGame, registeredGameIds } from "../../src/engine/registry.ts";
+import { REGISTERED_GAMES } from "../../src/engine/testing/enrollment.ts";
 import { leafPresets } from "../../src/engine/testing/presets.ts";
 
 const OUT = "metrics/tier-walk.md";
@@ -264,9 +263,8 @@ it("walks every tier at sizes below the menu's largest", () => {
   const kept = ONLY === null ? new Map<string, string>() : sectionsOnDisk();
   const report = (): void => writeFileSync(OUT, render(sections, kept));
 
-  for (const id of registeredGameIds().sort()) {
+  for (const [id, game] of REGISTERED_GAMES) {
     if (ONLY !== null && !ONLY.includes(id)) continue;
-    const game = getTsGame(id) as AnyGame;
     const tiers = difficultyChoiceItem<Params>(game)?.choices ?? null;
     if (tiers === null || !game.difficulty) continue;
     const section: Section = { id, tiers, cells: [] };

@@ -18,9 +18,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { permitsSearch } from "./difficulty.ts";
-import { Midend } from "./midend.ts";
-import { beginDealt } from "./testing/dealt.ts";
-import { declaresNoMarks, gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
+import { declaresNoMarks, HINT_GAMES } from "./testing/hint-games.ts";
+import { walkBoards } from "./testing/hint-walk.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 
@@ -44,11 +43,8 @@ describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", ()
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: the hint overlay survives the render cache`, () => {
       let shown = 0;
-      for (const { title, params } of gatePresets(game)) {
+      for (const { title, params, midend } of walkBoards(game)) {
         const seed = `${name}/${title}`;
-        const midend = new Midend(game);
-        expect(beginDealt(midend, game, params), `${seed}: no board`).toBeNull();
-
         const palette = game.colors(DEFAULT_BACKGROUND);
 
         for (let opener = 0; ; opener++) {

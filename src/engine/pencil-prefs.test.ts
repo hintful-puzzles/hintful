@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import type { GamePref } from "./game.ts";
 import {
   autoPencilPref,
@@ -8,9 +7,8 @@ import {
   STICKY_PENCIL_HELP,
   stickyPencilPref,
 } from "./pencil-prefs.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
 import { dealt } from "./testing/dealt.ts";
-import type { AnyGame } from "./testing/hint-games.ts";
+import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 
 describe("the shared pencil preferences", () => {
   it("drives ui.pencilSticky under upstream's keyword", () => {
@@ -61,8 +59,8 @@ describe("Every game offering a shared pencil preference uses the shared wording
   it("has no game hand-rolling a divergent label", () => {
     const offenders: string[] = [];
     const seen = new Map<string, number>();
-    for (const id of registeredGameIds()) {
-      const prefs = (getTsGame(id)?.prefs ?? []) as GamePref<unknown>[];
+    for (const [id, game] of REGISTERED_GAMES) {
+      const prefs = (game.prefs ?? []) as GamePref<unknown>[];
       for (const pref of prefs) {
         const shared = SHARED_LABELS[pref.kw];
         if (shared === undefined) continue;
@@ -82,16 +80,13 @@ describe("Every game offering sticky pencil mode starts with it on", () => {
   // `STICKY_PENCIL_HELP` tells the reader of every such game's help page to
   // turn the preference off, so a game starting with it off makes its own
   // page wrong.
-  const offering = registeredGameIds()
-    .sort()
-    .filter((id) => offersStickyPencil(getTsGame(id) ?? {}));
+  const offering = REGISTERED_GAMES.filter(([, game]) => offersStickyPencil(game));
 
   it("found the games that offer it", () => {
     expect(offering.length).toBeGreaterThanOrEqual(10);
   });
 
-  it.each(offering)("%s", (id) => {
-    const game = getTsGame(id) as AnyGame;
+  it.each(offering)("%s", (_id, game) => {
     const params = game.defaultParams();
     const state = game.newState(params, dealt(game, params).desc);
     const pref = (game.prefs as GamePref<unknown>[]).find(

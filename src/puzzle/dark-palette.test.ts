@@ -29,7 +29,8 @@ import {
   playerEntryColor,
   REGION_DONE,
 } from "../engine/color/palette.ts";
-import { getTsGame, registeredGameIds } from "../engine/registry.ts";
+import { getTsGame } from "../engine/registry.ts";
+import { REGISTERED_IDS } from "../engine/testing/enrollment.ts";
 import type { Color, PuzzleId } from "../engine/types.ts";
 import {
   colorToOKLCH,
@@ -39,7 +40,6 @@ import {
 } from "../utils/color.ts";
 import { darkModePalette } from "./dark-palette.ts";
 import { schemeOf } from "./scheme-palettes.ts";
-import "../games/index.ts";
 
 /** The lightness a dark-mode board background sits at, per `utils/color.ts`. */
 const DARK_BG_L = 0.2;
@@ -63,7 +63,7 @@ function schemes(id: PuzzleId): { light: OKLCH[]; dark: OKLCH[] } {
 }
 
 /** Every declared swap in the collection, with its game. */
-const PAIRS: [PuzzleId, number, number][] = registeredGameIds().flatMap((id) =>
+const PAIRS: [PuzzleId, number, number][] = REGISTERED_IDS.flatMap((id) =>
   schemeOf(id).darkSwaps.map(([a, b]): [PuzzleId, number, number] => [id, a, b]),
 );
 

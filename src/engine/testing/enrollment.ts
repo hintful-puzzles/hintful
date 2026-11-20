@@ -64,6 +64,9 @@ export const REGISTERED_GAMES: readonly [string, AnyGame][] = registeredGameIds(
     return [id, game];
   });
 
+/** The ids of `REGISTERED_GAMES`, in the same sorted order. */
+export const REGISTERED_IDS: readonly string[] = REGISTERED_GAMES.map(([id]) => id);
+
 /**
  * How many games the registry offered — the **vacuity guard** every derived
  * sweep owes. A sweep over an empty population passes while checking nothing,
@@ -348,7 +351,7 @@ export function membersNotMentioning(ids: string[], marker: string): string[] {
  * that was written somewhere else.
  */
 export function codeLinesMatching(
-  ids: string[],
+  ids: readonly string[],
   re: RegExp,
 ): { id: string; line: string }[] {
   return ids.flatMap((id) =>

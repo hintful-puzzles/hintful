@@ -20,12 +20,12 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import type { Game } from "./game.ts";
 import { Midend } from "./midend.ts";
 import { CURSOR_RIGHT } from "./pointer.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
+import { getTsGame } from "./registry.ts";
 import { observeMidend } from "./testing/drive-midend.ts";
+import { REGISTERED_GAMES, REGISTERED_IDS } from "./testing/enrollment.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { inSweep } from "./testing/slow.ts";
@@ -76,16 +76,13 @@ function lastUiState(last: ReturnType<typeof boardFor>["last"]): string | null {
   return note.uiState ?? null;
 }
 
-const PERSISTS_UI = registeredGameIds().filter(
-  (id) => (getTsGame(id) as AnyGame | undefined)?.encodeUi !== undefined,
-);
+const PERSISTS_UI = REGISTERED_GAMES.filter(([, game]) => game.encodeUi !== undefined);
 
 describe("a game's saveable Ui is reported to the app", () => {
   let swept = 0;
 
-  for (const id of PERSISTS_UI) {
+  for (const [id, game] of PERSISTS_UI) {
     it(`${id}: reports its encoded Ui with every state change`, () => {
-      const game = getTsGame(id) as AnyGame;
       const { last, uiNow } = boardFor(game);
       const reported = lastUiState(last);
       expect(reported, `${id} persists a Ui but reports no uiState`).toBe(
@@ -95,9 +92,8 @@ describe("a game's saveable Ui is reported to the app", () => {
     });
   }
 
-  for (const id of registeredGameIds()) {
-    const game = getTsGame(id) as AnyGame | undefined;
-    if (!game || game.encodeUi) continue;
+  for (const [id, game] of REGISTERED_GAMES) {
+    if (game.encodeUi) continue;
     it(`${id}: reports no Ui, having none to save`, () => {
       const { last } = boardFor(game);
       expect(lastUiState(last)).toBeNull();
@@ -111,7 +107,7 @@ describe("a game's saveable Ui is reported to the app", () => {
     // above passes over nothing and the sweep reports health. The first catches
     // the quieter shape: a registry that answers with a *subset* leaves most
     // games unswept while both loops still run.
-    expect(swept).toBe(registeredGameIds().filter(inSweep).length);
+    expect(swept).toBe(REGISTERED_IDS.filter(inSweep).length);
     expect(PERSISTS_UI.length).toBeGreaterThan(0);
   });
 });

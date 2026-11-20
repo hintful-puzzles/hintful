@@ -17,12 +17,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
+import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import type { DrawOp } from "./testing/recording-drawing.ts";
 import { renderScenario } from "./testing/render-scenario.ts";
-
-const IDS = registeredGameIds().sort();
 
 function unpaintedPixels(ops: readonly DrawOp[], w: number, h: number): number {
   const painted = new Uint8Array(w * h);
@@ -81,12 +78,12 @@ describe("first-frame coverage", () => {
   });
 
   it("covers every game in the registry", () => {
-    expect(IDS.length).toBeGreaterThan(0);
+    expect(REGISTERED_GAME_COUNT).toBeGreaterThan(0);
   });
 
-  it.each(IDS)("%s paints its whole canvas on the first frame", (id) => {
-    const game = getTsGame(id);
-    if (!game) throw new Error(`${id} is registered but has no game object`);
+  it.each(
+    REGISTERED_GAMES,
+  )("%s paints its whole canvas on the first frame", (_id, game) => {
     const params = game.encodeParams(game.defaultParams(), true);
     const { recording, size } = renderScenario({ game, id: `${params}#coverage` });
     expect(unpaintedPixels(recording.ops, size.w, size.h)).toBe(0);

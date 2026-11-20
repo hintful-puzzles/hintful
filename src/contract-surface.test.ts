@@ -61,8 +61,10 @@
  */
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { getTsGame, registeredGameIds } from "./engine/registry.ts";
-import "./games/index.ts";
+import {
+  REGISTERED_GAME_COUNT,
+  REGISTERED_GAMES,
+} from "./engine/testing/enrollment.ts";
 
 /** Every source module, eagerly, as raw text — Vite resolves these at build. */
 const sources = [
@@ -269,13 +271,12 @@ describe("the Game contract carries no capability without a consumer", () => {
   });
 
   it("every optional member has at least one game implementing it", () => {
-    const ids = registeredGameIds();
-    expect(ids.length).toBeGreaterThan(50);
+    expect(REGISTERED_GAME_COUNT).toBeGreaterThan(50);
 
     const orphans: string[] = [];
     for (const member of OPTIONAL) {
-      const implementers = ids.filter((id) =>
-        Object.hasOwn(getTsGame(id) as object, member),
+      const implementers = REGISTERED_GAMES.filter(([, game]) =>
+        Object.hasOwn(game, member),
       );
       if (implementers.length === 0) orphans.push(member);
     }
@@ -300,9 +301,7 @@ describe("the Game contract carries no capability without a consumer", () => {
     // never runs".
     const withImplementers = (names: string[]) =>
       names.map((m) => {
-        const n = registeredGameIds().filter((id) =>
-          Object.hasOwn(getTsGame(id) as object, m),
-        ).length;
+        const n = REGISTERED_GAMES.filter(([, game]) => Object.hasOwn(game, m)).length;
         return `${m} (${n} implementers)`;
       });
 

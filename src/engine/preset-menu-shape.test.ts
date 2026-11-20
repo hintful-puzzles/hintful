@@ -4,26 +4,20 @@
  * that calls `presetGrid` and for one that writes its list out.
  */
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { difficultyChoiceItem, withTier } from "./difficulty.ts";
 import type { Game, ParamConfigItem } from "./game.ts";
 import { presetMenu, type TitledPresetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
 import { MENU_LINES, MENU_SECTION_LINES } from "./preset-grid.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
 import { rulesetField } from "./ruleset.ts";
+import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { expectLedger } from "./testing/ledger.ts";
 import { leafPresets, rectangleShortfall, takesRectangles } from "./testing/presets.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
 type AnyGame = Game<unknown, unknown, unknown>;
 type Item = ParamConfigItem<unknown>;
-const ids = registeredGameIds();
-const game = (id: string): AnyGame => {
-  const g = getTsGame(id);
-  if (!g) throw new Error(`${id} is not registered`);
-  return g as AnyGame;
-};
+const GAMES: readonly [string, AnyGame][] = REGISTERED_GAMES;
 
 /** Each heading's own lines, the menu's top level among them. */
 function sections(menu: TitledPresetMenu<unknown>): TitledPresetMenu<unknown>[][] {
@@ -60,8 +54,7 @@ const TIERS_NOT_OFFERED: Record<string, Record<string, string>> = {
 };
 
 describe("a section of a menu is short enough to read", () => {
-  it.each(ids)("%s", (id) => {
-    const g = game(id);
+  it.each(GAMES)("%s", (id, g) => {
     for (const lines of sections(presetMenu(g))) {
       // A section with one line for each kind of board is as long as the
       // kinds are many: Loopy's tilings, Cube's solids.
@@ -78,16 +71,17 @@ describe("a section of a menu is short enough to read", () => {
 });
 
 describe("a whole menu is short enough to choose from", () => {
-  it.each(ids)("%s", (id) => {
-    expect(leafPresets(game(id)).length).toBeLessThanOrEqual(MENU_LINES);
+  it.each(GAMES)("%s", (_id, g) => {
+    expect(leafPresets(g).length).toBeLessThanOrEqual(MENU_LINES);
   });
 });
 
 describe("a tiered game's menu is a grid", () => {
-  const tiered = ids.filter((id) => difficultyChoiceItem(game(id)) !== null);
+  const tiered = GAMES.filter(([, g]) => difficultyChoiceItem(g) !== null);
 
-  it.each(tiered)("%s: a board's tiers are one run of lines, easiest first", (id) => {
-    const g = game(id);
+  it.each(
+    tiered,
+  )("%s: a board's tiers are one run of lines, easiest first", (id, g) => {
     const tier = difficultyChoiceItem(g);
     if (tier === null) throw new Error("unreachable");
     const ruleset = rulesetField(g);
@@ -129,8 +123,7 @@ describe("a tiered game's menu is a grid", () => {
     }
   });
 
-  it.each(tiered)("%s: every tier is on the menu", (id) => {
-    const g = game(id);
+  it.each(tiered)("%s: every tier is on the menu", (id, g) => {
     const tier = difficultyChoiceItem(g);
     if (tier === null) throw new Error("unreachable");
     const leaves = leafPresets(g);
@@ -150,15 +143,15 @@ describe("a tiered game's menu is a grid", () => {
 
   it("looked at the tiered games", () => {
     expect(tiered.length).toBeGreaterThan(20);
-    for (const id of Object.keys(TIERS_NOT_OFFERED)) expect(tiered).toContain(id);
+    for (const id of Object.keys(TIERS_NOT_OFFERED))
+      expect(tiered.map(([t]) => t)).toContain(id);
   });
 });
 
 describe("a rule modifier has one line of the menu", () => {
   let modifiers = 0;
 
-  it.each(ids)("%s", (id) => {
-    const g = game(id);
+  it.each(GAMES)("%s", (id, g) => {
     const leaves = leafPresets(g);
     for (const item of g.paramConfig ?? []) {
       // A choice modifier bounds its rule at every value, so no value of it is
@@ -182,26 +175,25 @@ describe("a rule modifier has one line of the menu", () => {
 });
 
 describe("a game that takes rectangles offers them", () => {
-  it.each(ids)("%s", (id) => {
-    expect(rectangleShortfall(game(id)), id).toBeNull();
+  it.each(GAMES)("%s", (id, g) => {
+    expect(rectangleShortfall(g), id).toBeNull();
   });
 
   // The population is read off each game's dimension pair, so a renamed field
   // would empty it without a sound.
   it("looked at the games that take rectangles", () => {
-    expect(ids.filter((id) => takesRectangles(game(id))).length).toBeGreaterThan(30);
+    expect(GAMES.filter(([, g]) => takesRectangles(g)).length).toBeGreaterThan(30);
   });
 });
 
 describe("a game with a size offers at least three boards", () => {
-  it.each(ids)("%s", (id) => {
-    const g = game(id);
+  it.each(GAMES)("%s", (id, g) => {
     const sized = (g.paramConfig ?? []).some((i) => i.label?.slot === "size");
     if (!sized) return;
     expect(leafPresets(g).length, id).toBeGreaterThanOrEqual(3);
   });
 
   it("looked at the collection", () => {
-    expect(ids.length).toBeGreaterThan(50);
+    expect(REGISTERED_GAME_COUNT).toBeGreaterThan(50);
   });
 });

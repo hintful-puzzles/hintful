@@ -16,12 +16,11 @@
  * every note-taking game uses.
  */
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
 import { CURSOR_RIGHT, MARK_ALL_BUTTON } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
 import { dealt } from "./testing/dealt.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
+import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
@@ -39,10 +38,9 @@ interface Row {
  * real question — does the flag match what the game *does* — is the
  * behavioral check below.
  */
-const MARK_ALL_GAMES: Row[] = registeredGameIds()
-  .sort()
-  .filter((id) => getTsGame(id)?.markAll !== undefined)
-  .map((id) => ({ name: id, game: getTsGame(id) as AnyGame }));
+const MARK_ALL_GAMES: Row[] = REGISTERED_GAMES.filter(
+  ([, game]) => game.markAll !== undefined,
+).map(([id, game]) => ({ name: id, game }));
 
 /** Every note-taking game keeps its candidates in `pencil`, one bitmask per
  * cell (Abcd's letters included), so the probe reads one field rather than

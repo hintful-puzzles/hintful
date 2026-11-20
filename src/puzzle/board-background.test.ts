@@ -17,10 +17,14 @@ import {
   paletteSchemeOf,
   resolvePalette,
 } from "../engine/color/color-mkhighlight.ts";
-import { getTsGame, registeredGameIds } from "../engine/registry.ts";
+import {
+  type AnyGame,
+  REGISTERED_GAME_COUNT,
+  REGISTERED_GAMES,
+  REGISTERED_IDS,
+} from "../engine/testing/enrollment.ts";
 import type { Color } from "../engine/types.ts";
 import { oklchToColor } from "../utils/color.ts";
-import "../games/index.ts";
 import { puzzleIds } from "./catalog.ts";
 
 /** What `components/view.ts` hands the engine in dark mode. */
@@ -31,9 +35,7 @@ const LIGHT = oklchToColor([0.87, 0, 0]);
 /** The board a game is expected to paint for a given host background. */
 const board = (host: Color): Color => mkhighlightBackground(host);
 
-function boardOf(id: string, host: Color): Color {
-  const game = getTsGame(id);
-  if (!game) throw new Error(`${id} is not registered`);
+function boardOf(id: string, game: AnyGame, host: Color): Color {
   const index = paletteSchemeOf(game).board;
   const color = resolvePalette(game, host)[index];
   if (!color) throw new Error(`${id} has no color at its board index ${index}`);
@@ -41,25 +43,27 @@ function boardOf(id: string, host: Color): Color {
 }
 
 describe("the board every game paints", () => {
-  const ids = registeredGameIds();
-
   it("looks at every game the app lists", () => {
     // The registry is filled by importing the games, so an import that stopped
     // reaching them would leave nothing to run on. The catalog is the list
     // the app offers a player, kept apart from the registry.
-    expect([...ids].sort()).toEqual([...puzzleIds].sort());
-    expect(ids.length).toBeGreaterThan(0);
+    expect(REGISTERED_IDS).toEqual([...puzzleIds].sort());
+    expect(REGISTERED_GAME_COUNT).toBeGreaterThan(0);
   });
 
-  it.each(ids)("%s paints the collection's board tone on a white host", (id) => {
+  it.each(
+    REGISTERED_GAMES,
+  )("%s paints the collection's board tone on a white host", (id, game) => {
     const expected = board(WHITE);
-    const actual = boardOf(id, WHITE);
+    const actual = boardOf(id, game, WHITE);
     for (let c = 0; c < 3; c++) expect(actual[c]).toBeCloseTo(expected[c], 9);
   });
 
-  it.each(ids)("%s paints the collection's board tone on the light host", (id) => {
+  it.each(
+    REGISTERED_GAMES,
+  )("%s paints the collection's board tone on the light host", (id, game) => {
     const expected = board(LIGHT);
-    const actual = boardOf(id, LIGHT);
+    const actual = boardOf(id, game, LIGHT);
     for (let c = 0; c < 3; c++) expect(actual[c]).toBeCloseTo(expected[c], 9);
   });
 

@@ -12,9 +12,8 @@ import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
 import { HATCH_OPACITY } from "../engine/hatch.ts";
 import type { Narration } from "../engine/hint-words.ts";
 import { Midend } from "../engine/index.ts";
-import { registeredGameIds } from "../engine/registry.ts";
 import { beginDealt } from "../engine/testing/dealt.ts";
-import { codeLinesMatching } from "../engine/testing/enrollment.ts";
+import { codeLinesMatching, REGISTERED_IDS } from "../engine/testing/enrollment.ts";
 import { gatePresets, HINT_GAMES } from "../engine/testing/hint-games.ts";
 import { opsOfKind, RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
@@ -86,9 +85,7 @@ function hatchColor(id: string): number | null {
 
 describe("the hint's line hatch", () => {
   const hatching = [
-    ...new Set(
-      codeLinesMatching(registeredGameIds(), /\.drawHatch\(/).map(({ id }) => id),
-    ),
+    ...new Set(codeLinesMatching(REGISTERED_IDS, /\.drawHatch\(/).map(({ id }) => id)),
   ];
 
   it("finds the games that draw it", () => {

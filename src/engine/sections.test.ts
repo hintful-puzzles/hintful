@@ -4,16 +4,12 @@
  * with an absent section is a draft.
  */
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
-import { getTsGame, registeredGameIds } from "./registry.ts";
+import { getTsGame } from "./registry.ts";
 import { draftSections, notApplicableFeatures, sectionState } from "./sections.ts";
+import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 
 function games() {
-  return registeredGameIds().map((id) => {
-    const game = getTsGame(id);
-    if (game === null) throw new Error(`${id} is registered but has no game`);
-    return game;
-  });
+  return REGISTERED_GAMES.map(([, game]) => game);
 }
 
 describe("contract sections", () => {
