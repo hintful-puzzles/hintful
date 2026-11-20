@@ -29,16 +29,19 @@ import { GREEN, ORANGE, PURPLE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   clueDoneColor,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   playerEntryColor,
   RULED_OUT,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
@@ -50,6 +53,7 @@ import {
 } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import { textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
@@ -72,34 +76,28 @@ export const PREFERRED_TILE_SIZE = 36;
 
 // --- palette ----------------------------------------------------------------
 
-const COL_OUTERBG = 0; // the board around and between the cell blocks
 /** The surface of a letter slot in a cell the player fills. */
-export const COL_CELL = 1;
-const COL_GRID = 2; // the line between two slots of a cell
+export const COL_CELL = FIRST_GAME_SLOT;
+const COL_GRID = FIRST_GAME_SLOT + 1; // the line between two slots of a cell
 /** The lifted slot surface of a cell whose set the puzzle gave. */
-export const COL_GIVEN = 3;
+export const COL_GIVEN = FIRST_GAME_SLOT + 2;
 /** A tally entry placed once, and the idle inspect badge's ring. */
-const COL_DONE = 4;
-const COL_FIXED = 5;
-export const COL_GUESS = 6;
-export const COL_ERROR = 7;
-const COL_CURSOR = 8;
+const COL_DONE = FIRST_GAME_SLOT + 3;
+const COL_FIXED = FIRST_GAME_SLOT + 4;
+export const COL_GUESS = FIRST_GAME_SLOT + 5;
+/** The keyboard cursor, in its own color (see its assignment). */
+const COL_PURPLE_CURSOR = FIRST_GAME_SLOT + 6;
 // Hint / reference-aid legend: what the current step decides (a slot, or the
 // tally entry of a set it rules out) is ringed by the engine; a highlighted
 // neighbor cell (across a horseshoe) or highlighted tally set is
-// COL_HINT_CELL; the cell a sentence names (a hidden single's one candidate,
+// COL_HINT_OUTLINE; the cell a sentence names (a hidden single's one candidate,
 // the cell a set is ruled out of) is striped under its letters; and the cells
 // a clicked reference-aid set can still go in get a COL_HINT_SPOT frame.
-export const COL_HINT_CELL = 9;
-export const COL_HINT_SPOT = 10;
+export const COL_HINT_SPOT = FIRST_GAME_SLOT + 7;
 // The cell where a clicked, already *placed* set sits.
-const COL_HINT_PLACED = 11;
+const COL_HINT_PLACED = FIRST_GAME_SLOT + 8;
 /** The cross in a slot whose letter is cleared. */
-export const COL_RULED_OUT = 12;
-/** The ground of every slot of a cell the win flash is on. */
-export const COL_FLASH = 13;
-/** The same, under the win flash's leading edge. */
-export const COL_FLASH_LEAD = 14;
+export const COL_RULED_OUT = FIRST_GAME_SLOT + 9;
 
 /** Sidecar bit: a cell a spotlit set can still be placed in. */
 const HINT_SPOT = 4;
@@ -121,22 +119,17 @@ const MISTAKE_SLOT = 2;
 const CODE_A = "A".charCodeAt(0);
 
 export function colors(background: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_OUTERBG] = background;
+  const out = rolePalette(background);
   out[COL_CELL] = cellSurface(background);
   out[COL_GRID] = surfaceGrid(background);
   out[COL_GIVEN] = givenSurface(background);
   out[COL_DONE] = clueDoneColor(background);
   out[COL_RULED_OUT] = RULED_OUT;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_FIXED] = INK;
   out[COL_GUESS] = playerEntryColor(background);
-  out[COL_ERROR] = ERROR;
   // Purple, because Subsets has spent the usual two: the hint's decided slot is
   // blue and the player's own entries are green.
-  out[COL_CURSOR] = PURPLE;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
+  out[COL_PURPLE_CURSOR] = PURPLE;
   // The "could still go here" spotlight is its own third emphasis, not the hint
   // action again: this deduction genuinely has three parts and the middle one is
   // the interesting one, so it keeps a hue of its own.
@@ -160,14 +153,15 @@ export function computeSize(p: Pick<SubsetsParams, "w" | "h">, ts: number): Size
 // --- draw state -------------------------------------------------------------
 
 export interface SubsetsDrawState {
-  started: boolean;
   tileSize: number;
-  /** Packed known/mask/flash/cursor-slot per cell (-1 = never drawn). */
-  cellCache: Int32Array;
-  /** Error-flag bits currently drawn per cell (upstream `oldflags`). */
+  /** Per cell, its packed known/mask/flash/cursor-slot, with both overlays
+   * registered. */
+  cells: TileCache;
+  /** Error-flag bits currently drawn per cell (upstream `oldflags`): per
+   * arrow, not per tile, so it stays its own record. */
   oldFlags: Uint8Array;
-  /** Tally counts currently drawn per set-value (upstream `oldcounts`). */
-  oldCounts: Int32Array;
+  /** Per set-value tally entry, its count and its look. */
+  tally: TileCache;
   mistakes: OverlaySidecar;
   /** Hint overlay: `HINT_TARGET`/`HINT_AREA`/`HINT_SPOT`/`HINT_PLACED` per
    * cell, plus the target slot index packed in bits 4+ (`(slot + 1) << 4`,
@@ -175,13 +169,11 @@ export interface SubsetsDrawState {
   hint: OverlaySidecar;
   /** How each tally entry looks, indexed by set-value: its box
    * (`TALLY_BOX_*`), its rule-out strike (`TALLY_STRUCK*`) and the keyboard
-   * cursor (`TALLY_CURSOR`); compared against
-   * {@link SubsetsDrawState.oldTallyLook} in the tally cache-miss test. */
+   * cursor (`TALLY_CURSOR`): the second word of the tally's key. */
   tallyLook: Uint8Array;
-  oldTallyLook: Uint8Array;
 }
 
-/** Tally look: boxed as a highlighted set (the premise, `COL_HINT_CELL`). */
+/** Tally look: boxed as a highlighted set (the premise, `COL_HINT_OUTLINE`). */
 const TALLY_BOX_SET = 1;
 /** Tally look: ringed as the set a hint step rules out (the action). */
 const TALLY_BOX_RULE = 2;
@@ -195,16 +187,16 @@ const TALLY_CURSOR = 16;
 
 export function newDrawState(state: SubsetsState, tileSize: number): SubsetsDrawState {
   const s = state.w * state.h;
+  const mistakes = new OverlaySidecar(s);
+  const hint = new OverlaySidecar(s);
   return {
-    started: false,
     tileSize,
-    cellCache: new Int32Array(s).fill(-1),
+    cells: new TileCache(s, { overlays: [mistakes, hint] }),
     oldFlags: new Uint8Array(s),
-    oldCounts: new Int32Array(s),
-    mistakes: new OverlaySidecar(s),
-    hint: new OverlaySidecar(s),
+    tally: new TileCache(s, { words: 2 }),
+    mistakes,
+    hint,
     tallyLook: new Uint8Array(s),
-    oldTallyLook: new Uint8Array(s),
   };
 }
 
@@ -252,7 +244,7 @@ export function redraw(
 
   // The grid cursor hides while the keyboard is in the tally band below.
   const cshow = ui.cursor.visible && ui.tallyCursor === null && !flash.winning;
-  const firstDraw = !ds.started;
+  const firstDraw = ds.cells.firstFrame();
 
   // Live error verdicts and the tally, recomputed pure from the committed
   // state (upstream recomputes on each state change; this is 16 cells).
@@ -361,13 +353,7 @@ export function redraw(
         ((state.mask[i] & abits) << n) |
         (lit << (2 * n)) |
         ((slot + 1) << (2 * n + 2));
-      if (
-        !firstDraw &&
-        ds.cellCache[i] === packed &&
-        !ds.mistakes.stale(i) &&
-        !ds.hint.stale(i)
-      )
-        continue;
+      if (!ds.cells.changed(i, packed)) continue;
 
       // The cell block's top-left corner and side.
       const bx = Math.floor((x * (cw + 1) + 0.5) * ts);
@@ -393,11 +379,7 @@ export function redraw(
           // holds: a letter, the cross, or nothing yet.
           dr.drawRect(
             box,
-            lit
-              ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD)
-              : state.immutable[i] & bit
-                ? COL_GIVEN
-                : COL_CELL,
+            lit ? winSlot(lit) : state.immutable[i] & bit ? COL_GIVEN : COL_CELL,
           );
           // The cell the hint's sentence names, under its letters.
           ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts - 1, h: ts - 1 }, ts);
@@ -423,7 +405,7 @@ export function redraw(
               tx + Math.floor(ts / 2),
               ty + Math.floor(ts / 2),
               Math.floor(ts * 0.4) - 1,
-              COL_CURSOR,
+              COL_PURPLE_CURSOR,
             );
           }
         }
@@ -448,13 +430,13 @@ export function redraw(
           w: 2 * iconR + 3,
           h: 2 * iconR + 3,
         },
-        COL_OUTERBG,
+        COL_BACKGROUND,
       );
       dr.drawCircle(
         { x: icx, y: iconY },
         iconR,
         active ? COL_HINT_SPOT : COL_DONE,
-        active ? COL_HINT_SPOT : COL_OUTERBG,
+        active ? COL_HINT_SPOT : COL_BACKGROUND,
       );
 
       // Duplicated placement (Check & Save): inset red frame on the block.
@@ -471,7 +453,7 @@ export function redraw(
             ? COL_HINT_PLACED
             : hintBits & HINT_SPOT
               ? COL_HINT_SPOT
-              : COL_HINT_CELL;
+              : COL_HINT_OUTLINE;
         drawThickRectOutline(
           dr,
           bx,
@@ -500,10 +482,6 @@ export function redraw(
       // Extend the update region up to cover the inspect badge above the block.
       const top = iconY - iconR - 1;
       dr.drawUpdate({ x: bx, y: top, w: ts * cw, h: by + ts * ch - top });
-
-      ds.cellCache[i] = packed;
-      ds.mistakes.commit(i);
-      ds.hint.commit(i);
     }
   }
 
@@ -534,9 +512,9 @@ export function redraw(
         if (state.clues[i1] & f) {
           if (firstDraw || (flags[i1] & f) !== (ds.oldFlags[i1] & f)) {
             const color = flags[i1] & f ? COL_ERROR : COL_FIXED;
-            dr.drawRect(box, COL_OUTERBG);
+            dr.drawRect(box, COL_BACKGROUND);
             dr.drawCircle({ x: tx, y: ty }, radius, color, color);
-            dr.drawCircle({ x: tx, y: ty }, radius - 2, COL_OUTERBG, COL_OUTERBG);
+            dr.drawCircle({ x: tx, y: ty }, radius - 2, COL_BACKGROUND, COL_BACKGROUND);
 
             // Open one side of the ring, leaving the horseshoe legs.
             if (f & (F_ADJ_UP | F_ADJ_DOWN)) {
@@ -545,7 +523,7 @@ export function redraw(
               dr.drawRect({ x: tx - radius, y: ty, w: diameter, h: radius }, color);
               dr.drawRect(
                 { x: 2 + tx - radius, y: ty, w: diameter - 4, h: radius },
-                COL_OUTERBG,
+                COL_BACKGROUND,
               );
             } else {
               if (dx > 0) tx -= radius;
@@ -553,7 +531,7 @@ export function redraw(
               dr.drawRect({ x: tx, y: ty - radius, w: radius, h: diameter }, color);
               dr.drawRect(
                 { x: tx, y: 2 + ty - radius, w: radius, h: diameter - 4 },
-                COL_OUTERBG,
+                COL_BACKGROUND,
               );
             }
             // The update rect follows the legs' shifted `tx`/`ty`.
@@ -587,7 +565,7 @@ export function redraw(
             dr.drawUpdate(box);
             ds.oldFlags[i1] |= f;
           } else {
-            dr.drawRect(box, COL_OUTERBG);
+            dr.drawRect(box, COL_BACKGROUND);
             dr.drawUpdate(box);
             ds.oldFlags[i1] &= ~f;
           }
@@ -603,8 +581,7 @@ export function redraw(
     for (let x = 0; x < w; x++) {
       const cn = x * h + y;
       const look = ds.tallyLook[cn];
-      if (!firstDraw && counts[cn] === ds.oldCounts[cn] && look === ds.oldTallyLook[cn])
-        continue;
+      if (!ds.tally.changed(cn, counts[cn], look)) continue;
 
       const tx = x * (cw + 1) * ts + Math.floor(cw * ts * 0.75);
       const ty = Math.floor(y * 0.75 * ts) + (h + 2) * ch * ts;
@@ -625,7 +602,7 @@ export function redraw(
         w: ts * 2,
         h: Math.floor(ts * 0.75),
       };
-      dr.drawRect(entry, COL_OUTERBG);
+      dr.drawRect(entry, COL_BACKGROUND);
       // "The highlighted set": a hint **boxes** the tally entry it points at,
       // or rings the one it rules out, the same marks it uses on the board
       // rather than a tint behind the label. The label's own color is
@@ -644,7 +621,7 @@ export function redraw(
           dr,
           { box: entry, outer: 0, inner: thick },
           MARK_ALL,
-          COL_HINT_CELL,
+          COL_HINT_OUTLINE,
         );
       // The keyboard cursor: a thin frame just inside the entry, outside the
       // hint's box, so both read at once.
@@ -656,7 +633,7 @@ export function redraw(
           entry.w,
           entry.h,
           Math.max(1, Math.floor(ts / 18)),
-          COL_CURSOR,
+          COL_PURPLE_CURSOR,
         );
       dr.drawText(label.origin, label.options, color, label.text);
       // A rule-out strikes the label through, in the player's own ink.
@@ -670,11 +647,6 @@ export function redraw(
         );
       }
       dr.drawUpdate(entry);
-
-      ds.oldCounts[cn] = counts[cn];
-      ds.oldTallyLook[cn] = look;
     }
   }
-
-  ds.started = true;
 }

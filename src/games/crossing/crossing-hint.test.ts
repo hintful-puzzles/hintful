@@ -15,6 +15,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
@@ -34,7 +35,6 @@ import { crossingGame } from "./index.ts";
 import {
   COL_ACROSS,
   COL_DOWN,
-  COL_HINT_CELL,
   COL_SELECTED,
   type CrossingDrawState,
   type CrossingHint,
@@ -797,7 +797,7 @@ describe("crossing hint — the frame", () => {
     );
     expect(
       inPanel.some(
-        (o) => o.op === "ring" || (o.op === "rect" && o.color === COL_HINT_CELL),
+        (o) => o.op === "ring" || (o.op === "rect" && o.color === COL_HINT_OUTLINE),
       ),
       "no hint mark in the clue list",
     ).toBe(true);

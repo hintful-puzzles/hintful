@@ -85,7 +85,8 @@
       edge-clue-latin (adjacent, unequal), galaxies, wordtrail,
       border-grid-render (palisade, separate), inertia, path, rect, slide,
       sokoban, pegs, signpost; of the multi-family games, abcd, pattern,
-      magnets, blackbox, tents, boats, tracks, salad, group.
+      magnets, blackbox, tents, boats, tracks, salad, group, crossing,
+      subsets.
       A game whose board
       values are palette indices (SameGame's and Flood's tile colors) numbers
       them from a run after its own slots (`COL_PIECE + c - 1`,
@@ -134,8 +135,14 @@
       asks once a size whether the count moved, since a size has a slot a
       boat. Group's hint sidecar is keyed by grid cell while its tiles are
       keyed by display position, so it cannot register with the cache: it
-      is tested after `changed`, as a string lane is. Next: bridges, guess,
-      crossing, subsets, undead. Then the multi-family games, then
+      is tested after `changed`, as a string lane is. A panel that repaints
+      whole on any entry's miss asks every entry, not up to the first miss,
+      so each records what the repaint paints (Crossing's numbers).
+      Subsets' arrow flags stay a record of their own: they are per arrow
+      bit, not per tile, and read the cell cache's first frame. A test title
+      that names a slot keys its snapshot, so a rename prunes the old entry
+      (`--update` on that file) after checking the bodies match. Next:
+      bridges, guess, undead. Then the multi-family games, then
       the neighbor-painting ones. Not tiles, keeping the explicit form:
       cube, loopy, untangle (palette roles only).
 - [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;

@@ -2158,13 +2158,11 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cellCache",
+      "cells",
       "hint",
       "mistakes",
-      "oldCounts",
       "oldFlags",
-      "oldTallyLook",
-      "started",
+      "tally",
       "tallyLook",
       "tileSize",
     ],

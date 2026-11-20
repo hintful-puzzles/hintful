@@ -28,11 +28,7 @@ import { BLUE_BOLD, ORANGE_BOLD } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   clueDoneColor,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   PAPER,
@@ -42,6 +38,13 @@ import {
   wallFill,
 } from "../../engine/color/palette.ts";
 import { crossingGhost } from "../../engine/color/palette-games.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import {
   drawRectCorners,
   drawRectOutline,
@@ -80,6 +83,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { LISTED } from "./hint-marks.ts";
@@ -99,29 +103,24 @@ export const PREFERRED_TILE_SIZE = 40;
 
 // --- palette ----------------------------------------------------------------
 
-export const COL_OUTERBG = 0; // the board around the grid, and the clue list's
 /** A clue that is used up, grayed back. */
-export const COL_DONE = 1;
+export const COL_DONE = FIRST_GAME_SLOT;
 /** The surface of an empty square. */
-export const COL_CELL = 2;
-/** The ground of a square the win flash is on: its body, and
- * (`COL_FLASH_LEAD`) its leading edge. */
-export const COL_FLASH = 3;
-const COL_GRID = 4; // the line between two squares, and the frame
-export const COL_ERROR = 5;
+export const COL_CELL = FIRST_GAME_SLOT + 1;
+const COL_GRID = FIRST_GAME_SLOT + 2; // the line between two squares, and the frame
 /** The lifted surface of a square that holds a digit. */
-export const COL_PLACED = 6;
+export const COL_PLACED = FIRST_GAME_SLOT + 3;
 /** A blocked square: a flat, strong fill. */
-export const COL_WALL = 7;
+export const COL_WALL = FIRST_GAME_SLOT + 4;
 /** Ink: a placed digit, and a clue in the list. */
-export const COL_TEXT = 8;
-export const COL_PENCIL = 9;
-const COL_PENCIL_BODY = 10;
+export const COL_TEXT = FIRST_GAME_SLOT + 5;
+export const COL_PENCIL = FIRST_GAME_SLOT + 6;
+const COL_PENCIL_BODY = FIRST_GAME_SLOT + 7;
 /** The preview of a held clue number, ghosted into the runs it still fits. */
-export const COL_GHOST = 11;
+export const COL_GHOST = FIRST_GAME_SLOT + 8;
 /** Outline drawn round the clue currently held. Held is a passing state, so it
  * is marked by a shape — the hues below are reserved for saying *direction*. */
-export const COL_HELD = 12;
+export const COL_HELD = FIRST_GAME_SLOT + 9;
 /**
  * Two hues, one per dimension, each filling a run on the board: **blue =
  * horizontal, amber = vertical**, everywhere and always. Tying the hue to the
@@ -131,12 +130,8 @@ export const COL_HELD = 12;
  * Blue/amber is also the safest pair to tell apart with any common form of
  * color blindness, which matters here because the hue *is* the information.
  */
-export const COL_ACROSS = 13;
-export const COL_DOWN = 14;
-/** A hint's evidence — the run(s) it reasons over, and the listed numbers that
- * still fit them. The ring on the square(s) it acts on, and on the clue it
- * writes in, is the engine's (`GameDrawing.drawRing`). */
-export const COL_HINT_CELL = 15;
+export const COL_ACROSS = FIRST_GAME_SLOT + 10;
+export const COL_DOWN = FIRST_GAME_SLOT + 11;
 /**
  * A placed digit sitting **on** a run highlight.
  *
@@ -145,7 +140,7 @@ export const COL_HINT_CELL = 15;
  * `PAPER`, which adapts the other way round from ink and is therefore right in
  * both.
  */
-export const COL_RUNTEXT = 16;
+export const COL_RUNTEXT = FIRST_GAME_SLOT + 12;
 /**
  * **Type here** — the selected square's wash, on an empty square and under a
  * placed digit alike, and its notes triangle. Also the completion wave's dim
@@ -163,24 +158,18 @@ export const COL_RUNTEXT = 16;
  * anyway: blue and amber are the two run directions, red is an error, and the
  * hint's marks take the engine's colors.
  */
-export const COL_SELECTED = 17;
+export const COL_SELECTED = FIRST_GAME_SLOT + 13;
 /** The cursor's corners on a wall: paper, which reads on the wall's strong
  * fill in both schemes. */
-export const COL_WALLCURSOR = 18;
-export const COL_FLASH_LEAD = 19;
-export const NCOLORS = 20;
+export const COL_WALLCURSOR = FIRST_GAME_SLOT + 14;
 
 export function colors(background: Color): Color[] {
-  const out: Color[] = new Array(NCOLORS);
-  out[COL_OUTERBG] = background;
+  const out = rolePalette(background);
   out[COL_CELL] = cellSurface(background);
   out[COL_PLACED] = givenSurface(background);
   out[COL_GRID] = surfaceGrid(background);
   out[COL_DONE] = clueDoneColor(background);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_TEXT] = INK;
-  out[COL_ERROR] = ERROR;
   out[COL_WALL] = wallFill(background);
 
   // A muted blue-gray for pencil marks, the collection's convention (ABCD,
@@ -201,7 +190,6 @@ export function colors(background: Color): Color[] {
   // green does not read there. The paper's tone is the wall's opposite.
   out[COL_WALLCURSOR] = PAPER;
   out[COL_SELECTED] = highlightWash(background);
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -282,17 +270,17 @@ export interface CrossingHint {
 
 export interface CrossingDrawState {
   tileSize: number;
-  /** `w·h` last-drawn packed tile values (-1 = never drawn). */
-  tiles: Int32Array;
+  /** Per square, its packed value, with both overlays registered. */
+  tiles: TileCache;
   /** Mistake-overlay sidecar (fork addition) — keeps Check & Save in the diff key. */
   wrong: OverlaySidecar;
   /** Hint-overlay sidecar — same reason as `wrong`: a hint is requested a frame
    * *after* the move that drew the board, so without it in the diff key the
    * overlay would never paint (docs/rendering.md § "Overlay sidecars"). */
   hint: OverlaySidecar;
-  /** Per-number last-drawn panel state: the color class, plus the hint class
-   * in the high nibble (-1 = never drawn). */
-  numberState: Int8Array;
+  /** Per number, its panel state: the color class, plus the hint class in the
+   * high nibble and the held bit. */
+  numberState: TileCache;
   /** The hint target's ring and the evidence region's outline (fork additions),
    * drawn after the cell loop. See {@link markBand}. */
   marks: HintMarks;
@@ -305,13 +293,15 @@ export function newDrawState(
   tileSize: number,
 ): CrossingDrawState {
   const { w, h, numbers } = state.puzzle;
+  const wrong = new OverlaySidecar(w * h);
+  const hint = new OverlaySidecar(w * h);
   return {
     tileSize,
-    tiles: new Int32Array(w * h).fill(-1),
-    wrong: new OverlaySidecar(w * h),
-    hint: new OverlaySidecar(w * h),
+    tiles: new TileCache(w * h, { overlays: [wrong, hint] }),
+    wrong,
+    hint,
     marks: new HintMarks(),
-    numberState: new Int8Array(numbers.length).fill(-1),
+    numberState: new TileCache(numbers.length),
     pencilModeShown: null,
   };
 }
@@ -506,8 +496,6 @@ function drawCell(
       highlight,
       COL_SELECTED,
       surface,
-      COL_FLASH,
-      COL_FLASH_LEAD,
     );
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, ts);
   }
@@ -524,22 +512,8 @@ function drawCell(
     //
     // The win flash fills the square it is on. A selected square takes its
     // highlight, as an empty square does.
-    const mid = highlightFill(
-      highlight,
-      COL_SELECTED,
-      surface,
-      COL_FLASH,
-      COL_FLASH_LEAD,
-    );
-    drawCellBackground(
-      dr,
-      body,
-      highlight,
-      COL_SELECTED,
-      surface,
-      COL_FLASH,
-      COL_FLASH_LEAD,
-    );
+    const mid = highlightFill(highlight, COL_SELECTED, surface);
+    drawCellBackground(dr, body, highlight, COL_SELECTED, surface);
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, ts);
     const { origin, options } = digitText(ts, x, y);
     dr.drawText(
@@ -581,8 +555,7 @@ function drawCell(
       y,
       (flags >> K_MARKS) & 0x1ff,
       struck,
-      highlightFill(highlight, COL_SELECTED, surface, COL_FLASH, COL_FLASH_LEAD) ===
-        runWash
+      highlightFill(highlight, COL_SELECTED, surface) === runWash
         ? COL_RUNTEXT
         : COL_PENCIL,
     );
@@ -759,7 +732,7 @@ function drawNumbers(
     if (hinted === 1) {
       // The outline nests *outside* the held box rather than sharing its
       // rectangle, so a clue that is both held and hinted shows both.
-      drawMarkSides(dr, { box, outer: markT, inner: 0 }, MARK_ALL, COL_HINT_CELL);
+      drawMarkSides(dr, { box, outer: markT, inner: 0 }, MARK_ALL, COL_HINT_OUTLINE);
     } else if (hinted === 2) {
       // The ring may reach into the gaps between the numbers round it: the
       // whole panel repaints when it moves.
@@ -794,7 +767,7 @@ function drawNumbers(
 // --- pencil-mode indicator -------------------------------------------------
 
 const PENCIL_STYLE: PencilIndicatorStyle = {
-  background: COL_OUTERBG,
+  background: COL_BACKGROUND,
   body: COL_PENCIL_BODY,
   ink: COL_TEXT,
 };
@@ -932,7 +905,7 @@ export function redraw(
 
       const tile = (state.grid[i] << K_DIGIT) | (errFlags[i] << K_ERR) | flags;
 
-      if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
+      if (ds.tiles.changed(i, tile)) {
         drawCell(
           dr,
           ds,
@@ -945,9 +918,6 @@ export function redraw(
           ds.wrong.at(i),
           ds.hint.struck[i],
         );
-        ds.tiles[i] = tile;
-        ds.wrong.commit(i);
-        ds.hint.commit(i);
       }
     }
   }
@@ -965,7 +935,7 @@ export function redraw(
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(ds.tileSize, x, y),
     text: (x, y) => squareText(state, ghost, ts, x, y),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   });
 
   // The number panel keeps the bookkeeping a paper solver does by hand: a
@@ -996,18 +966,16 @@ export function redraw(
   const panelState = (l: number): number =>
     colorClass(l) | (hintClass(l) << 4) | (l === ui.heldNumber ? 1 << 6 : 0);
 
+  // Every number is asked, not only up to the first miss, so each records what
+  // the whole panel's repaint paints.
   let panelStale = false;
-  for (let l = 0; l < numbers.length; l++) {
-    if (ds.numberState[l] !== panelState(l)) {
-      panelStale = true;
-      break;
-    }
-  }
+  for (let l = 0; l < numbers.length; l++)
+    if (ds.numberState.changed(l, panelState(l))) panelStale = true;
   if (panelStale) {
     // Start below the grid's bottom outline so the panel repaint can't erase it.
     const top = tileOrigin(h - 1, ts) + ts + 2;
     const size = computeSize(puzzle, ts);
-    dr.drawRect({ x: 0, y: top, w: size.w, h: size.h - top }, COL_OUTERBG);
+    dr.drawRect({ x: 0, y: top, w: size.w, h: size.h - top }, COL_BACKGROUND);
     drawNumbers(
       dr,
       ts,
@@ -1021,7 +989,6 @@ export function redraw(
       { x: 0, y: top, w: size.w, h: size.h - top },
     );
     dr.drawUpdate({ x: 0, y: top, w: size.w, h: size.h - top });
-    for (let l = 0; l < numbers.length; l++) ds.numberState[l] = panelState(l);
   }
 
   // The collection's place for it: the margin `border` leaves round the grid.

@@ -10,6 +10,12 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+} from "../../engine/color/roles.ts";
+import {
   DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
@@ -45,12 +51,8 @@ import {
   COL_CELL,
   COL_DONE,
   COL_DOWN,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_GHOST,
   COL_HELD,
-  COL_OUTERBG,
   COL_PENCIL,
   COL_PLACED,
   COL_RUNTEXT,
@@ -59,7 +61,6 @@ import {
   COL_WALL,
   COL_WALLCURSOR,
   layoutNumbers,
-  NCOLORS,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -1517,7 +1518,8 @@ describe("crossing rendering", () => {
       .slice(0, 4)
       .reduce((s2, mv) => crossingGame.executeMove(s2, mv), newState(P5, FIX.desc));
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
-    expect(palette).toHaveLength(NCOLORS);
+    // The last slot is the wall cursor's: nothing past it.
+    expect(palette).toHaveLength(COL_WALLCURSOR + 1);
 
     const ds = newDrawState(withDigits, TS);
     const dr = new RecordingDrawing(palette);
@@ -1534,7 +1536,7 @@ describe("crossing rendering", () => {
       dr.ops.flatMap((o) => (o.op === "rect" ? [o.color] : [])),
     );
     for (const c of tileColors) {
-      expect([COL_OUTERBG, COL_CELL, COL_PLACED, COL_WALL, COL_ERROR]).toContain(c);
+      expect([COL_BACKGROUND, COL_CELL, COL_PLACED, COL_WALL, COL_ERROR]).toContain(c);
     }
     // No bevel: a wall and a square holding a digit are each one flat fill.
     expect(dr.ops.filter((o) => o.op === "polygon" && o.fill >= 0)).toEqual([]);

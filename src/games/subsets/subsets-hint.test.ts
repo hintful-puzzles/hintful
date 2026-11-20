@@ -10,6 +10,7 @@
  * `testing/hint-games.ts`).
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
@@ -23,7 +24,7 @@ import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { subsetsGame } from "./index.ts";
-import { COL_HINT_CELL, COL_HINT_SPOT, newDrawState, redraw } from "./render.ts";
+import { COL_HINT_SPOT, newDrawState, redraw } from "./render.ts";
 import {
   candidateCells,
   candidateSets,
@@ -703,18 +704,18 @@ describe("hint rendering (tier 2.5)", () => {
     );
   };
 
-  it("an arrow hint frame rings the target slot and frames the COL_HINT_CELL neighbor", () => {
+  it("an arrow hint frame rings the target slot and frames the COL_HINT_OUTLINE neighbor", () => {
     const result = hintFrame("arrowKnown");
     const ops = result.recording.ops;
     expect(stepMarks(result.hint).of("ring", SLOT)).toHaveLength(1);
     expectRing(ops, { rings: ringed(result.hint) });
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE)).toBe(true);
     expect(ops).toMatchSnapshot();
   });
 
   it("a collapse hint frame boxes the highlighted set in the tally band", () => {
     const result = hintFrame("collapse");
-    // A collapse boxes the surviving sets in the tally (COL_HINT_CELL), and may
+    // A collapse boxes the surviving sets in the tally (COL_HINT_OUTLINE), and may
     // also frame one blocker cell for the "why not X" clause. A box rather
     // than a tint: the label's own color carries the state (error red, used-up
     // gray), so a fill behind it competes with what has to be read.
@@ -722,7 +723,7 @@ describe("hint rendering (tier 2.5)", () => {
     const ops = result.recording.ops;
     expect(ringed(result.hint)).toBeGreaterThan(0);
     expectRing(ops, { rings: ringed(result.hint) });
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE)).toBe(true);
     expect(ops).toMatchSnapshot();
   });
 
@@ -769,7 +770,7 @@ describe("reference-aid rendering (tier 2.5)", () => {
     expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_HINT_SPOT)).toBe(
       true,
     );
-    expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(
+    expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE)).toBe(
       true,
     );
   });

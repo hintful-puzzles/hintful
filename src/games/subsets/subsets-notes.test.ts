@@ -5,6 +5,7 @@
  * against the recorder that produced them.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { type HintStep, UI_UPDATE } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
@@ -28,14 +29,7 @@ import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { TALLY_SET } from "./hint-marks.ts";
 import { subsetsGame } from "./index.ts";
-import {
-  COL_ERROR,
-  COL_GUESS,
-  COL_HINT_CELL,
-  COL_HINT_SPOT,
-  COL_RULED_OUT,
-  newDrawState,
-} from "./render.ts";
+import { COL_GUESS, COL_HINT_SPOT, COL_RULED_OUT, newDrawState } from "./render.ts";
 import {
   candidateCells,
   candidateSets,
@@ -452,7 +446,7 @@ describe("the hint places the rule-outs it rests on", () => {
     // One hatch a letter slot of the cell, under its letters.
     expect(ops.filter((o) => o.op === "hatch")).toHaveLength(4);
     const rects = ops.filter((o) => o.op === "rect");
-    expect(rects.some((o) => o.color === COL_HINT_CELL)).toBe(true);
+    expect(rects.some((o) => o.color === COL_HINT_OUTLINE)).toBe(true);
     expect(ops).toMatchSnapshot();
   });
 });

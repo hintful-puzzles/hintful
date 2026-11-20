@@ -7,6 +7,7 @@
  * format, and tier-2.5 render scenarios with snapshots.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
@@ -43,16 +44,7 @@ import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/subsets-c-reference.json" with { type: "json" };
 import { generateCandidate, newSubsetsDesc } from "./generator.ts";
 import { subsetsGame } from "./index.ts";
-import {
-  COL_CELL,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_GIVEN,
-  COL_RULED_OUT,
-  newDrawState,
-  redraw,
-} from "./render.ts";
+import { COL_CELL, COL_GIVEN, COL_RULED_OUT, newDrawState, redraw } from "./render.ts";
 import {
   deduceHintPlan,
   findMistakes,

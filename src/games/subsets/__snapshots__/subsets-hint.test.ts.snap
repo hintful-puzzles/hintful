@@ -6159,7 +6159,7 @@ exports[`hint rendering (tier 2.5) > a hidden-single hint frame hatches the set'
 ]
 `;
 
-exports[`hint rendering (tier 2.5) > an arrow hint frame rings the target slot and frames the COL_HINT_CELL neighbor 1`] = `
+exports[`hint rendering (tier 2.5) > an arrow hint frame rings the target slot and frames the COL_HINT_OUTLINE neighbor 1`] = `
 [
   {
     "h": 540,
