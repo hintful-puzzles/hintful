@@ -14,8 +14,8 @@ import {
   APP_TAGLINE,
   REPO_URL,
 } from "./src/project-identity.ts";
-import { puzzleIds, puzzleCatalog as puzzles } from "./src/puzzle/catalog-data.ts";
 import { canonicalCoverage } from "./vite-plugins/canonical-coverage.ts";
+import { catalogRestart, puzzleCatalog as puzzles } from "./vite-plugins/catalog.ts";
 import { withControls } from "./vite-plugins/controls.ts";
 import { dependencyNotices } from "./vite-plugins/dependency-notices.ts";
 import { describeFirst } from "./vite-plugins/describe.ts";
@@ -430,7 +430,7 @@ export default defineConfig(async ({ command, mode }) => {
     // out — "Fifty-seven" appeared in the front page's intro and again in its
     // meta description, and the 58th game would have left both of them lying
     // in a place nobody re-reads.
-    puzzleCount: puzzleIds.length,
+    puzzleCount: Object.keys(puzzles).length,
     preflightSrc,
     analytics_html,
     colorSchemeInitScript,
@@ -516,6 +516,7 @@ export default defineConfig(async ({ command, mode }) => {
         },
       }),
       releaseClosedServer(),
+      catalogRestart(),
       gameCodeLoader(),
       draftPuzzles(),
       extraPages({

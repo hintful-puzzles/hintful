@@ -9,15 +9,13 @@
  * that nothing a gesture changes lives anywhere the engine does not put back.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "./pointer.ts";
 import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { canceledPresses, probeBoard, probePoints } from "./testing/input-probe.ts";
 import { inSweep, itOverWholeSweep } from "./testing/slow.ts";
 import type { Point } from "./types.ts";
-
-beforeAll(registerAllGames);
 
 /**
  * Games in which the probe canceled no press that had moved, each with why.

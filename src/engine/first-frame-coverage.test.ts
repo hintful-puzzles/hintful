@@ -17,14 +17,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import "../games/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import type { DrawOp } from "./testing/recording-drawing.ts";
 import { renderScenario } from "./testing/render-scenario.ts";
 
-// At import time, not in `beforeAll`: `it.each` reads the registry while the
-// file is being collected.
-registerAllGames();
 const IDS = registeredGameIds().sort();
 
 function unpaintedPixels(ops: readonly DrawOp[], w: number, h: number): number {

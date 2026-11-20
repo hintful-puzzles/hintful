@@ -14,8 +14,8 @@
  * play of that board could reach, or throws.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { Midend } from "./midend.ts";
 import {
   GridDrag,
@@ -28,8 +28,6 @@ import { builtGames, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { changedUnder, probeBoard, probePoints } from "./testing/input-probe.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 import type { Point } from "./types.ts";
-
-beforeAll(registerAllGames);
 
 /** Every `GridDrag` on a `Ui`, one level deep — the same reach the engine has. */
 function dragsOf(ui: unknown): GridDrag[] {

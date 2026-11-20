@@ -11,12 +11,11 @@
  * of a game's own.
  */
 import { describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
 import { DESC_NOT_DEDUCIBLE, loadVerdict, validateDesc } from "./desc-error.ts";
 import { fakeGame } from "./fake-game.ts";
 import { hintFinishes, nothingToDeduce } from "./hint-finishes.ts";
 import { PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";
-import { _resetRegistry, registerGame } from "./registry.ts";
+import { _unregisterGame, registerGame } from "./registry.ts";
 import { stripComments } from "./testing/code-lines.ts";
 import { dealt } from "./testing/dealt.ts";
 import {
@@ -159,7 +158,7 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
 });
 
 describe("registering a game", () => {
-  /** What `registerGame` throws for `game`, with the registry put back. */
+  /** What `registerGame` throws for `game`, which is taken back out. */
   function refusal(game: typeof fakeGame): string | null {
     try {
       registerGame(game);
@@ -167,8 +166,7 @@ describe("registering a game", () => {
     } catch (e) {
       return String(e);
     } finally {
-      _resetRegistry();
-      registerAllGames();
+      _unregisterGame(game.id);
     }
   }
 

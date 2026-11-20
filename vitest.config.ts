@@ -265,10 +265,9 @@ export default defineConfig({
     // state (the `testing` "deterministic under parallel load"
     // requirement). There are **two** shared mutable singletons, not one:
     //
-    //  - the game `registerGame` registry, populated by an idempotent
-    //    `registerAllGames()`; the one file that resets it (`worker-adapter`)
-    //    restores it in `afterAll`, and every file that reads the full registry
-    //    re-ensures it in `beforeAll`;
+    //  - the game `registerGame` registry, which each game module fills once
+    //    as it loads; nothing empties it, and the one test that registers a
+    //    game of its own (`untiered-load`) takes it back out;
     //  - **vitest's own per-worker module registry, which `vi.mock` writes
     //    into.** A mock reaches only the modules evaluated after it, so it
     //    missed whatever an earlier file in the worker had already loaded: two

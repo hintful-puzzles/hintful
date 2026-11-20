@@ -16,10 +16,8 @@
  * would have failed.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-// Registers every ported game; `beforeAll` re-runs it in case a sibling file
-// reset the shared registry under `isolate: false`.
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import type { Game } from "./game.ts";
 import { Midend } from "./midend.ts";
 import {
@@ -91,8 +89,6 @@ function play(
 }
 
 const REGISTERED = registeredGameIds();
-
-beforeAll(registerAllGames);
 
 describe("a saved game reloads in every ported game", () => {
   for (const id of REGISTERED) {
@@ -240,8 +236,6 @@ describe("a save this build cannot play is refused, not half-applied", () => {
  * was solved with help.
  */
 describe("a v1 save still loads", () => {
-  beforeAll(registerAllGames);
-
   // One per interesting shape: a plain grid game, a game with a private desc
   // (Mines), the two that recompute `completed`, and the game whose cheat flag
   // used to be spelled `solved`.

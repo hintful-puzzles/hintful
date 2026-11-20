@@ -23,7 +23,7 @@
  * contents predictable from where the Bar stops.
  */
 import { render, type TemplateResult } from "lit";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // The real `saved-games` store, against `fake-indexeddb`. Nothing here needs a
 // saved game: `Back to last save` renders either way, disabled when there is
@@ -31,7 +31,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTsEngine } from "../engine/registry.ts";
 import { NOT_STARTED } from "../engine/solve-failure.ts";
-import { registerAllGames } from "../games/index.ts";
+import "../games/index.ts";
 import {
   barCapacity,
   commandList,
@@ -426,8 +426,6 @@ describe("every puzzle command is in exactly one of the three panels", () => {
  * and its keys come from the engine, so no capability is typed in here.
  */
 describe("what a game brings is in the Game controls, and only there", () => {
-  beforeAll(registerAllGames);
-
   beforeEach(() => {
     document.body.replaceChildren();
   });

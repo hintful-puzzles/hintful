@@ -42,13 +42,11 @@
  * See docs/input.md § "The numeric keypad never arrives".
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { BACKSPACE, DELETE, ESCAPE } from "./pointer.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { type KeyLabel, PuzzleButton } from "./types.ts";
-
-beforeAll(registerAllGames);
 
 /**
  * Sources as text, via Vite's `import.meta.glob` rather than `node:fs` —

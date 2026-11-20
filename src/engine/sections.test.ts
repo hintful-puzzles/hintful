@@ -3,12 +3,10 @@
  * implemented, not applicable with the puzzle's reason, or absent, and a game
  * with an absent section is a draft.
  */
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { draftSections, notApplicableFeatures, sectionState } from "./sections.ts";
-
-beforeAll(registerAllGames);
 
 function games() {
   return registeredGameIds().map((id) => {

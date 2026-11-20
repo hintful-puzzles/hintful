@@ -265,15 +265,15 @@ simulate the release move without an import cycle
 
 ## Registering a game
 
-**Registration is two edits, made together**, because
-[`catalog-registry.test.ts`](../src/catalog-registry.test.ts) holds them to
-each other: the game in [`src/games/index.ts`](../src/games/index.ts), whose
-header says how, and its catalog entry in
-[`src/puzzle/catalog-data.ts`](../src/puzzle/catalog-data.ts). A game absent
-from the registry cannot be played. One that is registered is visible to
-every player at once, so the entry goes in with the first registration.
+**A game is registered by its own directory, and no shared file is
+edited.** Its `index.ts` ends with `registerGame(<id>Game)`, and its
+`catalog.ts` exports its catalog entry, the `PuzzleData` the home screen,
+the puzzle page and the help render. [`src/games/index.ts`](../src/games/index.ts)
+loads every directory's `index.ts`, and the load fails unless each directory
+registers a game under its own name and has a `catalog.ts`. A registered game
+is visible to every player at once.
 
-**The scaffold makes both edits**, so that every cross-game guard reads the
+**The scaffold writes both**, so that every cross-game guard reads the
 game from the first verdict: no guard reads a game until it is registered.
 The entry describes the skeleton's puzzle until you replace its words. A few
 records kept by hand refuse a registered game until each has it.

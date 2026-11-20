@@ -148,8 +148,8 @@ cd "${REPO_ROOT}"
 # the first verdict on (the script's header says why).
 node scripts/new-game-register.mjs "${GAME}" "${DESCRIPTION}" "${OBJECTIVE}" "${FAMILY}"
 
-# A longer name reflows lines, and the imports added want their sorted place.
-npx biome check --write "src/games/${GAME}" src/games/index.ts src/puzzle/catalog-data.ts > /dev/null
+# A longer name reflows lines, and the import added wants its sorted place.
+npx biome check --write "src/games/${GAME}" > /dev/null
 
 # Its techniques are the skeleton's as written, so the skeleton's soundness
 # verdicts are the copy's: each is a fingerprint of the technique, which
@@ -182,8 +182,8 @@ skeleton's own puzzle, and ${GAME}.description.yaml there holds its help page.
 
 What the copy has, each on the shared way: ${HAS}
 
-The game is registered: ${GAME_OBJECT} in src/games/index.ts, and its entry
-in src/puzzle/catalog-data.ts, whose words are the skeleton's puzzle's.
+The game is registered: its index.ts registers ${GAME_OBJECT}, and its
+catalog.ts is its catalog entry, whose words are the skeleton's puzzle's.
 
 What is left to do, and the copy does none of it:
   1. Run the game's whole verdict now, and after every concern you change:
@@ -195,7 +195,7 @@ What is left to do, and the copy does none of it:
          params-stability.test.ts (run each with -u and read the diff)
        - its icons and its spec, steps 5 and 6 below
   2. Replace the puzzle. ${PUZZLE}
-     The catalog entry is the puzzle's too: its name, description,
+     The catalog entry, catalog.ts, is the puzzle's too: its name, description,
      objective, aliases, family, and the puzzles it is similar to, which
      the All-the-puzzles help page lists.
      ${ROLES} is

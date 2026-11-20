@@ -17,12 +17,12 @@
  * - **Nothing is bound twice.** Two commands on one chord means whichever the
  *   table lists first wins, in a file where order is otherwise meaningless.
  */
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { CURSOR_RIGHT } from "../engine/pointer.ts";
 import { getTsGame, registeredGameIds } from "../engine/registry.ts";
 import { type AnyGame, probeBoard } from "../engine/testing/input-probe.ts";
 import { inSweep } from "../engine/testing/slow.ts";
-import { registerAllGames } from "../games/index.ts";
+import "../games/index.ts";
 import { bareCommand, chordCommand, SHORTCUTS, shortcutLabel } from "./shortcuts.ts";
 
 /** A `KeyboardEvent`-shaped object for the matchers, which read five fields. */
@@ -164,8 +164,6 @@ describe("a bare shortcut letter reaches the app in every game", () => {
   const bare = SHORTCUTS.flatMap((s) => (s.bare ? [[s.bare, s.command] as const] : []));
   const found: Record<string, string[]> = {};
   let swept = 0;
-
-  beforeAll(registerAllGames);
 
   it("has bare letters to sweep", () => {
     // Vacuity: if the table ever loses its `bare` entries this whole describe

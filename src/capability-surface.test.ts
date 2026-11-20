@@ -30,16 +30,14 @@
  * and `engine/testing/enrollment.ts`'s opening comment for the argument).
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   builtGames,
   capabilitySets,
   OPTIONAL_GAME_MEMBERS,
 } from "./engine/testing/enrollment.ts";
 import { expectLedger } from "./engine/testing/ledger.ts";
-import { registerAllGames } from "./games/index.ts";
-
-beforeAll(registerAllGames);
+import "./games/index.ts";
 
 describe("capability surface", () => {
   it("reads a non-trivial contract and a full collection", () => {

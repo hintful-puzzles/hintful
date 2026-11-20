@@ -29,8 +29,10 @@ called `puzzle`.
   dev server, since the page loaded.
 - **`drawing.ts`** — the `Drawing` class implementing the puzzle drawing API,
   running in the worker.
-- **`catalog.ts` / `catalog-data.ts`** — the committed game catalog and the
-  lookups over it.
+- **`catalog.ts` / `catalog-data.ts`** — the game catalog, assembled from each
+  game's `src/games/<id>/catalog.ts` (whose shape is `src/engine/catalog.ts`),
+  and the lookups over it. `catalog-data.ts` imports only a type, so the Vite
+  config can load it too.
 - **`contexts.ts`** — the `@lit/context` token for the `Puzzle` object. It lives
   at the root rather than under `components/` because dialogs and panels outside
   this directory consume it too.

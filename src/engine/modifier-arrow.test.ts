@@ -10,15 +10,13 @@
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import "../games/index.ts";
 import { builtGames } from "./testing/enrollment.ts";
 import {
   CURSOR_CAP,
   type ModifierArrows,
   modifierArrows,
 } from "./testing/input-probe.ts";
-
-beforeAll(registerAllGames);
 
 describe("the key decides which way a modified arrow acts", () => {
   const answers = new Map<string, ModifierArrows>();

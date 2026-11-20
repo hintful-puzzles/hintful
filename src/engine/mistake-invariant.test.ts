@@ -47,8 +47,8 @@
  * fails it, since it requires every game that finds mistakes to have flagged a
  * board, from its seeded run or a pinned wrong board.
  */
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { Midend } from "./midend.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { NOT_STARTED } from "./solve-failure.ts";
@@ -56,8 +56,6 @@ import { beginDealt } from "./testing/dealt.ts";
 import { capabilitySets } from "./testing/enrollment.ts";
 import { dealtBoards } from "./testing/presets.ts";
 import { SLOW_TESTS_ENABLED } from "./testing/slow.ts";
-
-beforeAll(registerAllGames);
 
 // biome-ignore lint/suspicious/noExplicitAny: the registry is heterogeneous by design.
 type AnyGame = any;

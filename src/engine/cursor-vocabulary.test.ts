@@ -26,15 +26,13 @@
  * from that module's export list.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import type { Game } from "./game.ts";
 import { CURSOR_RIGHT, newCursor } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
-
-beforeAll(registerAllGames);
 
 type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;
 

@@ -1796,8 +1796,11 @@ imports:
 - `game.ts`: the `Game` contract ([`mechanics.md`](./mechanics.md)).
 - `types.ts`: the shared vocabulary (`Color`, `Point`, `Rect`, config
   descriptions, change notifications).
-- `registry.ts`: `registerGame`. `catalog-registry.test.ts` holds it and
-  the catalog together both ways.
+- `registry.ts`: `registerGame`, the last line of a game's `index.ts`.
+  `src/games/index.ts` refuses a directory that registers no game under its
+  name.
+- `catalog.ts`: `PuzzleData`, the shape of the game's own `catalog.ts`
+  entry, and the families it names one of.
 
 What no game imports:
 

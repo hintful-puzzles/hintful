@@ -396,6 +396,13 @@ function verify(): void {
     game.scope.join() === "pearl" && game.whole.length === 0,
     "a Pearl-only push narrows every file to Pearl",
   );
+  // The registry and the app's catalog both load the games' directories by
+  // glob, and a walk that took a glob of modules as "everything" ran each.
+  expect(
+    game.narrow.includes("src/engine/sections.test.ts") &&
+      !game.narrow.includes("src/components/puzzle-switcher.test.ts"),
+    "a Pearl-only push selects the registry's readers and not the catalog's",
+  );
   expect(
     game.narrow.includes("src/engine/hint-resume.test.ts"),
     "a Pearl-only push selects hint-resume through the registry",

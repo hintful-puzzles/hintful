@@ -1,8 +1,5 @@
-import { beforeAll, describe, expect, it } from "vitest";
-// Registering every game lets the drift guard below read each one's declared
-// prefs. `beforeAll` re-runs it because under `isolate: false` a sibling file
-// may have reset the shared registry after import-time registration ran.
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import type { GamePref } from "./game.ts";
 import {
   autoPencilPref,
@@ -14,8 +11,6 @@ import {
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { dealt } from "./testing/dealt.ts";
 import type { AnyGame } from "./testing/hint-games.ts";
-
-beforeAll(registerAllGames);
 
 describe("the shared pencil preferences", () => {
   it("drives ui.pencilSticky under upstream's keyword", () => {

@@ -11,8 +11,8 @@
  * `targetVerbs.sweep` does that and is found by `target-verb-sweep.test.ts`.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { noteVerbs } from "../games/net/index.ts";
 import { crossDrag as pathCrossDrag } from "../games/path/index.ts";
 import { crossDrag } from "../games/pearl/index.ts";
@@ -21,8 +21,6 @@ import { PENCIL_MODE_BUTTON } from "./pointer.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import type { AnyGame } from "./testing/input-probe.ts";
 import { expectDragRepeatsThePress } from "./testing/sweep-probe.ts";
-
-beforeAll(registerAllGames);
 
 const game = (id: string) => getTsGame(id) as unknown as AnyGame;
 

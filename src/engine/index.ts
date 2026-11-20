@@ -48,7 +48,6 @@ export {
   RIGHT_RELEASE,
 } from "./pointer.ts";
 export {
-  _resetRegistry,
   createTsEngine,
   hasTsGame,
   registerGame,

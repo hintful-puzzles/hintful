@@ -3,8 +3,8 @@
  * titles, the type header, the bounds check and the help's Parameters section
  * are all built from it.
  */
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { difficultyChoiceItem, difficultyTiers, withTier } from "./difficulty.ts";
 import type { Game, PresetMenu } from "./game.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
@@ -12,9 +12,6 @@ import { paramsError } from "./params.ts";
 import { presetGrid } from "./preset-grid.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
-
-beforeAll(registerAllGames);
-registerAllGames();
 
 type AnyGame = Game<unknown, unknown, unknown>;
 const ids = registeredGameIds();

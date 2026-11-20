@@ -110,7 +110,8 @@ templates under [templates/](templates/). `src/` is organized by role:
 * `src/assets/` holds only committed files — nothing under `src/` is
   generated. `src/assets/icons/` is a committed thumbnail snapshot (see
   [openspec/specs/puzzle-icons/spec.md](openspec/specs/puzzle-icons/spec.md)).
-* `src/puzzle/catalog-data.ts` is the committed game catalog.
+* The game catalog is committed source: each game's entry is its
+  `src/games/<id>/catalog.ts`.
 
 The UI uses Lit web components and [Web Awesome][Web Awesome] design
 tokens; reactive state via `@lit-labs/signals`; offline via a Workbox
@@ -149,7 +150,7 @@ npm run test:run     # Vitest
 
 A fresh clone runs `npm run dev` and `npm run build` with nothing built first
 and nothing installed but Node: the game catalog is committed source
-(`src/puzzle/catalog-data.ts`), the icons are a committed snapshot, and the help
+(`src/games/<id>/catalog.ts`), the icons are a committed snapshot, and the help
 pages are committed markdown.
 
 ## Documentation

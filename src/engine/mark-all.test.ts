@@ -15,8 +15,8 @@
  * derived from `markAll` and the notes are read through the one field name
  * every note-taking game uses.
  */
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { CURSOR_RIGHT, MARK_ALL_BUTTON } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
@@ -24,10 +24,6 @@ import { dealt } from "./testing/dealt.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
-
-// Registers every ported game; `beforeAll` re-runs it in case a sibling file
-// reset the shared registry under `isolate: false`.
-beforeAll(registerAllGames);
 
 interface Row {
   name: string;

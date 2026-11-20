@@ -3,8 +3,8 @@
  * preset menu is a grid"), read off the menu itself, so it holds for a game
  * that calls `presetGrid` and for one that writes its list out.
  */
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { difficultyChoiceItem, withTier } from "./difficulty.ts";
 import type { Game, ParamConfigItem } from "./game.ts";
 import { presetMenu, type TitledPresetMenu } from "./param-label.ts";
@@ -15,9 +15,6 @@ import { rulesetField } from "./ruleset.ts";
 import { expectLedger } from "./testing/ledger.ts";
 import { leafPresets, rectangleShortfall, takesRectangles } from "./testing/presets.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
-
-beforeAll(registerAllGames);
-registerAllGames();
 
 type AnyGame = Game<unknown, unknown, unknown>;
 type Item = ParamConfigItem<unknown>;

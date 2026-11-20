@@ -1,9 +1,7 @@
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { getTsGame } from "./registry.ts";
 import { touchHelp } from "./touch-help.ts";
-
-beforeAll(registerAllGames);
 
 function sentence(id: string): string {
   const game = getTsGame(id);

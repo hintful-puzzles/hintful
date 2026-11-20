@@ -30,8 +30,8 @@
  * is deliberately left alone, and {@link pressNoteTakingCell} says why there.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { UI_UPDATE } from "./game.ts";
 import {
   type CellEntry,
@@ -60,8 +60,6 @@ import {
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import type { Rect } from "./types.ts";
 import { WIN_BODY, WIN_LEAD, WIN_NONE } from "./win-wave.ts";
-
-beforeAll(registerAllGames);
 
 const OPEN: CellEntry = { canEnter: true, canMark: true };
 const GIVEN: CellEntry = { canEnter: false, canMark: false };

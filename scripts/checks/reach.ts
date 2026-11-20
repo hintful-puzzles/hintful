@@ -10,8 +10,10 @@
  *   2. an `import.meta.glob` call, taken as the literal directory before its
  *      first wildcard. That is coarser than the pattern and only ever in the
  *      direction of reaching more (`select-tests.ts` says why a hand-rolled
- *      pattern matcher is the thing to avoid). A pattern that is not a literal
- *      reaches everything;
+ *      pattern matcher is the thing to avoid). A glob that imports modules is
+ *      followed into every file it can match, as an import would be, where
+ *      each is a script or JSON. A pattern that is not a literal, or that can
+ *      match another kind of file, reaches everything;
  *   3. `new URL("./x", import.meta.url)`, which is how the app names its worker.
  *
  * **The globs are read in every file the walk visits, not only in the file it
@@ -33,12 +35,19 @@ export const ROOT = path.resolve(import.meta.dirname, "../..");
 const TEST_ROOTS = ["src", "vite-plugins"];
 
 const SCRIPT = /\.[mc]?[jt]s$/;
+const LEAF_OR_SCRIPT = /\.(?:[mc]?[jt]s|json)$/;
 const GAME_PATH = /^src\/(?:generated\/)?games\/([^/]+)\//;
 
 /** The game whose directory holds `file` (repo-relative), or `null`. A game's
  * compiled module, generated outside its directory, is the game's too. */
 export function gameOf(file: string): string | null {
   return GAME_PATH.exec(file)?.[1] ?? null;
+}
+
+/** Whether `file` (repo-relative) is a game's catalog entry, which the app's
+ * catalog loads for every game and which imports nothing of the game. */
+export function isCatalogEntry(file: string): boolean {
+  return /^src\/games\/[^/]+\/catalog\.ts$/.test(file);
 }
 
 function walk(dir: string, keep: (file: string) => boolean, out: string[] = []) {
@@ -243,9 +252,8 @@ interface Reach {
    * `?url`). */
   textBases: GlobBase[];
   /**
-   * Whether the walk reaches every file: through a glob that imports modules,
-   * whose closure this walk does not expand, or through an import that
-   * resolves to no file, which it cannot follow.
+   * Whether the walk reaches every file: through a glob that imports modules
+   * it cannot follow, or through an import that resolves to no file.
    */
   everything: boolean;
 }
@@ -254,6 +262,27 @@ interface Reach {
  * glob as reading the games it sweeps rather than something of its own. */
 const intoGames = (bases: GlobBase[]) =>
   bases.every(({ base }) => base.startsWith("src/games/"));
+
+const matchCache = new Map<string, string[]>();
+
+/** The files a glob with this base can match, repo-relative: a superset of
+ * what Vite's matcher gives, as `globReaches` is. */
+function globMatches(glob: GlobBase): string[] {
+  const key = JSON.stringify(glob);
+  let found = matchCache.get(key);
+  if (found === undefined) {
+    const dir = path.join(ROOT, glob.base);
+    found = !existsSync(dir)
+      ? []
+      : statSync(dir).isDirectory()
+        ? walk(dir, () => true)
+            .map((f) => path.relative(ROOT, f))
+            .filter((f) => globReaches(glob, f))
+        : [glob.base];
+    matchCache.set(key, found);
+  }
+  return found;
+}
 
 /**
  * The walk from `start` (repo-relative).
@@ -276,14 +305,22 @@ export function reach(start: string, { cutAtGames = false } = {}): Reach {
   const queue = [start];
   for (let file = queue.pop(); file !== undefined; file = queue.pop()) {
     const { imports, globs } = edges(file);
+    const globbed: Edges["imports"] = [];
     for (const glob of globs) {
       out.bases.push(...glob.bases);
       if (glob.query !== null) out.textBases.push(...glob.bases);
-      if (glob.query === null && !(cutAtGames && intoGames(glob.bases))) {
-        out.everything = true;
+      else if (!(cutAtGames && intoGames(glob.bases))) {
+        for (const base of glob.bases) {
+          const matches = base.base === "" ? null : globMatches(base);
+          // A module a plugin compiles from another language imports what
+          // this walk cannot read off it.
+          if (matches === null || matches.some((f) => !LEAF_OR_SCRIPT.test(f)))
+            out.everything = true;
+          else for (const target of matches) globbed.push({ target, queried: false });
+        }
       }
     }
-    for (const { target, queried } of imports) {
+    for (const { target, queried } of [...imports, ...globbed]) {
       if (target === null) {
         out.everything = true;
         continue;

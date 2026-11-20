@@ -60,8 +60,8 @@
  * See docs/input.md § "The input-parity bar".
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { CLEAR_BUTTON, hasPencilArray } from "./key-labels.ts";
 import {
   CURSOR_DOWN,
@@ -92,8 +92,6 @@ import {
   unactionableClaims,
 } from "./testing/input-probe.ts";
 import { inSweep, itOverWholeSweep } from "./testing/slow.ts";
-
-beforeAll(registerAllGames);
 
 const REGISTERED = registeredGameIds();
 

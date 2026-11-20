@@ -812,10 +812,9 @@ reads; no list is edited. What each asks of the game's author:
   list matches the difficulty `paramConfig` choices, and tiers survive the
   params codec. A tiered game that does not declare fails. Adapter rules:
   [`solver-and-generator.md`](./solver-and-generator.md).
-- **Registration**: adding a game is two edits, `src/games/index.ts` and
-  `src/puzzle/catalog-data.ts`, and
-  [`catalog-registry.test.ts`](../src/catalog-registry.test.ts) holds them
-  equal in both directions.
+- **Registration**: a game's directory registers it, and
+  [`src/games/index.ts`](../src/games/index.ts) refuses, as the games load, a
+  directory that registers no game under its name or has no `catalog.ts`.
 - **Layering**: no game imports another game, the engine imports no game
   (but for `testing/hint-games.ts`, the enrollment file), and neither imports
   the app shell;

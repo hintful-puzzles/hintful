@@ -18,7 +18,7 @@
  */
 
 import ts from "typescript";
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { renderHelpPage } from "./describe/help-page.ts";
 import {
   gameDescriptions,
@@ -55,14 +55,10 @@ import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 import { itOverWholeSweep } from "./engine/testing/slow.ts";
 import { TOUCH_PLACEHOLDER } from "./engine/touch-help.ts";
 import { WING_PLACEHOLDER } from "./engine/wing.ts";
-// Registers every ported game; `beforeAll` re-runs it in case a sibling file
-// reset the shared registry under `isolate: false`.
-import { registerAllGames } from "./games/index.ts";
+import "./games/index.ts";
 import { puzzleDataMap, puzzleIds } from "./puzzle/catalog.ts";
 import { type CommandPuzzle, commandList } from "./puzzle/command-list.ts";
 import { insertGameLists, NO_RIGHT_CLICK } from "./puzzle/game-lists.ts";
-
-beforeAll(registerAllGames);
 
 const skeletons = import.meta.glob<string>("./skeleton/*/skeleton.description.yaml", {
   query: "?raw",
@@ -73,6 +69,7 @@ const skeletons = import.meta.glob<string>("./skeleton/*/skeleton.description.ya
 // The "All the puzzles" page, whose table rows link `../<puzzleId>`, as the
 // build renders its source.
 const puzzlesPage = insertGameLists(
+  puzzleDataMap,
   import.meta.glob<string>("../help/puzzles.md", {
     query: "?raw",
     import: "default",
@@ -833,7 +830,7 @@ describe("the populations the help asserts are derived, not trusted", () => {
     );
 
     const paragraph = /have no use for a right-click[^.]*?:([^.]*)\./s.exec(
-      insertGameLists(featuresPage ?? "", flaggedIds),
+      insertGameLists(puzzleDataMap, featuresPage ?? "", flaggedIds),
     )?.[1];
     expect(paragraph, "the §Right mouse sentence naming them has moved").toBeDefined();
     const named = (paragraph ?? "")

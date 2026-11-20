@@ -4,15 +4,13 @@
  * what the home screen reads, and the card shows it.
  */
 import drafts from "virtual:draft-puzzles";
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { getTsGame, registeredGameIds } from "../engine/registry.ts";
 import { draftSections } from "../engine/sections.ts";
-import { registerAllGames } from "../games/index.ts";
+import "../games/index.ts";
 import "../test-setup/icons.ts";
 import type { CatalogCard } from "./catalog-card.ts";
 import "./catalog-card.ts";
-
-beforeAll(registerAllGames);
 
 async function card(missing: readonly string[]): Promise<CatalogCard> {
   const el = document.createElement("catalog-card") as CatalogCard;

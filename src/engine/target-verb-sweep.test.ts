@@ -10,8 +10,8 @@
  * a sweep and never hands a drag to it fails there.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { UI_UPDATE } from "./game.ts";
 import {
   LEFT_BUTTON,
@@ -35,8 +35,6 @@ import {
 import type { AnyGame } from "./testing/input-probe.ts";
 import { expectDragRepeatsThePress } from "./testing/sweep-probe.ts";
 import type { Point } from "./types.ts";
-
-beforeAll(registerAllGames);
 
 describe("the sweep, in the model", () => {
   // A row of six squares: `.` empty, `x` filled, `o` dotted, `#` a clue no

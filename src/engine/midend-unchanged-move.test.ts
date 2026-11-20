@@ -5,8 +5,8 @@
  * take at its word. The sweep over the real games is `input-answers.test.ts`.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import {
   type FakeDrawState,
   type FakeMove,
@@ -258,8 +258,6 @@ describe("an input answered as nothing happened", () => {
 });
 
 describe("a save that holds a move that changed nothing", () => {
-  beforeAll(registerAllGames);
-
   /** Written by the build before the midend kept such a move out
    * (2026-10-10): Loopy, Right, Backspace, Enter. The first move sets an
    * undecided edge to undecided. */

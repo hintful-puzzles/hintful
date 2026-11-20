@@ -60,13 +60,9 @@
  * member that only looks consumed, never fail one that is genuinely read.
  */
 import ts from "typescript";
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
-// Registers every ported game; `beforeAll` re-runs it in case a sibling file
-// reset the shared registry under `isolate: false`.
-import { registerAllGames } from "./games/index.ts";
-
-beforeAll(registerAllGames);
+import "./games/index.ts";
 
 /** Every source module, eagerly, as raw text — Vite resolves these at build. */
 const sources = [

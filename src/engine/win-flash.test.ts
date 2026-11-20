@@ -8,7 +8,7 @@
  */
 
 import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import "../games/index.ts";
 import { FLASH, FLASH_LEAD } from "./color/palette.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "./pointer.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
@@ -26,8 +26,6 @@ import {
   WIN_NONE,
   WIN_STILL_S,
 } from "./win-wave.ts";
-
-registerAllGames();
 
 /** The games a solved board can be reached in without playing one: those with
  * a solver. The others pin their flash in their own tests. */

@@ -9,18 +9,19 @@
  * - `{{no-right-click-games}}`: the names of the games given, as "A, B and
  *   C". The plugin gives those that declare `ignoresSecondaryButton`.
  *
- * Reads the catalog only, so the Vite config may import it.
+ * It is given the catalog, and imports nothing but a type, so the Vite config
+ * may import it.
  */
 
-import { type PuzzleData, puzzleCatalog } from "./catalog-data.ts";
+import type { PuzzleData } from "../engine/catalog.ts";
+
+type Catalog = Readonly<Record<string, PuzzleData>>;
 
 const TABLE = /^\{\{puzzle-list\}\}$/m;
 export const NO_RIGHT_CLICK = "{{no-right-click-games}}";
 
-const catalog: Readonly<Record<string, PuzzleData>> = puzzleCatalog;
-
 /** The table, as markdown. */
-function puzzleListMarkdown(): string {
+function puzzleListMarkdown(catalog: Catalog): string {
   const rows = Object.entries(catalog)
     .sort(([, a], [, b]) => a.name.localeCompare(b.name, "en"))
     .map(
@@ -35,7 +36,7 @@ function puzzleListMarkdown(): string {
 }
 
 /** The catalog names of `ids`, sorted, as "A, B and C". */
-function gameNames(ids: readonly string[]): string {
+function gameNames(catalog: Catalog, ids: readonly string[]): string {
   const names = ids.map((id) => catalog[id]?.name ?? id).sort();
   return names.length < 2
     ? names.join("")
@@ -45,10 +46,11 @@ function gameNames(ids: readonly string[]): string {
 /** `source` with its markers replaced: the table, and the names of the games
  * in `noRightClick`. A page with no marker is returned as it is. */
 export function insertGameLists(
+  catalog: Catalog,
   source: string,
   noRightClick: readonly string[],
 ): string {
   return source
-    .replace(TABLE, () => puzzleListMarkdown())
-    .replaceAll(NO_RIGHT_CLICK, () => gameNames(noRightClick));
+    .replace(TABLE, () => puzzleListMarkdown(catalog))
+    .replaceAll(NO_RIGHT_CLICK, () => gameNames(catalog, noRightClick));
 }

@@ -13,12 +13,14 @@
  *
  *   1. it calls `import.meta.glob` with a `?raw` query, and every glob it calls
  *      has a query (`?raw` or `?url`), so none of them imports code;
- *   2. its import closure reaches no module under `src/games/`.
+ *   2. its import closure reaches no module under `src/games/` but the games'
+ *      catalog entries.
  *
  * The second is what makes the set cheap, and it is a fact about structure
  * rather than a timing: a board needs a `Game`, and a `Game` comes from a
  * module under `src/games/`. A file that cannot reach one cannot build a board,
- * and cannot even pay the import cost of the registry.
+ * and cannot even pay the import cost of the registry. A catalog entry is
+ * under `src/games/` and imports nothing of its game.
  *
  * The closure is `reach.ts`'s walk, which reads imports the way the compiler
  * does. It counts `import type` as an edge, and a specifier it cannot resolve
@@ -34,14 +36,17 @@
  */
 import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { allTestFiles, edges, gameOf, ROOT, reach } from "./reach.ts";
+import { allTestFiles, edges, gameOf, isCatalogEntry, ROOT, reach } from "./reach.ts";
 
 function isSourceScan(file: string): boolean {
   const queries = edges(file).globs.map((g) => g.query);
   if (!queries.includes("?raw")) return false;
   if (queries.includes(null)) return false;
   const walk = reach(file);
-  return !walk.everything && ![...walk.files].some((f) => gameOf(f) !== null);
+  return (
+    !walk.everything &&
+    ![...walk.files].some((f) => gameOf(f) !== null && !isCatalogEntry(f))
+  );
 }
 
 /** The source-scan test files, repo-relative and sorted. */

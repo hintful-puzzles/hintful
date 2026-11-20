@@ -14,8 +14,8 @@
  * disagrees with the verb, fails here.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { type HintStep, type HintTrackVerdict, UI_UPDATE } from "./game.ts";
 import {
   CURSOR_RIGHT,
@@ -50,8 +50,6 @@ import {
   targetPoints,
 } from "./testing/input-probe.ts";
 import type { Point } from "./types.ts";
-
-beforeAll(registerAllGames);
 
 /** Presses a cycle route is followed for: longer than any verb's cycle, so a
  * result the cycle passes through is met before the presses run out. */

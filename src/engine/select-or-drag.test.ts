@@ -35,14 +35,12 @@
  * reached zero of them fails instead of reporting health.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { LEFT_BUTTON, LEFT_RELEASE, RIGHT_BUTTON, RIGHT_RELEASE } from "./pointer.ts";
 import { type AnyGame, builtGames, enrolledIn } from "./testing/enrollment.ts";
 import { fingerprint, probeBoard, probePoints } from "./testing/input-probe.ts";
 import type { Point } from "./types.ts";
-
-beforeAll(registerAllGames);
 
 /** The fields that make a game a member — the same derivation
  * `note-taking-cell.test.ts` makes, for the same reason. */

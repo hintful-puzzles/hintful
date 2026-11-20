@@ -5,7 +5,7 @@
  * engine reads; the description is what makes the word computed.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   isFormal,
   isLibrary,
@@ -15,7 +15,7 @@ import {
 import { loadDescriptionFile } from "./describe/load.ts";
 import { getTsGame } from "./engine/registry.ts";
 import { rulesetField } from "./engine/ruleset.ts";
-import { registerAllGames } from "./games/index.ts";
+import "./games/index.ts";
 
 const texts = import.meta.glob<string>("./**/*.description.yaml", {
   eager: true,
@@ -29,8 +29,6 @@ const varied = Object.entries(texts).flatMap(([path, text]) => {
     ? [{ path, game: d.game, variations: d.variations }]
     : [];
 });
-
-beforeAll(registerAllGames);
 
 /** How the game offers a variation by `name`: as a ruleset by its name, as
  * a modifier by its words, or not at all. */

@@ -1,7 +1,7 @@
 /**
- * The game registry: `puzzleId` → the game's implementation. A game absent from
- * here cannot be played, which is why `catalog-registry.test.ts` asserts the
- * registry and the catalog are the same set of games in both directions.
+ * The game registry: `puzzleId` → the game's implementation. Each game
+ * registers itself as its module loads, and `src/games/index.ts` loads them
+ * all and holds the registry to the catalog.
  */
 
 import { offersSearch } from "./difficulty.ts";
@@ -15,19 +15,12 @@ const games = new Map<string, Game<unknown, unknown, unknown, unknown, unknown>>
  * Register a game. Generics are inferred from the passed `Game`, so no `any`
  * escapes: the stored factory is `() => EngineCore`.
  *
- * Idempotent on the *same* game instance, which lets `registerAllGames()`
- * repopulate the registry after a test-only `_resetRegistry()` (a game
- * module's import side effects run once per worker). A *different* game object
- * under an already-claimed id is a hard error: the copy-paste bug the guard
- * exists to catch.
+ * A second game under a claimed id is an error: the copy-paste bug of a game
+ * copied without renaming.
  */
 export function registerGame<P, S, M, U, D>(game: Game<P, S, M, U, D>): void {
-  const existing = games.get(game.id);
-  if (existing !== undefined) {
-    if (existing !== game) {
-      throw new Error(`A different TS game is already registered for "${game.id}"`);
-    }
-    return;
+  if (games.has(game.id)) {
+    throw new Error(`A game is already registered for "${game.id}"`);
   }
   assertRegistrable(game);
   factories.set(game.id, () => new Midend(game));
@@ -81,8 +74,7 @@ export function getTsGame(
   return games.get(puzzleId) ?? null;
 }
 
-/** All registered puzzle ids. Must equal the catalog — see
- * `catalog-registry.test.ts`. */
+/** All registered puzzle ids. */
 export function registeredGameIds(): string[] {
   return [...factories.keys()];
 }
@@ -93,8 +85,8 @@ export function createTsEngine(puzzleId: string): EngineCore | null {
   return factories.get(puzzleId)?.() ?? null;
 }
 
-/** Test-only: drop all registrations. */
-export function _resetRegistry(): void {
-  factories.clear();
-  games.clear();
+/** Test-only: take back a game a test registered. */
+export function _unregisterGame(puzzleId: string): void {
+  factories.delete(puzzleId);
+  games.delete(puzzleId);
 }

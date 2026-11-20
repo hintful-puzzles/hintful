@@ -37,8 +37,8 @@
  * name".
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { UI_UPDATE } from "./game.ts";
 import { Midend } from "./index.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
@@ -54,8 +54,6 @@ import {
 } from "./testing/input-probe.ts";
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
-
-beforeAll(registerAllGames);
 
 /**
  * Games whose Marks key is offered but does **not** toggle a mode, each with

@@ -28,8 +28,8 @@
  * Proved to fail by planting a latch in Keen: Keen lands in the unbroken list.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import {
   LEFT_BUTTON,
   LEFT_DRAG,
@@ -46,8 +46,6 @@ import {
   targetPoints,
 } from "./testing/input-probe.ts";
 import { expectLedger } from "./testing/ledger.ts";
-
-beforeAll(registerAllGames);
 
 /** The names a game's own completion record goes by. */
 const RECORD_KEYS = [

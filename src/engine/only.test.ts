@@ -9,8 +9,8 @@
  * is every game whose `getCustomParamsConfig` carries a narrowing, so a game
  * joins by declaring one.
  */
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { offeredOf, offeredValues } from "./config-narrowing.ts";
 import { difficultyItem, tierNames } from "./difficulty.ts";
 import type { Game, ParamConfigItem } from "./game.ts";
@@ -23,9 +23,6 @@ import { getTsGame, registeredGameIds } from "./registry.ts";
 import { type Ruleset, rulesetItem } from "./ruleset.ts";
 import { leafPresets } from "./testing/presets.ts";
 import type { ConfigDescription, ConfigItem, ConfigValues } from "./types.ts";
-
-beforeAll(registerAllGames);
-registerAllGames();
 
 interface P {
   mode: number;

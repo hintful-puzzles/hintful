@@ -22,6 +22,7 @@ import {
 } from "../../engine/line-drawing.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { isMouseDown, newCursor } from "../../engine/pointer.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { dictionary } from "./dictionary.ts";
@@ -185,3 +186,5 @@ export const wordtrailGame: Game<
 
   animLength: () => 0,
 };
+
+registerGame(wordtrailGame);

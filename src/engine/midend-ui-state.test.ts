@@ -19,8 +19,8 @@
  * it acquires an `encodeUi` and nobody has to remember this file exists.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import type { Game } from "./game.ts";
 import { Midend } from "./midend.ts";
 import { CURSOR_RIGHT } from "./pointer.ts";
@@ -29,8 +29,6 @@ import { observeMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { inSweep } from "./testing/slow.ts";
-
-beforeAll(registerAllGames);
 
 type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;
 

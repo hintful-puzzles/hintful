@@ -15,13 +15,11 @@
  * both, and the games it was first seen to convict are pinned.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { type InputAnswers, inputAnswers } from "./testing/input-probe.ts";
 import { inSweep } from "./testing/slow.ts";
-
-beforeAll(registerAllGames);
 
 /**
  * Games that make a move that leaves the board as it was, which the midend

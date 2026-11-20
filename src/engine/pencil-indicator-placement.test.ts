@@ -18,8 +18,8 @@
  * for its own reasons, and needs no game to name its own palette indices here.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { takesNotes } from "./key-labels.ts";
 import { type PencilIndicatorBox, pencilIndicatorBox } from "./pencil-indicator.ts";
 import { type AnyGame, builtGames, enrolledIn } from "./testing/enrollment.ts";
@@ -30,8 +30,6 @@ import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { inSweep } from "./testing/slow.ts";
 import type { Size } from "./types.ts";
 import { NO_FLASH } from "./win-wave.ts";
-
-beforeAll(registerAllGames);
 
 const noteTaking = enrolledIn((g) => takesNotes(g.state, g.ui));
 

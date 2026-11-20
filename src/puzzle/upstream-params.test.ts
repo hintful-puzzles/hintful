@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { expectLedger } from "../engine/testing/ledger.ts";
-import { puzzleCatalog } from "./catalog-data.ts";
+import { puzzleDataMap as catalog } from "./catalog.ts";
 
 /**
  * What upstream's `encode_params` writes, per game: forms chosen so that every
@@ -125,8 +125,6 @@ const UPSTREAM: Record<string, string[]> = {
 };
 
 describe("a params string upstream's encoder writes", () => {
-  const catalog: Record<string, { collection: string }> = puzzleCatalog;
-
   it("is recorded for exactly the games with an upstream", () => {
     const upstream = Object.keys(catalog)
       .filter((id) => catalog[id].collection !== "own")

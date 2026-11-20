@@ -1,168 +1,38 @@
 /**
- * The collection's games. Importing this module registers every one (via the
- * module-load side effect below), so the worker's dispatch seam
- * (`createTsEngine`) can find them. A new game adds one import and one
- * `registerGame` line.
+ * The collection's games. Importing this module registers every one: each
+ * game's `index.ts` registers itself as it loads, and this loads every
+ * directory's, so a game is registered by existing. The worker's dispatch
+ * seam (`createTsEngine`) finds them in the registry.
  *
- * `registerAllGames()` is exported and **idempotent** (re-registering the
- * same `Game` instance is a no-op — see `registry.ts`). It exists so a test
- * that shares a worker's module state under `isolate: false` can guarantee
- * the registry is fully populated even after a sibling test called
- * `_resetRegistry()`: the game modules self-register only once per worker
- * (ES-module side effects don't re-run), so a reset is otherwise
- * unrecoverable. Production still gets the unchanged "import populates the
- * registry" behavior from the module-load call at the bottom.
- *
- * A game absent from here cannot be played at all: `retire-c-engine` removed
- * the C/WASM fallback an empty registry used to mean, and
- * `catalog-registry.test.ts` now asserts the registry and the catalog are the
- * same set of games in both directions.
+ * It then holds the registry and the catalog to the directories: every
+ * directory registers a game under its own name and has a catalog entry
+ * (`catalog.ts`), and no catalog entry sits where there is no game. A game
+ * absent from the registry cannot be played, and one absent from the catalog
+ * cannot be reached, so either is an error as the games load.
  */
 
-import { registerGame } from "../engine/registry.ts";
-import { abcdGame } from "./abcd/index.ts";
-import { adjacentGame } from "./adjacent/index.ts";
-import { ascentGame } from "./ascent/index.ts";
-import { ballsortGame } from "./ballsort/index.ts";
-import { blackboxGame } from "./blackbox/index.ts";
-import { boatsGame } from "./boats/index.ts";
-import { bricksGame } from "./bricks/index.ts";
-import { bridgesGame } from "./bridges/index.ts";
-import { clustersGame } from "./clusters/index.ts";
-import { crossingGame } from "./crossing/index.ts";
-import { cubeGame } from "./cube/index.ts";
-import { dominosaGame } from "./dominosa/index.ts";
-import { fifteenGame } from "./fifteen/index.ts";
-import { fillingGame } from "./filling/index.ts";
-import { flipGame } from "./flip/index.ts";
-import { floodGame } from "./flood/index.ts";
-import { galaxiesGame } from "./galaxies/index.ts";
-import { groupGame } from "./group/index.ts";
-import { guessGame } from "./guess/index.ts";
-import { inertiaGame } from "./inertia/index.ts";
-import { keenGame } from "./keen/index.ts";
-import { lightupGame } from "./lightup/index.ts";
-import { loopyGame } from "./loopy/index.ts";
-import { magnetsGame } from "./magnets/index.ts";
-import { mapGame } from "./map/index.ts";
-import { mathraxGame } from "./mathrax/index.ts";
-import { minesGame } from "./mines/index.ts";
-import { mosaicGame } from "./mosaic/index.ts";
-import { netGame } from "./net/index.ts";
-import { netslideGame } from "./netslide/index.ts";
-import { norinoriGame } from "./norinori/index.ts";
-import { numgameGame } from "./numgame/index.ts";
-import { palisadeGame } from "./palisade/index.ts";
-import { pathGame } from "./path/index.ts";
-import { patternGame } from "./pattern/index.ts";
-import { pearlGame } from "./pearl/index.ts";
-import { pegsGame } from "./pegs/index.ts";
-import { rangeGame } from "./range/index.ts";
-import { rectGame } from "./rect/index.ts";
-import { romeGame } from "./rome/index.ts";
-import { saladGame } from "./salad/index.ts";
-import { samegameGame } from "./samegame/index.ts";
-import { seismicGame } from "./seismic/index.ts";
-import { separateGame } from "./separate/index.ts";
-import { signpostGame } from "./signpost/index.ts";
-import { singlesGame } from "./singles/index.ts";
-import { sixteenGame } from "./sixteen/index.ts";
-import { slantGame } from "./slant/index.ts";
-import { slideGame } from "./slide/index.ts";
-import { sokobanGame } from "./sokoban/index.ts";
-import { soloGame } from "./solo/index.ts";
-import { spokesGame } from "./spokes/index.ts";
-import { starbattleGame } from "./starbattle/index.ts";
-import { sticksGame } from "./sticks/index.ts";
-import { subsetsGame } from "./subsets/index.ts";
-import { tentsGame } from "./tents/index.ts";
-import { towersGame } from "./towers/index.ts";
-import { tracksGame } from "./tracks/index.ts";
-import { twiddleGame } from "./twiddle/index.ts";
-import { undeadGame } from "./undead/index.ts";
-import { unequalGame } from "./unequal/index.ts";
-import { unrulyGame } from "./unruly/index.ts";
-import { untangleGame } from "./untangle/index.ts";
-import { wordguessGame } from "./wordguess/index.ts";
-import { wordtrailGame } from "./wordtrail/index.ts";
+import { hasTsGame } from "../engine/registry.ts";
 
-/**
- * Register every ported game. Idempotent: safe to call repeatedly, and
- * safe to call after `_resetRegistry()` to restore a fully-populated
- * registry (the reason it exists — see the module header). Each call
- * infers its own concrete generics, so no `any`/`as` escapes (the same
- * shape as each game module's own top-level `registerGame`). Add one line
- * per port.
- */
-export function registerAllGames(): void {
-  registerGame(abcdGame);
-  registerGame(adjacentGame);
-  registerGame(ascentGame);
-  registerGame(blackboxGame);
-  registerGame(bridgesGame);
-  registerGame(boatsGame);
-  registerGame(bricksGame);
-  registerGame(clustersGame);
-  registerGame(crossingGame);
-  registerGame(cubeGame);
-  registerGame(dominosaGame);
-  registerGame(fifteenGame);
-  registerGame(fillingGame);
-  registerGame(flipGame);
-  registerGame(floodGame);
-  registerGame(galaxiesGame);
-  registerGame(groupGame);
-  registerGame(guessGame);
-  registerGame(inertiaGame);
-  registerGame(keenGame);
-  registerGame(lightupGame);
-  registerGame(loopyGame);
-  registerGame(magnetsGame);
-  registerGame(mapGame);
-  registerGame(mathraxGame);
-  registerGame(minesGame);
-  registerGame(mosaicGame);
-  registerGame(netGame);
-  registerGame(netslideGame);
-  registerGame(norinoriGame);
-  registerGame(numgameGame);
-  registerGame(palisadeGame);
-  registerGame(pathGame);
-  registerGame(patternGame);
-  registerGame(pearlGame);
-  registerGame(pegsGame);
-  registerGame(rangeGame);
-  registerGame(rectGame);
-  registerGame(romeGame);
-  registerGame(saladGame);
-  registerGame(samegameGame);
-  registerGame(seismicGame);
-  registerGame(separateGame);
-  registerGame(signpostGame);
-  registerGame(singlesGame);
-  registerGame(sixteenGame);
-  registerGame(slantGame);
-  registerGame(slideGame);
-  registerGame(sokobanGame);
-  registerGame(soloGame);
-  registerGame(spokesGame);
-  registerGame(starbattleGame);
-  registerGame(sticksGame);
-  registerGame(subsetsGame);
-  registerGame(tentsGame);
-  registerGame(towersGame);
-  registerGame(tracksGame);
-  registerGame(twiddleGame);
-  registerGame(undeadGame);
-  registerGame(unequalGame);
-  registerGame(unrulyGame);
-  registerGame(untangleGame);
-  registerGame(ballsortGame);
-  registerGame(wordguessGame);
-  registerGame(wordtrailGame);
+const directoryOf = (path: string) => path.split("/")[1] ?? path;
+
+// Bound to a name: Vite compiles `Object.keys(import.meta.glob(...))` written
+// as one expression to the paths alone, importing none of the modules.
+const games = import.meta.glob("./*/index.ts", { eager: true });
+const directories = Object.keys(games).map(directoryOf);
+// The paths alone, which is all this needs of the entries.
+const cataloged = Object.keys(import.meta.glob("./*/catalog.ts")).map(directoryOf);
+
+const unregistered = directories.filter((id) => !hasTsGame(id));
+if (unregistered.length > 0) {
+  throw new Error(
+    `src/games/${unregistered.join(", ")}: index.ts registers no game under its directory's name`,
+  );
 }
-
-// Module-load side effect: importing this barrel populates the registry,
-// exactly as before. (Each game's own module also self-registers on import;
-// `registerGame` is idempotent, so this second pass is a no-op there.)
-registerAllGames();
+const uncataloged = directories.filter((id) => !cataloged.includes(id));
+if (uncataloged.length > 0) {
+  throw new Error(`src/games/${uncataloged.join(", ")}: no catalog.ts`);
+}
+const gameless = cataloged.filter((id) => !directories.includes(id));
+if (gameless.length > 0) {
+  throw new Error(`src/games/${gameless.join(", ")}: a catalog.ts with no index.ts`);
+}

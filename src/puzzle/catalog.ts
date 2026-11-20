@@ -1,19 +1,16 @@
-import {
-  type PuzzleData,
-  type PuzzleFamily,
-  puzzleCatalog,
-  puzzleFamilies,
-  puzzleIds,
-} from "./catalog-data.ts";
+import { type PuzzleFamily, puzzleFamilies } from "../engine/catalog.ts";
+import { type CatalogModule, catalogFrom } from "./catalog-data.ts";
 
-export type { PuzzleData, PuzzleFamily } from "./catalog-data.ts";
-export { puzzleFamilies, puzzleIds } from "./catalog-data.ts";
+export type { PuzzleData, PuzzleFamily } from "../engine/catalog.ts";
+export { puzzleFamilies };
 
-export interface PuzzleDataMap {
-  [id: string]: PuzzleData;
-}
+/** Every game's catalog entry, by id, in id order. */
+export const puzzleDataMap = catalogFrom(
+  import.meta.glob<CatalogModule>("../games/*/catalog.ts", { eager: true }),
+);
 
-export const puzzleDataMap: Readonly<PuzzleDataMap> = puzzleCatalog;
+/** Catalog ids, sorted — the display order the home screen and menus use. */
+export const puzzleIds: readonly string[] = Object.keys(puzzleDataMap);
 
 /** A family's player-facing name. */
 export function familyLabel(family: PuzzleFamily): string {

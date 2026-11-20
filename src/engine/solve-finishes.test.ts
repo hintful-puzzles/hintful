@@ -14,12 +14,10 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import "../games/index.ts";
 import { LEFT_BUTTON, LEFT_RELEASE, RIGHT_BUTTON, RIGHT_RELEASE } from "./pointer.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { type AnyGame, probeBoard, probePoints } from "./testing/input-probe.ts";
-
-registerAllGames();
 
 const solvable = registeredGameIds().filter((id) => getTsGame(id)?.solve !== undefined);
 

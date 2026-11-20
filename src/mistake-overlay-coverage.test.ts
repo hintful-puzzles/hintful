@@ -32,12 +32,10 @@
  * A game may be listed below and still have its error frame well covered.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { capabilitySets } from "./engine/testing/enrollment.ts";
 import { expectLedger } from "./engine/testing/ledger.ts";
-import { registerAllGames } from "./games/index.ts";
-
-beforeAll(registerAllGames);
+import "./games/index.ts";
 
 /** Every game's **test** files, by game id — the opposite of the usual scan. */
 const testSources = (() => {

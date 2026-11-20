@@ -20,8 +20,8 @@
  * different rect.
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { registerAllGames } from "../games/index.ts";
+import { describe, expect, it } from "vitest";
+import "../games/index.ts";
 import { mkhighlightBackground, resolvePalette } from "./color/color-mkhighlight.ts";
 import { highlightWash } from "./color/palette.ts";
 import {
@@ -39,8 +39,6 @@ import {
 } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { NO_FLASH } from "./win-wave.ts";
-
-beforeAll(registerAllGames);
 
 const WASH = rgbLabel(highlightWash(mkhighlightBackground(DEFAULT_BACKGROUND)));
 
