@@ -86,7 +86,8 @@
       border-grid-render (palisade, separate), inertia, path, rect, slide,
       sokoban, pegs, signpost; of the multi-family games, abcd, pattern,
       magnets, blackbox, tents, boats, tracks, salad, group, crossing,
-      subsets, bridges, guess, undead.
+      subsets, bridges, guess, undead; of the neighbor-painting games,
+      fifteen, sixteen, twiddle, net, netslide.
       A game whose board
       values are palette indices (SameGame's and Flood's tile colors) numbers
       them from a run after its own slots (`COL_PIECE + c - 1`,
@@ -151,9 +152,18 @@
       nothing draws. Dropping Bridges' unused filler slot left `GRID_MID`
       imported by Abcd alone in `src/games/`; `palette-source.test.ts`'s
       shared-role count now reads `gameSourceFiles`, which credits
-      edge-clue-latin's renderer to Adjacent and Unequal. Next: the
-      neighbor-painting games (ascent, bricks, fifteen, net, netslide,
-      sixteen, spokes, twiddle, map). Not tiles, keeping the explicit form:
+      edge-clue-latin's renderer to Adjacent and Unequal. A tile that
+      animates keys as never drawn (-1) and is forced while it moves, so
+      the frame after the move repaints it too (Fifteen, Sixteen, Twiddle,
+      Netslide); Fifteen's two passes ask the cache once a cell before
+      either. Net reads a tile's shown key (`shown`) for "was rotating"
+      before `changed`. A hint mark that was global to the board (Fifteen's
+      ringed tile) is a bit of each tile's key, so only the tiles it moves
+      between repaint. Twiddle's two cursor slots and its pivot all held the
+      cursor color, and are the cursor role (the pivot under its own name).
+      A test that counted the palette or named a bevel slot by number
+      (Sixteen's, Fifteen's) reads the slot names. Next: ascent, bricks,
+      spokes, map. Not tiles, keeping the explicit form:
       cube, loopy, untangle (palette roles only).
 - [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;
       code and edges to go.

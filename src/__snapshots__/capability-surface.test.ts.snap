@@ -501,9 +501,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "hintTile",
-      "lit",
-      "started",
       "tileSize",
       "tiles",
     ],
@@ -1160,13 +1157,11 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "h",
-      "notesShown",
       "notesToDraw",
       "pencilModeShown",
-      "started",
       "tileSize",
+      "tiles",
       "toDraw",
-      "visible",
       "w",
     ],
     "id": "net",
@@ -1214,9 +1209,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "h",
       "hintArrowX",
       "hintArrowY",
-      "started",
       "tileSize",
-      "visible",
+      "tiles",
       "w",
     ],
     "id": "netslide",
@@ -1854,8 +1848,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hintTarget",
       "hintTile",
       "hintUltimate",
-      "lit",
-      "started",
       "tileSize",
       "tiles",
       "w",
@@ -2316,9 +2308,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
-      "started",
       "tileSize",
+      "tiles",
     ],
     "id": "twiddle",
     "members": [

@@ -4,6 +4,7 @@
 // mid-rotation frame that draws the block's tiles at rotated coordinates
 // (and settles them at animation end), and the win flash across the tiles.
 import { describe, expect, it } from "vitest";
+import { COL_CURSOR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
@@ -16,11 +17,7 @@ import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import { executeMove, twiddleGame } from "./index.ts";
 import {
   animLength,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_HIGHCURSOR,
   COL_HIGHLIGHT,
-  COL_LOWCURSOR,
   COL_LOWLIGHT,
   COL_PIVOT,
   COL_TILE,
@@ -113,10 +110,7 @@ describe("Twiddle rendering", () => {
 
   /** The cursor-colored bands a frame draws. */
   const cursorBands = (ops: RecordingDrawing["ops"]) =>
-    ops.filter(
-      (o) =>
-        o.op === "rect" && (o.color === COL_HIGHCURSOR || o.color === COL_LOWCURSOR),
-    ).length;
+    ops.filter((o) => o.op === "rect" && o.color === COL_CURSOR).length;
 
   it("draws a band round the outer edge of the cursor's block", () => {
     const state = solved3x3();

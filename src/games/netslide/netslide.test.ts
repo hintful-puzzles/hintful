@@ -12,6 +12,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -53,8 +54,6 @@ import {
   border,
   COL_BARRIER,
   COL_BORDER,
-  COL_FLASHING,
-  COL_FLASHING_LEAD,
   COL_POWERED,
   COL_WIRE,
   PREFERRED_TILE_SIZE,
@@ -763,7 +762,7 @@ describe("netslide rendering", () => {
     }
     const run = winFlashRun(paint, lit, 120);
     expectWinFlashTravels(run, w * h, (i) => distance.get(i) ?? -1);
-    expect(slotsSeen).toEqual(new Set([COL_FLASHING, COL_FLASHING_LEAD]));
+    expect(slotsSeen).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
     expect(run.frames[0]).toEqual([source]);
   });
 });
@@ -772,7 +771,7 @@ describe("netslide rendering", () => {
  * is one painted in either, the highlight's body or its leading edge. */
 const slotsSeen = new Set<number>();
 function litSlot(color: number): boolean {
-  if (color !== COL_FLASHING && color !== COL_FLASHING_LEAD) return false;
+  if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
   slotsSeen.add(color);
   return true;
 }

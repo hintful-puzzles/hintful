@@ -4,6 +4,7 @@
 // tile per non-gap cell, and a mid-slide animation frame that draws a
 // moving tile at an interpolated coordinate.
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
@@ -13,7 +14,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { executeMove, fifteenGame } from "./index.ts";
 import { TILE } from "./kinds.ts";
-import { COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
+import { COL_HIGHLIGHT, COL_LOWLIGHT } from "./render.ts";
 import { type FifteenState, newState } from "./state.ts";
 
 const PALETTE = fifteenGame.colors(DEFAULT_BACKGROUND);
@@ -57,10 +58,9 @@ describe("Fifteen rendering", () => {
 
     redraw(dr, ds, null, state, 0, UI, 0, NO_FLASH);
 
-    // The two recessed-border bevels are drawn (highlight=2, lowlight=3)
-    // before any tiles.
+    // The two recessed-border bevels are drawn before any tiles.
     const firstPolys = opsOfKind(ops, "polygon").slice(0, 2);
-    expect(firstPolys.map((o) => o.fill)).toEqual([2, 3]);
+    expect(firstPolys.map((o) => o.fill)).toEqual([COL_HIGHLIGHT, COL_LOWLIGHT]);
     // One number per non-gap cell (15 of 16).
     const numbers = ops.filter((o) => o.op === "text").map((o) => o.text);
     expect(numbers.length).toBe(15);

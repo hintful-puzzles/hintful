@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolvePalette } from "../../engine/color/color-mkhighlight.ts";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
@@ -25,12 +26,7 @@ import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { netslideGame } from "../netslide/index.ts";
 import { COL_LOWLIGHT } from "../netslide/render.ts";
 import { executeMove, sixteenGame, slideWords } from "./index.ts";
-import {
-  COL_ARROW,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  type SixteenHintHighlights,
-} from "./render.ts";
+import { COL_ARROW, type SixteenHintHighlights } from "./render.ts";
 import {
   decodeParams,
   defaultParams,
@@ -388,10 +384,11 @@ describe("Sixteen move execution", () => {
 // --- colors ----------------------------------------------------------
 
 describe("Sixteen colors", () => {
-  it("returns 9 colors from the game (the tile face, the arrows and the flash's two included)", () => {
+  it("fills every slot it numbers, the roles' and its own, with none past the arrows", () => {
     const bg: [number, number, number] = [0.9, 0.9, 0.9];
     const palette = sixteenGame.colors(bg);
-    expect(palette).toHaveLength(9);
+    expect(palette).toHaveLength(COL_ARROW + 1);
+    expect(Array.from(palette, (c) => c !== undefined)).not.toContain(false);
   });
 
   it("fills a slide arrow as Netslide fills its own, clear of the bevel's swap", () => {

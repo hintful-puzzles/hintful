@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import {
   CURSOR_RIGHT,
@@ -22,13 +23,7 @@ import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";
 import { netGame } from "./index.ts";
 import { findMistakes } from "./mistakes.ts";
-import {
-  boardMargin,
-  COL_ERR,
-  COL_PENCIL,
-  lineThick,
-  PREFERRED_TILE_SIZE,
-} from "./render.ts";
+import { boardMargin, COL_PENCIL, lineThick, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   LOCKED,
   type NetMove,
@@ -246,7 +241,7 @@ describe("the frame", () => {
       plain.recording.ops.some((o) => "color" in o && o.color === COL_PENCIL),
     ).toBe(true);
     expect(
-      opsOfKind(plain.recording.ops, "line").some((o) => o.color === COL_ERR),
+      opsOfKind(plain.recording.ops, "line").some((o) => o.color === COL_ERROR),
     ).toBe(false);
     const checked = renderScenario({
       game: netGame,

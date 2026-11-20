@@ -5,19 +5,17 @@
  * `draw_tile` / `rotate` / `highlight_colour`.
  */
 
-import {
-  CURSOR,
-  cellSurface,
-  FLASH,
-  FLASH_LEAD,
-  givenSurface,
-  HINT_OUTLINE,
-  INK,
-} from "../../engine/color/palette.ts";
+import { cellSurface, givenSurface, INK } from "../../engine/color/palette.ts";
 import {
   twiddleGentleHighlight,
   twiddleGentleLowlight,
 } from "../../engine/color/palette-games.ts";
+import {
+  COL_CURSOR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRecessedBorder, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
@@ -30,6 +28,7 @@ import {
   ringShape,
   textBox,
 } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { BLOCK, LIFTED, TILE } from "./kinds.ts";
@@ -44,29 +43,24 @@ const HIGHLIGHT_WIDTH_DIV = 20;
 
 // --- color indices ---------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_TEXT = 1;
-export const COL_HIGHLIGHT = 2;
-export const COL_HIGHLIGHT_GENTLE = 3;
-export const COL_LOWLIGHT = 4;
-export const COL_LOWLIGHT_GENTLE = 5;
-export const COL_HIGHCURSOR = 6;
-export const COL_LOWCURSOR = 7;
+// The win flash (`COL_FLASH`, `COL_FLASH_LEAD`) is on a tile's face; the
+// hint's outline (`COL_HINT_OUTLINE`) is round the tile it serves and the
+// square a run brings it to. The cursor (`COL_CURSOR`) is the *outline* of
+// the bevel triangles along the block's edges, over their ordinary fill: a
+// line, so the one color serves both the lit and the shaded sides.
+const COL_TEXT = FIRST_GAME_SLOT;
+export const COL_HIGHLIGHT = FIRST_GAME_SLOT + 1;
+export const COL_HIGHLIGHT_GENTLE = FIRST_GAME_SLOT + 2;
+export const COL_LOWLIGHT = FIRST_GAME_SLOT + 3;
+export const COL_LOWLIGHT_GENTLE = FIRST_GAME_SLOT + 4;
 /** A tile's face: the lifted surface, so the object the player moves stands
  * off the well it turns in, in both schemes. */
-export const COL_TILE = 8;
+export const COL_TILE = FIRST_GAME_SLOT + 5;
 /** The well: what a turning block uncovers. */
-const COL_WELL = 9;
-/** The face of a tile the win flash is on. */
-export const COL_FLASH = 10;
-/** The face of a tile the win flash's leading edge is on. */
-export const COL_FLASH_LEAD = 11;
-/** The hint's outline: the tile it serves, and the square a run brings it to. */
-export const COL_HINT_EVIDENCE = 12;
+const COL_WELL = FIRST_GAME_SLOT + 6;
 /** The dot at every block's pivot: the cursor's color, which marks where a
  * click acts. */
-export const COL_PIVOT = 13;
-const NCOLORS = 14;
+export const COL_PIVOT = COL_CURSOR;
 
 // --- cursor edge flags ------------------------------------------------
 
@@ -113,21 +107,16 @@ export function animLength(n: number): number {
 // --- draw state -------------------------------------------------------
 
 export interface TwiddleDrawState {
-  started: boolean;
-  /** Per-cell cache of the win flash's tone on the tile, above its two bits
-   * the hint's three mark bits, above those the four sides of a cursor or hover
-   * outline, and above those the packed `number*4 + orient`; `-1` forces a
-   * redraw (unknown, or inside the animating block). */
-  cache: Int32Array;
+  /** Per cell, the win flash's tone on the tile, above its two bits the
+   * hint's three mark bits, above those the four sides of a cursor or hover
+   * outline, and above those the packed `number*4 + orient`. A cell inside
+   * the turning block repaints every frame. */
+  tiles: TileCache;
   tileSize: number;
 }
 
 export function newDrawState(state: TwiddleState, tileSize: number): TwiddleDrawState {
-  return {
-    started: false,
-    cache: new Int32Array(state.w * state.h).fill(-1),
-    tileSize,
-  };
+  return { tiles: new TileCache(state.w * state.h), tileSize };
 }
 
 // --- rotation ---------------------------------------------------------
@@ -288,12 +277,10 @@ function drawTile(
   // the bevel of the block's outer edge in the cursor color, so either reads
   // as one thing and neither as a move made.
   if (cedges) {
-    if (cedges & CUR_TOP) band({ x: px, y: py, w: ts, h: hw }, COL_HIGHCURSOR);
-    if (cedges & CUR_LEFT) band({ x: px, y: py, w: hw, h: ts }, COL_HIGHCURSOR);
-    if (cedges & CUR_BOTTOM)
-      band({ x: px, y: py + ts - hw, w: ts, h: hw }, COL_LOWCURSOR);
-    if (cedges & CUR_RIGHT)
-      band({ x: px + ts - hw, y: py, w: hw, h: ts }, COL_LOWCURSOR);
+    if (cedges & CUR_TOP) band({ x: px, y: py, w: ts, h: hw }, COL_CURSOR);
+    if (cedges & CUR_LEFT) band({ x: px, y: py, w: hw, h: ts }, COL_CURSOR);
+    if (cedges & CUR_BOTTOM) band({ x: px, y: py + ts - hw, w: ts, h: hw }, COL_CURSOR);
+    if (cedges & CUR_RIGHT) band({ x: px + ts - hw, y: py, w: hw, h: ts }, COL_CURSOR);
   }
 
   // The hint's outline sits just inside the bevel, never on the number; its
@@ -301,10 +288,10 @@ function drawTile(
   if (marks & MARK_OUTLINE) {
     const i = hw;
     const s = ts - 2 * hw;
-    band({ x: px + i, y: py + i, w: s, h: hw }, COL_HINT_EVIDENCE);
-    band({ x: px + i, y: py + i + s - hw, w: s, h: hw }, COL_HINT_EVIDENCE);
-    band({ x: px + i, y: py + i, w: hw, h: s }, COL_HINT_EVIDENCE);
-    band({ x: px + i + s - hw, y: py + i, w: hw, h: s }, COL_HINT_EVIDENCE);
+    band({ x: px + i, y: py + i, w: s, h: hw }, COL_HINT_OUTLINE);
+    band({ x: px + i, y: py + i + s - hw, w: s, h: hw }, COL_HINT_OUTLINE);
+    band({ x: px + i, y: py + i, w: hw, h: s }, COL_HINT_OUTLINE);
+    band({ x: px + i + s - hw, y: py + i, w: hw, h: s }, COL_HINT_OUTLINE);
   }
 
   if (rot) dr.unclip();
@@ -480,7 +467,7 @@ export function redraw(
     return e;
   };
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     drawRecessedBorder(
       dr,
       {
@@ -493,7 +480,6 @@ export function redraw(
       COL_HIGHLIGHT,
       COL_LOWLIGHT,
     );
-    ds.started = true;
   }
 
   // Set up the rotation parameters if we're animating, and clear the
@@ -537,7 +523,8 @@ export function redraw(
     const tx = i % w;
     const ty = Math.floor(i / w);
 
-    // -1 ("always redraw") for cells inside the animating block.
+    // A cell inside the animating block keys as never drawn (-1), so it
+    // repaints every frame of the turn and the first frame after it.
     const inBlock =
       rot !== null && tx >= lastx && tx < lastx + n && ty >= lasty && ty < lasty + n;
     const lit = flash.win(sweepStep(tx, ty));
@@ -549,7 +536,7 @@ export function redraw(
           2) |
         lit;
 
-    if (ds.cache[i] !== t || t === -1) {
+    if (ds.tiles.changed(i, t) || inBlock) {
       const x = coord(tx, ts);
       const y = coord(ty, ts);
 
@@ -562,14 +549,13 @@ export function redraw(
         y,
         state.numbers[i],
         state.orient[i],
-        lit ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD) : COL_TILE,
+        lit ? winSlot(lit) : COL_TILE,
         // A tile outside the turning block draws unrotated, even mid-turn
         // (the win flash can repaint it while a new move animates).
         inBlock ? rot : null,
         cedges,
         marks,
       );
-      ds.cache[i] = t;
       if (inRinged(tx, ty)) ringRepainted = true;
     }
   }
@@ -644,24 +630,13 @@ export function redraw(
 /** Build the Twiddle palette from a base background + highlight/lowlight
  * (the gentle bevels and the cursor). */
 export function buildColors(bg: Color, hi: Color, lo: Color): Color[] {
-  const out: Color[] = new Array(NCOLORS);
-  out[COL_BACKGROUND] = bg;
+  const out = rolePalette(bg);
   out[COL_TEXT] = INK;
   out[COL_HIGHLIGHT] = hi;
   out[COL_HIGHLIGHT_GENTLE] = twiddleGentleHighlight(bg);
   out[COL_LOWLIGHT] = lo;
   out[COL_LOWLIGHT_GENTLE] = twiddleGentleLowlight(bg);
-  // The cursor is the *outline* of the bevel triangles along the block's
-  // edges, over their ordinary fill — a line, so one authored color serves
-  // both the lit and the shaded sides. Two slots survive because the dark-mode
-  // swap table keys them by index.
-  out[COL_HIGHCURSOR] = CURSOR;
-  out[COL_LOWCURSOR] = CURSOR;
   out[COL_TILE] = givenSurface(bg);
   out[COL_WELL] = cellSurface(bg);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
-  out[COL_PIVOT] = CURSOR;
   return out;
 }

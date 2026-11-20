@@ -9,15 +9,20 @@
 
 import { TWO } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
-  FLASH,
-  FLASH_LEAD,
   GRID_DARK,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { netslideLowlight } from "../../engine/color/palette-games.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
@@ -33,6 +38,7 @@ import {
   R,
   U,
 } from "../../engine/square-edges.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import { wireDistance } from "../../engine/wires.ts";
@@ -62,37 +68,29 @@ export function border(tileSize: number): number {
 }
 
 // --- palette ---------------------------------------------------------------
-const COL_BACKGROUND = 0; // the board around the grid, where the arrows are
-/** A tile's powered wires while the win flash is on it. */
-export const COL_FLASHING = 1;
-export const COL_BORDER = 2; // the line between two tiles, and the frame
-export const COL_WIRE = 3;
-const COL_ENDPOINT = 4;
-export const COL_POWERED = 5;
-export const COL_BARRIER = 6;
-export const COL_LOWLIGHT = 7;
-const COL_TEXT = 8;
-
-/** The keyboard cursor's gutter arrow, which upstream drew in the
- * powered-wire color. */
-const COL_CURSOR = 9;
-const COL_CELL = 10; // a tile's face
-/** A tile's powered wires under the win flash's leading edge. */
-export const COL_FLASHING_LEAD = 11;
+// The background (`COL_BACKGROUND`) is the board around the grid, where the
+// arrows are; the win flash (`COL_FLASH`, `COL_FLASH_LEAD`) a tile's powered
+// wires; the keyboard cursor (`COL_CURSOR`) its gutter arrow, which upstream
+// drew in the powered-wire color.
+export const COL_BORDER = FIRST_GAME_SLOT; // the line between two tiles, and the frame
+export const COL_WIRE = FIRST_GAME_SLOT + 1;
+const COL_ENDPOINT = FIRST_GAME_SLOT + 2;
+export const COL_POWERED = FIRST_GAME_SLOT + 3;
+export const COL_BARRIER = FIRST_GAME_SLOT + 4;
+export const COL_LOWLIGHT = FIRST_GAME_SLOT + 5;
+const COL_TEXT = FIRST_GAME_SLOT + 6;
+const COL_CELL = FIRST_GAME_SLOT + 7; // a tile's face
 /** An arrow fill: the hint's ring ink, which the engine owns, so the arrow the
  * hint says to press turns blue. */
 const HINTED = "hinted";
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
   // The board is the background as handed in: `resolvePalette` has already
   // shifted it off the extremes, so this is the same tone `mkhighlight` games
   // paint (upstream's `frontend_default_colour` versus `game_mkhighlight` is not
   // a distinction a port gets to keep).
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_FLASHING] = FLASH;
-  out[COL_FLASHING_LEAD] = FLASH_LEAD;
   out[COL_BORDER] = surfaceGrid(defaultBackground);
   out[COL_WIRE] = INK;
   out[COL_ENDPOINT] = TWO[0];
@@ -100,7 +98,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BARRIER] = GRID_DARK;
   out[COL_LOWLIGHT] = netslideLowlight(defaultBackground);
   out[COL_TEXT] = INK;
-  out[COL_CURSOR] = CURSOR;
   return out;
 }
 
@@ -129,13 +126,11 @@ export function computeSize(p: { w: number; h: number }, tileSize: number): Size
 }
 
 export interface NetslideDrawState {
-  started: boolean;
   w: number;
   h: number;
   tileSize: number;
-  /** Last-drawn value per tile (wires | ACTIVE | FLASHING | the HINT_* bits), or
-   * −1 for "dirty, repaint unconditionally" (upstream's `0xFF` sentinel). */
-  visible: Int32Array;
+  /** Per tile, its value (wires | ACTIVE | FLASHING | the HINT_* bits). */
+  tiles: TileCache;
   /** Last-drawn cursor arrow, so a cursor move repaints exactly two arrows. */
   curX: number;
   curY: number;
@@ -147,11 +142,10 @@ export interface NetslideDrawState {
 
 export function newDrawState(s: NetslideState, tileSize: number): NetslideDrawState {
   return {
-    started: false,
     w: s.w,
     h: s.h,
     tileSize,
-    visible: new Int32Array(s.w * s.h).fill(-1),
+    tiles: new TileCache(s.w * s.h),
     curX: -1,
     curY: -1,
     hintArrowX: -2,
@@ -252,8 +246,8 @@ function drawTile(
   const lit = !(tile & FLASHING)
     ? -1
     : tile & FLASHING_LEAD
-      ? COL_FLASHING_LEAD
-      : COL_FLASHING;
+      ? COL_FLASH_LEAD
+      : COL_FLASH;
   const powered = lit < 0 ? COL_POWERED : lit;
   const wireColor = tile & ACTIVE ? powered : COL_WIRE;
 
@@ -615,8 +609,7 @@ export function redraw(
   let state = current;
   let oldstate = prev;
 
-  if (!ds.started) {
-    ds.started = true;
+  if (ds.tiles.firstFrame()) {
     drawExteriorBarriers(dr, ds, state);
     drawSlideArrows(dr, ds, state);
   }
@@ -735,7 +728,9 @@ export function redraw(
         animating &&
         ((state.lastMoveCol !== -1 && Math.abs(x - state.lastMoveCol) === 1) ||
           (state.lastMoveRow !== -1 && Math.abs(y - state.lastMoveRow) === 1));
-      if (ds.visible[i] === c && !moving && !besideMoving) continue;
+      // A moving tile keys as never drawn (-1): mid-animation its drawn
+      // position does not match its value, so the frame after repaints it too.
+      if (!ds.tiles.changed(i, moving ? -1 : c) && !moving && !besideMoving) continue;
 
       const xs = y === state.lastMoveRow ? xshift : 0;
       const ys = x === state.lastMoveCol ? yshift : 0;
@@ -748,10 +743,6 @@ export function redraw(
       else if (xs > 0 && x === state.w - 1) drawTile(dr, ds, state, -1, y, c, xs, ys);
       else if (ys < 0 && y === 0) drawTile(dr, ds, state, x, state.h, c, xs, ys);
       else if (ys > 0 && y === state.h - 1) drawTile(dr, ds, state, x, -1, c, xs, ys);
-
-      // A moving tile is left marked dirty: mid-animation its drawn position
-      // doesn't match its value, so it must be repainted next frame regardless.
-      ds.visible[i] = moving ? -1 : c;
     }
   }
 

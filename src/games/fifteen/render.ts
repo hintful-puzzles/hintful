@@ -7,13 +7,8 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import {
-  cellSurface,
-  FLASH,
-  FLASH_LEAD,
-  givenSurface,
-  INK,
-} from "../../engine/color/palette.ts";
+import { cellSurface, givenSurface, INK } from "../../engine/color/palette.ts";
+import { FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
 import {
   drawRaisedTile,
   drawRecessedBorder,
@@ -24,6 +19,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -48,22 +44,19 @@ export const ANIM_TIME = 0.13;
 
 // --- color indices ---------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_TEXT = 1;
-const COL_HIGHLIGHT = 2;
-const COL_LOWLIGHT = 3;
+// The win flash (`COL_FLASH`, `COL_FLASH_LEAD`) is the face of a tile it is
+// on, inside its bevel.
+const COL_TEXT = FIRST_GAME_SLOT;
+export const COL_HIGHLIGHT = FIRST_GAME_SLOT + 1;
+export const COL_LOWLIGHT = FIRST_GAME_SLOT + 2;
 export const paletteScheme: Partial<PaletteScheme> = {
   darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
 };
 /** A tile's face: the lifted surface, so the object the player moves stands
  * off the well it slides in, in both schemes. */
-const COL_TILE = 4;
+const COL_TILE = FIRST_GAME_SLOT + 3;
 /** The well: the gap, and whatever a sliding tile uncovers. */
-const COL_WELL = 5;
-/** The face of a tile the win flash is on, inside its bevel: under the
- * highlight's body, and under its leading edge. */
-export const COL_FLASH = 6;
-export const COL_FLASH_LEAD = 7;
+const COL_WELL = FIRST_GAME_SLOT + 4;
 
 // --- coordinate helpers -----------------------------------------------
 
@@ -87,25 +80,14 @@ export function cellCenter(pos: number, ts: number): number {
 // --- drawing ----------------------------------------------------------
 
 export interface FifteenDrawState {
-  started: boolean;
-  /** Per cell: the tone of the win flash's highlight on the tile last drawn. */
-  lit: Uint8Array;
-  /** Per-cell cache of the last-drawn tile value; `-1` forces a redraw
-   * (unknown, or animating). */
-  tiles: Int32Array;
+  /** Per cell, the tile it shows (-1 while it animates), and the win flash's
+   * tone with the hint's ring on it. */
+  tiles: TileCache;
   tileSize: number;
-  /** Tile value currently highlighted as a hint, or null. */
-  hintTile: number | null;
 }
 
 export function newDrawState(state: FifteenState, tileSize: number): FifteenDrawState {
-  return {
-    started: false,
-    lit: new Uint8Array(state.n),
-    tiles: new Int32Array(state.n).fill(-1),
-    tileSize,
-    hintTile: null,
-  };
+  return { tiles: new TileCache(state.n, { words: 2 }), tileSize };
 }
 
 export function computeSize(p: FifteenParams, ts: number): Size {
@@ -115,15 +97,12 @@ export function computeSize(p: FifteenParams, ts: number): Size {
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  const out = rolePalette(background);
   out[COL_TEXT] = INK;
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
   out[COL_TILE] = givenSurface(background);
   out[COL_WELL] = cellSurface(background);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -204,10 +183,7 @@ export function redraw(
   const { w, h, n } = state;
   const hw = raisedBevelWidth(ts);
 
-  if (!ds.started) {
-    drawPlayfieldBorder(dr, w, h, ts, hw);
-    ds.started = true;
-  }
+  if (ds.tiles.firstFrame()) drawPlayfieldBorder(dr, w, h, ts, hw);
 
   const hintTile = stepMarks(activeHint).of("ring", TILE)[0] ?? null;
 
@@ -219,23 +195,31 @@ export function redraw(
       t !== 0 ? flash.win(sweepStep(i % w, Math.floor(i / w))) : WIN_NONE,
   );
 
+  // A cell whose tile differs from the previous state is animating, keyed as
+  // never drawn (-1) so it repaints every frame of the slide and the first
+  // after it; otherwise it shows its settled value. Asked once a cell, before
+  // the two passes below.
+  const animating = (i: number): boolean => !!prev && prev.tiles[i] !== state.tiles[i];
+  const miss = Array.from({ length: n }, (_, i) => {
+    const t = state.tiles[i];
+    const ringed = t !== 0 && t === hintTile ? 1 : 0;
+    const changed = ds.tiles.changed(
+      i,
+      animating(i) ? -1 : t,
+      lights[i] | (ringed << 2),
+    );
+    return changed || animating(i);
+  });
+
   // Two passes so a whole sliding line animates cleanly: pass 0 blanks
   // the cells vacated by moving tiles, pass 1 draws the moving tiles
   // interpolated toward the gap.
   for (let pass = 0; pass < 2; pass++) {
     for (let i = 0; i < n; i++) {
-      // A cell whose tile differs from the previous state is animating
-      // (-1 = "always redraw"); otherwise it shows its settled value.
-      let t = prev && prev.tiles[i] !== state.tiles[i] ? -1 : state.tiles[i];
-      const t0 = t;
+      let t = animating(i) ? -1 : state.tiles[i];
       const lit = lights[i];
 
-      if (
-        ds.lit[i] !== lit ||
-        ds.hintTile !== hintTile ||
-        ds.tiles[i] !== t ||
-        ds.tiles[i] === -1
-      ) {
+      if (miss[i]) {
         let x: number;
         let y: number;
 
@@ -268,13 +252,9 @@ export function redraw(
           y = coord(Math.floor(i / w), ts);
         }
 
-        const face = lit ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD) : COL_TILE;
+        const face = lit ? winSlot(lit) : COL_TILE;
         drawTile(dr, ts, x, y, t, face, t !== 0 && t === hintTile);
       }
-      ds.lit[i] = lit;
-      ds.tiles[i] = t0;
     }
   }
-
-  ds.hintTile = hintTile;
 }

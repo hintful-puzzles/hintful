@@ -8,13 +8,13 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
+import { givenSurface, INK } from "../../engine/color/palette.ts";
 import {
-  CURSOR,
-  FLASH,
-  FLASH_LEAD,
-  givenSurface,
-  INK,
-} from "../../engine/color/palette.ts";
+  COL_BACKGROUND,
+  COL_CURSOR,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import {
   drawRecessedBorder as drawBevel,
   drawRaisedTile,
@@ -25,6 +25,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -44,26 +45,22 @@ export const ANIM_TIME = 0.4;
 
 // --- color indices ---------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_TEXT = 1;
-const COL_HIGHLIGHT = 2;
-const COL_LOWLIGHT = 3;
+// The keyboard cursor (`COL_CURSOR`) is the arrow it is on; the win flash
+// (`COL_FLASH`, `COL_FLASH_LEAD`) the face of a tile it is on, inside its
+// bevel.
+const COL_TEXT = FIRST_GAME_SLOT;
+const COL_HIGHLIGHT = FIRST_GAME_SLOT + 1;
+const COL_LOWLIGHT = FIRST_GAME_SLOT + 2;
 export const paletteScheme: Partial<PaletteScheme> = {
   darkSwaps: [[COL_HIGHLIGHT, COL_LOWLIGHT]],
 };
 /** A tile's face: the lifted surface, so the object the player moves stands
  * off the board in both schemes. */
-const COL_TILE = 4;
+const COL_TILE = FIRST_GAME_SLOT + 3;
 /** A slide arrow's fill. The bevel's lowlight in a slot of its own, so the
  * bevel's dark-scheme swap leaves it alone and the arrows are the gray
  * Netslide's are in both schemes. */
-export const COL_ARROW = 5;
-/** The arrow the keyboard cursor is on. */
-const COL_CURSOR = 6;
-/** The face of a tile the win flash is on, inside its bevel: its body, and
- * its leading edge. */
-export const COL_FLASH = 7;
-export const COL_FLASH_LEAD = 8;
+export const COL_ARROW = FIRST_GAME_SLOT + 4;
 /** An arrow fill: the hint's ring ink, which the engine owns, so the arrow the
  * hint says to click turns blue. */
 const HINTED = "hinted";
@@ -102,12 +99,11 @@ export function cellCenter(pos: number, ts: number): number {
 // --- drawing ----------------------------------------------------------
 
 export interface SixteenDrawState {
-  started: boolean;
   w: number;
   h: number;
-  tiles: Int32Array;
-  /** The win flash's tone each cell's tile was last drawn in. */
-  lit: Uint8Array;
+  /** Per cell, the tile it shows (-1 while it animates), and the win flash's
+   * tone with the keyboard cursor's lowlight. */
+  tiles: TileCache;
   tileSize: number;
   curX: number;
   curY: number;
@@ -124,11 +120,9 @@ export interface SixteenDrawState {
 
 export function newDrawState(state: SixteenState, tileSize: number): SixteenDrawState {
   return {
-    started: false,
     w: state.w,
     h: state.h,
-    tiles: new Int32Array(state.n).fill(-1),
-    lit: new Uint8Array(state.n),
+    tiles: new TileCache(state.n, { words: 2 }),
     tileSize,
     curX: -1,
     curY: -1,
@@ -146,16 +140,12 @@ export function computeSize(p: SixteenParams, ts: number): Size {
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  const out = rolePalette(background);
   out[COL_TEXT] = INK;
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
   out[COL_TILE] = givenSurface(background);
   out[COL_ARROW] = lowlight;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -174,7 +164,7 @@ export function redraw(
   const ts = ds.tileSize;
   const hw = raisedBevelWidth(ts);
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     drawRecessedBorder(dr, state, ts, hw);
     for (let i = 0; i < state.w; i++) {
       drawArrow(dr, ts, coord(i, ts), coord(0, ts), 1, 0, COL_ARROW);
@@ -184,7 +174,6 @@ export function redraw(
       drawArrow(dr, ts, coord(state.w, ts), coord(i, ts), 0, 1, COL_ARROW);
       drawArrow(dr, ts, coord(0, ts), coord(i + 1, ts), 0, -1, COL_ARROW);
     }
-    ds.started = true;
   }
 
   // Cursor.
@@ -286,7 +275,7 @@ export function redraw(
       ds.hintUltimate ?? -1,
       hintTile === null ? -1 : state.tiles.indexOf(hintTile),
     ];
-    for (const pos of repaint) if (pos >= 0) ds.tiles[pos] = -1;
+    for (const pos of repaint) if (pos >= 0) ds.tiles.forget(pos);
     ds.hintTile = hintTile;
     ds.hintTarget = hintTarget;
     ds.hintUltimate = hintUltimate;
@@ -301,9 +290,10 @@ export function redraw(
     if (prev && prev.tiles[i] !== state.tiles[i]) t = -1;
     else t = state.tiles[i];
 
-    const t0 = t;
     const lit = flash.win(sweepStep(i % state.w, Math.floor(i / state.w)));
-    const bgcolor = lit ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD) : COL_TILE;
+    const bgcolor = lit ? winSlot(lit) : COL_TILE;
+    const cursorOn = tileCursor(i, state, curX, curY) ? 1 : 0;
+    const changed = ds.tiles.changed(i, t, lit | (cursorOn << 2));
 
     const isDraggedNow = !!(
       ui.dragging &&
@@ -325,16 +315,7 @@ export function redraw(
         : i % state.w === ds.dragIndex)
     );
 
-    if (
-      isDraggedNow ||
-      wasDraggedPrev ||
-      ds.lit[i] !== lit ||
-      ds.tiles[i] !== t ||
-      ds.tiles[i] === -1 ||
-      t === -1 ||
-      ((ds.curX !== curX || ds.curY !== curY) &&
-        (tileCursor(i, state, ds.curX, ds.curY) || tileCursor(i, state, curX, curY)))
-    ) {
+    if (changed || isDraggedNow || wasDraggedPrev || t === -1) {
       let drawX: number,
         drawY: number,
         drawX2 = -1,
@@ -428,8 +409,6 @@ export function redraw(
         drawTile(dr, ts, drawX2, drawY2, t, bgcolor, ringed);
       }
     }
-    ds.tiles[i] = t0;
-    ds.lit[i] = lit;
   }
 
   ds.curX = curX;

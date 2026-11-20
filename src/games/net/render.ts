@@ -6,26 +6,31 @@
  * The per-tile cache word packs every visible feature of a tile (barriers,
  * corners, cursor, the four wires at two bits each, the endpoint, neighbor
  * wires reaching onto our edges, the rotating flag, the locked flag) so the
- * diff key is that single `Int32` (docs/rendering.md § "The tile cache and the diff key"). The frame is drawn over a
+ * diff key is that word and the notes beside it (docs/rendering.md § "The tile cache and the diff key"). The frame is drawn over a
  * `(w+2)×(h+2)` grid — one ring wider than the board — so a barrier on the outer
  * edge has somewhere to draw its outline.
  */
 
 import { TWO } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   GRID_DARK,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   PENCIL_BODY,
   pencilColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -50,6 +55,7 @@ import {
   R,
   U,
 } from "../../engine/square-edges.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import { offset, wireDistance } from "../../engine/wires.ts";
@@ -71,31 +77,23 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 export const ROTATE_TIME = 0.13;
 
-const COL_BACKGROUND = 0; // the board around the grid
+// The keyboard cursor's ring is `COL_CURSOR`: upstream drew it in the locked
+// tint, or the board on a locked tile, a tint of the board either way, which
+// is the one thing a cursor must not be. The win flash (`COL_FLASH`,
+// `COL_FLASH_LEAD`) is on a tile's powered wires.
 /** The surface under a locked tile, lifted: the player has fixed it, as the
  * puzzle fixes a given. */
-export const COL_LOCKED = 1;
-export const COL_BORDER = 2; // the line between two tiles, and the frame
-export const COL_WIRE = 3;
-const COL_ENDPOINT = 4;
-export const COL_POWERED = 5;
-export const COL_BARRIER = 6;
-export const COL_ERR = 7;
-/** Appended past the C enum: the keyboard cursor's ring. Upstream drew it in
- * the locked tint, or the board on a locked tile — a tint of the board either
- * way, which is the one thing a cursor must not be. */
-const COL_CURSOR = 8;
+export const COL_LOCKED = FIRST_GAME_SLOT;
+export const COL_BORDER = FIRST_GAME_SLOT + 1; // the line between two tiles, and the frame
+export const COL_WIRE = FIRST_GAME_SLOT + 2;
+const COL_ENDPOINT = FIRST_GAME_SLOT + 3;
+export const COL_POWERED = FIRST_GAME_SLOT + 4;
+export const COL_BARRIER = FIRST_GAME_SLOT + 5;
 /** The player's side notes and the tile a keyboard note starts from. */
-export const COL_PENCIL = 9;
+export const COL_PENCIL = FIRST_GAME_SLOT + 6;
 /** The notes-mode indicator's pencil. */
-const COL_PENCIL_BODY = 10;
-/** A hint's outlines: what the step reasons from. */
-const COL_HINT_CELL = 11;
-const COL_CELL = 12; // the surface of a tile the player may still turn
-/** The powered wires of a tile the win flash is on. */
-export const COL_FLASH = 13;
-/** And under the flash's leading edge. */
-export const COL_FLASH_LEAD = 14;
+const COL_PENCIL_BODY = FIRST_GAME_SLOT + 7;
+const COL_CELL = FIRST_GAME_SLOT + 8; // the surface of a tile the player may still turn
 
 const INDICATOR: PencilIndicatorStyle = {
   background: COL_BACKGROUND,
@@ -104,22 +102,16 @@ const INDICATOR: PencilIndicatorStyle = {
 };
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_WIRE] = INK;
   out[COL_POWERED] = TWO[1];
   out[COL_BARRIER] = GRID_DARK;
-  out[COL_ERR] = ERROR;
   out[COL_ENDPOINT] = TWO[0];
   out[COL_BORDER] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_LOCKED] = givenSurface(defaultBackground);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_CURSOR] = CURSOR;
   out[COL_PENCIL] = pencilColor(defaultBackground);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -159,17 +151,14 @@ export interface NetDrawState extends PencilIndicatorCache {
   tileSize: number;
   w: number;
   h: number;
-  /** Last-drawn cache word per `(w+2)×(h+2)` cell (the outer ring holds barrier
-   * outlines), −1 = "repaint unconditionally". */
-  visible: Int32Array;
+  /** Per `(w+2)×(h+2)` cell (the outer ring holds barrier outlines), its
+   * cache word and, as a second word, its notes: the notes are the player's
+   * and would not fit in the first. Its first frame paints the margin, which
+   * nothing else paints. */
+  tiles: TileCache;
   /** Per-frame scratch for the target cache word. */
   toDraw: Int32Array;
-  /** The notes drawn on each cell, beside its cache word: the notes are the
-   * player's and would not fit in the word. −1 = "repaint". */
-  notesShown: Int32Array;
   notesToDraw: Int32Array;
-  /** Whether the margin has been painted: nothing else paints it. */
-  started: boolean;
 }
 
 export function newDrawState(s: NetState, tileSize: number): NetDrawState {
@@ -178,11 +167,9 @@ export function newDrawState(s: NetState, tileSize: number): NetDrawState {
     tileSize,
     w: s.w,
     h: s.h,
-    visible: new Int32Array(cells).fill(-1),
+    tiles: new TileCache(cells, { words: 2 }),
     toDraw: new Int32Array(cells),
-    notesShown: new Int32Array(cells).fill(-1),
     notesToDraw: new Int32Array(cells),
-    started: false,
     pencilModeShown: null,
   };
 }
@@ -408,7 +395,7 @@ function drawTile(
           ? COL_WIRE
           : edgetype === 2
             ? COL_POWERED
-            : COL_ERR;
+            : COL_ERROR;
       const halfwidth = pass === 0 && edgetype !== 1 ? liveRim : wireHalf;
 
       let rx: number;
@@ -465,7 +452,7 @@ function drawTile(
     wireHalf + swell,
     matrix,
   );
-  drawWires(dr, cx, cy, radius, tile, 0x8, COL_ERR, wireHalf, matrix);
+  drawWires(dr, cx, cy, radius, tile, 0x8, COL_ERROR, wireHalf, matrix);
 
   // Central box (endpoint / source): an outline pass, then the fill.
   const endtype = (tile >> TILE_ENDPOINT_SHIFT) & 3;
@@ -545,9 +532,9 @@ function drawTile(
     if (note === 0) continue;
     const col =
       notes & (1 << (MISTAKE_SIDE_SHIFT + dsh))
-        ? COL_ERR
+        ? COL_ERROR
         : notes & (1 << (HINT_OUTLINE_SIDE_SHIFT + dsh))
-          ? COL_HINT_CELL
+          ? COL_HINT_OUTLINE
           : COL_PENCIL;
     drawNote(d, note, col);
   }
@@ -569,10 +556,10 @@ function drawTile(
     dr.drawRect({ ...tileBox, w: width }, col);
     dr.drawRect({ ...tileBox, x: tileBox.x + tileBox.w - width, w: width }, col);
   };
-  if (notes & MISTAKE_TILE) band(COL_ERR);
+  if (notes & MISTAKE_TILE) band(COL_ERROR);
   else if (notes & HINT_RING_TILE)
     dr.drawRing(tileBox, NOTHING_TO_CLEAR, ringThickness);
-  else if (notes & HINT_OUTLINE_TILE) band(COL_HINT_CELL);
+  else if (notes & HINT_OUTLINE_TILE) band(COL_HINT_OUTLINE);
 
   // Barriers along grid edges: one flat fill, wider than the line between
   // tiles by `barrierOutline` on each side.
@@ -671,10 +658,9 @@ export function redraw(
   nd.fill(0);
 
   const canvas = computeSize(state, ds.tileSize);
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     dr.drawRect({ x: 0, y: 0, w: canvas.w, h: canvas.h }, COL_BACKGROUND);
     dr.drawUpdate({ x: 0, y: 0, w: canvas.w, h: canvas.h });
-    ds.started = true;
   }
 
   for (let dy = 0; dy < h; dy++) {
@@ -767,17 +753,10 @@ export function redraw(
   for (let dy = -1; dy < h + 1; dy++) {
     for (let dx = -1; dx < w + 1; dx++) {
       const i = cell(ds, dx, dy);
-      const prevWord = ds.visible[i];
       const curr = td[i];
-      if (
-        prevWord !== curr ||
-        (prevWord | curr) & TILE_ROTATING ||
-        ds.notesShown[i] !== nd[i]
-      ) {
+      const wasRotating = ds.tiles.shown(i) & TILE_ROTATING;
+      if (ds.tiles.changed(i, curr, nd[i]) || (wasRotating | curr) & TILE_ROTATING)
         drawTile(dr, ds, dx, dy, curr, nd[i], angle);
-        ds.visible[i] = curr;
-        ds.notesShown[i] = nd[i];
-      }
     }
   }
 

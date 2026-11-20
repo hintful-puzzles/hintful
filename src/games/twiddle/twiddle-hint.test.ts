@@ -5,6 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
@@ -13,7 +14,7 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { inDeepTier, seedBudget } from "../../engine/testing/slow.ts";
 import { hint } from "./hint.ts";
 import { executeMove, twiddleGame } from "./index.ts";
-import { COL_HINT_EVIDENCE, coord, PREFERRED_TILE_SIZE } from "./render.ts";
+import { coord, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   encodeDesc,
   newDesc,
@@ -152,7 +153,7 @@ describe("the frames a hint draws", () => {
     const headX = head.points.reduce((t, [x]) => t + x, 0) / head.points.length;
     expect(headX > cx).toBe(move.dir === -1);
     // Four sides round one tile.
-    expect(bands(COL_HINT_EVIDENCE)).toBe(4);
+    expect(bands(COL_HINT_OUTLINE)).toBe(4);
     expect(recording.ops).toMatchSnapshot();
   });
 });
