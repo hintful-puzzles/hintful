@@ -8,29 +8,6 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import {
-  BLACK,
-  BLUE,
-  BLUE_BOLD,
-  GRAY,
-  GREEN,
-  PINK,
-  RED,
-  RED_BOLD,
-  TEAL,
-  WHITE,
-} from "../../engine/color/colors.ts";
-import {
-  cellSurface,
-  ERROR,
-  ERROR_WASH,
-  FLASH,
-  FLASH_LEAD,
-  givenSurface,
-  HINT_OUTLINE,
-  INK,
-  surfaceGrid,
-} from "../../engine/color/palette.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { gridText } from "../../engine/grid-text.ts";
@@ -62,7 +39,7 @@ import {
   type TargetVerbs,
   verbClicks,
 } from "../../engine/target-verb.ts";
-import type { Color, GameStatus, Point } from "../../engine/types.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
 import { firstOpen } from "./generator.ts";
 import {
   MINES_RUNGS,
@@ -74,33 +51,10 @@ import {
 } from "./hint.ts";
 import {
   borderFor,
-  COL_1,
-  COL_2,
-  COL_3,
-  COL_4,
-  COL_5,
-  COL_6,
-  COL_7,
-  COL_8,
-  COL_BACKGROUND,
-  COL_BANG,
-  COL_COVERED,
-  COL_CURSOR,
-  COL_FLAG,
-  COL_FLAGBASE,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_GRID,
-  COL_HINT_EVIDENCE,
-  COL_MINE,
-  COL_MINE_GLINT,
-  COL_OPEN,
-  COL_QUERY,
-  COL_WRONGNUMBER,
+  colors,
   computeSize,
   FLASH_FRAME,
   type MinesDrawState,
-  NCOLORS,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -580,47 +534,7 @@ export const minesGame: Game<
     return dir > 0 && !a.dead && b.dead ? 3 * FLASH_FRAME : 0;
   },
 
-  colors(defaultBackground: Color): Color[] {
-    const bg = defaultBackground;
-    const ret: Color[] = new Array(NCOLORS);
-    ret[COL_BACKGROUND] = bg;
-    ret[COL_GRID] = surfaceGrid(bg);
-    ret[COL_OPEN] = cellSurface(bg);
-    // The one place the lifted surface says "covered" and not "given": nothing
-    // on this board is the puzzle's piece or the player's, and a covered
-    // square has to stand off an opened one at a glance in both schemes.
-    ret[COL_COVERED] = givenSurface(bg);
-    // Upstream's count colors, and by now most players' expectation of what a
-    // minesweeper looks like: 1 blue, 2 green, 3 red, 4 navy, 5 maroon, 6 teal.
-    // The two dark ones are why the palette has a bold step at all — a wash is a
-    // fill, and these are digits.
-    ret[COL_1] = BLUE;
-    ret[COL_2] = GREEN;
-    ret[COL_3] = RED;
-    ret[COL_4] = BLUE_BOLD;
-    ret[COL_5] = RED_BOLD;
-    ret[COL_6] = TEAL;
-    ret[COL_7] = INK;
-    ret[COL_8] = GRAY;
-    // A black mine with a white glint in either scheme: it is drawn on the
-    // error color and never on a surface.
-    ret[COL_MINE] = BLACK;
-    ret[COL_MINE_GLINT] = WHITE;
-    ret[COL_BANG] = ERROR;
-    ret[COL_FLASH] = FLASH;
-    ret[COL_FLASH_LEAD] = FLASH_LEAD;
-    // Red because a flag is yours and deliberate, not because anything is
-    // wrong — but the same red, which is what the collection has one of.
-    ret[COL_FLAG] = RED;
-    ret[COL_FLAGBASE] = INK;
-    ret[COL_QUERY] = INK;
-    ret[COL_WRONGNUMBER] = ERROR_WASH;
-    // Pink: it has to read on an opened square and a covered one alike, and
-    // the count digits have the rest spoken for.
-    ret[COL_CURSOR] = PINK;
-    ret[COL_HINT_EVIDENCE] = HINT_OUTLINE;
-    return ret;
-  },
+  colors,
   computeSize,
   newDrawState,
   redraw,

@@ -8,6 +8,7 @@
  * and the change id is a citation the gate can resolve.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -28,15 +29,7 @@ import type { Point } from "../../engine/types.ts";
 import { type Flash, NO_FLASH, ownFlash, sweepStep } from "../../engine/win-wave.ts";
 import { firstOpen, minegen } from "./generator.ts";
 import { minesGame } from "./index.ts";
-import {
-  borderFor,
-  COL_BANG,
-  COL_COVERED,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_OPEN,
-  FLASH_FRAME,
-} from "./render.ts";
+import { borderFor, COL_COVERED, COL_OPEN, FLASH_FRAME } from "./render.ts";
 import { ladderSolve } from "./solver.ts";
 import {
   COVERED,
@@ -840,7 +833,7 @@ describe("mines render", () => {
     expect(dead.dead).toBe(true);
     const lit = flashed(dead, ownFlash(FLASH_FRAME / 2));
     expect(lit.size).toBe(9);
-    for (const fill of lit.values()) expect(fill).toBe(COL_BANG);
+    for (const fill of lit.values()) expect(fill).toBe(COL_ERROR);
     // An unlit beat is the settled board, the trodden mine still red.
     expect(flashed(dead, ownFlash(FLASH_FRAME * 1.5)).size).toBe(0);
   });
@@ -888,9 +881,9 @@ describe("mines mistakes", () => {
     paint();
     expect(paint()).toEqual([]);
     const framed = paint(minesGame.findMistakes?.(wrong));
-    expect(framed.some((o) => o.op === "rect" && o.color === COL_BANG)).toBe(true);
+    expect(framed.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
     const cleared = paint();
     expect(cleared.length).toBeGreaterThan(0);
-    expect(cleared.some((o) => "color" in o && o.color === COL_BANG)).toBe(false);
+    expect(cleared.some((o) => "color" in o && o.color === COL_ERROR)).toBe(false);
   });
 });

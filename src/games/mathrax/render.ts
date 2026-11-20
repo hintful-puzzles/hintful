@@ -24,12 +24,8 @@
 import { valueBit } from "../../engine/candidate-bits.ts";
 import {
   cellSurface,
-  ERROR,
   ERROR_WASH,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -37,6 +33,13 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
@@ -67,6 +70,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
@@ -90,58 +94,43 @@ const BORDER = 1;
 
 // --- palette ---------------------------------------------------------------
 
-const COL_BACKGROUND = 0; // the board around the grid
-const COL_GRID = 1; // the line between two cells, and the frame
+// The hint's outline (`COL_HINT_OUTLINE`) replaces a cell's own border rather
+// than its background, so it is not read through the digits it surrounds.
+const COL_GRID = FIRST_GAME_SLOT; // the line between two cells, and the frame
 /** The surface of a cell the player fills. */
-const COL_CELL = 2;
+const COL_CELL = FIRST_GAME_SLOT + 1;
 /** Ink: a given digit, a clue's ring and its label. */
-const COL_BORDER = 3;
-const COL_GUESS = 4;
-export const COL_PENCIL = 5;
-export const COL_ERROR = 6;
-const COL_ERRORBG = 7;
-/** Fork addition, appended past the upstream enum: the pencil-mode indicator's
- * body. */
-const COL_PENCIL_BODY = 8;
-/** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 9;
-export const COL_FLASH_LEAD = 13;
-const COL_CURSOR = 10;
-/** The hint's outline around the cells a deduction reasons from
- * (docs/hints-marks.md § "The engine colors the marks"). It replaces a cell's
- * own border rather than its background, so it is not read through the digits
- * it surrounds. The ring round the cell it acts on is the engine's. */
-export const COL_HINT_CELL = 11;
+const COL_BORDER = FIRST_GAME_SLOT + 2;
+const COL_GUESS = FIRST_GAME_SLOT + 3;
+export const COL_PENCIL = FIRST_GAME_SLOT + 4;
+const COL_ERRORBG = FIRST_GAME_SLOT + 5;
+/** The pencil-mode indicator's body. */
+const COL_PENCIL_BODY = FIRST_GAME_SLOT + 6;
+/** The highlight: a fill *under* the digits, and green is spent on the
+ * player's own entries, so it is the Latin family's "you are here" wash (Solo,
+ * Keen, Towers) and not the cursor role. */
+const COL_HIGHLIGHT_WASH = FIRST_GAME_SLOT + 7;
 /** The lifted surface of what the puzzle fixed: the cell under a given digit,
  * and the disc of a clue. */
-const COL_GIVEN = 12;
+const COL_GIVEN = FIRST_GAME_SLOT + 8;
 
 export function colors(background: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  const out = rolePalette(background);
   out[COL_GRID] = surfaceGrid(background);
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
-  // A fill *under* the digits, and green is spent on the player's own entries,
-  // so the cursor is the Latin family's "you are here" wash (Solo, Keen, Towers).
-  out[COL_CURSOR] = highlightWash(background);
+  out[COL_HIGHLIGHT_WASH] = highlightWash(background);
   out[COL_BORDER] = INK;
   out[COL_GUESS] = playerEntryColor(background);
   out[COL_PENCIL] = pencilColor(background);
-  out[COL_ERROR] = ERROR;
   out[COL_ERRORBG] = ERROR_WASH;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  // The outline sits on a cell's own border, which is read against the board
-  // rather than through it, so it takes the palette's strong hint color.
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
 /** Highlight payload a Mathrax hint step carries (built in `index.ts`). The
  * marks (docs/hints-marks.md § "The engine colors the marks"): the clue's
- * cells outlined `COL_HINT_CELL`, the acted-on cell ringed by the engine,
+ * cells outlined `COL_HINT_OUTLINE`, the acted-on cell ringed by the engine,
  * the ruled-out candidates struck through among the pencil marks. */
 export interface MathraxHint {
   /** The cells the deduction reasons from — a clue's diagonal pair, all four
@@ -184,12 +173,11 @@ export function fromCoord(v: number, ts: number): number {
 // --- draw state ------------------------------------------------------------
 
 export interface MathraxDrawState {
-  started: boolean;
   tileSize: number;
-  /** `o²` packed last-drawn tile values (−1 = never drawn): the digit in bits
-   * 0–3, the pencil-mark bitmap (which itself starts at bit 1) in bits 4–13,
-   * and the cell + draw flags in bits 14–24. */
-  tiles: Int32Array;
+  /** What each of the `o²` cells shows: the digit in bits 0–3, the pencil-mark
+   * bitmap (which itself starts at bit 1) in bits 4–13, and the cell + draw
+   * flags in bits 14–24; and the mistake and hint overlays on it. */
+  tiles: TileCache;
   /** `o²` Check-&-Save mistake overlay. */
   wrong: OverlaySidecar;
   /** `o²` hint overlay: bit 0 = target cell, bit 1 = evidence, and the struck
@@ -204,12 +192,13 @@ export interface MathraxDrawState {
 
 export function newDrawState(state: MathraxState, tileSize: number): MathraxDrawState {
   const o = state.params.o;
+  const wrong = new OverlaySidecar(o * o);
+  const hint = new OverlaySidecar(o * o);
   return {
-    started: false,
     tileSize,
-    tiles: new Int32Array(o * o).fill(-1),
-    wrong: new OverlaySidecar(o * o),
-    hint: new OverlaySidecar(o * o),
+    tiles: new TileCache(o * o, { overlays: [wrong, hint] }),
+    wrong,
+    hint,
     marks: new HintMarks(),
     pencilModeShown: null,
   };
@@ -354,10 +343,8 @@ function drawTile(
     dr,
     cell,
     ((fs >> FD_HIGHLIGHT_SHIFT) & 7) as CellHighlight,
-    COL_CURSOR,
+    COL_HIGHLIGHT_WASH,
     fs & F_IMMUTABLE ? COL_GIVEN : COL_CELL,
-    COL_FLASH,
-    COL_FLASH_LEAD,
   );
   ds.hint.drawHatch(dr, i, cell, ts);
 
@@ -473,15 +460,12 @@ export function redraw(
 ): void {
   const ts = ds.tileSize;
   const o = state.params.o;
-  const firstFrame = !ds.started;
-
-  if (firstFrame) {
+  if (ds.tiles.firstFrame()) {
     // The rectangle the cell outlines sit on, which is the frame's own line.
     dr.drawRect(
       { x: origin(ts), y: origin(ts) - 1, w: o * ts + 1, h: o * ts + 1 },
       COL_GRID,
     );
-    ds.started = true;
   }
 
   const index = (x: number, y: number): number => y * o + x;
@@ -500,12 +484,8 @@ export function redraw(
       fs |= highlight << FD_HIGHLIGHT_SHIFT;
 
       const tile = state.grid[i] | (state.pencil[i] << 4) | (fs << 14);
-      if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
+      if (ds.tiles.changed(i, tile))
         drawTile(dr, ds, state, x, y, fs, ds.wrong.at(i), ds.hint.struck[i]);
-        ds.tiles[i] = tile;
-        ds.wrong.commit(i);
-        ds.hint.commit(i);
-      }
     }
   }
 
@@ -522,7 +502,7 @@ export function redraw(
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(ts, x, y),
     text: (x, y) => cellText(state, ts, x, y),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   });
   // A mark passes behind the clues on its cell's corners, never over their
   // labels: each marked cell draws its quarters of them again, on top.

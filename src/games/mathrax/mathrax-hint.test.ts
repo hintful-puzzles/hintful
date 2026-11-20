@@ -10,6 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { statedParts } from "../../engine/stated.ts";
@@ -27,7 +28,7 @@ import type { Point } from "../../engine/types.ts";
 import { STATED } from "../../generated/games/mathrax/mathrax.compiled.ts";
 import { newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
-import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
+import { COL_PENCIL } from "./render.ts";
 import {
   encodeParams,
   F_IMMUTABLE,
@@ -415,7 +416,7 @@ describe("mathrax hint render", () => {
     // Two **separate** outlines of four sides each, not one contour: the pair is
     // diagonal, so the two cells share no edge and joining them would outline
     // board the clue does not constrain (`hint-mark.ts`'s `outlineSides`).
-    expect(markSides(recording.ops, COL_HINT_CELL)).toHaveLength(8);
+    expect(markSides(recording.ops, COL_HINT_OUTLINE)).toHaveLength(8);
     // The struck candidate keeps its COL_PENCIL digit, crossed through in the
     // same color. A strike step rings nothing: a ring marks what a step
     // decides, and this one decides the struck note
@@ -436,7 +437,7 @@ describe("mathrax hint render", () => {
     expect(hint?.explanation).toMatch(/all four numbers around it are (even|odd)/);
     // A 2x2 block's contour is its eight outer sides — four per-cell rings would
     // be sixteen, so the count still tells the two apart.
-    expect(markSides(recording.ops, COL_HINT_CELL)).toHaveLength(8);
+    expect(markSides(recording.ops, COL_HINT_OUTLINE)).toHaveLength(8);
     // It strikes the parity it rules out, so it rings nothing.
     expect((hint?.highlights as AnyStep)?.marks.length).toBeGreaterThan(0);
     expect(ringsOf(recording.ops)).toEqual([]);

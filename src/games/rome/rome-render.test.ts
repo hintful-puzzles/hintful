@@ -5,6 +5,7 @@
  * on `Ui` state a scenario cannot set (an in-flight drag, the keyboard mode).
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { Midend } from "../../engine/midend.ts";
@@ -24,17 +25,14 @@ import { romeGame } from "./index.ts";
 import {
   BORDER,
   COL_ARROW_ENTRY,
-  COL_ARROW_ERROR,
   COL_ARROW_FIXED,
   COL_ARROW_GUESS,
   COL_ARROW_PENCIL,
   COL_BORDER,
-  COL_CURSOR,
   COL_ERRORBG,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_GOAL,
   COL_GOALBG,
+  COL_HIGHLIGHT_WASH,
   computeSize,
   newDrawState,
   origin,
@@ -193,7 +191,7 @@ describe("board contents", () => {
       dir: FM_DOWN,
     });
     const { dr } = frame(state, newUi());
-    const red = dr.ops.filter((o) => o.op === "line" && o.color === COL_ARROW_ERROR);
+    const red = dr.ops.filter((o) => o.op === "line" && o.color === COL_ERROR);
     // One arrow's worth of strokes: a shaft plus two head lines.
     expect(red).toHaveLength(3);
     expect(dr.ops.some((o) => o.op === "line" && o.color === COL_ARROW_FIXED)).toBe(
@@ -273,15 +271,18 @@ describe("cursor and drag", () => {
     }).dr;
     // The note-taking cell's pair: the wash for an arrow, the corner triangle
     // for a mark…
-    expect(place.ops.some((o) => o.op === "rect" && o.color === COL_CURSOR)).toBe(true);
+    expect(
+      place.ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT_WASH),
+    ).toBe(true);
     expect(
       pencil.ops.some(
-        (o) => o.op === "polygon" && o.fill === COL_CURSOR && o.points.length === 3,
+        (o) =>
+          o.op === "polygon" && o.fill === COL_HIGHLIGHT_WASH && o.points.length === 3,
       ),
     ).toBe(true);
-    expect(pencil.ops.some((o) => o.op === "rect" && o.color === COL_CURSOR)).toBe(
-      false,
-    );
+    expect(
+      pencil.ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT_WASH),
+    ).toBe(false);
     // …and either arm prompts for its direction with a '?' in the ink it will
     // draw in, which is what tells an armed cursor from a resting one.
     const prompt = (dr: typeof place) =>
@@ -301,7 +302,8 @@ describe("cursor and drag", () => {
     }).dr;
     expect(
       notes.ops.some(
-        (o) => o.op === "polygon" && o.fill === COL_CURSOR && o.points.length === 3,
+        (o) =>
+          o.op === "polygon" && o.fill === COL_HIGHLIGHT_WASH && o.points.length === 3,
       ),
     ).toBe(true);
   });
@@ -400,7 +402,7 @@ describe("mistake overlay", () => {
     const first = new RecordingDrawing(PALETTE);
     me.redraw(first);
     const errorOutline = (r: RecordingDrawing): boolean =>
-      r.ops.some((o) => o.op === "line" && o.color === COL_ARROW_ERROR);
+      r.ops.some((o) => o.op === "line" && o.color === COL_ERROR);
     // No rule is broken yet, so nothing is red on the first paint.
     expect(errorOutline(first)).toBe(false);
 

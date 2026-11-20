@@ -80,14 +80,20 @@
       `--update` and check the diff is only `cache`/`started` → `tiles`. In the app: a move, a hint, auto-solve to the win flash.
 
       Moved: towers, clusters, norinori, starbattle, seismic, keen,
-      samegame, sticks, lightup, singles, range, flood. A game whose board
+      samegame, sticks, lightup, singles, range, flood, mines, wordguess,
+      solo, mathrax, rome. A game whose board
       values are palette indices (SameGame's and Flood's tile colors) numbers
       them from a run after its own slots (`COL_PIECE + c - 1`,
       `COL_TILE + c`); a whole-board repaint (SameGame's margin) is
-      `forgetAll`. Seismic's `COL_CURSOR` was the note-taking wash and is
-      `COL_HIGHLIGHT_WASH`; Flood's mark on a tile stays black, its own slot.
-      Next, skeleton-shaped: mines, wordguess, solo, mathrax, rome,
-      edge-clue-latin (adjacent, unequal). Then the multi-family games, then
+      `forgetAll`. Seismic's, Mathrax's and Rome's `COL_CURSOR` was the
+      note-taking wash and is `COL_HIGHLIGHT_WASH`; Flood's mark on a tile
+      stays black and Mines' cursor pink, each its own slot with its reason
+      on the assignment (`palette-departures.test.ts` reads it there). A
+      cursor repainted by "did it move" (Mines' `curX`/`curY`) goes into the
+      key instead. Mines' `colors()` moved from `index.ts` beside its slots.
+      Next: edge-clue-latin (adjacent, unequal), which is one family of cell
+      tiles after all (its clues ride in each cell's flag word): a three-word
+      key of number, flash and cursor; flags; pencil. Then the multi-family games, then
       the neighbor-painting ones. Not tiles, keeping the explicit form:
       cube, loopy, untangle (palette roles only).
 - [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;

@@ -1072,7 +1072,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hint",
       "marks",
       "pencilModeShown",
-      "started",
       "tileSize",
       "tiles",
       "wrong",
@@ -1112,12 +1111,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "curX",
-      "curY",
-      "grid",
       "h",
-      "started",
       "tileSize",
+      "tiles",
       "w",
     ],
     "id": "mines",
@@ -1599,13 +1595,12 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "hint",
       "marks",
       "mistakes",
       "pencilModeShown",
-      "started",
       "tileSize",
+      "tiles",
     ],
     "id": "rome",
     "members": [
@@ -2037,9 +2032,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "cr",
       "hint",
       "marks",
-      "pencil",
       "pencilModeShown",
-      "started",
       "tileSize",
       "tiles",
       "wrong",

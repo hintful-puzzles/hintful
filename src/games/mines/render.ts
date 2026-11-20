@@ -12,6 +12,31 @@
  * paint-twice test in `mines.test.ts` guards that.
  */
 
+import {
+  BLACK,
+  BLUE,
+  BLUE_BOLD,
+  GRAY,
+  GREEN,
+  PINK,
+  RED,
+  RED_BOLD,
+  TEAL,
+  WHITE,
+} from "../../engine/color/colors.ts";
+import {
+  cellSurface,
+  ERROR_WASH,
+  givenSurface,
+  INK,
+  surfaceGrid,
+} from "../../engine/color/palette.ts";
+import {
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord } from "../../engine/geometry.ts";
@@ -19,7 +44,8 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
-import type { DrawTextOptions, Point } from "../../engine/types.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
+import type { Color, DrawTextOptions, Point } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import type { MinesHint } from "./hint.ts";
 import {
@@ -34,34 +60,52 @@ import {
 } from "./state.ts";
 
 // --- palette -------------------------------------------------------------
-export const COL_BACKGROUND = 0; // the board around the grid
-export const COL_GRID = 1; // the line between two squares, and the frame
-export const COL_OPEN = 2; // the surface of an opened square
-export const COL_COVERED = 3; // the surface of a covered square
-/** The eight count digits, in order from here. */
-export const COL_1 = 4;
-export const COL_2 = 5;
-export const COL_3 = 6;
-export const COL_4 = 7;
-export const COL_5 = 8;
-export const COL_6 = 9;
-export const COL_7 = 10;
-export const COL_8 = 11;
-export const COL_MINE = 12;
-export const COL_MINE_GLINT = 13;
-export const COL_BANG = 14;
-export const COL_FLAG = 15;
-export const COL_FLAGBASE = 16;
-export const COL_QUERY = 17;
-export const COL_WRONGNUMBER = 18;
-export const COL_CURSOR = 19;
-/** What a hint step reasons from: the outline on its border. */
-export const COL_HINT_EVIDENCE = 20;
-/** The ground of a square the win flash is on: its body, and its leading
- * edge. */
-export const COL_FLASH = 21;
-export const COL_FLASH_LEAD = 22;
-export const NCOLORS = 23;
+// The mine the player trod on, and every square on a death flash's lit beats,
+// is `COL_ERROR`.
+const COL_GRID = FIRST_GAME_SLOT; // the line between two squares, and the frame
+export const COL_OPEN = FIRST_GAME_SLOT + 1; // the surface of an opened square
+export const COL_COVERED = FIRST_GAME_SLOT + 2; // the surface of a covered square
+const COL_MINE = FIRST_GAME_SLOT + 3;
+const COL_MINE_GLINT = FIRST_GAME_SLOT + 4;
+const COL_FLAG = FIRST_GAME_SLOT + 5;
+const COL_FLAGBASE = FIRST_GAME_SLOT + 6;
+const COL_QUERY = FIRST_GAME_SLOT + 7;
+const COL_WRONGNUMBER = FIRST_GAME_SLOT + 8;
+/** The cursor, in its own color (see its assignment). */
+const COL_PINK_CURSOR = FIRST_GAME_SLOT + 9;
+/** The eight count digits: count `n` is `COL_COUNT + n - 1`. */
+const COL_COUNT = FIRST_GAME_SLOT + 10;
+
+export function colors(bg: Color): Color[] {
+  const out = rolePalette(bg);
+  out[COL_GRID] = surfaceGrid(bg);
+  out[COL_OPEN] = cellSurface(bg);
+  // The one place the lifted surface says "covered" and not "given": nothing
+  // on this board is the puzzle's piece or the player's, and a covered
+  // square has to stand off an opened one at a glance in both schemes.
+  out[COL_COVERED] = givenSurface(bg);
+  // A black mine with a white glint in either scheme: it is drawn on the
+  // error color and never on a surface.
+  out[COL_MINE] = BLACK;
+  out[COL_MINE_GLINT] = WHITE;
+  // Red because a flag is yours and deliberate, not because anything is
+  // wrong — but the same red, which is what the collection has one of.
+  out[COL_FLAG] = RED;
+  out[COL_FLAGBASE] = INK;
+  out[COL_QUERY] = INK;
+  out[COL_WRONGNUMBER] = ERROR_WASH;
+  // Pink, not the cursor role's green: it has to read on an opened square and
+  // a covered one alike, and the count digits have the rest spoken for.
+  out[COL_PINK_CURSOR] = PINK;
+  // Upstream's count colors, and by now most players' expectation of what a
+  // minesweeper looks like: 1 blue, 2 green, 3 red, 4 navy, 5 maroon, 6 teal.
+  // The two dark ones are why the palette has a bold step at all — a wash is a
+  // fill, and these are digits.
+  [BLUE, GREEN, RED, BLUE_BOLD, RED_BOLD, TEAL, INK, GRAY].forEach((c, k) => {
+    out[COL_COUNT + k] = c;
+  });
+  return out;
+}
 
 export const PREFERRED_TILE_SIZE = 20;
 export const FLASH_FRAME = 0.13;
@@ -76,13 +120,9 @@ export interface MinesDrawState {
   w: number;
   h: number;
   tileSize: number;
-  started: boolean;
-  /** Per-tile cache of the last-drawn value `v` with the tile's hint marks
-   * and its flash fill packed above it ({@link packTile}; -1 = never drawn). */
-  grid: Int32Array;
-  /** Last-drawn cursor cell (-1,-1 = none), for the cursor-moved repaint. */
-  curX: number;
-  curY: number;
+  /** What each square shows: its value `v` with its hint marks, its flash
+   * fill and the cursor packed above it ({@link packTile}). */
+  tiles: TileCache;
 }
 
 export function newDrawState(s: MinesState, tileSize: number): MinesDrawState {
@@ -90,10 +130,7 @@ export function newDrawState(s: MinesState, tileSize: number): MinesDrawState {
     w: s.w,
     h: s.h,
     tileSize,
-    started: false,
-    grid: new Int32Array(s.w * s.h).fill(-1),
-    curX: -1,
-    curY: -1,
+    tiles: new TileCache(s.w * s.h),
   };
 }
 
@@ -145,9 +182,10 @@ const MARK_STRIPES = 4;
 const MARK_MISTAKE = 8;
 
 /** The draw cache's key: the tile's value `v` (which reaches 66, and -24 when
- * pressed) with its hint marks above it, and its flash fill above those. */
-function packTile(v: number, marks: number, wash: number): number {
-  return (v + 128) | (marks << 8) | ((wash - NO_WASH) << 12);
+ * pressed) with its hint marks above it, its flash fill (a palette slot) above
+ * those, and the cursor at the top. */
+function packTile(v: number, marks: number, wash: number, cursor: boolean): number {
+  return (v + 128) | (marks << 8) | ((wash - NO_WASH) << 12) | (cursor ? 1 << 24 : 0);
 }
 
 /** Stripes across the tile's face, under its glyph. */
@@ -195,8 +233,8 @@ function drawBand(
       ? { enclose: [textBox(g.origin, g.options, g.text)], avoid: [] }
       : NOTHING_TO_CLEAR;
     dr.drawRing(band.box, clear, band.inner);
-  } else if (marks & MARK_OUTLINE) drawMarkSides(dr, band, MARK_ALL, COL_HINT_EVIDENCE);
-  else if (marks & MARK_MISTAKE) drawMarkSides(dr, band, MARK_ALL, COL_BANG);
+  } else if (marks & MARK_OUTLINE) drawMarkSides(dr, band, MARK_ALL, COL_HINT_OUTLINE);
+  else if (marks & MARK_MISTAKE) drawMarkSides(dr, band, MARK_ALL, COL_ERROR);
 }
 
 function drawTile(
@@ -252,13 +290,13 @@ function drawTile(
     // mine the player trod on keeps its red through a flash.
     const tinted = (v & 32) !== 0;
     v &= ~32;
-    if (v === KILLED) dr.drawRect(face(ts, x, y), COL_BANG);
+    if (v === KILLED) dr.drawRect(face(ts, x, y), COL_ERROR);
     else fill(tinted ? COL_WRONGNUMBER : COL_OPEN);
     drawStripes(dr, ts, x, y, marks);
 
     const g = glyph(ts, x, y, v);
     if (g) {
-      dr.drawText(g.origin, g.options, COL_1 - 1 + v, g.text);
+      dr.drawText(g.origin, g.options, COL_COUNT - 1 + v, g.text);
     } else if (v === KILLED) {
       const cx = x + Math.floor(ts / 2);
       const cy = y + Math.floor(ts / 2);
@@ -302,7 +340,7 @@ function drawTile(
       x + Math.floor(ts / 2),
       y + Math.floor(ts / 2),
       Math.floor(ts / 2) - 2,
-      COL_CURSOR,
+      COL_PINK_CURSOR,
       Math.max(2, ts >> 4),
     );
   drawBand(dr, ts, x, y, v, marks);
@@ -340,16 +378,14 @@ export function redraw(
   // On a death flash's lit beats every square takes the error color.
   const dead = flash.time > 0 && Math.floor(flash.time / FLASH_FRAME) % 2 === 0;
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The frame, no heavier than a grid line: each square draws the line along
     // its own top and left, and this closes the right and the bottom.
     drawRectOutline(dr, cx0(0), cx0(0), s.w * ts + 1, s.h * ts + 1, COL_GRID);
-    ds.started = true;
   }
 
   const cursorX = ui.cursor.visible ? ui.cursor.x : -1;
   const cursorY = ui.cursor.visible ? ui.cursor.y : -1;
-  const cmoved = cursorX !== ds.curX || cursorY !== ds.curY;
 
   for (let y = 0; y < ds.h; y++) {
     for (let x = 0; x < ds.w; x++) {
@@ -369,10 +405,6 @@ export function redraw(
         v -= 20;
       }
 
-      const cc =
-        cmoved &&
-        ((x === cursorX && y === cursorY) || (x === ds.curX && y === ds.curY));
-
       const key = `${x},${y}`;
       const marks =
         (ring.has(key) ? MARK_RING : 0) |
@@ -380,27 +412,10 @@ export function redraw(
         (stripes.has(key) ? MARK_STRIPES : 0) |
         (wrong.has(key) ? MARK_MISTAKE : 0);
       const tone = flash.win(sweepStep(x, y));
-      const wash = dead
-        ? COL_BANG
-        : tone
-          ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-          : NO_WASH;
-      const packed = packTile(v, marks, wash);
-      if (ds.grid[y * ds.w + x] !== packed || cc) {
-        drawTile(
-          dr,
-          ts,
-          cx0(x),
-          cx0(y),
-          v,
-          wash,
-          x === cursorX && y === cursorY,
-          marks,
-        );
-        ds.grid[y * ds.w + x] = packed;
-      }
+      const wash = dead ? COL_ERROR : tone ? winSlot(tone) : NO_WASH;
+      const cursor = x === cursorX && y === cursorY;
+      if (ds.tiles.changed(y * ds.w + x, packTile(v, marks, wash, cursor)))
+        drawTile(dr, ts, cx0(x), cx0(y), v, wash, cursor, marks);
     }
   }
-  ds.curX = cursorX;
-  ds.curY = cursorY;
 }

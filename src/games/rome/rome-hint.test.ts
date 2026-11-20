@@ -15,6 +15,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { CandidatePlanPrefs } from "../../engine/candidate-hint.ts";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -28,7 +29,7 @@ import {
 import { newRomeDesc } from "./generator.ts";
 import { buildSteps, say } from "./hint.ts";
 import { romeGame } from "./index.ts";
-import { COL_ARROW_PENCIL, COL_HINT_CELL } from "./render.ts";
+import { COL_ARROW_PENCIL } from "./render.ts";
 import { parseDesc, romeSolve } from "./solver.ts";
 import {
   boardFromClues,
@@ -430,7 +431,7 @@ describe("rome hint render", () => {
     expect(area.length).toBeGreaterThan(1);
     const hatches = opsOfKind(recording.ops, "hatch");
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(area.length);
-    expect(markSides(recording.ops, COL_HINT_CELL)).toHaveLength(4);
+    expect(markSides(recording.ops, COL_HINT_OUTLINE)).toHaveLength(4);
     // A strike step rings nothing: a ring marks what a step decides, and this
     // one decides the struck marks (`point-a-cell-reference-at-its-cell`, D1).
     expect(ringsOf(recording.ops)).toEqual([]);
@@ -455,7 +456,7 @@ describe("rome hint render", () => {
     expect(area.length).toBeGreaterThanOrEqual(2);
     expect(at(area)).toEqual(expect.arrayContaining(at(targets)));
     expect(
-      recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT_CELL),
+      recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT_OUTLINE),
     ).toEqual([]);
     // The struck square is shown by its struck mark, not a ring.
     expect(ringsOf(recording.ops)).toEqual([]);

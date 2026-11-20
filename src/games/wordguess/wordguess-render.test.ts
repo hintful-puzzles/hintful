@@ -3,6 +3,7 @@
  * frame.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
@@ -10,7 +11,6 @@ import { wordguessGame } from "./index.ts";
 import {
   COL_ELSEWHERE,
   COL_IN_PLACE,
-  COL_WRONG,
   redraw,
   type WordguessDrawState,
 } from "./render.ts";
@@ -56,8 +56,8 @@ describe("Wordguess redraw", () => {
     ui.entries.splice(0, 5, ...valuesOf("crnae"));
     paint();
     ui.refused = true;
-    expect(paint().some((o) => o.op === "rect" && o.color === COL_WRONG)).toBe(true);
+    expect(paint().some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
     ui.refused = false;
-    expect(paint().some((o) => o.op === "rect" && o.color === COL_WRONG)).toBe(false);
+    expect(paint().some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(false);
   });
 });

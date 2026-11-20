@@ -33,20 +33,23 @@ import { valueBit } from "../../engine/candidate-bits.ts";
 import { BLUE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
-  ERROR,
   ERROR_WASH,
-  FLASH,
-  FLASH_LEAD,
   GOAL,
   GOAL_WASH,
   givenSurface,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   pencilColor,
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectOutline, drawStrike } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
@@ -72,6 +75,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { RomeHint } from "./hint.ts";
@@ -125,53 +129,41 @@ const SIDE_SIZE = 0.6;
 
 // --- palette ----------------------------------------------------------------
 
-const COL_BACKGROUND = 0; // the board around the grid
+// An arrow in error is `COL_ERROR`.
 /** The surface of a square the player fills. */
-const COL_CELL = 1;
+const COL_CELL = FIRST_GAME_SLOT;
 /** The lifted surface under an arrow the puzzle fixed, and under the goal. */
-const COL_GIVEN = 2;
+const COL_GIVEN = FIRST_GAME_SLOT + 1;
 /** A region's outline, and the frame, which is the outer regions' outline. */
-export const COL_BORDER = 3;
-export const COL_ARROW_FIXED = 4;
-export const COL_ARROW_GUESS = 5;
-export const COL_ARROW_ERROR = 6;
-export const COL_ARROW_PENCIL = 7;
-export const COL_ARROW_ENTRY = 8;
-export const COL_ERRORBG = 9;
-export const COL_GOALBG = 10;
-export const COL_GOAL = 11;
-/** The area a hint reasons from, outlined (fork addition). */
-export const COL_HINT_CELL = 12;
-/** The selected square's wash, and its notes triangle. */
-export const COL_CURSOR = 13;
+export const COL_BORDER = FIRST_GAME_SLOT + 2;
+export const COL_ARROW_FIXED = FIRST_GAME_SLOT + 3;
+export const COL_ARROW_GUESS = FIRST_GAME_SLOT + 4;
+export const COL_ARROW_PENCIL = FIRST_GAME_SLOT + 5;
+export const COL_ARROW_ENTRY = FIRST_GAME_SLOT + 6;
+export const COL_ERRORBG = FIRST_GAME_SLOT + 7;
+export const COL_GOALBG = FIRST_GAME_SLOT + 8;
+export const COL_GOAL = FIRST_GAME_SLOT + 9;
+/** The selected square's wash, and its notes triangle: a fill under the arrow
+ * and its marks, the note-taking cell's "you are here" wash, which every game
+ * in that mechanic shares, and not the cursor role's green mark. */
+export const COL_HIGHLIGHT_WASH = FIRST_GAME_SLOT + 10;
 /** The thin line between two squares of one region. */
-const COL_GRID = 14;
-/** The ground of a square the win flash is on: its body, and its leading
- * edge. */
-export const COL_FLASH = 15;
-export const COL_FLASH_LEAD = 16;
+const COL_GRID = FIRST_GAME_SLOT + 11;
 
 export function colors(background: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  const out = rolePalette(background);
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
   out[COL_GRID] = surfaceGrid(background);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_BORDER] = INK;
   out[COL_ARROW_FIXED] = INK;
   out[COL_ARROW_GUESS] = playerEntryColor(background);
-  out[COL_ARROW_ERROR] = ERROR;
   out[COL_ARROW_PENCIL] = pencilColor(background);
   out[COL_ARROW_ENTRY] = BLUE;
   out[COL_ERRORBG] = ERROR_WASH;
   out[COL_GOALBG] = GOAL_WASH;
   out[COL_GOAL] = GOAL;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
-  // A fill under the arrow and its marks: the note-taking cell's "you are
-  // here" wash, which every game in that mechanic shares, not the green mark.
-  out[COL_CURSOR] = highlightWash(background);
+  out[COL_HIGHLIGHT_WASH] = highlightWash(background);
   return out;
 }
 
@@ -196,10 +188,10 @@ export function computeSize(p: RomeParams, ts: number): Size {
 const HB_MISTAKE = 1;
 
 export interface RomeDrawState {
-  started: boolean;
   tileSize: number;
-  /** Packed `(effective cell, effective marks, highlight)` per square. */
-  cache: Int32Array;
+  /** Packed `(effective cell, effective marks, highlight)` per square, and
+   * the mistake and hint overlays on it. */
+  tiles: TileCache;
   mistakes: OverlaySidecar;
   /** Hint overlay (fork addition): bit 0 = the square acted on, bit 1 =
    * evidence, and in its `struck` lane the arrow marks this firing rules out
@@ -213,12 +205,13 @@ export interface RomeDrawState {
 
 export function newDrawState(state: RomeState, tileSize: number): RomeDrawState {
   const s = state.w * state.h;
+  const mistakes = new OverlaySidecar(s);
+  const hint = new OverlaySidecar(s);
   return {
-    started: false,
     tileSize,
-    cache: new Int32Array(s).fill(-1),
-    mistakes: new OverlaySidecar(s),
-    hint: new OverlaySidecar(s),
+    tiles: new TileCache(s, { overlays: [mistakes, hint] }),
+    mistakes,
+    hint,
     marks: new HintMarks(),
     pencilModeShown: null,
   };
@@ -336,7 +329,7 @@ function drawArrow(
         : data & FM_FIXED
           ? COL_ARROW_FIXED
           : data & FE_DOUBLE
-            ? COL_ARROW_ERROR
+            ? COL_ERROR
             : COL_ARROW_GUESS;
 
   if (data & (FM_UP | FM_DOWN)) line(dr, thick, tx, ty - size, tx, ty + size, color);
@@ -382,7 +375,7 @@ export function redraw(
   // alone, as upstream does through a local copy.
   const cursorShown = ui.cursor.visible && !flash.winning;
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The grid: every square's own rect is inset into this, so what survives
     // is the outline.
     dr.drawRect(
@@ -394,7 +387,6 @@ export function redraw(
       },
       COL_BORDER,
     );
-    ds.started = true;
   }
 
   ds.mistakes.clear();
@@ -441,11 +433,7 @@ export function redraw(
         ((p & FD_ENTRY ? 1 : 0) << 19) |
         (highlight << 20) |
         ((armed ? 1 : 0) << 24);
-      if (ds.cache[i1] === key && !ds.mistakes.stale(i1) && !ds.hint.stale(i1))
-        continue;
-      ds.cache[i1] = key;
-      ds.mistakes.commit(i1);
-      ds.hint.commit(i1);
+      if (!ds.tiles.changed(i1, key)) continue;
 
       let cx = ox + x * ts;
       let cy = ox + y * ts;
@@ -496,10 +484,8 @@ export function redraw(
         dr,
         { x: cx, y: cy, w: cw, h: ch },
         highlight,
-        COL_CURSOR,
+        COL_HIGHLIGHT_WASH,
         color,
-        COL_FLASH,
-        COL_FLASH_LEAD,
       );
       ds.hint.drawHatch(dr, i1, { x: cx, y: cy, w: cw, h: ch }, ts);
 
@@ -589,7 +575,7 @@ export function redraw(
           ox + y * ts + inset,
           ts - 1 - 2 * inset,
           ts - 1 - 2 * inset,
-          COL_ARROW_ERROR,
+          COL_ERROR,
         );
       }
     }
@@ -608,7 +594,7 @@ export function redraw(
   ds.marks.paint(dr, targets, evidence, {
     band: (bx, by) => markBand(ds, bx, by),
     text: (bx, by) => squareText(ts, armedAt, bx, by),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   });
 
   // The pencil-mode indicator (fork addition), in the engine's corner. A sticky

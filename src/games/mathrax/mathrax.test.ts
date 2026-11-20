@@ -5,6 +5,7 @@
  * (including notes), the keypad, and the render frames.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -42,14 +43,7 @@ import {
 import cReference from "./__fixtures__/mathrax-c-reference.json" with { type: "json" };
 import { mathraxCandidateClue, newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
-import {
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  computeSize,
-  origin,
-  PREFERRED_TILE_SIZE,
-} from "./render.ts";
+import { computeSize, origin, PREFERRED_TILE_SIZE } from "./render.ts";
 import { mathraxSolve, SOLVE_STUCK, SOLVE_UNIQUE } from "./solver.ts";
 import {
   bitOf,
