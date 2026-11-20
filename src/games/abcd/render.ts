@@ -21,11 +21,7 @@ import { valueBit } from "../../engine/candidate-bits.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   GRID_MID,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -34,6 +30,13 @@ import {
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { abcdBorderLetter } from "../../engine/color/palette-games.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as geometryFromCoord } from "../../engine/geometry.ts";
@@ -65,6 +68,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { AbcdHint } from "./hint.ts";
@@ -82,54 +86,39 @@ import {
 
 export const PREFERRED_TILE_SIZE = 36;
 
-// --- palette (index-for-index with the upstream COL_* enum) ----------------
+// --- palette ------------------------------------------------------------------
 
-const COL_OUTERBG = 0;
-const COL_INNERBG = 1;
-const COL_GRID = 2;
-const COL_BORDERLETTER = 3;
-const COL_TEXT = 4;
-const COL_GUESS = 5;
-export const COL_ERROR = 6;
-const COL_PENCIL = 7;
-/** The ground of a cell the win flash is on: its body, and (`COL_FLASH_LEAD`)
- * its leading edge. */
-export const COL_FLASH = 8;
+const COL_INNERBG = FIRST_GAME_SLOT;
+const COL_GRID = FIRST_GAME_SLOT + 1;
+const COL_BORDERLETTER = FIRST_GAME_SLOT + 2;
+const COL_TEXT = FIRST_GAME_SLOT + 3;
+const COL_GUESS = FIRST_GAME_SLOT + 4;
+const COL_PENCIL = FIRST_GAME_SLOT + 5;
 /** The line between two cells, and the frame. The diagonal-mode corner crosses
  * are a rule and stay `COL_GRID`. */
-const COL_LINE = 9;
-// Fork addition, appended past the upstream enum: the yellow body of the shared
-// pencil-mode indicator glyph.
-export const COL_PENCIL_BODY = 10;
+const COL_LINE = FIRST_GAME_SLOT + 6;
+/** The yellow body of the shared pencil-mode indicator glyph. */
+export const COL_PENCIL_BODY = FIRST_GAME_SLOT + 7;
 /** The highlight's wash, in both its full-cell and its corner form. Upstream
  * used mkhighlight's near-white, which the dark-mode pass inverts to
  * near-black. */
-export const COL_CURSOR = 11;
-/** The hint's evidence color: the outline of the squares a reason rests on,
- * and the clue it reads. */
-export const COL_HINT_CELL = 12;
-const COL_CELL = 13; // the surface of a cell the player fills
-export const COL_FLASH_LEAD = 14;
+export const COL_HIGHLIGHT_WASH = FIRST_GAME_SLOT + 8;
+const COL_CELL = FIRST_GAME_SLOT + 9; // the surface of a cell the player fills
 
 export function colors(defaultBackground: Color): Color[] {
   const outer = defaultBackground;
   const { background: inner } = mkhighlight(defaultBackground);
-  const out: Color[] = [];
-  out[COL_OUTERBG] = outer;
+  const out = rolePalette(outer);
   out[COL_INNERBG] = inner;
   out[COL_GRID] = GRID_MID;
   out[COL_BORDERLETTER] = abcdBorderLetter(outer);
   out[COL_TEXT] = INK;
   out[COL_GUESS] = playerEntryColor(inner);
-  out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(inner);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   // A fill under the letter and its notes: the note-taking cell's "you are
   // here" wash, which every game in that mechanic shares, not the green mark.
-  out[COL_CURSOR] = highlightWash(inner);
-  out[COL_HINT_CELL] = HINT_OUTLINE;
+  out[COL_HIGHLIGHT_WASH] = highlightWash(inner);
   out[COL_CELL] = cellSurface(outer);
   out[COL_LINE] = surfaceGrid(outer);
   return out;
@@ -166,13 +155,12 @@ const DF_ERR = 1 << 7; // this letter breaks an adjacency rule
 const K_PENCIL = 8; // bits 8+: the n-bit pencil-mark mask
 
 export interface AbcdDrawState {
-  started: boolean;
   tileSize: number;
-  /** `w·h` last-drawn packed tile values (-1 = never drawn). */
-  tiles: Int32Array;
-  /** `(w+h)·n` last-drawn clue looks (-1 = never drawn): {@link CLUE_ERR},
-   * {@link CLUE_HATCHED}, {@link CLUE_READ}. */
-  clueLook: Int8Array;
+  /** The `w·h` cells' packed values, with the mistake and hint overlays. */
+  tiles: TileCache;
+  /** The `(w+h)·n` clue slots' looks: {@link CLUE_ERR}, {@link CLUE_HATCHED},
+   * {@link CLUE_READ}. */
+  clues: TileCache;
   /** Mistake-overlay sidecar (fork addition) — keeps Check & Save in the diff key. */
   wrong: OverlaySidecar;
   /** The displayed hint: target and evidence bits, the hatch, and each struck
@@ -193,13 +181,14 @@ const CLUE_READ = 4;
 
 export function newDrawState(state: AbcdState, tileSize: number): AbcdDrawState {
   const { w, h, n } = state.params;
+  const wrong = new OverlaySidecar(w * h);
+  const hint = new OverlaySidecar(w * h);
   return {
-    started: false,
     tileSize,
-    tiles: new Int32Array(w * h).fill(-1),
-    clueLook: new Int8Array((w + h) * n).fill(-1),
-    wrong: new OverlaySidecar(w * h),
-    hint: new OverlaySidecar(w * h),
+    tiles: new TileCache(w * h, { overlays: [wrong, hint] }),
+    clues: new TileCache((w + h) * n),
+    wrong,
+    hint,
     marks: new HintMarks(),
     pencilModeShown: null,
   };
@@ -401,10 +390,8 @@ function drawTile(
     dr,
     box,
     ((fs >> K_HIGHLIGHT) & 7) as CellHighlight,
-    COL_CURSOR,
+    COL_HIGHLIGHT_WASH,
     COL_CELL,
-    COL_FLASH,
-    COL_FLASH_LEAD,
   );
   ds.hint.drawHatch(dr, i, box, ts);
 
@@ -498,7 +485,7 @@ function drawTile(
 // --- pencil-mode indicator -------------------------------------------------
 
 const PENCIL_STYLE: PencilIndicatorStyle = {
-  background: COL_OUTERBG,
+  background: COL_BACKGROUND,
   body: COL_PENCIL_BODY,
   ink: COL_GRID,
 };
@@ -523,10 +510,7 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h, n } = state.params;
 
-  if (!ds.started) {
-    drawBorderLetters(dr, ts, n);
-    ds.started = true;
-  }
+  if (ds.tiles.firstFrame()) drawBorderLetters(dr, ts, n);
 
   const index = (x: number, y: number): number => y * w + x;
   ds.wrong.packCells(mistakes ?? null, index);
@@ -556,22 +540,25 @@ export function redraw(
           (clueErr[pos] ? CLUE_ERR : 0) |
           (hatched ? CLUE_HATCHED : 0) |
           (pos === read ? CLUE_READ : 0);
-        if (ds.clueLook[pos] === look) continue;
+        if (!ds.clues.changed(pos, look)) continue;
         const oo = outerCoord(i, ts);
         const oi = innerCoord(a, ts, n);
         const ox = horizontal ? oo : oi;
         const oy = horizontal ? oi : oo;
         const slot = { x: ox, y: oy, w: ts - 1, h: ts - 1 };
-        dr.drawRect(slot, COL_OUTERBG);
+        dr.drawRect(slot, COL_BACKGROUND);
         if (look & CLUE_HATCHED) dr.drawHatch(slot, hatchPeriod(ts));
         const clue = state.numbers[pos];
         if (clue !== NO_NUMBER) {
           const color =
-            look & CLUE_ERR ? COL_ERROR : look & CLUE_READ ? COL_HINT_CELL : COL_TEXT;
+            look & CLUE_ERR
+              ? COL_ERROR
+              : look & CLUE_READ
+                ? COL_HINT_OUTLINE
+                : COL_TEXT;
           drawTileText(dr, ox, oy, ts, color, String(clue));
         }
         dr.drawUpdate(slot);
-        ds.clueLook[pos] = look;
       }
     }
   }
@@ -592,12 +579,7 @@ export function redraw(
       const pencilMask = letter === EMPTY ? state.pencil[i] : 0;
       const tile = (letter << K_LETTER) | fs | (pencilMask << K_PENCIL);
 
-      if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
-        drawTile(dr, ds, state, x, y, fs, ds.wrong.at(i));
-        ds.tiles[i] = tile;
-        ds.wrong.commit(i);
-        ds.hint.commit(i);
-      }
+      if (ds.tiles.changed(i, tile)) drawTile(dr, ds, state, x, y, fs, ds.wrong.at(i));
     }
   }
 
@@ -612,7 +594,7 @@ export function redraw(
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(x, y, ts, n),
     text: (x, y) => cellText(state, ts, x, y),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   });
 
   // Pencil-mode indicator (fork addition): the sticky-pencil "mode on" glyph.

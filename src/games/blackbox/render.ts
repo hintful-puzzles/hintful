@@ -1,6 +1,6 @@
 /**
  * Black Box — palette, geometry, and the imperative `redraw`, over a
- * per-tile cache (`ds.grid` mirrors each tile's displayed value, cursor and
+ * per-tile cache (`ds.tiles` keys each tile on its displayed value, cursor and
  * flash flags included). A reveal is the win, and the win flash sweeps the
  * squares of the box.
  *
@@ -13,15 +13,18 @@
 import { GREEN, RED, TWO } from "../../engine/color/colors.ts";
 import {
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   RULED_OUT,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import {
   drawRectCorners,
   drawRectOutline,
@@ -32,6 +35,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, drawRuledOutCross, TWO_SHAPES } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { BUTTON, LASER } from "./hint-marks.ts";
@@ -56,25 +60,18 @@ import {
 
 // --- color indices -------------------------------------------------------
 
-const COL_BACKGROUND = 0; // the board, and a laser square not fired yet
-const COL_GRID = 1; // the line between two squares
-export const COL_CELL = 2; // the surface of a square of the box
+const COL_GRID = FIRST_GAME_SLOT; // the line between two squares
+export const COL_CELL = FIRST_GAME_SLOT + 1; // the surface of a square of the box
 /** The surface of what is settled: a square marked as known, a fired laser
  * square, and every square of a revealed box. */
-export const COL_SETTLED = 3;
-export const COL_KNOWN = 4; // the cross in a square marked as known that has no ball
-const COL_TEXT = 5;
-const COL_FLASHTEXT = 6;
-export const COL_BALL = 7;
-export const COL_WRONG = 8;
-export const COL_BUTTON = 9;
-const COL_CURSOR = 10;
-export const COL_HINT_EVIDENCE = 11;
-/** The ground of a square of the box the win flash is on: its body, and its
- * leading edge. */
-export const COL_WIN = 12;
-export const COL_WIN_LEAD = 13;
-const NCOLORS = 14;
+export const COL_SETTLED = FIRST_GAME_SLOT + 2;
+export const COL_KNOWN = FIRST_GAME_SLOT + 3; // the cross in a square marked as known that has no ball
+const COL_TEXT = FIRST_GAME_SLOT + 4;
+const COL_FLASHTEXT = FIRST_GAME_SLOT + 5;
+export const COL_BALL = FIRST_GAME_SLOT + 6;
+export const COL_BUTTON = FIRST_GAME_SLOT + 7;
+/** The keyboard cursor, in its own color (see its assignment). */
+const COL_RED_CURSOR = FIRST_GAME_SLOT + 8;
 
 /** A ball is the pair's disc, in a color no mark drawn round it has spent. */
 const PAIR_DISC = 1;
@@ -100,9 +97,10 @@ export interface BlackboxDrawState {
   ballRadius: number;
   ringRadius: number;
   w: number;
-  grid: Int32Array;
-  started: boolean;
-  reveal: boolean;
+  /** Per square of the grid, the box's and the laser ring's alike: its
+   * value with the cursor, mark and flash flags, and whether the box is
+   * revealed. */
+  tiles: TileCache;
   flashLaserno: number;
 }
 
@@ -112,9 +110,7 @@ export function newDrawState(s: BlackboxState, tileSize: number): BlackboxDrawSt
     ballRadius: Math.floor((tileSize - 1) / 2),
     ringRadius: Math.floor((3 * tileSize) / 8),
     w: s.w,
-    grid: new Int32Array((s.w + 2) * (s.h + 2)),
-    started: false,
-    reveal: false,
+    tiles: new TileCache((s.w + 2) * (s.h + 2), { words: 2 }),
     flashLaserno: LASER_EMPTY,
   };
 }
@@ -136,8 +132,7 @@ export function computeSize(p: BlackboxParams, tileSize: number): Size {
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
-  const ret: Color[] = new Array(NCOLORS);
-  ret[COL_BACKGROUND] = bg;
+  const ret = rolePalette(bg);
   ret[COL_GRID] = surfaceGrid(bg);
   ret[COL_CELL] = cellSurface(bg);
   // The lifted surface is the puzzle's word here as it is under a given: a
@@ -145,17 +140,13 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_SETTLED] = givenSurface(bg);
   ret[COL_KNOWN] = RULED_OUT;
   ret[COL_BALL] = TWO[PAIR_DISC];
-  ret[COL_WRONG] = ERROR;
   ret[COL_BUTTON] = GREEN;
   // Not `CURSOR`: green is spent on the reveal button and the fired laser's
   // text, and the cursor rings both.
-  ret[COL_CURSOR] = RED;
+  ret[COL_RED_CURSOR] = RED;
   ret[COL_TEXT] = INK;
   // The laser you just fired, lit up for a beat — not the solved flash.
   ret[COL_FLASHTEXT] = GREEN;
-  ret[COL_HINT_EVIDENCE] = HINT_OUTLINE;
-  ret[COL_WIN] = FLASH;
-  ret[COL_WIN_LEAD] = FLASH_LEAD;
   return ret;
 }
 
@@ -175,10 +166,10 @@ function drawHintMark(
   const ts = ds.tileSize;
   const thick = markThickness(ts);
   if (flags & TILE_OUTLINE)
-    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_HINT_EVIDENCE);
+    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_HINT_OUTLINE);
   if (flags & TILE_RING) dr.drawRing(face(ds, dx, dy), clear, thick);
   if (flags & MISTAKE)
-    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_WRONG);
+    drawThickRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, thick, COL_ERROR);
 }
 
 /** Which tiles the displayed step's words ring or outline, by grid index. */
@@ -241,7 +232,14 @@ function drawCursor(
 ): void {
   const ts = ds.tileSize;
   const half = Math.floor(ts / 2);
-  drawRectCorners(dr, dx + half, dy + half, half - 3, COL_CURSOR, Math.max(2, ts >> 4));
+  drawRectCorners(
+    dr,
+    dx + half,
+    dy + half,
+    half - 3,
+    COL_RED_CURSOR,
+    Math.max(2, ts >> 4),
+  );
 }
 
 // --- arena tile -------------------------------------------------------
@@ -253,21 +251,19 @@ function drawArenaTile(
   ui: BlackboxUi,
   ax: number,
   ay: number,
-  force: boolean,
   marks: number,
 ): void {
   const ts = ds.tileSize;
   const gx = ax + 1;
   const gy = ay + 1;
   let gsTile = gs.grid[gridIdx(gs.w, gx, gy)] | marks;
-  const dsTile = ds.grid[gridIdx(ds.w, gx, gy)];
   const dx = todraw(ds, gx);
   const dy = todraw(ds, gy);
 
   if (ui.cursor.visible && ui.cursor.x === gx && ui.cursor.y === gy)
     gsTile |= FLAG_CURSOR;
 
-  if (gsTile !== dsTile || gs.reveal !== ds.reveal || force) {
+  if (ds.tiles.changed(gridIdx(ds.w, gx, gy), gsTile, gs.reveal ? 1 : 0)) {
     const known = (gsTile & BALL_LOCK) !== 0;
     const tone = ((gsTile >> K_LIT) & 3) as WinTone;
     dr.clip(rect(dx, dy, ts + 1, ts + 1));
@@ -276,11 +272,7 @@ function drawArenaTile(
       ds,
       dx,
       dy,
-      tone
-        ? winSlot(tone, COL_WIN, COL_WIN_LEAD)
-        : gs.reveal || known
-          ? COL_SETTLED
-          : COL_CELL,
+      tone ? winSlot(tone) : gs.reveal || known ? COL_SETTLED : COL_CELL,
     );
 
     // A reveal shows guesses that are the real balls, so only guesses are
@@ -295,7 +287,6 @@ function drawArenaTile(
     dr.unclip();
     dr.drawUpdate(rect(dx, dy, ts + 1, ts + 1));
   }
-  ds.grid[gridIdx(ds.w, gx, gy)] = gsTile;
 }
 
 // --- laser (firing-range) tile ----------------------------------------
@@ -320,7 +311,6 @@ function drawLaserTile(
   ds: BlackboxDrawState,
   ui: BlackboxUi,
   lno: number,
-  force: boolean,
   hint: number,
 ): void {
   const ts = ds.tileSize;
@@ -328,7 +318,6 @@ function drawLaserTile(
   if (!rc) return;
   const { x: gx, y: gy } = rc;
   let gsTile = gs.grid[gridIdx(gs.w, gx, gy)];
-  const dsTile = ds.grid[gridIdx(ds.w, gx, gy)];
   const dx = todraw(ds, gx);
   const dy = todraw(ds, gy);
 
@@ -351,7 +340,7 @@ function drawLaserTile(
   if (ui.cursor.visible && ui.cursor.x === gx && ui.cursor.y === gy)
     gsTile |= FLAG_CURSOR;
 
-  if (gsTile !== dsTile || force) {
+  if (ds.tiles.changed(gridIdx(ds.w, gx, gy), gsTile)) {
     let clear = NOTHING_TO_CLEAR;
     const fired =
       (gsTile &
@@ -362,21 +351,21 @@ function drawLaserTile(
     drawSurface(dr, ds, dx, dy, surface);
 
     if (fired) {
-      const tcol = flash ? COL_FLASHTEXT : omitted ? COL_WRONG : COL_TEXT;
+      const tcol = flash ? COL_FLASHTEXT : omitted ? COL_ERROR : COL_TEXT;
       const str = reflect || hit ? (reflect ? "R" : "H") : String(laserval);
 
       if (wrong) {
         dr.drawCircle(
           pt(dx + Math.floor(ts / 2), dy + Math.floor(ts / 2)),
           ds.ringRadius,
-          COL_WRONG,
-          COL_WRONG,
+          COL_ERROR,
+          COL_ERROR,
         );
         dr.drawCircle(
           pt(dx + Math.floor(ts / 2), dy + Math.floor(ts / 2)),
           ds.ringRadius - Math.floor(ts / 16),
           surface,
-          COL_WRONG,
+          COL_ERROR,
         );
       }
 
@@ -390,7 +379,6 @@ function drawLaserTile(
     dr.unclip();
     dr.drawUpdate(rect(dx, dy, ts + 1, ts + 1));
   }
-  ds.grid[gridIdx(ds.w, gx, gy)] = gsTile;
 }
 
 // --- full redraw ------------------------------------------------------
@@ -408,7 +396,6 @@ export function redraw(
   mistakes?: readonly Point[],
 ): void {
   const ts = ds.tileSize;
-  let force = false;
   const marked = hintFlags(state, hint);
   for (const m of mistakes ?? []) {
     const i = gridIdx(state.w, m.x, m.y);
@@ -417,15 +404,10 @@ export function redraw(
   const flagsAt = (x: number, y: number): number =>
     marked.get(gridIdx(state.w, x, y)) ?? 0;
 
-  if (!ds.started) {
-    force = true;
-    ds.started = true;
-  }
-
   for (let x = 0; x < state.w; x++)
     for (let y = 0; y < state.h; y++) {
       const lit = flash.win(sweepStep(x, y)) << K_LIT;
-      drawArenaTile(dr, state, ds, ui, x, y, force, flagsAt(x + 1, y + 1) | lit);
+      drawArenaTile(dr, state, ds, ui, x, y, flagsAt(x + 1, y + 1) | lit);
     }
 
   // Which laser to highlight this frame.
@@ -435,7 +417,7 @@ export function redraw(
 
   for (let i = 0; i < 2 * (state.w + state.h); i++) {
     const rc = range2grid(state.w, state.h, i);
-    drawLaserTile(dr, state, ds, ui, i, force, rc ? flagsAt(rc.x, rc.y) : 0);
+    drawLaserTile(dr, state, ds, ui, i, rc ? flagsAt(rc.x, rc.y) : 0);
   }
 
   // The reveal ("finish") button at (0,0), repainted whole every frame, so a
@@ -444,7 +426,7 @@ export function redraw(
   if (canReveal(state)) {
     const outline =
       ui.cursor.visible && ui.cursor.x === 0 && ui.cursor.y === 0
-        ? COL_CURSOR
+        ? COL_RED_CURSOR
         : COL_TEXT;
     dr.clip(rect(b0 - 1, b0 - 1, ts + 1, ts + 1));
     // The square the no-button branch clears, and no wider: the laser squares
@@ -470,8 +452,6 @@ export function redraw(
     dr.drawRect(rect(b0 - 1, b0 - 1, ts, ts), COL_BACKGROUND);
   }
   dr.drawUpdate(rect(b0, b0, ts, ts));
-
-  ds.reveal = state.reveal;
 }
 
 // --- timing -----------------------------------------------------------

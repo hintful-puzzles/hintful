@@ -7,6 +7,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
@@ -19,8 +20,6 @@ import {
   COL_CELL,
   COL_KNOWN,
   COL_SETTLED,
-  COL_WIN,
-  COL_WIN_LEAD,
   redraw,
 } from "./render.ts";
 import {
@@ -149,7 +148,7 @@ describe("Black Box redraw", () => {
     // origins, and the balls drawn.
     const tones = new Set<number>();
     const isLit = (color: number): boolean => {
-      if (color !== COL_WIN && color !== COL_WIN_LEAD) return false;
+      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
       tones.add(color);
       return true;
     };
@@ -175,6 +174,6 @@ describe("Black Box redraw", () => {
       5 * 5,
       (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
     );
-    expect(tones).toEqual(new Set([COL_WIN, COL_WIN_LEAD]));
+    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 });

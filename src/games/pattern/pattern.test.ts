@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -35,14 +36,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newPatternDesc } from "./generator.ts";
 import { patternGame } from "./index.ts";
-import {
-  COL_CELL,
-  COL_CLEAR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_FULL,
-  fromCoord,
-} from "./render.ts";
+import { COL_CELL, COL_CLEAR, COL_FULL, fromCoord } from "./render.ts";
 import { findMistakes, isComplete, solveState, status } from "./solver.ts";
 import {
   computeRuns,

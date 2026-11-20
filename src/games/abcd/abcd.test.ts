@@ -11,6 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_NOT_UNIQUE,
   DESC_OUT_OF_RANGE,
@@ -31,15 +32,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newAbcdDesc } from "./generator.ts";
 import { abcdGame } from "./index.ts";
-import {
-  COL_CURSOR,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_PENCIL_BODY,
-  newDrawState,
-  redraw,
-} from "./render.ts";
+import { COL_HIGHLIGHT_WASH, COL_PENCIL_BODY, newDrawState, redraw } from "./render.ts";
 import { abcdLadder, abcdMarks, dealtOf, solveAbcd } from "./solver.ts";
 import {
   type AbcdMove,
@@ -571,7 +564,9 @@ describe("abcd render", () => {
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, withMark, 1, ui, 0, NO_FLASH);
     // The highlighted cursor cell fills its background with the wash.
-    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_CURSOR)).toBe(true);
+    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT_WASH)).toBe(
+      true,
+    );
     // The pencil mark 'A' is drawn as text.
     expect(dr.ops.some((o) => o.op === "text" && o.text === "A")).toBe(true);
   });

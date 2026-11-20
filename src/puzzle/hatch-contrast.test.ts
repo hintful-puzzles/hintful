@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 import { darkValue } from "../engine/color/color-token.ts";
 import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
+import { COL_BACKGROUND } from "../engine/color/roles.ts";
 import { HATCH_OPACITY } from "../engine/hatch.ts";
 import type { Narration } from "../engine/hint-words.ts";
 import { Midend } from "../engine/index.ts";
@@ -173,9 +174,9 @@ describe("Magnets under the hatch", () => {
     // is the weakest to begin with.
     const pairs = [
       [magnets.COL_CELL, magnets.COL_NOT],
-      [magnets.COL_POSITIVE, magnets.COL_BACKGROUND],
-      [magnets.COL_NEGATIVE, magnets.COL_BACKGROUND],
-      [magnets.COL_NEUTRAL, magnets.COL_BACKGROUND],
+      [magnets.COL_POSITIVE, COL_BACKGROUND],
+      [magnets.COL_NEGATIVE, COL_BACKGROUND],
+      [magnets.COL_NEUTRAL, COL_BACKGROUND],
     ];
     const { light, dark } = schemePalettes("magnets");
     // Each of the stripes' colors, as the app repaints a reference's stripes

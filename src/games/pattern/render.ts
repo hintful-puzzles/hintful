@@ -11,16 +11,19 @@
 import {
   CLEAR,
   CLEAR_MARK,
-  CURSOR,
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   INK,
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
@@ -28,6 +31,7 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { CLUE, LINE } from "./hint-marks.ts";
@@ -47,45 +51,29 @@ import {
 export const PREFERRED_TILE_SIZE = 24;
 
 // --- palette -------------------------------------------------------------
-const COL_BACKGROUND = 0;
 /** The surface of a cell known to be empty. */
-export const COL_CLEAR = 1;
+export const COL_CLEAR = FIRST_GAME_SLOT;
 /** The piece in a full cell. */
-export const COL_FULL = 2;
-const COL_TEXT = 3;
+export const COL_FULL = FIRST_GAME_SLOT + 1;
+const COL_TEXT = FIRST_GAME_SLOT + 2;
 /** The surface of a cell, whatever it holds. */
-export const COL_CELL = 4;
-export const COL_GRID = 5;
-const COL_CURSOR = 6;
-const COL_ERROR = 7;
-const COL_CURSOR_GUIDE = 8;
-// The hint's outline ink: a cited cell and the reasoned line's clue are
-// outlined COL_HINT_CELL.
-export const COL_HINT_CELL = 9;
+export const COL_CELL = FIRST_GAME_SLOT + 3;
+export const COL_GRID = FIRST_GAME_SLOT + 4;
+/** The clue numbers of the cursor's own row and column: the cursor, projected
+ * into the margin, so it takes the cursor's color rather than a gray of its
+ * own. */
+const COL_CURSOR_GUIDE = COL_CURSOR;
 /** The faint cross on a cell known to be empty. */
-export const COL_CLEAR_MARK = 10;
-/** The ground of a cell the win flash is on, whatever it holds: its body, and
- * its leading edge. */
-export const COL_FLASH = 11;
-export const COL_FLASH_LEAD = 12;
+export const COL_CLEAR_MARK = FIRST_GAME_SLOT + 5;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_TEXT] = INK;
   out[COL_FULL] = SHADED;
   out[COL_CLEAR] = CLEAR;
   out[COL_CLEAR_MARK] = CLEAR_MARK;
-  // The clue numbers of the cursor's own row and column: the cursor, projected
-  // into the margin, so it takes the cursor's color rather than a gray of its own.
-  out[COL_CURSOR_GUIDE] = CURSOR;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_ERROR] = ERROR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -118,25 +106,23 @@ export function computeSize(p: PatternParams, ts: number): Size {
 // --- draw state ----------------------------------------------------------
 
 export interface PatternDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
-  /** Per-cell packed display key; -1 forces a redraw. */
-  visible: Int32Array;
-  /** Per-line last-drawn clue color and hatch; -1 forces a redraw. */
-  numColors: Int32Array;
+  /** Per cell, its packed display key. */
+  tiles: TileCache;
+  /** Per line, its clue's color and whether its strip is hatched. */
+  clues: TileCache;
 }
 
 export function newDrawState(state: PatternState, tileSize: number): PatternDrawState {
   const { w, h } = state.common;
   return {
-    started: false,
     tileSize,
     w,
     h,
-    visible: new Int32Array(w * h).fill(-1),
-    numColors: new Int32Array(w + h).fill(-1),
+    tiles: new TileCache(w * h),
+    clues: new TileCache(w + h, { words: 2 }),
   };
 }
 
@@ -146,7 +132,7 @@ const K_MISTAKE = 1 << 3;
 // Hint-overlay bits (no upstream analog), also folded into the cache key.
 const K_HINT_TARGET = 1 << 4; // a forced cell (ringed)
 const K_HINT_LINE = 1 << 5; // a cell of the reasoned line (hatched)
-const K_HINT_CITED = 1 << 6; // a cited cell (COL_HINT_CELL outline)
+const K_HINT_CITED = 1 << 6; // a cited cell (COL_HINT_OUTLINE outline)
 const K_WIN_SHIFT = 8; // the win flash's tone on the cell, in two bits
 
 function gridSquare(
@@ -190,7 +176,7 @@ function gridSquare(
   // its surface and under its piece, so the line reads as one strip. A cited
   // cell keeps its own content (the premise) and gets an outline below,
   // beside the piece.
-  const lit = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : null;
+  const lit = tone ? winSlot(tone) : null;
   if (val === GRID_EMPTY)
     drawClearSquare(dr, surface, lit ?? COL_CLEAR, COL_CLEAR_MARK, content);
   else dr.drawRect(surface, lit ?? COL_CELL);
@@ -199,7 +185,7 @@ function gridSquare(
 
   if (hintBits & K_HINT_CITED) {
     const t = Math.max(1, Math.floor(ts / 10));
-    drawThickRectOutline(dr, dx, dy, dw, dh, t, COL_HINT_CELL);
+    drawThickRectOutline(dr, dx, dy, dw, dh, t, COL_HINT_OUTLINE);
   }
 
   // A cell shows no text, so its ring has none to keep clear of.
@@ -333,14 +319,13 @@ export function redraw(
   const inReasonedLine = (x: number, y: number): boolean =>
     hintLines.some((l) => (l < w ? x === l : y === l - w));
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The frame closes the grid on its right and bottom, one line thick; each
     // cell draws the line on its own top and left.
     dr.drawRect(
       { x: toCoord(ts, w, 0), y: toCoord(ts, h, 0), w: w * ts + 1, h: h * ts + 1 },
       COL_GRID,
     );
-    ds.started = true;
   }
 
   // Drag preview rectangle.
@@ -392,8 +377,7 @@ export function redraw(
         (mistake ? K_MISTAKE : 0) |
         hintBits |
         (tone << K_WIN_SHIFT);
-      if (ds.visible[i] !== key) {
-        ds.visible[i] = key;
+      if (ds.tiles.changed(i, key)) {
         gridSquare(dr, ds, y, x, val, cur, mistake, hintBits, tone);
       }
     }
@@ -410,11 +394,9 @@ export function redraw(
     // stripe runs from the count to the end of the line. A line with no clue
     // has its strip hatched but no numbers to recolor, so the hatch keys the
     // repaint beside the color.
-    if (hintClues.has(i)) color = COL_HINT_CELL;
+    if (hintClues.has(i)) color = COL_HINT_OUTLINE;
     const hatched = hintLines.includes(i);
-    const key = color * 2 + (hatched ? 1 : 0);
-    if (ds.numColors[i] !== key) {
-      ds.numColors[i] = key;
+    if (ds.clues.changed(i, color, hatched ? 1 : 0)) {
       drawNumbers(dr, ds, state, i, color, hatched);
     }
   }

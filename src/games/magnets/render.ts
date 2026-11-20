@@ -19,13 +19,16 @@ import { BLUE_BOLD, GREEN, RED } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   clueDoneColor,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   highlightWash,
   INK,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -38,6 +41,7 @@ import {
 } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -70,42 +74,27 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
-export const COL_BACKGROUND = 0;
-export const COL_HIGHLIGHT = 1;
 /** The surface of a domino the player has not decided: the collection's cell
  * surface, so a decided domino is told by its color and never by a gray. */
-export const COL_CELL = 2;
-export const COL_TEXT = 3;
-export const COL_ERROR = 4;
-export const COL_CURSOR = 5;
-export const COL_DONE = 6;
-export const COL_NEUTRAL = 7;
-export const COL_NEGATIVE = 8;
-export const COL_POSITIVE = 9;
-export const COL_NOT = 10;
-// Fork mistake overlay, appended past the upstream enum.
-export const COL_MISTAKE = 11;
-/** The hint's evidence outline. The ring round what a step decides is the
- * engine's (`GameDrawing.drawRing`). */
-export const COL_HINT_CELL = 12;
-/** The ground of a domino under the win flash's leading edge. Under its body
- * the ground is {@link COL_HIGHLIGHT}. */
-export const COL_FLASH_LEAD = 13;
+export const COL_CELL = FIRST_GAME_SLOT;
+export const COL_TEXT = FIRST_GAME_SLOT + 1;
+/** The cursor's tile fill, the note-taking wash (see its assignment). */
+export const COL_HIGHLIGHT_WASH = FIRST_GAME_SLOT + 2;
+export const COL_DONE = FIRST_GAME_SLOT + 3;
+export const COL_NEUTRAL = FIRST_GAME_SLOT + 4;
+export const COL_NEGATIVE = FIRST_GAME_SLOT + 5;
+export const COL_POSITIVE = FIRST_GAME_SLOT + 6;
+export const COL_NOT = FIRST_GAME_SLOT + 7;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
-  // The slot's only use is the solved flash's tile fill; nothing bevels with it.
-  out[COL_HIGHLIGHT] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
+  const out = rolePalette(background);
   out[COL_CELL] = cellSurface(background);
   out[COL_TEXT] = INK;
-  out[COL_ERROR] = ERROR;
   // The cursor is a tile *fill* under the tile's own content, so it is the
   // "you are here" wash Solo's family uses, not the green mark — which would
   // in any case vanish on a neutral tile, whose fill is green.
-  out[COL_CURSOR] = highlightWash(background);
+  out[COL_HIGHLIGHT_WASH] = highlightWash(background);
   out[COL_DONE] = clueDoneColor(background);
   out[COL_NEUTRAL] = GREEN;
   out[COL_NEGATIVE] = INK;
@@ -113,8 +102,6 @@ export function colors(defaultBackground: Color): Color[] {
   // Blue's bold step: the `?` is thin, and on the cell surface the base blue
   // lost a quarter of its contrast under the hint's hatch.
   out[COL_NOT] = BLUE_BOLD;
-  out[COL_MISTAKE] = ERROR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -150,29 +137,27 @@ export function computeSize(p: { w: number; h: number }, ts: number): Size {
 // --- draw state -----------------------------------------------------------
 
 export interface MagnetsDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
-  /** Last-drawn packed word per tile; −1 forces a draw. */
-  what: Int32Array;
-  /** Last-drawn color per column clue (3·w: [neutral,+,−]); −1 forces. */
-  colwhat: Int32Array;
-  /** Last-drawn color per row clue (3·h). */
-  rowwhat: Int32Array;
+  /** Per square, its packed word. */
+  tiles: TileCache;
+  /** Per column clue (3·w: [neutral,+,−]), its color, hatch and cursor. */
+  colClues: TileCache;
+  /** Per row clue (3·h), the same. */
+  rowClues: TileCache;
   /** The hint's target ring and evidence outline, drawn after the tile loop. */
   marks: HintMarks;
 }
 
 export function newDrawState(state: MagnetsState, tileSize: number): MagnetsDrawState {
   return {
-    started: false,
     tileSize,
     w: state.w,
     h: state.h,
-    what: new Int32Array(state.wh).fill(-1),
-    colwhat: new Int32Array(state.w * 3).fill(-1),
-    rowwhat: new Int32Array(state.h * 3).fill(-1),
+    tiles: new TileCache(state.wh),
+    colClues: new TileCache(state.w * 3),
+    rowClues: new TileCache(state.h * 3),
     marks: new HintMarks(),
   };
 }
@@ -335,7 +320,7 @@ function drawTile(
   dr.drawRect({ x: cx, y: cy, w: ts, h: ts }, COL_BACKGROUND);
 
   let bg: number;
-  if (flags & DS_CURSOR) bg = COL_CURSOR;
+  if (flags & DS_CURSOR) bg = COL_HIGHLIGHT_WASH;
   else if (which === POSITIVE) bg = COL_POSITIVE;
   else if (which === NEGATIVE) bg = COL_NEGATIVE;
   else if (flags & DS_SET) bg = COL_NEUTRAL;
@@ -357,7 +342,7 @@ function drawTile(
   }
 
   const tone = ((flags >> DS_WIN_SHIFT) & 3) as WinTone;
-  if (tone !== WIN_NONE) bg = winSlot(tone, COL_HIGHLIGHT, COL_FLASH_LEAD);
+  if (tone !== WIN_NONE) bg = winSlot(tone);
   drawTileCol(dr, ds, dominoes, x, y, which, bg, fg, perc, !!(flags & DS_HINT_LINE));
 
   // Fork findMistakes overlay: an inset red outline (distinct from symbol red).
@@ -367,7 +352,7 @@ function drawTile(
     const sx = cx + inset;
     const sy = cy + inset;
     const span = ts - 2 * inset;
-    drawThickRectOutline(dr, sx, sy, span, span, thick, COL_MISTAKE);
+    drawThickRectOutline(dr, sx, sy, span, span, thick, COL_ERROR);
   }
 
   dr.drawUpdate({ x: cx, y: cy, w: ts, h: ts });
@@ -412,7 +397,10 @@ function drawNum(
     cy = which === NEGATIVE ? ts * (ds.h + 1) : 0;
   }
 
-  dr.drawRect({ x: cx, y: cy, w: ts, h: ts }, cursor ? COL_CURSOR : COL_BACKGROUND);
+  dr.drawRect(
+    { x: cx, y: cy, w: ts, h: ts },
+    cursor ? COL_HIGHLIGHT_WASH : COL_BACKGROUND,
+  );
   if (hatched) dr.drawHatch({ x: cx, y: cy, w: ts, h: ts }, hatchPeriod(ts));
   if (num >= 0) {
     dr.drawText(
@@ -449,10 +437,10 @@ function getCountColor(
   // The clue a hint counts with is recolored, tying the line the sentence
   // calls "this row" to its count (docs/hints-marks.md § "Off-board
   // evidence").
-  if (hinted.has(idx)) return COL_HINT_CELL;
+  if (hinted.has(idx)) return COL_HINT_OUTLINE;
   // A met line cited as a reason is evidence, and named in words by where it
   // is ("the column beside it"), never "this".
-  if (reasons.has(idx)) return COL_HINT_CELL;
+  if (reasons.has(idx)) return COL_HINT_OUTLINE;
   if (state.countsDone[idx]) return COL_DONE;
   return COL_TEXT;
 }
@@ -486,7 +474,7 @@ export function redraw(
   const { w, h, grid, flags, common } = state;
   const { dominoes, colcount, rowcount } = common;
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // Corner +/− symbols.
     drawSym(dr, ts, -1, -1, POSITIVE, COL_TEXT);
     drawSym(dr, ts, w, h, NEGATIVE, COL_TEXT);
@@ -522,7 +510,7 @@ export function redraw(
   const markStyle: HintMarkStyle = {
     band: (x, y) => markBand(ts, x, y),
     text: (x, y) => squareText(state, ts, x, y),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
     joinTargets: partners,
     joinEvidence: partners,
   };
@@ -546,10 +534,7 @@ export function redraw(
       if (flags[idx] & GS_NOTNEGATIVE) c |= DS_NOTNEG;
       if (flags[idx] & GS_NOTNEUTRAL) c |= DS_NOTNEU;
       if (mistakeSet.has(idx)) c |= DS_MISTAKE;
-      if (ds.what[idx] !== c) {
-        drawTile(dr, ds, dominoes, x, y, c);
-        ds.what[idx] = c;
-      }
+      if (ds.tiles.changed(idx, c)) drawTile(dr, ds, dominoes, x, y, c);
     }
   }
 
@@ -560,8 +545,8 @@ export function redraw(
   // Clue counts around the four borders.
   for (const which of [POSITIVE, NEGATIVE]) {
     for (const [rowcol, n, targets, drawn] of [
-      [COLUMN, w, colcount, ds.colwhat],
-      [ROW, h, rowcount, ds.rowwhat],
+      [COLUMN, w, colcount, ds.colClues],
+      [ROW, h, rowcount, ds.rowClues],
     ] as const) {
       for (let i = 0; i < n; i++) {
         const index = i * 3 + which;
@@ -581,13 +566,9 @@ export function redraw(
         const cursor =
           rowcol === COLUMN ? cx === i && cy === edge : cx === edge && cy === i;
         const key = color + (hatched ? CLUE_HATCHED : 0) + (cursor ? CLUE_CURSOR : 0);
-        if (drawn[index] !== key) {
+        if (drawn.changed(index, key))
           drawNum(dr, ds, rowcol, which, i, color, targets[index], hatched, cursor);
-          drawn[index] = key;
-        }
       }
     }
   }
-
-  ds.started = true;
 }

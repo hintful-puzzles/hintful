@@ -4,11 +4,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
 [
   {
     "drawState": [
-      "clueLook",
+      "clues",
       "hint",
       "marks",
       "pencilModeShown",
-      "started",
       "tileSize",
       "tiles",
       "wrong",
@@ -207,11 +206,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "drawState": [
       "ballRadius",
       "flashLaserno",
-      "grid",
-      "reveal",
       "ringRadius",
-      "started",
       "tileSize",
+      "tiles",
       "w",
     ],
     "id": "blackbox",
@@ -965,14 +962,13 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "colwhat",
+      "colClues",
       "h",
       "marks",
-      "rowwhat",
-      "started",
+      "rowClues",
       "tileSize",
+      "tiles",
       "w",
-      "what",
     ],
     "id": "magnets",
     "members": [
@@ -1388,11 +1384,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
+      "clues",
       "h",
-      "numColors",
-      "started",
       "tileSize",
-      "visible",
+      "tiles",
       "w",
     ],
     "id": "pattern",

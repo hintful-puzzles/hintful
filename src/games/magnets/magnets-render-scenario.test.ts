@@ -7,6 +7,12 @@
  * targeted assertions survive a careless `-u`).
  */
 import { describe, expect, it } from "vitest";
+import {
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+} from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { CURSOR_SELECT, CURSOR_UP } from "../../engine/pointer.ts";
@@ -30,12 +36,8 @@ import type { MagnetsHighlights } from "./hint.ts";
 import { magnetsGame } from "./index.ts";
 import { CLUE, LINE, SQUARE } from "./kinds.ts";
 import {
-  COL_CURSOR,
   COL_DONE,
-  COL_FLASH_LEAD,
-  COL_HIGHLIGHT,
-  COL_HINT_CELL,
-  COL_MISTAKE,
+  COL_HIGHLIGHT_WASH,
   COL_NEGATIVE,
   COL_POSITIVE,
   colors,
@@ -80,7 +82,7 @@ describe("magnets render scenarios", () => {
           o.x === ts &&
           o.y === 0 &&
           o.w === ts &&
-          o.color === COL_CURSOR,
+          o.color === COL_HIGHLIGHT_WASH,
       );
     const hidden = renderScenario({ game: magnetsGame, id });
     expect(cursorOnSlot(hidden.recording.ops)).toBe(false);
@@ -177,7 +179,7 @@ describe("magnets render scenarios", () => {
     const { recording } = hintFrame("placementWithEvidence");
     // One round ring, and the square keeps its own content.
     expectRing(recording.ops);
-    const evidence = markSides(recording.ops, COL_HINT_CELL);
+    const evidence = markSides(recording.ops, COL_HINT_OUTLINE);
     expect(evidence.length).toBeGreaterThan(0);
     for (const side of evidence) expect(isThin(side)).toBe(true);
     expect(recording.ops).toMatchSnapshot();
@@ -188,7 +190,7 @@ describe("magnets render scenarios", () => {
     // One ring around both ends, not a ring per square.
     expectPieceRing(recording.ops);
     const hinted = recording.ops.filter(
-      (o) => o.op === "text" && o.color === COL_HINT_CELL,
+      (o) => o.op === "text" && o.color === COL_HINT_OUTLINE,
     );
     expect(hinted.length).toBe(countedClues(step).length);
     expect(recording.ops).toMatchSnapshot();
@@ -224,10 +226,12 @@ describe("magnets render scenarios", () => {
     });
     // The mistake overlay (inset red outline) appears on a frame *after* the
     // move that placed the cell (docs/rendering.md § "Overlay sidecars":
-    // the overlay must be in the diff key).
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(
-      true,
-    );
+    // the overlay must be in the diff key). A live error's symbol is red too,
+    // so the count is taken against the same frame with mistakes hidden.
+    const red = (ops: typeof recording.ops): number =>
+      ops.filter((o) => o.op === "rect" && o.color === COL_ERROR).length;
+    const hidden = renderScenario({ game: magnetsGame, id, moves });
+    expect(red(recording.ops)).toBeGreaterThan(red(hidden.recording.ops));
   });
 
   it("the win flash sweeps the dominoes from the bottom left to the top right", () => {
@@ -251,14 +255,14 @@ describe("magnets render scenarios", () => {
         const squares = new Set<number>();
         for (const o of dr.ops) {
           if (o.op !== "rect") continue;
-          if (o.color !== COL_HIGHLIGHT && o.color !== COL_FLASH_LEAD) continue;
+          if (o.color !== COL_FLASH && o.color !== COL_FLASH_LEAD) continue;
           tones.add(o.color);
           squares.add((Math.floor(o.y / ts) - 1) * state.w + Math.floor(o.x / ts) - 1);
         }
         return [...squares];
       },
     );
-    expect([...tones].sort()).toEqual([COL_HIGHLIGHT, COL_FLASH_LEAD]);
+    expect([...tones].sort()).toEqual([COL_FLASH, COL_FLASH_LEAD]);
     const { dominoes } = state.common;
     // A square's position is the middle of its domino.
     expectWinFlashTravels(run, state.wh, (i) => {

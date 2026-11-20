@@ -6,6 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -15,7 +16,6 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { answerCount } from "./answer.ts";
 import { type BlackboxRung, deduce, type Firing } from "./hint.ts";
 import { blackboxGame as game } from "./index.ts";
-import { COL_HINT_EVIDENCE } from "./render.ts";
 import {
   BALL_CORRECT,
   BALL_GUESS,
@@ -248,7 +248,7 @@ describe("Black Box's hint", () => {
     const { recording } = renderPinnedHint(game, pinned("ray"));
     expectRing(recording.ops);
     const rects = recording.ops.filter((o) => o.op === "rect");
-    expect(rects.some((o) => o.color === COL_HINT_EVIDENCE)).toBe(true);
+    expect(rects.some((o) => o.color === COL_HINT_OUTLINE)).toBe(true);
     expect(recording.ops).toMatchSnapshot();
   });
 });

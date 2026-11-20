@@ -5,6 +5,7 @@
  * stand beside the snapshot so a careless `vitest -u` cannot erase them.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
@@ -15,7 +16,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { cellAt, LINE } from "./hint-marks.ts";
 import { type PatternHint, patternGame } from "./index.ts";
-import { COL_CLEAR, COL_CLEAR_MARK, COL_GRID, COL_HINT_CELL } from "./render.ts";
+import { COL_CLEAR, COL_CLEAR_MARK, COL_GRID } from "./render.ts";
 import { deduceHintPlan } from "./solver.ts";
 import { GRID_EMPTY, GRID_FULL } from "./state.ts";
 
@@ -106,7 +107,7 @@ describe("Pattern hint render scenarios", () => {
     }
   });
 
-  it("ringed-premise frame: a cited black mark is outlined in COL_HINT_CELL", () => {
+  it("ringed-premise frame: a cited black mark is outlined in COL_HINT_OUTLINE", () => {
     // A step that cites an already-placed black mark (an overlap anchored by
     // an earlier deduction) outlines it.
     const position = pinned("citesBlack");
@@ -118,7 +119,7 @@ describe("Pattern hint render scenarios", () => {
       expect.arrayContaining(cited.blackRefs.map((i) => cellAt(i, P.w))),
     );
     expect(
-      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL),
+      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE),
     ).toBe(true);
   });
 });

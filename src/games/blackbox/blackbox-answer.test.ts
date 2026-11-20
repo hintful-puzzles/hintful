@@ -5,6 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { DESC_NOT_UNIQUE, loadVerdict, validateDesc } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { MULTIPLE_SOLUTIONS } from "../../engine/solve-failure.ts";
@@ -14,7 +15,6 @@ import type { Point } from "../../engine/types.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { answerCount } from "./answer.ts";
 import { blackboxGame as game } from "./index.ts";
-import { COL_WRONG } from "./render.ts";
 import {
   BALL_CORRECT,
   type BlackboxParams,
@@ -162,9 +162,9 @@ describe("Black Box's check", () => {
     const settled = paint().length;
     expect(paint().length).toBe(settled);
     const framed = paint(game.findMistakes?.(s));
-    expect(framed.some((o) => o.op === "rect" && o.color === COL_WRONG)).toBe(true);
+    expect(framed.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
     const cleared = paint();
     expect(cleared.length).toBeGreaterThan(settled);
-    expect(cleared.some((o) => "color" in o && o.color === COL_WRONG)).toBe(false);
+    expect(cleared.some((o) => "color" in o && o.color === COL_ERROR)).toBe(false);
   });
 });

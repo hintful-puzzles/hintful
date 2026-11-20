@@ -84,7 +84,8 @@
       solo, mathrax, rome, flip, unruly, filling, mosaic, dominosa, pearl,
       edge-clue-latin (adjacent, unequal), galaxies, wordtrail,
       border-grid-render (palisade, separate), inertia, path, rect, slide,
-      sokoban, pegs, signpost.
+      sokoban, pegs, signpost; of the multi-family games, abcd, pattern,
+      magnets, blackbox.
       A game whose board
       values are palette indices (SameGame's and Flood's tile colors) numbers
       them from a run after its own slots (`COL_PIECE + c - 1`,
@@ -120,8 +121,16 @@
       (`COL_FLOOR`, the ground's color) rather than slot 0's; its red and
       Signpost's purple cursor are their own slots. A test that named a
       slot by its number (`dark-palette.test.ts` for Slide, Signpost's and
-      Sokoban's render tests) imports it instead. Next, the multi-family
-      games. Then the multi-family games, then
+      Sokoban's render tests) imports it instead. A multi-family game
+      keeps a cache a family (Abcd's and Pattern's clues, Magnets' row and
+      column clues), and the cells' cache owns the first frame; Blackbox's
+      box and laser ring share one grid-indexed cache, its `force` flag gone
+      into the first frame's misses and its `ds.reveal` into a key word.
+      Pattern's cursor guide is the cursor role under its own name. A test
+      that found an overlay by its color, once the overlay's color merged
+      into the error role, counts against the frame without the overlay
+      (Magnets). Next: boats, salad, tents, tracks, group, bridges, guess,
+      crossing, subsets, undead. Then the multi-family games, then
       the neighbor-painting ones. Not tiles, keeping the explicit form:
       cube, loopy, untangle (palette roles only).
 - [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;

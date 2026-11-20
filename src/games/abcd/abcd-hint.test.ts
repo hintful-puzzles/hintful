@@ -10,6 +10,7 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -27,7 +28,6 @@ import {
 } from "./hint.ts";
 import { CLUE } from "./hint-marks.ts";
 import { abcdGame } from "./index.ts";
-import { COL_HINT_CELL } from "./render.ts";
 import {
   type AbcdMove,
   type AbcdParams,
@@ -413,10 +413,10 @@ describe("the frames a hint draws", () => {
     expect(line.length).toBe(5);
     expect(opsOfKind(ops, "hatch")).toHaveLength(5 + RUNS_PARAMS.n);
     // The count the sentence reads is recolored, as an outline.
-    expect(ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL)).toBe(true);
+    expect(ops.some((o) => o.op === "text" && o.color === COL_HINT_OUTLINE)).toBe(true);
     // The stretches the sentence counts are outlined.
     expect(hl.area.length).toBeGreaterThan(1);
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE)).toBe(true);
     expect(ops).toMatchSnapshot();
   });
 });
