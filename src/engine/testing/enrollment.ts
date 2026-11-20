@@ -28,6 +28,7 @@ import { type Game, hasHint } from "../game.ts";
 import { randomNew } from "../random/index.ts";
 import { getTsGame, registeredGameIds } from "../registry.ts";
 import { linesMatching, stripComments } from "./code-lines.ts";
+import { ENGINE_DIRECTORIES } from "./engine-directories.ts";
 import type { KindExemption } from "./ledger.ts";
 import { preferredDrawState } from "./preferred-draw-state.ts";
 import {
@@ -275,12 +276,12 @@ const fromHere = (key: string): string =>
  * a test that merely mentions the helper.
  *
  * A game's own code includes each **game family** it imports: an engine
- * directory whose modules build part of a `Game` (they import the contract,
- * `engine/game.ts`), such as `edge-clue-latin/`, which Unequal and Adjacent
- * play on. What two games share cannot live in either, and a game that runs
- * the shared mechanic there has neither hand-rolled it nor hidden it. The
- * engine's libraries (`grid/`, `color/`) and flat helpers are not a game's own
- * code: they are the mechanics the guards ask after. */
+ * directory that builds part of a `Game` (a `family` in
+ * `engine-directories.ts`), such as `edge-clue-latin/`, which Unequal and
+ * Adjacent play on. What two games share cannot live in either, and a game
+ * that runs the shared mechanic there has neither hand-rolled it nor hidden
+ * it. The engine's other directories are not a game's own code: they are the
+ * mechanics the guards ask after. */
 export const gameSourceFiles: ReadonlyMap<string, readonly SourceFile[]> = (() => {
   // A game's compiled module is its own code, generated outside its directory.
   const modules = {
@@ -300,20 +301,21 @@ export const gameSourceFiles: ReadonlyMap<string, readonly SourceFile[]> = (() =
     import: "default",
     eager: true,
   });
+  const familyDirs = new Set(
+    ENGINE_DIRECTORIES.filter((d) => d.kind === "family").map((d) => d.dir),
+  );
   const families = new Map<string, SourceFile[]>();
   for (const [key, text] of Object.entries(engineDirs)) {
     if (key.includes(".test.")) continue;
     const path = fromHere(key);
     const dir = path.split("/")[2] as string;
-    families.set(dir, [...(families.get(dir) ?? []), { path, text }]);
+    if (familyDirs.has(dir))
+      families.set(dir, [...(families.get(dir) ?? []), { path, text }]);
   }
-  for (const [dir, files] of families)
-    if (
-      !files.some((f) =>
-        importedModules(parsed(f.path, f.text)).includes("src/engine/game.ts"),
-      )
-    )
-      families.delete(dir);
+  if (families.size !== familyDirs.size)
+    throw new Error(
+      `game families read ${families.size} of ${familyDirs.size} declared`,
+    );
 
   const byGame = new Map<string, SourceFile[]>();
   const familiesOf = new Map<string, Set<string>>();

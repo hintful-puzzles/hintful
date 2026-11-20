@@ -25,6 +25,7 @@
  * Usage: `node scripts/checks/engine-catalog.mjs`. Exit 1 on any report.
  */
 import { readdirSync, readFileSync } from "node:fs";
+import { ENGINE_DIRECTORIES } from "../../src/engine/testing/engine-directories.ts";
 
 const CATALOG = "docs/engine-catalog.md";
 const ENGINE = "src/engine";
@@ -53,20 +54,28 @@ const catalog = readFileSync(CATALOG, "utf8");
 const isModule = (e) =>
   e.isFile() && e.name.endsWith(".ts") && !e.name.includes(".test.");
 
+/** What each directory under `src/engine/` is (`engine-directories.ts`). */
+const kinds = new Map(ENGINE_DIRECTORIES.map(({ dir, kind }) => [dir, kind]));
+
 /**
- * A module directly under `src/engine/` by its file name, and a subdirectory
- * that holds modules by its own name with a slash (`grid/`): a directory is one
- * helper behind one entry, and its files are that helper's own parts.
+ * The helpers in `dir`: a module by its file name, and a subdirectory that
+ * holds modules by its own name with a slash (`grid/`), because a directory is
+ * one helper behind one entry and its files are that helper's own parts. A
+ * concern directory (`board/`) is not a helper: its members are, each named
+ * on its own.
  */
-const modules = readdirSync(ENGINE, { withFileTypes: true })
-  .filter(
-    (e) =>
-      isModule(e) ||
-      (e.isDirectory() &&
-        readdirSync(`${ENGINE}/${e.name}`, { withFileTypes: true }).some(isModule)),
-  )
-  .map((e) => (e.isDirectory() ? `${e.name}/` : e.name))
-  .sort();
+function helpersIn(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    if (isModule(e)) return [e.name];
+    if (!e.isDirectory()) return [];
+    const sub = `${dir}/${e.name}`;
+    if (dir === ENGINE && kinds.get(e.name) === "concern") return helpersIn(sub);
+    return readdirSync(sub, { withFileTypes: true }).some(isModule)
+      ? [`${e.name}/`]
+      : [];
+  });
+}
+const modules = helpersIn(ENGINE).sort();
 
 /** Whether the catalog names `m`: a file in backticks, a directory as the
  * start of a backticked path or after `src/engine/`. */
