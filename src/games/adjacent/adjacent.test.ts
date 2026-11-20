@@ -5,14 +5,11 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { DESC_CONTRADICTORY, validateDesc } from "../../engine/desc-error.ts";
 import { cappedSolveFor, lowestSolvingCap } from "../../engine/difficulty.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
-import {
-  COL_ERROR,
-  coord,
-  PREFERRED_TILE_SIZE,
-} from "../../engine/edge-clue-latin/render.ts";
+import { coord, PREFERRED_TILE_SIZE } from "../../engine/edge-clue-latin/render.ts";
 import { solveEdgeClues } from "../../engine/edge-clue-latin/solver.ts";
 import {
   diffToLevel,

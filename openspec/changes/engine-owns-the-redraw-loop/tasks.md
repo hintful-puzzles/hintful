@@ -81,7 +81,8 @@
 
       Moved: towers, clusters, norinori, starbattle, seismic, keen,
       samegame, sticks, lightup, singles, range, flood, mines, wordguess,
-      solo, mathrax, rome, flip, unruly, filling, mosaic, dominosa, pearl.
+      solo, mathrax, rome, flip, unruly, filling, mosaic, dominosa, pearl,
+      edge-clue-latin (adjacent, unequal), galaxies, wordtrail.
       A game whose board
       values are palette indices (SameGame's and Flood's tile colors) numbers
       them from a run after its own slots (`COL_PIECE + c - 1`,
@@ -99,10 +100,14 @@
       game's. A second key word replaces a side lane (Dominosa's mark sides,
       Pearl's hint word). `src/puzzle/neighbor-contrast.test.ts` keys its
       close-on-purpose pairs by palette index, so a renumbered game's entry
-      moves with it (Pearl's did; Galaxies', Guess's and Undead's will).
-      Next: edge-clue-latin (adjacent, unequal), which is one family of cell
-      tiles after all (its clues ride in each cell's flag word): a three-word
-      key of number, flash and cursor; flags; pencil. Then the multi-family games, then
+      moves with it (Pearl's and Galaxies' did; Guess's and Undead's will).
+      Edge-clue-latin is one family of cell tiles (its clues ride in each
+      cell's flag word): its key is number and highlight, flags, pencil, and
+      the cursor's "did it move" bookkeeping went into the highlight; a cell
+      under an erased hint mark is `forget`. Galaxies' `colors()` moved from
+      `index.ts`. Next, the remaining cell-tile games: inertia, palisade and
+      separate (`border-grid-render.ts`), path, pegs, rect, signpost, slide,
+      sokoban. Then the multi-family games, then
       the neighbor-painting ones. Not tiles, keeping the explicit form:
       cube, loopy, untangle (palette roles only).
 - [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;

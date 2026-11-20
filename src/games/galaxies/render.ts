@@ -3,6 +3,22 @@
  * transient UI, the hint and the wrong walls in three overlay sidecars.
  */
 
+import { BLACK, WHITE } from "../../engine/color/colors.ts";
+import {
+  cellSurface,
+  DRAG_ADD,
+  givenSurface,
+  INK,
+  surfaceGrid,
+} from "../../engine/color/palette.ts";
+import { galaxiesBlackRegion } from "../../engine/color/palette-games.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -13,6 +29,8 @@ import {
 } from "../../engine/index.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
+import type { Color } from "../../engine/types.ts";
 import {
   type Flash,
   sweepStep,
@@ -40,33 +58,50 @@ import {
 
 // --- color palette indices ----------------------------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_WHITEBG = 1;
-export const COL_BLACKBG = 2;
-export const COL_WHITEDOT = 3;
-export const COL_BLACKDOT = 4;
-export const COL_GRID = 5;
-export const COL_EDGE = 6;
-export const COL_ARROW = 7;
-export const COL_CURSOR = 8;
-export const COL_MISTAKE = 9;
+// The displayed hint's *evidence* (the cells, walls and dots the deduction
+// reasons over) is `COL_HINT_OUTLINE`; a wrong wall is `COL_ERROR`.
+export const COL_WHITEBG = FIRST_GAME_SLOT;
+export const COL_BLACKBG = FIRST_GAME_SLOT + 1;
+export const COL_WHITEDOT = FIRST_GAME_SLOT + 2;
+export const COL_BLACKDOT = FIRST_GAME_SLOT + 3;
+export const COL_GRID = FIRST_GAME_SLOT + 4;
+export const COL_EDGE = FIRST_GAME_SLOT + 5;
+export const COL_ARROW = FIRST_GAME_SLOT + 6;
 /** The in-progress association drag's preview: its own color, not the
  * cursor's, since the two mean different things and are on screen together
  * during a keyboard drag. See `DRAG_ADD`'s doc comment. */
-export const COL_DRAG = 10;
-/** The displayed hint's *evidence*: the cells, walls and dots the deduction
- * reasons over. */
-export const COL_HINT_CELL = 11;
+export const COL_DRAG = FIRST_GAME_SLOT + 7;
 /** The surface of a cell no galaxy has claimed yet. */
-export const COL_CELL = 12;
+export const COL_CELL = FIRST_GAME_SLOT + 8;
 /** The line round a dot: ink, so a white dot is closed on a light surface and
  * a black one on a dark surface. */
-export const COL_DOT_RIM = 13;
-/** The ground of a cell the win flash is on: under the highlight's body, and
- * under its leading edge. */
-export const COL_FLASH = 14;
-export const COL_FLASH_LEAD = 15;
-export const NCOLORS = 16;
+export const COL_DOT_RIM = FIRST_GAME_SLOT + 9;
+
+export function colors(defaultBackground: Color): Color[] {
+  const bg = defaultBackground;
+  const ret = rolePalette(bg);
+  // A closed region is a lifted surface against the plain cells around it,
+  // brighter than them in both schemes. Paper is not: it inverts, and in
+  // the dark scheme lands a faint step below the cell surface.
+  ret[COL_WHITEBG] = givenSurface(bg);
+  ret[COL_BLACKBG] = galaxiesBlackRegion(bg);
+  // The dots are the clues and a hint calls them white and black, so they
+  // are pinned: paper inverts, and a "white dot" was a near-black disc on a
+  // near-black cell in the dark scheme. The rim is what inverts.
+  ret[COL_WHITEDOT] = WHITE;
+  ret[COL_BLACKDOT] = BLACK;
+  ret[COL_DOT_RIM] = INK;
+  ret[COL_GRID] = surfaceGrid(bg);
+  ret[COL_CELL] = cellSurface(bg);
+  ret[COL_EDGE] = INK;
+  ret[COL_ARROW] = INK;
+  // The drag takes an authored color rather than a board-relative tint, since
+  // a tint of the board cannot be prominent by construction, in either
+  // scheme. Galaxies spends grays, black, white and red, so blue is free for
+  // the drag, as the default cursor green is for the cursor.
+  ret[COL_DRAG] = DRAG_ADD;
+  return ret;
+}
 
 // --- DrawState ------------------------------------------------------
 
@@ -74,16 +109,9 @@ export interface GalaxiesDrawState {
   w: number;
   h: number;
   tileSize: number;
-  started: boolean;
-  /** Per-tile cache key (flags | dots) from the last paint, a positive Int32;
-   * -1 = never drawn. The arrow's direction lives in `dx`/`dy` and is
-   * compared alongside it. */
-  cache: Int32Array;
-  dx: Int16Array;
-  dy: Int16Array;
-  /** Per tile: the tone of the win flash on it at the last paint. Its own
-   * array, since the Int32 key is full. */
-  tone: Uint8Array;
+  /** Per tile, four words: flags | dots (a full Int32), the arrow's direction
+   * in x and in y, and the tone of the win flash on it. */
+  tiles: TileCache;
   /** Everything the *transient* UI paints on a tile, in one sidecar word: the
    * drag preview (bits 0-1, {@link PREVIEW_GHOST} / {@link PREVIEW_TARGET}),
    * the half-grid keyboard cursor (bits 2-10, {@link cursorBit}) and a
@@ -109,18 +137,17 @@ export const PREFERRED_TILE_SIZE = 32;
 
 export function newDrawState(s: GalaxiesState, tileSize: number): GalaxiesDrawState {
   const n = s.w * s.h;
+  const overlay = new OverlaySidecar(n);
+  const hint = new OverlaySidecar(n);
+  const wrongEdges = new OverlaySidecar(n);
   return {
     w: s.w,
     h: s.h,
     tileSize,
-    started: false,
-    cache: new Int32Array(n).fill(-1),
-    dx: new Int16Array(n),
-    dy: new Int16Array(n),
-    tone: new Uint8Array(n),
-    overlay: new OverlaySidecar(n),
-    hint: new OverlaySidecar(n),
-    wrongEdges: new OverlaySidecar(n),
+    tiles: new TileCache(n, { words: 4, overlays: [overlay, hint, wrongEdges] }),
+    overlay,
+    hint,
+    wrongEdges,
   };
 }
 
@@ -185,7 +212,7 @@ const candAt = (overlay: number, dx0: number, dy0: number): number =>
 
 /** Bit 0: a cell the hint's association claims (ringed twice). */
 const HINT_TARGET_CELL = 1 << 0;
-/** Bit 1: a cell the deduction reasons over (`COL_HINT_CELL` outline). */
+/** Bit 1: a cell the deduction reasons over (`COL_HINT_OUTLINE` outline). */
 const HINT_AREA_CELL = 1 << 1;
 /** Bit 28: a cell the move claims only because it is the 180° partner of the
  * one being deduced. Ringed once: same fate, but the deduced cell is the one
@@ -197,7 +224,7 @@ const HINT_REGION_CELL = 1 << 29;
  * wall). One wall lights a bit in each of the two tiles it separates, exactly
  * as `wrongEdges` does. */
 const HINT_WALL_SHIFT = 2;
-/** Bits 6-9: a wall the deduction cites (`COL_HINT_CELL`). */
+/** Bits 6-9: a wall the deduction cites (`COL_HINT_OUTLINE`). */
 const HINT_REFWALL_SHIFT = 6;
 /** Bits 10-27: a ring on the dot at this tile's subcell position, two bits
  * each — {@link HINT_DOT_ACTION} for the dot the association points at,
@@ -360,7 +387,7 @@ function drawSquare(
   // hint role fills; its marks are the stripes here and inset rings, below.
   const lit = tone !== WIN_NONE;
   const bg = lit
-    ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
+    ? winSlot(tone)
     : flags & DRAW_WHITE
       ? COL_WHITEBG
       : flags & DRAW_BLACK
@@ -401,14 +428,14 @@ function drawSquare(
   }
 
   // Edges. Two overlays can recolor a wall: a wall the player set inside a
-  // single solution galaxy is COL_MISTAKE, and a wall the displayed hint
-  // reasons *from* is COL_HINT_CELL. The wall a hint asks the player to
+  // single solution galaxy is COL_ERROR, and a wall the displayed hint
+  // reasons *from* is COL_HINT_OUTLINE. The wall a hint asks the player to
   // *draw* is ringed below, with the wall drawn inside the ring whether or
   // not it exists yet. `null` means this side draws nothing.
   const edgeCol = (side: number): number | null => {
     if (!(flags & side)) return null;
-    if (wrongEdges & side) return COL_MISTAKE;
-    if (hint & (side << HINT_REFWALL_SHIFT)) return COL_HINT_CELL;
+    if (wrongEdges & side) return COL_ERROR;
+    if (hint & (side << HINT_REFWALL_SHIFT)) return COL_HINT_OUTLINE;
     return COL_EDGE;
   };
   const colL = edgeCol(DRAW_EDGE_L);
@@ -580,7 +607,7 @@ function drawSquare(
         // strokes one pixel wide, so a ring is a hairline however many are
         // stacked, and filling the dot itself would cost the narration its
         // noun ("the white dot" must stay visibly white).
-        dr.drawCircle(center, dotSize + halo, COL_HINT_CELL, COL_HINT_CELL);
+        dr.drawCircle(center, dotSize + halo, COL_HINT_OUTLINE, COL_HINT_OUTLINE);
         const val = (dots >>> (DOT_SHIFT_C + DOT_SHIFT_M * (dy0 * 3 + dx0))) & 3;
         if (val) {
           dr.drawCircle(
@@ -641,7 +668,7 @@ function drawSquare(
       dr,
       { box: insetBox(0), outer: 0, inner: previewThickness },
       MARK_ALL,
-      COL_HINT_CELL,
+      COL_HINT_OUTLINE,
     );
   }
 
@@ -667,15 +694,15 @@ function drawSquare(
     const inset = Math.max(edgeThickness, (tileSize / 12) | 0);
     const t = Math.max(2, (tileSize / 12) | 0);
     const span = tileSize - 2 * inset;
-    dr.drawRect({ x: lx + inset, y: ly + inset, w: span, h: t }, COL_MISTAKE);
+    dr.drawRect({ x: lx + inset, y: ly + inset, w: span, h: t }, COL_ERROR);
     dr.drawRect(
       { x: lx + inset, y: ly + tileSize - inset - t, w: span, h: t },
-      COL_MISTAKE,
+      COL_ERROR,
     );
-    dr.drawRect({ x: lx + inset, y: ly + inset, w: t, h: span }, COL_MISTAKE);
+    dr.drawRect({ x: lx + inset, y: ly + inset, w: t, h: span }, COL_ERROR);
     dr.drawRect(
       { x: lx + tileSize - inset - t, y: ly + inset, w: t, h: span },
-      COL_MISTAKE,
+      COL_ERROR,
     );
   }
 
@@ -740,7 +767,7 @@ export function redraw(
   const edgeThickness = Math.max(tile >> 4, 2);
 
   // First-draw: the outer border.
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // Outer border edge frame, matching upstream's first-draw rect.
     dr.drawRect(
       {
@@ -751,7 +778,6 @@ export function redraw(
       },
       COL_EDGE,
     );
-    ds.started = true;
   }
 
   const cols = checkComplete(s, true).colors;
@@ -915,20 +941,9 @@ export function redraw(
         );
       }
 
-      // Cache key: flags (bits 0-11, 30) | dots (bits 12-29), within 31
-      // bits — fits a positive Int32. ddx/ddy, the transient-UI overlay
-      // and the wrong-wall mask live in their sidecar arrays and form part
-      // of the cache-miss check.
-      const key = flags | dots;
-      if (
-        ds.cache[cacheI] !== key ||
-        ds.dx[cacheI] !== ddx ||
-        ds.dy[cacheI] !== ddy ||
-        ds.tone[cacheI] !== tone ||
-        ds.overlay.stale(cacheI) ||
-        ds.hint.stale(cacheI) ||
-        ds.wrongEdges.stale(cacheI)
-      ) {
+      // flags (bits 0-11, 30) | dots (bits 12-29), within 31 bits: a
+      // positive Int32.
+      if (ds.tiles.changed(cacheI, flags | dots, ddx, ddy, tone)) {
         drawSquare(
           dr,
           x,
@@ -944,13 +959,6 @@ export function redraw(
           ds.hint.packed[cacheI],
           tone,
         );
-        ds.cache[cacheI] = key;
-        ds.tone[cacheI] = tone;
-        ds.dx[cacheI] = ddx;
-        ds.dy[cacheI] = ddy;
-        ds.overlay.commit(cacheI);
-        ds.hint.commit(cacheI);
-        ds.wrongEdges.commit(cacheI);
       }
     }
   }

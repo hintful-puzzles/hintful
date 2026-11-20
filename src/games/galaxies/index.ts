@@ -4,20 +4,6 @@
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
-import { BLACK, WHITE } from "../../engine/color/colors.ts";
-import {
-  CURSOR,
-  cellSurface,
-  DRAG_ADD,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
-  givenSurface,
-  HINT_OUTLINE,
-  INK,
-  surfaceGrid,
-} from "../../engine/color/palette.ts";
-import { galaxiesBlackRegion } from "../../engine/color/palette-games.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import {
   type DifficultyContract,
@@ -68,7 +54,7 @@ import {
   type TargetVerbs,
   verbClicks,
 } from "../../engine/target-verb.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import type { Point, Size } from "../../engine/types.ts";
 import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import { newGameDesc } from "./generator.ts";
 import {
@@ -89,24 +75,8 @@ import {
 } from "./moves.ts";
 import {
   borderFor,
-  COL_ARROW,
-  COL_BACKGROUND,
-  COL_BLACKBG,
-  COL_BLACKDOT,
-  COL_CELL,
-  COL_CURSOR,
-  COL_DOT_RIM,
-  COL_DRAG,
-  COL_EDGE,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_GRID,
-  COL_HINT_CELL,
-  COL_MISTAKE,
-  COL_WHITEBG,
-  COL_WHITEDOT,
+  colors,
   type GalaxiesDrawState,
-  NCOLORS,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -1250,40 +1220,7 @@ export const galaxiesGame: Game<
   textFormat,
   statusbarText,
 
-  colors(defaultBackground: Color): Color[] {
-    const bg = defaultBackground;
-    const ret = new Array<Color>(NCOLORS);
-    ret[COL_BACKGROUND] = bg;
-    // A closed region is a lifted surface against the plain cells around it,
-    // brighter than them in both schemes. Paper is not: it inverts, and in
-    // the dark scheme lands a faint step below the cell surface.
-    ret[COL_WHITEBG] = givenSurface(bg);
-    ret[COL_BLACKBG] = galaxiesBlackRegion(bg);
-    // The dots are the clues and a hint calls them white and black, so they
-    // are pinned: paper inverts, and a "white dot" was a near-black disc on a
-    // near-black cell in the dark scheme. The rim is what inverts.
-    ret[COL_WHITEDOT] = WHITE;
-    ret[COL_BLACKDOT] = BLACK;
-    ret[COL_DOT_RIM] = INK;
-    ret[COL_FLASH] = FLASH;
-    ret[COL_FLASH_LEAD] = FLASH_LEAD;
-    ret[COL_GRID] = surfaceGrid(bg);
-    ret[COL_CELL] = cellSurface(bg);
-    ret[COL_EDGE] = INK;
-    ret[COL_ARROW] = INK;
-    // Both transient affordances take authored colors rather than
-    // board-relative tints, since a tint of the board cannot be prominent by
-    // construction, in either scheme. Galaxies spends grays, black, white and
-    // red, so the default cursor green is free (`CURSOR`'s doc comment), and
-    // blue is free for the drag.
-    ret[COL_CURSOR] = CURSOR;
-    ret[COL_DRAG] = DRAG_ADD;
-    // Mistake highlight: a strong red that reads on both white and black
-    // region fills and the page background.
-    ret[COL_MISTAKE] = ERROR;
-    ret[COL_HINT_CELL] = HINT_OUTLINE;
-    return ret;
-  },
+  colors,
 
   computeSize(p, tileSize): Size {
     const border = borderFor(tileSize);

@@ -8,8 +8,9 @@
  * whatever its clue (populate, keep-track, refusals) is tested through Unequal.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
-import { COL_HINT_CELL, COL_PENCIL } from "../../engine/edge-clue-latin/render.ts";
+import { COL_PENCIL } from "../../engine/edge-clue-latin/render.ts";
 import {
   type EdgeClueMove,
   type EdgeClueParams,
@@ -216,7 +217,7 @@ describe("adjacent hint render", () => {
     const { recording } = renderPinnedHint(adjacentGame, pinned("barStrike"), {
       defaultBackground: DEFAULT_BACKGROUND,
     });
-    expectContour(recording.ops, COL_HINT_CELL, 2);
+    expectContour(recording.ops, COL_HINT_OUTLINE, 2);
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_PENCIL)).toBe(
       true,
     );

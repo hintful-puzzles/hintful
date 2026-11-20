@@ -5,9 +5,8 @@
  * (`engine/edge-clue-latin/render.ts`).
  */
 
+import { COL_BACKGROUND, COL_ERROR } from "../../engine/color/roles.ts";
 import {
-  COL_BACKGROUND,
-  COL_ERROR,
   COL_GRID,
   clueColor,
   gap,

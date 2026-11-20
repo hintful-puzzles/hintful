@@ -17,6 +17,7 @@
  *     # # # P      # # # P
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { Midend } from "../../engine/index.ts";
 import { CROSS, type EdgeChange, LINE, OPEN } from "../../engine/line-drawing.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -41,7 +42,6 @@ import type { Point } from "../../engine/types.ts";
 import { crossDrag, wordtrailGame } from "./index.ts";
 import {
   COL_DARK,
-  COL_ERROR,
   centerOf,
   layout,
   newDrawState,

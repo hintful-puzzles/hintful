@@ -9,6 +9,7 @@
  * unset edge), and the two mark roles have to stay one apiece.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import {
@@ -21,7 +22,7 @@ import { type DrawOp, opsOfKind } from "../../engine/testing/recording-drawing.t
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { GalaxiesHint } from "./hint.ts";
 import { type GalaxiesMove, galaxiesGame } from "./index.ts";
-import { COL_HINT_CELL, PREFERRED_TILE_SIZE as TS } from "./render.ts";
+import { PREFERRED_TILE_SIZE as TS } from "./render.ts";
 import { GalaxiesDiff } from "./solver.ts";
 
 const lit = (step: HintStep<GalaxiesMove, GalaxiesHint>): GalaxiesHint => {
@@ -139,7 +140,7 @@ describe("a displayed hint reaches the canvas", () => {
     // The dot is ringed, and is the only one marked: "the ringed dot" cannot
     // be ambiguous.
     expect(centers.size).toBe(hl.targets.length + 1);
-    expect(circles(recording.ops, COL_HINT_CELL)).toHaveLength(0);
+    expect(circles(recording.ops, COL_HINT_OUTLINE)).toHaveLength(0);
   });
 
   it("never rings a dot standing on a cell it has filled", () => {
@@ -186,7 +187,7 @@ describe("a displayed hint reaches the canvas", () => {
     // One ring per evidence cell, and no fill: an evidence cell's own black or
     // white background is what the deduction is reading, so a wash over it would
     // erase the reading.
-    const sides = markSides(recording.ops, COL_HINT_CELL);
+    const sides = markSides(recording.ops, COL_HINT_OUTLINE);
     expect(sides.length).toBe(4 * hl.area.length);
     for (const s of sides) expect(isThin(s)).toBe(true);
   });

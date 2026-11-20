@@ -5,6 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
@@ -16,9 +17,6 @@ import {
 import { cappedSolveFor, lowestSolvingCap } from "../../engine/difficulty.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import {
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   computeSize,
   coord,
   PREFERRED_TILE_SIZE,

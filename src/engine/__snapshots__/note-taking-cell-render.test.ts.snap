@@ -285,53 +285,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
     {
       "h": 32,
       "op": "rect",
-      "rgb": "rgb(194, 194, 194)",
-      "w": 32,
-      "x": 24,
-      "y": 24,
-    },
-    {
-      "fillRgb": "none",
-      "op": "polygon",
-      "outlineRgb": "rgb(139, 139, 139)",
-      "points": [
-        [
-          24,
-          24,
-        ],
-        [
-          55,
-          24,
-        ],
-        [
-          55,
-          55,
-        ],
-        [
-          24,
-          55,
-        ],
-      ],
-    },
-    {
-      "h": 32,
-      "op": "rect",
-      "rgb": "rgb(128, 128, 128)",
-      "w": 4,
-      "x": 62,
-      "y": 24,
-    },
-    {
-      "h": 4,
-      "op": "rect",
-      "rgb": "rgb(211, 211, 211)",
-      "w": 32,
-      "x": 24,
-      "y": 62,
-    },
-    {
-      "h": 32,
-      "op": "rect",
       "rgb": "rgb(181, 169, 105)",
       "w": 32,
       "x": 72,
@@ -5848,48 +5801,6 @@ exports[`unequal > matches its recorded frames 1`] = `
     },
   ],
   "entry": [
-    {
-      "h": 32,
-      "op": "rect",
-      "rgb": "rgb(237, 237, 237)",
-      "w": 32,
-      "x": 24,
-      "y": 24,
-    },
-    {
-      "fillRgb": "none",
-      "op": "polygon",
-      "outlineRgb": "rgb(139, 139, 139)",
-      "points": [
-        [
-          24,
-          24,
-        ],
-        [
-          55,
-          24,
-        ],
-        [
-          55,
-          55,
-        ],
-        [
-          24,
-          55,
-        ],
-      ],
-    },
-    {
-      "align": "center",
-      "baseline": "mathematical",
-      "fontType": "variable",
-      "op": "text",
-      "rgb": "rgb(0, 0, 0)",
-      "size": 24,
-      "text": "1",
-      "x": 40,
-      "y": 40,
-    },
     {
       "h": 32,
       "op": "rect",

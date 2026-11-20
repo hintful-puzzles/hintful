@@ -13,20 +13,23 @@
 
 import { FREE, FREE_TEXT } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
   DRAG_ADD,
   DRAG_REMOVE,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   GOAL,
-  HINT_OUTLINE,
   INK,
   RULED_OUT,
   surfaceGrid,
   wallFill,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { drawEdgeHints, edgeHintWords, stepEdgeHints } from "../../engine/edge-hint.ts";
@@ -55,6 +58,7 @@ import {
   squareCenter,
   squareEdges,
 } from "../../engine/square-edges.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { WordtrailHighlights } from "./hint.ts";
@@ -73,30 +77,24 @@ export const PREFERRED_TILE_SIZE = 48;
 
 // --- palette ----------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_GRID = 1;
-const COL_CELL = 2;
-const COL_LINE = 3;
-const COL_RULED_OUT = 4;
+// A line that breaks a rule already (it closes a loop, or makes a trail
+// longer than any listed word) is `COL_ERROR`. The letter a hint step reasons
+// from, and the letters of the words it finds, are `COL_HINT_OUTLINE`; the
+// edges it decides are ringed by the engine (`drawEdgeHints`).
+const COL_GRID = FIRST_GAME_SLOT;
+const COL_CELL = FIRST_GAME_SLOT + 1;
+const COL_LINE = FIRST_GAME_SLOT + 2;
+const COL_RULED_OUT = FIRST_GAME_SLOT + 3;
 /** A dark square, which holds no letter. */
-export const COL_DARK = 5;
-/** A line that breaks a rule already: it closes a loop, or makes a trail
- * longer than any listed word. */
-export const COL_ERROR = 6;
-const COL_DRAG_ADD = 7;
-const COL_DRAG_REMOVE = 8;
-const COL_CURSOR = 9;
-/** The letter a hint step reasons from, and the letters of the words it
- * finds. The edges it decides are ringed by the engine (`drawEdgeHints`). */
-export const COL_HINT_EVIDENCE = 10;
-const COL_FLASH = 11;
-const COL_FLASH_LEAD = 12;
-export const COL_TEXT = 13;
+export const COL_DARK = FIRST_GAME_SLOT + 4;
+const COL_DRAG_ADD = FIRST_GAME_SLOT + 5;
+const COL_DRAG_REMOVE = FIRST_GAME_SLOT + 6;
+export const COL_TEXT = FIRST_GAME_SLOT + 7;
 /** The first of the words' colors, which tell the words drawn apart, each
  * its own on the board and in the list (owner, 2026-11-19): the ten-color
  * set's first nine, as Path's pairs take them, since its gray reads as a
  * dark square. A board of more words than that takes them round again. */
-const COL_HUE = 14;
+const COL_HUE = FIRST_GAME_SLOT + 8;
 export const HUES = 9;
 /** The first of the letters on each word color's disc, a slot a color. */
 export const COL_HUE_TEXT = COL_HUE + HUES;
@@ -105,20 +103,14 @@ export const COL_HUE_TEXT = COL_HUE + HUES;
 export const COL_SPOTLIGHT = COL_HUE_TEXT + HUES;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_LINE] = INK;
   out[COL_RULED_OUT] = RULED_OUT;
   out[COL_DARK] = wallFill(defaultBackground);
-  out[COL_ERROR] = ERROR;
   out[COL_DRAG_ADD] = DRAG_ADD;
   out[COL_DRAG_REMOVE] = DRAG_REMOVE;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_TEXT] = INK;
   for (let k = 0; k < HUES; k++) {
     out[COL_HUE + k] = FREE[k];
@@ -257,16 +249,12 @@ const S_DRAG_ADD = 1 << 5;
 const S_DRAG_REMOVE = 1 << 6;
 const S_OUT = 1 << 7;
 
-// Word 2, the hint on the sides: `edge-hint.ts`'s word. Word 3, the sides
-// whose asked line runs out of the square, a bit a side.
-const WORDS = 4;
-
 export interface WordtrailDrawState {
-  started: boolean;
   tileSize: number;
-  /** What each square shows on the canvas, three words a square; -1 before
-   * the first frame. */
-  cache: Int32Array;
+  /** What each square shows on the canvas, four words a square: the
+   * square, its sides, the hint on the sides (`edge-hint.ts`'s word), and
+   * the sides whose asked line runs out of the square, a bit a side. */
+  tiles: TileCache;
   /** What the list of lengths shows: each slot's word, or "" where none is
    * drawn yet. `null` before the first frame. */
   list: string | null;
@@ -277,9 +265,8 @@ export function newDrawState(
   tileSize: number,
 ): WordtrailDrawState {
   return {
-    started: false,
     tileSize,
-    cache: new Int32Array(state.w * state.h * WORDS).fill(-1),
+    tiles: new TileCache(state.w * state.h, { words: 4 }),
     list: null,
   };
 }
@@ -327,7 +314,7 @@ function drawTile(
     dr.drawUpdate({ x: px, y: py, w: ts, h: ts });
     return;
   }
-  const surface = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_CELL;
+  const surface = tone ? winSlot(tone) : COL_CELL;
   // The word's color, or -1 where the square's piece spells none.
   const hue = ((square >> K_HUE) & 0xf) - 1;
   dr.drawRect(body, surface);
@@ -339,7 +326,7 @@ function drawTile(
     dr,
     { box: body, outer: 0, inner: Math.max(2, ts >> 4) },
     (square >> K_OUTLINE) & 0xf,
-    COL_HINT_EVIDENCE,
+    COL_HINT_OUTLINE,
   );
   // The dictionary's spotlight, inside where the hint's outline would be, so
   // a letter can wear both.
@@ -384,7 +371,7 @@ function drawTile(
   // laid one would be.
   const small = Math.max(2, Math.floor(ts / 8));
   const hintCross = Math.max(2, ts >> 4);
-  drawEdgeHints(dr, hints, COL_HINT_EVIDENCE, {
+  drawEdgeHints(dr, hints, COL_HINT_OUTLINE, {
     cross: (sides, ink) => {
       for (let k = 0; k < 4; k++) if (sides & (1 << k)) cross(k, ink, small, hintCross);
     },
@@ -589,12 +576,11 @@ export function redraw(
   const { w, h, letters } = state;
   const g = squareEdges(w, h);
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The grid's frame: each square draws its top and left lines, and this
     // the bottom and right ones, in the border where no square repaints.
     const b = border(ts);
     dr.drawRect({ x: b, y: b, w: w * ts + 1, h: h * ts + 1 }, COL_GRID);
-    ds.started = true;
   }
 
   // What the board shows: the state, with the drag as it would be released.
@@ -669,19 +655,8 @@ export function redraw(
         sides |= s << (k * SIDE_BITS);
       }
       const keyed = square | (outs > 0 && ins === 0 ? F_START : 0);
-      const at = i * WORDS;
-      if (
-        ds.cache[at] === keyed &&
-        ds.cache[at + 1] === sides &&
-        ds.cache[at + 2] === hints &&
-        ds.cache[at + 3] === hintOut
-      )
-        continue;
+      if (!ds.tiles.changed(i, keyed, sides, hints, hintOut)) continue;
       drawTile(dr, ds, state, x, y, keyed, sides, hints, hintOut);
-      ds.cache[at] = keyed;
-      ds.cache[at + 1] = sides;
-      ds.cache[at + 2] = hints;
-      ds.cache[at + 3] = hintOut;
     }
   }
 

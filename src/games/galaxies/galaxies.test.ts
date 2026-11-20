@@ -1,4 +1,10 @@
 import { describe, expect, it } from "vitest";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+} from "../../engine/color/roles.ts";
 import { descBadCharacter, validateDesc } from "../../engine/desc-error.ts";
 import { difficultyTiers } from "../../engine/difficulty.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
@@ -35,14 +41,7 @@ import {
   galaxiesGame,
 } from "./index.ts";
 import { legalDotsFor, okToAddAssocWithOpposite, reachableFromDot } from "./moves.ts";
-import {
-  COL_CURSOR,
-  COL_DRAG,
-  COL_EDGE,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_MISTAKE,
-} from "./render.ts";
+import { COL_DRAG, COL_EDGE } from "./render.ts";
 import { clearForSolve, solverState } from "./solver.ts";
 import {
   addAssoc,
@@ -478,7 +477,7 @@ describe("Galaxies findMistakes", () => {
     ).toBe(false);
   });
 
-  it("renders a flagged wall in COL_MISTAKE", () => {
+  it("renders a flagged wall in COL_ERROR", () => {
     expect(interior).not.toBeNull();
     if (!interior) return;
     const s = cloneState(init);
@@ -488,10 +487,10 @@ describe("Galaxies findMistakes", () => {
     const ds = preferredDrawState(galaxiesGame, s);
     const { dr, ops } = recordingDrawing();
     galaxiesRedraw(dr, ds, null, s, 1, ui, 0, NO_FLASH, undefined, mistakes);
-    // The only COL_MISTAKE consumer reachable from this state is the
+    // The only COL_ERROR consumer reachable from this state is the
     // wrong-wall recolor (no tile mistakes present), so any such rect
     // proves the wall was painted in the mistake color.
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
 
   it("recolors a flagged wall on a board that was already drawn", () => {
@@ -509,21 +508,19 @@ describe("Galaxies findMistakes", () => {
     // Frame 1: the same board, no overlay — warms the per-tile cache.
     const cold = recordingDrawing();
     galaxiesRedraw(cold.dr, ds, null, s, 1, ui, 0, NO_FLASH, undefined, undefined);
-    expect(cold.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(
-      false,
-    );
+    expect(cold.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(false);
 
     // Frame 2: Check & Save turns the overlay on. Nothing else changed.
     const warm = recordingDrawing();
     const mistakes = galaxiesGame.findMistakes?.(s) ?? [];
     galaxiesRedraw(warm.dr, ds, s, s, 1, ui, 0, NO_FLASH, undefined, mistakes);
-    expect(warm.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(true);
+    expect(warm.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
 
     // Frame 3: the overlay clears (the player moves on) — the wall must go
     // back to COL_EDGE, which only happens if the *removal* is stale too.
     const cleared = recordingDrawing();
     galaxiesRedraw(cleared.dr, ds, s, s, 1, ui, 0, NO_FLASH, undefined, undefined);
-    expect(cleared.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(
+    expect(cleared.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(
       false,
     );
     expect(cleared.ops.some((o) => o.op === "rect" && o.color === COL_EDGE)).toBe(true);

@@ -41,7 +41,7 @@ import { schemeOf, schemePalettes } from "./scheme-palettes.ts";
 /** `kind:a:b` to what the pair is, per game. */
 const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
   galaxies: {
-    "mark:13:3": "a white dot's ink rim, white in the dark scheme; the dot carries it",
+    "mark:15:8": "a white dot's ink rim, white in the dark scheme; the dot carries it",
   },
   guess: {
     "mark:1:17": "the outline of a white peg, which is white",

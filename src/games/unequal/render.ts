@@ -5,12 +5,8 @@
  * edge-clue renderer's (`engine/edge-clue-latin/render.ts`).
  */
 
-import {
-  COL_BACKGROUND,
-  COL_TEXT,
-  clueColor,
-  gap,
-} from "../../engine/edge-clue-latin/render.ts";
+import { COL_BACKGROUND } from "../../engine/color/roles.ts";
+import { COL_TEXT, clueColor, gap } from "../../engine/edge-clue-latin/render.ts";
 import {
   F_ADJ_DOWN,
   F_ADJ_LEFT,
