@@ -477,10 +477,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "h",
-      "markSides",
       "marks",
       "tileSize",
-      "visible",
+      "tiles",
       "w",
     ],
     "id": "dominosa",
@@ -546,11 +545,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "h",
       "marks",
-      "started",
       "tileSize",
+      "tiles",
       "w",
     ],
     "id": "filling",
@@ -583,7 +581,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "started",
       "tileSize",
       "tiles",
     ],
@@ -1152,9 +1149,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "ringed",
       "tileSize",
+      "tiles",
     ],
     "id": "mosaic",
     "members": [
@@ -1443,10 +1440,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "h",
-      "hint",
-      "lflags",
-      "started",
       "tileSize",
+      "tiles",
       "w",
     ],
     "id": "pearl",
@@ -2512,9 +2507,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
-      "started",
       "tileSize",
+      "tiles",
     ],
     "id": "unruly",
     "members": [

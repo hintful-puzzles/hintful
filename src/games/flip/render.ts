@@ -9,14 +9,13 @@
  */
 
 import { BLACK, TWO, WHITE } from "../../engine/color/colors.ts";
+import { cellSurface, surfaceGrid } from "../../engine/color/palette.ts";
 import {
-  CURSOR,
-  cellSurface,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
-  surfaceGrid,
-} from "../../engine/color/palette.ts";
+  COL_CURSOR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -24,18 +23,17 @@ import { drawMarkSides, type MarkBand, MarkOutlines } from "../../engine/hint-ma
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { FlipMove, FlipParams, FlipState, FlipUi } from "./state.ts";
 
 export interface FlipDrawState {
-  started: boolean;
   tileSize: number;
-  /** Per-cell render cache: the bits `drawTile` last drew (the grid's, plus 4
-   * for the cursor, the hint marks' sides from {@link MARK_SHIFT} up,
-   * {@link STRIPED} and the flash's tone from {@link FLASH_SHIFT}); -1 = never drawn,
-   * {@link ANIMATING} mid-flip. */
-  tiles: Int32Array;
+  /** Per square, the bits `drawTile` last drew (the grid's, plus 4 for the
+   * cursor, the hint marks' sides from {@link MARK_SHIFT} up, {@link STRIPED}
+   * and the flash's tone from {@link FLASH_SHIFT}), {@link ANIMATING} mid-flip. */
+  tiles: TileCache;
 }
 
 /** The cache entry of a tile mid-flip, which repaints on every frame. */
@@ -48,23 +46,16 @@ const STRIPED = 1 << 16;
 /** Where the tone of the win flash on a square sits: two bits. */
 const FLASH_SHIFT = 17;
 
-// Color palette indices.
-const COL_BACKGROUND = 0;
-const COL_UNLIT = 1;
-const COL_LIT = 2;
-const COL_GRID = 3;
+// Color palette indices. The hint outline marks the unlit squares the press
+// is for.
+const COL_UNLIT = FIRST_GAME_SLOT;
+const COL_LIT = FIRST_GAME_SLOT + 1;
+export const COL_GRID = FIRST_GAME_SLOT + 2;
 /** The diagram on an unlit square's piece; {@link COL_LIT_DIAG} on a lit one's. */
-const COL_UNLIT_DIAG = 4;
-const COL_CURSOR = 5;
-export const COL_HINT_CELL = 6; // the unlit squares the press is for: outlined
-const COL_LIT_DIAG = 7;
+const COL_UNLIT_DIAG = FIRST_GAME_SLOT + 3;
+const COL_LIT_DIAG = FIRST_GAME_SLOT + 4;
 /** The surface of a square, which the piece sits inset on. */
-const COL_SURFACE = 8;
-/** The ground of a square the win flash is on. */
-export const COL_FLASH = 9;
-/** And under the flash's leading edge. */
-export const COL_FLASH_LEAD = 10;
-const NCOLORS = 11;
+const COL_SURFACE = FIRST_GAME_SLOT + 5;
 
 /** Which member of the two-state pair a square holds: the first while it is
  * still to be lit, the second once it is. */
@@ -81,19 +72,15 @@ export function border(tileSize: number): number {
 
 export function newDrawState(s: FlipState, tileSize: number): FlipDrawState {
   return {
-    started: false,
     tileSize,
-    tiles: new Int32Array(s.w * s.h).fill(-1),
+    tiles: new TileCache(s.w * s.h),
   };
 }
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
-  const ret: Color[] = new Array(NCOLORS);
-  ret[COL_BACKGROUND] = bg;
+  const ret = rolePalette(bg);
   ret[COL_SURFACE] = cellSurface(bg);
-  ret[COL_FLASH] = FLASH;
-  ret[COL_FLASH_LEAD] = FLASH_LEAD;
   ret[COL_GRID] = surfaceGrid(bg);
   ret[COL_UNLIT] = TWO[pairIndex(true)];
   ret[COL_LIT] = TWO[pairIndex(false)];
@@ -102,8 +89,6 @@ export function colors(defaultBackground: Color): Color[] {
   // taking the dark one.
   ret[COL_UNLIT_DIAG] = WHITE;
   ret[COL_LIT_DIAG] = BLACK;
-  ret[COL_CURSOR] = CURSOR;
-  ret[COL_HINT_CELL] = HINT_OUTLINE;
   return ret;
 }
 
@@ -131,7 +116,7 @@ export function redraw(
   const tile = ds.tileSize;
   const b = border(tile);
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     for (let i = 0; i <= w; i++) {
       dr.drawLine(
         { x: i * tile + b, y: b },
@@ -148,7 +133,6 @@ export function redraw(
         1,
       );
     }
-    ds.started = true;
   }
 
   const progress = animTime / ANIM_TIME;
@@ -174,9 +158,8 @@ export function redraw(
       (tone << FLASH_SHIFT) |
       (marks.packed(x, y) << MARK_SHIFT) |
       (flipping ? ANIMATING : v);
-    if (flipping || ds.tiles[i] !== drawn) {
+    if (ds.tiles.changed(i, drawn) || flipping) {
       drawTile(dr, ds, s, x, y, v, flipping, progress, marks, stripes, tone);
-      ds.tiles[i] = drawn;
     }
   }
 }
@@ -203,7 +186,7 @@ function drawTile(
   const unlit = (v & 1) !== 0;
 
   dr.clip(inner);
-  dr.drawRect(inner, tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_SURFACE);
+  dr.drawRect(inner, tone ? winSlot(tone) : COL_SURFACE);
 
   // Under the piece: the bands mark the square, and the piece is what it holds.
   if (stripes) dr.drawHatch(inner, hatchPeriod(ts));
@@ -267,7 +250,7 @@ function drawTile(
     outer: 0,
     inner: Math.max(2, ts >> 4),
   };
-  drawMarkSides(dr, band, marks.evidenceSides(x, y), COL_HINT_CELL);
+  drawMarkSides(dr, band, marks.evidenceSides(x, y), COL_HINT_OUTLINE);
   if (marks.targetSides(x, y)) dr.drawRing(inner, NOTHING_TO_CLEAR, band.inner);
 
   dr.unclip();

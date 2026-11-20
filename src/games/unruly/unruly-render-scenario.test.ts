@@ -4,13 +4,14 @@
 // reviewable text diff. `vitest -u` re-baselines an intended change — keep
 // the targeted assertions so a careless `-u` can't silently erase them.
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { type Cell, ONE, ZERO } from "./constants.ts";
 import { newDesc } from "./generator.ts";
 import { type UnrulyHint, unrulyGame } from "./index.ts";
-import { COL_0, COL_1, COL_ERROR, COL_GIVEN, COL_GRID } from "./render.ts";
+import { COL_0, COL_1, COL_GIVEN, COL_GRID } from "./render.ts";
 import { solveToString } from "./solver.ts";
 import { newState, type UnrulyMove } from "./state.ts";
 

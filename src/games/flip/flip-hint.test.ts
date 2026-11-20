@@ -7,6 +7,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -18,7 +19,6 @@ import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { type FlipRung, hint, hintKeepTrack } from "./hint.ts";
 import { flipGame } from "./index.ts";
-import { COL_HINT_CELL } from "./render.ts";
 import { shortestAnswer } from "./solver.ts";
 import { encodeBitmap, type FlipMove, type FlipState } from "./state.ts";
 
@@ -242,7 +242,7 @@ describe("Flip hint frame", () => {
     const ops = result.recording.ops;
     expectRing(ops);
     // Two outlined squares, as one contour or two rings: six to eight sides.
-    const sides = markSides(ops, COL_HINT_CELL).length;
+    const sides = markSides(ops, COL_HINT_OUTLINE).length;
     expect(sides).toBeGreaterThanOrEqual(6);
     expect(sides).toBeLessThanOrEqual(8);
     // One hatch a striped square, in the press's color.
@@ -256,6 +256,6 @@ describe("Flip hint frame", () => {
     const result = renderScenario({ game: G, id: pinned("lastChance").id });
     const ops = result.recording.ops;
     expect(ringsOf(ops)).toEqual([]);
-    expect(markSides(ops, COL_HINT_CELL)).toEqual([]);
+    expect(markSides(ops, COL_HINT_OUTLINE)).toEqual([]);
   });
 });

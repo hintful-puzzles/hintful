@@ -1,12 +1,18 @@
 /**
  * Tier-2.5 render scenarios for Pearl: drive a real Midend to a target frame
  * and capture `redraw`. Targeted op assertions (pearls as black/white
- * circles, laid loop segments as thick lines, the `COL_MISTAKE` overlay) plus
+ * circles, laid loop segments as thick lines, the `COL_ERROR` mistake overlay) plus
  * a snapshot so a render regression is a reviewable text diff. A second
  * scenario switches the `appearance` preference to the loopy style and
  * asserts the center-dot grid it draws.
  */
 import { describe, expect, it } from "vitest";
+import {
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+} from "../../engine/color/roles.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
@@ -26,12 +32,8 @@ import { pearlGame } from "./index.ts";
 import { SQUARE } from "./kinds.ts";
 import {
   COL_BLACK,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_GRID,
-  COL_HINT_CELL,
   COL_LINE,
-  COL_MISTAKE,
   COL_WHITE,
   fromCoord,
   metrics,
@@ -109,7 +111,7 @@ describe("Pearl render scenarios", () => {
     );
   });
 
-  it("a wrong segment shows the COL_MISTAKE overlay", () => {
+  it("a wrong segment shows the COL_ERROR mistake overlay", () => {
     // Find a horizontal edge the unique solution does NOT contain.
     const state = newState(P, DESC);
     const sol = new Uint8Array(P.w * P.h);
@@ -128,7 +130,7 @@ describe("Pearl render scenarios", () => {
       showMistakes: true,
     });
     expect(mistakeCount).toBeGreaterThan(0);
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(
+    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(
       true,
     );
   });
@@ -151,7 +153,7 @@ describe("Pearl render scenarios", () => {
     expect(recording.ops.some((o) => o.op === "rect" && o.color === ink)).toBe(false);
     // The evidence square is outlined, a band on each of its four sides.
     const band = recording.ops.filter(
-      (o) => o.op === "rect" && o.color === COL_HINT_CELL,
+      (o) => o.op === "rect" && o.color === COL_HINT_OUTLINE,
     );
     expect(band).toHaveLength(4);
     expect(recording.ops).toMatchSnapshot();

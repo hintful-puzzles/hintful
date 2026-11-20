@@ -3,6 +3,13 @@
 // count badge, the lifted cell under a given, the cursor outline, the
 // win flash across the cells, and the cache suppressing unchanged tiles.
 import { describe, expect, it } from "vitest";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+} from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, mark, phrase, so } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -25,14 +32,10 @@ import { unrulyGame } from "./index.ts";
 import {
   COL_0,
   COL_1,
-  COL_CURSOR,
   COL_EMPTY,
-  COL_ERROR,
   COL_ERROR_TEXT,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_GIVEN,
-  COL_HINT_CELL,
+  COL_GRID,
   newDrawState,
   PLACE_ANIM_TIME,
   redraw,
@@ -108,7 +111,7 @@ describe("Unruly redraw", () => {
     // 36 empty tile bodies.
     expect(bodies(ops).filter((o) => o.color === COL_EMPTY).length).toBe(36);
     // The outer grid edge frame was drawn on first draw.
-    expect(ops.some((o) => o.op === "rect" && o.color === 1)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_GRID)).toBe(true);
   });
 
   it("draws a one as a square and a zero as a disc, on a surface that stays quiet", () => {
@@ -246,10 +249,10 @@ describe("Unruly redraw", () => {
     const hatches = opsOfKind(ops, "hatch");
     expect(hatches).toHaveLength(state.w2);
     expect(new Set(hatches.map((h) => h.y)).size).toBe(1);
-    // Premise outline: COL_HINT_CELL strips around the cited clue.
+    // Premise outline: COL_HINT_OUTLINE strips around the cited clue.
     expect(
       opsOfKind(ops, "rect").filter(
-        (o) => o.color === COL_HINT_CELL && !(o.w === TS - 1 && o.h === TS - 1),
+        (o) => o.color === COL_HINT_OUTLINE && !(o.w === TS - 1 && o.h === TS - 1),
       ).length,
     ).toBeGreaterThanOrEqual(4);
   });

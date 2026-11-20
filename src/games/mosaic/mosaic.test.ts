@@ -23,6 +23,7 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
 } from "../../engine/pointer.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import { mosaicGame } from "./index.ts";
 import { status } from "./solver.ts";
 import {
@@ -351,7 +352,7 @@ describe("Mosaic status / text", () => {
 describe("Mosaic input mapping", () => {
   const ds = {
     tileSize: 32,
-    cache: new Int32Array(0),
+    tiles: new TileCache(0),
     ringed: [],
   };
   const at = (cx: number, cy: number) => ({

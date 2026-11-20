@@ -31,13 +31,8 @@ import { dominosaGame } from "./index.ts";
 // A set up to 1 above Easy and a set up to 2 above Normal.
 describeAbsentTiers(dominosaGame, ["1db", "1dh", "1de", "2dh", "2de"]);
 
-import {
-  COL_DOMINOCLASH,
-  COL_DOMINOTEXT,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_REFERENCE,
-} from "./render.ts";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
+import { COL_DOMINOTEXT, COL_REFERENCE } from "./render.ts";
 import { solveNumbers } from "./solver.ts";
 import {
   DCOUNT,
@@ -450,7 +445,7 @@ describe("dominosa render", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("renders a clash in COL_DOMINOCLASH when a value is placed twice", () => {
+  it("renders a clash in COL_ERROR when a value is placed twice", () => {
     // Place the same domino in two disjoint spots on a fixed board.
     const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("clash"));
@@ -462,9 +457,7 @@ describe("dominosa render", () => {
       id: `${encodeParams(p, true)}:${desc}`,
       moves: two?.map(([d1, d2]): DominosaMove => ({ type: "domino", d1, d2 })),
     });
-    const clash = recording.ops.some(
-      (o) => o.op === "polygon" && o.fill === COL_DOMINOCLASH,
-    );
+    const clash = recording.ops.some((o) => o.op === "polygon" && o.fill === COL_ERROR);
     expect(clash).toBe(true);
   });
 

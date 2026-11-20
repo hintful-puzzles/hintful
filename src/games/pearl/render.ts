@@ -15,18 +15,22 @@
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLACK, WHITE } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
   DRAG_ADD,
   DRAG_REMOVE,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   INK,
   RULED_OUT,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
 import {
   drawEdgeHints,
@@ -53,6 +57,7 @@ import {
   squareEdges,
   U,
 } from "../../engine/square-edges.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, loopSteps, WIN_LEAD, walkLoop } from "../../engine/win-wave.ts";
 import { edgeOf, type PearlHint } from "./hint.ts";
@@ -70,38 +75,31 @@ import {
 
 export const PREFERRED_TILE_SIZE = 31;
 
-// --- palette (index-for-index with the pearl.c color enum) ---------------
-export const COL_BACKGROUND = 0;
-export const COL_HIGHLIGHT = 1;
-export const COL_LOWLIGHT = 2;
-export const COL_BLACK = 3;
-export const COL_WHITE = 4;
-export const COL_ERROR = 5;
-export const COL_GRID = 6;
-export const COL_FLASH = 7;
-export const COL_DRAGON = 8;
-export const COL_DRAGOFF = 9;
-export const COL_MISTAKE = 10; // appended past the C enum (findMistakes overlay)
-/** The keyboard cursor: brackets at the square's corners, which the loop
- * never crosses. */
-export const COL_CURSOR = 11;
+// --- palette ----------------------------------------------------------------
+// A line the rules break, a clue it breaks and a Check & Save mistake are all
+// `COL_ERROR`; the cursor's brackets sit at the square's corners, which the
+// loop never crosses; the squares a hint step reasons from are outlined in
+// `COL_HINT_OUTLINE`; the loop is `COL_FLASH` under the win flash's body and
+// `COL_FLASH_LEAD` under its leading edge.
+export const COL_HIGHLIGHT = FIRST_GAME_SLOT;
+export const COL_LOWLIGHT = FIRST_GAME_SLOT + 1;
+export const COL_BLACK = FIRST_GAME_SLOT + 2;
+export const COL_WHITE = FIRST_GAME_SLOT + 3;
+export const COL_GRID = FIRST_GAME_SLOT + 4;
+export const COL_DRAGON = FIRST_GAME_SLOT + 5;
+export const COL_DRAGOFF = FIRST_GAME_SLOT + 6;
 /** The player's edge crosses. Their own slot rather than upstream's pearl
  * `COL_BLACK`, which stays black in both schemes and sank into a dark board. */
-export const COL_RULED_OUT = 12;
-/** The squares a hint step reasons from, outlined. */
-export const COL_HINT_CELL = 13;
-export const COL_CELL = 14; // the surface of a square
+export const COL_RULED_OUT = FIRST_GAME_SLOT + 7;
+export const COL_CELL = FIRST_GAME_SLOT + 8; // the surface of a square
 /** The loop the player draws. Ink and not the black pearl's `COL_BLACK`: the
  * loop is read against the surface, so it inverts with the scheme, and a
  * pinned black sank into a dark board. */
-export const COL_LINE = 15;
-/** The loop under the win flash's leading edge; {@link COL_FLASH} under its body. */
-export const COL_FLASH_LEAD = 16;
+export const COL_LINE = FIRST_GAME_SLOT + 9;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  const out = rolePalette(background);
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
   out[COL_BLACK] = BLACK;
@@ -109,16 +107,10 @@ export function colors(defaultBackground: Color): Color[] {
   // The grid is where the squares are and never the drawing: the loop is.
   out[COL_GRID] = surfaceGrid(background);
   out[COL_CELL] = cellSurface(background);
-  out[COL_ERROR] = ERROR;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_DRAGON] = DRAG_ADD;
   out[COL_DRAGOFF] = DRAG_REMOVE;
-  out[COL_MISTAKE] = ERROR;
-  out[COL_CURSOR] = CURSOR;
   out[COL_LINE] = INK;
   out[COL_RULED_OUT] = RULED_OUT;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -140,30 +132,27 @@ const DS_FLASH_LEAD = 1 << 27;
 
 // --- hint draw flags ------------------------------------------------------
 //
-// A word of its own beside `lflags`, compared in the same cache-miss test, so a
+// A key word of its own beside the drawstate flags, so a
 // hint displayed on an otherwise unchanged board still repaints
 // (docs/rendering.md § "The tile cache and the diff key"). Its low bits are
 // `edge-hint.ts`'s word for the edges the step decides.
 const H_AREA_SHIFT = EDGE_HINT_BITS; // 4 bits: sides of the evidence outline to paint
 
 export interface PearlDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
-  lflags: Int32Array;
-  /** Per-square hint marks: part of the diff key, see the `H_*` bits. */
-  hint: Int32Array;
+  /** Per square, the `DS_*` flags it shows and its hint marks (the `H_*`
+   * bits). */
+  tiles: TileCache;
 }
 
 export function newDrawState(state: PearlState, tileSize: number): PearlDrawState {
   return {
-    started: false,
     tileSize,
     w: state.w,
     h: state.h,
-    lflags: new Int32Array(state.w * state.h),
-    hint: new Int32Array(state.w * state.h),
+    tiles: new TileCache(state.w * state.h, { words: 2 }),
   };
 }
 
@@ -287,7 +276,7 @@ function drawSquare(
     dr,
     { box, outer: 0, inner: band },
     hint >> H_AREA_SHIFT,
-    COL_HINT_CELL,
+    COL_HINT_OUTLINE,
   );
 
   // Thin gridlines or no-line marks (drawn first; thick lines go on top).
@@ -308,7 +297,7 @@ function drawSquare(
       continue; // no gridlines out to the border
     if ((lflags >> DS_MSHIFT) & d) {
       const wrong = (lflags >> DS_WSHIFT) & d;
-      cross(cx + xoff, cy + yoff, t16, wrong ? COL_MISTAKE : COL_RULED_OUT, 1);
+      cross(cx + xoff, cy + yoff, t16, wrong ? COL_ERROR : COL_RULED_OUT, 1);
     } else if (guiStyle === GUI_LOOPY && !(hintCrosses & d)) {
       drawLine(dr, cx, cy, cx + xoff, cy + yoff, COL_GRID);
     }
@@ -324,7 +313,7 @@ function drawSquare(
   const each = (sides: number, draw: (d: number) => void): void => {
     for (let d = 1; d < 16; d *= 2) if (sides & d) draw(d);
   };
-  drawEdgeHints(dr, hint, COL_HINT_CELL, {
+  drawEdgeHints(dr, hint, COL_HINT_OUTLINE, {
     cross: (sides, ink) =>
       each(sides, (d) =>
         cross(cx + t2 * dirX(d), cy + t2 * dirY(d), t16, ink, Math.max(2, band)),
@@ -364,7 +353,7 @@ function drawSquare(
       : COL_FLASH;
   drawLinesSpecific(dr, m, x, y, lflags, 0, line);
   drawLinesSpecific(dr, m, x, y, lflags, DS_ESHIFT, COL_ERROR);
-  drawLinesSpecific(dr, m, x, y, lflags, DS_XSHIFT, COL_MISTAKE);
+  drawLinesSpecific(dr, m, x, y, lflags, DS_XSHIFT, COL_ERROR);
   drawLinesSpecific(dr, m, x, y, lflags, DS_DSHIFT, COL_DRAGOFF);
   drawLinesSpecific(dr, m, x, y, lflags, DS_DSHIFT, COL_DRAGON);
 
@@ -421,9 +410,8 @@ export function redraw(
   const { w, h } = state;
   const m = metrics(ds.tileSize);
   const guiStyle = ui.guiStyle;
-  let force = false;
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     if (guiStyle === GUI_MASYU) {
       // The rectangle behind the whole grid, whose right and bottom edges
       // show as the frame: one line, like the one each square draws on its
@@ -439,8 +427,6 @@ export function redraw(
       w: w * m.tile + 2 * m.border,
       h: h * m.tile + 2 * m.border,
     });
-    ds.started = true;
-    force = true;
   }
 
   // The win flash runs the loop: a square's position is its step around it.
@@ -477,9 +463,7 @@ export function redraw(
       }
       if (ui.cursor.visible && x === ui.cursor.x && y === ui.cursor.y) f |= DS_CURSOR;
 
-      if (f !== ds.lflags[i] || hintWords[i] !== ds.hint[i] || force) {
-        ds.lflags[i] = f;
-        ds.hint[i] = hintWords[i];
+      if (ds.tiles.changed(i, f, hintWords[i])) {
         drawSquare(dr, ds, guiStyle, x, y, f, hintWords[i], state.clues[i]);
       }
     }

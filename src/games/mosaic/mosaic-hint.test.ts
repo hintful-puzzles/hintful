@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -15,7 +16,6 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { type MosaicHint, mosaicHint } from "./hint.ts";
 import { mosaicGame } from "./index.ts";
 import { BLOCK, blockOf } from "./kinds.ts";
-import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf, newDesc, solveGameActual } from "./solver.ts";
 import {
   DIFF_NORMAL,
@@ -129,7 +129,7 @@ describe("Mosaic's hint", () => {
     const across = new Set(block.map((p) => p.x)).size;
     const down = new Set(block.map((p) => p.y)).size;
     const sides = recording.ops.filter(
-      (o) => o.op === "rect" && o.color === COL_HINT_EVIDENCE,
+      (o) => o.op === "rect" && o.color === COL_HINT_OUTLINE,
     );
     expect(sides).toHaveLength(2 * (across + down));
     // The number the sentence names is circled, so it is found without
@@ -195,7 +195,7 @@ describe("Mosaic's hint", () => {
       }
     }
     const sides = recording.ops.filter(
-      (o) => o.op === "rect" && o.color === COL_HINT_EVIDENCE,
+      (o) => o.op === "rect" && o.color === COL_HINT_OUTLINE,
     );
     expect(sides).toHaveLength(perimeter.size);
     // Both numbers are circled, each the value the sentence gives it.

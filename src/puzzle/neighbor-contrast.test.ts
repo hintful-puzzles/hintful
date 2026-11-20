@@ -47,7 +47,7 @@ const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
     "mark:1:17": "the outline of a white peg, which is white",
   },
   pearl: {
-    "area:4:15": "a white pearl on the loop; its black outline carries it",
+    "area:9:15": "a white pearl on the loop; its black outline carries it",
   },
   undead: {
     "area:0:8": "a vampire's body on the board; its ink outline carries it",

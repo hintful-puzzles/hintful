@@ -5,6 +5,12 @@
 // suppressing unchanged tiles.
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+} from "../../engine/color/roles.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
@@ -15,11 +21,7 @@ import {
   COL_CELL,
   COL_CLEAR,
   COL_CLEAR_MARK,
-  COL_CURSOR,
-  COL_ERROR,
   COL_ERROR_TEXT,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_GRID,
   COL_SHADED,
   COL_TEXT,

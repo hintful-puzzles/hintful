@@ -11,22 +11,25 @@
 
 import { TWO } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
-  ERROR,
   ERROR_TEXT,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { type Cell, EMPTY, ONE, pairIndex, ZERO } from "./constants.ts";
@@ -56,38 +59,23 @@ export const PREFERRED_TILE_SIZE = 32;
 export const PLACE_ANIM_TIME = 0.13;
 
 // --- palette -------------------------------------------------------------
-const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
+export const COL_GRID = FIRST_GAME_SLOT;
 /** The surface of a cell, which is all an undecided cell is. */
-export const COL_EMPTY = 2;
+export const COL_EMPTY = FIRST_GAME_SLOT + 1;
 /** The surface under a given. */
-export const COL_GIVEN = 3;
-export const COL_0 = 4;
-export const COL_1 = 5;
-export const COL_CURSOR = 6;
-export const COL_ERROR = 7;
-export const COL_ERROR_TEXT = 8;
-/** The outline on a cited premise cell. */
-export const COL_HINT_CELL = 9;
-/** The ground of a cell the win flash is on. */
-export const COL_FLASH = 10;
-/** The ground of a cell the win flash's leading edge is on. */
-export const COL_FLASH_LEAD = 11;
+export const COL_GIVEN = FIRST_GAME_SLOT + 2;
+export const COL_0 = FIRST_GAME_SLOT + 3;
+export const COL_1 = FIRST_GAME_SLOT + 4;
+export const COL_ERROR_TEXT = FIRST_GAME_SLOT + 5;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_EMPTY] = cellSurface(defaultBackground);
   out[COL_GIVEN] = givenSurface(defaultBackground);
   out[COL_1] = TWO[pairIndex(ONE)];
   out[COL_0] = TWO[pairIndex(ZERO)];
-  out[COL_CURSOR] = CURSOR;
-  out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -104,7 +92,7 @@ const FF_MISTAKE = 0x2000;
 // Hint-overlay bits (no upstream analog), also folded into the cache key.
 const FF_HINT_TARGET = 0x4000; // the forced cell (ringed)
 const FF_HINT_LINE = 0x10000; // a cell of the line the sentence names (hatched)
-const FF_HINT_OUTLINE = 0x20000; // a cited premise / pivotal cell (COL_HINT_CELL outline)
+const FF_HINT_OUTLINE = 0x20000; // a cited premise / pivotal cell (COL_HINT_OUTLINE outline)
 
 // --- geometry -----------------------------------------------------------
 /** The board's pixel origin. Exported so `interpretMove` reads the same number
@@ -122,18 +110,13 @@ export function computeSize(p: UnrulyParams, ts: number): Size {
 // --- draw state ---------------------------------------------------------
 
 export interface UnrulyDrawState {
-  started: boolean;
   tileSize: number;
-  /** Last-drawn packed tile word per cell; -1 forces a draw. */
-  cache: Int32Array;
+  /** The packed tile word each cell shows. */
+  tiles: TileCache;
 }
 
 export function newDrawState(state: UnrulyState, tileSize: number): UnrulyDrawState {
-  return {
-    started: false,
-    tileSize,
-    cache: new Int32Array(state.w2 * state.h2).fill(-1),
-  };
+  return { tileSize, tiles: new TileCache(state.w2 * state.h2) };
 }
 
 // --- tile drawing -------------------------------------------------------
@@ -181,10 +164,7 @@ function drawTile(
   const value: Cell = tile & FF_ZERO ? ZERO : tile & FF_ONE ? ONE : EMPTY;
   const lifted = value !== EMPTY && tile & FF_IMMUTABLE;
   const tone = ((tile >> FF_FLASH_SHIFT) & 3) as WinTone;
-  dr.drawRect(
-    inner,
-    tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : lifted ? COL_GIVEN : COL_EMPTY,
-  );
+  dr.drawRect(inner, tone ? winSlot(tone) : lifted ? COL_GIVEN : COL_EMPTY);
   // The hatch goes under the piece: it marks the line, and the piece is what
   // the line holds.
   if (tile & FF_HINT_LINE) dr.drawHatch(inner, hatchPeriod(ts));
@@ -272,10 +252,10 @@ function drawTile(
   // the outline marks the spared cells.
   if (tile & FF_HINT_OUTLINE) {
     const t = Math.max(1, Math.floor(ts / 12));
-    dr.drawRect({ x: px, y: py, w: ts - 1, h: t }, COL_HINT_CELL);
-    dr.drawRect({ x: px, y: py + ts - 1 - t, w: ts - 1, h: t }, COL_HINT_CELL);
-    dr.drawRect({ x: px, y: py, w: t, h: ts - 1 }, COL_HINT_CELL);
-    dr.drawRect({ x: px + ts - 1 - t, y: py, w: t, h: ts - 1 }, COL_HINT_CELL);
+    dr.drawRect({ x: px, y: py, w: ts - 1, h: t }, COL_HINT_OUTLINE);
+    dr.drawRect({ x: px, y: py + ts - 1 - t, w: ts - 1, h: t }, COL_HINT_OUTLINE);
+    dr.drawRect({ x: px, y: py, w: t, h: ts - 1 }, COL_HINT_OUTLINE);
+    dr.drawRect({ x: px + ts - 1 - t, y: py, w: t, h: ts - 1 }, COL_HINT_OUTLINE);
   }
 
   // The forced cell is **ringed**: the hint marks where to act, it does not
@@ -349,7 +329,7 @@ export function redraw(
   // (animTime > 0) and we have a from-state to grow out of.
   const animating = animTime > 0 && prev != null;
   const animFrac = animTime / PLACE_ANIM_TIME;
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The outer grid-edge frame.
     const o = outerEdge(ts);
     dr.drawRect(
@@ -361,7 +341,6 @@ export function redraw(
       },
       COL_GRID,
     );
-    ds.started = true;
   }
 
   // Recompute error overlays each frame (live error display, like upstream).
@@ -400,7 +379,7 @@ export function redraw(
       // new color out of its previous color.
       const animThis = animating && prev != null && prev.grid[i] !== grid[i];
       if (animThis) {
-        ds.cache[i] = -1;
+        ds.tiles.forget(i);
         drawTile(
           dr,
           coord(x, ts),
@@ -410,8 +389,7 @@ export function redraw(
           prev.grid[i] as Cell,
           animFrac,
         );
-      } else if (ds.cache[i] !== tile) {
-        ds.cache[i] = tile;
+      } else if (ds.tiles.changed(i, tile)) {
         drawTile(dr, coord(x, ts), coord(y, ts), ts, tile);
       }
     }

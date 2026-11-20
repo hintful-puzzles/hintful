@@ -4,6 +4,7 @@
  * See docs/hints.md.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
@@ -12,7 +13,6 @@ import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { type FillingHint, fillingGame } from "./index.ts";
-import { COL_HINT_CELL } from "./render.ts";
 import { deduceHintPlan, type FillingHintMove, solveFilling } from "./solver.ts";
 import { decodeParams, executeMove, type FillingState, newState } from "./state.ts";
 
@@ -272,7 +272,7 @@ describe("filling hint render scenario", () => {
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(
       marks.of("stripes", CELL).length,
     );
-    expect(markSides(recording.ops, COL_HINT_CELL)).toEqual([]);
+    expect(markSides(recording.ops, COL_HINT_OUTLINE)).toEqual([]);
     expect(recording.ops.some((o) => o.op === "text")).toBe(true); // clues
     expect(recording.ops).toMatchSnapshot();
   });

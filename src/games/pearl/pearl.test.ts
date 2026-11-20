@@ -280,7 +280,8 @@ describe("pearl mistake overlay is in the diff key (paint-twice)", () => {
     const { RecordingDrawing } = await import(
       "../../engine/testing/recording-drawing.ts"
     );
-    const { redraw, newDrawState, COL_MISTAKE } = await import("./render.ts");
+    const { redraw, newDrawState } = await import("./render.ts");
+    const { COL_ERROR } = await import("../../engine/color/roles.ts");
     const state = generate(EASY_6, "fm-paint");
     const sol = solutionLines(state);
     // Lay a wrong horizontal segment.
@@ -305,20 +306,20 @@ describe("pearl mistake overlay is in the diff key (paint-twice)", () => {
     // Frame 1: warm the cache with NO mistakes (draws the laid segment).
     const dr1 = new RecordingDrawing(palette);
     redraw(dr1, ds, null, wrong, 0, ui, 0, NO_FLASH, undefined, []);
-    expect(dr1.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(false);
+    expect(dr1.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(false);
 
     // Frame 2: same drawstate, WITH mistakes — the overlay must still paint
     // even though the cell's tile value is otherwise unchanged.
     const dr2 = new RecordingDrawing(palette);
     redraw(dr2, ds, null, wrong, 0, ui, 0, NO_FLASH, undefined, mistakes);
-    expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(true);
+    expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
 
-    // Frame 3: clearing the overlay erases it (repaints without COL_MISTAKE).
+    // Frame 3: clearing the overlay erases it (repaints without COL_ERROR).
     const dr3 = new RecordingDrawing(palette);
     redraw(dr3, ds, null, wrong, 0, ui, 0, NO_FLASH, undefined, []);
     const cellRepainted = dr3.ops.some((o) => o.op === "rect");
     expect(cellRepainted).toBe(true);
-    expect(dr3.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(false);
+    expect(dr3.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(false);
   });
 });
 

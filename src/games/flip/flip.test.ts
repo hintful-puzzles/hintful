@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -18,14 +19,12 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { PuzzleButton } from "../../engine/types.ts";
 import { NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { type FlipParams, type FlipState, flipGame } from "./index.ts";
-import { border, COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
+import { border, COL_GRID } from "./render.ts";
 
 function recordingDrawing() {
   const dr = new RecordingDrawing(flipGame.colors(DEFAULT_BACKGROUND));
   return { dr, ops: dr.ops };
 }
-
-const COL_GRID = 3;
 
 // `solve` is optional on the `Game` interface; Flip always has one.
 const solveFlip = flipGame.solve as NonNullable<typeof flipGame.solve>;

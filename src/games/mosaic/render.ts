@@ -13,17 +13,20 @@ import { GRAY_WASH, WHITE } from "../../engine/color/colors.ts";
 import {
   CLEAR,
   CLEAR_MARK,
-  CURSOR,
   cellSurface,
-  ERROR,
   ERROR_TEXT,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   INK,
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
@@ -35,6 +38,7 @@ import {
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import { ringFits, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { MosaicHint } from "./hint.ts";
@@ -55,34 +59,25 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
 /** The surface of a cell, whatever it holds. */
-export const COL_CELL = 1;
-export const COL_GRID = 2;
+export const COL_CELL = FIRST_GAME_SLOT;
+export const COL_GRID = FIRST_GAME_SLOT + 1;
 /** The piece in a marked cell. */
-export const COL_SHADED = 3;
+export const COL_SHADED = FIRST_GAME_SLOT + 2;
 /** The surface of a blank cell. */
-export const COL_CLEAR = 4;
+export const COL_CLEAR = FIRST_GAME_SLOT + 3;
 /** A number the board has not satisfied, off the piece. */
-export const COL_TEXT = 5;
+export const COL_TEXT = FIRST_GAME_SLOT + 4;
 /** What is faint on a blank cell: its cross, or a number the board has
  * satisfied. */
-export const COL_CLEAR_MARK = 6;
+export const COL_CLEAR_MARK = FIRST_GAME_SLOT + 5;
 /** A number on the shaded piece, and one there that the board has satisfied. */
-export const COL_TEXT_ON_PIECE = 7;
-export const COL_TEXT_SOLVED_ON_PIECE = 8;
-export const COL_ERROR = 9;
-export const COL_ERROR_TEXT = 10;
-export const COL_CURSOR = 11;
-export const COL_HINT_EVIDENCE = 12;
-/** The ground of a cell the win flash is on, whatever it holds: its body, and
- * its leading edge. */
-export const COL_FLASH = 13;
-export const COL_FLASH_LEAD = 14;
+export const COL_TEXT_ON_PIECE = FIRST_GAME_SLOT + 6;
+export const COL_TEXT_SOLVED_ON_PIECE = FIRST_GAME_SLOT + 7;
+export const COL_ERROR_TEXT = FIRST_GAME_SLOT + 8;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_SHADED] = SHADED;
@@ -94,12 +89,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TEXT_ON_PIECE] = WHITE;
   // A gray between the piece and its white number in both schemes.
   out[COL_TEXT_SOLVED_ON_PIECE] = GRAY_WASH;
-  out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -135,10 +125,9 @@ const WIN_SHIFT = 25;
 
 export interface MosaicDrawState {
   tileSize: number;
-  /** (width+1)×(height+1) cache of last-drawn packed cell values; -1
-   * forces a draw (docs/rendering.md § "The tile cache and the diff
-   * key"). */
-  cache: Int32Array;
+  /** The packed cell value each of the (width+1)×(height+1) tiles shows: a
+   * cell, or the closing grid line of the margin row and column. */
+  tiles: TileCache;
   /** The squares the last frame ringed, as `y * width + x`: their rings may
    * reach into the tiles round them, which repaint when the rings go. */
   ringed: number[];
@@ -147,7 +136,7 @@ export interface MosaicDrawState {
 export function newDrawState(state: MosaicState, tileSize: number): MosaicDrawState {
   return {
     tileSize,
-    cache: new Int32Array((state.width + 1) * (state.height + 1)).fill(-1),
+    tiles: new TileCache((state.width + 1) * (state.height + 1)),
     ringed: [],
   };
 }
@@ -211,7 +200,7 @@ function drawCell(
     const shaded = (cell & STATE_MARKED) !== 0;
     const clear = !shaded && (cell & STATE_BLANK) !== 0;
     const tone = ((cell >> WIN_SHIFT) & 3) as WinTone;
-    const lit = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : null;
+    const lit = tone ? winSlot(tone) : null;
     if (clear) {
       // No cross where the cell has a number, which takes the middle.
       drawClearSquare(
@@ -268,7 +257,7 @@ function drawCell(
       outer: 0,
       inner: Math.max(2, ts >> 4),
     };
-    drawMarkSides(dr, band, (sides >> 4) & MARK_ALL, COL_HINT_EVIDENCE);
+    drawMarkSides(dr, band, (sides >> 4) & MARK_ALL, COL_HINT_OUTLINE);
     // The number a step names is circled, inside the square and clear of its
     // edge, so it shows on a square the step also rings. On the piece the
     // circle takes the number's own ink: the evidence color against the piece
@@ -280,7 +269,7 @@ function drawCell(
           center,
           ts * 0.33 - i,
           -1,
-          shaded ? COL_TEXT_ON_PIECE : COL_HINT_EVIDENCE,
+          shaded ? COL_TEXT_ON_PIECE : COL_HINT_OUTLINE,
         );
     }
   }
@@ -329,7 +318,7 @@ export function redraw(
           const x = (i % width) + dx;
           const y = Math.floor(i / width) + dy;
           if (x >= 0 && y >= 0 && x <= width && y <= height)
-            ds.cache[y * (width + 1) + x] = -1;
+            ds.tiles.forget(y * (width + 1) + x);
         }
   ds.ringed = ringed;
 
@@ -352,10 +341,8 @@ export function redraw(
 
       const clueVal = inBounds ? board.clues[y * width + x] : -1;
 
-      const cachePos = y * (width + 1) + x;
-      if (ds.cache[cachePos] !== cell) {
+      if (ds.tiles.changed(y * (width + 1) + x, cell)) {
         drawCell(dr, cell, ts, clueVal, x, y);
-        ds.cache[cachePos] = cell;
       }
     }
   }

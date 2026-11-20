@@ -13,25 +13,29 @@
  */
 
 import {
-  CURSOR,
   cellSurface,
   ERROR_WASH,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   playerEntryColor,
   REGION_DONE,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -53,35 +57,26 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette --------------------------------------------------------------
-const COL_BACKGROUND = 0; // the board around the grid
-const COL_GRID = 1; // the thin line between two cells, and the frame
-const COL_HIGHLIGHT = 2; // selected-cell background
-export const COL_CORRECT = 3; // completed-region background
-export const COL_ERROR = 4; // overfull / boxed-in region background
-const COL_USER = 5; // player-filled digit
-const COL_CURSOR = 6;
-export const COL_HINT_CELL = 7; // the deduction's evidence cells — outlined
-export const COL_INK = 8; // a clue's digit, and a region's border
-export const COL_CELL = 9; // the surface of a cell the player fills
-export const COL_GIVEN = 10; // the lifted surface under a clue
-export const COL_FLASH = 11; // the ground of a cell under the win flash's body
-export const COL_FLASH_LEAD = 12; // and under its leading edge
+const COL_GRID = FIRST_GAME_SLOT; // the thin line between two cells, and the frame
+const COL_HIGHLIGHT = FIRST_GAME_SLOT + 1; // selected-cell background
+export const COL_CORRECT = FIRST_GAME_SLOT + 2; // completed-region background
+export const COL_ERROR_WASH = FIRST_GAME_SLOT + 3; // overfull / boxed-in region background
+const COL_USER = FIRST_GAME_SLOT + 4; // player-filled digit
+export const COL_INK = FIRST_GAME_SLOT + 5; // a clue's digit, and a region's border
+export const COL_CELL = FIRST_GAME_SLOT + 6; // the surface of a cell the player fills
+export const COL_GIVEN = FIRST_GAME_SLOT + 7; // the lifted surface under a clue
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = bg;
+  const out = rolePalette(bg);
   out[COL_GRID] = surfaceGrid(bg);
   out[COL_INK] = INK;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_HIGHLIGHT] = highlightWash(bg);
   out[COL_CORRECT] = REGION_DONE;
-  out[COL_ERROR] = ERROR_WASH;
+  out[COL_ERROR_WASH] = ERROR_WASH;
   out[COL_USER] = playerEntryColor(bg);
-  out[COL_CURSOR] = CURSOR;
   // The evidence is **outlined rather than washed**, though Filling is the
   // strongest case for a wash in the collection: its premise is a digit, which
   // reads well on a pale fill (3.41:1 in light, 4.04:1 in dark). But the wash
@@ -90,8 +85,8 @@ export function colors(defaultBackground: Color): Color[] {
   // mode**. The two pull opposite ways along one axis, so a wash under content
   // loses however it is tuned. An outline is read *against* the board, so it
   // can take teal's **bold** step ("dark in light mode, light in dark mode"),
-  // standing off the board by a similar margin in both schemes.
-  out[COL_HINT_CELL] = HINT_OUTLINE;
+  // standing off the board by a similar margin in both schemes: the role's
+  // `COL_HINT_OUTLINE`.
   return out;
 }
 
@@ -128,12 +123,11 @@ export function computeSize(w: number, h: number, ts: number): Size {
 // --- draw state ----------------------------------------------------------
 
 export interface FillingDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
-  /** Last-drawn packed word per cell; -1 forces a draw. */
-  cache: Int32Array;
+  /** The packed word each cell shows. */
+  tiles: TileCache;
   /** The hint target's ring and the evidence region's outline (fork additions),
    * drawn after the cell loop. See {@link markBand}. */
   marks: HintMarks;
@@ -141,11 +135,10 @@ export interface FillingDrawState {
 
 export function newDrawState(state: FillingState, tileSize: number): FillingDrawState {
   return {
-    started: false,
     tileSize,
     w: state.w,
     h: state.h,
-    cache: new Int32Array(state.w * state.h).fill(-1),
+    tiles: new TileCache(state.w * state.h),
     marks: new HintMarks(),
   };
 }
@@ -218,11 +211,11 @@ function drawSquare(
   const tone = ((flags >> WIN_SHIFT) & 3) as WinTone;
   const bg =
     tone !== WIN_NONE
-      ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
+      ? winSlot(tone)
       : flags & HIGH_BG
         ? COL_HIGHLIGHT
         : flags & ERROR_BG
-          ? COL_ERROR
+          ? COL_ERROR_WASH
           : flags & CORRECT_BG
             ? COL_CORRECT
             : flags & USER_COL
@@ -306,7 +299,7 @@ export function redrawFilling(
   const { w, h, board, clues } = state;
   const sz = w * h;
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The cells draw on top of this, which leaves the line past the last row
     // and column and a border's width outside the board all round. The board's
     // edge is always a region's border, so the frame is ink, and with each
@@ -323,7 +316,6 @@ export function redrawFilling(
       },
       COL_INK,
     );
-    ds.started = true;
   }
 
   const dsf = makeRegionDsf(board, w, h);
@@ -436,8 +428,7 @@ export function redrawFilling(
       if (hintRegion.has(i)) flags |= HINT_LINE;
 
       const word = v | (flags << VALUE_BITS);
-      if (ds.cache[i] !== word) {
-        ds.cache[i] = word;
+      if (ds.tiles.changed(i, word)) {
         drawSquare(dr, ts, x, y, v, flags);
       }
     }
@@ -461,6 +452,6 @@ function paintHintMarks(
   ds.marks.paint(dr, [...targets].map(cellAt), [...area].map(cellAt), {
     band: (x, y) => markBand(ds, x, y),
     text: (x, y) => cellText(state, ds.tileSize, x, y),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   });
 }

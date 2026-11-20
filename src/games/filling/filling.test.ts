@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
@@ -36,15 +37,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newFillingDesc } from "./generator.ts";
 import { fillingGame } from "./index.ts";
-import {
-  COL_CELL,
-  COL_CORRECT,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_GIVEN,
-  COL_INK,
-} from "./render.ts";
+import { COL_CELL, COL_CORRECT, COL_ERROR_WASH, COL_GIVEN, COL_INK } from "./render.ts";
 import { solveFilling } from "./solver.ts";
 import {
   decodeParams,
@@ -349,7 +342,7 @@ describe("filling render scenario", () => {
       ],
     });
     expect(
-      overfull.recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR),
+      overfull.recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR_WASH),
     ).toBe(true);
   });
 });

@@ -11,16 +11,16 @@
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLACK, GREEN, RED, WHITE } from "../../engine/color/colors.ts";
+import { GOAL, INK, lineNoColor, SHADED } from "../../engine/color/palette.ts";
 import {
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
-  GOAL,
-  HINT_OUTLINE,
-  INK,
-  lineNoColor,
-  SHADED,
-} from "../../engine/color/palette.ts";
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
@@ -39,6 +39,7 @@ import {
   JOIN_UP,
 } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD } from "../../engine/win-wave.ts";
 import type { DominosaHint } from "./hint.ts";
@@ -60,35 +61,30 @@ import {
 
 export const PREFERRED_TILE_SIZE = 32;
 
-// --- palette (mirrors the dominosa.c color enum index-for-index) ----------
-export const COL_BACKGROUND = 0;
-export const COL_TEXT = 1;
-export const COL_DOMINO = 2;
-export const COL_DOMINOCLASH = 3;
-export const COL_DOMINOTEXT = 4;
-export const COL_EDGE = 5;
-export const COL_HIGHLIGHT_1 = 6;
-export const COL_HIGHLIGHT_2 = 7;
-// Fork overlays, appended past the upstream enum.
-export const COL_MISTAKE = 8;
-export const COL_HINT_CELL = 9; // the evidence squares' outline
+// --- palette ----------------------------------------------------------------
+// A domino clashing with another, and a mistake's outline, are `COL_ERROR`.
+// The evidence squares' outline is `COL_HINT_OUTLINE`, on the square's own
+// border: every Dominosa square carries a number, so a fill behind one is
+// exactly what has no working value.
+export const COL_TEXT = FIRST_GAME_SLOT;
+export const COL_DOMINO = FIRST_GAME_SLOT + 1;
+export const COL_DOMINOTEXT = FIRST_GAME_SLOT + 2;
+export const COL_EDGE = FIRST_GAME_SLOT + 3;
+export const COL_HIGHLIGHT_1 = FIRST_GAME_SLOT + 4;
+export const COL_HIGHLIGHT_2 = FIRST_GAME_SLOT + 5;
 // The reference-panel spotlight boxing a domino's candidate placements: the
 // places the domino the player is after could go, so the goal's color, which
 // no domino, mistake, hint or value highlight takes.
-export const COL_REFERENCE = 10;
-export const COL_FLASH = 11; // the ground of a domino the win flash's body is on
-export const COL_FLASH_LEAD = 12; // and of one its leading edge is on
+export const COL_REFERENCE = FIRST_GAME_SLOT + 6;
 /** The number on a lit domino: the domino's own white would vanish on the
  * flash's white leading edge. */
-const COL_FLASH_TEXT = 13;
+const COL_FLASH_TEXT = FIRST_GAME_SLOT + 7;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background } = mkhighlight(defaultBackground);
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  const out = rolePalette(background);
   out[COL_TEXT] = INK;
   out[COL_DOMINO] = SHADED;
-  out[COL_DOMINOCLASH] = ERROR;
   // Pinned: a domino's two fills keep their lightness across the schemes, so
   // the number on them does.
   out[COL_DOMINOTEXT] = WHITE;
@@ -97,14 +93,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_EDGE] = lineNoColor(background);
   out[COL_HIGHLIGHT_1] = RED;
   out[COL_HIGHLIGHT_2] = GREEN;
-  out[COL_MISTAKE] = ERROR;
-  // The outline is on the square's own border and takes a strong color: every
-  // Dominosa square carries a number, so a fill behind one is exactly what has
-  // no working value.
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_REFERENCE] = GOAL;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_FLASH_TEXT] = BLACK;
   return out;
 }
@@ -173,12 +162,11 @@ export interface DominosaDrawState {
   tileSize: number;
   w: number;
   h: number;
-  /** Last-drawn packed word per square; −1 forces a redraw. */
-  visible: Int32Array;
-  /** Last-drawn hint mark sides per square ({@link MarkOutlines.packed}): the
-   * rest of the cache key, in a lane of its own because the word has no byte
-   * left. A square whose sides change repaints, and that repaint erases them. */
-  markSides: Uint8Array;
+  /** Per square, the packed word it shows and its hint mark sides
+   * ({@link MarkOutlines.packed}), a word of their own because the first has
+   * no byte left. A square whose sides change repaints, and that repaint
+   * erases them. */
+  tiles: TileCache;
   /** The hint target's ring and the evidence area's outline (fork additions),
    * drawn after the square loop. See {@link markBand}. */
   marks: HintMarks;
@@ -192,8 +180,7 @@ export function newDrawState(
     tileSize,
     w: state.w,
     h: state.h,
-    visible: new Int32Array(state.w * state.h).fill(-1),
-    markSides: new Uint8Array(state.w * state.h),
+    tiles: new TileCache(state.w * state.h, { words: 2 }),
     marks: new HintMarks(),
   };
 }
@@ -324,7 +311,7 @@ function drawTile(
   let nc: number;
 
   if (type !== TYPE_BLANK) {
-    let bg = flags & DF_CLASH ? COL_DOMINOCLASH : COL_DOMINO;
+    let bg = flags & DF_CLASH ? COL_ERROR : COL_DOMINO;
     nc = COL_DOMINOTEXT;
     if (flags & DF_FLASH) {
       bg = flags & DF_FLASH_LEAD ? COL_FLASH_LEAD : COL_FLASH;
@@ -374,10 +361,10 @@ function drawTile(
     const sx = cx + inset;
     const sy = cy + inset;
     const span = ts - 2 * inset;
-    dr.drawRect({ x: sx, y: sy, w: span, h: t }, COL_MISTAKE);
-    dr.drawRect({ x: sx, y: sy + span - t, w: span, h: t }, COL_MISTAKE);
-    dr.drawRect({ x: sx, y: sy, w: t, h: span }, COL_MISTAKE);
-    dr.drawRect({ x: sx + span - t, y: sy, w: t, h: span }, COL_MISTAKE);
+    dr.drawRect({ x: sx, y: sy, w: span, h: t }, COL_ERROR);
+    dr.drawRect({ x: sx, y: sy + span - t, w: span, h: t }, COL_ERROR);
+    dr.drawRect({ x: sx, y: sy, w: t, h: span }, COL_ERROR);
+    dr.drawRect({ x: sx + span - t, y: sy, w: t, h: span }, COL_ERROR);
   }
 
   // Reference spotlight: a box hugging the square edge in COL_REFERENCE, marking
@@ -433,7 +420,7 @@ export function redraw(
   const markStyle: HintMarkStyle = {
     band: (x, y) => markBand(ds, x, y),
     text: (x, y) => squareText(state, ts, x, y),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   };
   // The spot's ring is this file's (`drawSpotRing`); its sides here are only
   // the cache key that repaints a square the ring leaves.
@@ -521,11 +508,8 @@ export function redraw(
         else if (i === b && b === a + w) c |= DF_HINT_EDGE_T;
       }
 
-      const sides = outlines.packed(x, y);
-      if (ds.visible[i] !== c || ds.markSides[i] !== sides) {
+      if (ds.tiles.changed(i, c, outlines.packed(x, y))) {
         drawTile(dr, ts, state, x, y, c);
-        ds.visible[i] = c;
-        ds.markSides[i] = sides;
       }
     }
   }
