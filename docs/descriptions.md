@@ -237,7 +237,7 @@ Towers' line says `distinct(f(x) over x in L)`.
 
 **Names and functions** are the ones
 [`compile-geometry.ts`](../src/describe/compile-geometry.ts) knows, over the space in
-[`describe-runtime.ts`](../src/engine/describe-runtime.ts), whose `GridSpace`
+[`describe-runtime/space.ts`](../src/engine/describe-runtime/space.ts), whose `GridSpace`
 says what each set holds and in which order. The compiler refuses a name or
 function it does not have, naming it; the interpreter reads more
 ([`research/describe/README.md`](../research/describe/README.md)). What a
@@ -1588,7 +1588,7 @@ may read a supplied count (`rest`, the spokes a later leg still decides).
 **A technique whose words need what held says `witness: true`**: the
 compiler then reads, on the same marks as the terms and only on a hint's
 path, what held in its `for` clauses' `where`s and its `premise`, and the
-firing's `says.witness` carries it (`Witness`, `engine/describe-runtime.ts`).
+firing's `says.witness` carries it (`Witness`, `engine/describe-runtime/marks.ts`).
 It is a tree over the formula: the side of an `or` that held (`arm`, the left
 tried first), the first member an `exists` held for (`member`: the binders'
 values), the cell and value a `with` supposed and what held under it
@@ -1608,7 +1608,7 @@ each binder is drawn from or defined as (`n = |{...}|`, `a in open(k)`), are
 compiled a further time, in place (nothing hoisted out of its loop, or the read
 would run before `_rc` is declared), with every read of a mark (`known`, `value`, `cand`,
 `in cand`, an edge's mark) recording its element, and the firing's
-`says.reads` (`Reads`, `engine/describe-runtime.ts`) lists the answer elements
+`says.reads` (`Reads`, `engine/describe-runtime/marks.ts`) lists the answer elements
 (`cells`) and edge-mark elements (`edges`) read on the path the formula took,
 each once, first read first. A read under a `with` of the supposed element is
 not a read of the board and is not recorded. Cost (Path's `lineBreaks`,

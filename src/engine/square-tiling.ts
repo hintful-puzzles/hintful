@@ -1,5 +1,5 @@
 /**
- * A grid of squares read as a tiling (`describe-runtime.ts`'s `Tiling`):
+ * A grid of squares read as a tiling (`describe-runtime/space.ts`'s `Tiling`):
  * each square is a dot, joined to the squares beside it by the sides
  * between them, which are its edges, and a face lies where four squares
  * meet. On a wrapping board the sides across the grid's edge join too, so

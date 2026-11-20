@@ -225,7 +225,7 @@ geometry.
 Reach for `Dsf` for any partition or connectivity question. Exemplar:
 `galaxies/state.ts`. Where a description must know whether two edges have
 the same or the opposite value, it states the relation and the runtime keeps
-it (`EdgeRelation` in `describe-runtime.ts`).
+it (`EdgeRelation` in `describe-runtime/marks.ts`).
 
 - **For a class's minimal element, precompute a `minimal[i]` map after all
   merges** (`buildMinimal` in `keen/state.ts`). It does not change the
@@ -600,9 +600,9 @@ hook, `cubeOut` and the family's generator shapes are in
 `npm run describe` and never edited by hand; `latinLadder` pairs each with
 its reason, and runs a described game's own on its clues
 ([`descriptions.md`](./descriptions.md); exemplar `unequal/solver.ts`).
-`describe-runtime.ts` is what compiled code reads: the marks' interface, the
-numbered grid (`describedSpace`, `latinSpace`) and a game's `ClueList`s and
-`ListClues`. `marks-made.ts` numbers the kinds of fact `Marks.made` counts,
+`describe-runtime.ts` is what compiled code reads, and the modules under
+`describe-runtime/` hold it: the marks' interface, the numbered grid
+(`describedSpace`, `latinSpace`) and a game's `ClueList`s and `ListClues`. `marks-made.ts` numbers the kinds of fact `Marks.made` counts,
 which the compiler reads to check a binding again before it fires.
 
 ### `ladder-runtime.ts` — what a compiled ladder runs on
