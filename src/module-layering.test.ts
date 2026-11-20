@@ -24,7 +24,14 @@
  * cycle edge: it is evaluated at call time, so it cannot close an
  * initialization loop, which is the hazard being guarded.
  */
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import {
+  type ImportEdge,
+  importsOf,
+  nodesOf,
+  parsed,
+} from "./engine/testing/syntax.ts";
 
 /** Every source module, eagerly, as raw text — Vite resolves these at build. */
 const sources = import.meta.glob("./**/*.ts", {
@@ -41,42 +48,45 @@ const modules = Object.entries(sources)
   .filter(([p]) => !isTest(p));
 
 /**
- * Every import specifier in `text`, tagged with whether it forms a runtime edge.
+ * Every module `text` reaches for, read off its syntax tree: an import, a
+ * re-export (`export … from`, a runtime edge like an import), or an
+ * `import("…")`. An import written inside a string or a comment is not one.
  *
- * `type` — `import type …`, or a named import whose every binding is
- * `type`-prefixed. Erased; no runtime edge.
+ * `type` — `import type …`, or bindings that are all `type`. Erased; no
+ * runtime edge.
  * `dynamic` — `import("…")`. Real, but deferred to call time.
  * `value` — everything else, including side-effect-only `import "…"`.
  */
-function imports(text: string): { spec: string; kind: "value" | "type" | "dynamic" }[] {
-  const out: { spec: string; kind: "value" | "type" | "dynamic" }[] = [];
+const imports = (text: string, path = "src/plant.ts"): ImportEdge[] =>
+  importsOf(parsed(path, text));
 
-  for (const m of text.matchAll(/\bimport\s*\(\s*["']([^"']+)["']\s*\)/g)) {
-    out.push({ spec: m[1], kind: "dynamic" });
+/**
+ * What in `sf` preflight may not do, as `kind: source`: an `import()`, an
+ * `await` outside any function (a top-level await, `for await` included),
+ * `import.meta` other than `import.meta.env` (which vite replaces at build
+ * time, so it never reaches the browser), or a relative import, which could
+ * drag the others in.
+ */
+function breaches(sf: ts.SourceFile): string[] {
+  const out: string[] = [];
+  const say = (kind: string, n: ts.Node) => out.push(`${kind}: ${n.getText()}`);
+  for (const n of nodesOf(sf)) {
+    if (ts.isCallExpression(n) && n.expression.kind === ts.SyntaxKind.ImportKeyword)
+      say("dynamic import", n);
+    const awaits =
+      ts.isAwaitExpression(n) ||
+      (ts.isForOfStatement(n) && n.awaitModifier !== undefined);
+    if (awaits && ts.findAncestor(n.parent, ts.isFunctionLike) === undefined)
+      say("top-level await", n);
+    if (
+      ts.isMetaProperty(n) &&
+      n.keywordToken === ts.SyntaxKind.ImportKeyword &&
+      !(ts.isPropertyAccessExpression(n.parent) && n.parent.name.text === "env")
+    )
+      say("import.meta", n);
   }
-  for (const m of text.matchAll(/^\s*import\s+["']([^"']+)["']\s*;?\s*$/gm)) {
-    out.push({ spec: m[1], kind: "value" });
-  }
-  for (const m of text.matchAll(
-    /import\s+(type\s+)?([\s\S]*?)\s+from\s+["']([^"']+)["']/g,
-  )) {
-    const [, typeKw, clause, spec] = m;
-    if (typeKw) {
-      out.push({ spec, kind: "type" });
-      continue;
-    }
-    const braced = /\{([\s\S]*)\}/.exec(clause);
-    if (!braced) {
-      out.push({ spec, kind: "value" }); // default or namespace import
-      continue;
-    }
-    const bindings = braced[1]
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const allTypes = bindings.length > 0 && bindings.every((b) => /^type\s/.test(b));
-    out.push({ spec, kind: allTypes ? "type" : "value" });
-  }
+  for (const e of importsOf(sf))
+    if (e.kind !== "dynamic" && e.spec.startsWith(".")) out.push(`import: ${e.spec}`);
   return out;
 }
 
@@ -131,7 +141,7 @@ describe("module layering", () => {
     for (const [path, text] of Object.entries(sources).map(
       ([p, t]) => [p.replace(/^\.\//, "src/"), t] as const,
     )) {
-      for (const { spec } of imports(text)) {
+      for (const { spec } of imports(text, path)) {
         if (!spec.startsWith(".") || !spec.endsWith(".ts")) continue;
         if (resolve(path, spec)) resolved++;
         else unresolved.push(`${path} → ${spec}`);
@@ -146,7 +156,7 @@ describe("module layering", () => {
     for (const [path, text] of modules) {
       const from = gameOf(path);
       if (!from) continue;
-      for (const { spec } of imports(text)) {
+      for (const { spec } of imports(text, path)) {
         const target = resolve(path, spec);
         const to = target && gameOf(target);
         if (to && to !== from) offenders.push(`${path} → ${target}`);
@@ -164,7 +174,7 @@ describe("module layering", () => {
     const offenders: string[] = [];
     for (const [path, text] of modules) {
       if (!gameOf(path)) continue;
-      for (const { spec } of imports(text)) {
+      for (const { spec } of imports(text, path)) {
         if (resolve(path, spec) === "src/engine/midend.ts") {
           offenders.push(`${path} → ${spec}`);
         }
@@ -199,7 +209,7 @@ describe("module layering", () => {
     const offenders: string[] = [];
     for (const [path, text] of modules) {
       if (!path.startsWith("src/engine/") || ALLOWED.has(path)) continue;
-      for (const { spec } of imports(text)) {
+      for (const { spec } of imports(text, path)) {
         const target = resolve(path, spec);
         if (target && gameOf(target)) offenders.push(`${path} → ${target}`);
       }
@@ -233,7 +243,7 @@ describe("module layering", () => {
       ([p, t]) => [p.replace(/^\.\//, "src/"), t] as const,
     )) {
       if (!OWN.some((o) => path.startsWith(o))) continue;
-      for (const { spec } of imports(text)) {
+      for (const { spec } of imports(text, path)) {
         const target = resolve(path, spec);
         if (target && !OWN.some((o) => target.startsWith(o))) {
           offenders.push(`${path} → ${target}`);
@@ -248,23 +258,31 @@ describe("module layering", () => {
     // not use top-level await or dynamic import(), and may not import a module
     // that could drag those in.
     //
-    // Comments are stripped first. preflight.ts's own header documents the
-    // restriction — "no top-level await, dynamic import(), import.meta" — so
-    // checking the raw text fails on the prose that states the rule. (knip has
-    // the same bug against src/test-setup/icons.ts: a tool reading a comment as
-    // code is a recurring shape, not a one-off.)
+    // Read off the syntax tree, where a comment is no node: preflight.ts's own
+    // header documents the restriction — "no top-level await, dynamic
+    // import(), import.meta" — and a text scan fails on the prose that states
+    // the rule.
     const raw = sources["./preflight.ts"];
     expect(raw).toBeTypeOf("string");
-    const code = raw
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/(^|[^:])\/\/.*$/gm, "$1");
+    expect(breaches(parsed("src/preflight.ts", raw))).toEqual([]);
+  });
 
-    expect(code).not.toMatch(/\bimport\s*\(/);
-    expect(code).not.toMatch(/^\s*await\s/m);
-    // `import.meta.env.…` is allowed — vite statically replaces it at build
-    // time, so it never reaches the browser. Any *other* import.meta use does.
-    expect(code.replace(/\bimport\.meta\.env\b/g, "")).not.toMatch(/\bimport\.meta\b/);
-    expect(imports(code).filter((i) => i.spec.startsWith("."))).toEqual([]);
+  it("would see each thing preflight may not do", () => {
+    for (const plant of [
+      'const m = import("./b.ts");',
+      "await f();",
+      "for await (const x of xs) g(x);",
+      "const u = import.meta.url;",
+      'import { a } from "./a.ts";',
+    ])
+      expect(breaches(parsed("src/plant.ts", plant)), plant).toHaveLength(1);
+    for (const fine of [
+      "async function f() { await g(); }",
+      "const h = async () => { await g(); };",
+      "const dev = import.meta.env.DEV;",
+      "// await import('./b.ts'); import.meta.url",
+    ])
+      expect(breaches(parsed("src/plant.ts", fine)), fine).toEqual([]);
   });
 });
 
@@ -274,7 +292,7 @@ describe("import cycles", () => {
     for (const [path, text] of modules) {
       graph.set(
         path,
-        imports(text)
+        imports(text, path)
           .filter((i) => i.kind === "value") // type + dynamic edges cannot close a cycle
           .map((i) => resolve(path, i.spec))
           .filter((t): t is string => t !== null),

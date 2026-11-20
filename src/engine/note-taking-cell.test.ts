@@ -54,7 +54,7 @@ import { LEFT_BUTTON, LEFT_RELEASE, newCursor, RIGHT_BUTTON } from "./pointer.ts
 import {
   builtGames,
   enrolledIn,
-  membersNotMentioning,
+  gamesNotUsing,
   SCANNED_SOURCE_FILES,
 } from "./testing/enrollment.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
@@ -414,10 +414,14 @@ describe("the enrolled population is derived, not listed", () => {
   // on the first alone would convict Rome and Map, which is `docs/method.md`
   // § "A scan that keys on a name" aimed at this file.
   it("every enrolled game routes its pointer press through a shared arm", () => {
-    const arms = ["pressNoteTakingCell(", "tapNoteTakingCell("];
-    const missing = arms
-      .map((arm) => membersNotMentioning(noteTaking.ids, arm))
-      .reduce((a, b) => a.filter((id) => b.includes(id)));
+    const missing = gamesNotUsing(
+      noteTaking.ids,
+      ["pressNoteTakingCell", "tapNoteTakingCell"].map((name) => ({
+        module: "src/engine/note-taking-cell.ts",
+        name,
+      })),
+      "call",
+    );
     expect(
       missing,
       "carry the note-taking Ui but call neither pressNoteTakingCell nor " +

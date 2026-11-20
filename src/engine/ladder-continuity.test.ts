@@ -6,15 +6,16 @@
  */
 import { describe, expect, it } from "vitest";
 import { dealt } from "./testing/dealt.ts";
-import { membersNotMentioning } from "./testing/enrollment.ts";
+import { gamesUsing } from "./testing/enrollment.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { ladderContinuity } from "./testing/ladder-continuity.ts";
+import type { UseKind } from "./testing/syntax.ts";
 
 const IDS = HINT_GAMES.map(([id]) => id);
-const mentioning = (marker: string): string[] => {
-  const without = new Set(membersNotMentioning(IDS, marker));
-  return IDS.filter((id) => !without.has(id));
-};
+/** The hint games whose code uses `name` from engine module `module`, as
+ * `kind`. */
+const using = (module: string, name: string, kind: UseKind): string[] =>
+  gamesUsing(IDS, { module: `src/engine/${module}`, name }, kind);
 
 /** Each game's corpus at seed `s`: the gate's boards, one of each kind
  * (`gatePresets`), and every leaf preset in the slow tier. */
@@ -49,7 +50,10 @@ const MAX_SEEDS = 40;
  * driver built, never by reading for the option.
  */
 const DRIVING = [
-  ...new Set([...mentioning("singleFirings("), ...mentioning("ladderWalk(")]),
+  ...new Set([
+    ...using("deduction-fixpoint.ts", "singleFirings", "call"),
+    ...using("ladder-runtime.ts", "ladderWalk", "call"),
+  ]),
 ];
 const CONTINUING: readonly string[] = DRIVING.filter((id) => {
   const [{ game, state }] = corpus(id);
@@ -72,9 +76,9 @@ describe("ladder hint plans continue from their latest step where they can", () 
   // A game that builds its own frontier continues by it, and
   // `hint-frontier.test.ts`'s `OWN_FRONTIER` accounts for it.
   it("finds every game on deduceHintPlan continuing, or taking the frontier itself", () => {
-    const own = mentioning("new HintFrontier");
+    const own = using("hint-frontier.ts", "HintFrontier", "new");
     expect(own.length).toBeGreaterThan(0);
-    const off = mentioning("deduceHintPlan(").filter(
+    const off = using("hint-plan.ts", "deduceHintPlan", "call").filter(
       (id) => !CONTINUING.includes(id) && !own.includes(id),
     );
     expect(

@@ -14,7 +14,7 @@ import { HATCH_OPACITY } from "../engine/hatch.ts";
 import type { Narration } from "../engine/hint-words.ts";
 import { Midend } from "../engine/index.ts";
 import { beginDealt } from "../engine/testing/dealt.ts";
-import { codeLinesMatching, REGISTERED_IDS } from "../engine/testing/enrollment.ts";
+import { gamesCallingMethod, REGISTERED_IDS } from "../engine/testing/enrollment.ts";
 import { gatePresets, HINT_GAMES } from "../engine/testing/hint-games.ts";
 import { opsOfKind, RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
@@ -85,9 +85,7 @@ function hatchColor(id: string): number | null {
 }
 
 describe("the hint's line hatch", () => {
-  const hatching = [
-    ...new Set(codeLinesMatching(REGISTERED_IDS, /\.drawHatch\(/).map(({ id }) => id)),
-  ];
+  const hatching = gamesCallingMethod(REGISTERED_IDS, "drawHatch");
 
   it("finds the games that draw it", () => {
     // A scan keyed on the call; Magnets is the known positive.

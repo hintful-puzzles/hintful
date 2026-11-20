@@ -40,7 +40,8 @@ import { mark, phrase, stepMarks } from "./hint-words.ts";
 import { newCursor } from "./pointer.ts";
 import {
   enrolledIn,
-  membersNotMentioning,
+  gamesNotUsing,
+  gamesUsing,
   SCANNED_SOURCE_FILES,
 } from "./testing/enrollment.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
@@ -199,7 +200,11 @@ describe("both border-grid games use the shared renderer", () => {
   // what makes a game a border-grid game is that it calls the input mechanic.
   // Same question, different fact about the game.
   const borderGrid = enrolledIn(
-    (g) => membersNotMentioning([g.id], "borderGridVerbs").length === 0,
+    (g) =>
+      gamesUsing([g.id], {
+        module: "src/engine/border-grid.ts",
+        name: "borderGridVerbs",
+      }).length > 0,
   );
 
   it("looked at the whole registry and every game's source (vacuity guard)", () => {
@@ -212,10 +217,13 @@ describe("both border-grid games use the shared renderer", () => {
   });
 
   it("every game using the border-grid input also uses its renderer", () => {
-    // Keyed on the *call*, not the module path: importing the module and
-    // drawing the tile by hand beside it is exactly the state this guards
-    // against, and an import-path marker would be satisfied by it.
-    const missing = membersNotMentioning(borderGrid.ids, "drawBorderTile(");
+    // Keyed on the *call*, not the import: importing the module and drawing
+    // the tile by hand beside it is exactly the state this guards against.
+    const missing = gamesNotUsing(
+      borderGrid.ids,
+      { module: "src/engine/border-grid-render.ts", name: "drawBorderTile" },
+      "call",
+    );
     expect(
       missing,
       "use the border-grid input mechanic but draw the board themselves — " +

@@ -28,7 +28,7 @@ import {
   type BuiltGame,
   builtGames,
   enrolledIn,
-  membersNotMentioning,
+  gamesNotUsing,
 } from "./testing/enrollment.ts";
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 import {
@@ -39,6 +39,11 @@ import {
 } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import { NO_FLASH } from "./win-wave.ts";
+
+const DRAW_CELL_BACKGROUND = {
+  module: "src/engine/note-taking-cell.ts",
+  name: "drawCellBackground",
+};
 
 const WASH = rgbLabel(highlightWash(mkhighlightBackground(DEFAULT_BACKGROUND)));
 
@@ -148,7 +153,7 @@ it("excuses exactly the members whose selection is not a cell", () => {
   // after all — an entry that outlived its reason fails here.
   const ledgered = Object.keys(NOT_A_CELL);
   expect(ledgered.filter((id) => !noteTaking.ids.includes(id))).toEqual([]);
-  expect(membersNotMentioning(ledgered, "drawCellBackground(")).toEqual(ledgered);
+  expect(gamesNotUsing(ledgered, DRAW_CELL_BACKGROUND, "call")).toEqual(ledgered);
 });
 
 it("every cell member paints its cell background through drawCellBackground", () => {
@@ -156,7 +161,7 @@ it("every cell member paints its cell background through drawCellBackground", ()
   // what is being asserted is that no hand-drawn copy exists beside the shared
   // one, which no frame can show.
   expect(
-    membersNotMentioning(cellMembers, "drawCellBackground("),
+    gamesNotUsing(cellMembers, DRAW_CELL_BACKGROUND, "call"),
     "carry the note-taking Ui but draw the highlight by hand: paint it with " +
       "drawCellBackground, or, if the selection is not a cell, add the game to " +
       "NOT_A_CELL (src/engine/note-taking-cell-render.test.ts) with what it is",

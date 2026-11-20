@@ -6,8 +6,8 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  codeLinesMatching,
-  membersNotMentioning,
+  gamesImporting,
+  gamesUsing,
   SCANNED_SOURCE_FILES,
 } from "../engine/testing/enrollment.ts";
 import { puzzleFamilies, puzzleIds, puzzlesInFamily } from "./catalog.ts";
@@ -64,15 +64,20 @@ describe("a family the code can vouch for agrees with the code", () => {
    *   that built its own solver from nothing would be a family member the
    *   shared work could not reach, and that is worth hearing about.
    *
-   * The scan reads each file as it compiles, so a type-only import is not a
-   * use: Solo has no runtime tie to the Latin hint helpers, only to the engine.
+   * A type-only import is not a use: Solo has no runtime tie to the Latin
+   * hint helpers, only to the engine.
    *
    * The two bounds are not equal and need not be: Ascent, Singles and Tents
    * borrow a Latin helper without being Latin squares.
    */
   const latin = puzzlesInFamily("latin");
-  const LATIN_SPEECH = /engine\/latin-hint|\b(?:narrateLatinReason|latinPremise)\(/;
-  const LATIN_RULES = /engine\/latin-hint|\blatinPremise\(/;
+  const sentence = (name: string) => ({ module: "src/engine/hint-text.ts", name });
+  /** The games importing the Latin hint helpers, or calling one of `sentences`. */
+  const speaking = (ids: readonly string[], sentences: string[]): string[] => {
+    const importing = gamesImporting(ids, (m) => m === "src/engine/latin-hint.ts");
+    const saying = gamesUsing(ids, sentences.map(sentence), "call");
+    return ids.filter((id) => importing.includes(id) || saying.includes(id));
+  };
 
   it("scans the games' sources at all", () => {
     expect(SCANNED_SOURCE_FILES).toBeGreaterThan(100);
@@ -83,17 +88,21 @@ describe("a family the code can vouch for agrees with the code", () => {
     // The single-placement sentence (`narrateLatinReason`) is borrowed by games
     // that are not Latin squares, as the helpers are; the arms that state a
     // Latin rule are the strikes'.
-    const speakers = [
-      ...new Set(codeLinesMatching([...puzzleIds], LATIN_RULES).map((m) => m.id)),
-    ];
+    const speakers = speaking([...puzzleIds], ["latinPremise"]);
     // A known positive, so a scan that stopped seeing imports cannot pass.
     expect(speakers).toContain("keen");
     expect(speakers.filter((id) => !latin.includes(id))).toEqual([]);
   });
 
   it("finds the shared Latin engine in every game tagged Latin squares", () => {
-    const silent = membersNotMentioning([...latin], "engine/latin");
-    const speakers = new Set(codeLinesMatching(silent, LATIN_SPEECH).map((m) => m.id));
-    expect(silent.filter((id) => !speakers.has(id))).toEqual([]);
+    // The Latin engine: its modules, and its compiled ladder.
+    const engine = gamesImporting(
+      [...latin],
+      (m) =>
+        m.startsWith("src/engine/latin") || m.startsWith("src/generated/engine/latin"),
+    );
+    const silent = latin.filter((id) => !engine.includes(id));
+    const speakers = speaking(silent, ["narrateLatinReason", "latinPremise"]);
+    expect(silent.filter((id) => !speakers.includes(id))).toEqual([]);
   });
 });

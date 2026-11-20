@@ -887,12 +887,13 @@ For the author of a new cross-game guard. The normative form is the
    derivation (`ignoresSecondaryButton`, in `input-parity.test.ts`). Better
    is no flag: the midend reads `canMarkAll` off the presence of the
    `markAll` hook. A flag that only turns a guard off most needs this.
-5. **Scan code, not text.** `membersNotMentioning` strips comments, because a
-   mention in prose is not a use. Key on the name and take the superset
-   ([`method.md`](./method.md), "A scan that keys on a name"). When the
-   population is who uses a symbol, ask by reference:
-   `npm run refs -- <file> <Name | Type.member>`, which is blind to source
-   read as text.
+5. **Scan the syntax tree, not text.** When the population is who uses a
+   shared export, ask `gamesUsing` with the export's module and name, and
+   say whether a call or a `new` is the use: it is bound through the import,
+   so a renamed import counts, a same-named local does not, and a comment is
+   never a node. It throws when no game uses the export at all, so a rename
+   cannot empty the population without a sound. Regex reads only text whose
+   wording is the thing under test (§ "A guard that only reads source").
 6. **Ask a question the system is actually asked.** Read the guard's inputs
    off what the game presents (its presets, its registered object, its `Ui`)
    and do not construct them: `validateParams` accepting a record is not
@@ -1089,6 +1090,18 @@ family it imports (`testing/enrollment.ts`'s `gameSourceFiles`, which says
 what a family is). Read it through that, never through a glob of
 `src/games/` alone, or a game whose mechanic lives in a family reads as
 having none.
+
+Read TypeScript as a syntax tree, through
+[`testing/syntax.ts`](../src/engine/testing/syntax.ts): `parsed` keeps one
+tree per file per worker, so a second guard over the same sources pays
+nothing, and a parse costs a quarter of the comment stripping a text scan
+needs. Key the query on what the code refers to: an export by its module
+and name (`usesOf`, `gamesUsing`), an import by its resolved path
+(`importedModules`), a node by its kind. A regex stays right only where the
+text is the subject: a sentence a player reads, help markdown, YAML, markup,
+a shell script, or a byte the file must not hold. Plant the defect a
+converted scan exists for and see it fail, as `syntax.test.ts` does for the
+helper itself.
 
 ### One concept under several names
 

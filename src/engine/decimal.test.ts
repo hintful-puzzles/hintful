@@ -7,15 +7,13 @@
  * yet another one. What it cannot see, stated: a constant holding a digit code
  * and passed as an *argument*, which is the same shape one level up.
  */
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { digitValue, isDigit, parseLeadingInt } from "./decimal.ts";
 import { c2n } from "./desc-alphabet.ts";
 import { digitOf } from "./pointer.ts";
-import {
-  builtGames,
-  codeLinesMatching,
-  SCANNED_SOURCE_FILES,
-} from "./testing/enrollment.ts";
+import { builtGames, gameSyntax, SCANNED_SOURCE_FILES } from "./testing/enrollment.ts";
+import { nodesOf, parsed, shown, where } from "./testing/syntax.ts";
 
 describe("isDigit / digitValue", () => {
   it("accepts exactly the ten digit characters", () => {
@@ -80,7 +78,7 @@ describe("parseLeadingInt", () => {
  * this loses no real site — while `50`–`56` in decimal are left out on
  * purpose: `if (w > 50)` is a count, and games write one.
  */
-const DIGIT_CODE = "(?:48|49|57|0x3[0-9])";
+const DIGIT_CODE = /^(?:48|49|57|0x3[0-9])$/i;
 
 /**
  * Every way a game source has restated the digit fact, keyed on the **shape**
@@ -97,20 +95,54 @@ const DIGIT_CODE = "(?:48|49|57|0x3[0-9])";
  * `=` is an assignment rather than a comparison. Equality against a specific
  * character (`c === "1"`) is a game's own meaning and is not matched either.
  */
-const DIGIT_SHAPES = [
-  new RegExp(String.raw`(?:[<>]=?|[=!]==|-|\+)\s*(?<![\d.])${DIGIT_CODE}\b`),
-  new RegExp(String.raw`(?<![\w.])${DIGIT_CODE}\s*\+`),
-  new RegExp(String.raw`\bcase\s+${DIGIT_CODE}\s*:`),
-  /[<>]=?\s*"[0-9]"/,
-  /"[0-9]"\.charCodeAt/,
-];
+function restatements(root: ts.Node): ts.Node[] {
+  const K = ts.SyntaxKind;
+  const relational = [
+    K.LessThanToken,
+    K.GreaterThanToken,
+    K.LessThanEqualsToken,
+    K.GreaterThanEqualsToken,
+  ];
+  const operand = [
+    ...relational,
+    K.EqualsEqualsEqualsToken,
+    K.ExclamationEqualsEqualsToken,
+    K.MinusToken,
+    K.PlusToken,
+  ];
+  const isCode = (n: ts.Node) => ts.isNumericLiteral(n) && DIGIT_CODE.test(n.getText());
+  const isDigitString = (n: ts.Node) => ts.isStringLiteral(n) && /^[0-9]$/.test(n.text);
+  return [...nodesOf(root)].filter((n) => {
+    const p = n.parent;
+    if (p === undefined) return false;
+    if (isCode(n)) {
+      if (ts.isCaseClause(p)) return p.expression === n;
+      if (!ts.isBinaryExpression(p)) return false;
+      const op = p.operatorToken.kind;
+      return (
+        (p.right === n && operand.includes(op)) || (p.left === n && op === K.PlusToken)
+      );
+    }
+    if (isDigitString(n)) {
+      if (ts.isBinaryExpression(p))
+        return p.right === n && relational.includes(p.operatorToken.kind);
+      return (
+        ts.isPropertyAccessExpression(p) &&
+        p.expression === n &&
+        p.name.text === "charCodeAt"
+      );
+    }
+    return false;
+  });
+}
 
-const restates = (line: string): boolean => DIGIT_SHAPES.some((re) => re.test(line));
+const restates = (snippet: string): boolean =>
+  restatements(parsed(`plant:${snippet}`, snippet)).length > 0;
 
 describe("no game restates the decimal digit fact", () => {
   it("finds each shape it claims to find", () => {
-    // Proved on planted copies of the shapes the sweep removed, so an edit to a
-    // regex that stops matching one fails here rather than passing over a
+    // Proved on planted copies of the shapes the sweep removed, so an edit to
+    // the shapes that stops matching one fails here rather than passing over a
     // clean-looking collection.
     for (const snippet of [
       "if (button >= 48 && button <= 57) n = button - 48;",
@@ -119,9 +151,9 @@ describe("no game restates the decimal digit fact", () => {
       "v = c.charCodeAt(0) - 0x30;",
       "out += String.fromCharCode(48 + clue);",
       "if (code < 48 || code > 48 + m) return bad;",
-      "case 49:",
+      "switch (b) { case 49: break; }",
       'if (c >= "0" && c <= "9") num += c;',
-      'else if (tok.value >= "0" && tok.value <= "4") squares++;',
+      'if (a) {} else if (tok.value >= "0" && tok.value <= "4") squares++;',
       'const ZERO = "0".charCodeAt(0);',
     ]) {
       expect(restates(snippet), snippet).toBe(true);
@@ -129,16 +161,18 @@ describe("no game restates the decimal digit fact", () => {
     // …and stays quiet on the shapes that legitimately remain.
     for (const snippet of [
       "export const PREFERRED_TILE_SIZE = 48;",
-      "  { autosize: 48, order: 9 },",
+      "x = { autosize: 48, order: 9 };",
       "const pupil = f(ts / 48);",
       "button = NK(57);",
-      "if (ratio < 0.48 || ratio > 0.78) continue;",
-      "if (w > 50) return 'Width must be at most 50';",
+      "if (ratio < 0.48 || ratio > 0.78) x();",
+      "if (w > 50) y = 'Width must be at most 50';",
       'grid[i] = c === "1" ? ONE : ZERO;',
       "const digit = digitValue(tok.value);",
       // A typed array's own absent constant, named at the write.
-      "else clues[pos++] = digitValue(tok.value) ?? -1;",
-      "if (button >= 97 && button <= 105) return button - 97;",
+      "clues[pos++] = digitValue(tok.value) ?? -1;",
+      "if (button >= 97 && button <= 105) n = button - 97;",
+      // A comment is not code: `// 97 = 'a'`, an `untangle.c:57` citation.
+      "// if (c >= 48) return c - 48;",
     ]) {
       expect(restates(snippet), snippet).toBe(false);
     }
@@ -149,11 +183,13 @@ describe("no game restates the decimal digit fact", () => {
     expect(SCANNED_SOURCE_FILES).toBeGreaterThan(250);
     const ids = builtGames().map((g) => g.id);
     expect(ids.length).toBeGreaterThanOrEqual(57);
-    // Comment-stripped, because a comment is not a use: `// 97 = 'a'` and a
-    // `untangle.c:57` citation would otherwise both hit.
-    const hits = codeLinesMatching(ids, /./).filter(({ line }) => restates(line));
-    // Excusing a line — a pixel offset that happens to be `- 48` — goes in a ledger asserted
-    // equal to what the scan found, never in a narrower regex.
-    expect(hits.map((h) => `${h.id}: ${h.line}`)).toEqual([]);
+    const hits = ids.flatMap((id) =>
+      gameSyntax(id)
+        .flatMap(restatements)
+        .map((n) => `${where(n)}: ${shown(n.parent)}`),
+    );
+    // Excusing a site — a pixel offset that happens to be `- 48` — goes in a
+    // ledger asserted equal to what the scan found, never in a narrower shape.
+    expect([...new Set(hits)]).toEqual([]);
   });
 });

@@ -14,7 +14,7 @@
  *
  * Dev/test-only; never imported by production code.
  */
-import { linesMatching, stripComments } from "./code-lines.ts";
+import { type ExportRef, parsed, type UseKind, usesOf } from "./syntax.ts";
 
 const testSource = (() => {
   const modules = {
@@ -34,16 +34,24 @@ const testSource = (() => {
   return out;
 })();
 
-/** How many test files {@link testCodeLinesMatching} scans — its vacuity
+/** How many test files {@link testFilesUsing} scans — its vacuity
  * number. An unmatched glob yields `{}`, and every check over it then passes. */
 export const SCANNED_TEST_FILES = testSource.size;
 
-/** Every line of the suite's own code matching `re`, tagged by file path.
- * Comment-stripped like the other scanners, so a doc comment *about* a pattern
- * does not read as a use of it — which matters more here than anywhere, since
- * a guard's comment is usually where the pattern is explained. */
-export function testCodeLinesMatching(re: RegExp): { id: string; line: string }[] {
-  return [...testSource].flatMap(([path, text]) =>
-    linesMatching(path, stripComments(text), re),
-  );
+/** The test files, by repo-relative path, that use any of `refs` as `kind`
+ * (`syntax.ts`'s `usesOf`). A comment *about* a helper is not a use, which
+ * matters more here than anywhere, since a guard's comment is usually where
+ * the pattern is explained. Throws when no test uses any of them: an export
+ * was renamed or moved. */
+export function testFilesUsing(refs: readonly ExportRef[], kind: UseKind): string[] {
+  const found = [...testSource]
+    .filter(([path, text]) =>
+      refs.some((ref) => usesOf(parsed(path, text), ref).some((u) => u.kind === kind)),
+    )
+    .map(([path]) => path);
+  if (found.length === 0)
+    throw new Error(
+      `test-source: no test uses ${refs.map((r) => r.name).join(" or ")}: renamed or moved?`,
+    );
+  return found;
 }

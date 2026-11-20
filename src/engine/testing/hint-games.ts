@@ -13,7 +13,7 @@
  * Dev/test-only; never imported by production code.
  */
 import { hasHint } from "../game.ts";
-import { type AnyGame, membersNotMentioning, REGISTERED_GAMES } from "./enrollment.ts";
+import { type AnyGame, gamesUsing, REGISTERED_GAMES } from "./enrollment.ts";
 import { dealtBoards } from "./presets.ts";
 import { SLOW_TESTS_ENABLED } from "./slow.ts";
 
@@ -27,16 +27,18 @@ export const HINT_GAMES: [string, AnyGame][] = REGISTERED_GAMES.filter(([, game]
 
 /**
  * The games whose hint **plans by searching** rather than by deducing — derived
- * from each game's own comment-stripped source (it calls the shared slide
- * planner), never declared. The marker carries its opening paren so importing
- * the planner without calling it does not count.
+ * from each game's own code (it calls the shared slide planner), never
+ * declared. Importing the planner without calling it does not count.
  *
  * Which games may *refuse* as a search past its reach is a different question,
  * answered by {@link SEARCH_REACH_GAMES}: Guess and Pegs search without this
  * planner.
  */
-export const SEARCH_PLANNING_GAMES: readonly string[] =
-  membersMentioning("planSlides(");
+export const SEARCH_PLANNING_GAMES: readonly string[] = gamesUsing(
+  HINT_GAMES.map(([id]) => id),
+  { module: "src/engine/slide-planner.ts", name: "planSlides" },
+  "call",
+);
 
 /**
  * The games whose hint can say `SEARCH_OUT_OF_REACH`, the one refusal that
@@ -50,20 +52,19 @@ export const SEARCH_PLANNING_GAMES: readonly string[] =
  * the planner (Guess's enumeration, Pegs' beam-and-proof search) and still
  * give this refusal.
  */
-export const SEARCH_REACH_GAMES: readonly string[] = HINT_GAMES.map(
-  ([id]) => id,
-).filter(
-  (id) =>
-    membersMentioning("SEARCH_OUT_OF_REACH").includes(id) ||
-    membersMentioning("searchRefusal(").includes(id),
-);
-
-/** The hinted games whose comment-stripped code contains `marker`. */
-function membersMentioning(marker: string): string[] {
+export const SEARCH_REACH_GAMES: readonly string[] = (() => {
   const ids = HINT_GAMES.map(([id]) => id);
-  const without = new Set(membersNotMentioning(ids, marker));
-  return ids.filter((id) => !without.has(id));
-}
+  const named = gamesUsing(ids, {
+    module: "src/engine/hint-refusal.ts",
+    name: "SEARCH_OUT_OF_REACH",
+  });
+  const handed = gamesUsing(
+    ids,
+    { module: "src/engine/search-outcome.ts", name: "searchRefusal" },
+    "call",
+  );
+  return ids.filter((id) => named.includes(id) || handed.includes(id));
+})();
 
 /**
  * How many times a walk that resumes a hint from the player's positions asks

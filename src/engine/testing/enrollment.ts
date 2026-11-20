@@ -30,6 +30,15 @@ import { getTsGame, registeredGameIds } from "../registry.ts";
 import { linesMatching, stripComments } from "./code-lines.ts";
 import type { KindExemption } from "./ledger.ts";
 import { preferredDrawState } from "./preferred-draw-state.ts";
+import {
+  callsTo,
+  type ExportRef,
+  importedModules,
+  parsed,
+  resolveSpecifier,
+  type UseKind,
+  usesOf,
+} from "./syntax.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
 export type AnyGame = Game<any, any, any, any, any, any>;
@@ -251,11 +260,15 @@ export function workingRowExemption(
   };
 }
 
-/** A source file a guard reads, by its path from this module. */
+/** A source file a guard reads, by its repo-relative path. */
 export interface SourceFile {
   path: string;
   text: string;
 }
+
+/** A glob key from this module's directory, as a repo-relative path. */
+const fromHere = (key: string): string =>
+  resolveSpecifier("src/engine/testing/x.ts", key);
 
 /** Every game's own source files, by game id — test files excluded, because a
  * guard asking "does this game hand-roll the mechanic" must not be satisfied by
@@ -263,11 +276,11 @@ export interface SourceFile {
  *
  * A game's own code includes each **game family** it imports: an engine
  * directory whose modules build part of a `Game` (they import the contract,
- * `../game.ts`), such as `edge-clue-latin/`, which Unequal and Adjacent play
- * on. What two games share cannot live in either, and a game that runs the
- * shared mechanic there has neither hand-rolled it nor hidden it. The engine's
- * libraries (`grid/`, `color/`) and flat helpers are not a game's own code:
- * they are the mechanics the guards ask after. */
+ * `engine/game.ts`), such as `edge-clue-latin/`, which Unequal and Adjacent
+ * play on. What two games share cannot live in either, and a game that runs
+ * the shared mechanic there has neither hand-rolled it nor hidden it. The
+ * engine's libraries (`grid/`, `color/`) and flat helpers are not a game's own
+ * code: they are the mechanics the guards ask after. */
 export const gameSourceFiles: ReadonlyMap<string, readonly SourceFile[]> = (() => {
   // A game's compiled module is its own code, generated outside its directory.
   const modules = {
@@ -288,24 +301,39 @@ export const gameSourceFiles: ReadonlyMap<string, readonly SourceFile[]> = (() =
     eager: true,
   });
   const families = new Map<string, SourceFile[]>();
-  for (const [path, text] of Object.entries(engineDirs)) {
-    if (path.includes(".test.")) continue;
-    const dir = path.split("/")[1];
+  for (const [key, text] of Object.entries(engineDirs)) {
+    if (key.includes(".test.")) continue;
+    const path = fromHere(key);
+    const dir = path.split("/")[2] as string;
     families.set(dir, [...(families.get(dir) ?? []), { path, text }]);
   }
   for (const [dir, files] of families)
-    if (!files.some((f) => f.text.includes('from "../game.ts"'))) families.delete(dir);
+    if (
+      !files.some((f) =>
+        importedModules(parsed(f.path, f.text)).includes("src/engine/game.ts"),
+      )
+    )
+      families.delete(dir);
 
   const byGame = new Map<string, SourceFile[]>();
   const familiesOf = new Map<string, Set<string>>();
-  for (const [path, text] of Object.entries(modules)) {
-    if (path.includes(".test.")) continue;
+  for (const [key, text] of Object.entries(modules)) {
+    if (key.includes(".test.")) continue;
+    const path = fromHere(key);
     const id = /\/games\/([^/]+)\//.exec(path)?.[1];
     if (!id) continue;
     byGame.set(id, [...(byGame.get(id) ?? []), { path, text }]);
     const dirs = familiesOf.get(id) ?? new Set<string>();
-    for (const m of text.matchAll(/from "\.\.\/\.\.\/engine\/([a-z-]+)\/[^"]+"/g))
-      if (families.has(m[1])) dirs.add(m[1]);
+    for (const m of importedModules(parsed(path, text))) {
+      const [src, engine, dir, file] = m.split("/");
+      if (
+        src === "src" &&
+        engine === "engine" &&
+        file !== undefined &&
+        families.has(dir as string)
+      )
+        dirs.add(dir as string);
+    }
     familiesOf.set(id, dirs);
   }
   for (const [id, dirs] of familiesOf)
@@ -313,16 +341,95 @@ export const gameSourceFiles: ReadonlyMap<string, readonly SourceFile[]> = (() =
   return byGame;
 })();
 
-const sourceText = new Map(
-  [...gameSourceFiles].map(([id, files]) => [id, files.map((f) => f.text)]),
-);
-
 /** How many game source files were scanned — the source sweep's own vacuity
  * number. An unmatched glob yields `{}`, and every check over it then passes. */
-export const SCANNED_SOURCE_FILES = [...sourceText.values()].reduce(
+export const SCANNED_SOURCE_FILES = [...gameSourceFiles.values()].reduce(
   (n, list) => n + list.length,
   0,
 );
+
+/** Each game's syntax trees, one per source file. */
+export function gameSyntax(id: string): ts.SourceFile[] {
+  return (gameSourceFiles.get(id) ?? []).map((f) => parsed(f.path, f.text));
+}
+
+/** Every game's trees, once each: a family's files are shared by its games. */
+function everyGameSyntax(): ts.SourceFile[] {
+  return [...new Set([...gameSourceFiles.keys()].flatMap(gameSyntax))];
+}
+
+/** The questions {@link gamesUsing} has seen some game answer, so a guard
+ * asking it per game checks the whole collection once. */
+const everUsed = new Set<string>();
+
+/**
+ * Which of `ids` use any of the exports `refs` in their own code, as `kind`
+ * when given: a `"call"` of a function, a `"new"` of a class, or a use of any
+ * kind. Bound through the import, so a renamed import counts and a local of
+ * the same name does not (`syntax.ts`'s `usesOf`).
+ *
+ * **The reverse direction, and the one no behavioral test can see**: what is
+ * often asserted is that a hand-rolled copy of the shared mechanic does *not*
+ * exist, and code that does not exist cannot be observed by running anything.
+ * Ask for the call where the call is the mechanic: importing a module and
+ * never calling it is not using it.
+ *
+ * Throws when no game's code uses any of `refs`: an export was renamed or
+ * moved, and a guard keyed on the old one would otherwise read an empty
+ * population as health.
+ */
+export function gamesUsing(
+  ids: readonly string[],
+  refs: ExportRef | readonly ExportRef[],
+  kind: UseKind | null = null,
+): string[] {
+  const all: readonly ExportRef[] = "module" in refs ? [refs] : refs;
+  const used = (sf: ts.SourceFile): boolean =>
+    all.some((ref) => usesOf(sf, ref).some((u) => kind === null || u.kind === kind));
+  const key = JSON.stringify([all, kind]);
+  if (!everUsed.has(key) && !everyGameSyntax().some(used))
+    throw new Error(
+      `enrollment: no game's code uses ${all.map((r) => `${r.name} from ${r.module}`).join(" or ")}${kind ? ` as a ${kind}` : ""}: renamed or moved?`,
+    );
+  everUsed.add(key);
+  return ids.filter((id) => gameSyntax(id).some(used));
+}
+
+/** The rest of `ids`: those whose code never uses any of `refs` as `kind`
+ * ({@link gamesUsing}). */
+export function gamesNotUsing(
+  ids: readonly string[],
+  refs: ExportRef | readonly ExportRef[],
+  kind: UseKind | null = null,
+): string[] {
+  const using = gamesUsing(ids, refs, kind);
+  return ids.filter((id) => !using.includes(id));
+}
+
+/** Which of `ids` call a method named `name` on any receiver (`x.name(…)`):
+ * the key for a member of an interface, such as `GameDrawing`'s, which no
+ * import binds. Throws, as {@link gamesUsing} does, when no game calls one. */
+export function gamesCallingMethod(ids: readonly string[], name: string): string[] {
+  const calls = (sf: ts.SourceFile): boolean =>
+    callsTo(sf, name).some((c) => ts.isPropertyAccessExpression(c.expression));
+  if (!everyGameSyntax().some(calls))
+    throw new Error(`enrollment: no game calls a method named ${name}: renamed?`);
+  return ids.filter((id) => gameSyntax(id).some(calls));
+}
+
+/** Which of `ids` import a module `matches` accepts (a repo-relative path),
+ * at run time: a type-only import is not a use. Throws, as
+ * {@link gamesUsing} does, when no game imports one. */
+export function gamesImporting(
+  ids: readonly string[],
+  matches: (module: string) => boolean,
+): string[] {
+  const imports = (sf: ts.SourceFile): boolean =>
+    importedModules(sf, true).some(matches);
+  if (!everyGameSyntax().some(imports))
+    throw new Error("enrollment: no game imports a module the predicate accepts");
+  return ids.filter((id) => gameSyntax(id).some(imports));
+}
 
 /** Each game's comment-stripped sources, computed on first ask and kept. */
 const codeText = new Map<string, string[]>();
@@ -330,32 +437,19 @@ const codeText = new Map<string, string[]>();
 function gameCode(id: string): string[] {
   const cached = codeText.get(id);
   if (cached) return cached;
-  const stripped = (sourceText.get(id) ?? []).map(stripComments);
+  const stripped = (gameSourceFiles.get(id) ?? []).map((f) => stripComments(f.text));
   codeText.set(id, stripped);
   return stripped;
 }
 
 /**
- * Which of `ids` never mention `marker` in their own **code**.
- *
- * **The reverse direction, and the one no behavioral test can see**: what is
- * being asserted is that a hand-rolled copy of the shared mechanic does *not*
- * exist, and code that does not exist cannot be observed by running anything.
- *
- * `marker` should be the thing a caller would have to write — a function name
- * with its opening paren, a module path, or an imported constant — so that
- * importing the module and never calling it does not count as using it.
- */
-export function membersNotMentioning(ids: string[], marker: string): string[] {
-  return ids.filter((id) => !gameCode(id).some((t) => t.includes(marker)));
-}
-
-/**
  * Every line of `ids`' own **code** matching `re`, tagged with the game it came
- * from — the affirmative counterpart to {@link membersNotMentioning}.
+ * from: for a scan whose subject is wording, where the text is the thing under
+ * test. A scan for a use of something keys on the tree instead
+ * ({@link gamesUsing}).
  *
- * Comment-stripped for the same reason: a rule about what a game *says to a
- * player* must not fire on a doc comment discussing it.
+ * Comment-stripped: a rule about what a game *says to a player* must not fire
+ * on a doc comment discussing it.
  *
  * The caller gets a superset — every match anywhere in the code, not only in a
  * narration string — and is expected to classify what it catches rather than

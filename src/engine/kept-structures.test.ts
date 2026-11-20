@@ -9,18 +9,22 @@ import { expect, it } from "vitest";
 import { setKeptCheck } from "./describe-runtime.ts";
 import { difficultyTiers } from "./difficulty.ts";
 import { dealt } from "./testing/dealt.ts";
-import {
-  type AnyGame,
-  membersNotMentioning,
-  REGISTERED_GAMES,
-} from "./testing/enrollment.ts";
+import { type AnyGame, gamesUsing, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { dealtBoards } from "./testing/presets.ts";
 
 /** What a compiled module calls to read a kept structure. */
-const KEPT = ["keptEdgeGroups(", "linkedSum(", "linkedOf("];
+const KEPT = ["keptEdgeGroups", "linkedSum", "linkedOf"].map((name) => ({
+  module: "src/engine/describe-runtime.ts",
+  name,
+}));
 
+const KEEPING = gamesUsing(
+  REGISTERED_GAMES.map(([id]) => id),
+  KEPT,
+  "call",
+);
 const KEEPERS: [string, AnyGame][] = REGISTERED_GAMES.filter(([id]) =>
-  KEPT.some((marker) => membersNotMentioning([id], marker).length === 0),
+  KEEPING.includes(id),
 );
 
 /** Hint requests made of each board, and boards a game. */

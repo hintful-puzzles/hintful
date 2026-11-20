@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "./candidate-hint.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import { dealt } from "./testing/dealt.ts";
-import { enrolledIn, membersNotMentioning } from "./testing/enrollment.ts";
+import { enrolledIn, gamesImporting, gamesUsing } from "./testing/enrollment.ts";
 import { HINT_GAMES } from "./testing/hint-games.ts";
 import { expectLedger } from "./testing/ledger.ts";
 import { planContinuity } from "./testing/plan-continuity.ts";
@@ -119,22 +119,17 @@ describe("HintFrontier", () => {
 
 /**
  * The games whose hint plans choose through a `HintFrontier` — derived from
- * each game's own comment-stripped source (it walks its plan with
- * `runCandidatePlan` or a preset over it, either of which owns the frontier),
- * never declared.
- *
- * The key is the **shape both entry points share**, not either one's full
- * name: `runLatinCandidatePlan` does not contain `runCandidatePlan`, so a key on
- * one full name silently drops the other's games (`docs/method.md` § "A scan
- * that keys on a name"). The comment
- * stripper transpiles, which erases the type arguments, so a call written
- * `runCandidatePlan<M, H, …>({` reaches the scan as `runCandidatePlan({`.
+ * each game's own code (it calls `runCandidatePlan` or the Latin preset over
+ * it, either of which owns the frontier), never declared.
  */
-const FRONTIER_GAMES: readonly string[] = (() => {
-  const ids = HINT_GAMES.map(([id]) => id);
-  const without = new Set(membersNotMentioning(ids, "CandidatePlan("));
-  return ids.filter((id) => !without.has(id));
-})();
+const FRONTIER_GAMES: readonly string[] = gamesUsing(
+  HINT_GAMES.map(([id]) => id),
+  ["runCandidatePlan", "runLatinCandidatePlan"].map((name) => ({
+    module: "src/engine/candidate-plan.ts",
+    name,
+  })),
+  "call",
+);
 
 /** The same population read a second, independent way: a game that imports the
  * walk's module. Not the same question — importing is not calling — but nothing
@@ -143,11 +138,10 @@ const FRONTIER_GAMES: readonly string[] = (() => {
  * key that stops matching a call site leaves the import behind. If a future game
  * genuinely imports without walking, this fails and says so, which is the
  * honest outcome; it is not a remembered count. */
-const PLAN_IMPORTERS: readonly string[] = (() => {
-  const ids = HINT_GAMES.map(([id]) => id);
-  const without = new Set(membersNotMentioning(ids, "engine/candidate-plan.ts"));
-  return ids.filter((id) => !without.has(id));
-})();
+const PLAN_IMPORTERS: readonly string[] = gamesImporting(
+  HINT_GAMES.map(([id]) => id),
+  (m) => m === "src/engine/candidate-plan.ts",
+);
 
 /**
  * The share of a plan's jumps (a step reading nothing its predecessor wrote)
@@ -277,8 +271,11 @@ describe("hint plans continue from their previous step where they can", () => {
 
   it("accounts for every game that takes the frontier directly", () => {
     const ids = HINT_GAMES.map(([id]) => id);
-    const without = new Set(membersNotMentioning(ids, "new HintFrontier"));
-    const direct = ids.filter((id) => !without.has(id) && !FRONTIER_GAMES.includes(id));
+    const direct = gamesUsing(
+      ids,
+      { module: "src/engine/hint-frontier.ts", name: "HintFrontier" },
+      "new",
+    ).filter((id) => !FRONTIER_GAMES.includes(id));
     expectLedger(direct, OWN_FRONTIER, {
       table: "OWN_FRONTIER",
       file: "src/engine/hint-frontier.test.ts",

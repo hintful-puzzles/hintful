@@ -10,6 +10,7 @@
  * yes too readily: `nothingToDeduce`, which turns the check off, and a test
  * of a game's own.
  */
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { DESC_NOT_DEDUCIBLE, loadVerdict, validateDesc } from "./desc-error.ts";
 import { fakeGame } from "./fake-game.ts";
@@ -17,15 +18,15 @@ import { DRAFT_HINT } from "./game.ts";
 import { hintFinishes, nothingToDeduce } from "./hint-finishes.ts";
 import { PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";
 import { _unregisterGame, registerGame } from "./registry.ts";
-import { stripComments } from "./testing/code-lines.ts";
 import { dealt } from "./testing/dealt.ts";
 import {
-  membersNotMentioning,
+  gamesUsing,
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,
 } from "./testing/enrollment.ts";
 import { gatePresets } from "./testing/hint-games.ts";
 import { expectLedger } from "./testing/ledger.ts";
+import { parsed, usesOf } from "./testing/syntax.ts";
 
 const UNTIERED = REGISTERED_GAMES.filter(([, game]) => game.difficulty === undefined);
 
@@ -36,22 +37,26 @@ const UNTIERED = REGISTERED_GAMES.filter(([, game]) => game.difficulty === undef
  * that returns the refusal cannot go unlisted.
  */
 const RELAYS: Record<string, string> = {
-  "candidate-hint.ts": "candidateHint(",
-  "described-edge-hint.ts": "describedEdgeHint<",
-  "described-firing-hint.ts": "describedFiringHint<",
-  "described-hint.ts": "describedHint<",
+  "candidate-hint.ts": "candidateHint",
+  "described-edge-hint.ts": "describedEdgeHint",
+  "described-firing-hint.ts": "describedFiringHint",
+  "described-hint.ts": "describedHint",
 };
-const REFUSAL = "DEDUCTION_EXHAUSTED";
+const REFUSAL = { module: "src/engine/hint-refusal.ts", name: "DEDUCTION_EXHAUSTED" };
 
 /** The untiered games whose own code can end a hint that way. */
 function canRunOutOfDeduction(): string[] {
   const ids = UNTIERED.map(([id]) => id);
-  const mentions = (marker: string) => {
-    const without = new Set(membersNotMentioning(ids, marker));
-    return (id: string) => !without.has(id);
-  };
-  const ways = [REFUSAL, ...Object.values(RELAYS)].map(mentions);
-  return ids.filter((id) => ways.some((names) => names(id)));
+  const naming = gamesUsing(ids, REFUSAL);
+  const relaying = gamesUsing(
+    ids,
+    Object.entries(RELAYS).map(([file, name]) => ({
+      module: `src/engine/${file}`,
+      name,
+    })),
+    "call",
+  );
+  return ids.filter((id) => naming.includes(id) || relaying.includes(id));
 }
 
 describe("an untiered game's answer to whether deduction finishes a board", () => {
@@ -147,9 +152,19 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
       import: "default",
       eager: true,
     });
+    // A refusal is an object whose `error` is the constant, however the
+    // constant is imported or the object written.
     const returning = Object.entries(modules)
       .filter(([path]) => !path.includes(".test."))
-      .filter(([, text]) => stripComments(text).includes(`error: ${REFUSAL}`))
+      .filter(([path, text]) =>
+        usesOf(parsed(`src/engine/${path.slice(2)}`, text), REFUSAL).some(
+          ({ node }) =>
+            ts.isPropertyAssignment(node.parent) &&
+            node.parent.initializer === node &&
+            ts.isIdentifier(node.parent.name) &&
+            node.parent.name.text === "error",
+        ),
+      )
       .map(([path]) => path.slice(2))
       .sort();
     expect(Object.keys(modules).length).toBeGreaterThanOrEqual(50);

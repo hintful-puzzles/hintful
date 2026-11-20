@@ -26,7 +26,7 @@ import { hasHint } from "./game.ts";
 import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { axisSlice, dealtBoards, leafPresets, presetAxes } from "./testing/presets.ts";
-import { SCANNED_TEST_FILES, testCodeLinesMatching } from "./testing/test-source.ts";
+import { SCANNED_TEST_FILES, testFilesUsing } from "./testing/test-source.ts";
 
 describe("the hint-guard enrolled set is derived, and non-vacuous", () => {
   it("drew from a fully populated registry", () => {
@@ -216,9 +216,11 @@ const BUILDS_ITS_OWN_BOARDS: Record<string, string> = {
 };
 
 describe("a cross-game sweep takes its boards from the slice", () => {
-  // `withTier` is the engine's, called as a function; `\b` also matches the
-  // method spelling a copied guard might carry.
-  const OWN_BOARDS = /\bfirstLeaf\(|\bwithTier\(/;
+  // A call through the import, renamed or through a namespace alike.
+  const OWN_BOARDS = [
+    { module: "src/engine/testing/presets.ts", name: "firstLeaf" },
+    { module: "src/engine/difficulty.ts", name: "withTier" },
+  ];
 
   it("scanned the suite, and only the ledgered files build their own", () => {
     // Vacuity, first and for the usual reason: a glob that matched nothing
@@ -227,9 +229,7 @@ describe("a cross-game sweep takes its boards from the slice", () => {
       SCANNED_TEST_FILES,
       "the test-source glob found almost nothing",
     ).toBeGreaterThan(250);
-    const found = [
-      ...new Set(testCodeLinesMatching(OWN_BOARDS).map((m) => m.id)),
-    ].sort();
+    const found = testFilesUsing(OWN_BOARDS, "call").sort();
     expect(
       found,
       "a test builds its own board population instead of calling `gatePresets` " +
