@@ -24,10 +24,10 @@
  * option.
  */
 
-import { describe, expect, it } from "vitest";
+import { expect } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/rect-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
 import { rectGame } from "./index.ts";
@@ -59,15 +59,12 @@ const paramsOf = (f: RectFixture): RectParams => {
     : { ...p, diff: DIFF_NORMAL };
 };
 
-describe("rect differential (vs C reference)", () => {
-  for (const f of FIXTURES) {
-    const label = `${f.w}x${f.h}${f.expandfactor ? `e${f.expandfactor}` : ""} seed=${f.seed}`;
-    it(`reproduces the C desc + aux byte for byte — ${label}`, () => {
-      const p = paramsOf(f);
-      const { desc, aux } = newDesc(p, randomNew(f.seed));
-      expect(desc).toBe(f.desc);
-      expect(aux).toBe(f.aux);
-      expect(validateDesc(rectGame, p, desc)).toBeNull();
-    });
-  }
+describeDescDifferential<RectFixture, RectParams>({
+  title: "rect differential (vs C reference, desc + aux)",
+  fixtures: FIXTURES,
+  label: (f) =>
+    `${f.w}x${f.h}${f.expandfactor ? `e${f.expandfactor}` : ""} seed=${f.seed}`,
+  params: paramsOf,
+  newDesc,
+  extra: (f, p) => expect(validateDesc(rectGame, p, f.desc)).toBeNull(),
 });

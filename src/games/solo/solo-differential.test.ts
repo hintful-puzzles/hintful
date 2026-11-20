@@ -21,7 +21,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/solo-c-reference.json" with { type: "json" };
 import { newSoloDesc } from "./generator.ts";
 import { soloGame } from "./index.ts";
@@ -67,6 +67,15 @@ function label(f: Fixture): string {
   return `${v} diff=${f.diff} kdiff=${f.kdiff} seed=${f.seed}`;
 }
 
+describeDescDifferential<Fixture, SoloParams>({
+  title: "solo differential (frozen C reference, desc)",
+  fixtures: data.fixtures.filter((f) => f.diff < DIFF_EXTREME),
+  label,
+  params: paramsOf,
+  newDesc: newSoloDesc,
+  extra: (f, p) => expect(validateDesc(soloGame, p, f.desc)).toBeNull(),
+});
+
 describe("solo differential (frozen C reference)", () => {
   it("re-founds some fixtures and keeps others byte-matched", () => {
     expect(data.fixtures.some((f) => f.diff >= DIFF_EXTREME)).toBe(true);
@@ -74,13 +83,6 @@ describe("solo differential (frozen C reference)", () => {
   });
 
   for (const f of data.fixtures) {
-    if (f.diff < DIFF_EXTREME)
-      it(`${label(f)}: TS desc matches C byte-for-byte`, () => {
-        const { desc } = newSoloDesc(paramsOf(f), randomNew(f.seed));
-        expect(desc).toBe(f.desc);
-        expect(validateDesc(soloGame, paramsOf(f), desc)).toBeNull();
-      });
-
     it(`${label(f)}: TS solver grades the published board as C did`, () => {
       const p = paramsOf(f);
       const s = newState(p, f.desc);

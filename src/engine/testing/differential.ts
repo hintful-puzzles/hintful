@@ -35,10 +35,13 @@ import { describe, expect, it } from "vitest";
 import { type RandomState, randomNew } from "../random/index.ts";
 import { describeSlow } from "./slow.ts";
 
-/** The minimum a byte-match fixture must carry: a seed and the C-recorded desc. */
+/** The minimum a byte-match fixture must carry: a seed and the C-recorded desc.
+ * A fixture that recorded the generator's `aux` too (Map, Pearl, Rect) is held
+ * to it as well. */
 export interface DescFixture {
   seed: string;
   desc: string;
+  aux?: string;
 }
 
 export interface DescDifferentialOptions<F extends DescFixture, P> {
@@ -51,7 +54,7 @@ export interface DescDifferentialOptions<F extends DescFixture, P> {
   /** Map a fixture to the params its `newDesc` takes. */
   params: (fixture: F) => P;
   /** The game's generator entry point. */
-  newDesc: (params: P, rng: RandomState) => { desc: string };
+  newDesc: (params: P, rng: RandomState) => { desc: string; aux?: string };
   /**
    * Optional follow-on assertion run inside the same `it` after the
    * byte-match (e.g. `validateDesc(game, p, f.desc)` is null).
@@ -75,11 +78,12 @@ export interface DescDifferentialOptions<F extends DescFixture, P> {
 export function expectDescMatches<F extends DescFixture, P>(
   fixture: F,
   params: P,
-  newDesc: (params: P, rng: RandomState) => { desc: string },
+  newDesc: (params: P, rng: RandomState) => { desc: string; aux?: string },
   extra?: (fixture: F, params: P) => void,
 ): void {
-  const { desc } = newDesc(params, randomNew(fixture.seed));
+  const { desc, aux } = newDesc(params, randomNew(fixture.seed));
   expect(desc).toBe(fixture.desc);
+  if (fixture.aux !== undefined) expect(aux).toBe(fixture.aux);
   extra?.(fixture, params);
 }
 

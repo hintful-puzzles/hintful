@@ -17,7 +17,7 @@
 
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/group-c-reference.json" with { type: "json" };
 import { newGameDesc } from "./generator.ts";
 import { groupGame } from "./index.ts";
@@ -40,17 +40,20 @@ const FIXTURES = reference.fixtures as Fixture[];
  * `solverDiff` is its `diff`. */
 const params = (f: Fixture): GroupParams => ({ w: f.w, diff: f.solverDiff, id: f.id });
 
-describe("group differential (byte-match + solver agreement)", () => {
+const label = (f: Fixture) => `${f.w}d${f.diff}${f.id ? "" : "i"} (seed ${f.seed})`;
+
+describeDescDifferential<Fixture, GroupParams>({
+  title: "group differential (byte-match)",
+  fixtures: FIXTURES,
+  label,
+  params,
+  newDesc: newGameDesc,
+  extra: (f, p) => expect(validateDesc(groupGame, p, f.desc)).toBeNull(),
+});
+
+describe("group differential (solver agreement)", () => {
   for (const f of FIXTURES) {
-    const label = `${f.w}d${f.diff}${f.id ? "" : "i"} (seed ${f.seed})`;
-
-    it(`${label}: desc matches C byte-for-byte`, () => {
-      const { desc } = newGameDesc(params(f), randomNew(f.seed));
-      expect(desc).toBe(f.desc);
-      expect(validateDesc(groupGame, params(f), desc)).toBeNull();
-    });
-
-    it(`${label}: TS solver grades at the C difficulty`, () => {
+    it(`${label(f)}: TS solver grades at the C difficulty`, () => {
       const givens = newState(params(f), f.desc).grid.slice();
       const ret = solveGroup(givens, f.w, f.solverDiff);
       expect(ret).toBe(f.solverDiff);

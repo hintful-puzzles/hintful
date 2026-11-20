@@ -24,7 +24,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/loopy-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
 import { loopyGame } from "./index.ts";
@@ -72,13 +72,8 @@ describe("loopy C differential", () => {
         expect(encodeParams(paramsOf(f), true)).toBe(f.params);
       });
 
-      it("generates the same description, byte for byte", () => {
-        const { desc } = newDesc(paramsOf(f), randomNew(f.seed));
-        expect(desc).toBe(f.desc);
-      });
-
       it("accepts and grades the C's board at exactly its recorded difficulty", () => {
-        // Independent of the byte-match above: this checks the solver against a
+        // Independent of the byte-match below: this checks the solver against a
         // board the C built, so it still says something if the generator and
         // the solver ever diverged together.
         const p = paramsOf(f);
@@ -93,4 +88,12 @@ describe("loopy C differential", () => {
       });
     });
   }
+});
+
+describeDescDifferential<LoopyFixture, LoopyParams>({
+  title: "loopy C differential (desc)",
+  fixtures,
+  label: (f) => `${f.typeName} ${f.w}x${f.h} ${f.diff} (${f.seed})`,
+  params: paramsOf,
+  newDesc,
 });

@@ -21,7 +21,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/slide-c-reference.json" with { type: "json" };
 import { newSlideDesc } from "./generator.ts";
 import { slideGame } from "./index.ts";
@@ -52,6 +52,15 @@ const params = (f: Fixture): SlideParams => ({
 const label = (f: Fixture): string =>
   `${f.w}x${f.h}${f.maxmoves >= 0 ? `m${f.maxmoves}` : "u"} seed=${f.seed}`;
 
+describeDescDifferential<Fixture, SlideParams>({
+  title: "slide differential (frozen C reference, desc)",
+  fixtures,
+  label,
+  params,
+  newDesc: newSlideDesc,
+  extra: (f, p) => expect(validateDesc(slideGame, p, f.desc)).toBeNull(),
+});
+
 describe("slide differential (frozen C reference)", () => {
   it("covers every upstream preset", () => {
     for (const preset of [
@@ -66,15 +75,6 @@ describe("slide differential (frozen C reference)", () => {
       ).toBe(true);
     }
   });
-
-  for (const f of fixtures) {
-    it(`${label(f)}: TS desc matches C byte-for-byte`, () => {
-      const p = params(f);
-      const { desc } = newSlideDesc(p, randomNew(f.seed));
-      expect(desc).toBe(f.desc);
-      expect(validateDesc(slideGame, p, f.desc)).toBeNull();
-    });
-  }
 
   for (const f of fixtures) {
     it(`${label(f)}: TS solver agrees on the minimum solution length`, () => {

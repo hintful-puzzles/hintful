@@ -31,7 +31,7 @@ import {
   type EdgeClueParams,
   newState,
 } from "../../engine/edge-clue-latin/state.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/unequal-c-reference.json" with { type: "json" };
 import { unequalGame } from "./index.ts";
 import { SIGNS } from "./state.ts";
@@ -50,7 +50,16 @@ function fixtureParams(f: Fixture): EdgeClueParams {
   return { order: f.order, diff: diffFromLevel(f.diff) };
 }
 
-describe("unequal differential (byte-match + solver agreement)", () => {
+describeDescDifferential<Fixture, EdgeClueParams>({
+  title: "unequal differential (byte-match)",
+  fixtures: FIXTURES.filter((f) => f.diff < DIFF_EXTREME),
+  label: (f) => `${f.order} d${f.diff} (seed ${f.seed})`,
+  params: fixtureParams,
+  newDesc: (p, rng) => newEdgeClueDesc(SIGNS, p, rng),
+  extra: (f, p) => expect(validateDesc(unequalGame, p, f.desc)).toBeNull(),
+});
+
+describe("unequal differential (solver agreement)", () => {
   it("re-founds some fixtures and keeps others byte-matched", () => {
     expect(FIXTURES.some((f) => f.diff >= DIFF_EXTREME)).toBe(true);
     expect(FIXTURES.some((f) => f.diff < DIFF_EXTREME)).toBe(true);
@@ -58,13 +67,6 @@ describe("unequal differential (byte-match + solver agreement)", () => {
 
   for (const f of FIXTURES) {
     const p = fixtureParams(f);
-    if (f.diff < DIFF_EXTREME)
-      it(`${f.order} d${f.diff} (seed ${f.seed}): desc matches C byte-for-byte`, () => {
-        const { desc } = newEdgeClueDesc(SIGNS, p, randomNew(f.seed));
-        expect(desc).toBe(f.desc);
-        expect(validateDesc(unequalGame, p, desc)).toBeNull();
-      });
-
     it(`${f.order} d${f.diff} (seed ${f.seed}): TS solver grades at the C difficulty`, () => {
       const state = newState(SIGNS, p, f.desc);
       const grade = (cap: number): number =>

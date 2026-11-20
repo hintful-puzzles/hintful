@@ -23,7 +23,7 @@ import {
   type EdgeClueParams,
   newState,
 } from "../../engine/edge-clue-latin/state.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/adjacent-c-reference.json" with { type: "json" };
 import { adjacentGame } from "./index.ts";
 import { BARS } from "./state.ts";
@@ -38,22 +38,32 @@ interface Fixture {
 
 const FIXTURES = reference.fixtures as Fixture[];
 
-describe("adjacent differential (byte-match + solver agreement)", () => {
-  it("has fixtures, all below Hard, where the generators still agree", () => {
+const paramsOf = (f: Fixture): EdgeClueParams => ({
+  order: f.order,
+  diff: diffFromLevel(f.diff),
+});
+const label = (f: Fixture) => `${f.order} d${f.diff} (seed ${f.seed})`;
+
+describe("adjacent differential's fixtures", () => {
+  it("are there, all below Hard, where the generators still agree", () => {
     expect(FIXTURES.length).toBeGreaterThan(0);
     expect(FIXTURES.every((f) => f.diff < DIFF_EXTREME)).toBe(true);
   });
+});
 
+describeDescDifferential<Fixture, EdgeClueParams>({
+  title: "adjacent differential (byte-match)",
+  fixtures: FIXTURES,
+  label,
+  params: paramsOf,
+  newDesc: (p, rng) => newEdgeClueDesc(BARS, p, rng),
+  extra: (f, p) => expect(validateDesc(adjacentGame, p, f.desc)).toBeNull(),
+});
+
+describe("adjacent differential (solver agreement)", () => {
   for (const f of FIXTURES) {
-    const p: EdgeClueParams = { order: f.order, diff: diffFromLevel(f.diff) };
-    it(`${f.order} d${f.diff} (seed ${f.seed}): desc matches C byte-for-byte`, () => {
-      const { desc } = newEdgeClueDesc(BARS, p, randomNew(f.seed));
-      expect(desc).toBe(f.desc);
-      expect(validateDesc(adjacentGame, p, desc)).toBeNull();
-    });
-
-    it(`${f.order} d${f.diff} (seed ${f.seed}): TS solver grades at the C difficulty`, () => {
-      const state = newState(BARS, p, f.desc);
+    it(`${label(f)}: TS solver grades at the C difficulty`, () => {
+      const state = newState(BARS, paramsOf(f), f.desc);
       expect(
         solveEdgeClues(
           state.order,

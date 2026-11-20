@@ -22,7 +22,7 @@
 
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/inertia-c-reference.json" with { type: "json" };
 import { newInertiaDesc } from "./generator.ts";
 import { inertiaGame } from "./index.ts";
@@ -41,15 +41,18 @@ interface Fixture {
 
 const FIXTURES = reference.fixtures as Fixture[];
 
-describe("inertia differential vs the C reference", () => {
+describeDescDifferential<Fixture, { w: number; h: number }>({
+  title: "inertia differential vs the C reference (desc)",
+  fixtures: FIXTURES,
+  label: (f) => `${f.w}x${f.h} seed=${f.seed}`,
+  params: (f) => ({ w: f.w, h: f.h }),
+  newDesc: newInertiaDesc,
+  extra: (f, p) => expect(validateDesc(inertiaGame, p, f.desc)).toBeNull(),
+});
+
+describe("inertia differential vs the C reference (route)", () => {
   for (const f of FIXTURES) {
     const params = { w: f.w, h: f.h };
-
-    it(`${f.w}x${f.h} seed=${f.seed}: generator reproduces the C desc`, () => {
-      const { desc } = newInertiaDesc(params, randomNew(f.seed));
-      expect(desc).toBe(f.desc);
-      expect(validateDesc(inertiaGame, params, f.desc)).toBeNull();
-    });
 
     it(`${f.w}x${f.h} seed=${f.seed}: the route collects every gem, alive`, () => {
       const start = newState(params, f.desc);

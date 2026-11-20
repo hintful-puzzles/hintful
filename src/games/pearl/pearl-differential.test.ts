@@ -15,7 +15,7 @@
  * the fixtures were chosen to byte-match.)
  */
 import { describe, expect, it } from "vitest";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import fixtures from "./__fixtures__/pearl-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
 import { gradePearl, pearlSolve } from "./solver.ts";
@@ -37,17 +37,20 @@ const paramsOf = (f: Fixture): PearlParams => ({
   difficulty: f.difficulty,
 });
 
-describe("pearl generator differential (byte-match vs C)", () => {
-  for (const f of fixtures.fixtures as Fixture[]) {
-    const tag = `${f.seed} (${f.w}x${f.h} d=${f.difficulty})`;
+const FIXTURES = fixtures.fixtures as Fixture[];
+const tag = (f: Fixture) => `${f.seed} (${f.w}x${f.h} d=${f.difficulty})`;
 
-    it(`${tag}: TS desc + aux match C byte-for-byte`, () => {
-      const { desc, aux } = newDesc(paramsOf(f), randomNew(f.seed));
-      expect(desc).toBe(f.desc);
-      expect(aux).toBe(f.aux);
-    });
+describeDescDifferential<Fixture, PearlParams>({
+  title: "pearl generator differential (byte-match vs C, desc + aux)",
+  fixtures: FIXTURES,
+  label: tag,
+  params: paramsOf,
+  newDesc,
+});
 
-    it(`${tag}: TS solver grades the C board at difficulty ${f.grade}`, () => {
+describe("pearl generator differential (solver vs C)", () => {
+  for (const f of FIXTURES) {
+    it(`${tag(f)}: TS solver grades the C board at difficulty ${f.grade}`, () => {
       const state = newState(paramsOf(f), f.desc);
       expect(gradePearl(f.w, f.h, state.clues)).toBe(f.grade);
       if (f.grade > 0) {

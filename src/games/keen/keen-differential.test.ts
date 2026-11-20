@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/keen-c-reference.json" with { type: "json" };
 import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
@@ -36,19 +36,21 @@ function fixtureParams(f: Fixture): KeenParams {
   return { w: f.w, diff: diffFromLevel(f.diff), multiplicationOnly: f.mult };
 }
 
-describe("keen differential (byte-match + solver agreement)", () => {
+const label = (f: Fixture) => `${f.w}d${f.diff}${f.mult ? "m" : ""} (seed ${f.seed})`;
+
+describeDescDifferential<Fixture, KeenParams>({
+  title: "keen differential (byte-match)",
+  fixtures: FIXTURES,
+  label,
+  params: fixtureParams,
+  newDesc: newKeenDesc,
+  extra: (f, p) => expect(validateDesc(keenGame, p, f.desc)).toBeNull(),
+});
+
+describe("keen differential (solver agreement)", () => {
   for (const f of FIXTURES) {
-    const p = fixtureParams(f);
-    const label = `${f.w}d${f.diff}${f.mult ? "m" : ""} (seed ${f.seed})`;
-
-    it(`${label}: desc matches C byte-for-byte`, () => {
-      const { desc } = newKeenDesc(p, randomNew(f.seed));
-      expect(desc).toBe(f.desc);
-      expect(validateDesc(keenGame, p, desc)).toBeNull();
-    });
-
-    it(`${label}: TS solver grades at the C difficulty`, () => {
-      const state = newState(p, f.desc);
+    it(`${label(f)}: TS solver grades at the C difficulty`, () => {
+      const state = newState(fixtureParams(f), f.desc);
       const soln = new Uint8Array(f.w * f.w);
       const ret = solveKeen(f.w, state.clues, soln, f.solverDiff);
       expect(ret).toBe(f.solverDiff);

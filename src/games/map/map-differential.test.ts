@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/desc-error.ts";
-import { randomNew } from "../../engine/random/index.ts";
+import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/map-c-reference.json" with { type: "json" };
 import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
@@ -37,30 +37,28 @@ interface Fixture {
 
 const data = cReference as { fixtures: Fixture[] };
 
-describe("map differential (frozen C reference)", () => {
+const paramsOf = (f: Fixture): MapParams => ({ w: f.w, h: f.h, n: f.n, diff: f.diff });
+const label = (f: Fixture) => `${f.w}x${f.h}n${f.n}d${f.diff} seed=${f.seed}`;
+
+// Upstream dealt an Easy board under the tier's name after fifty tries, and
+// one fixture records that. The generator here does not, so that fixture keeps
+// only its solver half. Tricky is no longer upstream's forcing chain
+// (2026-10-28), and the rungs a tier runs decide which clues its board keeps,
+// so a board dealt at Tricky or above keeps only the solver half too, held to
+// having one answer, which Unreasonable proves.
+describeDescDifferential<Fixture, MapParams>({
+  title: "map differential (frozen C reference, desc + aux)",
+  fixtures: data.fixtures.filter((f) => f.diff < DIFF_HARD && f.solverDiff >= f.diff),
+  label,
+  params: paramsOf,
+  newDesc: newMapDesc,
+  extra: (f, p) => expect(validateDesc(mapGame, p, f.desc)).toBeNull(),
+});
+
+describe("map differential (frozen C reference, solver)", () => {
   for (const f of data.fixtures) {
-    const p: MapParams = { w: f.w, h: f.h, n: f.n, diff: f.diff };
-    const label = `${f.w}x${f.h}n${f.n}d${f.diff} seed=${f.seed}`;
-
-    // Upstream dealt an Easy board under the tier's name after fifty tries,
-    // and one fixture records that. The generator here does not, so that
-    // fixture keeps only its solver half. Tricky is no longer upstream's
-    // forcing chain (2026-10-28), and the rungs a tier runs decide which clues
-    // its board keeps, so a board dealt at Tricky or above keeps only the
-    // solver half too, held to having one answer, which Unreasonable proves.
-    const upstreamRungs = f.diff < DIFF_HARD;
-    const dealtBelowTier = f.solverDiff < f.diff;
-    it.skipIf(dealtBelowTier || !upstreamRungs)(
-      `${label}: TS desc + aux match C byte-for-byte`,
-      () => {
-        const { desc, aux } = newMapDesc(p, randomNew(f.seed));
-        expect(desc).toBe(f.desc);
-        expect(aux).toBe(f.aux);
-        expect(validateDesc(mapGame, p, desc)).toBeNull();
-      },
-    );
-
-    it(`${label}: TS solver grades the board at the C difficulty, or has one answer`, () => {
+    const p = paramsOf(f);
+    it(`${label(f)}: TS solver grades the board at the C difficulty, or has one answer`, () => {
       const { map, coloring } = newMapData(p, f.desc);
       const clues = new Int32Array(f.n).fill(-1);
       for (let i = 0; i < f.n; i++) if (map.immutable[i]) clues[i] = coloring[i];

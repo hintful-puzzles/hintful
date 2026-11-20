@@ -65,7 +65,15 @@
 
 ## 3. Tests and input
 
-- [ ] 3.1 Move the 8 hand-rolled differentials onto `describeDescDifferential`.
+- [x] 3.1 Move the 8 hand-rolled differentials onto `describeDescDifferential`.
+      2026-11-20: eleven hand-rolled the byte-match loop (Adjacent, Group,
+      Inertia, Keen, Loopy, Map, Pearl, Rect, Slide, Solo, Unequal); their
+      byte-match half now calls the helper and the solver half stays in its
+      own `describe`. The helper also asserts the generator's `aux` where a
+      fixture recorded it (Map, Pearl and Rect did by hand; Netslide, Slant
+      and Tents recorded one never asserted, and match), with a delta in
+      `specs/testing`. A planted `aux` defect fails all six. The other
+      differentials are solver agreement only, which the spec keeps inline.
 - [ ] 3.2 Sort the 34 `interpretTargetVerbs` holdouts by input shape;
       migrate those of the target-and-verb shape, and run each in the app
       with mouse, touch and keyboard.
