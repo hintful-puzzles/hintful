@@ -75,7 +75,7 @@ function play(
     m.timer(60);
   }
 
-  const size = game.computeSize(params, game.preferredTileSize ?? 32);
+  const size = game.computeSize(params, game.preferredTileSize);
   const step = Math.max(6, Math.floor(Math.min(size.w, size.h) / 6));
 
   for (const button of [LEFT_BUTTON, RIGHT_BUTTON]) {
@@ -275,7 +275,7 @@ describe("a v1 save still loads", () => {
       // release. Mines needs it (its layout does not exist until the first
       // click, and Solve refuses before that), and it is what puts a `privDesc`
       // in the envelope, which is the half of the format this game covers.
-      const size = game.computeSize(params, game.preferredTileSize ?? 32);
+      const size = game.computeSize(params, game.preferredTileSize);
       const cx = Math.floor(size.w / 2);
       const cy = Math.floor(size.h / 2);
       played.processInput(cx, cy, LEFT_BUTTON);

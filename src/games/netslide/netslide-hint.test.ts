@@ -105,7 +105,7 @@ const pinned = describeHintPins({
 });
 
 function hintOf(state: NetslideState, aux?: string) {
-  const res = netslideGame.hint?.(state, aux);
+  const res = netslideGame.hint.plan(state, aux);
   if (!res) throw new Error("netslide has no hint()");
   return res;
 }
@@ -220,7 +220,7 @@ describe("the hint's idea of where a tile belongs", () => {
     // A destination decided in advance narrates this finishing slide "(setting
     // up)", because the tile the slide delivers need not be the one it picked.
     const { state, aux } = board(EASY_3X3, "final-move-1");
-    const solve = netslideGame.solve?.(state, state, aux);
+    const solve = netslideGame.solve(state, state, aux);
     if (!solve?.ok) throw new Error("solve refused");
     const finished = netslideGame.executeMove(state, solve.move);
 
@@ -265,7 +265,7 @@ describe("netslide hint", () => {
     const { state } = board(EASY_3X3, "no-aux-1");
 
     const hint = hintOf(state, undefined);
-    const solve = netslideGame.solve?.(state, state, undefined);
+    const solve = netslideGame.solve(state, state, undefined);
 
     expect(hint.ok).toBe(true);
     expect(solve?.ok).toBe(true);
@@ -472,7 +472,7 @@ describe("netslide hintKeepTrack", () => {
   const step = res.steps[0];
 
   it("counts the slide it asked for as completed", () => {
-    expect(netslideGame.hintKeepTrack?.(step.move, step, state)).toBe("completed");
+    expect(netslideGame.hint.keepTrack(step.move, step, state)).toBe("completed");
   });
 
   it("drops the plan on any other slide", () => {
@@ -487,7 +487,7 @@ describe("netslide hintKeepTrack", () => {
       ) {
         continue;
       }
-      expect(netslideGame.hintKeepTrack?.(other, step, state)).toBe("off");
+      expect(netslideGame.hint.keepTrack(other, step, state)).toBe("off");
       others++;
     }
     // A board offering only the hinted slide would assert nothing.
@@ -501,7 +501,7 @@ describe("netslide hint convergence", () => {
   // in circles.
   //
   // This walks it the way the midend does. A followed hint keeps its plan
-  // (`hintKeepTrack` says "completed" and the plan advances), so a hint is
+  // (`hint.keepTrack` says "completed" and the plan advances), so a hint is
   // recomputed only when its plan runs out — which is also what makes the
   // expensive endgame search affordable: it is paid once and its whole plan plays
   // out. How a plan can wander or loop, and what prevents each, is written at

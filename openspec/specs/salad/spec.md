@@ -317,7 +317,7 @@ Backspace, Delete and Space SHALL clear the square.
 
 Salad's hint SHALL be a plan of the shared candidate walk
 (`engine-candidate-hints`, "A shared candidate-elimination hint plan"), its
-marks those of its legend (`hintMarks`). Beside the walk's note steps and
+marks those of its legend (`hint.marks`). Beside the walk's note steps and
 placements, a step of Salad's own SHALL settle a square's emptiness by
 entering an empty or a not-empty marker.
 

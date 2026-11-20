@@ -139,7 +139,7 @@ describe("starbattle hint plans", () => {
       // The plan is capped, so it is asked again until the board is done.
       for (let asked = 0; starbattleGame.status(state) !== "solved"; asked++) {
         expect(asked).toBeLessThan(state.grid.length);
-        const result = starbattleGame.hint?.(state);
+        const result = starbattleGame.hint.plan(state);
         if (!result?.ok) throw new Error(`refused on ${seed}`);
         for (const step of result.steps) {
           if (step.move.kind !== "mark") throw new Error("a step marks squares");
@@ -155,7 +155,7 @@ describe("starbattle hint plans", () => {
 
   it("a step rings exactly the squares its move marks", () => {
     const state = deal(BOARDS[2], "rings");
-    const result = starbattleGame.hint?.(state);
+    const result = starbattleGame.hint.plan(state);
     if (!result?.ok) throw new Error("refused");
     for (const step of result.steps) {
       if (step.move.kind !== "mark") throw new Error("a step marks squares");
@@ -172,7 +172,7 @@ describe("starbattle hint plans", () => {
     const [first, ...rest] = step.move.cells;
     expect(rest.length).toBeGreaterThan(0);
     const copy = { ...step, move: structuredClone(step.move) };
-    const verdict = starbattleGame.hintKeepTrack?.(
+    const verdict = starbattleGame.hint.keepTrack(
       { kind: "mark", cells: [first] },
       copy,
       state,
@@ -190,7 +190,7 @@ describe("starbattle hint plans", () => {
     // The right button reaches a star through a cross.
     const copy = { ...step, move: structuredClone(step.move) };
     expect(
-      starbattleGame.hintKeepTrack?.(
+      starbattleGame.hint.keepTrack(
         { kind: "mark", cells: [{ index, mark: CROSSED }] },
         copy,
         state,
@@ -202,7 +202,7 @@ describe("starbattle hint plans", () => {
       cells: [{ index, mark: CROSSED }],
     });
     expect(
-      starbattleGame.hintKeepTrack?.(
+      starbattleGame.hint.keepTrack(
         { kind: "mark", cells: [{ index, mark: STAR }] },
         copy,
         crossed,
@@ -219,7 +219,7 @@ describe("starbattle hint plans", () => {
     );
     if (other === undefined) throw new Error("no other blank square");
     expect(
-      starbattleGame.hintKeepTrack?.(
+      starbattleGame.hint.keepTrack(
         { kind: "mark", cells: [{ index: other, mark: CROSSED }] },
         step,
         state,

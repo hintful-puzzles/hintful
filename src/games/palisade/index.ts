@@ -23,7 +23,7 @@ import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { interpretTargetVerbs, verbClicks } from "../../engine/target-verb.ts";
+import { interpretTargetVerbs } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
@@ -163,30 +163,24 @@ export const palisadeGame: Game<
     const edits = revealBorderEdge(state, solved);
     return edits === null ? null : { type: "edges", edits };
   },
-  hint: palisadeHint,
-  judgeMove: palisadeJudgeMove,
-  hintMarks: {
-    roles: {
-      ring: BORDER_RING_LEGEND,
-      outline:
-        'what the step reasons from, inside its squares: the clue it counts, the two clues either side of an edge, the four squares meeting at "this corner", or the two regions a join would merge.',
-      stripes:
-        'the one region the sentence is about: "this region", or "the same region" two edges both border.',
+  hint: {
+    plan: palisadeHint,
+    judgeMove: palisadeJudgeMove,
+    marks: {
+      roles: {
+        ring: BORDER_RING_LEGEND,
+        outline:
+          'what the step reasons from, inside its squares: the clue it counts, the two clues either side of an edge, the four squares meeting at "this corner", or the two regions a join would merge.',
+        stripes:
+          'the one region the sentence is about: "this region", or "the same region" two edges both border.',
+      },
     },
-  },
-  hintRungs: PALISADE_RUNGS,
-  hintKeepTrack: palisadeHintKeepTrack,
-  hintGesture: (s, ui, ds, m, step) => {
-    if (m.type !== "edges") throw new Error("palisade: a hint only sets edges");
-    return verbClicks(
-      targetVerbs,
-      { executeMove, hintKeepTrack: palisadeHintKeepTrack },
-      s,
-      ui,
-      ds,
-      step,
-      [borderStepEdge(m.edits)],
-    );
+    rungs: PALISADE_RUNGS,
+    keepTrack: palisadeHintKeepTrack,
+    targets: (_s, m) => {
+      if (m.type !== "edges") throw new Error("palisade: a hint only sets edges");
+      return [borderStepEdge(m.edits)];
+    },
   },
 
   textFormat,

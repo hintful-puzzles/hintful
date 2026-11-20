@@ -283,7 +283,7 @@ on, on the step's hinted edge, the state the step forces (a wall, or a no-wall
 mark), and `"off"` for every other move. The verdict SHALL be checked by
 button and not by side: the other button's state set on the hinted edge SHALL
 NOT complete the step, and the hinted edit SHALL complete it whichever of the
-edge's two cells the press landed in. A game's `hintKeepTrack` SHALL hand its
+edge's two cells the press landed in. A game's `hint.keepTrack` SHALL hand its
 edge edits to this helper.
 
 #### Scenario: The wrong button on the right edge

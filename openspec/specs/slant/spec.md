@@ -331,7 +331,7 @@ named as that pattern. No mark SHALL be placed that no firing uses.
 
 ### Requirement: Hint: Slant's hint marks are its legend's, with no slash drawn in a ringed square
 
-A step's marks SHALL be the roles `hintMarks` declares, in the hint colors of
+A step's marks SHALL be the roles `hint.marks` declares, in the hint colors of
 its palette: a ring on what the step decides, and an outline on what it
 reasons from. A ringed square SHALL hold no slash preview: the diagonal is
 drawn only once the move is made. The evidence a step outlines SHALL be

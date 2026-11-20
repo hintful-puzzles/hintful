@@ -45,11 +45,7 @@ import {
   POSITIVE,
 } from "./state.ts";
 
-const hint = (s: MagnetsState) => {
-  const h = magnetsGame.hint;
-  if (!h) throw new Error("magnets declares no hint");
-  return h(s);
-};
+const hint = (s: MagnetsState) => magnetsGame.hint.plan(s);
 
 /** What a step shows, as its words name it: an outlined clue is a reason when
  * the step cites it as one, and the count read otherwise. */

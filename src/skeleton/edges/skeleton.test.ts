@@ -264,7 +264,7 @@ describe("skeleton completion", () => {
     });
 
   it("the solve move finishes the board", () => {
-    const solved = skeletonGame.solve?.(start, start);
+    const solved = skeletonGame.solve(start, start);
     if (!solved?.ok) throw new Error("expected a solution");
     expect(skeletonGame.status(executeMove(start, solved.move))).toBe("solved");
   });

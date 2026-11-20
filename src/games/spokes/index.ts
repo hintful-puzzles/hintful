@@ -29,7 +29,6 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
-import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   LEFT_BUTTON,
@@ -50,7 +49,6 @@ import {
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
@@ -403,20 +401,11 @@ function hintKeepTrack(
 }
 
 /** A click on the spoke's dot, beside the hub the move names it from. */
-function hintGesture(
-  state: SpokesState,
-  ui: SpokesUi,
-  ds: SpokesDrawState,
-  m: SpokesMove,
-  step: HintStep<SpokesMove, SpokesHint>,
-): readonly PointerAction[] {
+function hintTargets(state: SpokesState, m: SpokesMove): Point[] {
   if (m.kind !== "set") return [];
   const { w } = state;
   const d = SPOKE_DIRS[m.dir];
-  const dot = { x: 3 * (m.index % w) + d.dx, y: 3 * ((m.index / w) | 0) + d.dy };
-  return verbClicks(targetVerbs, { executeMove, hintKeepTrack }, state, ui, ds, step, [
-    dot,
-  ]);
+  return [{ x: 3 * (m.index % w) + d.dx, y: 3 * ((m.index / w) | 0) + d.dy }];
 }
 
 /** Do two `set` moves name the same edge? A spoke has two ends; a move may cite
@@ -484,17 +473,19 @@ export const spokesGame: Game<
 
   solve,
   difficulty,
-  hint: spokesHint,
-  judgeMove: spokesJudgeMove,
-  hintMarks: {
-    roles: {
-      ring: "each spoke the step decides: a line in the hint color is one to draw, and a ring round a dot on a hub's rim is a spoke that must be unused, which you mark on that dot, as described above.",
-      outline: "the hubs the step reasons from, with a halo in a second color.",
+  hint: {
+    plan: spokesHint,
+    judgeMove: spokesJudgeMove,
+    marks: {
+      roles: {
+        ring: "each spoke the step decides: a line in the hint color is one to draw, and a ring round a dot on a hub's rim is a spoke that must be unused, which you mark on that dot, as described above.",
+        outline: "the hubs the step reasons from, with a halo in a second color.",
+      },
     },
+    rungs: SPOKES_RUNGS,
+    keepTrack: hintKeepTrack,
+    targets: hintTargets,
   },
-  hintRungs: SPOKES_RUNGS,
-  hintKeepTrack,
-  hintGesture,
   findMistakes,
   clearMistakes,
   revealOne,

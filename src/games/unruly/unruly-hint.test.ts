@@ -76,7 +76,7 @@ const pinned = describeHintPins({
 
 /** The hint's steps from `state`: the plan, in the order a player meets it. */
 function plan(state: UnrulyState): HintStep<UnrulyMove, UnrulyHint, UnrulyRung>[] {
-  const res = unrulyGame.hint?.(state);
+  const res = unrulyGame.hint.plan(state);
   if (!res?.ok) throw new Error("expected a plan");
   return res.steps;
 }
@@ -176,7 +176,7 @@ describe("hint", () => {
 
   it("returns a plan whose moves are legal and solve the board", () => {
     const st = fromSeed(P, "unruly-hint-plan");
-    const res = unrulyGame.hint?.(st);
+    const res = unrulyGame.hint.plan(st);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     expect(res.steps.length).toBeGreaterThan(0);
@@ -189,7 +189,7 @@ describe("hint", () => {
   it("gives every step visible evidence (a hatched line or a ringed premise)", () => {
     for (const seed of ["unruly-hint-plan", "unruly-ev-2", "unruly-ev-3"]) {
       const st = fromSeed(P, seed);
-      const res = unrulyGame.hint?.(st);
+      const res = unrulyGame.hint.plan(st);
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
         const hl = step.highlights as UnrulyHint;
@@ -213,7 +213,7 @@ describe("hint", () => {
 
   it("counts the board its plan finishes as solved, so the midend refuses it", () => {
     const st = fromSeed(P, "unruly-hint-solved");
-    const res0 = unrulyGame.hint?.(st);
+    const res0 = unrulyGame.hint.plan(st);
     if (!res0?.ok) throw new Error("expected a plan");
     let cur = st;
     for (const step of res0.steps) cur = unrulyGame.executeMove(cur, step.move);
@@ -223,7 +223,7 @@ describe("hint", () => {
   it("flags the opposite of the hint's first move, so the midend refuses it", () => {
     const st = fromSeed(P, "unruly-hint-mistake");
     // The hint's own first move is correct; play the opposite → a mistake.
-    const res = unrulyGame.hint?.(st);
+    const res = unrulyGame.hint.plan(st);
     if (!res?.ok) throw new Error("expected a plan");
     const t = (res.steps[0].highlights as UnrulyHint).target;
     const wrong: Cell = t.value === O ? Z : O;
@@ -240,7 +240,7 @@ describe("hint", () => {
 describe("hintKeepTrack", () => {
   it("completes when the move sets the hinted cell, off otherwise", () => {
     const st = fromSeed({ w2: 8, h2: 8, unique: false, diff: 1 }, "unruly-track");
-    const res = unrulyGame.hint?.(st);
+    const res = unrulyGame.hint.plan(st);
     if (!res?.ok) throw new Error("expected a plan");
     const step = res.steps[0];
     const t = (step.highlights as UnrulyHint).target;
@@ -251,7 +251,7 @@ describe("hintKeepTrack", () => {
       y: t.y,
       value: t.value as Cell,
     };
-    expect(unrulyGame.hintKeepTrack?.(right, step, st)).toBe("completed");
+    expect(unrulyGame.hint.keepTrack(right, step, st)).toBe("completed");
 
     const wrongVal: UnrulyMove = {
       type: "place",
@@ -259,7 +259,7 @@ describe("hintKeepTrack", () => {
       y: t.y,
       value: t.value === O ? Z : O,
     };
-    expect(unrulyGame.hintKeepTrack?.(wrongVal, step, st)).toBe("off");
+    expect(unrulyGame.hint.keepTrack(wrongVal, step, st)).toBe("off");
 
     const elsewhere: UnrulyMove = {
       type: "place",
@@ -267,7 +267,7 @@ describe("hintKeepTrack", () => {
       y: t.y,
       value: t.value as Cell,
     };
-    expect(unrulyGame.hintKeepTrack?.(elsewhere, step, st)).toBe("off");
+    expect(unrulyGame.hint.keepTrack(elsewhere, step, st)).toBe("off");
   });
 });
 
@@ -283,7 +283,7 @@ describe("animLength", () => {
 
   it("does not animate a bulk solve fill", () => {
     const st = fromSeed(P, "unruly-anim-solve");
-    const solveRes = unrulyGame.solve?.(st, st);
+    const solveRes = unrulyGame.solve(st, st);
     if (!solveRes?.ok) throw new Error("expected solvable");
     const solved = unrulyGame.executeMove(st, solveRes.move);
     expect(unrulyGame.animLength?.(st, solved, 1, ui)).toBe(0);

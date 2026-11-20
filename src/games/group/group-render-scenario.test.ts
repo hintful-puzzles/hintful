@@ -132,7 +132,7 @@ describe("group hint marks on a warm canvas", () => {
     pencil: new Int32Array(given.pencil.length),
     immutable: new Uint8Array(given.immutable.length),
   };
-  const ts = groupGame.preferredTileSize ?? 32;
+  const ts = groupGame.preferredTileSize;
   const size = groupGame.computeSize(p, ts);
   const palette = groupGame.colors(DEFAULT_BACKGROUND);
   const hintOver = (area: { x: number; y: number }[]) => ({

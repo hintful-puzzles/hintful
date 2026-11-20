@@ -61,7 +61,7 @@ function deal(p: PearlParams, seed: string): PearlState {
 }
 
 function hintSteps(state: PearlState): Step[] {
-  const res = pearlGame.hint?.(state);
+  const res = pearlGame.hint.plan(state);
   if (!res?.ok) throw new Error(`refused: ${res?.error}`);
   return res.steps as Step[];
 }

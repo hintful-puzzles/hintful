@@ -63,7 +63,7 @@ export function walkLines(
   const lines: string[] = [];
   for (let round = 0; round < ROUND_CAP; round++) {
     if (game.status(state) === "solved") return { lines, end: "solved" };
-    const res = game.hint?.(state, aux);
+    const res = game.hint.plan(state, aux);
     if (!res) throw new Error("the game has no hint()");
     if (!res.ok) return { lines, end: res.error };
     for (const step of res.steps) {

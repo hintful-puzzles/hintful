@@ -32,6 +32,7 @@
  * Dev/test-only; never imported by production code.
  */
 
+import { hasHint } from "../game.ts";
 import { StepMarks } from "../hint-words.ts";
 import { Midend } from "../midend.ts";
 import {
@@ -402,7 +403,7 @@ export function repaintDifferential(
   const params = board
     ? game.decodeParams(board.slice(0, board.indexOf(":")))
     : game.defaultParams();
-  const tileSize = game.preferredTileSize ?? 32;
+  const tileSize = game.preferredTileSize;
   const size = game.computeSize(params, tileSize);
   const palette = game.colors(DEFAULT_BACKGROUND);
   let warm: BoxRaster | null = null;
@@ -547,7 +548,7 @@ export function repaintDifferential(
   // run on an empty board rarely asks for one, and once its moves have made
   // the board wrong the hint only refuses, so most hinted games never showed
   // a hint frame at all.
-  if (typeof game.hint === "function") {
+  if (hasHint(game)) {
     lastEvent = "hint";
     m.hint();
     settle();
@@ -646,7 +647,7 @@ export function repaintDifferential(
   // follows each plan as a player pressing Hint again does, each step shown
   // as the one before it is played, and asks for a plan only when one runs
   // out: a searching hint asked afresh at every step was most of the file.
-  if (typeof game.hint === "function" && mismatch === null) {
+  if (hasHint(game) && mismatch === null) {
     const walk = begin();
     for (let s = 0; s < WALK_STEPS && mismatch === null; s++) {
       if (walk.m.activeHintStep() === null) {

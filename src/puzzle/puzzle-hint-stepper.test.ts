@@ -20,7 +20,6 @@ import { HINT_PENDING_MESSAGE, HINT_PENDING_MS, Puzzle } from "./puzzle.ts";
 import type { RemoteWorkerPuzzle } from "./worker.ts";
 
 const ATTRS: PuzzleStaticAttributes = {
-  canSolve: true,
   canHint: true,
   canCheck: false,
   referenceTitle: null,
@@ -432,7 +431,7 @@ describe("a slow hint says it is thinking (coalesce-hint-requests)", () => {
 
 describe("a hint's measured marks", () => {
   // The hint's marks are repainted over the board in their colors for as long
-  // as `hintMarks` holds them, so a board that drops the hint must drop them
+  // as `hint.marks` holds them, so a board that drops the hint must drop them
   // too: the engine's next message carries no words, which reads as no change
   // once the words were cleared here.
   it("go with the hint when the board is restarted", async () => {

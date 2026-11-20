@@ -11,8 +11,7 @@
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import type { Game, HintStep, SolveResult } from "../../engine/game.ts";
-import type { PointerAction } from "../../engine/hint-gesture.ts";
+import type { Game, SolveResult } from "../../engine/game.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -24,18 +23,10 @@ import {
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newNorinoriDesc } from "./generator.ts";
-import {
-  type NorinoriHint,
-  norinoriHint,
-  norinoriJudgeMove,
-  norinoriKeepTrack,
-  norinoriRefreshHintStep,
-  norinoriRulesOut,
-} from "./hint.ts";
+import { type NorinoriHint, norinoriHint, norinoriRulesOut } from "./hint.ts";
 import {
   border,
   colors,
@@ -163,24 +154,10 @@ const difficulty: DifficultyContract<NorinoriParams> = {
 
 /** A click on each square the step decides, with the button that marks it
  * the way the step asks. */
-function hintGesture(
-  state: NorinoriState,
-  ui: NorinoriUi,
-  ds: NorinoriDrawState,
-  move: NorinoriMove,
-  step: HintStep<NorinoriMove, NorinoriHint>,
-): readonly PointerAction[] {
+function hintTargets(state: NorinoriState, move: NorinoriMove): Point[] {
   if (move.kind !== "mark") return [];
   const { w } = state;
-  return verbClicks(
-    targetVerbs,
-    { executeMove, hintKeepTrack: norinoriKeepTrack },
-    state,
-    ui,
-    ds,
-    step,
-    move.cells.map(({ index }) => ({ x: index % w, y: (index / w) | 0 })),
-  );
+  return move.cells.map(({ index }) => ({ x: index % w, y: (index / w) | 0 }));
 }
 
 export const norinoriGame: Game<
@@ -224,22 +201,20 @@ export const norinoriGame: Game<
   ],
   textFormat,
   rulesOut: norinoriRulesOut,
-
-  hint: norinoriHint,
-  judgeMove: norinoriJudgeMove,
-  hintRungs: NORINORI_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the squares the step decides. The sentence says what they must be.",
-      stripes:
-        "the region the step is about, or the open squares beside a shaded square.",
-      outline:
-        "what else it reasons from: shaded squares, or the squares a tried one would leave clear.",
+  hint: {
+    ...norinoriHint,
+    rungs: NORINORI_RUNGS,
+    marks: {
+      roles: {
+        ring: "the squares the step decides. The sentence says what they must be.",
+        stripes:
+          "the region the step is about, or the open squares beside a shaded square.",
+        outline:
+          "what else it reasons from: shaded squares, or the squares a tried one would leave clear.",
+      },
     },
+    targets: hintTargets,
   },
-  hintKeepTrack: norinoriKeepTrack,
-  refreshHintStep: norinoriRefreshHintStep,
-  hintGesture,
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

@@ -483,7 +483,7 @@ const described = describedFiringHint<
   stated: STATED,
   say: {},
 });
-const { hint, hintKeepTrack, judgeMove } = described;
+const { keepTrack } = described.hint;
 
 /**
  * A leg of one still-empty square is a click, found from the verbs. A longer
@@ -509,7 +509,7 @@ function hintGesture(
   if (empty.length === 1)
     return verbClicks(
       targetVerbs,
-      { executeMove, hintKeepTrack },
+      { executeMove, keepTrack },
       state,
       ui,
       ds,
@@ -635,20 +635,20 @@ export const boatsGame: Game<
       to: "-",
     })),
   difficulty,
-  hint,
-  judgeMove,
-  hintMarks: {
-    roles: {
-      ring: "the squares the step decides, drawn in the hint color in the shape of what goes there: a small boat segment for a boat square, two wavy lines, like a given water square's, for water. A step that places a boat segment also shows the water that has to go round it.",
-      outline:
-        "the squares it reasons from, such as a given segment, the rest of an unfinished boat, or the water that closes a square in.",
-      stripes:
-        "the row or column whose number it counts with, and the stripes run on through that number.",
+  hint: {
+    ...described.hint,
+    marks: {
+      roles: {
+        ring: "the squares the step decides, drawn in the hint color in the shape of what goes there: a small boat segment for a boat square, two wavy lines, like a given water square's, for water. A step that places a boat segment also shows the water that has to go round it.",
+        outline:
+          "the squares it reasons from, such as a given segment, the rest of an unfinished boat, or the water that closes a square in.",
+        stripes:
+          "the row or column whose number it counts with, and the stripes run on through that number.",
+      },
     },
+    rungs: SAYS_KINDS,
+    gesture: hintGesture,
   },
-  hintRungs: SAYS_KINDS,
-  hintKeepTrack,
-  hintGesture,
   textFormat,
 
   colors,

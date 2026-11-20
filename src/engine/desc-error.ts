@@ -163,7 +163,7 @@ interface Loadable<P, S> {
   solve?(orig: S, curr: S): { ok: true } | { ok: false; error: string };
   finishesByDeduction?(state: S): boolean;
   difficulty?: DifficultyContract<P>;
-  paramConfig?: readonly ParamConfigItem<P>[];
+  paramConfig: readonly ParamConfigItem<P>[];
 }
 
 /** The board a desc describes, or why it describes none: the game's own

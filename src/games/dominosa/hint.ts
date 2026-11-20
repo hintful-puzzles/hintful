@@ -97,7 +97,7 @@ function stepOf(
   return steps;
 }
 
-const { hint: dominosaPlan, judgeMove: judgePlan } = describedEdgeHint<
+const { plan: dominosaPlan, judgeMove: judgePlan } = describedEdgeHint<
   DominosaState,
   DominosaMove,
   DominosaHint,

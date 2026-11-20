@@ -112,7 +112,7 @@ describe("Galaxies game flow", () => {
     const { desc } = galaxiesGame.newDesc(p, rng);
     const init = galaxiesGame.newState(p, desc);
     expect(galaxiesGame.status(init)).toBe("ongoing");
-    const result = galaxiesGame.solve?.(init, init);
+    const result = galaxiesGame.solve(init, init);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const next = galaxiesGame.executeMove(init, result.move);
@@ -281,7 +281,7 @@ describe("Galaxies rendering", () => {
     const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
     const { desc } = galaxiesGame.newDesc(p, randomNew("render-win-flash"));
     const init = galaxiesGame.newState(p, desc);
-    const result = galaxiesGame.solve?.(init, init);
+    const result = galaxiesGame.solve(init, init);
     if (!result?.ok) throw new Error("the fixture does not solve");
     const s = galaxiesGame.executeMove(init, result.move);
     expect(galaxiesGame.status(s)).toBe("solved");
@@ -415,7 +415,7 @@ describe("Galaxies findMistakes", () => {
   });
 
   it("flags nothing on a correctly solved board", () => {
-    const result = galaxiesGame.solve?.(init, init);
+    const result = galaxiesGame.solve(init, init);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const solved = galaxiesGame.executeMove(init, result.move);

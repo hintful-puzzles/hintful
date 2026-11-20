@@ -63,7 +63,7 @@ function expandParameters(code: GameCode, id: string, source: string): string {
     throw new Error(
       `${descriptionPath(id)}: its parameters section writes ${PARAMETERS_PLACEHOLDER} where the generated list goes`,
     );
-  const config = game.paramConfig ?? [];
+  const config = game.paramConfig;
   const rulesets = rulesetField(game)?.rulesets ?? [];
   const modifiers = modifiersOf(game);
   const listed = withList(

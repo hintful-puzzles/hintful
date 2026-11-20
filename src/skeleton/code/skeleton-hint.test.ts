@@ -55,7 +55,7 @@ function follow(state: SkeletonState, at: (s: SkeletonState) => void = () => {})
   let s = state;
   while (skeletonGame.status(s) === "ongoing") {
     at(s);
-    const result = skeletonGame.hint?.(s);
+    const result = skeletonGame.hint.plan(s);
     if (!result?.ok) throw new Error(`refused on ${s.code.join("")}`);
     for (const step of result.steps) s = skeletonGame.executeMove(s, step.move);
   }
@@ -80,7 +80,9 @@ describe("skeleton hint plans", () => {
     // fits the scores so far is given the same plan.
     const p = menu.boards[0];
     const plan = (s: SkeletonState) =>
-      JSON.stringify(skeletonGame.hint?.(s), (k, v) => (k === "words" ? undefined : v));
+      JSON.stringify(skeletonGame.hint.plan(s), (k, v) =>
+        k === "words" ? undefined : v,
+      );
     let compared = 0;
     for (const code of codes(p)) {
       follow(newState(p, encodeDesc(code)), (s) => {
@@ -104,7 +106,7 @@ describe("skeleton hint plans", () => {
     let steps = 0;
     for (const code of codes(p)) {
       follow(newState(p, encodeDesc(code)), (s) => {
-        const result = skeletonGame.hint?.(s);
+        const result = skeletonGame.hint.plan(s);
         if (!result?.ok) return;
         for (const step of result.steps) {
           steps++;
@@ -128,7 +130,7 @@ describe("skeleton hint plans", () => {
     const { state, step } = pinned("absent");
     if (step.move.type !== "mark") throw new Error("an absent step marks");
     const [first, ...rest] = step.move.marks;
-    const part = skeletonGame.hintKeepTrack?.(
+    const part = skeletonGame.hint.keepTrack(
       { type: "mark", marks: [first], ruledOut: true },
       step,
       state,
@@ -141,7 +143,7 @@ describe("skeleton hint plans", () => {
     const value = [1, 2, 3, 4, 5, 6].find((v) => !asked(v)) ?? 0;
     const other = { pos: first.pos, value };
     expect(
-      skeletonGame.hintKeepTrack?.(
+      skeletonGame.hint.keepTrack(
         { type: "mark", marks: [other], ruledOut: true },
         step,
         state,

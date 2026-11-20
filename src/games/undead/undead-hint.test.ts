@@ -4,7 +4,7 @@
  * Tier 1 — the plan solves a generated board from empty *and* mid-game,
  * naked-single-first, with populate before the first strike and no
  * sightline-strike mark bleeding off the narrated path; refusal on solved /
- * mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario snapshot of
+ * mistakes; `hint.keepTrack` verdicts. Tier 2.5 — a render-scenario snapshot of
  * a sightline-elimination frame.
  */
 import { describe, expect, it } from "vitest";
@@ -44,7 +44,7 @@ function gen(p: UndeadParams, seed: string): UndeadState {
 }
 
 function fullPlan(st: UndeadState): HintStep<UndeadMove, UndeadHint>[] {
-  const r = undeadGame.hint?.(st);
+  const r = undeadGame.hint.plan(st);
   if (!r?.ok) throw new Error(`hint refused: ${r && !r.ok ? r.error : "no hint"}`);
   return r.steps;
 }
@@ -240,7 +240,7 @@ describe("undead hint plan", () => {
 describe("undead boards the midend refuses a hint on", () => {
   it("counts a solved board as finished", () => {
     const st = gen({ w: 4, h: 4, diff: "easy" }, "refuse-solved");
-    const r = undeadGame.solve?.(st, st);
+    const r = undeadGame.solve(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const solved = undeadGame.executeMove(st, r.move);
     expect(undeadGame.status(solved)).toBe("solved");
@@ -248,7 +248,7 @@ describe("undead boards the midend refuses a hint on", () => {
 
   it("flags a wrong monster as a mistake", () => {
     const st = gen({ w: 4, h: 4, diff: "easy" }, "refuse-wrong");
-    const r = undeadGame.solve?.(st, st);
+    const r = undeadGame.solve(st, st);
     if (!r?.ok || r.move.type !== "solve") throw new Error("solve failed");
     const sol = r.move.placements;
     // Place a wrong monster in the first editable cell.
@@ -270,11 +270,11 @@ describe("undead boards the midend refuses a hint on", () => {
 describe("undead hintKeepTrack", () => {
   it("a matching markAll / set / pencil completes its step; a mismatch is off", () => {
     const { state: st, step: populate } = pinned("populate");
-    expect(undeadGame.hintKeepTrack?.({ type: "markAll" }, populate, st)).toBe(
+    expect(undeadGame.hint.keepTrack({ type: "markAll" }, populate, st)).toBe(
       "completed",
     );
     expect(
-      undeadGame.hintKeepTrack?.(
+      undeadGame.hint.keepTrack(
         { type: "pencil", cell: 0, monster: MON_GHOST },
         populate,
         st,
@@ -290,7 +290,7 @@ describe("undead hintKeepTrack", () => {
     const mark = strikeMarks[0];
     // The candidate is present (pre-move) → a toggle clears it → on plan.
     expect(s.pencil[mark.cell] & mark.monster).toBeTruthy();
-    const v = undeadGame.hintKeepTrack?.(
+    const v = undeadGame.hint.keepTrack(
       { type: "pencil", cell: mark.cell, monster: mark.monster },
       strike,
       s,
@@ -302,7 +302,7 @@ describe("undead hintKeepTrack", () => {
     );
     if (other === undefined) throw new Error("the pin strikes every candidate");
     expect(
-      undeadGame.hintKeepTrack?.(
+      undeadGame.hint.keepTrack(
         { type: "pencil", cell: mark.cell, monster: other },
         strike,
         s,
@@ -320,7 +320,7 @@ describe("undead hint resume (per tier)", () => {
       let moves = 0;
       for (; moves < 600; moves++) {
         if (undeadGame.status(s) === "solved") break;
-        const r = undeadGame.hint?.(s);
+        const r = undeadGame.hint.plan(s);
         expect(r?.ok, `normal/${seed}: gave up at move ${moves}`).toBe(true);
         if (!r?.ok) break;
         s = undeadGame.executeMove(s, r.steps[0].move);
@@ -341,7 +341,7 @@ describe("undead hint resume (per tier)", () => {
       let refused = false;
       for (; moves < 600; moves++) {
         if (undeadGame.status(s) === "solved") break;
-        const r = undeadGame.hint?.(s);
+        const r = undeadGame.hint.plan(s);
         if (!r?.ok) {
           refused = true;
           break;

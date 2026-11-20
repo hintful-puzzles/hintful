@@ -646,34 +646,36 @@ export const mathraxGame: Game<
   clearMistakes: (_state, mistakes) => clearEntries(setMoves, mistakes),
   revealOne: (state, solved) =>
     revealEntry(setMoves, state.grid, solved.grid, state.params.o),
-  hint,
-  judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps, mathrax.NAMES),
-  hintRungs: MATHRAX_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the cell the step fills in with a number.",
-      strike: "the pencil marks the step crosses out.",
-      outline:
-        "what the step reasons from: “this cell”, whose pencil marks it crosses out, the cells a clue constrains (the diagonal pair it sits between, or all four around an E or O), the number just placed, the cells of a set, or “the middle cell” a step weighs and the cells it reads.",
-      stripes:
-        'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
+  hint: {
+    plan: hint,
+    judgeMove: (before, after, ui) =>
+      candidateJudge(before, after, ui ?? newUi(before), buildSteps, mathrax.NAMES),
+    rungs: MATHRAX_RUNGS,
+    marks: {
+      roles: {
+        ring: "the cell the step fills in with a number.",
+        strike: "the pencil marks the step crosses out.",
+        outline:
+          "what the step reasons from: “this cell”, whose pencil marks it crosses out, the cells a clue constrains (the diagonal pair it sits between, or all four around an E or O), the number just placed, the cells of a set, or “the middle cell” a step weighs and the cells it reads.",
+        stripes:
+          'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
+      },
     },
+    keepTrack: hintKeepTrack,
+    gesture: (s, ui, ds, m) => {
+      const ts = ds.tileSize;
+      const mid = (v: number) => origin(ts) + v * ts + ((ts / 2) | 0);
+      return candidateGesture(
+        m,
+        ui,
+        (x, y) => ({ x: mid(x), y: mid(y) }),
+        digitKeyCode,
+        undefined,
+        markAll(s),
+      );
+    },
+    refreshStep: refreshHintStep,
   },
-  hintKeepTrack,
-  hintGesture: (s, ui, ds, m) => {
-    const ts = ds.tileSize;
-    const mid = (v: number) => origin(ts) + v * ts + ((ts / 2) | 0);
-    return candidateGesture(
-      m,
-      ui,
-      (x, y) => ({ x: mid(x), y: mid(y) }),
-      digitKeyCode,
-      undefined,
-      markAll(s),
-    );
-  },
-  refreshHintStep,
   requestKeys: (p) => digitKeys(p.o),
 
   prefs: [

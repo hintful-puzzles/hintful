@@ -283,7 +283,7 @@ describe("rome hint plan", () => {
       { kind: "pencil", x: 0, y: 2, dir: FM_LEFT },
     ]);
     const st = (me as unknown as { state: RomeState }).state;
-    expect(romeGame.hint?.(st)?.ok).toBe(true);
+    expect(romeGame.hint.plan(st)?.ok).toBe(true);
     expect(st.pencil[2 * st.w] & FM_LEFT).toBe(0);
   });
 

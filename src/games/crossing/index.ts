@@ -373,7 +373,7 @@ const crossingCandidateMoves: CandidateMoveAdapter<CrossingMove> = {
       return { type: "set", x: m.x, y: m.y, n: m.digit, pencil: true };
     if (m.kind === "pencilStrike") return { type: "pencilStrike", marks: [...m.marks] };
     // `place`, `pencilAdd`, `solve`, and the two "clear this" moves are
-    // Crossing's own, read by `hintKeepTrack` and `refreshHintStep` first.
+    // Crossing's own, read by `hint.keepTrack` and `hint.refreshStep` first.
     return null;
   },
   strike: (marks) => ({ kind: "pencilStrike", marks }),
@@ -631,7 +631,7 @@ function refreshHintStep(
 }
 
 /** The digits a hint step writes, square by square: a whole number goes into
- * its run's empty squares one digit at a time, which `hintKeepTrack` follows. */
+ * its run's empty squares one digit at a time, which `hint.keepTrack` follows. */
 function hintEntries(
   state: CrossingState,
   move: CrossingMove,
@@ -740,45 +740,47 @@ export const crossingGame: Game<
   clearMistakes: (_state, mistakes) => clearEntries(entryMoves, mistakes),
   revealOne: (state, solved) =>
     revealEntry(entryMoves, state.grid, solved.grid, state.puzzle.w),
-  hint,
-  judgeMove,
-  hintRungs: CROSSING_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "what the step decides: the square it fills, or every square of a run it fills with a whole number, and then the number in the list it writes in.",
-      strike: "a digit the step rules out of that square.",
-      outline:
-        "what the step reasons from: the numbers in the list that still fit the run, boxed, or the squares that rule a number out of a run.",
-      stripes:
-        "the run the sentence names: “this across run”, “this down run”. When a step uses both runs through a square, both are striped.",
+  hint: {
+    plan: hint,
+    judgeMove,
+    rungs: CROSSING_RUNGS,
+    marks: {
+      roles: {
+        ring: "what the step decides: the square it fills, or every square of a run it fills with a whole number, and then the number in the list it writes in.",
+        strike: "a digit the step rules out of that square.",
+        outline:
+          "what the step reasons from: the numbers in the list that still fit the run, boxed, or the squares that rule a number out of a run.",
+        stripes:
+          "the run the sentence names: “this across run”, “this down run”. When a step uses both runs through a square, both are striped.",
+      },
     },
-  },
-  hintKeepTrack,
-  hintGesture,
-  refreshHintStep,
-  /**
-   * Selecting a square, moving the cursor or picking a clue up puts a displayed
-   * hint away — **unless the player is working inside the squares the hint is
-   * about**.
-   *
-   * Dismissal is needed at all because Crossing's hint *suppresses* the
-   * selection's run wash: without it a click would do nothing visible, leaving
-   * no way out of hint mode. The exception is what keeps following a hint by
-   * hand workable — clicking into a hinted run to type its number in must not
-   * delete the explanation of what to type. The selection stays visible on
-   * those squares because the hint marks them with a ring on the border,
-   * leaving the background to the selection (`render.ts`).
-   *
-   * Everything a firing is about — the run(s) it reasons over and the squares it
-   * acts on — is already in `hatch`/`targets`, so this is exactly "am I inside
-   * the highlight?".
-   */
-  uiUpdateClearsHint(step, _state, ui) {
-    const hl = step.highlights as CrossingHint | undefined;
-    if (!hl || !ui.cursor.visible) return true; // nothing shown, or nothing selected
-    const here = (cs: readonly Point[]): boolean =>
-      cs.some((c) => c.x === ui.cursor.x && c.y === ui.cursor.y);
-    return !(here(hl.hatch) || here(hl.targets));
+    keepTrack: hintKeepTrack,
+    gesture: hintGesture,
+    refreshStep: refreshHintStep,
+    /**
+     * Selecting a square, moving the cursor or picking a clue up puts a displayed
+     * hint away — **unless the player is working inside the squares the hint is
+     * about**.
+     *
+     * Dismissal is needed at all because Crossing's hint *suppresses* the
+     * selection's run wash: without it a click would do nothing visible, leaving
+     * no way out of hint mode. The exception is what keeps following a hint by
+     * hand workable — clicking into a hinted run to type its number in must not
+     * delete the explanation of what to type. The selection stays visible on
+     * those squares because the hint marks them with a ring on the border,
+     * leaving the background to the selection (`render.ts`).
+     *
+     * Everything a firing is about — the run(s) it reasons over and the squares it
+     * acts on — is already in `hatch`/`targets`, so this is exactly "am I inside
+     * the highlight?".
+     */
+    uiUpdateClears(step, _state, ui) {
+      const hl = step.highlights as CrossingHint | undefined;
+      if (!hl || !ui.cursor.visible) return true; // nothing shown, or nothing selected
+      const here = (cs: readonly Point[]): boolean =>
+        cs.some((c) => c.x === ui.cursor.x && c.y === ui.cursor.y);
+      return !(here(hl.hatch) || here(hl.targets));
+    },
   },
   requestKeys: (): KeyLabel[] => digitKeys(9),
   textFormat,

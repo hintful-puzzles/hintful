@@ -3,7 +3,7 @@
  *
  * Tier 1 — `hint` populates, strikes
  * (basic-Latin culls + the sign eliminations) and places with quality-bar
- * narration; refusal on solved / on mistakes; `hintKeepTrack` verdicts; resume
+ * narration; refusal on solved / on mistakes; `hint.keepTrack` verdicts; resume
  * to solved. Tier 2.5 — a render-scenario snapshot of a sign-elimination
  * journey frame (struck candidate's strikethrough, evidence `COL_HINT_OUTLINE`,
  * clue glyphs still drawn).
@@ -45,14 +45,14 @@ const UNEQ: EdgeClueParams = { order: 5, diff: "tricky" };
 // --- tier 1: hint plan ------------------------------------------------------
 
 function firstHint(st: EdgeClueState) {
-  const res = unequalGame.hint?.(st);
+  const res = unequalGame.hint.plan(st);
   if (!res) throw new Error("no hint method");
   return res;
 }
 
 /** The hint under the populate reading, which is not Unequal's default. */
 function populateHint(st: EdgeClueState) {
-  const res = unequalGame.hint?.(st, undefined, {
+  const res = unequalGame.hint.plan(st, undefined, {
     ...newUi(st),
     candidateReading: "populate",
   });
@@ -86,7 +86,7 @@ describe("unequal hint", () => {
 
   it("surfaces a naked single as the next move ahead of any elimination", () => {
     const { st } = gen(UNEQ, "hint-naked");
-    const r = unequalGame.solve?.(st, st);
+    const r = unequalGame.solve(st, st);
     if (!r?.ok || r.move.type !== "solve") throw new Error("solve failed");
     const o = st.order;
     const i = [...st.immutable].indexOf(0);
@@ -102,7 +102,7 @@ describe("unequal hint", () => {
       marks,
     });
 
-    const res = unequalGame.hint?.(narrowed);
+    const res = unequalGame.hint.plan(narrowed);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     // Auto-pencil defaults off → the placement carries `autoElim: false`.
@@ -120,7 +120,7 @@ describe("unequal hint", () => {
   it("every deduction conclusion uses the necessity voice", () => {
     const { st } = gen(UNEQ, "voice-unequal");
     const populated = unequalGame.executeMove(st, { type: "pencilAll" });
-    const res = unequalGame.hint?.(populated);
+    const res = unequalGame.hint.plan(populated);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     // A strike concludes "we must cross out …" or "… cross them out"; a
@@ -141,10 +141,10 @@ describe("unequal hint", () => {
     const populated = unequalGame.executeMove(st, { type: "pencilAll" });
     const uiOn = newUi(populated);
     uiOn.autoPencil = true;
-    const on = unequalGame.hint?.(populated, undefined, uiOn);
+    const on = unequalGame.hint.plan(populated, undefined, uiOn);
     const uiOff = newUi(populated);
     uiOff.autoPencil = false;
-    const off = unequalGame.hint?.(populated, undefined, uiOff);
+    const off = unequalGame.hint.plan(populated, undefined, uiOff);
     expect(on?.ok && off?.ok).toBe(true);
     if (!on?.ok || !off?.ok) return;
 
@@ -160,7 +160,7 @@ describe("unequal hint", () => {
     let checked = 0;
     for (let s = 0; s < 8; s++) {
       const { st } = gen(UNEQ, `bleed-unequal-${s}`);
-      const res = unequalGame.hint?.(st);
+      const res = unequalGame.hint.plan(st);
       if (!res?.ok) continue;
       for (const step of res.steps as AnyStep[]) {
         if (step.move.type !== "pencilStrike") continue;
@@ -184,7 +184,7 @@ describe("unequal hint", () => {
 
   it("counts a solved board as finished and flags a wrong entry, the boards the midend refuses", () => {
     const { st } = gen(UNEQ, "hint-refuse");
-    const r = unequalGame.solve?.(st, st);
+    const r = unequalGame.solve(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const solved = unequalGame.executeMove(st, r.move);
     expect(unequalGame.status(solved)).toBe("solved");
@@ -213,11 +213,11 @@ describe("unequal hintKeepTrack", () => {
     if (!res.ok) throw new Error("refused");
     const step = res.steps.find((s) => (s.move as EdgeClueMove).type === "pencilAll");
     if (!step) throw new Error("no populate step");
-    expect(unequalGame.hintKeepTrack?.({ type: "pencilAll" }, step, st)).toBe(
+    expect(unequalGame.hint.keepTrack({ type: "pencilAll" }, step, st)).toBe(
       "completed",
     );
     expect(
-      unequalGame.hintKeepTrack?.(
+      unequalGame.hint.keepTrack(
         { type: "set", x: 0, y: 0, n: 1, pencil: false },
         step,
         st,
@@ -232,7 +232,7 @@ describe("unequal hintKeepTrack", () => {
     const marks = [...step.move.marks] as { x: number; y: number; n: number }[];
     // Clear the first mark via a pencil toggle (the production strike path).
     const first = marks[0];
-    const v1 = unequalGame.hintKeepTrack?.(
+    const v1 = unequalGame.hint.keepTrack(
       { type: "set", x: first.x, y: first.y, n: first.n, pencil: true },
       step,
       populated,
@@ -250,7 +250,7 @@ describe("unequal hintKeepTrack", () => {
     });
     for (let k = 1; k < marks.length; k++) {
       const mk = marks[k];
-      const v = unequalGame.hintKeepTrack?.(
+      const v = unequalGame.hint.keepTrack(
         { type: "set", x: mk.x, y: mk.y, n: mk.n, pencil: true },
         step,
         cur,

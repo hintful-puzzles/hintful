@@ -44,7 +44,7 @@ function solvedBoard(id: string, game: AnyGame): (flash: Flash) => string {
   }
   const { state, ui } = pb.live();
   expect(game.status(state)).toBe("solved");
-  const tileSize = game.preferredTileSize ?? 32;
+  const tileSize = game.preferredTileSize;
   return (flash) => {
     const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
     game.redraw(dr, game.newDrawState(state, tileSize), null, state, 1, ui, 0, flash);

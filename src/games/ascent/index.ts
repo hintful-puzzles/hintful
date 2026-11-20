@@ -596,8 +596,7 @@ export const ascentGame: Game<
   newState: newAscentState,
   newUi: newAscentUi,
   changedState,
-  encodeUi: encodeAscentUi,
-  decodeUi: decodeAscentUi,
+  uiCodec: { encode: encodeAscentUi, decode: decodeAscentUi },
   interpretMove: interpretAscentMove,
   executeMove: executeAscentMove,
   // A number can be written into any empty square only by typing it, and the
@@ -608,21 +607,23 @@ export const ascentGame: Game<
   findMistakes,
   clearMistakes: (_state, mistakes) =>
     mistakes.map(({ cell }) => ({ kind: "clear", cell })),
-  // `findMistakes` compares every entered number with the unique solution, so
-  // a board it passes, the only kind the midend asks about, is one the hint may
-  // deduce from.
-  hint: ascentHint,
-  hintRungs: ASCENT_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the square the step fills. When the step fills a whole run at once, each square it fills is ringed, with the line of its only route, from one end to the other, inside the rings: *the drawn route*, in its words.",
-      outline: `what the step reasons from: the numbers the new one sits between, a dead end's one way in, the squares a missing run has to step through, and in ${EDGES} mode an arrow the step reads.`,
-      stripes:
-        "the row, column or diagonal an arrow points along, or every square a run of missing numbers can reach.",
+  hint: {
+    // `findMistakes` compares every entered number with the unique solution, so
+    // a board it passes, the only kind the midend asks about, is one the hint may
+    // deduce from.
+    plan: ascentHint,
+    rungs: ASCENT_RUNGS,
+    marks: {
+      roles: {
+        ring: "the square the step fills. When the step fills a whole run at once, each square it fills is ringed, with the line of its only route, from one end to the other, inside the rings: *the drawn route*, in its words.",
+        outline: `what the step reasons from: the numbers the new one sits between, a dead end's one way in, the squares a missing run has to step through, and in ${EDGES} mode an arrow the step reads.`,
+        stripes:
+          "the row, column or diagonal an arrow points along, or every square a run of missing numbers can reach.",
+      },
     },
+    keepTrack: ascentKeepTrack,
+    gesture: hintGesture,
   },
-  hintKeepTrack: ascentKeepTrack,
-  hintGesture,
   difficulty,
   textFormat,
 

@@ -231,7 +231,7 @@ describe("crossing hint — techniques and narration", () => {
 
   it("a whole-run placement is one step covering the whole run", () => {
     const hit = pinned("onlyNumber");
-    const steps = crossingGame.hint?.(hit.state);
+    const steps = crossingGame.hint.plan(hit.state);
     expect(steps?.ok).toBe(true);
     if (!steps?.ok) return;
     const step = steps.steps[0] as Step;
@@ -316,7 +316,7 @@ describe("crossing hint — ruling a candidate out", () => {
       [0, 0, 9],
       [0, 0, 1],
     ]);
-    const res = crossingGame.hint?.(state);
+    const res = crossingGame.hint.plan(state);
     if (!res?.ok) throw new Error("hint refused");
     expect(res.steps[0].move).toEqual({ kind: "place", run: 0, number: 0 });
     expect(res.steps[0].explanation).toBe(
@@ -333,7 +333,7 @@ describe("crossing hint — ruling a candidate out", () => {
       [0, 0, 1],
       [0, 0, 5],
     ]);
-    const res = crossingGame.hint?.(state);
+    const res = crossingGame.hint.plan(state);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const step = res.steps[0] as Step;
@@ -499,7 +499,7 @@ describe("crossing hint — every premise is on the board", () => {
 
   it("writes the notes a placement rests on before making it", () => {
     const state = newState(NEEDS_NOTES.params, NEEDS_NOTES.desc);
-    const res = crossingGame.hint?.(state);
+    const res = crossingGame.hint.plan(state);
     if (!res?.ok) throw new Error("hint refused");
     const steps = res.steps as Step[];
     const [first, second] = steps;
@@ -528,7 +528,7 @@ describe("crossing hint — every premise is on the board", () => {
 
   it("writes one run's notes in several squares as one journey", () => {
     const state = newState(NOTE_JOURNEY.params, NOTE_JOURNEY.desc);
-    const res = crossingGame.hint?.(state);
+    const res = crossingGame.hint.plan(state);
     if (!res?.ok) throw new Error("hint refused");
     const steps = res.steps as Step[];
     const j = steps.findIndex((s) => s.continuesPrevious);
@@ -553,7 +553,7 @@ describe("crossing hint — every premise is on the board", () => {
 
   it("follows a note step toggled in by hand, one digit at a time", () => {
     const state = newState(NEEDS_NOTES.params, NEEDS_NOTES.desc);
-    const res = crossingGame.hint?.(state);
+    const res = crossingGame.hint.plan(state);
     if (!res?.ok) throw new Error("hint refused");
     const step = res.steps[0] as Step;
     if (step.move.kind !== "pencilAdd") throw new Error("expected a note step");
@@ -564,11 +564,11 @@ describe("crossing hint — every premise is on the board", () => {
       digit,
     });
 
-    expect(crossingGame.hintKeepTrack?.(toggle(2), step, state)).toBe("off");
+    expect(crossingGame.hint.keepTrack(toggle(2), step, state)).toBe("off");
     let cur = state;
     const verdicts: string[] = [];
     for (const n of [1, 3, 6, 7]) {
-      verdicts.push(crossingGame.hintKeepTrack?.(toggle(n), step, cur) ?? "?");
+      verdicts.push(crossingGame.hint.keepTrack(toggle(n), step, cur) ?? "?");
       cur = crossingGame.executeMove(cur, toggle(n));
     }
     expect(verdicts).toEqual(["onTrack", "onTrack", "onTrack", "completed"]);
@@ -576,7 +576,7 @@ describe("crossing hint — every premise is on the board", () => {
 
   it("resolves a note step once its notes are there, and shrinks it before that", () => {
     const state = newState(NEEDS_NOTES.params, NEEDS_NOTES.desc);
-    const res = crossingGame.hint?.(state);
+    const res = crossingGame.hint.plan(state);
     if (!res?.ok) throw new Error("hint refused");
     const step = res.steps[0] as Step;
     const partial = crossingGame.executeMove(state, {
@@ -585,12 +585,12 @@ describe("crossing hint — every premise is on the board", () => {
       y: 0,
       digit: 3,
     });
-    expect(crossingGame.refreshHintStep?.(step, partial)?.move).toEqual({
+    expect(crossingGame.hint.refreshStep?.(step, partial)?.move).toEqual({
       kind: "pencilAdd",
       marks: [1, 6, 7].map((n) => ({ x: 1, y: 0, n })),
     });
     const done = crossingGame.executeMove(state, step.move);
-    expect(crossingGame.refreshHintStep?.(step, done)).toBeNull();
+    expect(crossingGame.hint.refreshStep?.(step, done)).toBeNull();
     // Only ever adds, so replaying it changes nothing.
     expect([...crossingGame.executeMove(done, step.move).pencil]).toEqual([
       ...done.pencil,
@@ -644,14 +644,14 @@ describe("crossing hint — refusals", () => {
   it("refuses a position nothing can be deduced from", () => {
     const state = newState(AMBIGUOUS, AMBIGUOUS_DESC);
     expect(crossingGame.findMistakes?.(state)).toEqual([]);
-    const res = crossingGame.hint?.(state);
+    const res = crossingGame.hint.plan(state);
     expect(res).toEqual({ ok: false, error: DEDUCTION_EXHAUSTED });
   });
 });
 
 describe("crossing hint — following the plan", () => {
   const firstStep = (state: CrossingState): Step => {
-    const res = crossingGame.hint?.(state);
+    const res = crossingGame.hint.plan(state);
     if (!res?.ok) throw new Error("hint refused");
     return res.steps[0] as Step;
   };
@@ -660,7 +660,7 @@ describe("crossing hint — following the plan", () => {
     const state = board(EASY_PRESETS[0], "hint-track-place");
     const step = firstStep(state);
     if (step.move.kind !== "place") throw new Error("expected a whole-run step");
-    expect(crossingGame.hintKeepTrack?.(step.move, step, state)).toBe("completed");
+    expect(crossingGame.hint.keepTrack(step.move, step, state)).toBe("completed");
   });
 
   it("counts typing the number in digit by digit as following it", () => {
@@ -680,7 +680,7 @@ describe("crossing hint — following the plan", () => {
         y: Math.floor(cells[k] / state.puzzle.w),
         digit: num[k],
       };
-      verdicts.push(crossingGame.hintKeepTrack?.(m, step, cur) ?? "?");
+      verdicts.push(crossingGame.hint.keepTrack(m, step, cur) ?? "?");
       cur = crossingGame.executeMove(cur, m);
     }
     expect(verdicts.slice(0, -1).every((v) => v === "onTrack")).toBe(true);
@@ -694,7 +694,7 @@ describe("crossing hint — following the plan", () => {
     const cells = state.puzzle.runs[step.move.run].cells;
     const num = state.puzzle.numbers[step.move.number];
     const wrong = num[0] === 9 ? 8 : 9;
-    const verdict = crossingGame.hintKeepTrack?.(
+    const verdict = crossingGame.hint.keepTrack(
       {
         kind: "set",
         x: cells[0] % state.puzzle.w,
@@ -711,7 +711,7 @@ describe("crossing hint — following the plan", () => {
     const state = board(EASY_PRESETS[0], "hint-track-place");
     const step = firstStep(state);
     if (step.move.kind !== "place") throw new Error("expected a whole-run step");
-    expect(crossingGame.refreshHintStep?.(step, state)).toBe(step);
+    expect(crossingGame.hint.refreshStep?.(step, state)).toBe(step);
 
     const cells = state.puzzle.runs[step.move.run].cells;
     const num = state.puzzle.numbers[step.move.number];
@@ -721,11 +721,11 @@ describe("crossing hint — following the plan", () => {
       y: Math.floor(cells[0] / state.puzzle.w),
       digit: num[0],
     });
-    const shrunk = crossingGame.refreshHintStep?.(step, partial) as Step | null;
+    const shrunk = crossingGame.hint.refreshStep?.(step, partial) as Step | null;
     expect(shrunk?.highlights?.targets.length).toBe(cells.length - 1);
 
     const full = crossingGame.executeMove(state, step.move);
-    expect(crossingGame.refreshHintStep?.(step, full)).toBeNull();
+    expect(crossingGame.hint.refreshStep?.(step, full)).toBeNull();
   });
 
   it("shrinks a rule-out step as its candidates go, and resolves when they are gone", () => {
@@ -739,15 +739,15 @@ describe("crossing hint — following the plan", () => {
 
     // The player strikes one of the two by hand: the step shrinks and stays up.
     const toggle: CrossingMove = { kind: "pencil", x: 0, y: 0, digit: 9 };
-    expect(crossingGame.hintKeepTrack?.(toggle, step, state)).toBe("onTrack");
+    expect(crossingGame.hint.keepTrack(toggle, step, state)).toBe("onTrack");
     state = crossingGame.executeMove(state, toggle);
     expect((step.move as { marks: readonly unknown[] }).marks).toHaveLength(1);
 
     // Striking the last one completes it; a refresh past that resolves.
     const last: CrossingMove = { kind: "pencil", x: 0, y: 0, digit: 7 };
-    expect(crossingGame.hintKeepTrack?.(last, step, state)).toBe("completed");
+    expect(crossingGame.hint.keepTrack(last, step, state)).toBe("completed");
     state = crossingGame.executeMove(state, last);
-    expect(crossingGame.refreshHintStep?.(step, state)).toBeNull();
+    expect(crossingGame.hint.refreshStep?.(step, state)).toBeNull();
   });
 });
 
@@ -809,7 +809,7 @@ describe("crossing hint — the frame", () => {
     // board's coloring for as long as it is up.
     const params = EASY_PRESETS[0];
     const state = board(params, "hint-wash");
-    const res = crossingGame.hint?.(state);
+    const res = crossingGame.hint.plan(state);
     if (!res?.ok) throw new Error("hint refused");
     // A square in a run is selected, so without the hint its runs are washed.
     const cell = state.puzzle.runs[0].cells[0];
@@ -868,8 +868,8 @@ describe("crossing hint — the frame", () => {
     // Without this, clicking a square to carry on by hand would leave the hint
     // on screen *and* — because a displayed hint suppresses the run wash — do
     // nothing visible at all, leaving no way out of hint mode. A selection
-    // change is a `UI_UPDATE`, which `hintKeepTrack` never sees;
-    // `uiUpdateClearsHint` is what dismisses it (Subsets' precedent).
+    // change is a `UI_UPDATE`, which `hint.keepTrack` never sees;
+    // `hint.uiUpdateClears` is what dismisses it (Subsets' precedent).
     const { midend, step } = hinted("hint-dismiss");
     const params = EASY_PRESETS[0];
     const puzzle = board(params, "hint-dismiss").puzzle;

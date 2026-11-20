@@ -206,7 +206,7 @@ describe("a game's status is judged from the board alone", () => {
     for (const [id, game] of all) {
       const pb = probeBoard(game, id);
       const states: [string, unknown][] = [["fresh", pb.live().state]];
-      if (game.solve && pb.m.solve() === null) {
+      if (pb.m.solve() === null) {
         states.push(["solved", pb.live().state]);
         solvedStates++;
       }

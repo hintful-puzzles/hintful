@@ -212,28 +212,33 @@ export const unrulyGame: Game<
     if (!grid) return { ok: false, error: PUZZLE_NOT_REASONABLE };
     return { ok: true, move: { type: "solve", grid } };
   },
-
-  hint: described.hint,
-  judgeMove: described.judgeMove,
-  hintRungs: described.hintRungs,
-  hintMarks: {
-    roles: {
-      ring: `the square to fill. It is drawn empty: the sentence says whether it must hold a ${pieceName(ONE)} or a ${pieceName(ZERO)}.`,
-      outline:
-        "the squares whose pieces the step reasons from: the pair that would make three, the full quota, the only places the last one can go, or the row a match would copy.",
-      stripes: 'the row or column the sentence calls "this row" or "this column".',
+  hint: {
+    ...described,
+    marks: {
+      roles: {
+        ring: `the square to fill. It is drawn empty: the sentence says whether it must hold a ${pieceName(ONE)} or a ${pieceName(ZERO)}.`,
+        outline:
+          "the squares whose pieces the step reasons from: the pair that would make three, the full quota, the only places the last one can go, or the row a match would copy.",
+        stripes: 'the row or column the sentence calls "this row" or "this column".',
+      },
     },
-  },
-  hintKeepTrack: described.hintKeepTrack,
-  hintGesture: (s, ui, ds, m) => {
-    if (m.type !== "place") throw new Error("unruly: a hint only places");
-    const at = { x: m.x, y: m.y };
-    // Each button walks the three states one way round, so one of them reaches
-    // any other state in one press.
-    const left = targetVerbs.primary.apply(s, at, ui);
-    const reaches =
-      typeof left === "object" && left?.type === "place" && left.value === m.value;
-    return verbGesture(targetVerbs, s, ds, ui, [at], reaches ? "primary" : "secondary");
+    gesture: (s, ui, ds, m) => {
+      if (m.type !== "place") throw new Error("unruly: a hint only places");
+      const at = { x: m.x, y: m.y };
+      // Each button walks the three states one way round, so one of them reaches
+      // any other state in one press.
+      const left = targetVerbs.primary.apply(s, at, ui);
+      const reaches =
+        typeof left === "object" && left?.type === "place" && left.value === m.value;
+      return verbGesture(
+        targetVerbs,
+        s,
+        ds,
+        ui,
+        [at],
+        reaches ? "primary" : "secondary",
+      );
+    },
   },
   findMistakes,
   clearMistakes,

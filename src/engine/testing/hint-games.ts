@@ -1,29 +1,28 @@
 /**
  * The enrolled set for every cross-game hint guard — **derived from the
- * registry, never authored**: a game is enrolled iff it declares `hint`, and
- * every file importing `HINT_GAMES` iterates it.
+ * registry, never authored**: a game is enrolled iff its hint is written (it is
+ * not `DRAFT_HINT`), and every file importing `HINT_GAMES` iterates it.
  *
  * A hand-maintained list is a thing a session has to remember, and a game left
  * off it gets none of the guards, silently: *a guard blind to a game cannot fire
- * on it.* Reading the declaration rather than scanning for the word matters too,
- * because games mention `hint` without declaring one (an unused `redraw`
- * parameter, Guess's unrelated `ui.hint`).
+ * on it.*
  *
- * **A game with no `hint()` is a draft** (docs/hints.md § "The quality bar"), and
- * joins every guard here the moment it gains one.
+ * **A game whose hint is `DRAFT_HINT` is a draft** (docs/hints.md § "The quality
+ * bar"), and joins every guard here the moment its hint is written.
  *
  * Dev/test-only; never imported by production code.
  */
+import { hasHint } from "../game.ts";
 import { type AnyGame, membersNotMentioning, REGISTERED_GAMES } from "./enrollment.ts";
 import { dealtBoards } from "./presets.ts";
 import { SLOW_TESTS_ENABLED } from "./slow.ts";
 
 export type { AnyGame };
 
-/** Every registered game that declares a `hint()`, in `REGISTERED_GAMES`' stable
+/** Every registered game whose hint is written, in `REGISTERED_GAMES`' stable
  * order. */
-export const HINT_GAMES: [string, AnyGame][] = REGISTERED_GAMES.filter(
-  ([, game]) => typeof game.hint === "function",
+export const HINT_GAMES: [string, AnyGame][] = REGISTERED_GAMES.filter(([, game]) =>
+  hasHint(game),
 );
 
 /**

@@ -70,6 +70,4 @@ const described = describedFiringHint<
   say: {},
 });
 
-export const { hint: clustersHint, hintKeepTrack: clustersKeepTrack } = described;
-export const clustersRefreshHintStep = described.refreshHintStep;
-export const clustersJudgeMove = described.judgeMove;
+export const clustersHint = described.hint;

@@ -85,7 +85,7 @@ function walkDesc(params: TracksParams, desc: string, seed: string) {
   const planned = new Set<string>();
   for (let i = 0; i < 900; i++) {
     if (tracksGame.status(state) === "solved") break;
-    const res = tracksGame.hint?.(state);
+    const res = tracksGame.hint.plan(state);
     if (!res?.ok) throw new Error(`${seed}: refused after ${i}: ${res?.error}`);
     for (const s of res.steps) planned.add(s.rung);
     const step = res.steps[0];
@@ -191,7 +191,7 @@ describe("what the plan hides is exactly what the board already says", () => {
         beyond.push({ kind: "square", x: nx, y: ny, track: false, set: true });
       }
       if (beyond.length < 2) continue;
-      const res = tracksGame.hint?.(tracksGame.executeMove(fresh, { ops: beyond }));
+      const res = tracksGame.hint.plan(tracksGame.executeMove(fresh, { ops: beyond }));
       if (!res?.ok) continue;
       checked++;
       for (const step of res.steps) {
@@ -509,7 +509,7 @@ describe("following one step at a time", () => {
     let state = before;
     for (let i = 0; i < wanted.length; i++) {
       const one: TracksMove = { ops: [wanted[i]] };
-      const verdict = tracksGame.hintKeepTrack?.(one, step, state);
+      const verdict = tracksGame.hint.keepTrack(one, step, state);
       expect(verdict).toBe(i === wanted.length - 1 ? "completed" : "onTrack");
       state = tracksGame.executeMove(state, one);
       if (i < wanted.length - 1) {
@@ -543,9 +543,7 @@ describe("following one step at a time", () => {
       y: op.y + dirY(dir),
       dir: opposite(dir),
     };
-    expect(tracksGame.hintKeepTrack?.({ ops: [flipped] }, step, before)).not.toBe(
-      "off",
-    );
+    expect(tracksGame.hint.keepTrack({ ops: [flipped] }, step, before)).not.toBe("off");
   });
 
   it("a move the step never asked for is off-plan", () => {
@@ -556,7 +554,7 @@ describe("following one step at a time", () => {
     const asked = step.move.ops[0];
     const foreign: TracksMove = { ops: [{ ...asked, track: !asked.track }] };
     expect(step.move.ops).not.toContainEqual(foreign.ops[0]);
-    expect(tracksGame.hintKeepTrack?.(foreign, step, before)).toBe("off");
+    expect(tracksGame.hint.keepTrack(foreign, step, before)).toBe("off");
   });
 });
 
@@ -566,7 +564,7 @@ describe("the boards the midend refuses a hint on", () => {
   it("counts a solved board as finished", () => {
     const { desc } = tracksGame.newDesc(params, randomNew("refuse-solved"));
     const fresh = tracksGame.newState(params, desc);
-    const solved = tracksGame.solve?.(fresh, fresh);
+    const solved = tracksGame.solve(fresh, fresh);
     expect(solved?.ok).toBe(true);
     if (!solved?.ok) return;
     const done = tracksGame.executeMove(fresh, solved.move);

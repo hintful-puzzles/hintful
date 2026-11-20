@@ -205,7 +205,7 @@ describe("path hint plans", () => {
       // The plan is capped, so it is asked again until the board is done.
       for (let asked = 0; pathGame.status(state) !== "solved"; asked++) {
         expect(asked).toBeLessThan(state.edges.length);
-        const result = pathGame.hint?.(state);
+        const result = pathGame.hint.plan(state);
         if (!result?.ok) throw new Error(`refused on ${seed}`);
         for (const step of result.steps) {
           if (step.move.kind !== "edges") throw new Error("a step marks edges");
@@ -221,7 +221,7 @@ describe("path hint plans", () => {
 
   it("a step rings exactly the edges its move marks", () => {
     const state = deal(BOARDS[1], "rings");
-    const result = pathGame.hint?.(state);
+    const result = pathGame.hint.plan(state);
     if (!result?.ok) throw new Error("refused");
     for (const step of result.steps) {
       if (step.move.kind !== "edges") throw new Error("a step marks edges");
@@ -237,7 +237,7 @@ describe("path hint plans", () => {
     if (step.move.kind !== "edges") throw new Error("a step marks edges");
     const [first, ...rest] = step.move.changes;
     const copy = { ...step, move: structuredClone(step.move) };
-    const verdict = pathGame.hintKeepTrack?.(
+    const verdict = pathGame.hint.keepTrack(
       { kind: "edges", changes: [first] },
       copy,
       state,
@@ -251,7 +251,7 @@ describe("path hint plans", () => {
     if (step.move.kind !== "edges") throw new Error("a step marks edges");
     const { edge } = step.move.changes[0];
     expect(
-      pathGame.hintKeepTrack?.(
+      pathGame.hint.keepTrack(
         { kind: "edges", changes: [{ edge, mark: CROSS }] },
         step,
         state,
@@ -269,7 +269,7 @@ describe("path hint order", () => {
     const sq = (x: number, y: number): number => y * 5 + x;
     const edge = (p: [number, number], q: [number, number]): number =>
       edgeBetween(g, sq(...p), sq(...q));
-    const result = pathGame.hint?.(state);
+    const result = pathGame.hint.plan(state);
     if (!result?.ok) throw new Error("refused");
     const first = result.steps
       .slice(0, 3)

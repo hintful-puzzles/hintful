@@ -221,7 +221,7 @@ describe("slant marks as state", () => {
 
 /** Walk a plan from `s`, checking every step against the board it is shown on. */
 function walkPlan(s: SlantState): { marks: number; steps: number } {
-  const res = slantGame.hint?.(s);
+  const res = slantGame.hint.plan(s);
   if (!res?.ok) throw new Error("expected a plan");
   const sol = solutionOf(s);
   const { w } = s;
@@ -407,7 +407,7 @@ describe("slant hint places the marks it uses", () => {
 
   it("a plan resumed from the player's own marks cites them and places none twice", () => {
     const s = fresh(12, 10, DIFF_HARD, "notes-resume");
-    const first = slantGame.hint?.(s);
+    const first = slantGame.hint.plan(s);
     if (!first?.ok) throw new Error("expected a plan");
     // The player makes only the plan's marks, none of its diagonals.
     let marked = s;
@@ -422,7 +422,7 @@ describe("slant hint places the marks it uses", () => {
     // never the same ones.
     const { marks } = walkPlan(marked);
     expect(marks).toBeLessThan(placed);
-    const again = slantGame.hint?.(marked);
+    const again = slantGame.hint.plan(marked);
     if (!again?.ok) throw new Error("expected a plan");
     const cited = again.steps.some(
       (st) => ((st.highlights as SlantHint).marks ?? []).length,
@@ -432,12 +432,12 @@ describe("slant hint places the marks it uses", () => {
 
   it("keep-track completes a mark step only on that mark", () => {
     const s = fresh(12, 10, DIFF_HARD, "notes-track");
-    const res = slantGame.hint?.(s);
+    const res = slantGame.hint.plan(s);
     if (!res?.ok) throw new Error("expected a plan");
     const step = res.steps.find((st) => st.move.type === "alike");
     if (step?.move.type !== "alike") throw new Error("expected a mark step");
-    expect(slantGame.hintKeepTrack?.(step.move, step, s)).toBe("completed");
-    expect(slantGame.hintKeepTrack?.({ ...step.move, on: false }, step, s)).toBe("off");
+    expect(slantGame.hint.keepTrack(step.move, step, s)).toBe("completed");
+    expect(slantGame.hint.keepTrack({ ...step.move, on: false }, step, s)).toBe("off");
   });
 });
 

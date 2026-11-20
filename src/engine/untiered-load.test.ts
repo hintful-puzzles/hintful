@@ -13,6 +13,7 @@
 import { describe, expect, it } from "vitest";
 import { DESC_NOT_DEDUCIBLE, loadVerdict, validateDesc } from "./desc-error.ts";
 import { fakeGame } from "./fake-game.ts";
+import { DRAFT_HINT } from "./game.ts";
 import { hintFinishes, nothingToDeduce } from "./hint-finishes.ts";
 import { PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";
 import { _unregisterGame, registerGame } from "./registry.ts";
@@ -132,7 +133,7 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
       const params = gatePresets(game)[0].params;
       let board = game.newState(params, dealt(game, params).desc);
       while (game.status(board) !== "solved") {
-        const plan = game.hint?.(board);
+        const plan = game.hint.plan(board);
         if (!plan?.ok) throw new Error(`${id}: its hint did not finish a dealt board`);
         for (const step of plan.steps) board = game.executeMove(board, step.move);
       }
@@ -205,10 +206,13 @@ describe("hintFinishes", () => {
   /** The fake game with a hint that plans one step and stops at `reach`. */
   const hinting = (reach: number): typeof fakeGame => ({
     ...fakeGame,
-    hint: (s) =>
-      s.count < reach
-        ? { ok: true, steps: [{ move: "inc", rung: "inc", explanation: "" }] }
-        : { ok: false, error: PUZZLE_NOT_REASONABLE },
+    hint: {
+      ...fakeGame.hint,
+      plan: (s) =>
+        s.count < reach
+          ? { ok: true, steps: [{ move: "inc", rung: "inc", explanation: "" }] }
+          : { ok: false, error: PUZZLE_NOT_REASONABLE },
+    },
   });
 
   it("follows the hint, a plan at a time, to a solved board", () => {
@@ -219,9 +223,9 @@ describe("hintFinishes", () => {
     expect(hintFinishes(hinting(2), start)).toBe(false);
   });
 
-  it("throws for a game with no hint to follow", () => {
-    expect(() => hintFinishes({ ...fakeGame, hint: undefined }, start)).toThrow(
-      /needs a hint/,
+  it("throws for a draft, whose hint is not written", () => {
+    expect(() => hintFinishes({ ...fakeGame, hint: DRAFT_HINT }, start)).toThrow(
+      /hint is not written/,
     );
   });
 });

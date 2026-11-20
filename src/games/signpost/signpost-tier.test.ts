@@ -292,7 +292,7 @@ describe("an Unreasonable Signpost board", () => {
       expect(solverFinishes(state), desc).toBe(false);
       expect(countChains(state), desc).toBe(1);
       // And the answer Solve and the mistake check go by is that chain.
-      const solved = signpostGame.solve?.(state, state);
+      const solved = signpostGame.solve(state, state);
       if (!solved?.ok) throw new Error(`${desc}: no answer found`);
       expect(signpostGame.status(executeMove(state, solved.move)), desc).toBe("solved");
     }
@@ -432,9 +432,9 @@ describe("the hint on an Unreasonable Signpost board", () => {
     const followHint = (): number => {
       let steps = 0;
       for (
-        let plan = signpostGame.hint?.(state);
+        let plan = signpostGame.hint.plan(state);
         plan?.ok;
-        plan = signpostGame.hint?.(state)
+        plan = signpostGame.hint.plan(state)
       )
         for (const step of plan.steps) {
           state = executeMove(state, step.move);

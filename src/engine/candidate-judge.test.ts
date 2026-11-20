@@ -21,7 +21,7 @@ const fresh = (): TowersState => game.newState(params, desc);
 
 const answer = (() => {
   const s = fresh();
-  const solved = game.solve?.(s, s, aux);
+  const solved = game.solve(s, s, aux);
   if (!solved?.ok) throw new Error("Towers did not solve its own board");
   return game.executeMove(s, solved.move).grid;
 })();
@@ -45,10 +45,10 @@ const placed = (s: TowersState, i: number, n = answer[i]): TowersState =>
 describe("candidateJudge", () => {
   it("names a placement the board shows by its step's rung", () => {
     const s = fresh();
-    const res = game.hint?.(s, aux, game.newUi(s));
+    const res = game.hint.plan(s, aux, game.newUi(s));
     if (!res?.ok) throw new Error("no hint");
     const step = res.steps[0];
-    const v = game.judgeMove?.(s, game.executeMove(s, step.move));
+    const v = game.hint.judgeMove?.(s, game.executeMove(s, step.move));
     expect(v?.followed).toBe(true);
     expect(v?.words.text).toMatch(DIRECT);
     expect(v?.words.text).toContain(nameOf(step.rung));
@@ -56,7 +56,7 @@ describe("candidateJudge", () => {
 
   it("names directly a placement the board shows, though the hint takes it later", () => {
     const s = fresh();
-    const res = game.hint?.(s, aux, game.newUi(s));
+    const res = game.hint.plan(s, aux, game.newUi(s));
     if (!res?.ok) throw new Error("no hint");
     // Another firing of the rung the hint opens with, which the board as
     // dealt shows as plainly.
@@ -69,7 +69,7 @@ describe("candidateJudge", () => {
           step.continuesPrevious !== true,
       );
     if (later === undefined) throw new Error("the hint fires its first rung once");
-    const v = game.judgeMove?.(s, game.executeMove(s, later.move));
+    const v = game.hint.judgeMove?.(s, game.executeMove(s, later.move));
     expect(v?.words.text).toMatch(DIRECT);
     expect(v?.words.text).toContain(nameOf(later.rung));
   });
@@ -79,13 +79,13 @@ describe("candidateJudge", () => {
     for (let n = 0; n < 30; n++) {
       const board = dealt(game, params, n);
       const s = game.newState(params, board.desc);
-      const res = game.hint?.(s, board.aux, game.newUi(s));
+      const res = game.hint.plan(s, board.aux, game.newUi(s));
       if (!res?.ok) continue;
       const later = res.steps.find(
         (step) => step.continuesPrevious === true && step.move.type === "set",
       );
       if (later === undefined) continue;
-      const v = game.judgeMove?.(s, game.executeMove(s, later.move));
+      const v = game.hint.judgeMove?.(s, game.executeMove(s, later.move));
       expect(v?.words.text).toMatch(DIRECT);
       expect(v?.words.text).toContain(nameOf(later.rung));
       return;
@@ -97,7 +97,7 @@ describe("candidateJudge", () => {
     const s = fresh();
     const chained = [...s.grid.keys()]
       .filter((i) => s.grid[i] === 0)
-      .map((i) => game.judgeMove?.(s, placed(s, i)))
+      .map((i) => game.hint.judgeMove?.(s, placed(s, i)))
       .find((v) => v?.words.text.includes("a few steps on"));
     if (!chained) throw new Error("no placement on the board took a chain");
     expect(chained.followed).toBe(true);
@@ -115,7 +115,7 @@ describe("candidateJudge", () => {
     // Check & save judges only a sound board, so a wrong value stands in
     // for a right move no deduction reaches.
     const wrong = (answer[i] % s.w) + 1;
-    const v = game.judgeMove?.(s, placed(s, i, wrong));
+    const v = game.hint.judgeMove?.(s, placed(s, i, wrong));
     expect(v?.followed).toBe(false);
     expect(v?.words.text).toBe(verdictOf({ kind: "unforced" }).words.text);
   });
@@ -128,7 +128,7 @@ describe("candidateJudge", () => {
 
   it("does not judge penciling every candidate in", () => {
     const s = fresh();
-    expect(game.judgeMove?.(s, penciled(s))).toBeNull();
+    expect(game.hint.judgeMove?.(s, penciled(s))).toBeNull();
   });
 
   it("judges notes written into a cell with none by what they leave out", () => {
@@ -137,7 +137,7 @@ describe("candidateJudge", () => {
     const one = with_(s, (t) => {
       t.pencil[i] = 1 << answer[i];
     });
-    expect(game.judgeMove?.(s, one)?.followed).toBe(true);
+    expect(game.hint.judgeMove?.(s, one)?.followed).toBe(true);
   });
 
   it("judges a note struck from a cell's notes", () => {
@@ -146,6 +146,6 @@ describe("candidateJudge", () => {
     const struck = with_(s, (t) => {
       t.pencil[i] &= ~(1 << ((answer[i] % s.w) + 1));
     });
-    expect(game.judgeMove?.(s, struck)?.followed).toBe(true);
+    expect(game.hint.judgeMove?.(s, struck)?.followed).toBe(true);
   });
 });

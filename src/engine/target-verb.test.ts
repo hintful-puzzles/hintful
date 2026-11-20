@@ -218,7 +218,7 @@ describe("verbClicks: a hint step's clicks, found by its keep-track", () => {
       ...s,
       marks: { ...s.marks, ...Object.fromEntries(m.set) },
     }),
-    hintKeepTrack: (m: M, step: HintStep<M>): HintTrackVerdict => {
+    keepTrack: (m: M, step: HintStep<M>): HintTrackVerdict => {
       const wanted = new Map(step.move.set);
       if (!m.set.every(([k, v]) => wanted.get(k) === v)) return "off";
       step.move.set = step.move.set.filter(([k]) => !m.set.some(([j]) => j === k));
@@ -266,11 +266,11 @@ describe("verbClicks: a hint step's clicks, found by its keep-track", () => {
     // the wanted one is on the way, and changes nothing about the step.
     const cycling = {
       ...rules,
-      hintKeepTrack: (m: M, step: HintStep<M>): HintTrackVerdict => {
+      keepTrack: (m: M, step: HintStep<M>): HintTrackVerdict => {
         const wanted = new Map(step.move.set);
         if (m.set.every(([k, v]) => wanted.has(k) && wanted.get(k) !== v))
           return "onTrack";
-        return rules.hintKeepTrack(m, step);
+        return rules.keepTrack(m, step);
       },
     };
     const step = stepOf([
@@ -310,7 +310,7 @@ describe("verbClicks: a hint step's clicks, found by its keep-track", () => {
     };
     const judging = {
       ...rules,
-      hintKeepTrack: (m: M, step: HintStep<M>, s: S): HintTrackVerdict => {
+      keepTrack: (m: M, step: HintStep<M>, s: S): HintTrackVerdict => {
         const wanted = new Map(step.move.set);
         if (!m.set.every(([k, v]) => wanted.get(k) === v)) return "off";
         const after = rules.executeMove(s, m).marks;
@@ -360,7 +360,7 @@ describe("a geometry's pointAt is a point that addresses its target", () => {
     const state = game.newState(params, game.newDesc(params, randomNew(id)).desc);
     const ui = game.newUi(state);
     // The midend's own fallback for a game that names no tile size.
-    const tileSize = game.preferredTileSize ?? 32;
+    const tileSize = game.preferredTileSize;
     const ds = game.newDrawState(state, tileSize);
     const size = game.computeSize(params, tileSize);
     // A target is a plain record, or an object of the game's own that the

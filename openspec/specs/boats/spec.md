@@ -460,7 +460,7 @@ when every tier below it has nothing.
 
 Every leg of a journey SHALL carry the sentence and the marks of the whole
 firing: every square the firing decides, its never-touch water included, and
-its evidence. Playing a leg SHALL NOT shrink the picture. `hintKeepTrack`
+its evidence. Playing a leg SHALL NOT shrink the picture. `hint.keepTrack`
 SHALL judge a leg by the squares its own move asks for, so a journey advances
 one leg at a time.
 

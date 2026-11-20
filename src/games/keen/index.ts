@@ -495,38 +495,40 @@ export const keenGame: Game<
 
   solve,
   difficulty,
-  hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
-  judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps, keen.NAMES),
-  hintRungs: KEEN_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the cell the step fills in with a number.",
-      strike: "the pencil marks the step crosses out.",
-      outline:
-        "what the step reasons from: “this cell”, whose pencil marks it crosses out, cells that between them already account for the numbers being crossed out, the number just placed, or “the middle cell” a step weighs and the cells it reads.",
-      stripes:
-        'the cage, row or column the sentence names: "this cage", "this row" or "this column". Or the several rows or columns it names together, such as "these 2 columns", where one number fits only the outlined cells.',
+  hint: {
+    plan: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+    judgeMove: (before, after, ui) =>
+      candidateJudge(before, after, ui ?? newUi(before), buildSteps, keen.NAMES),
+    rungs: KEEN_RUNGS,
+    marks: {
+      roles: {
+        ring: "the cell the step fills in with a number.",
+        strike: "the pencil marks the step crosses out.",
+        outline:
+          "what the step reasons from: “this cell”, whose pencil marks it crosses out, cells that between them already account for the numbers being crossed out, the number just placed, or “the middle cell” a step weighs and the cells it reads.",
+        stripes:
+          'the cage, row or column the sentence names: "this cage", "this row" or "this column". Or the several rows or columns it names together, such as "these 2 columns", where one number fits only the outlined cells.',
+      },
     },
+    // The shared candidate-elimination keep-track and stale-step check;
+    // `KeenHint` is structurally `CandidateHighlights`.
+    keepTrack: (m, step, state) =>
+      keepCandidateHintTrack(m, step, state.pencil, state.params.w),
+    gesture: (s, ui, ds, m) => {
+      const ts = ds.tileSize;
+      const mid = (v: number) => coord(v, ts) + ((ts / 2) | 0);
+      return candidateGesture(
+        m,
+        ui,
+        (x, y) => ({ x: mid(x), y: mid(y) }),
+        digitKeyCode,
+        undefined,
+        markAll(s),
+      );
+    },
+    refreshStep: (step, state) =>
+      refreshCandidateHintStep(step, state.grid, state.pencil, state.params.w),
   },
-  // The shared candidate-elimination keep-track and stale-step check;
-  // `KeenHint` is structurally `CandidateHighlights`.
-  hintKeepTrack: (m, step, state) =>
-    keepCandidateHintTrack(m, step, state.pencil, state.params.w),
-  hintGesture: (s, ui, ds, m) => {
-    const ts = ds.tileSize;
-    const mid = (v: number) => coord(v, ts) + ((ts / 2) | 0);
-    return candidateGesture(
-      m,
-      ui,
-      (x, y) => ({ x: mid(x), y: mid(y) }),
-      digitKeyCode,
-      undefined,
-      markAll(s),
-    );
-  },
-  refreshHintStep: (step, state) =>
-    refreshCandidateHintStep(step, state.grid, state.pencil, state.params.w),
   findMistakes,
   clearMistakes: (_state, mistakes) => clearEntries(setMoves, mistakes),
   revealOne: (state, solved) =>

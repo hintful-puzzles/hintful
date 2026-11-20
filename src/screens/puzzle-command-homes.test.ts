@@ -80,7 +80,6 @@ function fullyCapablePuzzle(overrides: FakePuzzle = {}): FakePuzzle {
     canUndo: true,
     canRedo: true,
     canHint: true,
-    canSolve: true,
     canMarkAll: true,
     canCheck: true,
     referenceTitle: "Dominoes",
@@ -337,7 +336,6 @@ describe("every puzzle command is in exactly one of the three panels", () => {
         await homes(
           fullyCapablePuzzle({
             canHint: false,
-            canSolve: false,
             canMarkAll: false,
             canCheck: false,
             referenceTitle: null,
@@ -355,7 +353,6 @@ describe("every puzzle command is in exactly one of the three panels", () => {
       "mark-all",
       "toggle-reference",
       "check-only",
-      "solve",
     ]) {
       expect(found.has(command), `${command} should be absent for this game`).toBe(
         false,

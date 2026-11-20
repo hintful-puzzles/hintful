@@ -252,18 +252,20 @@ export const pearlGame: Game<
     );
     return input.clearEdges(state, [...edges]);
   },
-  hint: pearlHint,
-  judgeMove: pearlJudgeMove,
-  hintMarks: {
-    roles: {
-      ring: "the edges the step decides: a line from a square's center to its edge means the loop must go through that edge, and a cross on an edge means it can't. The sentence calls one “this edge”, or names the pearl or square whose edges they are.",
-      outline:
-        "the squares the step reasons from: the pearl or square it is about, the squares beside a pearl, or a stretch of loop drawn so far.",
+  hint: {
+    plan: pearlHint,
+    judgeMove: pearlJudgeMove,
+    marks: {
+      roles: {
+        ring: "the edges the step decides: a line from a square's center to its edge means the loop must go through that edge, and a cross on an edge means it can't. The sentence calls one “this edge”, or names the pearl or square whose edges they are.",
+        outline:
+          "the squares the step reasons from: the pearl or square it is about, the squares beside a pearl, or a stretch of loop drawn so far.",
+      },
     },
+    rungs: PEARL_RUNGS,
+    keepTrack: pearlKeepTrack,
+    gesture: hintGesture,
   },
-  hintRungs: PEARL_RUNGS,
-  hintKeepTrack: pearlKeepTrack,
-  hintGesture,
 
   textFormat,
 

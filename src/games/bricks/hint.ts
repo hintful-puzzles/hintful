@@ -79,7 +79,7 @@ const described = describedFiringHint<
 
 /** The steps of the ladder's walk from the player's own colors, with no check
  * that the board has the one answer they are guaranteed to agree with. */
-export const bricksSteps = described.hint;
+export const bricksSteps = described.hint.plan;
 
 export function bricksHint(
   state: BricksState,
@@ -92,6 +92,6 @@ export function bricksHint(
   return bricksSteps(state);
 }
 
-export const bricksKeepTrack = described.hintKeepTrack;
-export const bricksJudgeMove = described.judgeMove;
-export const bricksRefreshHintStep = described.refreshHintStep;
+export const bricksKeepTrack = described.hint.keepTrack;
+export const bricksJudgeMove = described.hint.judgeMove;
+export const bricksRefreshHintStep = described.hint.refreshStep;

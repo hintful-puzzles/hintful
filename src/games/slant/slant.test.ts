@@ -276,7 +276,7 @@ describe("slant solve + findMistakes", () => {
 
   it("solve uses the aux solution when present", () => {
     const s = newState(p, FIXTURE.desc);
-    const r = slantGame.solve?.(s, s, FIXTURE.aux);
+    const r = slantGame.solve(s, s, FIXTURE.aux);
     expect(r).toEqual({ ok: true, move: { type: "solve", grid: FIXTURE.aux } });
   });
 
@@ -285,7 +285,7 @@ describe("slant solve + findMistakes", () => {
     // Place two wrong diagonals first.
     const wrong0 = FIXTURE.aux[0] === "\\" ? 1 : -1;
     s = executeMove(s, set(0, 0, wrong0 as -1 | 1));
-    const r = slantGame.solve?.(newState(p, FIXTURE.desc), s);
+    const r = slantGame.solve(newState(p, FIXTURE.desc), s);
     expect(r?.ok).toBe(true);
     if (r?.ok) {
       const done = executeMove(s, r.move);

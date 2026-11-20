@@ -3,7 +3,7 @@
  *
  * Tier 1 — `hint` populates, strikes and places with quality-bar narration; the clue
  * sentence it speaks follows the board rather than the record; refusal on solved
- * / on mistakes; `hintKeepTrack` verdicts; resume to solved. Tier 2.5 — render
+ * / on mistakes; `hint.keepTrack` verdicts; resume to solved. Tier 2.5 — render
  * scenarios for both clue shapes: the arithmetic clue's diagonal pair (two
  * separate rings, because the pair shares no edge) and the `E`/`O` clue's block
  * of four.
@@ -152,7 +152,7 @@ const pinned = describeHintKindPins({
 
 function firstHint(st: MathraxState, reading?: CandidateReading) {
   const ui = { ...newUi(st), ...(reading ? { candidateReading: reading } : {}) };
-  const res = mathraxGame.hint?.(st, undefined, ui);
+  const res = mathraxGame.hint.plan(st, undefined, ui);
   if (!res?.ok) throw new Error(`hint refused: ${res && !res.ok ? res.error : "—"}`);
   return res;
 }
@@ -180,7 +180,7 @@ describe("mathrax hint", () => {
     for (const p of [NORMAL, TRICKY]) {
       const { st } = gen(p, `voice-${p.o}`);
       const populated = mathraxGame.executeMove(st, { type: "pencilAll" });
-      const res = mathraxGame.hint?.(populated);
+      const res = mathraxGame.hint.plan(populated);
       expect(res?.ok).toBe(true);
       if (!res?.ok) continue;
       const modal = /can only|can't|must (be|go)/i;
@@ -198,7 +198,7 @@ describe("mathrax hint", () => {
     for (const p of [NORMAL, TRICKY]) {
       for (let s = 0; s < 8; s++) {
         const { st } = gen(p, `bleed-${p.o}-${s}`);
-        const res = mathraxGame.hint?.(st);
+        const res = mathraxGame.hint.plan(st);
         if (!res?.ok) continue;
         for (const step of res.steps as AnyStep[]) {
           if (step.move.type !== "pencilStrike") continue;
@@ -222,7 +222,7 @@ describe("mathrax hint", () => {
     for (const p of [NORMAL, TRICKY]) {
       for (let s = 0; s < 8; s++) {
         const { st } = gen(p, `area-${p.o}-${s}`);
-        const res = mathraxGame.hint?.(st);
+        const res = mathraxGame.hint.plan(st);
         if (!res?.ok) continue;
         for (const step of res.steps as AnyStep[]) {
           const area: { x: number; y: number }[] = step.highlights?.area ?? [];
@@ -259,7 +259,7 @@ describe("mathrax hint", () => {
     for (const p of [NORMAL, TRICKY]) {
       let st = gen(p, `across-${p.o}`).st;
       for (let k = 0; k < 120 && status(st) !== "solved"; k++) {
-        const res = mathraxGame.hint?.(st);
+        const res = mathraxGame.hint.plan(st);
         if (!res?.ok) break;
         const step = res.steps[0] as AnyStep;
         const m = /and the (\d) across it/.exec(step.explanation);
@@ -289,7 +289,7 @@ describe("mathrax hint", () => {
     for (const p of [NORMAL, TRICKY]) {
       for (let s = 0; s < 8; s++) {
         const { st } = gen(p, `degenerate-${p.o}-${s}`);
-        const res = mathraxGame.hint?.(st);
+        const res = mathraxGame.hint.plan(st);
         if (!res?.ok) continue;
         for (const step of res.steps) {
           expect(step.explanation).not.toMatch(/differ by 0|is 0 away/);
@@ -310,10 +310,10 @@ describe("mathrax hint", () => {
     const populated = mathraxGame.executeMove(st, { type: "pencilAll" });
     const uiOn = newUi(populated);
     uiOn.autoPencil = true;
-    const on = mathraxGame.hint?.(populated, undefined, uiOn);
+    const on = mathraxGame.hint.plan(populated, undefined, uiOn);
     const uiOff = newUi(populated);
     uiOff.autoPencil = false;
-    const off = mathraxGame.hint?.(populated, undefined, uiOff);
+    const off = mathraxGame.hint.plan(populated, undefined, uiOff);
     expect(on?.ok && off?.ok).toBe(true);
     if (!on?.ok || !off?.ok) return;
     const dupCount = (r: typeof on) => r.steps.filter((s) => s.rung === "dup").length;
@@ -323,7 +323,7 @@ describe("mathrax hint", () => {
 
   it("counts a solved board as finished and flags a wrong entry, the boards the midend refuses", () => {
     const { st } = gen(NORMAL, "hint-refuse");
-    const r = mathraxGame.solve?.(st, st);
+    const r = mathraxGame.solve(st, st);
     if (!r?.ok || r.move.type !== "solve") throw new Error("solve failed");
     expect(mathraxGame.status(mathraxGame.executeMove(st, r.move))).toBe("solved");
 
@@ -349,11 +349,11 @@ describe("mathrax hintKeepTrack", () => {
     const res = firstHint(st, "populate");
     const step = res.steps.find((s) => (s.move as MathraxMove).type === "pencilAll");
     if (!step) throw new Error("no populate step");
-    expect(mathraxGame.hintKeepTrack?.({ type: "pencilAll" }, step, st)).toBe(
+    expect(mathraxGame.hint.keepTrack({ type: "pencilAll" }, step, st)).toBe(
       "completed",
     );
     expect(
-      mathraxGame.hintKeepTrack?.(
+      mathraxGame.hint.keepTrack(
         { type: "set", x: 0, y: 0, n: 1, pencil: false },
         step,
         st,
@@ -376,7 +376,7 @@ describe("mathrax hintKeepTrack", () => {
         n: mk.n,
         pencil: true,
       };
-      expect(mathraxGame.hintKeepTrack?.(toggle, step, cur)).toBe(
+      expect(mathraxGame.hint.keepTrack(toggle, step, cur)).toBe(
         k === marks.length - 1 ? "completed" : "onTrack",
       );
       cur = mathraxGame.executeMove(cur, toggle);
@@ -393,7 +393,7 @@ describe("mathrax hint resumes to solved", () => {
       let state = gen(p, `resume-${p.o}`).st;
       for (let moves = 0; moves < 800; moves++) {
         if (status(state) === "solved") return;
-        const res = mathraxGame.hint?.(state);
+        const res = mathraxGame.hint.plan(state);
         expect(res?.ok).toBe(true);
         if (!res?.ok) throw new Error(`gave up: ${res?.error}`);
         state = mathraxGame.executeMove(state, res.steps[0].move);

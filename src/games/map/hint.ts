@@ -574,7 +574,7 @@ function workOf(state: MapState): Work {
  * are not left to carry: before every firing they are brought down to the
  * working board, which the legs of the steps so far have advanced.
  */
-const { hint: deduction, judgeMove } = describedEdgeHint<
+const { plan: deduction, judgeMove } = describedEdgeHint<
   MapState,
   MapMove,
   MapHint,

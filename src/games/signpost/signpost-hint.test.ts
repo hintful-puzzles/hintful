@@ -35,7 +35,7 @@ function arm(step: Step): string {
 }
 
 function hintOf(state: SignpostState): Step[] {
-  const res = signpostGame.hint?.(state);
+  const res = signpostGame.hint.plan(state);
   if (!res?.ok) throw new Error(`no hint: ${res?.error}`);
   return res.steps;
 }

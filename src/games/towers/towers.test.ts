@@ -72,7 +72,7 @@ function gen(w: number, diff: TowersParams["diff"], seed: string) {
 }
 
 function solutionGrid(st: TowersState): number[] {
-  const r = towersGame.solve?.(st, st);
+  const r = towersGame.solve(st, st);
   if (!r?.ok) throw new Error("solve failed");
   if (r.move.type !== "solve") throw new Error("expected solve move");
   return r.move.grid;
@@ -528,7 +528,7 @@ describe("towers sticky pencil mode", () => {
 
 describe("towers render", () => {
   it("draws the pencil-mode indicator only while pencil mode is on", () => {
-    const ts = towersGame.preferredTileSize ?? 48;
+    const ts = towersGame.preferredTileSize;
     const palette = towersGame.colors(DEFAULT_BACKGROUND);
     const render = (pencilMode: boolean): RecordingDrawing => {
       const st = newState(RENDER.p, RENDER.desc);
@@ -558,7 +558,7 @@ describe("towers render", () => {
   });
 
   it("the 2D appearance omits the tower-face polygons", () => {
-    const ts = towersGame.preferredTileSize ?? 48;
+    const ts = towersGame.preferredTileSize;
     const palette = towersGame.colors(DEFAULT_BACKGROUND);
 
     const render3d = (threeD: boolean): RecordingDrawing => {
@@ -662,7 +662,7 @@ describe("towers render", () => {
     "hatch",
     "mistake",
   ] as const)("a withdrawn %s on a 3D tower leaves the canvas a fresh paint would show", (kind) => {
-    const ts = towersGame.preferredTileSize ?? 48;
+    const ts = towersGame.preferredTileSize;
     const palette = towersGame.colors(DEFAULT_BACKGROUND);
     const size = towersGame.computeSize(RENDER.p, ts);
     const set: TowersMove = { type: "set", x: 0, y: 1, n: 6, pencil: false };
@@ -713,7 +713,7 @@ describe("on-screen keys (requestKeys)", () => {
 describe("towers: the win flash sweeps the squares", () => {
   const TS = 48;
   const start = gen(5, "easy", "win-flash").st;
-  const answer = towersGame.solve?.(start, start);
+  const answer = towersGame.solve(start, start);
   if (!answer?.ok) throw new Error("the board does not solve");
   const state = towersGame.executeMove(start, answer.move);
   const squares = state.w * state.w;

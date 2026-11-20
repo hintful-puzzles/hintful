@@ -75,7 +75,7 @@ function frameWith(
   game: AnyGame,
   state: unknown,
   on: boolean,
-  ts = game.preferredTileSize ?? 32,
+  ts = game.preferredTileSize,
 ): DrawOp[] {
   const ui = game.newUi(state) as {
     pencilMode: boolean;
@@ -117,7 +117,7 @@ describe("the pencil-mode indicator is where the engine puts it", () => {
     if (!noteTaking.ids.includes(id)) continue;
 
     it(`${id}: draws it in the engine's box and nowhere else`, () => {
-      const ts = game.preferredTileSize ?? 32;
+      const ts = game.preferredTileSize;
       const box = pencilIndicatorBox(game.computeSize(game.defaultParams(), ts), ts);
       const added = addedByPencilMode(
         frameWith(game, state, false),

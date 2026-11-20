@@ -36,6 +36,7 @@ import {
   type GameDrawing,
   type HintResult,
   type HintStep,
+  hasHint,
   UI_UPDATE,
   type UiUpdate,
 } from "./game.ts";
@@ -77,7 +78,7 @@ import { RULES_OUT_PREF } from "./rules-out.ts";
 import { sameShown, sameValue } from "./same-value.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import { NO_SOLUTION_FROM_HERE } from "./solve-failure.ts";
-import { endSweep, sweepContinues, sweepPending } from "./target-verb.ts";
+import { endSweep, hintGesture, sweepContinues, sweepPending } from "./target-verb.ts";
 import type {
   ChangeNotification,
   CheckVerdict,
@@ -570,9 +571,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   getStaticProperties(): PuzzleStaticAttributes {
     return {
-      canSolve: this.game.solve !== undefined,
-      canHint: this.game.hint !== undefined,
-      canCheck: this.game.findMistakes !== undefined || this.game.hint !== undefined,
+      canHint: hasHint(this.game),
+      canCheck: this.game.findMistakes !== undefined || hasHint(this.game),
       referenceTitle: this.game.reference?.title ?? null,
       canMarkAll: this.game.markAll !== undefined,
       ignoresSecondaryButton: this.game.ignoresSecondaryButton ?? false,
@@ -1128,7 +1128,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * that leaves the board as it was is a `Ui` change only. */
   private playMove(move: Move, joins: boolean): void {
     // Classify the move against the plan with the PRE-move state (the
-    // established `hintKeepTrack` contract — a game may itself apply the
+    // established `hint.keepTrack` contract — a game may itself apply the
     // move to reason about its result, e.g. Sixteen's slide), then
     // re-validate the kept plan against the POST-move state so a later
     // step the move's side effects already resolved is never shown stale.
@@ -1147,7 +1147,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const after = brought?.state ?? next;
     const step = this.currentHintStep;
     if (step !== null) {
-      const verdict = this.game.hintKeepTrack?.(move, step, prev) ?? "off";
+      const verdict = this.game.hint.keepTrack(move, step, prev);
       if (verdict === "completed") {
         // The game asserts the post-move state matches the plan's
         // expectation after this step, so the rest stays valid —
@@ -1364,11 +1364,11 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * save/undo), so the result is indistinguishable from one reached by
    * clicking; the render-scenario harness uses it to reach a target frame.
    *
-   * It does not consult the hint plan (`hintKeepTrack`), since replayed moves
+   * It does not consult the hint plan (`hint.keepTrack`), since replayed moves
    * are setup rather than an answer to a displayed hint, so any stored plan is
    * dropped, as a self-played move drops it. A kept plan would re-show a stale
    * step on the next `hint()` (re-validation is a no-op for a game without
-   * `refreshHintStep`), and a stale step can be illegal to execute (Flood). */
+   * `hint.refreshStep`), and a stale step can be illegal to execute (Flood). */
   playMoves(moves: readonly Move[]): void {
     if (moves.length > 0) this.clearHint();
     for (const move of moves) this.applyMove(move);
@@ -1379,9 +1379,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * back, and a move that leaves anything but a solved board is the game's
    * defect, thrown before it reaches the history. */
   solve(): string | null {
-    if (!this.game.solve) {
-      return "This game does not support solving";
-    }
     const status = this.statusOf(this.state);
     if (status === "solved") return ALREADY_SOLVED;
     if (status === "lost") return GAME_OVER;
@@ -1408,7 +1405,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   // --- hints ---------------------------------------------------------
 
   /** The stored plan's current step (`undefined` when no plan is
-   * active) — what `hintKeepTrack` classifies moves against and what
+   * active) — what `hint.keepTrack` classifies moves against and what
    * `executeHint` plays, displayed or not. */
   private get currentHintStep(): HintStep<Move> | null {
     return this.activeHint?.steps[this.activeHint.index] ?? null;
@@ -1511,7 +1508,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private uiUpdateDismisses(): boolean {
     const step = this.currentHintStep;
     if (step === null) return false;
-    return this.game.uiUpdateClearsHint?.(step, this.state, this.ui) ?? false;
+    return this.game.hint.uiUpdateClears?.(step, this.state, this.ui) ?? false;
   }
 
   private clearHint(): void {
@@ -1566,10 +1563,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const count = this.findMistakes();
     if (count > 0) return { kind: "mistakes", count };
     const sound: CheckVerdict = { kind: "sound", mistakesChecked };
-    if (!this.game.hint || this.statusOf(this.state) === "solved") return sound;
+    if (!hasHint(this.game) || this.statusOf(this.state) === "solved") return sound;
     this.refreshActiveHint();
     if (this.activeHint) return sound;
-    const result = this.askHint(this.game.hint);
+    const result = this.askHint();
     if (result.ok) return sound;
     if (result.error === SEARCH_OUT_OF_REACH) return { kind: "out-of-reach" };
     if (!isDeadEnd(result.error)) return sound;
@@ -1580,13 +1577,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /**
    * The check's word on the last move, on a board with nothing wrong on it:
    * whether the game's deductions reach it from the position before it
-   * (`Game.judgeMove`), shown where a hint's step is until the next
+   * (`Game.hint.judgeMove`), shown where a hint's step is until the next
    * transition. Nothing where the last thing done was not a move, or the
    * move made nothing a deduction makes. Says whether it judged.
    */
   private judgeLastMove(): boolean {
     const gesture = this.lastGesture;
-    const judge = this.game.judgeMove;
+    const judge = this.game.hint.judgeMove;
     if (gesture === null || !judge) return false;
     const move = this.moveLog[gesture.to - 1];
     if (move === undefined || move instanceof Restart) return false;
@@ -1612,17 +1609,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /**
    * The hint's answer for the position on display: the game's proof that
    * nothing finishes from it, where it has one that names its cause
-   * (`Game.hasNoSolution`), else the game's `hint`. So a game states such a
-   * proof once, for loading and for the hint alike, and its `hint` is asked
+   * (`Game.hasNoSolution`), else the game's hint's plan. So a game states such
+   * a proof once, for loading and for the hint alike, and its plan is asked
    * only about a position not proved dead.
    */
-  private askHint(
-    hint: (state: State, aux?: string, ui?: Ui) => HintResult<Move>,
-    state: State = this.state,
-  ): HintResult<Move> {
+  private askHint(state: State = this.state): HintResult<Move> {
     const proof = this.game.hasNoSolution?.(state);
     if (typeof proof === "object") return proof;
-    return hint(state, this.aux, this.ui);
+    return this.game.hint.plan(state, this.aux, this.ui);
   }
 
   /** Take a refusal as the hint's word on this position: a dead end counts as
@@ -1667,12 +1661,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * displayed) so a displayed step never references already-resolved
    * work — the engine-level "a displayed hint step is never stale"
    * guarantee. Drops no-longer-actionable parts of the current step via
-   * the game's `refreshHintStep`, advances past any step that is now
+   * the game's `hint.refreshStep`, advances past any step that is now
    * fully resolved, and clears the plan if it drains entirely. A game
    * without the hook is left untouched (its move types can't be
    * partially resolved by a sibling move's side effects). */
   private refreshActiveHint(state: State = this.state): void {
-    if (!this.game.refreshHintStep) return;
+    if (!this.game.hint.refreshStep) return;
     // Bounded by the plan length: each iteration either settles on a
     // live step (returns) or advances the index by one.
     for (let guard = (this.activeHint?.steps.length ?? 0) + 1; guard > 0; guard--) {
@@ -1682,7 +1676,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         this.clearHint();
         return;
       }
-      const refreshed = this.game.refreshHintStep(step, state);
+      const refreshed = this.game.hint.refreshStep(step, state);
       if (refreshed === null) {
         // Fully resolved by an earlier move's side effects — skip it.
         this.advanceHint();
@@ -1697,7 +1691,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * message when no plan is available. */
   private computeHintPlan(): string | null {
     this.wayForward = null;
-    if (!this.game.hint) {
+    if (!hasHint(this.game)) {
       return "This game does not support hints";
     }
     // The two refusals every game would otherwise owe, asked in this order
@@ -1708,7 +1702,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       this.wayForward = "clear";
       return FIX_MISTAKES_FIRST;
     }
-    const result = this.askHint(this.game.hint);
+    const result = this.askHint();
     if (!result.ok && result.error === DEDUCTION_EXHAUSTED) {
       // The refusal tells the player the tier allows positions that need trial
       // and error, which only an `Unreasonable` tier does. Anywhere else the
@@ -1756,7 +1750,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       refusal === SEARCH_OUT_OF_REACH ||
       refusal === NO_MOVE_WORTH_MAKING
     ) {
-      if (!this.game.solve) return null;
       return this.game.revealOne ? "reveal" : "solve";
     }
     return null;
@@ -1811,8 +1804,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    */
   private rewindTarget(): number {
     const start = this.runStart();
-    const hint = this.game.hint;
-    if (!hint) return start;
+    if (!hasHint(this.game)) return start;
     for (let at = this.pos - 1; at > start; at--) {
       // Undo stops only where an entry did not join the one before it.
       if (this.joined[at]) continue;
@@ -1821,10 +1813,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       if (status === "lost") continue;
       if (status === "solved") return at;
       if ((this.game.findMistakes?.(s).length ?? 0) > 0) continue;
-      const result = this.askHint(hint, s);
+      const result = this.askHint(s);
       if (!result.ok && isDeadEnd(result.error)) continue;
-      const solved = this.game.solve?.(this.history[0], s, this.aux);
-      if (solved && !solved.ok && solved.error === NO_SOLUTION_FROM_HERE) continue;
+      const solved = this.game.solve(this.history[0], s, this.aux);
+      if (!solved.ok && solved.error === NO_SOLUTION_FROM_HERE) continue;
       return at;
     }
     return start;
@@ -1965,9 +1957,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   /**
-   * Play `step` as the player would: its gesture ({@link Game.hintGesture}) is
-   * sent through `interpretMove` as the frontend sends a tap, a drag or an
-   * on-screen key, and each move that makes is judged by `hintKeepTrack`.
+   * Play `step` as the player would: its gesture (`hintGesture`) is sent
+   * through `interpretMove` as the frontend sends a tap, a drag or an
+   * on-screen key, and each move that makes is judged by `GameHint.keepTrack`.
    * Moves on the way are committed as the player's own; the one that completes
    * the step is played in slow motion, and the plan advances when it settles (a
    * game with no move animation settles synchronously inside `afterTransition`).
@@ -1979,10 +1971,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private playHintGesture(step: HintStep<Move>, hideAfter: boolean): void {
     const ds = this.drawState;
     if (ds === null) throw new Error(`${this.game.id}: a hint played with no board`);
-    if (!this.game.hintGesture) {
-      throw new Error(`${this.game.id}: has a hint but no hintGesture`);
-    }
-    const gesture = this.game.hintGesture(this.state, this.ui, ds, step.move, step);
+    const gesture = hintGesture(this.game, this.state, this.ui, ds, step);
     const fail = (why: string): never => {
       throw new Error(
         `${this.game.id}: the hint's gesture ${why} ` +
@@ -2014,7 +2003,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         return true;
       }
       if (completed) fail(`makes a move after completing its step`);
-      const verdict = this.game.hintKeepTrack?.(made, step, this.state) ?? "off";
+      const verdict = this.game.hint.keepTrack(made, step, this.state);
       if (verdict === "off") fail(`makes a move off its step: ${JSON.stringify(made)}`);
       if (verdict === "completed") {
         completed = true;
@@ -2295,7 +2284,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   getCustomParamsConfig(): ConfigDescription {
     const items: ConfigDescription["items"] = {};
-    for (const item of this.game.paramConfig ?? []) {
+    for (const item of this.game.paramConfig) {
       items[item.kw] =
         item.type === "boolean"
           ? { type: "boolean", name: item.name }
@@ -2303,7 +2292,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
             ? { type: "choices", name: item.name, choicenames: item.choices }
             : { type: "string", name: fieldLabel(item) };
     }
-    const narrowing = configNarrowing(this.game.paramConfig ?? []);
+    const narrowing = configNarrowing(this.game.paramConfig);
     return narrowing.length > 0 ? { items, narrowing } : { items };
   }
 
@@ -2313,7 +2302,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   getCustomParams(): ConfigValues {
     const values: ConfigValues = {};
     const shown = this.chosenParamsAsDealt();
-    for (const item of this.game.paramConfig ?? []) {
+    for (const item of this.game.paramConfig) {
       values[item.kw] = item.get(shown);
     }
     return values;
@@ -2340,7 +2329,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * the rest keep their current value. */
   private paramsFromCustomValues(values: ConfigValues): Params {
     const draft = structuredClone(this.params);
-    for (const item of this.game.paramConfig ?? []) {
+    for (const item of this.game.paramConfig) {
       const v = values[item.kw];
       if (v === undefined) continue;
       if (item.type === "boolean") {
@@ -2363,7 +2352,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * draft, so the draft alone would pass it.
    */
   private customValuesError(values: ConfigValues, draft: Params): string | null {
-    const submitted = onlyError(this.game.paramConfig ?? [], (item) => {
+    const submitted = onlyError(this.game.paramConfig, (item) => {
       const v = values[item.kw] ?? item.get(this.params);
       return item.type === "boolean" ? asChecked(v) : v;
     });
@@ -2371,7 +2360,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   setCustomParams(values: ConfigValues): string | null {
-    if (!this.game.paramConfig?.length) return null;
+    if (this.game.paramConfig.length === 0) return null;
     const draft = this.paramsFromCustomValues(values);
     const err = this.customValuesError(values, draft);
     if (err) return err;
@@ -2381,7 +2370,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   encodeCustomParams(values: ConfigValues): CustomParamsEncoding {
-    if (!this.game.paramConfig?.length) {
+    if (this.game.paramConfig.length === 0) {
       return { ok: true, params: this.game.encodeParams(this.params, true) };
     }
     const draft = this.paramsFromCustomValues(values);
@@ -2505,7 +2494,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   private get preferredTileSize(): number {
-    return this.game.preferredTileSize ?? 32;
+    return this.game.preferredTileSize;
   }
 
   preferredSize(): Size {
@@ -2560,7 +2549,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   // --- save / load -------------------------------------------------
 
   saveGame(): Uint8Array<ArrayBuffer> {
-    const serMove = this.game.serializeMove ?? ((m: Move) => m as unknown);
+    const serMove = this.game.moveCodec?.serialize ?? ((m: Move) => m as unknown);
     const restarts = this.moveLog.flatMap((entry, at) =>
       entry instanceof Restart
         ? [
@@ -2592,7 +2581,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       timerElapsed: this.timerElapsed,
       ...(this.helped ? { hinted: true } : {}),
       cheated: this.cheated,
-      ...(this.game.encodeUi ? { ui: this.game.encodeUi(this.ui) } : {}),
+      ...(this.game.uiCodec ? { ui: this.game.uiCodec.encode(this.ui) } : {}),
     };
     return encodeSave(envelope);
   }
@@ -2645,7 +2634,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // A save pins the tier its board was labeled at, which a build that
     // mislabeled the board got wrong; `withBoardTier` checks it.
     this.params = this.withBoardTier(env.params, params, env.desc);
-    const deMove = this.game.deserializeMove ?? ((raw: unknown) => raw as Move);
+    const deMove = this.game.moveCodec?.deserialize ?? ((raw: unknown) => raw as Move);
     // A restart written before a restart reset the clock carries no time of
     // its own: the time and the help ran on through it, so the far side's are
     // the save's.
@@ -2714,8 +2703,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // Restore Ui state the move log cannot reconstruct (Mines' death counter /
     // completion flag), after the replay above — replay goes through
     // `executeMove`, never `interpretMove`, so a death removed from the log by
-    // an undo would otherwise be lost. See {@link Game.encodeUi}.
-    if (env.ui !== undefined) this.game.decodeUi?.(this.ui, env.ui, this.state);
+    // an undo would otherwise be lost. See {@link Game.uiCodec}.
+    if (env.ui !== undefined) this.game.uiCodec?.decode(this.ui, env.ui, this.state);
     // Replay armed animations for each step; a restored game should
     // appear settled, not mid-animation.
     this.clearAnimation();
@@ -2915,7 +2904,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // Read off the flag {@link takesNotes} keys the Marks key on, so the key
       // and its state cannot disagree about which games have the mode.
       pencilMode: (this.ui as { pencilMode?: unknown } | null)?.pencilMode === true,
-      ...(this.game.encodeUi ? { uiState: this.game.encodeUi(this.ui) } : {}),
+      ...(this.game.uiCodec ? { uiState: this.game.uiCodec.encode(this.ui) } : {}),
       ...(this.game.reference
         ? { referenceWatch: this.game.reference.watches(this.ui) }
         : {}),
@@ -2950,7 +2939,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // A game may want the banner without a status bar (Range), so a
     // hint-capable game always emits, letting its explanation appear and
     // clear; only a game with neither is skipped.
-    if (!this.game.statusbarText && !this.game.hint) return;
+    if (!this.game.statusbarText && !hasHint(this.game)) return;
     // The completion words are the engine's, read off the two facts it holds
     // (the board's status and whether the solver was used), so they are the
     // same words in every game that has a status bar.

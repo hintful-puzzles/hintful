@@ -88,7 +88,7 @@ describe("wordtrail dictionary", () => {
 
   it("marks a word placed once its trail is drawn", () => {
     const { state } = deal("dictionary placed");
-    const answer = wordtrailGame.solve?.(state, state);
+    const answer = wordtrailGame.solve(state, state);
     if (!answer?.ok) throw new Error("no answer");
     const solved = executeMove(state, answer.move);
     const placed = items(solved).filter((i) => i.status === "placed");
@@ -103,7 +103,7 @@ describe("wordtrail dictionary", () => {
       let state = deal(seed).state;
       for (let asked = 0; wordtrailGame.status(state) !== "solved"; asked++) {
         expect(asked).toBeLessThan(state.edges.length);
-        const result = wordtrailGame.hint?.(state);
+        const result = wordtrailGame.hint.plan(state);
         if (!result?.ok) throw new Error(`refused on ${seed}`);
         for (const step of result.steps) {
           const keys = step.reference ?? [];

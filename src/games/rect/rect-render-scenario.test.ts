@@ -48,7 +48,7 @@ describe("rect render scenarios", () => {
     // Build the solve move from the same id's board.
     const { desc } = newDesc(P, randomNew("rect-scenario"));
     const st = newState(P, desc);
-    const solveMove = rectGame.solve?.(st, st, undefined);
+    const solveMove = rectGame.solve(st, st, undefined);
     if (!solveMove?.ok) throw new Error("unsolvable");
     const { recording } = renderScenario({
       game: rectGame,
@@ -62,7 +62,7 @@ describe("rect render scenarios", () => {
   it("win flash: lights each cell's ground in turn, bottom left to top right", () => {
     const { desc } = newDesc(P, randomNew("rect-scenario"));
     const st = newState(P, desc);
-    const solveMove = rectGame.solve?.(st, st, undefined);
+    const solveMove = rectGame.solve(st, st, undefined);
     if (!solveMove?.ok) throw new Error("unsolvable");
     const solved = rectGame.executeMove(st, solveMove.move);
     const TS = PREFERRED_TILE_SIZE;
@@ -93,7 +93,7 @@ describe("rect render scenarios", () => {
   it("mistake frame: a wrong wall shows the red overlay", () => {
     const { desc } = newDesc(P, randomNew("rect-scenario"));
     const st = newState(P, desc);
-    const solveMove = rectGame.solve?.(st, st, undefined);
+    const solveMove = rectGame.solve(st, st, undefined);
     if (!solveMove?.ok) throw new Error("unsolvable");
     const solved = rectGame.executeMove(st, solveMove.move);
     // Find an interior vedge not in the solution.

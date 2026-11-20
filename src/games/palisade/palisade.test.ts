@@ -171,7 +171,7 @@ describe("palisade moves", () => {
   it("a solve move completes the board", () => {
     const p = { w: 5, h: 5, k: 5, diff: DIFF_EASY };
     const s0 = newState(p, newDesc(p, randomNew("palisade-solvemove")).desc);
-    const res = palisadeGame.solve?.(s0, s0);
+    const res = palisadeGame.solve(s0, s0);
     expect(res?.ok).toBe(true);
     if (res?.ok) {
       const solved = palisadeGame.executeMove(s0, res.move);
@@ -364,7 +364,7 @@ describe("palisade hint", () => {
 
   it("deduces a chain whose moves solve the board", () => {
     const s0 = newState(P, newDesc(P, randomNew("palisade-hint-chain")).desc);
-    const r = palisadeGame.hint?.(s0);
+    const r = palisadeGame.hint.plan(s0);
     expect(r?.ok).toBe(true);
     if (!r?.ok) return;
     expect(r.steps.length).toBeGreaterThan(0);
@@ -384,7 +384,7 @@ describe("palisade hint", () => {
       for (const seed of ["a", "b", "c", "d"]) {
         const { desc } = newDesc(p, randomNew(`palisade-hint-regions-${seed}`));
         let s = newState(p, desc);
-        const r = palisadeGame.hint?.(s);
+        const r = palisadeGame.hint.plan(s);
         if (!r?.ok) throw new Error(`no hint on ${desc}`);
         r.steps.forEach((step, n) => {
           const regions = step.continuesPrevious
@@ -543,7 +543,7 @@ describe("palisade hint", () => {
     const target = physicalEdge(hlOf(nowall), s0.w);
 
     const s1 = palisadeGame.executeMove(s0, nowall.move);
-    const r2 = palisadeGame.hint?.(s1);
+    const r2 = palisadeGame.hint.plan(s1);
     expect(r2?.ok).toBe(true);
     if (!r2?.ok) return;
     expect(r2.steps.some((s) => physicalEdge(hlOf(s), s0.w) === target)).toBe(false);
@@ -551,7 +551,7 @@ describe("palisade hint", () => {
 
   it("counts a solved board as finished, so the midend refuses it", () => {
     const s0 = newState(P, newDesc(P, randomNew("palisade-hint-solved")).desc);
-    const r = palisadeGame.solve?.(s0, s0);
+    const r = palisadeGame.solve(s0, s0);
     if (!r?.ok) throw new Error("the generated board did not solve");
     expect(palisadeGame.status(palisadeGame.executeMove(s0, r.move))).toBe("solved");
   });
@@ -579,13 +579,13 @@ describe("palisade hint", () => {
 
   it("hintKeepTrack completes on the hinted edit and rejects the wrong one", () => {
     const s0 = newState(P, newDesc(P, randomNew("palisade-hint-track")).desc);
-    const r = palisadeGame.hint?.(s0);
+    const r = palisadeGame.hint.plan(s0);
     if (!r?.ok) throw new Error("no hint on a fresh board");
     const step = r.steps[0];
     const hl = hlOf(step);
 
     // The exact hinted edit completes the step.
-    expect(palisadeGame.hintKeepTrack?.(step.move, step, s0)).toBe("completed");
+    expect(palisadeGame.hint.keepTrack(step.move, step, s0)).toBe("completed");
 
     // The wrong button on the same edge (other bit) deviates.
     const wrongFlag = hl.kind === "wall" ? DISABLED(BORDER(hl.dir)) : BORDER(hl.dir);
@@ -593,14 +593,14 @@ describe("palisade hint", () => {
       type: "edges",
       edits: [{ x: hl.x, y: hl.y, flag: wrongFlag }],
     };
-    expect(palisadeGame.hintKeepTrack?.(wrong, step, s0)).toBe("off");
+    expect(palisadeGame.hint.keepTrack(wrong, step, s0)).toBe("off");
 
     // An edit on an unrelated edge deviates.
     const other: PalisadeMove = {
       type: "edges",
       edits: [{ x: hl.x === 0 ? P.w - 1 : 0, y: hl.y, flag: BORDER(FLIP(hl.dir)) }],
     };
-    expect(palisadeGame.hintKeepTrack?.(other, step, s0)).toBe("off");
+    expect(palisadeGame.hint.keepTrack(other, step, s0)).toBe("off");
   });
 });
 

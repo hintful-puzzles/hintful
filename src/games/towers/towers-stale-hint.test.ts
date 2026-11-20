@@ -6,10 +6,10 @@
  * auto-pencil OFF the plan teaches explicit `pencilStrike` legs; if the player
  * then turns auto-pencil ON, a placement silently strikes the placed height from
  * its row/column, so a later *kept* strike step names notes that are already
- * gone. The engine's `refreshHintStep` re-validation is what prevents it.
+ * gone. The engine's `hint.refreshStep` re-validation is what prevents it.
  *
  * This drives a REAL `Midend` through keyboard input (the production
- * `processInput` path, with `hintKeepTrack` and the re-show/auto-play hint
+ * `processInput` path, with `hint.keepTrack` and the re-show/auto-play hint
  * lifecycle exactly as the app runs them), following the displayed hint to
  * solved while flipping the auto-pencil pref, and asserts after every
  * (re-)display that the displayed strike names only live candidates.

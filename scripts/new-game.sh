@@ -55,7 +55,7 @@ tile-cached renderer, and tests for each."
     PUZZLE="The rules and the hint's sentences live in
      ${GAME}.description.yaml, the board in state.ts. Rename what the copy calls a \"mark\", a
      \"clue\" and its two rungs to this puzzle's own words as you go."
-    ROLES="Each of the three hint roles in hintMarks (ring, outline, stripes)"
+    ROLES="Each of the three hint roles in hint.marks (ring, outline, stripes)"
     FAMILY="shading"
     DESCRIPTION="Shading puzzle"
     OBJECTIVE="Shade squares so that every number counts the shaded squares beside it."
@@ -73,7 +73,7 @@ tests for each."
      what the copy calls a \"wall\" and its two rungs to this puzzle's own
      words as you go. The generator's answer is a loop through every square;
      a puzzle with other answers draws its own."
-    ROLES="Each of the two hint roles in hintMarks (ring, outline)"
+    ROLES="Each of the two hint roles in hint.marks (ring, outline)"
     FAMILY="lines"
     DESCRIPTION="Loop puzzle"
     OBJECTIVE="Draw one loop through every square that never crosses a wall."
@@ -91,7 +91,7 @@ generator and no solver: the answer is the desc."
      Rename what the copy calls a \"digit\" and a \"code\" to this puzzle's own
      words as you go; keep the hint reading the scores and never the answer,
      which its test checks."
-    ROLES="Each of the two hint roles in hintMarks (ring, stripes)"
+    ROLES="Each of the two hint roles in hint.marks (ring, stripes)"
     FAMILY="hidden"
     DESCRIPTION="Code-breaking puzzle"
     OBJECTIVE="Find the hidden code from how each guess is scored."

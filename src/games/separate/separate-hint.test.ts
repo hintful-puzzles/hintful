@@ -50,7 +50,7 @@ const PRESETS: SeparateParams[] = [
 ];
 
 const hintOf = (s: SeparateState) => {
-  const r = separateGame.hint?.(s);
+  const r = separateGame.hint.plan(s);
   if (!r) throw new Error("separate declares no hint");
   return r;
 };
@@ -228,8 +228,8 @@ describe("separate hint mechanics", () => {
       type: "edges",
       edits: [{ x: hl.x, y: hl.y, flag }],
     });
-    expect(separateGame.hintKeepTrack?.(click(bit), step, fresh)).toBe("completed");
-    expect(separateGame.hintKeepTrack?.(click(other), step, fresh)).toBe("off");
+    expect(separateGame.hint.keepTrack(click(bit), step, fresh)).toBe("completed");
+    expect(separateGame.hint.keepTrack(click(other), step, fresh)).toBe("off");
   });
 
   it("flags a wrong edge, so the midend refuses a hint", () => {

@@ -316,34 +316,36 @@ export const magnetsGame: Game<
   solve,
   findMistakes,
   clearMistakes,
-  hint: magnetsHint,
-  judgeMove: magnetsJudgeMove,
-  hintRungs: MAGNETS_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "what the step decides: one end of a magnet, or a whole tile to make neutral or to mark ?.",
-      outline:
-        'what the step reasons from: the magnet a pole would touch (two of them are "like poles"), the tiles elsewhere in the line that can\'t take the pole ("either outlined tile"), and the clues it reads. A clue a step counts with is recolored, and so is the clue of a line it only cites, because that line already has all its + or − poles: "its row\'s clue".',
-      stripes:
-        'the row or column the sentence calls "this row" or "this column", running on through its numbers.',
+  hint: {
+    plan: magnetsHint,
+    judgeMove: magnetsJudgeMove,
+    rungs: MAGNETS_RUNGS,
+    marks: {
+      roles: {
+        ring: "what the step decides: one end of a magnet, or a whole tile to make neutral or to mark ?.",
+        outline:
+          'what the step reasons from: the magnet a pole would touch (two of them are "like poles"), the tiles elsewhere in the line that can\'t take the pole ("either outlined tile"), and the clues it reads. A clue a step counts with is recolored, and so is the clue of a line it only cites, because that line already has all its + or − poles: "its row\'s clue".',
+        stripes:
+          'the row or column the sentence calls "this row" or "this column", running on through its numbers.',
+      },
     },
-  },
-  hintKeepTrack: magnetsKeepTrack,
-  hintGesture: (s, ui, ds, m) => {
-    if (m.type !== "set" && m.type !== "flag") {
-      throw new Error(`magnets: a hint never asks for ${m.type}`);
-    }
-    const tile = (i: number) => ({ x: i % s.w, y: Math.floor(i / s.w) });
-    if (m.type === "set") {
-      // A left click puts the + in the end it lands on, so a − goes in by
-      // clicking the other end.
-      const end = m.which === POSITIVE ? m.idx : s.common.dominoes[m.idx];
-      return verbGesture(targetVerbs, s, ds, ui, [tile(end)]);
-    }
-    // The right button cycles empty, neutral, `?`.
-    const neutral = s.grid[m.idx] === NEUTRAL && (s.flags[m.idx] & GS_SET) !== 0;
-    const presses = m.mode === "neutral" || neutral ? 1 : 2;
-    return verbGesture(targetVerbs, s, ds, ui, [tile(m.idx)], "secondary", presses);
+    keepTrack: magnetsKeepTrack,
+    gesture: (s, ui, ds, m) => {
+      if (m.type !== "set" && m.type !== "flag") {
+        throw new Error(`magnets: a hint never asks for ${m.type}`);
+      }
+      const tile = (i: number) => ({ x: i % s.w, y: Math.floor(i / s.w) });
+      if (m.type === "set") {
+        // A left click puts the + in the end it lands on, so a − goes in by
+        // clicking the other end.
+        const end = m.which === POSITIVE ? m.idx : s.common.dominoes[m.idx];
+        return verbGesture(targetVerbs, s, ds, ui, [tile(end)]);
+      }
+      // The right button cycles empty, neutral, `?`.
+      const neutral = s.grid[m.idx] === NEUTRAL && (s.flags[m.idx] & GS_SET) !== 0;
+      const presses = m.mode === "neutral" || neutral ? 1 : 2;
+      return verbGesture(targetVerbs, s, ds, ui, [tile(m.idx)], "secondary", presses);
+    },
   },
   difficulty,
 

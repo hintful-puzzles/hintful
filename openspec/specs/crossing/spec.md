@@ -512,7 +512,7 @@ and SHALL NOT cite entries the board does not carry.
 ### Requirement: Hint: Crossing's marks are its legend's, on the clue list as on the grid
 
 Every step's explanation SHALL name the run its deduction reasons over. A
-role of `hintMarks` SHALL mark a number in the clue list below the grid as it
+role of `hint.marks` SHALL mark a number in the clue list below the grid as it
 marks a square, so a premise about which listed numbers still fit a run is
 visible where the numbers are.
 

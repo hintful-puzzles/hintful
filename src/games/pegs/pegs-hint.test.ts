@@ -598,6 +598,6 @@ describe("pegs solve", () => {
 
   it("round-trips the solve move through a save", () => {
     const m: PegsMove = { type: "solve", finish: 12 };
-    expect(G.deserializeMove?.(G.serializeMove?.(m))).toEqual(m);
+    expect(G.moveCodec?.deserialize(G.moveCodec?.serialize(m))).toEqual(m);
   });
 });

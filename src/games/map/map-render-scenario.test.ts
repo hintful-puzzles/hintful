@@ -69,10 +69,10 @@ describe("map render scenarios", () => {
 });
 
 describe("map win flash", () => {
-  const TS = mapGame.preferredTileSize ?? 20;
+  const TS = mapGame.preferredTileSize;
   const { desc } = newMapDesc(P, randomNew(SEED));
   const start = mapGame.newState(P, desc);
-  const answer = mapGame.solve?.(start, start);
+  const answer = mapGame.solve(start, start);
   if (!answer?.ok) throw new Error("the fixture does not solve");
   const state = mapGame.executeMove(start, answer.move);
   const { map } = state;

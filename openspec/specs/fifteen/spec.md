@@ -178,16 +178,16 @@ the plan moves it, and otherwise that it slides out of the way.
 - **THEN** the step that first homed it said it slides into place, and the
   slide back says so again
 
-### Requirement: Hint: Fifteen's hintKeepTrack completes on the hinted slide alone
+### Requirement: Hint: Fifteen's hint.keepTrack completes on the hinted slide alone
 
-`hintKeepTrack` SHALL return `"completed"` for a player move that produces
+`hint.keepTrack` SHALL return `"completed"` for a player move that produces
 exactly the board the current step expects, and `"off"` for any other move. It
 SHALL never return `"onTrack"`.
 
 #### Scenario: The hinted slide completes the step and any other is off
 
 - **WHEN** the player makes exactly the move the current step describes
-- **THEN** `hintKeepTrack` reports the step completed
+- **THEN** `hint.keepTrack` reports the step completed
 - **AND** a different move reports `"off"`
 
 ### Requirement: Status bar: Fifteen's status bar shows the move count

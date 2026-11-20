@@ -823,7 +823,7 @@ describe("positions from the owner's playtest", () => {
       params,
       ascentGame.newDesc(params, randomNew(seed)).desc,
     );
-    const solved = ascentGame.solve?.(start, start);
+    const solved = ascentGame.solve(start, start);
     if (!solved?.ok || solved.move.kind !== "solve") throw new Error("unsolvable");
     // The solve move reports only numbers; walls stay the board's own.
     const answer = solved.move.grid;

@@ -68,6 +68,4 @@ const described = describedFiringHint<
   say: {},
 });
 
-export const { hint: mosaicHint, hintKeepTrack: mosaicKeepTrack } = described;
-export const mosaicRefreshHintStep = described.refreshHintStep;
-export const mosaicJudgeMove = described.judgeMove;
+export const mosaicHint = described.hint;

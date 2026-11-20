@@ -35,13 +35,14 @@ Each step names the file of `src/skeleton/grid/` that already does it.
    references to marks (§ "Writing the narration", § "The sentences live in
    the description"). The step's `rung`, `words` and `explanation` are
    the engine's.
-4. **Judge the player's move against the step** with the keep-track and
-   `refreshHintStep` that `describedFiringHint` builds (`skeletonKeepTrack`,
-   `skeletonRefreshHintStep`), which narrow the words when a step shrinks (§
-   "The hooks a hinted game implements").
-5. **Declare the hooks in `index.ts`**: `hint`, `hintRungs`, `hintMarks`,
-   `hintKeepTrack`, `refreshHintStep` and `hintGesture` (§ "Every step is a
-   gesture").
+4. **Judge the player's move against the step** with the `keepTrack` and
+   `refreshStep` that `describedFiringHint` builds beside the plan, which
+   narrow the words when a step shrinks (§ "The hooks a hinted game
+   implements"). It hands them over as one part, `skeletonHint`.
+5. **Declare the hint in `index.ts`** as one object: `hint: { ...skeletonHint,
+   rungs, marks, targets }`, the builder's part spread, the rungs and the
+   marks, and the targets the engine clicks through the game's verbs (§
+   "Every step is a gesture").
 6. **Paint the marks from the words** in `render.ts`, from `stepMarks(hint)`.
    How is [`hints-marks.md`](./hints-marks.md).
 7. **Write the help page's `## Hints` section**, with `{{hint-marks}}`
@@ -80,30 +81,31 @@ Each step names the file of `src/skeleton/grid/` that already does it.
 | – The help teaches the marks | you write the help page's `## Hints` section, or change a mark |
 | – Hint the move that advances the goal | a plan offers forced moves that build nothing |
 | – Show only what the board does not already say | a step restates what the player's own marks show |
-| The hooks a hinted game implements | you wire `hint`, `hintKeepTrack` or another hint hook into `Game` |
+| The hooks a hinted game implements | you wire `hint`, `hint.keepTrack` or another hint hook into `Game` |
 | – Name the rung a step speaks | you add a deduction, or a test needs to know which one a step is |
-| – Every step is a gesture | you write `hintGesture`, or a walk throws on a step's move |
+| – Every step is a gesture | you write `hint.targets` or `hint.gesture`, or a walk throws on a step's move |
 | – The shared plan loop: deduceHintPlan | you write the loop that turns firings into a plan |
 | – Recording the deduction | the solver must say why each firing happened |
 | – A rung is not a premise, so return per premise | one rung holds several rules, or one step shows several deductions |
 | – A firing is not always a technique, so check the boundary too | true, forced steps split one thing a player sees at once |
 | – Census the reasons, not only the rungs | a reason kind may never fire, or you add one |
-| Refusal wording comes from one module | `hint()` has no step to give |
+| Refusal wording comes from one module | `hint.plan()` has no step to give |
 | Refusal couples to the mistake overlay | the board holds a mistake when a hint is asked, or `solve` refuses |
 | Judging the last move | you wire `judgeMove`, or a plan builder that should supply it |
 | The cross-game guards | a cross-game hint test fails for your game |
 | – A hint must resume from any position | the hint is asked from a board the player reached alone |
 | – A hint carries on from an entry the player made first | a rule bounds a line by the nearest undecided cell |
 | – The step budget | a deduction loops until nothing changes |
-| – Stale plans and refreshHintStep | a followed move or a preference can settle a later step |
+| – Stale plans and hint.refreshStep | a followed move or a preference can settle a later step |
 | – A plan's copy is the board, no further on and no further back | the planner works on a copy of the board |
 | Verifying a hint in-process | you test a hint's frame or pin its positions |
 | Probe before trusting a diagnosis | a hint misbehaves and you have a theory why |
 
 ## The quality bar
 
-Every game is to have a `hint()`, a game without one is a draft, and a new
-game ships with its hint. A hint that names the next move with no explanation,
+Every game is to have a hint, a game whose `hint` is still `DRAFT_HINT` is a
+draft (`mechanics.md` § "Contract sections, and what makes a draft"), and a
+new game ships with its hint. A hint that names the next move with no explanation,
 as upstream's `'h'` does, is below the bar. The rules are cited elsewhere by
 these numbers:
 
@@ -129,21 +131,22 @@ these numbers:
    the hint's steps place it. Where a notation would be too hard to manage,
    the tier that needs it becomes `Unreasonable` (`hints-marks.md` § "Give the
    facts a notation").
-7. **A hint asks only for what the pointer does.** A hinted game declares
-   `hintGesture`, and the midend plays a step by sending that gesture through
-   `interpretMove` (§ "Every step is a gesture").
+7. **A hint asks only for what the pointer does.** A hinted game names a
+   step's targets (`hint.targets`) or its gesture (`hint.gesture`), and the
+   midend plays a step by sending that gesture through `interpretMove` (§
+   "Every step is a gesture").
 8. **One deductive step per hint; the rest goes onto the board.** A step
    carries at most one inference, and longer reasoning is spread over board
    marks, one a step (§ "Cognitive load: one step per hint").
 
 A game with no deduction is exempt from deduction only, not from the bar
 (`hints-search.md` § "What every game does"). The hinted games are the
-registered games that declare a `hint`, derived by
+registered games whose `hint` is written (`hasHint`), derived by
 [`engine/testing/hint-games.ts`](../src/engine/testing/hint-games.ts).
 
 Exemplars: Palisade (grouped multi-leg deductions),
 [`src/games/range/`](../src/games/range/) (a compiled ladder walked a firing
-at a time, `hint` and `hintKeepTrack`, and the highlight), [`src/games/towers/`](../src/games/towers/)
+at a time, `hint.plan` and `hint.keepTrack`, and the highlight), [`src/games/towers/`](../src/games/towers/)
 (candidate elimination), and [`src/games/inertia/`](../src/games/inertia/)
 (no deduction: verified claims, a stable marked subgoal, a recompute-stable
 plan).
@@ -283,7 +286,7 @@ builds. A supposition names its place as the pill ("a line on [this edge]
 would…, so it must be crossed out"), never "a line here would…"; where an "it"
 in the premise already means something else, the move names the place again.
 
-**The declaration.** Every hinted game declares `hintMarks`: the roles its
+**The declaration.** Every hinted game declares `hint.marks`: the roles its
 steps name, in the words its help page gives them. The page writes
 `{{hint-marks}}` where the list goes and the help build fills it
 (`vite-plugins/hint-marks.ts`).
@@ -852,7 +855,11 @@ The contract and the `Midend` lifecycle are the
 implementation is [`src/engine/midend.ts`](../src/engine/midend.ts). Exemplar:
 `src/skeleton/grid/index.ts` and `hint.ts`.
 
-- **`hint(state, aux?, ui?)`** returns `{ ok: true, steps }` or
+A game's hint is one object, `Game.hint` (`GameHint` in
+[`game.ts`](../src/engine/game.ts)); a builder returns the part it can make
+under the same names, and the game spreads it and adds the rest.
+
+- **`hint.plan(state, aux?, ui?)`** returns `{ ok: true, steps }` or
   `{ ok: false, error }` with a `HintRefusal`. Compute the whole remaining
   plan once; the midend advances it as the player follows or auto-play runs.
   Each `HintStep` carries `move`, `rung`, `words` and `highlights`
@@ -860,7 +867,7 @@ implementation is [`src/engine/midend.ts`](../src/engine/midend.ts). Exemplar:
   is one; when a hint may lean on it is `hints-search.md` § "Recover the
   answer from the board". `ui` is the midend's, for a game that reads a
   preference.
-- **`hintKeepTrack(move, step, state)`** returns `"completed"` when the move
+- **`hint.keepTrack(move, step, state)`** returns `"completed"` when the move
   matches the step's intent, `"onTrack"` for partial progress on a step of
   several moves, else `"off"`, which drops the plan. It is handed the state
   before the move (`Midend.processInput`), so a game that needs the result
@@ -873,10 +880,11 @@ implementation is [`src/engine/midend.ts`](../src/engine/midend.ts). Exemplar:
   the player's own never puts a sentence on screen: a completed step hides the
   hint and every leg waits to be asked for. So a leg's sentence cannot lean
   on the one before it still being on screen.
-- **`refreshHintStep(step, state)`** validates a kept step at display
-  (§ "Stale plans and refreshHintStep").
-- **`hintGesture(state, ui, ds, move, step)`**, **`hintRungs`** and
-  **`hintMarks`** are required of every hinted game (§ "Every step is a
+- **`hint.refreshStep(step, state)`** validates a kept step at display
+  (§ "Stale plans and hint.refreshStep").
+- **`hint.rungs`** and **`hint.marks`** are required by the type, and so is
+  one of **`hint.targets(state, move, step)`** and **`hint.gesture(state, ui,
+  ds, move, step)`**, which the registry checks (§ "Every step is a
   gesture", § "Name the rung a step speaks", § "Bind the words to the
   marks").
 
@@ -893,7 +901,7 @@ what asserts wording. A game writes three things, each once:
 2. **The stamp**, where a step is built: `rung: reason.kind`. Type the step
    `HintStep<FooMove, FooHint, FooRung>`, and a reason kind missing from the
    list fails to compile.
-3. **The declaration**: `Game<…, FooHint, FooRung>` and `hintRungs:
+3. **The declaration**: `Game<…, FooHint, FooRung>` and `hint.rungs:
    FOO_RUNGS`.
 
 Exemplar: `SKELETON_RUNGS` in `src/skeleton/grid/solver.ts` and `stepOf` in
@@ -933,24 +941,27 @@ On the candidate walk the game writes no stamp
 
 Make every step's move one the pointer makes: a tap, a long press, a drag or
 an on-screen key. The midend never applies a step's move. `executeHint` asks
-`hintGesture` for the gesture
-([`hint-gesture.ts`](../src/engine/hint-gesture.ts)), sends it through
-`interpretMove`, and hands each move it makes to `hintKeepTrack`. A move off
+`hintGesture` ([`target-verb.ts`](../src/engine/target-verb.ts)) for the
+gesture, the game's `hint.gesture` or clicks on its `hint.targets`
+([`hint-gesture.ts`](../src/engine/hint-gesture.ts) has the actions), sends it through
+`interpretMove`, and hands each move it makes to `hint.keepTrack`. A move off
 the step, a key no on-screen control sends, or a gesture that ends before the
 step completes throws, and `hint-gesture.test.ts` walks every plan.
 
 - **A game that declares `targetVerbs` names its step's targets and no
-  more.** `verbClicks` (`target-verb.ts`, whose doc says how it picks the
-  button) clicks each target once with a button whose verb makes a move
-  `hintKeepTrack` keeps on the step. Once, because the midend refuses a move
-  off the step, so a target reached only by cycling through a value the step
-  does not want cannot be played. A step that presses a target several
-  times over values the step accepts, or drags, keeps its own gesture.
-  Exemplars: the skeleton's `hintGesture`, Pattern, Mosaic.
+  more**, as `hint.targets`. The engine's `verbClicks` (`target-verb.ts`,
+  whose doc says how it picks the button) clicks each target once with a
+  button whose verb makes a move `hint.keepTrack` keeps on the step. Once,
+  because the midend refuses a move off the step, so a target reached only
+  by cycling through a value the step does not want cannot be played. A step
+  that presses a target several times over values the step accepts, or
+  drags, writes `hint.gesture` instead, and may still call `verbClicks` for
+  its clicks (Loopy, Tents, Boats, Galaxies). Exemplars of targets: the grid
+  skeleton's `hintTargets`, Pattern, Mosaic.
 - **Aim at the middle of what the move changes**, computed from `ds.tileSize`
   with the helper the renderer uses to place the square or edge.
 - **A step the pointer makes in several moves is several actions.**
-  `hintKeepTrack` calls the earlier moves `"onTrack"` and the last
+  `hint.keepTrack` calls the earlier moves `"onTrack"` and the last
   `"completed"`.
 - **A mode is part of the gesture.** A step in notes mode presses
   `PENCIL_MODE_BUTTON`, plays the notes, and presses it again if the mode was
@@ -1241,9 +1252,9 @@ the same banner, so word a `solve` refusal as player-facing text.
 ## Judging the last move
 
 Check & save, on a board with nothing wrong, judges the player's last gesture
-through `Game.judgeMove(before, after, ui)` (spec `quick-save`, "Check & save
-judges the last move"). A game gets it from its plan builder and wires it as
-it wires `hint`; it decides nothing itself. The builder walks the ladder
+through `Game.hint.judgeMove(before, after, ui)` (spec `quick-save`, "Check &
+save judges the last move"). A game gets it from its plan builder, in the part
+it spreads into `hint`; it decides nothing itself. The builder walks the ladder
 **aimed** (`ladderWalk`'s `aim`), so a firing that makes one of the move's
 facts is taken first at any tier. A move made at the walk's first step is
 direct. A later one is chained, and its chain began at the earliest firing
@@ -1374,7 +1385,7 @@ name a chain's start, so a chained verdict names none.
 
 ## The cross-game guards
 
-A game enrolls in every cross-game hint guard by declaring `hint`, with no
+A game enrolls in every cross-game hint guard by writing its `hint`, with no
 line of its own: the guards iterate the list
 [`testing/hint-games.ts`](../src/engine/testing/hint-games.ts) derives from
 the registry. They are
@@ -1452,7 +1463,7 @@ and does not hang inside one `hint()` call.
 The limit is `DEFAULT_HINT_STEP_LIMIT`, well above what an honest fixpoint
 needs.
 
-### Stale plans and refreshHintStep
+### Stale plans and hint.refreshStep
 
 Implement `Game.refreshHintStep(step, state)` wherever a followed move or a
 preference change can settle part of a later step. Return the step with its
@@ -1512,7 +1523,7 @@ Exemplars: `src/skeleton/grid/skeleton-hint.test.ts`,
 
 - **Pin a position for every rung through `describeHintPins`**
   ([`testing/hint-positions.ts`](../src/engine/testing/hint-positions.ts)).
-  It requires a pin for each of the game's `hintRungs`, and `npm run hint-scan
+  It requires a pin for each of the game's `hint.rungs`, and `npm run hint-scan
   -- <the test file>` finds and writes them. Do not write a scan of your own
   ([`testing.md`](./testing.md) § "Pinning a hint's positions").
 - **A hint frame is a pin's, never a walk down a plan on a board kept by

@@ -259,7 +259,7 @@ describe("slide Solve", () => {
     if (!plan.ok) throw new Error("no plan");
     const moved = executeMove(dealt, plan.steps[0].move);
 
-    const solved = G.solve?.(dealt, moved);
+    const solved = G.solve(dealt, moved);
     expect(solved).toMatchObject({ ok: true, move: { restart: false } });
     if (solved?.ok) expect(status(executeMove(moved, solved.move))).toBe("solved");
 

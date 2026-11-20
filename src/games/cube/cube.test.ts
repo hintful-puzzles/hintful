@@ -352,10 +352,8 @@ describe("turning the board", () => {
 describe("cube Game wiring", () => {
   it("advertises the right capabilities", () => {
     expect(cubeGame.id).toBe("cube");
-    expect(cubeGame.solve).toBeDefined();
     expect(cubeGame.textFormat).toBeUndefined();
     expect(cubeGame.statusbarText).toBeDefined();
-    expect(cubeGame.hint).toBeDefined();
     expect(cubeGame.findMistakes).toBeUndefined();
   });
 
@@ -395,7 +393,7 @@ function interiorCube(): { state: CubeState; ui: CubeUi; ds: CubeDrawState } {
   const p: CubeParams = { solid: SolidType.Cube, d1: 4, d2: 4 };
   const area = gridArea(p.d1, p.d2, SOLIDS[p.solid].order);
   const state = newState(p, `${"0".repeat(Math.floor((area + 3) / 4))},5`);
-  const ds = newDrawState(state, cubeGame.preferredTileSize ?? 48);
+  const ds = newDrawState(state, cubeGame.preferredTileSize);
   return { state, ui: newUi(state), ds };
 }
 

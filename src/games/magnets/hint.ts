@@ -851,7 +851,7 @@ const sentence = (_spoken: unknown, { words }: MagnetsMarked): Sentence => words
  * has just decided. A contradiction on a board `findMistakes` called clean
  * would mean the deduction is unsound, not that the player went wrong.
  */
-export const { hint: magnetsHint, judgeMove: magnetsJudgeMove } = describedEdgeHint<
+export const { plan: magnetsHint, judgeMove: magnetsJudgeMove } = describedEdgeHint<
   MagnetsState,
   MagnetsMove,
   MagnetsHighlights,

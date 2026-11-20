@@ -56,7 +56,7 @@ const P = (over: Partial<RectParams> = {}): RectParams => ({
   ...over,
 });
 
-const TILE = rectGame.preferredTileSize ?? 24;
+const TILE = rectGame.preferredTileSize;
 // Pixel coordinate of a fractional grid coordinate.
 const px = (g: number) => g * TILE + BORDER;
 
@@ -64,7 +64,7 @@ const px = (g: number) => g * TILE + BORDER;
 function boardWithWrongWall(): { st: RectState; wrong: { x: number; y: number } } {
   const p = P();
   const st = newState(p, newDesc(p, randomNew("3")).desc);
-  const solveMove = rectGame.solve?.(st, st, undefined);
+  const solveMove = rectGame.solve(st, st, undefined);
   if (!solveMove?.ok) throw new Error("unsolvable");
   const solved = executeMove(st, solveMove.move);
   for (let y = 0; y < p.h; y++)
@@ -518,7 +518,7 @@ describe("rect resize", () => {
     const ui = rectGame.newUi(st);
     const ds = preferredDrawState(rectGame, st);
     const step = { move: goal, rung: "fit", explanation: "", highlights: null };
-    const [gesture] = rectGame.hintGesture?.(st, ui, ds, goal, step) ?? [];
+    const [gesture] = rectGame.hint.gesture?.(st, ui, ds, goal, step) ?? [];
     if (gesture?.kind !== "drag") throw new Error("no drag");
     rectGame.interpretMove(st, ui, ds, gesture.from, LEFT_BUTTON);
     rectGame.interpretMove(st, ui, ds, gesture.to, LEFT_DRAG);
@@ -537,7 +537,7 @@ describe("rect completion + solve", () => {
       const { desc, aux } = newDesc(p, randomNew(seed));
       const st = newState(p, desc);
       expect(status(st)).toBe("ongoing");
-      const solved = rectGame.solve?.(st, st, aux);
+      const solved = rectGame.solve(st, st, aux);
       expect(solved?.ok).toBe(true);
       if (solved?.ok) expect(status(executeMove(st, solved.move))).toBe("solved");
     }
@@ -547,7 +547,7 @@ describe("rect completion + solve", () => {
     const p = P();
     const { desc } = newDesc(p, randomNew("5"));
     const st = newState(p, desc);
-    const solved = rectGame.solve?.(st, st, undefined);
+    const solved = rectGame.solve(st, st, undefined);
     expect(solved?.ok).toBe(true);
     if (solved?.ok) expect(status(executeMove(st, solved.move))).toBe("solved");
   });
@@ -605,7 +605,7 @@ describe("rect findMistakes", () => {
     const p = P();
     const { desc } = newDesc(p, randomNew("3"));
     const st = newState(p, desc);
-    const solveMove = rectGame.solve?.(st, st, undefined);
+    const solveMove = rectGame.solve(st, st, undefined);
     if (!solveMove?.ok) throw new Error("unsolvable");
     const solved = executeMove(st, solveMove.move);
     expect(rectGame.findMistakes?.(solved) ?? []).toEqual([]);

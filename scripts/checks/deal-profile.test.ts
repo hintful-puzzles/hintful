@@ -31,7 +31,7 @@ import { Session } from "node:inspector/promises";
 import { expect, it } from "vitest";
 import { compiledPath } from "../../src/describe/sources.ts";
 import "../../src/games/index.ts";
-import type { Game } from "../../src/engine/game.ts";
+import { type Game, hasHint } from "../../src/engine/game.ts";
 import { paramsError } from "../../src/engine/params.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { getTsGame } from "../../src/engine/registry.ts";
@@ -153,11 +153,11 @@ function walk(game: AnyGame, boards: Board[]): number {
     let walked = 0;
     for (let round = 0; round < ROUNDS && walked < STEPS; round++) {
       if (game.status(state) !== "ongoing") break;
-      const res = game.hint?.(state, aux, ui);
+      const res = game.hint.plan(state, aux, ui);
       if (!res?.ok) break;
       for (const step of res.steps) {
         if (walked++ >= STEPS) break;
-        const live = game.refreshHintStep ? game.refreshHintStep(step, state) : step;
+        const live = game.hint.refreshStep ? game.hint.refreshStep(step, state) : step;
         if (live === null) continue;
         state = game.executeMove(state, live.move);
       }
@@ -180,7 +180,7 @@ it("reports the share of each described game's deals and walks in described code
     const row: string[] = [id];
     const notes: string[] = [];
     for (const phase of ["deal", "walk"] as const) {
-      if (phase === "walk" && typeof game.hint !== "function") {
+      if (phase === "walk" && !hasHint(game)) {
         row.push("no hint", "", "");
         continue;
       }

@@ -265,7 +265,7 @@ function stepOf(
  * the Easy techniques before the Normal ones, which is the order a hint wants
  * anyway.
  */
-export const { hint: tentsHint, judgeMove: tentsJudgeMove } = describedEdgeHint<
+export const { plan: tentsHint, judgeMove: tentsJudgeMove } = describedEdgeHint<
   TentsState,
   TentsMove,
   null,

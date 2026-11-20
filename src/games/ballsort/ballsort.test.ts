@@ -258,7 +258,7 @@ describe("Ball Sort's Solve", () => {
   it("shows the sorted board a shortest line ends on", () => {
     const p = decodeParams("4h4e2");
     const s = newState(p, G.newDesc(p, randomNew("solve")).desc);
-    const r = G.solve?.(s, s);
+    const r = G.solve(s, s);
     if (!r?.ok) throw new Error("no solve");
     expect(status(G.executeMove(s, r.move))).toBe("solved");
   });

@@ -433,7 +433,7 @@ fold away.
 ### Requirement: Hint: A ringed Undead cell shows no monster ahead of the move
 
 What the ring and the outline of a step stand for SHALL be the legend's
-(`hintMarks`). The cell a step places in SHALL be ringed with no pre-rendered
+(`hint.marks`). The cell a step places in SHALL be ringed with no pre-rendered
 monster glyph.
 
 #### Scenario: A sightline step on screen

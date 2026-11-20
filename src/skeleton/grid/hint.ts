@@ -60,6 +60,4 @@ const described = describedFiringHint<
   say: {},
 });
 
-export const { hint: skeletonHint, hintKeepTrack: skeletonKeepTrack } = described;
-export const skeletonRefreshHintStep = described.refreshHintStep;
-export const skeletonJudgeMove = described.judgeMove;
+export const skeletonHint = described.hint;

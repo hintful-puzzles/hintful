@@ -235,7 +235,7 @@ describe("an Unreasonable Palisade board", () => {
       expect(solveToBorders(p, state.clues), desc).toBeNull();
       expect(countDivisions(p, state.clues), desc).toBe(1);
       // And the answer Solve and the mistake check go by is that division.
-      const solved = palisadeGame.solve?.(state, state);
+      const solved = palisadeGame.solve(state, state);
       if (!solved?.ok) throw new Error(`${desc}: no answer found`);
       expect(status(palisadeGame.executeMove(state, solved.move)), desc).toBe("solved");
     }
@@ -331,9 +331,9 @@ describe("the hint on an Unreasonable Palisade board", () => {
     const followHint = (): number => {
       let steps = 0;
       for (
-        let plan = palisadeGame.hint?.(state);
+        let plan = palisadeGame.hint.plan(state);
         plan?.ok;
-        plan = palisadeGame.hint?.(state)
+        plan = palisadeGame.hint.plan(state)
       )
         for (const step of plan.steps) {
           state = palisadeGame.executeMove(state, step.move);

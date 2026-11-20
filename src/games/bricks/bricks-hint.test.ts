@@ -2,7 +2,7 @@
  * Bricks explained-hint tests. Each technique's step is pinned on crafted
  * minimal grids (one rule each), the plan's stop where only the search
  * progresses on a Tricky fixture, and the whole `hint()` — refusals, plan
- * stability, narration, `hintKeepTrack`, and the render overlay — on a real
+ * stability, narration, `hint.keepTrack`, and the render overlay — on a real
  * board.
  */
 import { describe, expect, it } from "vitest";
@@ -233,7 +233,7 @@ describe("bricks hint — where the search takes over", () => {
       });
     // The hint has nothing more to say here…
     expect(bricksGame.status(st)).toBe("ongoing");
-    expect(bricksGame.hint?.(st)).toEqual({ ok: false, error: DEDUCTION_EXHAUSTED });
+    expect(bricksGame.hint.plan(st)).toEqual({ ok: false, error: DEDUCTION_EXHAUSTED });
     // …while the search, beneath it, still finishes the board.
     expect(answerOf(st).kind).toBe("one");
   });
@@ -242,7 +242,7 @@ describe("bricks hint — where the search takes over", () => {
 describe("bricks hint — the full hint()", () => {
   it("returns a non-empty plan whose steps each explain a forced move", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const r = bricksGame.hint?.(st);
+    const r = bricksGame.hint.plan(st);
     expect(r?.ok).toBe(true);
     if (!r?.ok) throw new Error();
     expect(r.steps.length).toBeGreaterThan(0);
@@ -270,11 +270,11 @@ describe("bricks hint — the full hint()", () => {
 
   it("is recompute-stable: a hint after following step 0 continues the plan", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const r0 = bricksGame.hint?.(st);
+    const r0 = bricksGame.hint.plan(st);
     if (!r0?.ok) throw new Error();
     const s0 = r0.steps[0];
     const next = bricksGame.executeMove(st, s0.move);
-    const r1 = bricksGame.hint?.(next);
+    const r1 = bricksGame.hint.plan(next);
     if (!r1?.ok) throw new Error();
     // The recomputed plan's first step is what was step 1 before.
     expect(hl(r1.steps[0]).targets).toEqual(hl(r0.steps[1]).targets);
@@ -317,7 +317,7 @@ describe("bricks hint — a second mark on the board is named", () => {
           pool.splice(rnd(pool.length), 1).forEach((c) => {
             g[c] = sol[c] & COL_MASK;
           });
-        const r = bricksGame.hint?.({ ...st, grid: g });
+        const r = bricksGame.hint.plan({ ...st, grid: g });
         if (!r?.ok) continue;
         for (const step of r.steps) {
           checked++;
@@ -349,7 +349,7 @@ describe("bricks hint — a second mark on the board is named", () => {
 describe("bricks hint — refusals", () => {
   it("counts a solved board as finished, so the midend refuses it", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const solved = bricksGame.solve?.(st, st);
+    const solved = bricksGame.solve(st, st);
     if (!solved?.ok) throw new Error("solve refused");
     expect(bricksGame.status(bricksGame.executeMove(st, solved.move))).toBe("solved");
   });
@@ -413,16 +413,16 @@ describe("bricks hint — refusals", () => {
 describe("bricks hint — hintKeepTrack", () => {
   it("completes on the hinted move and is off for a different one", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const r = bricksGame.hint?.(st);
+    const r = bricksGame.hint.plan(st);
     if (!r?.ok) throw new Error();
     const step = r.steps[0];
-    expect(bricksGame.hintKeepTrack?.(step.move, step, st)).toBe("completed");
+    expect(bricksGame.hint.keepTrack(step.move, step, st)).toBe("completed");
     const { index, to } = decided(step);
     const wrong: BricksMove = {
       kind: "paint",
       cells: [{ index, to: to === "shade" ? "unshade" : "shade" }],
     };
-    expect(bricksGame.hintKeepTrack?.(wrong, step, st)).toBe("off");
+    expect(bricksGame.hint.keepTrack(wrong, step, st)).toBe("off");
   });
 });
 
@@ -465,7 +465,7 @@ describe("bricks hint — rendering (tier 2.5)", () => {
     );
     if (target === undefined)
       throw new Error("no cell with a right and lower neighbor");
-    const planned = bricksGame.hint?.(state);
+    const planned = bricksGame.hint.plan(state);
     if (!planned?.ok) throw new Error("the fixture has no hint");
     const step = {
       ...planned.steps[0],
@@ -478,7 +478,7 @@ describe("bricks hint — rendering (tier 2.5)", () => {
         value: String,
       }),
     };
-    const ts = bricksGame.preferredTileSize ?? 32;
+    const ts = bricksGame.preferredTileSize;
     const size = bricksGame.computeSize(FIX_PARAMS, ts);
     const palette = bricksGame.colors(DEFAULT_BACKGROUND);
     const frame = (

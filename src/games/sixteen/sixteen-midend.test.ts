@@ -396,11 +396,12 @@ describe("Sixteen midend integration — executeHint auto-play", () => {
     let hintCalls = 0;
     const countingGame: typeof sixteenGame = {
       ...sixteenGame,
-      hint: (s) => {
-        hintCalls += 1;
-        const base = sixteenGame.hint;
-        if (!base) throw new Error("sixteenGame.hint missing");
-        return base(s);
+      hint: {
+        ...sixteenGame.hint,
+        plan: (s) => {
+          hintCalls += 1;
+          return sixteenGame.hint.plan(s);
+        },
       },
     };
     const h = harness(countingGame);

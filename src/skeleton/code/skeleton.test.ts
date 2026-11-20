@@ -165,7 +165,7 @@ describe("the answer row", () => {
 describe("the end", () => {
   it("the solve move wins", () => {
     const { state } = start();
-    const solved = skeletonGame.solve?.(state, state);
+    const solved = skeletonGame.solve(state, state);
     if (!solved?.ok) throw new Error("expected the code");
     expect(skeletonGame.status(skeletonGame.executeMove(state, solved.move))).toBe(
       "solved",

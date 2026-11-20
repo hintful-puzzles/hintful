@@ -9,8 +9,7 @@
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import type { Game, HintStep, SolveResult } from "../../engine/game.ts";
-import type { PointerAction } from "../../engine/hint-gesture.ts";
+import type { Game, SolveResult } from "../../engine/game.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
@@ -20,17 +19,10 @@ import {
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSkeletonDesc } from "./generator.ts";
-import {
-  type SkeletonHint,
-  skeletonHint,
-  skeletonJudgeMove,
-  skeletonKeepTrack,
-  skeletonRefreshHintStep,
-} from "./hint.ts";
+import { type SkeletonHint, skeletonHint } from "./hint.ts";
 import {
   border,
   colors,
@@ -164,26 +156,12 @@ const difficulty: DifficultyContract<SkeletonParams> = {
 
 // --- the hint's gesture -----------------------------------------------------
 
-/** A click on each square the step decides, with the button that marks it
- * the way the step asks. */
-function hintGesture(
-  state: SkeletonState,
-  ui: SkeletonUi,
-  ds: SkeletonDrawState,
-  move: SkeletonMove,
-  step: HintStep<SkeletonMove, SkeletonHint>,
-): readonly PointerAction[] {
+/** The squares the step decides: the engine clicks each with the verb whose
+ * button marks it the way the step asks. */
+function hintTargets(state: SkeletonState, move: SkeletonMove): Point[] {
   if (move.kind !== "mark") return [];
   const { w } = state;
-  return verbClicks(
-    targetVerbs,
-    { executeMove, hintKeepTrack: skeletonKeepTrack },
-    state,
-    ui,
-    ds,
-    step,
-    move.cells.map(({ index }) => ({ x: index % w, y: (index / w) | 0 })),
-  );
+  return move.cells.map(({ index }) => ({ x: index % w, y: (index / w) | 0 }));
 }
 
 export const skeletonGame: Game<
@@ -226,20 +204,18 @@ export const skeletonGame: Game<
     },
   ],
   textFormat,
-
-  hint: skeletonHint,
-  judgeMove: skeletonJudgeMove,
-  hintRungs: SKELETON_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the squares the step decides. The sentence says what they must be.",
-      outline: "the numbers it reasons from.",
-      stripes: "the squares two numbers share, where a step reads them together.",
+  hint: {
+    ...skeletonHint,
+    rungs: SKELETON_RUNGS,
+    marks: {
+      roles: {
+        ring: "the squares the step decides. The sentence says what they must be.",
+        outline: "the numbers it reasons from.",
+        stripes: "the squares two numbers share, where a step reads them together.",
+      },
     },
+    targets: hintTargets,
   },
-  hintKeepTrack: skeletonKeepTrack,
-  refreshHintStep: skeletonRefreshHintStep,
-  hintGesture,
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

@@ -6,7 +6,7 @@
  * every game whose hinted move animates the two can disagree: the press shows
  * the step in flight, and the settle then hides it, leaving the control armed
  * to apply a step the player never saw. `midend.test.ts` pins the mechanism on
- * a fake game; this walks the real ones, whose `refreshHintStep` and win flash
+ * a fake game; this walks the real ones, whose `hint.refreshStep` and win flash
  * take part in the settle.
  */
 import { describe, expect, it } from "vitest";

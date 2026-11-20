@@ -104,7 +104,7 @@ describe("executeMove", () => {
 
   it("solve plays the answer as the next guess, which wins", () => {
     const { state } = freshGame();
-    const res = guessGame.solve?.(state, state);
+    const res = guessGame.solve(state, state);
     if (!res?.ok) throw new Error("Guess's Solve refused a fresh board");
     const next = guessGame.executeMove(state, res.move);
     expect(next.guesses[0].pegs).toEqual(state.solution);
@@ -561,7 +561,7 @@ describe("guess encodeUi / decodeUi", () => {
 
     const restored = guessGame.newUi(state);
     guessGame.changedState?.(restored, null, state);
-    guessGame.decodeUi?.(restored, guessGame.encodeUi?.(ui) ?? "", state);
+    guessGame.uiCodec?.decode(restored, guessGame.uiCodec?.encode(ui) ?? "", state);
     expect(restored.entries).toEqual(ui.entries);
     expect(restored.holds).toEqual(ui.holds);
     // And the restored cursor is where the next color goes, not wherever it
@@ -571,7 +571,7 @@ describe("guess encodeUi / decodeUi", () => {
 
   it("drops a peg a save claims that this game has no color for", () => {
     const { state, ui } = freshGame("decode-ui-junk");
-    guessGame.decodeUi?.(ui, "3,99,-1,2_", state);
+    guessGame.uiCodec?.decode(ui, "3,99,-1,2_", state);
     expect(ui.entries).toEqual([3, 0, 0, 2]);
     expect(ui.holds).toEqual([false, false, false, true]);
   });

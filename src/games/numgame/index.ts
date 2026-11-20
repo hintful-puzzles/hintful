@@ -295,12 +295,13 @@ export const numgameGame: Game<
   hasNoSolution,
   difficulty,
   textFormat,
-
-  hint: numgameHint,
-  hintRungs: NUMGAME_RUNGS,
-  hintMarks: HINT_MARKS,
-  hintKeepTrack: numgameKeepTrack,
-  hintGesture,
+  hint: {
+    plan: numgameHint,
+    rungs: NUMGAME_RUNGS,
+    marks: HINT_MARKS,
+    keepTrack: numgameKeepTrack,
+    gesture: hintGesture,
+  },
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

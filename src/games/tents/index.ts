@@ -514,41 +514,43 @@ export const tentsGame: Game<
   difficulty,
   findMistakes,
   clearMistakes,
-  hint: tentsHint,
-  judgeMove: tentsJudgeMove,
-  hintRungs: TENTS_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the squares the step decides. When it asks for a link, the tent and the tree are ringed as one shape, and the link is drawn between them inside the ring, in its color.",
-      outline:
-        "what it reasons from: a tree, or a tent that already belongs to another tree, and the number of the row or column it counts with, which is shown in the hint's color.",
-      stripes: 'the row or column the sentence calls "this row" or "this column".',
+  hint: {
+    plan: tentsHint,
+    judgeMove: tentsJudgeMove,
+    rungs: TENTS_RUNGS,
+    marks: {
+      roles: {
+        ring: "the squares the step decides. When it asks for a link, the tent and the tree are ringed as one shape, and the link is drawn between them inside the ring, in its color.",
+        outline:
+          "what it reasons from: a tree, or a tent that already belongs to another tree, and the number of the row or column it counts with, which is shown in the hint's color.",
+        stripes: 'the row or column the sentence calls "this row" or "this column".',
+      },
     },
-  },
-  hintKeepTrack: tentsKeepTrack,
-  hintGesture(state, ui, ds, m, step): readonly PointerAction[] {
-    switch (m.type) {
-      case "cells":
-        return verbClicks(
-          targetVerbs,
-          { executeMove, hintKeepTrack: tentsKeepTrack },
-          state,
-          ui,
-          ds,
-          step,
-          m.cells.map(({ x, y }) => ({ x, y })),
-        );
-      // The link drag, from the square to its tree.
-      case "link": {
-        const at = (x: number, y: number) => ({
-          x: cellCenter(x, ds.tileSize),
-          y: cellCenter(y, ds.tileSize),
-        });
-        return [drag(at(m.x, m.y), at(m.x + DX(m.d), m.y + DY(m.d)))];
+    keepTrack: tentsKeepTrack,
+    gesture(state, ui, ds, m, step): readonly PointerAction[] {
+      switch (m.type) {
+        case "cells":
+          return verbClicks(
+            targetVerbs,
+            { executeMove, keepTrack: tentsKeepTrack },
+            state,
+            ui,
+            ds,
+            step,
+            m.cells.map(({ x, y }) => ({ x, y })),
+          );
+        // The link drag, from the square to its tree.
+        case "link": {
+          const at = (x: number, y: number) => ({
+            x: cellCenter(x, ds.tileSize),
+            y: cellCenter(y, ds.tileSize),
+          });
+          return [drag(at(m.x, m.y), at(m.x + DX(m.d), m.y + DY(m.d)))];
+        }
+        default:
+          return [];
       }
-      default:
-        return [];
-    }
+    },
   },
 
   textFormat,

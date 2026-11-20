@@ -27,6 +27,7 @@
  */
 
 import {
+  type Game,
   type HintStep,
   type HintTrackVerdict,
   UI_UPDATE,
@@ -651,7 +652,7 @@ export function interpretTargetVerbs<S, U extends TargetVerbUi, D, T, M>(
 /**
  * The gesture that applies a button's verb at each of `targets`, `times`
  * presses apiece: what a hint step of a target-verb game asks the pointer for
- * (`Game.hintGesture`). A key-only verb's step asks for its route instead
+ * (`Game.hint.gesture`). A key-only verb's step asks for its route instead
  * ({@link routeGesture}).
  */
 export function verbGesture<S, U, D, T, M>(
@@ -674,7 +675,7 @@ export function verbGesture<S, U, D, T, M>(
 /**
  * The clicks that make a hint step's move, one at each of `targets` in turn:
  * on each, the button (left, then right, where both do as well) whose verb
- * makes a move the game's `hintKeepTrack` keeps on the step, and that gets
+ * makes a move the hint's `keepTrack` keeps on the step, and that gets
  * furthest with it. That is the judge the midend plays
  * the gesture against, so the gesture completes the step or the hint walk
  * says why; and the moves are the verbs', so it cannot ask a button for what
@@ -691,7 +692,7 @@ export function verbGesture<S, U, D, T, M>(
  * game whose clicks carry more than their target says when one is `settled`
  * and it is skipped.
  *
- * The step is judged on a copy, since `hintKeepTrack` may shrink it, and the
+ * The step is judged on a copy, since `keepTrack` may shrink it, and the
  * verbs see a copy of the `Ui`, since a verb may keep a tally there. A target no button reaches is a
  * defect in the game's hint, and throws.
  */
@@ -699,11 +700,7 @@ export function verbClicks<S, U, D, T, M, H>(
   verbs: Verbs<S, U, D, T, M>,
   rules: {
     readonly executeMove: (state: S, move: M) => S;
-    readonly hintKeepTrack: (
-      move: M,
-      step: HintStep<M, H>,
-      state: S,
-    ) => HintTrackVerdict;
+    readonly keepTrack: (move: M, step: HintStep<M, H>, state: S) => HintTrackVerdict;
     /** Whether `target` is already as the step wants it on `state`. */
     readonly settled?: (state: S, target: T) => boolean;
   },
@@ -731,7 +728,7 @@ export function verbClicks<S, U, D, T, M, H>(
       const move = verbs[button]?.apply(board, target, scratch) ?? null;
       if (move === null || move === UI_UPDATE) continue;
       const trial = { ...judged, move: structuredClone(judged.move) };
-      const verdict = rules.hintKeepTrack(move, trial, board);
+      const verdict = rules.keepTrack(move, trial, board);
       if (verdict === "off") continue;
       const shrunk = JSON.stringify(trial.move) !== JSON.stringify(judged.move);
       found.push({
@@ -761,6 +758,40 @@ export function verbClicks<S, U, D, T, M, H>(
     if (found.verdict === "completed") return out;
   }
   return out;
+}
+
+/** What {@link hintGesture} reads off a game. */
+type Gesturing<S, U, D, M, H> = Pick<
+  Game<unknown, S, M, U, D, unknown, H>,
+  "id" | "hint" | "targetVerbs" | "executeMove"
+>;
+
+/**
+ * How the pointer makes `step`'s move from `state`: the game's own gesture,
+ * or, for a hint that names its move's targets, a click on each through the
+ * game's verbs ({@link verbClicks}). What the midend plays a step by, and what
+ * a guard plays it by.
+ */
+export function hintGesture<S, U, D, M, H>(
+  game: Gesturing<S, U, D, M, H>,
+  state: S,
+  ui: U,
+  ds: D,
+  step: HintStep<M, H>,
+): readonly PointerAction[] {
+  const { hint } = game;
+  if (hint.gesture) return hint.gesture(state, ui, ds, step.move, step);
+  if (!hint.targets || !game.targetVerbs)
+    throw new Error(`${game.id}: a hint names its gesture, or its targets and verbs`);
+  return verbClicks(
+    game.targetVerbs,
+    { executeMove: game.executeMove, keepTrack: hint.keepTrack },
+    state,
+    ui,
+    ds,
+    step,
+    hint.targets(state, step.move, step),
+  );
 }
 
 /**

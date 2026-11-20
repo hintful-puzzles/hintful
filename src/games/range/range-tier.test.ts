@@ -242,7 +242,7 @@ describe("an Unreasonable Range board", () => {
           (state.clues[n - 1 - i] as number) > 0,
         );
       // And the answer Solve and the mistake check go by solves it.
-      const solved = rangeGame.solve?.(state, state);
+      const solved = rangeGame.solve(state, state);
       if (!solved?.ok) throw new Error(`${desc}: no answer found`);
       expect(rangeGame.status(rangeGame.executeMove(state, solved.move)), desc).toBe(
         "solved",
@@ -397,7 +397,11 @@ describe("the hint on an Unreasonable Range board", () => {
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
       let steps = 0;
-      for (let plan = rangeGame.hint?.(state); plan?.ok; plan = rangeGame.hint?.(state))
+      for (
+        let plan = rangeGame.hint.plan(state);
+        plan?.ok;
+        plan = rangeGame.hint.plan(state)
+      )
         for (const step of plan.steps) {
           state = rangeGame.executeMove(state, step.move);
           me.playMoves([step.move]);

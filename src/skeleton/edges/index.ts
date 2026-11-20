@@ -139,20 +139,21 @@ export const skeletonGame: Game<
       mistakes.map((m) => m.edge),
     ),
   textFormat,
-
-  hint: skeletonHint,
-  judgeMove: skeletonJudgeMove,
-  hintRungs: SKELETON_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the edges the step decides, drawn as the line or cross it asks for.",
-      outline:
-        "the squares it reasons from, and the edges it tries lines on, drawn thin.",
+  hint: {
+    plan: skeletonHint,
+    judgeMove: skeletonJudgeMove,
+    rungs: SKELETON_RUNGS,
+    marks: {
+      roles: {
+        ring: "the edges the step decides, drawn as the line or cross it asks for.",
+        outline:
+          "the squares it reasons from, and the edges it tries lines on, drawn thin.",
+      },
     },
+    keepTrack: skeletonKeepTrack,
+    gesture: (state, _ui, ds, move) =>
+      move.kind === "edges" ? input.hintGesture(state, ds, move.changes) : [],
   },
-  hintKeepTrack: skeletonKeepTrack,
-  hintGesture: (state, _ui, ds, move) =>
-    move.kind === "edges" ? input.hintGesture(state, ds, move.changes) : [],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

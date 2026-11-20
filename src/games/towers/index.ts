@@ -690,39 +690,41 @@ export const towersGame: Game<
 
   solve,
   difficulty,
-  hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
-  judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
-  hintRungs: TOWERS_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the cell the step fills in with a height.",
-      strike:
-        "the heights the step crosses out of the pencil marks, crossed through in their own color.",
-      outline:
-        "what the step reasons from: “this cell”, whose heights it crosses out, the clue it counts, in its slot beside the grid, the tower just placed, the cells of a set, or “the middle cell” a step weighs and the cells it reads.",
-      stripes:
-        "the line the sentence names: the row or column a clue sees along, through the clue slots at both its ends. Or the several rows or columns it names together, such as “these 2 columns”, where one height fits only the outlined cells.",
+  hint: {
+    plan: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+    judgeMove: (before, after, ui) =>
+      candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
+    rungs: TOWERS_RUNGS,
+    marks: {
+      roles: {
+        ring: "the cell the step fills in with a height.",
+        strike:
+          "the heights the step crosses out of the pencil marks, crossed through in their own color.",
+        outline:
+          "what the step reasons from: “this cell”, whose heights it crosses out, the clue it counts, in its slot beside the grid, the tower just placed, the cells of a set, or “the middle cell” a step weighs and the cells it reads.",
+        stripes:
+          "the line the sentence names: the row or column a clue sees along, through the clue slots at both its ends. Or the several rows or columns it names together, such as “these 2 columns”, where one height fits only the outlined cells.",
+      },
     },
+    keepTrack: (m, step, state) =>
+      keepCandidateHintTrack(m, step, state.pencil, state.w),
+    // A cell's middle is its own in 3D too: a neighbor's tower leans at most an
+    // eighth of a tile (`x3d`) sideways into it.
+    gesture: (s, ui, ds, m) => {
+      const ts = ds.tileSize;
+      const mid = (v: number) => coord(v, ts) + ((ts / 2) | 0);
+      return candidateGesture(
+        m,
+        ui,
+        (x, y) => ({ x: mid(x), y: mid(y) }),
+        digitKeyCode,
+        undefined,
+        markAll(s),
+      );
+    },
+    refreshStep: (step, state) =>
+      refreshCandidateHintStep(step, state.grid, state.pencil, state.w),
   },
-  hintKeepTrack: (m, step, state) =>
-    keepCandidateHintTrack(m, step, state.pencil, state.w),
-  // A cell's middle is its own in 3D too: a neighbor's tower leans at most an
-  // eighth of a tile (`x3d`) sideways into it.
-  hintGesture: (s, ui, ds, m) => {
-    const ts = ds.tileSize;
-    const mid = (v: number) => coord(v, ts) + ((ts / 2) | 0);
-    return candidateGesture(
-      m,
-      ui,
-      (x, y) => ({ x: mid(x), y: mid(y) }),
-      digitKeyCode,
-      undefined,
-      markAll(s),
-    );
-  },
-  refreshHintStep: (step, state) =>
-    refreshCandidateHintStep(step, state.grid, state.pencil, state.w),
   findMistakes,
   clearMistakes: (_state, mistakes) => clearEntries(setMoves, mistakes),
   revealOne: (state, solved) => revealEntry(setMoves, state.grid, solved.grid, state.w),

@@ -267,37 +267,39 @@ export const adjacentGame: Game<
 
   solve,
   difficulty: edgeClueDifficulty(BARS),
-  hint,
-  judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps, adjacent.NAMES),
-  hintRungs: ADJACENT_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the cell the step fills in with a number.",
-      strike: "the pencil marks the step crosses out.",
-      outline:
-        'what the step reasons from: the two cells either side of a bar, or of no bar at all (the one whose marks are struck, and "its neighbor"), the cells that already account for the numbers being crossed out, the number just placed, or "the middle cell" a step weighs and the cells it reads.',
-      stripes:
-        'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
+  hint: {
+    plan: hint,
+    judgeMove: (before, after, ui) =>
+      candidateJudge(before, after, ui ?? newUi(before), buildSteps, adjacent.NAMES),
+    rungs: ADJACENT_RUNGS,
+    marks: {
+      roles: {
+        ring: "the cell the step fills in with a number.",
+        strike: "the pencil marks the step crosses out.",
+        outline:
+          'what the step reasons from: the two cells either side of a bar, or of no bar at all (the one whose marks are struck, and "its neighbor"), the cells that already account for the numbers being crossed out, the number just placed, or "the middle cell" a step weighs and the cells it reads.',
+        stripes:
+          'the row or column the sentence names: "in this row". Or the several it names together, such as "these 2 columns", where one number fits only the outlined cells.',
+      },
     },
+    keepTrack: hintKeepTrack,
+    // The middle of a cell, clear of the gaps a press there would read as a
+    // clue's spent flag.
+    gesture: (s, ui, ds, m) => {
+      const ts = ds.tileSize;
+      const mid = (v: number) => coord(v, ts) + ((ts / 2) | 0);
+      const keys = edgeClueKeys(s.order);
+      return candidateGesture(
+        m,
+        ui,
+        (x, y) => ({ x: mid(x), y: mid(y) }),
+        (n) => keys[n - 1].button,
+        undefined,
+        markAll(s),
+      );
+    },
+    refreshStep: refreshHintStep,
   },
-  hintKeepTrack,
-  // The middle of a cell, clear of the gaps a press there would read as a
-  // clue's spent flag.
-  hintGesture: (s, ui, ds, m) => {
-    const ts = ds.tileSize;
-    const mid = (v: number) => coord(v, ts) + ((ts / 2) | 0);
-    const keys = edgeClueKeys(s.order);
-    return candidateGesture(
-      m,
-      ui,
-      (x, y) => ({ x: mid(x), y: mid(y) }),
-      (n) => keys[n - 1].button,
-      undefined,
-      markAll(s),
-    );
-  },
-  refreshHintStep,
   findMistakes,
   clearMistakes,
   revealOne,

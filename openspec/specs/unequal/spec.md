@@ -211,7 +211,7 @@ answers no question its regions already settle"), departing only in the
 reading it starts on. Unequal SHALL supply its sign technique as a rung over
 the notes, saying its two ends and the bound each is held to, and the words
 of its sign deductions, stated below. What its marks stand for SHALL be the
-legend's (`hintMarks`).
+legend's (`hint.marks`).
 
 #### Scenario: A single on an Unequal board
 

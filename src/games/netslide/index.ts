@@ -326,19 +326,20 @@ export const netslideGame: Game<
     return { ok: true, move: { type: "solve", tiles: Array.from(tiles) } };
   },
   hasNoSolution,
-
-  hint,
-  hintRungs: NETSLIDE_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "what the step decides: the piece to slide, and the arrow to click, which is filled blue. The words give the way it slides (left, right, up or down), say whether the piece then belongs there or is being set up for a later move, and name the piece by its shape: a *loose end*, a *straight*, a *corner*, a *T-piece* or a *cross*.",
+  hint: {
+    plan: hint,
+    rungs: NETSLIDE_RUNGS,
+    marks: {
+      roles: {
+        ring: "what the step decides: the piece to slide, and the arrow to click, which is filled blue. The words give the way it slides (left, right, up or down), say whether the piece then belongs there or is being set up for a later move, and name the piece by its shape: a *loose end*, a *straight*, a *corner*, a *T-piece* or a *cross*.",
+      },
     },
-  },
-  hintKeepTrack,
-  hintGesture(s, ui, ds, m) {
-    if (m.type !== "slide") return [];
-    const { arrowX, arrowY } = arrowFor(s, m);
-    return verbGesture(targetVerbs, s, ds, ui, [{ x: arrowX, y: arrowY }]);
+    keepTrack: hintKeepTrack,
+    gesture(s, ui, ds, m) {
+      if (m.type !== "slide") return [];
+      const { arrowX, arrowY } = arrowFor(s, m);
+      return verbGesture(targetVerbs, s, ds, ui, [{ x: arrowX, y: arrowY }]);
+    },
   },
 
   statusbarText: (s) => {

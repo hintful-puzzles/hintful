@@ -155,6 +155,7 @@ describe("a game's own description error", () => {
 describe("the engine's verdict on a desc", () => {
   // A game whose parse accepts only "ok", and whose build has a bug on "bug".
   const game = {
+    paramConfig: [],
     newState(_p: null, desc: string): string {
       const value = descValue<string>(
         desc === "ok" || desc === "bug"
@@ -225,6 +226,7 @@ describe("a board the game's solver cannot solve", () => {
 
   it("is asked of an untiered game through finishesByDeduction", () => {
     const untiered = (finishesByDeduction?: (s: string) => boolean) => ({
+      paramConfig: [],
       newState: (_p: null, desc: string) => desc,
       ...(finishesByDeduction ? { finishesByDeduction } : {}),
     });

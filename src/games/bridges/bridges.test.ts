@@ -469,7 +469,7 @@ describe("bridges solve + findMistakes", () => {
 
   it("solve() produces a move that completes a freshly generated board", () => {
     const { state } = genState(0, "bridges-solve-easy");
-    const res = bridgesGame.solve?.(state, state);
+    const res = bridgesGame.solve(state, state);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const solved = bridgesGame.executeMove(state, res.move);
@@ -478,7 +478,7 @@ describe("bridges solve + findMistakes", () => {
 
   it("a fully solved board has no mistakes; an extra bridge is flagged", () => {
     const { state } = genState(0, "bridges-mistake-easy");
-    const res = bridgesGame.solve?.(state, state);
+    const res = bridgesGame.solve(state, state);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const solved = bridgesGame.executeMove(state, res.move);
@@ -511,7 +511,7 @@ describe("bridges solve + findMistakes", () => {
 
   it("a limit below the solution's bridges is flagged, the cross included", () => {
     const { state } = genState(2, "bridges-mistake-limit");
-    const res = bridgesGame.solve?.(state, state);
+    const res = bridgesGame.solve(state, state);
     if (!res?.ok) throw new Error("the generated board did not solve");
     const solved = bridgesGame.executeMove(state, res.move);
     // Every right/down span, by what the solution puts on it.
@@ -543,7 +543,7 @@ describe("bridges solve + findMistakes", () => {
     const limited = bridgesGame.executeMove(state, {
       ops: [{ op: "C", ...single.span, n: 1 }],
     });
-    const again = bridgesGame.solve?.(state, limited);
+    const again = bridgesGame.solve(state, limited);
     if (!again?.ok) throw new Error("a correct limit stopped the solve");
     const after = bridgesGame.executeMove(limited, again.move);
     expect(bridgesGame.status(after)).toBe("solved");
@@ -608,7 +608,7 @@ describe("bridges render smoke (tier 2.5)", () => {
     const p = BRIDGES_PRESETS[0];
     const { desc } = newBridgesDesc(p, randomNew("bridges-flash"));
     const state = bridgesGame.newState(p, desc);
-    const res = bridgesGame.solve?.(state, state);
+    const res = bridgesGame.solve(state, state);
     if (!res?.ok) throw new Error("the board does not solve");
     const solved = bridgesGame.executeMove(state, res.move);
     const palette = bridgesGame.colors([0.9, 0.9, 0.9]);

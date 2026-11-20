@@ -150,7 +150,7 @@ const pinned = describeHintPins({
 });
 
 function plan(s: MinesState): Step[] {
-  const r = minesGame.hint?.(s);
+  const r = minesGame.hint.plan(s);
   if (!r?.ok) throw new Error(`no plan: ${r?.error}`);
   return r.steps;
 }
@@ -161,7 +161,7 @@ function walk(s0: MinesState): { steps: [MinesState, Step][]; end: MinesState } 
   const steps: [MinesState, Step][] = [];
   let s = s0;
   for (let round = 0; round < 60 && minesGame.status(s) !== "solved"; round++) {
-    const r = minesGame.hint?.(s);
+    const r = minesGame.hint.plan(s);
     if (!r?.ok) break;
     for (const step of r.steps) {
       steps.push([s, step]);
@@ -217,7 +217,7 @@ describe("Mines hint: the start of a board", () => {
     const i = mines.indexOf(1);
     const dead = minesGame.executeMove(s1, open(i % 9, Math.floor(i / 9)));
     expect(dead.dead).toBe(true);
-    expect(minesGame.hint?.(dead)).toEqual({ ok: false, error: DEAD_BOARD });
+    expect(minesGame.hint.plan(dead)).toEqual({ ok: false, error: DEAD_BOARD });
   });
 });
 
@@ -298,9 +298,9 @@ describe("Mines hint: following a step", () => {
     if (!step.highlights) throw new Error("unreachable");
     const t = step.highlights.targets[0];
     const copy = (): Step => ({ ...step, move: structuredClone(step.move) });
-    expect(minesGame.hintKeepTrack?.(open(t.x, t.y), copy(), s1)).not.toBe("off");
+    expect(minesGame.hint.keepTrack(open(t.x, t.y), copy(), s1)).not.toBe("off");
     const flag: MinesMove = { type: "ops", ops: [{ op: "F", x: t.x, y: t.y }] };
-    expect(minesGame.hintKeepTrack?.(flag, copy(), s1)).toBe("off");
+    expect(minesGame.hint.keepTrack(flag, copy(), s1)).toBe("off");
   });
 
   // Judged "off", the step that finished the board could not be played.
@@ -310,7 +310,7 @@ describe("Mines hint: following a step", () => {
     expect(minesGame.status(end)).toBe("solved");
     expect(flagged(end)).toBeGreaterThan(flagged(s));
     const copy: Step = { ...last, move: structuredClone(last.move) };
-    expect(minesGame.hintKeepTrack?.(last.move, copy, s)).toBe("completed");
+    expect(minesGame.hint.keepTrack(last.move, copy, s)).toBe("completed");
   });
 
   it("drops the targets the board already shows done", () => {
@@ -321,7 +321,7 @@ describe("Mines hint: following a step", () => {
       type: "ops",
       ops: [{ op: "F", x: first.x, y: first.y }],
     });
-    const refreshed = minesGame.refreshHintStep?.(step, after);
+    const refreshed = minesGame.hint.refreshStep?.(step, after);
     expect(refreshed?.highlights?.targets).toEqual(rest);
     expect(refreshed?.explanation).toBe(refreshed?.words?.text);
   });
@@ -338,7 +338,10 @@ describe("Mines hint: a board that needs a guess", () => {
         expect(loadVerdict(minesGame, p, desc)).toBeNull();
         continue;
       }
-      expect(minesGame.hint?.(end)).toEqual({ ok: false, error: DEDUCTION_EXHAUSTED });
+      expect(minesGame.hint.plan(end)).toEqual({
+        ok: false,
+        error: DEDUCTION_EXHAUSTED,
+      });
       expect(loadVerdict(minesGame, p, desc)).toBe(DESC_NOT_DEDUCIBLE);
       refused++;
     }

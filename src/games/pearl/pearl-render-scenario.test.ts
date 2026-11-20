@@ -187,7 +187,7 @@ describe("Pearl render scenarios", () => {
 
 describe("pearl win flash", () => {
   const start = newState(P, DESC);
-  const answer = pearlGame.solve?.(start, start);
+  const answer = pearlGame.solve(start, start);
   if (!answer?.ok) throw new Error("the fixture does not solve");
   const state = pearlGame.executeMove(start, answer.move);
   const { w } = state;

@@ -17,16 +17,9 @@ import {
   rulingOut,
   squareGrid,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
-import {
-  type MosaicHint,
-  mosaicHint,
-  mosaicJudgeMove,
-  mosaicKeepTrack,
-  mosaicRefreshHintStep,
-} from "./hint.ts";
+import { type MosaicHint, mosaicHint } from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -198,31 +191,21 @@ export const mosaicGame: Game<
   findMistakes,
   clearMistakes,
   revealOne,
-
-  hint: mosaicHint,
-  judgeMove: mosaicJudgeMove,
-  hintRungs: MOSAIC_RUNGS,
-  hintKeepTrack: mosaicKeepTrack,
-  refreshHintStep: mosaicRefreshHintStep,
-  // A tap on each of the step's squares: a tap cycles a filled square too,
-  // where a drag would paint only empty ones.
-  hintGesture: (state, ui, ds, m, step) =>
-    m.type === "fill"
-      ? verbClicks(
-          targetVerbs,
-          { executeMove, hintKeepTrack: mosaicKeepTrack },
-          state,
-          ui,
-          ds,
-          step,
-          m.cells.map((i) => ({ x: i % state.width, y: Math.floor(i / state.width) })),
-        )
-      : [],
-  hintMarks: {
-    roles: {
-      ring: `the squares the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,
-      outline:
-        "the block of each number the step reasons from: the number's own square and the eight around it. The number itself is circled.",
+  hint: {
+    ...mosaicHint,
+    rungs: MOSAIC_RUNGS,
+    // A tap on each of the step's squares: a tap cycles a filled square too,
+    // where a drag would paint only empty ones.
+    targets: (state, m) =>
+      m.type === "fill"
+        ? m.cells.map((i) => ({ x: i % state.width, y: Math.floor(i / state.width) }))
+        : [],
+    marks: {
+      roles: {
+        ring: `the squares the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,
+        outline:
+          "the block of each number the step reasons from: the number's own square and the eight around it. The number itself is circled.",
+      },
     },
   },
 

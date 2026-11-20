@@ -594,13 +594,13 @@ describe("mines supersede + midend", () => {
   it("encodeUi / decodeUi round-trips deaths, and reads an older save's C", () => {
     const ui = minesGame.newUi({} as never);
     ui.deaths = 3;
-    const enc = minesGame.encodeUi?.(ui) ?? "";
+    const enc = minesGame.uiCodec?.encode(ui) ?? "";
     expect(enc).toBe("D3");
     const ui2 = minesGame.newUi({} as never);
-    minesGame.decodeUi?.(ui2, enc, {} as never);
+    minesGame.uiCodec?.decode(ui2, enc, {} as never);
     expect(ui2.deaths).toBe(3);
     const ui3 = minesGame.newUi({} as never);
-    minesGame.decodeUi?.(ui3, "D4C", {} as never);
+    minesGame.uiCodec?.decode(ui3, "D4C", {} as never);
     expect(ui3.deaths).toBe(4);
   });
 });

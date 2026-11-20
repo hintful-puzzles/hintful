@@ -65,10 +65,10 @@ const described = describedFiringHint<
   say: {},
 });
 
-export const starbattleHint = described.hint;
+export const starbattleHint = described.hint.plan;
 export const starbattleRulesOut = described.rulesOut;
-export const starbattleRefreshHintStep = described.refreshHintStep;
-export const starbattleJudgeMove = described.judgeMove;
+export const starbattleRefreshHintStep = described.hint.refreshStep;
+export const starbattleJudgeMove = described.hint.judgeMove;
 
 /**
  * Judge a move against the step on show by what it did to the board, so a
@@ -92,5 +92,5 @@ export function starbattleKeepTrack(
     step.move.cells.some((t) => t.index === first.index && t.mark !== first.mark)
   )
     return "onTrack";
-  return described.hintKeepTrack(move, step, state);
+  return described.hint.keepTrack(move, step, state);
 }

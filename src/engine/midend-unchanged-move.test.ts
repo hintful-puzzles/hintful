@@ -88,8 +88,11 @@ function game() {
     },
     executeMove: (s: FakeState, m: Move) =>
       m === "same" ? { ...s } : fakeGame.executeMove(s, m),
-    hintKeepTrack: (m: Move) => (m === "inc" ? "completed" : "off"),
-    hintGesture: () => [click({ x: 15, y: 5 })],
+    hint: {
+      ...fakeGame.hint,
+      keepTrack: (m: Move) => (m === "inc" ? "completed" : "off"),
+      gesture: () => [click({ x: 15, y: 5 })],
+    },
   };
   return g as unknown as typeof fakeGame;
 }
@@ -178,7 +181,11 @@ describe("a move that leaves the board as it was", () => {
   });
 
   it("never completes a hint's step, so a hint that asks for one is thrown", () => {
-    const g = { ...game(), hintGesture: () => [click({ x: 5, y: 5 })] };
+    const base = game();
+    const g = {
+      ...base,
+      hint: { ...base.hint, gesture: () => [click({ x: 5, y: 5 })] },
+    };
     const m = new Midend(g as unknown as typeof fakeGame);
     m.newGame();
     expect(() => m.executeHint()).toThrow(/does not complete its step/);
@@ -229,8 +236,10 @@ describe("an input answered as nothing happened", () => {
 
   it("has its drag played by a hint, as the view tracks a press it claimed", () => {
     // The press picks up and answers nothing; only a drag that follows counts.
+    const base = game();
     const g = {
-      ...game(),
+      ...base,
+      hint: { ...base.hint, gesture: () => [drag({ x: 5, y: 5 }, { x: 15, y: 5 })] },
       interpretMove: (
         _s: FakeState,
         ui: Ui,
@@ -241,7 +250,6 @@ describe("an input answered as nothing happened", () => {
         if (b === LEFT_BUTTON) ui.held = true;
         return b === LEFT_DRAG && ui.held ? "inc" : null;
       },
-      hintGesture: () => [drag({ x: 5, y: 5 }, { x: 15, y: 5 })],
     };
     const m = new Midend(g as unknown as typeof fakeGame);
     m.newGame();

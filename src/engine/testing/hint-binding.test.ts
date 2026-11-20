@@ -40,10 +40,12 @@ function toyGame(opts: { dropOutlines?: boolean; roles?: object } = {}): AnyGame
       if (!opts.dropOutlines) for (const p of marks.of("outline", CELL)) cell(dr, p, 2);
       for (const p of hint?.highlights?.extra ?? []) cell(dr, p, 1);
     },
-    hintMarks: {
-      roles: opts.roles ?? {
-        ring: "the cell decided",
-        outline: "the cells reasoned from",
+    hint: {
+      marks: {
+        roles: opts.roles ?? {
+          ring: "the cell decided",
+          outline: "the cells reasoned from",
+        },
       },
     },
   } as unknown as AnyGame;

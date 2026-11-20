@@ -62,7 +62,7 @@ export const BORDER_RING_LEGEND =
 
 /**
  * The edge a leg's edits set, which is what its click aims at
- * (`Game.hintGesture`, through `verbClicks`, which picks the button). A leg's
+ * (`Game.hint.targets`, clicked through `verbClicks`, which picks the button). A leg's
  * first edit is on the square the edge is named from, with the one bit it
  * sets: a wall, or not-a-wall four bits up.
  */

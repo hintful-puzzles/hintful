@@ -8,10 +8,12 @@
  * returns a new state, never mutates), GC instead of `dup_*`/`free_*`, and
  * union/boolean types instead of integer sentinels.
  *
- * An absent optional member means "this game does not have that capability"
- * (no preferences, no `prefs`), and the midend runs without it. For the members
- * `sections.ts` names, it also means the game is a draft, unless the game gives
- * the puzzle's reason in `notApplicable`.
+ * A member every game has is required. An absent optional member means "this
+ * game does not have that capability" (no preferences, no `prefs`), and the
+ * midend runs without it. For the members `sections.ts` names, it also means
+ * the game is a draft, unless the game gives the puzzle's reason in
+ * `notApplicable`; the hint, which every game has, is a draft's when it is
+ * {@link DRAFT_HINT}.
  */
 
 import type { DifficultyContract } from "./difficulty.ts";
@@ -81,7 +83,7 @@ export interface ReferenceAid<State, Ui, Move = never> {
   select(state: State, ui: Ui, key: string | null): Move | UiUpdate | null;
 }
 
-/** What a check says of a move ({@link Game.judgeMove}): whether a deduction
+/** What a check says of a move ({@link GameHint.judgeMove}): whether a deduction
  * reached it, and the words that name it. It marks nothing on the board. */
 export interface MoveVerdict {
   readonly followed: boolean;
@@ -90,7 +92,7 @@ export interface MoveVerdict {
 
 export interface HintStep<Move, Highlights = unknown, Rung extends string = string> {
   move: Move;
-  /** Which of the game's deductions this step is: one of {@link Game.hintRungs}.
+  /** Which of the game's deductions this step is: one of {@link GameHint.rungs}.
    * Whatever needs to know reads this and never the sentence, so rewording a
    * step moves nothing that is not about its wording
    * (docs/hints.md § "Name the rung a step speaks"). */
@@ -99,8 +101,8 @@ export interface HintStep<Move, Highlights = unknown, Rung extends string = stri
    * words. The only part of a step that crosses the worker boundary. */
   explanation: string;
   /** The sentence with its references to the marks the step draws
-   * (`hint-words.ts`). Every step of a game with {@link Game.hintMarks} has
-   * them, its renderer paints its marks from them (`stepMarks`), and
+   * (`hint-words.ts`), with the roles of {@link GameHint.marks}. Every step
+   * has them, its game's renderer paints its marks from them (`stepMarks`), and
    * `testing/hint-binding.ts` holds the rendered frame to them. A
    * {@link Sentence}, so they were built from their parts or declared an
    * exception. */
@@ -136,7 +138,7 @@ export type HintResult<Move, Highlights = unknown, Rung extends string = string>
 
 /** The hint plan currently being followed. Stored in the midend (not
  * in game state, never persisted); `steps[index]` is the step being
- * displayed. Advanced by `hintKeepTrack` verdicts and executed-hint
+ * displayed. Advanced by `GameHint.keepTrack` verdicts and executed-hint
  * animation settles; cleared on undo/redo/restart/new game/solve,
  * when the last step completes, and when the board is solved. */
 export interface ActiveHint<Move, Highlights = unknown> {
@@ -427,6 +429,158 @@ export interface GameDrawing<Blitter = unknown> {
 }
 
 /**
+ * A game's explained hint: its plan and everything the midend and the guards
+ * ask of it. A hint builder (`describedHint`, `describedEdgeHint`,
+ * `describedFiringHint`) returns the parts it makes, and the game hands them
+ * over with the rest.
+ */
+export interface GameHint<
+  State,
+  Move,
+  Ui = unknown,
+  DrawState = unknown,
+  Highlights = unknown,
+  Rung extends string = string,
+> {
+  /** Compute a hint plan for the current state: a non-empty ordered
+   * sequence of narrated moves, or an error. Nothing is auto-applied
+   * — the midend stores the plan and displays one step at a time;
+   * the player follows it (or `executeHint` plays it) step by step.
+   *
+   * `aux` is the generator's solution hint (upstream `aux_info`), the
+   * same value passed to `solve` — present for freshly-generated games,
+   * absent for descriptive game ids or some loaded saves. A game whose
+   * best hint derives from the known solution uses it when
+   * present and falls back otherwise; deductive games ignore it.
+   *
+   * `ui` is the live game UI, passed so a hint can honor a player
+   * preference that changes how moves behave or how the hint should be
+   * expressed (Towers' auto-pencil mode decides whether the hint teaches
+   * the trivial row/column note eliminations or folds them into the
+   * placement). Ignored by most games.
+   *
+   * Never asked about a board whose status is solved, or on which
+   * `findMistakes` finds anything: the midend refuses those itself. */
+  plan(state: State, aux?: string, ui?: Ui): HintResult<Move, Highlights, Rung>;
+  /** Every rung a hint step of this game can be, each once: the ids its steps
+   * carry in {@link HintStep.rung}. The pin harness requires a pinned position
+   * for each (`testing/hint-positions.ts`), and the hint-quality walk fails a
+   * step whose rung is not listed. */
+  readonly rungs: readonly Rung[];
+  /** The marks this game's hint draws, and what each means here. It binds
+   * every step's words to its marks ({@link HintMarkLegend}). */
+  readonly marks: HintMarkLegend;
+  /** Classify a player move against the current hint step. The game
+   * MAY adjust `step.move` in place on `"onTrack"` (e.g. shrink a
+   * slide's remaining distance after partial manual progress) so a
+   * later `executeHint` doesn't overshoot. `"completed"` obliges the
+   * game to ensure the resulting state matches the plan's
+   * expectation after this step — return `"off"` when in doubt. */
+  keepTrack(m: Move, step: HintStep<Move, Highlights>, state: State): HintTrackVerdict;
+  /** How the pointer makes `move`, the move of the hint step on display, from
+   * `state` with `ui` as it is and the board drawn at `ds`: the taps, drags and
+   * on-screen keys a player would use (`hint-gesture.ts`). The midend plays a
+   * hint step by sending this through {@link Game.interpretMove}, never by
+   * applying `move`, and the moves it makes must complete the step by
+   * {@link keepTrack}; so a hint cannot ask for a move the pointer does not
+   * make. `step` is the whole step, for a gesture found by asking `keepTrack`
+   * (`verbClicks`).
+   *
+   * A hint has this or {@link targets}, never both (`registerGame`). */
+  gesture?(
+    state: State,
+    ui: Ui,
+    ds: DrawState,
+    move: Move,
+    step: HintStep<Move, Highlights>,
+  ): readonly PointerAction[];
+  /** For a game that plays by {@link Game.targetVerbs}: the targets the step's
+   * move is made at, in order. The engine makes the gesture from them, a click
+   * on each with the button whose verb `keepTrack` keeps (`hintGesture`,
+   * `verbClicks`), so the game says only where. Of the verbs' target type. */
+  targets?(
+    state: State,
+    move: Move,
+    step: HintStep<Move, Highlights>,
+  ): readonly unknown[];
+  /** Re-validate a *stored* hint step against the current state right
+   * before the midend (re-)displays it, so a kept plan can never show a
+   * step whose action has already been resolved out from under it. A
+   * move that the plan is following can have side effects the plan
+   * didn't author — most concretely Towers' auto-pencil, which silently
+   * strikes a placed height from its row/column, removing candidates a
+   * *later* stored `pencilStrike` step still names. Return:
+   * - the step **with no-longer-actionable parts dropped** (e.g. a
+   *   `pencilStrike` filtered to candidates still present), rebuilding
+   *   `highlights` to match — return the SAME object reference when
+   *   nothing changed, so the midend can cheaply detect "still live";
+   * - `null` when the step is now **fully** resolved (every part is a
+   *   no-op against the current state) — the midend advances past it,
+   *   recomputing the plan if the whole plan drains.
+   * Pure (no state mutation). Absent ⇒ the game's stored steps are
+   * shown as-is; implement it for any game whose moves can be partially
+   * resolved by another move's side effects (the candidate-elimination
+   * games). */
+  refreshStep?(
+    step: HintStep<Move, Highlights>,
+    state: State,
+  ): HintStep<Move, Highlights> | null;
+  /** What Check & save says of the player's last move, `before` the position
+   * it was made from and `after` the one it made (`move-judge.ts`): whether
+   * the game's deductions reach it from `before`, naming the techniques that
+   * do, or `null` where it made nothing a deduction makes. A builder that
+   * walks a compiled ladder supplies it; a game writes none. `ui` carries the
+   * preferences the hint is walked under (a candidate plan's). */
+  judgeMove?(before: State, after: State, ui?: Ui): MoveVerdict | null;
+  /** Does this `UI_UPDATE` dismiss the hint, as a real move that goes off-plan
+   * does? Absent ⇒ never: a UI/cursor change leaves the hint on screen, which
+   * is right for a game whose hint suppresses nothing.
+   *
+   * A game needs this when its in-place UI changes are an *alternative display*
+   * the hint would fight with, because the hint then **suppresses** something
+   * and the suppression is invisible until the player touches it — at which
+   * point nothing happens at all, and there is no way out of hint mode. Subsets'
+   * reference aid draws in the hint's overlay space; Crossing's hint takes over
+   * the board's coloring from the selected-run wash.
+   *
+   * `() => true` dismisses on every UI change — the simplest rule, and enough
+   * when the game has no "follow this by hand" flow to protect. Answering per
+   * step dismisses *selectively*: `ui` is the **post-`interpretMove`** ui, so
+   * the new cursor position is already in it. Crossing keeps its hint up while
+   * the player works inside the squares it is about, so a hinted number can be
+   * typed in by hand without the explanation vanishing.
+   *
+   * A game that answers `false` anywhere its hint paints **must** make sure its
+   * cursor cue still reads against the hint colors — the hint owns the
+   * background there, so a background-only selection cue becomes invisible
+   * exactly when the player needs it (see `crossing/render.ts`).
+   *
+   * Called only while a plan is stored, with that plan's current step. Pure. */
+  uiUpdateClears?(step: HintStep<Move, Highlights>, state: State, ui: Ui): boolean;
+}
+
+/**
+ * The hint of a game whose hint is not written yet, which makes the game a
+ * draft (`sections.ts`): the midend offers no hint for it, so nothing asks its
+ * plan, and a guard that does is told so. A game being ported registers with
+ * it until its hint is written.
+ */
+export const DRAFT_HINT: GameHint<never, never, never, never, never, never> = {
+  plan() {
+    throw new Error("a draft's hint is not written: nothing asks it");
+  },
+  rungs: [],
+  marks: { roles: {} },
+  keepTrack: () => "off",
+  gesture: () => [],
+};
+
+/** Whether `game`'s hint is written: it is not {@link DRAFT_HINT}. */
+export function hasHint(game: { readonly hint: object }): boolean {
+  return game.hint !== DRAFT_HINT;
+}
+
+/**
  * Every hook is declared with method syntax, never as a function-typed
  * property. The registry holds a game with its type parameters erased, and a
  * property's parameters are checked contravariantly, which the erased type
@@ -443,7 +597,7 @@ export interface Game<
    * every hint member and `redraw`, so a game's renderer and its legend see
    * the type its `hint` builds. */
   Highlights = unknown,
-  /** The ids of the deductions a hint step can be ({@link Game.hintRungs}). */
+  /** The ids of the deductions a hint step can be ({@link GameHint.rungs}). */
   Rung extends string = string,
 > {
   /** Catalog puzzleId; the registry key. */
@@ -611,13 +765,13 @@ export interface Game<
    * "solved-with-help", which is the midend's. */
   status(s: State): GameStatus;
 
-  /** Solve from `orig` (the initial state) given `curr`. Having it is what
-   * offers Solve to the player. Returns a discriminated result so a `Move`
-   * that is itself a string can't be confused with an error message.
+  /** Solve from `orig` (the initial state) given `curr`, which the player's
+   * Solve asks. Returns a discriminated result so a `Move` that is itself a
+   * string can't be confused with an error message.
    *
    * The move must leave a board whose status is solved: `Midend.solve` throws
    * on one that does not, so a game that cannot finish from `curr` refuses. */
-  solve?(orig: State, curr: State, aux?: string): SolveResult<Move>;
+  solve(orig: State, curr: State, aux?: string): SolveResult<Move>;
 
   /** Whether this board is proved to have no solution: no moves from it reach
    * a solved one. `loadDesc` refuses a board that is, so nobody is handed one
@@ -634,7 +788,7 @@ export interface Game<
    * **A game that can be lost answers for a position played into, too, and
    * with what proves it**: a `markedDeadEnd`, whose words name the pegs or the
    * barrel at fault. The midend refuses a hint with it before it asks
-   * {@link hint}, so the proof is stated once and a `hint` is never asked
+   * {@link hint}, so the proof is stated once and a hint is never asked
    * about a position it holds for. A bare `true` is a verdict on the board as
    * dealt only, and leaves the hint to the game (Flood's leads home past the
    * limit). */
@@ -663,118 +817,10 @@ export interface Game<
    * way to reach something. */
   hover?(state: State, ui: Ui, ds: DrawState, p: Point | null): UiUpdate | null;
 
-  /** Compute a hint plan for the current state: a non-empty ordered
-   * sequence of narrated moves, or an error. Nothing is auto-applied
-   * — the midend stores the plan and displays one step at a time;
-   * the player follows it (or `executeHint` plays it) step by step.
-   *
-   * `aux` is the generator's solution hint (upstream `aux_info`), the
-   * same value passed to `solve` — present for freshly-generated games,
-   * absent for descriptive game ids or some loaded saves. A game whose
-   * best hint derives from the known solution uses it when
-   * present and falls back otherwise; deductive games ignore it.
-   *
-   * `ui` is the live game UI, passed so a hint can honor a player
-   * preference that changes how moves behave or how the hint should be
-   * expressed (Towers' auto-pencil mode decides whether the hint teaches
-   * the trivial row/column note eliminations or folds them into the
-   * placement). Ignored by most games.
-   *
-   * Never asked about a board whose status is solved, or on which
-   * `findMistakes` finds anything: the midend refuses those itself. */
-  hint?(state: State, aux?: string, ui?: Ui): HintResult<Move, Highlights, Rung>;
-  /** Every rung a hint step of this game can be, each once: the ids its steps
-   * carry in {@link HintStep.rung}. Every game with a `hint` has it. The pin
-   * harness requires a pinned position for each
-   * (`testing/hint-positions.ts`), and the hint-quality walk fails a step
-   * whose rung is not listed. */
-  hintRungs?: readonly Rung[];
-  /** How the pointer makes `move`, the move of the hint step on display, from
-   * `state` with `ui` as it is and the board drawn at `ds`: the taps, drags and
-   * on-screen keys a player would use (`hint-gesture.ts`). The midend plays a
-   * hint step by sending this through {@link interpretMove}, never by applying
-   * `move`, and the moves it makes must complete the step by
-   * {@link hintKeepTrack}; so a hint cannot ask for a move the pointer does not
-   * make. Every game with a `hint` has one. `step` is the whole step, for a
-   * gesture found by asking `hintKeepTrack` (`verbClicks`). */
-  hintGesture?(
-    state: State,
-    ui: Ui,
-    ds: DrawState,
-    move: Move,
-    step: HintStep<Move, Highlights>,
-  ): readonly PointerAction[];
-  /** The marks this game's hint draws, and what each means here. Declaring it
-   * binds every step's words to its marks ({@link HintMarkLegend}). */
-  hintMarks?: HintMarkLegend;
-  /** Classify a player move against the current hint step. The game
-   * MAY adjust `step.move` in place on `"onTrack"` (e.g. shrink a
-   * slide's remaining distance after partial manual progress) so a
-   * later `executeHint` doesn't overshoot. `"completed"` obliges the
-   * game to ensure the resulting state matches the plan's
-   * expectation after this step — return `"off"` when in doubt. */
-  hintKeepTrack?(
-    m: Move,
-    step: HintStep<Move, Highlights>,
-    state: State,
-  ): HintTrackVerdict;
-
-  /** Re-validate a *stored* hint step against the current state right
-   * before the midend (re-)displays it, so a kept plan can never show a
-   * step whose action has already been resolved out from under it. A
-   * move that the plan is following can have side effects the plan
-   * didn't author — most concretely Towers' auto-pencil, which silently
-   * strikes a placed height from its row/column, removing candidates a
-   * *later* stored `pencilStrike` step still names. Return:
-   * - the step **with no-longer-actionable parts dropped** (e.g. a
-   *   `pencilStrike` filtered to candidates still present), rebuilding
-   *   `highlights` to match — return the SAME object reference when
-   *   nothing changed, so the midend can cheaply detect "still live";
-   * - `null` when the step is now **fully** resolved (every part is a
-   *   no-op against the current state) — the midend advances past it,
-   *   recomputing the plan if the whole plan drains.
-   * Pure (no state mutation). Absent ⇒ the game's stored steps are
-   * shown as-is; implement it for any game whose moves can be partially
-   * resolved by another move's side effects (the candidate-elimination
-   * games). */
-  refreshHintStep?(
-    step: HintStep<Move, Highlights>,
-    state: State,
-  ): HintStep<Move, Highlights> | null;
-
-  /** What Check & save says of the player's last move, `before` the position
-   * it was made from and `after` the one it made (`move-judge.ts`): whether
-   * the game's deductions reach it from `before`, naming the techniques that
-   * do, or `null` where it made nothing a deduction makes. A builder that
-   * walks a compiled ladder supplies it; a game writes none. `ui` carries the
-   * preferences the hint is walked under (a candidate plan's). */
-  judgeMove?(before: State, after: State, ui?: Ui): MoveVerdict | null;
-
-  /** Does this `UI_UPDATE` dismiss the hint, as a real move that goes off-plan
-   * does? Absent ⇒ never: a UI/cursor change leaves the hint on screen, which
-   * is right for a game whose hint suppresses nothing.
-   *
-   * A game needs this when its in-place UI changes are an *alternative display*
-   * the hint would fight with, because the hint then **suppresses** something
-   * and the suppression is invisible until the player touches it — at which
-   * point nothing happens at all, and there is no way out of hint mode. Subsets'
-   * reference aid draws in the hint's overlay space; Crossing's hint takes over
-   * the board's coloring from the selected-run wash.
-   *
-   * `() => true` dismisses on every UI change — the simplest rule, and enough
-   * when the game has no "follow this by hand" flow to protect. Answering per
-   * step dismisses *selectively*: `ui` is the **post-`interpretMove`** ui, so
-   * the new cursor position is already in it. Crossing keeps its hint up while
-   * the player works inside the squares it is about, so a hinted number can be
-   * typed in by hand without the explanation vanishing.
-   *
-   * A game that answers `false` anywhere its hint paints **must** make sure its
-   * cursor cue still reads against the hint colors — the hint owns the
-   * background there, so a background-only selection cue becomes invisible
-   * exactly when the player needs it (see `crossing/render.ts`).
-   *
-   * Called only while a plan is stored, with that plan's current step. Pure. */
-  uiUpdateClearsHint?(step: HintStep<Move, Highlights>, state: State, ui: Ui): boolean;
+  /** The game's explained hint, one capability ({@link GameHint}). A game
+   * whose hint is not written yet has {@link DRAFT_HINT}, and is a draft
+   * (`sections.ts`). */
+  readonly hint: GameHint<State, Move, Ui, DrawState, Highlights, Rung>;
 
   /** Compute the cells of the current state that contradict the
    * puzzle's unique solution — the mistake-checking divergence from
@@ -840,19 +886,17 @@ export interface Game<
    * ordered list of field descriptors the midend turns into the app's
    * "Custom type…" dialog and parses back onto a copy of `Params`,
    * validated by `paramsError`. A plain width/height game declares
-   * `paramConfig: dimensionParamConfig({ doc })`. Absent ⇒ an empty custom
-   * dialog, which `custom-params.test.ts` refuses for every game.
+   * `paramConfig: dimensionParamConfig({ doc })`.
    *
    * **It is the field list everything about params is derived from**, so what
    * it declares reaches further than the dialog: the tier names and accessors
    * (`difficulty.ts`), the codec (`params-codec.ts`), the preset titles and
    * the custom header (`param-label.ts`), the bounds check (`paramsError`)
    * and the help's Parameters section. */
-  paramConfig?: ParamConfigItem<Params>[];
+  paramConfig: ParamConfigItem<Params>[];
 
   /** How to run this game's solver capped at a tier. Declared by a game with
-   * difficulty tiers, absent otherwise, as a game without a solver omits
-   * `solve`.
+   * difficulty tiers, absent otherwise.
    *
    * **What the tiers are, and how params hold one, is not here**: both come
    * off the game's difficulty item (`difficultyItem`), so a tiered game
@@ -885,8 +929,8 @@ export interface Game<
    * schemes: a board that is not color 0, and the bevels dark mode exchanges.
    * It names palette slots with the game's own constants, never a color. */
   readonly paletteScheme?: Partial<PaletteScheme>;
-  /** Upstream's `preferred_tilesize`; the size baseline. Default 32. */
-  readonly preferredTileSize?: number;
+  /** Upstream's `preferred_tilesize`; the size baseline. */
+  readonly preferredTileSize: number;
   computeSize(p: Params, tileSize: number): Size;
   /** Build the per-game draw state (the tile cache and whatever else `redraw`
    * needs) at `tileSize`, deriving any tile-size geometry here. Required, so
@@ -937,24 +981,29 @@ export interface Game<
    * means. */
   readonly notApplicable?: NotApplicableReasons;
 
-  /** Serialize/parse a move for the save file. Default: the move must
-   * be structured-clone/JSON-safe and is stored as-is. */
-  serializeMove?(m: Move): unknown;
-  deserializeMove?(raw: unknown): Move;
+  /** How a move is written to the save file and read back. Absent: the move
+   * is JSON-safe and stored as-is. One object, so a game cannot write a move
+   * it has no way to read. */
+  readonly moveCodec?: {
+    serialize(m: Move): unknown;
+    deserialize(raw: unknown): Move;
+  };
 
-  /** Serialize the parts of the `Ui` that must survive a save (upstream
+  /** The parts of the `Ui` that must survive a save (upstream
    * `encode_ui`/`decode_ui`). The `Ui` is otherwise rebuilt from `newUi`
    * on load and reconstructed by replaying the move log — but a field that
    * lives *outside* the undo history and is set by `interpretMove` (which
    * replay never calls) cannot be recovered that way. Mines' persistent
    * death counter and its "was ever completed" flag are exactly that: dying
    * then undoing removes the death from the move log, so only serializing
-   * the `Ui` keeps the count. The midend writes `encodeUi(ui)` into the save
-   * and, after replaying the move log on load, restores it via `decodeUi`.
+   * the `Ui` keeps the count. The midend writes `encode(ui)` into the save
+   * and, after replaying the move log on load, restores it via `decode`.
    * Absent ⇒ the `Ui` carries no save-surviving state (every other game). */
-  encodeUi?(ui: Ui): string;
-  /** `state` is the board the `Ui` is restored onto, the log replayed: what a
-   * field derived from both is judged against (Wordguess's "this row may be
-   * sent" asks the word list and the rows already scored). */
-  decodeUi?(ui: Ui, encoded: string, state: State): void;
+  readonly uiCodec?: {
+    encode(ui: Ui): string;
+    /** `state` is the board the `Ui` is restored onto, the log replayed: what
+     * a field derived from both is judged against (Wordguess's "this row may
+     * be sent" asks the word list and the rows already scored). */
+    decode(ui: Ui, encoded: string, state: State): void;
+  };
 }

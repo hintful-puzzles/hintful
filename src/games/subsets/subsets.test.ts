@@ -521,7 +521,7 @@ describe("subsets solve (through a real Midend)", () => {
     const desc = "_D,_D,_,_L,_RD,_,_URDL,_,_,_RDL,_,_L,_UR,_,_U,_UL";
     const start = newState(PARAMS, desc);
     expect(subsetsSolveGame(newState(PARAMS, desc), DIFF_NORMAL)).toBe("unfinished");
-    expect(subsetsGame.solve?.(start, start, undefined)).toEqual({
+    expect(subsetsGame.solve(start, start, undefined)).toEqual({
       ok: false,
       error: PUZZLE_NOT_REASONABLE,
     });

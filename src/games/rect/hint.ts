@@ -257,7 +257,7 @@ function rectWalk(state: RectState): {
  * The plan from the player's lines to the end, a step per rectangle or line.
  * Stops where the ladder runs out.
  */
-export const { hint: rectHint, judgeMove: rectJudgeMove } = describedEdgeHint<
+export const { plan: rectHint, judgeMove: rectJudgeMove } = describedEdgeHint<
   RectState,
   RectMove,
   RectHint,

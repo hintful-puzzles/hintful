@@ -124,7 +124,7 @@ function deduceSpokesPlan(board: SpokesBoard): Firing[] {
     params: spokesGame.defaultParams(),
     autoMarks: new Set(),
   };
-  const res = spokesGame.hint?.(state, undefined);
+  const res = spokesGame.hint.plan(state, undefined);
   if (!res?.ok) return [];
   const plan: Firing[] = [];
   for (const step of res.steps) {
@@ -405,7 +405,7 @@ describe("boards the midend refuses a hint on", () => {
   it("counts a solved board as finished", () => {
     const { desc } = newSpokesDesc(EASY, randomNew("refuse-solved"));
     const base = newState(EASY, desc);
-    const solved = spokesGame.solve?.(base, base);
+    const solved = spokesGame.solve(base, base);
     if (!solved?.ok) throw new Error("solve refused");
     expect(spokesGame.status(spokesGame.executeMove(base, solved.move))).toBe("solved");
   });
@@ -493,7 +493,10 @@ describe("the search beneath the ladder never reaches a hint", () => {
       }
       expect(firings, `${desc}: the ladder decides nothing`).toBeGreaterThan(0);
       expect(spokesSolved(board), `${desc}: the ladder finishes it`).toBe(false);
-      const refused = spokesGame.hint?.({ ...newState(UNREASONABLE, desc), ...board });
+      const refused = spokesGame.hint.plan({
+        ...newState(UNREASONABLE, desc),
+        ...board,
+      });
       expect(refused?.ok === false && refused.error).toBe(DEDUCTION_EXHAUSTED);
     }
   });

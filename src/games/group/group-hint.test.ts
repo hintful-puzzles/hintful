@@ -43,7 +43,7 @@ function walk(
   const texts: string[] = [];
   const states: GroupState[] = [state];
   for (let i = 0; i < 500 && groupGame.status(state) === "ongoing"; i++) {
-    const res = groupGame.hint?.(state, undefined);
+    const res = groupGame.hint.plan(state, undefined);
     if (!res?.ok) break;
     for (const s of res.steps) texts.push(s.explanation);
     state = groupGame.executeMove(state, res.steps[0].move);
@@ -184,7 +184,7 @@ describe("group hint — plan solves boards", () => {
     let { state } = pinned("identityElim");
     expect(state.id, "the elimination is an identity-hidden board's").toBe(false);
     for (let i = 0; i < 500 && groupGame.status(state) === "ongoing"; i++) {
-      const res = groupGame.hint?.(state, undefined);
+      const res = groupGame.hint.plan(state, undefined);
       if (!res?.ok) break;
       state = groupGame.executeMove(state, res.steps[0].move);
     }
@@ -199,7 +199,7 @@ describe("group hint — plan solves boards", () => {
     let state = mid;
     let progressed = false;
     for (let i = 0; i < 500 && groupGame.status(state) === "ongoing"; i++) {
-      const res = groupGame.hint?.(state, undefined);
+      const res = groupGame.hint.plan(state, undefined);
       expect(res?.ok, `refused mid-game after ${i} moves`).toBe(true);
       if (!res?.ok) break;
       state = groupGame.executeMove(state, res.steps[0].move);
@@ -220,7 +220,7 @@ describe("group hint — placements on a note-free board", () => {
     for (const seed of ["nf0", "nf1", "nf2", "nf3", "nf4"]) {
       const state = board(NORMAL, seed);
       const w = state.w;
-      const res = groupGame.hint?.(state, undefined);
+      const res = groupGame.hint.plan(state, undefined);
       if (!res?.ok) continue;
       const g = Uint8Array.from(state.grid);
       const open = (x: number, y: number, n: number): boolean => {
@@ -255,7 +255,7 @@ describe("group hint — placements on a note-free board", () => {
 describe("group hint — boards the midend refuses", () => {
   it("counts a solved board as finished, so the midend refuses it", () => {
     const orig = board(NORMAL, "refuse-solved");
-    const sr = groupGame.solve?.(orig, orig, undefined);
+    const sr = groupGame.solve(orig, orig, undefined);
     expect(sr?.ok).toBe(true);
     if (!sr?.ok) return;
     const solved = groupGame.executeMove(orig, sr.move);
@@ -264,7 +264,7 @@ describe("group hint — boards the midend refuses", () => {
 
   it("flags a wrong entry, so the midend refuses it", () => {
     const orig = board(NORMAL, "refuse-mistake");
-    const sr = groupGame.solve?.(orig, orig, undefined);
+    const sr = groupGame.solve(orig, orig, undefined);
     if (!sr?.ok || sr.move.type !== "solve") throw new Error("solve() failed");
     const soln = sr.move.grid;
     // Fill the first empty cell with a *wrong* value.
@@ -287,7 +287,7 @@ describe("group hint — boards the midend refuses", () => {
 
   it("flags marks that have crossed out a cell's answer, so the midend refuses them", () => {
     const orig = board(NORMAL, "refuse-note-mistake");
-    const sr = groupGame.solve?.(orig, orig, undefined);
+    const sr = groupGame.solve(orig, orig, undefined);
     if (!sr?.ok || sr.move.type !== "solve") throw new Error("solve() failed");
     const soln = sr.move.grid;
     const w = orig.w;
@@ -321,7 +321,7 @@ describe("group hint — keepTrack", () => {
     const m = step.move as Extract<GroupMove, { type: "set" }>;
     const cell = m.cells[0];
     expect(
-      groupGame.hintKeepTrack?.(
+      groupGame.hint.keepTrack(
         { type: "set", cells: [{ x: cell.x, y: cell.y }], n: m.n },
         step,
         state,
@@ -329,7 +329,7 @@ describe("group hint — keepTrack", () => {
     ).toBe("completed");
     // A different value at the same cell is off-plan.
     expect(
-      groupGame.hintKeepTrack?.(
+      groupGame.hint.keepTrack(
         { type: "set", cells: [{ x: cell.x, y: cell.y }], n: (m.n % state.w) + 1 },
         step,
         state,
@@ -343,7 +343,7 @@ describe("group hint — keepTrack", () => {
     const found = pinned("liveStrike");
     const mv = found.step.move as Extract<GroupMove, { type: "pencilStrike" }>;
     const k = mv.marks[0];
-    const verdict = groupGame.hintKeepTrack?.(
+    const verdict = groupGame.hint.keepTrack(
       { type: "pencil", cells: [{ x: k.x, y: k.y }], n: k.n },
       found.step,
       found.state,
@@ -354,9 +354,9 @@ describe("group hint — keepTrack", () => {
 
   it("a Mark-all completes a populate step", () => {
     const { state: s, step: pop } = pinnedPopulate("populate");
-    expect(groupGame.hintKeepTrack?.({ type: "pencilAll" }, pop, s)).toBe("completed");
+    expect(groupGame.hint.keepTrack({ type: "pencilAll" }, pop, s)).toBe("completed");
     expect(
-      groupGame.hintKeepTrack?.({ type: "set", cells: [{ x: 0, y: 0 }], n: 1 }, pop, s),
+      groupGame.hint.keepTrack({ type: "set", cells: [{ x: 0, y: 0 }], n: 1 }, pop, s),
     ).toBe("off");
   });
 });

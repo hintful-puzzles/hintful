@@ -56,7 +56,6 @@ export type CommandPuzzle = Pick<
   | "canUndo"
   | "canRedo"
   | "canHint"
-  | "canSolve"
   | "canCheck"
   | "isSolved"
   | "hintPending"
@@ -127,13 +126,10 @@ export function commandList(puzzle: CommandPuzzle, gameName: string): CommandEnt
             disabled: solved,
           }),
     ),
-    ...when(
-      puzzle.canSolve,
-      command("help", "solve", "show-solution", "Show solution…", {
-        quiet: true,
-        disabled: solved,
-      }),
-    ),
+    command("help", "solve", "show-solution", "Show solution…", {
+      quiet: true,
+      disabled: solved,
+    }),
 
     { kind: "timeline", id: "timeline", group: "board", icon: "history", label: "" },
     // Beside the timeline, which also takes the board back to an earlier

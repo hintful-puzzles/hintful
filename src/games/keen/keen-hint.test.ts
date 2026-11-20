@@ -3,7 +3,7 @@
  *
  * Tier 1 — `hint` populates, strikes (cage
  * eliminations + basic-Latin culls) and places with quality-bar narration; refusal
- * on solved / on mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario
+ * on solved / on mistakes; `hint.keepTrack` verdicts. Tier 2.5 — a render-scenario
  * snapshot of a cage-elimination journey frame (struck candidate `COL_PENCIL`
  * strikethrough, evidence `COL_HINT_OUTLINE`, cage clue glyphs still drawn).
  */
@@ -210,7 +210,7 @@ const pinnedMarked = describeHintKindPins({
 describe("keen hint", () => {
   it("populates before the first elimination", () => {
     const { st } = gen(NORMAL, "hint-empty");
-    const res = keenGame.hint?.(st);
+    const res = keenGame.hint.plan(st);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const moves = res.steps.map((s) => (s.move as KeenMove).type);
@@ -224,7 +224,7 @@ describe("keen hint", () => {
   it("skips populate once notes are present", () => {
     const { st } = gen(NORMAL, "hint-pop");
     const populated = keenGame.executeMove(st, { type: "pencilAll" });
-    const res = keenGame.hint?.(populated);
+    const res = keenGame.hint.plan(populated);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     expect((res.steps[0].move as KeenMove).type).not.toBe("pencilAll");
@@ -232,7 +232,7 @@ describe("keen hint", () => {
 
   it("surfaces a naked single as the next move ahead of any elimination", () => {
     const { st } = gen(NORMAL, "hint-naked");
-    const r = keenGame.solve?.(st, st);
+    const r = keenGame.solve(st, st);
     if (!r?.ok || r.move.type !== "solve") throw new Error("solve failed");
     const w = st.params.w;
     const x = 2;
@@ -245,7 +245,7 @@ describe("keen hint", () => {
     for (let n = 1; n <= w; n++) if (n !== v) marks.push({ x, y, n });
     const narrowed = keenGame.executeMove(populated, { type: "pencilStrike", marks });
 
-    const res = keenGame.hint?.(narrowed);
+    const res = keenGame.hint.plan(narrowed);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     // Auto-pencil defaults off, so a placement carries `autoElim: false` (the
@@ -264,7 +264,7 @@ describe("keen hint", () => {
   it("every deduction conclusion uses the necessity voice", () => {
     const { st } = gen(NORMAL, "voice");
     const populated = keenGame.executeMove(st, { type: "pencilAll" });
-    const res = keenGame.hint?.(populated);
+    const res = keenGame.hint.plan(populated);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     // A strike concludes "must cross out …" / "must cross them out"; a placement
@@ -288,7 +288,7 @@ describe("keen hint", () => {
     for (const p of [NORMAL, HARD]) {
       for (let s = 0; s < 8; s++) {
         const { st } = gen(p, `bleed-${p.diff}-${s}`);
-        const res = keenGame.hint?.(st);
+        const res = keenGame.hint.plan(st);
         if (!res?.ok) continue;
         for (const step of res.steps as AnyStep[]) {
           if (step.move.type !== "pencilStrike") continue;
@@ -309,10 +309,10 @@ describe("keen hint", () => {
     const { st } = gen(NORMAL, "autopencil");
     const uiOn = newUi(st);
     uiOn.autoPencil = true;
-    const on = keenGame.hint?.(st, undefined, uiOn);
+    const on = keenGame.hint.plan(st, undefined, uiOn);
     const uiOff = newUi(st);
     uiOff.autoPencil = false;
-    const off = keenGame.hint?.(st, undefined, uiOff);
+    const off = keenGame.hint.plan(st, undefined, uiOff);
     expect(on?.ok && off?.ok).toBe(true);
     if (!on?.ok || !off?.ok) return;
     const dupCount = (r: typeof on) => r.steps.filter((s) => s.rung === "dup").length;
@@ -346,7 +346,7 @@ describe("keen hint", () => {
 
   it("counts a solved board as finished and flags a wrong entry, the boards the midend refuses", () => {
     const { st } = gen(NORMAL, "refuse");
-    const r = keenGame.solve?.(st, st);
+    const r = keenGame.solve(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const solved = keenGame.executeMove(st, r.move);
     expect(keenGame.status(solved)).toBe("solved");
@@ -370,9 +370,9 @@ describe("keen hint", () => {
 describe("keen hintKeepTrack", () => {
   it("matches a populate step, rejects anything else", () => {
     const { state: st, step } = pinnedFresh("populate");
-    expect(keenGame.hintKeepTrack?.({ type: "pencilAll" }, step, st)).toBe("completed");
+    expect(keenGame.hint.keepTrack({ type: "pencilAll" }, step, st)).toBe("completed");
     expect(
-      keenGame.hintKeepTrack?.(
+      keenGame.hint.keepTrack(
         { type: "set", x: 0, y: 0, n: 1, pencil: false },
         step,
         st,
@@ -387,7 +387,7 @@ describe("keen hintKeepTrack", () => {
 
     const marks = [...step.move.marks] as { x: number; y: number; n: number }[];
     const first = marks[0];
-    const v1 = keenGame.hintKeepTrack?.(
+    const v1 = keenGame.hint.keepTrack(
       { type: "set", x: first.x, y: first.y, n: first.n, pencil: true },
       step,
       populated,
@@ -404,7 +404,7 @@ describe("keen hintKeepTrack", () => {
     });
     for (let k = 1; k < marks.length; k++) {
       const mk = marks[k];
-      const v = keenGame.hintKeepTrack?.(
+      const v = keenGame.hint.keepTrack(
         { type: "set", x: mk.x, y: mk.y, n: mk.n, pencil: true },
         step,
         cur,
@@ -429,7 +429,7 @@ describe("keen hint resumes to solved", () => {
     let state: KeenState = start;
     for (let moves = 0; moves < 2000; moves++) {
       if (status(state) === "solved") return;
-      const res = keenGame.hint?.(state, aux);
+      const res = keenGame.hint.plan(state, aux);
       expect(res?.ok).toBe(true);
       if (!res?.ok) throw new Error(`gave up: ${res?.error}`);
       state = keenGame.executeMove(state, res.steps[0].move);

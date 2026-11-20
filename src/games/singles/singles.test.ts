@@ -142,7 +142,7 @@ describe("singles solve", () => {
     const p: SinglesParams = { w: 6, h: 6, diff: "tricky" };
     const { desc } = newSinglesDesc(p, randomNew("solve-test"));
     const s0 = newState(p, desc);
-    const res = singlesGame.solve?.(s0, s0);
+    const res = singlesGame.solve(s0, s0);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const solved = singlesGame.executeMove(s0, res.move);

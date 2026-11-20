@@ -181,11 +181,11 @@ describe("Flood win / lose status", () => {
     const p: FloodParams = { w: 3, h: 1, colors: 3, leniency: 0 };
     const lost = executeMove(newState(p, "012,1"), { type: "fill", color: 1 });
     // Lost but unflooded, the board still takes fills, so the hint still plays.
-    expect(floodGame.hint?.(lost)?.ok).toBe(true);
+    expect(floodGame.hint.plan(lost)?.ok).toBe(true);
     const over = executeMove(lost, { type: "fill", color: 2 });
     expect(completed(over.grid)).toBe(true);
     expect(status(over)).toBe("lost");
-    expect(floodGame.hint?.(over)).toEqual({ ok: false, error: GAME_OVER });
+    expect(floodGame.hint.plan(over)).toEqual({ ok: false, error: GAME_OVER });
   });
 });
 
@@ -193,7 +193,7 @@ describe("Flood solve", () => {
   it("snaps to a completed board", () => {
     const p = defaultParams();
     const state = gen(p, "solve-seed");
-    const result = floodGame.solve?.(state, state);
+    const result = floodGame.solve(state, state);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const solved = executeMove(state, result.move);

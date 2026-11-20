@@ -30,7 +30,7 @@ export type RungNames<Rung extends string> = Readonly<
 
 const SETUP: ReadonlySet<string> = new Set(NOTES_RUNGS);
 
-/** `Game.judgeMove` for a game whose hint is `candidateHint` over
+/** `Game.hint.judgeMove` for a game whose hint is `candidateHint` over
  * `buildSteps`, which hands its plan the `judging` it is given, its
  * deductions named by `names`. */
 export function candidateJudge<State, Move, H, Rung extends string>(

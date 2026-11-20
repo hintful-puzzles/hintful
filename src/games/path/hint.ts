@@ -297,7 +297,7 @@ type Element = Point | number;
 const TRIED = EDGE as unknown as MarkKind<Element>;
 
 /** The plan from the player's lines and crosses. */
-export const { hint: pathHint, judgeMove: pathJudgeMove } = describedEdgeHint<
+export const { plan: pathHint, judgeMove: pathJudgeMove } = describedEdgeHint<
   PathState,
   PathMove,
   PathHighlights,

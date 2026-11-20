@@ -10,7 +10,7 @@
  * (docs/doctrine.md § "One source of truth").
  */
 
-import type { Game } from "../game.ts";
+import { type Game, hasHint } from "../game.ts";
 import { Midend } from "../midend.ts";
 import {
   CURSOR_DOWN,
@@ -34,7 +34,7 @@ import {
   RIGHT_RELEASE,
 } from "../pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../random/index.ts";
-import { sweepOpen } from "../target-verb.ts";
+import { hintGesture, sweepOpen } from "../target-verb.ts";
 import type { Color, ConfigValues, Point, Size } from "../types.ts";
 import { copyUi, restoreUi } from "../ui-snapshot.ts";
 import { NO_FLASH } from "../win-wave.ts";
@@ -112,7 +112,7 @@ export function probeBoard(
 ): ProbeBoard {
   const params = game.defaultParams();
   const desc = game.newDesc(params, randomNew(`parity-${id}`)).desc;
-  const tileSize = game.preferredTileSize ?? 32;
+  const tileSize = game.preferredTileSize;
   let seen: unknown = null;
   let painted = false;
   // The state the midend holds and the `Ui` it mutates, as the game's own
@@ -1365,15 +1365,14 @@ export function inputAnswers(game: AnyGame, id: string): InputAnswers {
     }
   // Random keys spell no move in a game whose move is a word: the opening
   // hint's own gesture, sent as these inputs, makes one in any game with a hint.
-  const { hint, hintGesture } = game;
-  if (hint && hintGesture) {
+  if (hasHint(game)) {
     rewind();
     const { state, ui } = b.live();
-    const res = hint(state, undefined, ui);
+    const res = game.hint.plan(state, undefined, ui);
     const step = res.ok ? res.steps[0] : undefined;
     if (step !== undefined) {
       const ds = game.newDrawState(state, tileSize);
-      const gesture = hintGesture(state, ui, ds, step.move, step);
+      const gesture = hintGesture(game, state, ui, ds, step);
       run(
         gesture.flatMap((a) => {
           if (a.kind === "key") return [key(a.code)];

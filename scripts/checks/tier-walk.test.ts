@@ -96,7 +96,7 @@ interface Section {
 function sizesToWalk(game: AnyGame): { shape: number; params: Params }[] {
   const tierItem = difficultyChoiceItem<Params>(game);
   const presets = leafPresets(game).map((e) => e.params as Params);
-  const numeric = (game.paramConfig ?? []).filter(
+  const numeric = game.paramConfig.filter(
     (item: ParamConfigItem<Params>): item is NumericItem =>
       // Digits, and not `Number()`: a list field left empty reads as 0.
       item.type === "string" && presets.every((p) => /^\d+$/.test(item.get(p))),

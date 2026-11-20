@@ -23,7 +23,7 @@ describe("Unruly render scenarios", () => {
     const id = `6x6dt:${desc}`;
     const { recording, size } = renderScenario({ game: unrulyGame, id });
 
-    const ts = unrulyGame.preferredTileSize ?? 32;
+    const ts = unrulyGame.preferredTileSize;
     const fullBody = (color: number) =>
       recording.ops.some(
         (o) => o.op === "rect" && o.color === color && o.w === ts - 1 && o.h === ts - 1,

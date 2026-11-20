@@ -1,5 +1,5 @@
 /**
- * The check a bound game's every hint step owes (`Game.hintMarks`): its words
+ * The check a bound game's every hint step owes (`Game.hint.marks`): its words
  * and its marks say the same thing, measured on the frame `redraw` paints.
  * A refusal that marks its cause (`markedDeadEnd`) owes the same, through
  * `redraw`'s `deadEnd`.
@@ -70,7 +70,7 @@ function defects<W extends Narration>(
   explanation: string,
   shown: Shown<W>,
 ): string[] {
-  const legend = game.hintMarks;
+  const legend = game.hint.marks;
   if (!legend) return ["the game declares no hintMarks"];
   const out: string[] = [];
   if (words.text !== explanation)
@@ -80,7 +80,7 @@ function defects<W extends Narration>(
       out.push(`names the ${r.role} role, which the legend does not list`);
 
   const palette = game.colors(DEFAULT_BACKGROUND);
-  const tileSize = game.preferredTileSize ?? 32;
+  const tileSize = game.preferredTileSize;
   const frame = (w?: W): string => {
     const rec = new RecordingDrawing(palette);
     const ds = game.newDrawState(state, tileSize);

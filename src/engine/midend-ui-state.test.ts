@@ -76,7 +76,7 @@ function lastUiState(last: ReturnType<typeof boardFor>["last"]): string | null {
   return note.uiState ?? null;
 }
 
-const PERSISTS_UI = REGISTERED_GAMES.filter(([, game]) => game.encodeUi !== undefined);
+const PERSISTS_UI = REGISTERED_GAMES.filter(([, game]) => game.uiCodec !== undefined);
 
 describe("a game's saveable Ui is reported to the app", () => {
   let swept = 0;
@@ -86,14 +86,14 @@ describe("a game's saveable Ui is reported to the app", () => {
       const { last, uiNow } = boardFor(game);
       const reported = lastUiState(last);
       expect(reported, `${id} persists a Ui but reports no uiState`).toBe(
-        game.encodeUi?.(uiNow()),
+        game.uiCodec?.encode(uiNow()),
       );
       swept++;
     });
   }
 
   for (const [id, game] of REGISTERED_GAMES) {
-    if (game.encodeUi) continue;
+    if (game.uiCodec) continue;
     it(`${id}: reports no Ui, having none to save`, () => {
       const { last } = boardFor(game);
       expect(lastUiState(last)).toBeNull();

@@ -32,7 +32,7 @@ function sections(menu: TitledPresetMenu<unknown>): TitledPresetMenu<unknown>[][
 function kindItems(g: AnyGame): Item[] {
   const tier = difficultyChoiceItem(g);
   const ruleset = rulesetField(g);
-  return (g.paramConfig ?? []).filter(
+  return g.paramConfig.filter(
     (i) => i.type === "choices" && i.kw !== tier?.kw && i.kw !== ruleset?.kw,
   );
 }
@@ -153,7 +153,7 @@ describe("a rule modifier has one line of the menu", () => {
 
   it.each(GAMES)("%s", (id, g) => {
     const leaves = leafPresets(g);
-    for (const item of g.paramConfig ?? []) {
+    for (const item of g.paramConfig) {
       // A choice modifier bounds its rule at every value, so no value of it is
       // the plain game and none is owed a line.
       if (item.type !== "boolean" || item.modifier?.when === undefined) continue;
@@ -188,7 +188,7 @@ describe("a game that takes rectangles offers them", () => {
 
 describe("a game with a size offers at least three boards", () => {
   it.each(GAMES)("%s", (id, g) => {
-    const sized = (g.paramConfig ?? []).some((i) => i.label?.slot === "size");
+    const sized = g.paramConfig.some((i) => i.label?.slot === "size");
     if (!sized) return;
     expect(leafPresets(g).length, id).toBeGreaterThanOrEqual(3);
   });

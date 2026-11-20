@@ -33,8 +33,8 @@ already; a copy changes the verbs and keeps the shape.
    ([the skeleton's](../src/skeleton/grid/skeleton.description.yaml)) where the
    Controls paragraph goes, and after it only what the game does beyond its
    verbs.
-6. Build `hintGesture` from the same verbs with `verbClicks`
-   (`hints.md` § "Every step is a gesture").
+6. Name a hint step's targets in `hint.targets`, which the engine clicks
+   with the same verbs (`hints.md` § "Every step is a gesture").
 7. Make every action reachable with the two buttons alone, clicks and drags,
    and from the keyboard alone, to completion (§ "One pointer, two buttons",
    § "The input-parity bar").
@@ -458,7 +458,7 @@ nothing is declared for them; a longer one is armed by nothing. A verb that
 only picks changes the `Ui` and no board, and the guards count that as
 doing something. Two things are the game's own:
 
-- **Its `hintGesture` taps each part**, from the selection as it stands.
+- **Its `hint.gesture` taps each part**, from the selection as it stands.
   `verbClicks` needs every click to make a move the step keeps, which a click
   that only picks does not.
 - **A key for a part picks the part under the cursor too** where nothing is
@@ -886,7 +886,7 @@ absolute sets and not toggles. Exemplar: `setEdge` in
 - **Read the counts through the pending ops, not off the board.** One click
   can deliver several marks, and a helper that reads the state alone finds
   nothing on the move that should trigger it.
-- **Derive the hint's allowance from the step's own move.** `hintKeepTrack`
+- **Derive the hint's allowance from the step's own move.** `hint.keepTrack`
   drops the plan on an op the step did not ask for, so with the aid on it
   would drop on the step just taken. Run the same aid over the step's wanted
   ops and allow exactly that, so an extra mark the step does not force still

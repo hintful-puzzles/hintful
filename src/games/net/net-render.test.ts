@@ -41,7 +41,7 @@ function board(
   const { desc } = newDesc(p, randomNew(seed));
   const id = `${netGame.encodeParams(p, true)}:${desc}`;
   const state = newState(p, desc);
-  const solveResult = netGame.solve?.(state, state);
+  const solveResult = netGame.solve(state, state);
   if (!solveResult?.ok) throw new Error("board should be solvable");
   return { id, state, solveMove: solveResult.move };
 }

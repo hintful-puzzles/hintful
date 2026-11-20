@@ -113,7 +113,7 @@ describe("norinori completion", () => {
   const start = newState(P, DESC);
 
   it("the solve move finishes the board", () => {
-    const solved = norinoriGame.solve?.(start, start);
+    const solved = norinoriGame.solve(start, start);
     if (!solved?.ok) throw new Error("expected a solution");
     const end = executeMove(start, solved.move);
     expect(norinoriGame.status(end)).toBe("solved");

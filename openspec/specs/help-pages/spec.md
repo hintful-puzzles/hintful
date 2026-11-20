@@ -316,7 +316,7 @@ unbound game's page with one, SHALL fail the build.
 
 #### Scenario: A game binds its hint
 
-- **WHEN** a game declares `hintMarks`
+- **WHEN** a game declares `hint.marks`
 - **THEN** its help page's Hints section lists "A ring marks …", "An outline
   marks …" and "Stripes mark …" for the roles its legend lists, in the game's
   own words for what each marks there

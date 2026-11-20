@@ -46,7 +46,7 @@ function board(p: NetParams, seed: string) {
 type TurnHint = Exclude<NetHint, { kind: "note" }>;
 
 const plan = (s: NetState) => {
-  const r = netGame.hint?.(s, undefined, newUi(s));
+  const r = netGame.hint.plan(s, undefined, newUi(s));
   if (!r?.ok) throw new Error(`no hint: ${r?.error}`);
   return r.steps;
 };
@@ -231,7 +231,7 @@ describe("keep-track", () => {
       wrongWay.type === "rotate" && wrongWay.op === "A"
         ? anticlockwise(now)
         : clockwise(now);
-    const verdict = netGame.hintKeepTrack?.(wrongWay, copy, s);
+    const verdict = netGame.hint.keepTrack(wrongWay, copy, s);
     if (turned === h.wires) expect(verdict).toBe("completed");
     else {
       expect(verdict).toBe("onTrack");
@@ -243,10 +243,10 @@ describe("keep-track", () => {
 
   it("the step's own move completes it; a move elsewhere drops the plan", () => {
     const { state: s, step } = pinned("turn");
-    expect(netGame.hintKeepTrack?.(step.move, step, s)).toBe("completed");
+    expect(netGame.hint.keepTrack(step.move, step, s)).toBe("completed");
     const h = step.highlights as TurnHint;
     const elsewhere: NetMove = { type: "lock", x: (h.at.x + 1) % s.w, y: h.at.y };
-    expect(netGame.hintKeepTrack?.(elsewhere, step, s)).toBe("off");
+    expect(netGame.hint.keepTrack(elsewhere, step, s)).toBe("off");
   });
 });
 

@@ -693,7 +693,7 @@ describe("boats solve", () => {
     // the fleet contradicts.
     const p = params();
     const state = newState(p, "0,0,0,0,0,0,0,0,0,0,0,0,");
-    expect(boatsGame.solve?.(state, state)?.ok).toBe(false);
+    expect(boatsGame.solve(state, state)?.ok).toBe(false);
   });
 });
 

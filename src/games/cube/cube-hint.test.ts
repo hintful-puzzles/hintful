@@ -206,12 +206,12 @@ describe("cube hint gesture", () => {
   it("is a tap the game reads as the step's roll, from every square of every preset", () => {
     for (const p of PRESETS) {
       const base = newState(p, newDesc(p, randomNew("g")).desc);
-      const ds = cubeGame.newDrawState(base, cubeGame.preferredTileSize ?? 48);
+      const ds = cubeGame.newDrawState(base, cubeGame.preferredTileSize);
       for (let sq = 0; sq < base.grid.length; sq++) {
         const s = { ...base, current: sq };
         for (const m of rollsFrom(s)) {
           const [tap] =
-            cubeGame.hintGesture?.(s, {}, ds, m, {
+            cubeGame.hint.gesture?.(s, {}, ds, m, {
               move: m,
               rung: "travel",
               explanation: "",
@@ -233,7 +233,7 @@ describe("cube hint marks", () => {
     const step = res.steps.find((st) => stepMarks(st).of("outline", SQUARE).length > 0);
     if (!step) throw new Error("no step outlines a goal");
     const dr = new RecordingDrawing(cubeGame.colors(DEFAULT_BACKGROUND));
-    const ds = cubeGame.newDrawState(s, cubeGame.preferredTileSize ?? 48);
+    const ds = cubeGame.newDrawState(s, cubeGame.preferredTileSize);
     redraw(dr, ds, null, s, 0, {}, 0, NO_FLASH, step);
     const lines = opsOfKind(dr.ops, "line");
     // The square to roll onto is ringed round, and the goal's outline is

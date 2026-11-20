@@ -500,7 +500,7 @@ describe("levels with pits, which only a hand-typed ID has", () => {
         expect(++pushes).toBeLessThan(50);
       }
       expect(pushes).toBeGreaterThan(0);
-      const solved = G.solve?.(start, start);
+      const solved = G.solve(start, start);
       expect(solved?.ok).toBe(true);
       if (solved?.ok) expect(status(executeMove(start, solved.move))).toBe("solved");
     });
@@ -510,7 +510,7 @@ describe("levels with pits, which only a hand-typed ID has", () => {
 describe("Solve", () => {
   it("leaves the finished board, from the dealt one when the player's is lost", () => {
     const s = load(PINNED.onTarget);
-    const r = G.solve?.(s, s);
+    const r = G.solve(s, s);
     expect(r?.ok).toBe(true);
     if (!r?.ok) return;
     expect(status(executeMove(s, r.move))).toBe("solved");
@@ -521,7 +521,7 @@ describe("Solve", () => {
     const [striped] = stepMarks(trap).of("stripes", PUSH);
     const lost = executeMove(deal, pushMove(deal.w, striped));
     expect(hint(lost).ok).toBe(false);
-    const back = G.solve?.(deal, lost);
+    const back = G.solve(deal, lost);
     expect(back?.ok).toBe(true);
     if (back?.ok) expect(status(executeMove(lost, back.move))).toBe("solved");
   });

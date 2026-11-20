@@ -125,7 +125,7 @@ count before and after in one sentence. Exemplar:
 - **Cap the plan, and end it early once the next request might find something
   better** (Untangle's `MAX_PLAN_STEPS`). Every step is a fresh measurement,
   and the midend recomputes when a plan runs out.
-- **Declare no `hintKeepTrack`.** Without one every move the player makes is
+- **Declare no `hint.keepTrack`.** Without one every move the player makes is
   `"off"`, so any deviation drops the plan and the next request measures again.
 - **Carry the suggestion as the step's highlight, and draw the move from piece
   to destination in the hint color.** Read the source from live state, so an
@@ -239,7 +239,7 @@ a non-negative integer every hinted move provably lowers.
 - **A potential holds only where some move lowers it, so count the positions
   where none does.** A search that is not shortest has no potential a local
   rule can complete: call the result "measured", not proved.
-- **Do not carry the plan to hide an instability.** `hintKeepTrack` keeps a
+- **Do not carry the plan to hide an instability.** `hint.keepTrack` keeps a
   plan while the player follows it, and the cycle appears the moment they do
   not.
 - **Never narrate a tour heuristic as the plan.** Recomputed from adjacent
@@ -364,7 +364,7 @@ rule settles.
   by distance from the pieces and goals still out of place.
 - **Where the move needs a walk first, the step's move is the whole of it**
   (walk, then push, as `executeMove` applies it). Its gesture is the one a
-  player makes, and `hintKeepTrack` answers `"onTrack"` to a walk that changes
+  player makes, and `hint.keepTrack` answers `"onTrack"` to a walk that changes
   nothing the step said.
 
 ## A move puzzle teaches order

@@ -61,7 +61,7 @@ describe("wordtrail hint plans", () => {
       // The plan is capped, so it is asked again until the board is done.
       for (let asked = 0; wordtrailGame.status(state) !== "solved"; asked++) {
         expect(asked).toBeLessThan(state.edges.length);
-        const result = wordtrailGame.hint?.(state);
+        const result = wordtrailGame.hint.plan(state);
         if (!result?.ok) throw new Error(`refused on ${seed}`);
         for (const step of result.steps) {
           if (step.move.kind !== "edges") throw new Error("a step marks edges");
@@ -81,7 +81,7 @@ describe("wordtrail hint plans", () => {
 
   it("a step rings exactly the edges its move marks", () => {
     const state = deal(BOARDS[1], "rings");
-    const result = wordtrailGame.hint?.(state);
+    const result = wordtrailGame.hint.plan(state);
     if (!result?.ok) throw new Error("refused");
     for (const step of result.steps) {
       if (step.move.kind !== "edges") throw new Error("a step marks edges");
@@ -97,7 +97,7 @@ describe("wordtrail hint plans", () => {
     if (step.move.kind !== "edges") throw new Error("a step marks edges");
     const [first, ...rest] = step.move.changes;
     const copy = { ...step, move: structuredClone(step.move) };
-    const verdict = wordtrailGame.hintKeepTrack?.(
+    const verdict = wordtrailGame.hint.keepTrack(
       { kind: "edges", changes: [first] },
       copy,
       state,
@@ -111,7 +111,7 @@ describe("wordtrail hint plans", () => {
     if (step.move.kind !== "edges") throw new Error("a step marks edges");
     const { edge } = step.move.changes[0];
     expect(
-      wordtrailGame.hintKeepTrack?.(
+      wordtrailGame.hint.keepTrack(
         { kind: "edges", changes: [{ edge, mark: CROSS }] },
         step,
         state,
@@ -129,7 +129,7 @@ describe("wordtrail hint tracking by direction", () => {
     const g = squareEdges(state.w, state.h);
     const other = g.a[line.edge] === line.from ? g.b[line.edge] : g.a[line.edge];
     const judge = (from: number) =>
-      wordtrailGame.hintKeepTrack?.(
+      wordtrailGame.hint.keepTrack(
         { kind: "edges", changes: [{ ...line, from }] },
         { ...step, move: structuredClone(step.move) },
         state,

@@ -1,5 +1,5 @@
 /**
- * The judge of a player's last move (`Game.judgeMove`), on Light Up's
+ * The judge of a player's last move (`Game.hint.judgeMove`), on Light Up's
  * `describedFiringHint`: a move a deduction makes from the board is named
  * by its technique; a move only a deeper chain reaches says so; a right move
  * nothing decided yet is told apart; and a move that makes nothing a
@@ -83,7 +83,7 @@ function fresh(p: LightupParams, seed: string): LightupState {
 const nameOf = (rung: string): string =>
   NAMES[rung.split(".")[0] as keyof typeof NAMES];
 
-const judge = lightupGame.judgeMove;
+const judge = lightupGame.hint.judgeMove;
 if (!judge) throw new Error("Light Up wires no judgeMove");
 
 describe("verdictOf", () => {
@@ -108,7 +108,7 @@ describe("judgeMove", () => {
   it("names a hint's own move by its technique", () => {
     for (const seed of ["mj-a", "mj-b", "mj-c"]) {
       const state = fresh(EASY, seed);
-      const res = lightupGame.hint?.(state);
+      const res = lightupGame.hint.plan(state);
       if (!res?.ok) throw new Error("no hint");
       const step = res.steps[0];
       const verdict = judge(state, lightupGame.executeMove(state, step.move));
@@ -127,10 +127,10 @@ describe("judgeMove", () => {
     const { desc, aux } = dealt(game, params);
     let state = game.newState(params, desc);
     for (let k = 0; k < 40; k++) {
-      const res = game.hint?.(state, aux, game.newUi(state));
+      const res = game.hint.plan(state, aux, game.newUi(state));
       if (!res?.ok) break;
       const after = game.executeMove(state, res.steps[0].move);
-      const text = game.judgeMove?.(state, after)?.words.text ?? "";
+      const text = game.hint.judgeMove?.(state, after)?.words.text ?? "";
       if (text.startsWith(DIRECT) && text.includes(", or ")) {
         const named = Object.values(UNRULY_NAMES).filter((n) => text.includes(n));
         expect(named.length, text).toBeGreaterThanOrEqual(2);
@@ -146,11 +146,11 @@ describe("judgeMove", () => {
     for (const seed of ["mj-a", "mj-b", "mj-c"]) {
       // A few moves in, past the steps the bare clues decide.
       let state = fresh(EASY, seed);
-      const plan = lightupGame.hint?.(state);
+      const plan = lightupGame.hint.plan(state);
       if (!plan?.ok) throw new Error("no hint");
       for (const step of plan.steps.slice(0, 6))
         state = lightupGame.executeMove(state, step.move);
-      const res = lightupGame.hint?.(state);
+      const res = lightupGame.hint.plan(state);
       if (!res?.ok) continue;
       for (const step of res.steps.slice(1)) {
         const verdict = judge(state, lightupGame.executeMove(state, step.move));
@@ -169,7 +169,7 @@ describe("judgeMove", () => {
   it("tells a right bulb nothing decided from a deduced one", () => {
     let state = fresh(UNREASONABLE, "lh-unreasonable");
     for (let moves = 0; moves < 200; moves++) {
-      const res = lightupGame.hint?.(state);
+      const res = lightupGame.hint.plan(state);
       if (!res?.ok) break;
       state = lightupGame.executeMove(state, res.steps[0].move);
     }
@@ -194,7 +194,7 @@ describe("judgeMove", () => {
 
   it("does not judge a move that takes a mark away", () => {
     const state = fresh(EASY, "mj-a");
-    const res = lightupGame.hint?.(state);
+    const res = lightupGame.hint.plan(state);
     if (!res?.ok) throw new Error("no hint");
     const marked = lightupGame.executeMove(state, res.steps[0].move);
     // The same toggles again take the marks off.
@@ -231,7 +231,7 @@ describe("judgeMove, where a chain began", () => {
     const moves: Parameters<typeof game.executeMove>[1][] = [];
     let state = start;
     for (let k = 0; k < 40; k++) {
-      const res = game.hint?.(state, aux, game.newUi(state));
+      const res = game.hint.plan(state, aux, game.newUi(state));
       if (!res?.ok) break;
       moves.push(res.steps[0].move);
       state = game.executeMove(state, res.steps[0].move);
@@ -240,7 +240,8 @@ describe("judgeMove, where a chain began", () => {
     for (const move of moves) {
       let text = "";
       const audits = heard(() => {
-        text = game.judgeMove?.(start, game.executeMove(start, move))?.words.text ?? "";
+        text =
+          game.hint.judgeMove?.(start, game.executeMove(start, move))?.words.text ?? "";
       });
       const said = audits.length === 1 ? namedBy(audits[0]) : null;
       if (said === null) expect(text).not.toMatch(CHAINED);
@@ -266,14 +267,14 @@ describe("judgeMove, where a chain began", () => {
     const start = game.newState(params, desc);
     for (const candidateReading of ["populate", "implicit"] as const) {
       const ui = { ...game.newUi(start), candidateReading };
-      const res = game.hint?.(start, aux, ui);
+      const res = game.hint.plan(start, aux, ui);
       if (!res?.ok) throw new Error("no hint on the board as dealt");
       let named = 0;
       for (const step of res.steps) {
         let text = "";
         const audits = heard(() => {
           text =
-            game.judgeMove?.(start, game.executeMove(start, step.move), ui)?.words
+            game.hint.judgeMove?.(start, game.executeMove(start, step.move), ui)?.words
               .text ?? "";
         });
         if (audits.length === 0) continue;
@@ -429,12 +430,13 @@ describe("judgeMove, where a chain began", () => {
     const params = game.defaultParams();
     const { desc, aux } = dealt(game, params);
     const start = game.newState(params, desc);
-    const res = game.hint?.(start, aux, game.newUi(start));
+    const res = game.hint.plan(start, aux, game.newUi(start));
     if (!res?.ok) throw new Error("no hint on the board as dealt");
     let chained = 0;
     for (const step of res.steps) {
       const text =
-        game.judgeMove?.(start, game.executeMove(start, step.move))?.words.text ?? "";
+        game.hint.judgeMove?.(start, game.executeMove(start, step.move))?.words.text ??
+        "";
       if (!text.includes("a few steps on")) continue;
       chained++;
       expect(text, step.explanation).toMatch(CHAINED);
@@ -508,7 +510,7 @@ describe("judgeMove, where a chain began", () => {
 });
 
 describe("judgeMove, a mark no firing makes", () => {
-  const tracksJudge = tracksGame.judgeMove;
+  const tracksJudge = tracksGame.hint.judgeMove;
   if (!tracksJudge) throw new Error("Tracks wires no judgeMove");
   // Tracks' sides a square closes, by its two rails or by holding none, are
   // read off the marks and crossed by no technique.
@@ -517,7 +519,7 @@ describe("judgeMove, a mark no firing makes", () => {
   let state = tracksGame.newState(params, desc);
   const path = [state];
   for (let k = 0; k < 300; k++) {
-    const res = tracksGame.hint?.(state, aux, tracksGame.newUi(state));
+    const res = tracksGame.hint.plan(state, aux, tracksGame.newUi(state));
     if (!res?.ok) break;
     state = tracksGame.executeMove(state, res.steps[0].move);
     path.push(state);

@@ -103,7 +103,7 @@ describe("Black Box's answer", () => {
     // The board itself is well formed: only its answers keep it from loading.
     expect(validateDesc(game, HIDDEN_MIDDLE, CORNERS)).toBeNull();
     const s = newState(HIDDEN_MIDDLE, CORNERS);
-    expect(game.solve?.(s, s)).toEqual({ ok: false, error: MULTIPLE_SOLUTIONS });
+    expect(game.solve(s, s)).toEqual({ ok: false, error: MULTIPLE_SOLUTIONS });
     // The same balls with the count fixed have one answer, and load.
     const four = { ...HIDDEN_MIDDLE, maxballs: 4 };
     expect(

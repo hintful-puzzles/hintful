@@ -6,7 +6,6 @@ import type { NotifyGameStateChange, PuzzleStaticAttributes } from "../engine/ty
 import { BROUGHT_BACK, Puzzle } from "./puzzle.ts";
 
 const ATTRS: PuzzleStaticAttributes = {
-  canSolve: true,
   canHint: true,
   canCheck: true,
   referenceTitle: null,

@@ -65,7 +65,7 @@ describe("no compiled binding fires on a stale read", () => {
           let state = game.newState(params, desc);
           const ui = game.newUi(state);
           for (let i = 0; i < STEPS && game.status(state) === "ongoing"; i++) {
-            const res = game.hint?.(state, aux, ui);
+            const res = game.hint.plan(state, aux, ui);
             if (!res?.ok) break;
             const step = res.steps[0];
             if (step === undefined) break;

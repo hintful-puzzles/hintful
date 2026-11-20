@@ -24,7 +24,7 @@
 import ts from "typescript";
 import "../../games/index.ts";
 import type { WorkingRow } from "../code-rows.ts";
-import type { Game } from "../game.ts";
+import { type Game, hasHint } from "../game.ts";
 import { randomNew } from "../random/index.ts";
 import { getTsGame, registeredGameIds } from "../registry.ts";
 import { linesMatching, stripComments } from "./code-lines.ts";
@@ -127,7 +127,8 @@ export function enrolledIn(isMember: (g: BuiltGame) => boolean): Enrollment {
 // --- what each game can do, derived ----------------------------------------
 
 /**
- * The optional members of the `Game` interface, read off its own declaration.
+ * The optional members of the `Game` interface and of its hint, `GameHint`,
+ * read off their own declarations: a hint's as `hint.<member>`.
  *
  * The same derivation `contract-surface.test.ts` makes, for the complementary
  * question. That file asks, per *member*, "does anyone implement this and does
@@ -144,17 +145,25 @@ export const OPTIONAL_GAME_MEMBERS: readonly string[] = (() => {
   const text = Object.values(modules)[0];
   if (text === undefined) throw new Error("enrollment: engine/game.ts not found");
   const src = ts.createSourceFile("game.ts", text, ts.ScriptTarget.ESNext, true);
-  for (const st of src.statements) {
-    if (!ts.isInterfaceDeclaration(st) || st.name.text !== "Game") continue;
-    const names = st.members
-      .filter((m) => m.questionToken !== undefined && m.name !== undefined)
-      .map((m) => (m.name as ts.Identifier).text)
-      .sort();
-    if (names.length === 0)
-      throw new Error("enrollment: `Game` has no optional members");
-    return names;
-  }
-  throw new Error("enrollment: no `Game` interface in engine/game.ts");
+  const optionalOf = (name: string): string[] => {
+    for (const st of src.statements) {
+      if (!ts.isInterfaceDeclaration(st) || st.name.text !== name) continue;
+      const names = st.members
+        .filter((m) => m.questionToken !== undefined && m.name !== undefined)
+        .map((m) => (m.name as ts.Identifier).text);
+      if (names.length === 0)
+        throw new Error(`enrollment: \`${name}\` has no optional members`);
+      return names;
+    }
+    throw new Error(`enrollment: no \`${name}\` interface in engine/game.ts`);
+  };
+  // `hint` itself is required, and absent as a draft's `DRAFT_HINT`: a game
+  // may lack a written hint as it may lack any optional member.
+  return [
+    "hint",
+    ...optionalOf("Game"),
+    ...optionalOf("GameHint").map((m) => `hint.${m}`),
+  ].sort();
 })();
 
 /** Everything one game is observably able to do. */
@@ -192,7 +201,11 @@ export function capabilitySets(): CapabilitySet[] {
   return builtGames().map((g) => ({
     id: g.id,
     members: OPTIONAL_GAME_MEMBERS.filter((m) =>
-      Object.hasOwn(g.game as object, m),
+      m === "hint"
+        ? hasHint(g.game)
+        : m.startsWith("hint.")
+          ? Object.hasOwn(g.game.hint, m.slice("hint.".length))
+          : Object.hasOwn(g.game as object, m),
     ).sort(),
     ui: Object.keys(g.ui).sort(),
     drawState: Object.keys(g.drawState).sort(),

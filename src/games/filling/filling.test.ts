@@ -173,9 +173,9 @@ describe("filling moves + selection", () => {
   it("fills every selected cell with one digit", () => {
     const st = newState(size(3, 1), "aaa"); // all empty
     const ui = fillingGame.newUi(st);
-    const ds = fillingGame.newDrawState(st, fillingGame.preferredTileSize ?? 32);
+    const ds = fillingGame.newDrawState(st, fillingGame.preferredTileSize);
     // Select cells 1 and 2 with left-click + drag.
-    const ts = fillingGame.preferredTileSize ?? 32;
+    const ts = fillingGame.preferredTileSize;
     const cx = (i: number) => Math.floor(ts / 2) + i * ts + Math.floor(ts / 2);
     fillingGame.interpretMove(st, ui, ds, { x: cx(1), y: cx(0) }, LEFT_BUTTON);
     fillingGame.interpretMove(st, ui, ds, { x: cx(2), y: cx(0) }, LEFT_DRAG);

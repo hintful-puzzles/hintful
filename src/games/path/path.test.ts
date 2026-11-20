@@ -109,7 +109,7 @@ describe("path boards dealt before the Checks", () => {
     if (!contract) throw new Error("Path is tiered");
     expect(contract.solveAtCap(p, desc, DIFF_TRICKY)).toBe("unsolved");
     expect(contract.solveAtCap(p, desc, DIFF_UNREASONABLE)).toBe("solved");
-    expect(pathGame.solve?.(newState(p, desc), newState(p, desc)).ok).toBe(true);
+    expect(pathGame.solve(newState(p, desc), newState(p, desc)).ok).toBe(true);
     const m = new Midend(pathGame);
     expect(m.newGameFromId(id)).toBeNull();
     expect(m.getParams()).toBe(`${params.slice(0, -1)}u`);
@@ -407,7 +407,7 @@ describe("path completion", () => {
     });
 
   it("the solve move finishes the board", () => {
-    const solved = pathGame.solve?.(start, start);
+    const solved = pathGame.solve(start, start);
     if (!solved?.ok) throw new Error("expected a solution");
     expect(pathGame.status(executeMove(start, solved.move))).toBe("solved");
   });
@@ -594,7 +594,7 @@ describe("path, the one-line ruleset", () => {
     }
     // A move that names the wall, as a crafted save might, leaves it.
     expect(executeMove(walled, set(10, OPEN)).edges[10]).toBe(CROSS);
-    const solved = pathGame.solve?.(walled, walled);
+    const solved = pathGame.solve(walled, walled);
     if (!solved?.ok) throw new Error("expected a solution");
     expect(executeMove(walled, solved.move).edges[10]).toBe(CROSS);
   });

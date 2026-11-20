@@ -220,31 +220,33 @@ describe("the continuity instrument", () => {
     type M = { strike: [number, number] } | { place: [number, number] };
     const bit = (n: number): number => 1 << (n - 1);
     const game = {
-      hint: () => ({
-        ok: true,
-        steps: [
-          {
-            move: { strike: [5, 2] },
-            highlights: {
-              area: [{ x: 0, y: 0 }],
-              targets: [{ x: 2, y: 1 }],
-              marks: [{ x: 2, y: 1, n: 2 }],
+      hint: {
+        plan: () => ({
+          ok: true,
+          steps: [
+            {
+              move: { strike: [5, 2] },
+              highlights: {
+                area: [{ x: 0, y: 0 }],
+                targets: [{ x: 2, y: 1 }],
+                marks: [{ x: 2, y: 1, n: 2 }],
+              },
             },
-          },
-          {
-            move: { place: [4, 2] },
-            highlights: {
-              area: [],
-              hatch: [
-                { x: 0, y: 1 },
-                { x: 2, y: 1 },
-              ],
-              targets: [{ x: 1, y: 1 }],
-              marks: [],
+            {
+              move: { place: [4, 2] },
+              highlights: {
+                area: [],
+                hatch: [
+                  { x: 0, y: 1 },
+                  { x: 2, y: 1 },
+                ],
+                targets: [{ x: 1, y: 1 }],
+                marks: [],
+              },
             },
-          },
-        ],
-      }),
+          ],
+        }),
+      },
       executeMove: (s: S, m: M): S => {
         const next = { ...s, grid: s.grid.slice(), pencil: s.pencil.slice() };
         if ("strike" in m) next.pencil[m.strike[0]] &= ~bit(m.strike[1]);

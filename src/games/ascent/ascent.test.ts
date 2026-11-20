@@ -113,7 +113,7 @@ describe("ascent's dialog asks for the ruleset, Edges and the board's shape sepa
    * order on a copy. */
   const submit = (from: number, ruleset: number, edged: boolean, shape: number) => {
     const p = { ...ascentGame.defaultParams(), mode: from };
-    for (const item of ascentGame.paramConfig ?? []) {
+    for (const item of ascentGame.paramConfig) {
       if (item.kw === "ruleset") field("ruleset").set(p, ruleset);
       else if (item.kw === "edges") edges.set(p, edged);
       else if (item.kw === "board-shape") field("board-shape").set(p, shape);
@@ -312,7 +312,7 @@ describe("ascent solve + completion", () => {
     const p = mk(5, 5, 1, MODE_RECT);
     const { desc } = newAscentDesc(p, randomNew("solve-seed"));
     const state = newAscentState(p, desc);
-    const res = ascentGame.solve?.(state, state);
+    const res = ascentGame.solve(state, state);
     expect(res?.ok).toBe(true);
     if (!res?.ok) throw new Error("solve failed");
     const solved = ascentGame.executeMove(state, res.move);
@@ -340,7 +340,7 @@ describe("ascent hexagonal hit-testing (design F7)", () => {
     const p = mk(7, 7, 1, MODE_HEXAGON);
     const { desc } = newAscentDesc(p, randomNew("hex-hit"));
     const state = newAscentState(p, desc);
-    const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);
+    const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize);
 
     const ts = ds.tileSize;
     const R = ts / Math.sqrt(3);
@@ -379,7 +379,7 @@ describe("ascent edge-drag guide line", () => {
     const state = newAscentState(p, desc);
     const ui = ascentGame.newUi(state);
     set(ui);
-    const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);
+    const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize);
     const rec = new RecordingDrawing(ascentGame.colors([0.83, 0.83, 0.83]));
     ascentGame.redraw?.(rec, ds, null, state, 1, ui, 0, NO_FLASH);
     return rec.ops.filter(
@@ -457,7 +457,7 @@ describe("ascent typed-number line preview", () => {
         ui.typingCell = cellB;
         ui.typingNumber = previewNum + 1; // displayed (1-based)
       }
-      const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);
+      const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize);
       const rec = new RecordingDrawing(ascentGame.colors([0.83, 0.83, 0.83]));
       ascentGame.redraw?.(rec, ds, null, state, 1, ui, 0, NO_FLASH);
       return rec.ops.filter(
@@ -494,7 +494,7 @@ function scratch() {
     path: null,
   };
   const ui = ascentGame.newUi(state);
-  const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);
+  const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize);
   const center = (cell: number) => ({
     x: ds.offsetX + (cell % w) * ds.tileSize + ds.tileSize / 2,
     y: ds.offsetY + Math.trunc(cell / w) * ds.tileSize + ds.tileSize / 2,
@@ -634,7 +634,7 @@ describe("ascent right-click two-option toggle", () => {
 
     const ui = ascentGame.newUi(state);
     ui.held = cellA;
-    const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);
+    const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize);
     const ts = ds.tileSize;
     const center = {
       x: ds.offsetX + (cellB % w) * ts + ts / 2,
@@ -691,7 +691,7 @@ describe("ascent right-click two-option toggle", () => {
     expect(cellB).toBeGreaterThanOrEqual(0);
 
     const ui = ascentGame.newUi(state);
-    const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);
+    const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize);
     const ts = ds.tileSize;
     const at = (c: number) => ({
       x: ds.offsetX + (c % w) * ts + ts / 2,

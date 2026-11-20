@@ -14,7 +14,7 @@ import {
   fakeGame,
 } from "./fake-game.ts";
 import type { Game, HintStep } from "./game.ts";
-import { narratedStep, UI_UPDATE } from "./game.ts";
+import { DRAFT_HINT, narratedStep, UI_UPDATE } from "./game.ts";
 import { click, drag, key } from "./hint-gesture.ts";
 import {
   ALREADY_SOLVED,
@@ -46,6 +46,7 @@ import {
 } from "./pointer.ts";
 import { RetryLimitExceeded } from "./retry-limit.ts";
 import { decodeSave, encodeSave } from "./save.ts";
+import { SOLUTION_UNKNOWN } from "./solve-failure.ts";
 import { interpretTargetVerbs, squareGrid, type TargetVerbs } from "./target-verb.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
@@ -629,7 +630,7 @@ describe("Midend moves / undo / redo", () => {
     } as unknown as typeof fakeGame;
     h = harness(game);
     h.m.newGame();
-    const tile = fakeGame.preferredTileSize ?? 32;
+    const tile = fakeGame.preferredTileSize;
     const at = (square: number) => square * tile + tile / 2;
 
     h.m.processInput(at(0), 5, LEFT_BUTTON);
@@ -725,29 +726,16 @@ describe("Midend status + solve", () => {
     expect(h.state()?.canUndo).toBe(false);
   });
 
-  // The refusals a player can actually read. `canSolve`/`canHint` are the flags
-  // the app hides the buttons behind, but the midend must still answer
-  // correctly when something calls through anyway — a keyboard shortcut, a
-  // stale UI, a scripted replay — and answering `undefined` means "done", which
-  // would leave the board untouched and the player told it worked.
-  it.each([
-    [
-      "solving",
-      { ...fakeGame, solve: undefined },
-      (m: Midend<never, never, never, never, never>) => m.solve(),
-      "This game does not support solving",
-    ],
-    [
-      "hints",
-      { ...fakeGame, hint: undefined },
-      (m: Midend<never, never, never, never, never>) => m.hint(),
-      "This game does not support hints",
-    ],
-  ])("refuses %s on a game that does not implement it", (_what, game, call, message) => {
-    const h = harness(game as typeof fakeGame);
+  // The refusal a player can actually read. `canHint` is the flag the app hides
+  // the button behind, but the midend must still answer correctly when
+  // something calls through anyway — a keyboard shortcut, a stale UI, a
+  // scripted replay — and answering `undefined` means "done", which would
+  // leave the board untouched and the player told it worked.
+  it("refuses hints on a draft, whose hint is not written", () => {
+    const h = harness({ ...fakeGame, hint: DRAFT_HINT });
     h.m.newGame();
     const before = h.m.formatAsText();
-    expect(call(h.m as never)).toBe(message);
+    expect(h.m.hint()).toBe("This game does not support hints");
     expect(h.m.formatAsText()).toBe(before);
     expect(h.state()?.status).toBe("ongoing");
   });
@@ -1400,7 +1388,7 @@ describe("Midend: deduction runs out only on an Unreasonable tier", () => {
       // A solver that finishes what the hint cannot: the board loads at any
       // tier (`loadDesc`), and the hint still runs out.
       difficulty: { solveAtCap: () => "solved" },
-      hint: () => ({ ok: false, error: DEDUCTION_EXHAUSTED }),
+      hint: { ...tiered.hint, plan: () => ({ ok: false, error: DEDUCTION_EXHAUSTED }) },
     };
     return g as unknown as typeof fakeGame;
   }
@@ -1427,7 +1415,10 @@ describe("Midend: deduction runs out only on an Unreasonable tier", () => {
   it("a game with no tiers has none that allows trial and error", () => {
     const h = harness({
       ...fakeGame,
-      hint: () => ({ ok: false, error: DEDUCTION_EXHAUSTED }),
+      hint: {
+        ...fakeGame.hint,
+        plan: () => ({ ok: false, error: DEDUCTION_EXHAUSTED }),
+      },
     });
     h.m.newGame();
     expect(() => h.m.hint()).toThrow(
@@ -1509,15 +1500,24 @@ describe("Midend: a board carries the tier it needs", () => {
   });
 });
 
+/** `fakeGame`, or `game`, with parts of its hint replaced. */
+function withHint(
+  hint: Partial<(typeof fakeGame)["hint"]>,
+  game: typeof fakeGame = fakeGame,
+): typeof fakeGame {
+  return { ...game, hint: { ...game.hint, ...hint } };
+}
+
 function countingHintGame(): { game: typeof fakeGame; hintCalls: () => number } {
   let calls = 0;
   const game: typeof fakeGame = {
     ...fakeGame,
-    hint: (s) => {
-      calls += 1;
-      const base = fakeGame.hint;
-      if (!base) throw new Error("fakeGame.hint missing");
-      return base(s);
+    hint: {
+      ...fakeGame.hint,
+      plan: (s) => {
+        calls += 1;
+        return fakeGame.hint.plan(s);
+      },
     },
   };
   return { game, hintCalls: () => calls };
@@ -1538,16 +1538,20 @@ describe("Midend hint plan lifecycle", () => {
   });
 
   it("sends a step's words in both schemes, for the screen to show the one in force", () => {
-    const base = fakeGame.hint;
-    if (!base) throw new Error("fakeGame.hint missing");
     const word = new ColorWord("yellow", "brown");
     h = harness({
       ...fakeGame,
-      hint: (s) => {
-        const r = base(s);
-        if (!r.ok) return r;
-        const words = unshaped(phrase`Fill it with ${word}.`, "bare");
-        return { ok: true, steps: r.steps.map((st) => narratedStep({ ...st, words })) };
+      hint: {
+        ...fakeGame.hint,
+        plan: (s) => {
+          const r = fakeGame.hint.plan(s);
+          if (!r.ok) return r;
+          const words = unshaped(phrase`Fill it with ${word}.`, "bare");
+          return {
+            ok: true,
+            steps: r.steps.map((st) => narratedStep({ ...st, words })),
+          };
+        },
       },
     });
     h.m.newGame();
@@ -1565,16 +1569,20 @@ describe("Midend hint plan lifecycle", () => {
   function twoMarkGame(
     said = phrase`From ${mark.as("outline", CELL, [{ x: 0, y: 0 }], "the left cell")}, fill ${mark.as("ring", CELL, [{ x: 1, y: 0 }], "the right one")}.`,
   ) {
-    const base = fakeGame.hint;
-    if (!base) throw new Error("fakeGame.hint missing");
     const drawn: (HintStep<FakeMove> | null)[] = [];
     const game: typeof fakeGame = {
       ...fakeGame,
-      hint: (s) => {
-        const r = base(s);
-        if (!r.ok) return r;
-        const words = unshaped(said, "evident");
-        return { ok: true, steps: r.steps.map((st) => narratedStep({ ...st, words })) };
+      hint: {
+        ...fakeGame.hint,
+        plan: (s) => {
+          const r = fakeGame.hint.plan(s);
+          if (!r.ok) return r;
+          const words = unshaped(said, "evident");
+          return {
+            ok: true,
+            steps: r.steps.map((st) => narratedStep({ ...st, words })),
+          };
+        },
       },
       redraw: (...args) => {
         drawn.push(args[8] ?? null);
@@ -1641,11 +1649,14 @@ describe("Midend hint plan lifecycle", () => {
     );
     h = harness({
       ...g.game,
-      hintKeepTrack: (_m, step) => {
-        step.words = step.words?.narrow(
-          (role, _kind, key) => role !== "ring" || key !== "1,0",
-        );
-        return "onTrack";
+      hint: {
+        ...g.game.hint,
+        keepTrack: (_m, step) => {
+          step.words = step.words?.narrow(
+            (role, _kind, key) => role !== "ring" || key !== "1,0",
+          );
+          return "onTrack";
+        },
       },
     });
     h.m.newGame();
@@ -1701,18 +1712,20 @@ describe("Midend hint plan lifecycle", () => {
    * journey. */
   function journeyGame() {
     const c = countingHintGame();
-    const game = {
+    const game: typeof fakeGame = {
       ...c.game,
-      hint: (s: Parameters<NonNullable<typeof fakeGame.hint>>[0]) => {
-        const base = c.game.hint?.(s);
-        if (!base?.ok)
-          return base ?? { ok: false as const, error: NO_MOVE_WORTH_MAKING };
-        return {
-          ok: true as const,
-          steps: base.steps.map((step, i) =>
-            i === 1 ? { ...step, continuesPrevious: true } : step,
-          ),
-        };
+      hint: {
+        ...c.game.hint,
+        plan: (s) => {
+          const base = c.game.hint.plan(s);
+          if (!base.ok) return base;
+          return {
+            ok: true as const,
+            steps: base.steps.map((step, i) =>
+              i === 1 ? { ...step, continuesPrevious: true } : step,
+            ),
+          };
+        },
       },
     };
     return { game, hintCalls: c.hintCalls };
@@ -1740,17 +1753,20 @@ describe("Midend hint plan lifecycle", () => {
     // own next move, where it is the plan's too, must leave it hidden: the
     // step after it continues a journey here, which once brought it back.
     const c = journeyGame();
-    const game = {
+    const game: typeof fakeGame = {
       ...c.game,
-      hint: (s: Parameters<NonNullable<typeof fakeGame.hint>>[0]) => {
-        const base = c.game.hint(s);
-        if (!base.ok) return base;
-        return {
-          ok: true as const,
-          steps: base.steps.map((step, i) =>
-            i === 2 ? { ...step, continuesPrevious: true } : step,
-          ),
-        };
+      hint: {
+        ...c.game.hint,
+        plan: (s) => {
+          const base = c.game.hint.plan(s);
+          if (!base.ok) return base;
+          return {
+            ok: true as const,
+            steps: base.steps.map((step, i) =>
+              i === 2 ? { ...step, continuesPrevious: true } : step,
+            ),
+          };
+        },
       },
     };
     h = harness(game);
@@ -1819,7 +1835,7 @@ describe("Midend hint plan lifecycle", () => {
   });
 
   it("an onTrack move keeps the current step displayed", () => {
-    h = harness({ ...fakeGame, hintKeepTrack: () => "onTrack" });
+    h = harness(withHint({ keepTrack: () => "onTrack" }));
     h.m.newGame();
     h.m.hint();
     h.m.processInput(0, 0, LEFT_BUTTON);
@@ -1829,10 +1845,11 @@ describe("Midend hint plan lifecycle", () => {
   it("an onTrack move leaves a hidden step hidden", () => {
     // Part of a step made by hand after the plan was put away (Ascent: one
     // number of a whole run) is still the player's own move.
-    h = harness({
-      ...fakeGame,
-      hintKeepTrack: (_m, _step, s) => (s.count === 0 ? "completed" : "onTrack"),
-    });
+    h = harness(
+      withHint({
+        keepTrack: (_m, _step, s) => (s.count === 0 ? "completed" : "onTrack"),
+      }),
+    );
     h.m.newGame();
     expect(h.m.executeHint(true)).toBeNull(); // step 1 applied, plan hidden
     h.m.processInput(0, 0, LEFT_BUTTON); // on track for step 2
@@ -1850,7 +1867,7 @@ describe("Midend hint plan lifecycle", () => {
   });
 
   it("a game returning an empty plan is rejected", () => {
-    h = harness({ ...fakeGame, hint: () => ({ ok: true, steps: [] }) });
+    h = harness(withHint({ plan: () => ({ ok: true, steps: [] }) }));
     h.m.newGame();
     expect(h.m.hint()).toBe("Game returned an empty hint plan");
     expect(explanation()).toBeUndefined();
@@ -1895,13 +1912,13 @@ describe("Midend hint plan lifecycle", () => {
     expect(props.canHint).toBe(true);
   });
 
-  it("canSolve and wantsStatusbar come from having solve and statusbarText", () => {
+  it("wantsStatusbar comes from having statusbarText", () => {
     const full = new Midend(fakeGame).getStaticProperties();
-    expect(full.canSolve).toBe(true);
     expect(full.wantsStatusbar).toBe(true);
-    const bare = { ...fakeGame, solve: undefined, statusbarText: undefined };
-    const none = new Midend(bare as typeof fakeGame).getStaticProperties();
-    expect(none.canSolve).toBe(false);
+    const none = new Midend({
+      ...fakeGame,
+      statusbarText: undefined,
+    }).getStaticProperties();
     expect(none.wantsStatusbar).toBe(false);
   });
 
@@ -1983,7 +2000,7 @@ describe("Midend hint plan lifecycle", () => {
     };
     const m = new Midend({
       ...refGame(),
-      hint: () => ({ ok: true, steps: [step] }),
+      hint: { ...refGame().hint, plan: () => ({ ok: true, steps: [step] }) },
     } as unknown as typeof fakeGame);
     m.newGameFromId("t3:g3-0");
     expect(m.hint()).toBeNull();
@@ -2042,7 +2059,7 @@ describe("Midend hint plan lifecycle", () => {
 });
 
 // A displayed hint step is never stale. The engine-level guarantee: before (re-)displaying a stored step, the midend asks
-// the game's `refreshHintStep` whether parts of it are already resolved and
+// the game's `hint.refreshStep` whether parts of it are already resolved and
 // drops/advances past them. Modeled here with the smallest game whose move has
 // a side effect that resolves a *later* plan step (Towers' auto-pencil shape):
 // striking candidate `i` also strikes `i+1`, so the plan [strike 0, strike 1,
@@ -2085,30 +2102,35 @@ function strikeGame(opts: {
       return { n: s.n, struck };
     },
     status: (s) => (s.struck === (1 << s.n) - 1 ? "solved" : "ongoing"),
-    solve: undefined,
-    hint: (s) => {
-      const steps = [];
-      for (let i = 0; i < s.n; i++) {
-        if (present(s, i)) {
-          steps.push({
-            move: { type: "strike", i } as StrikeMove,
-            rung: "strike",
-            explanation: `Strike candidate ${i}`,
-            // One journey, counted as "Step i of n" (Towers' dup chain).
-            continuesPrevious: i > 0,
-          });
+    solve: () => ({ ok: false, error: SOLUTION_UNKNOWN }),
+    hint: {
+      plan: (s) => {
+        const steps = [];
+        for (let i = 0; i < s.n; i++) {
+          if (present(s, i)) {
+            steps.push({
+              move: { type: "strike", i } as StrikeMove,
+              rung: "strike",
+              explanation: `Strike candidate ${i}`,
+              // One journey, counted as "Step i of n" (Towers' dup chain).
+              continuesPrevious: i > 0,
+            });
+          }
         }
-      }
-      return steps.length
-        ? { ok: true, steps }
-        : { ok: false, error: NO_MOVE_WORTH_MAKING };
+        return steps.length
+          ? { ok: true, steps }
+          : { ok: false, error: NO_MOVE_WORTH_MAKING };
+      },
+      rungs: ["strike"],
+      marks: { roles: {} },
+      keepTrack: (m, step) =>
+        m.type === "strike" && step.move.type === "strike" && m.i === step.move.i
+          ? "completed"
+          : "off",
+      gesture: (_s, _ui, _ds, m) => (m.type === "strike" ? [key(100 + m.i)] : []),
+      refreshStep: (step, state) =>
+        step.move.type === "strike" && present(state, step.move.i) ? step : null,
     },
-    hintKeepTrack: (m, step) =>
-      m.type === "strike" && step.move.type === "strike" && m.i === step.move.i
-        ? "completed"
-        : "off",
-    refreshHintStep: (step, state) =>
-      step.move.type === "strike" && present(state, step.move.i) ? step : null,
     textFormat: (s) => `struck=${s.struck}`,
   };
 }
@@ -2189,7 +2211,7 @@ describe("Midend re-validates a kept plan (a displayed step is never stale)", ()
     const m = new Midend(strikeGame({ sideEffect: true }));
     m.newGame();
     m.hint(); // plan strike 0,1,2
-    // A scripted replay bypasses `hintKeepTrack` (the moves are setup, not an
+    // A scripted replay bypasses `hint.keepTrack` (the moves are setup, not an
     // answer to the displayed hint), so the stored plan is dropped, as a
     // self-played move drops it; see `Midend.playMoves`.
     m.playMoves([{ type: "strike", i: 0 }]);
@@ -2334,12 +2356,11 @@ describe("Midend executeHint plays a step's gesture, never its move", () => {
     // Guess acts only on the release of a press it declines.
     const buttons: number[] = [];
     const h = harness({
-      ...fakeGame,
+      ...withHint({ gesture: () => [drag({ x: 0, y: 0 }, { x: 5, y: 0 })] }),
       interpretMove: (_s, _ui, _ds, _p, button) => {
         buttons.push(button);
         return button === LEFT_RELEASE ? "inc" : null;
       },
-      hintGesture: () => [drag({ x: 0, y: 0 }, { x: 5, y: 0 })],
     });
     h.m.newGame();
     expect(h.m.executeHint()).toBeNull();
@@ -2350,17 +2371,18 @@ describe("Midend executeHint plays a step's gesture, never its move", () => {
   it("plays a step the pointer makes in several moves, completing on the last", () => {
     // One step jumps to the target; the pointer gets there one `inc` at a time,
     // as Net's half turn is two quarter turns.
-    const h = harness({
-      ...fakeGame,
-      hint: () => ({
-        ok: true,
-        steps: [{ move: "solve", rung: "inc", explanation: "Finish" }],
+    const h = harness(
+      withHint({
+        plan: () => ({
+          ok: true,
+          steps: [{ move: "solve", rung: "inc", explanation: "Finish" }],
+        }),
+        keepTrack: (m, _step, s) =>
+          m !== "inc" ? "off" : s.count + 1 >= s.target ? "completed" : "onTrack",
+        gesture: (s) =>
+          Array.from({ length: s.target - s.count }, () => click({ x: 0, y: 0 })),
       }),
-      hintKeepTrack: (m, _step, s) =>
-        m !== "inc" ? "off" : s.count + 1 >= s.target ? "completed" : "onTrack",
-      hintGesture: (s) =>
-        Array.from({ length: s.target - s.count }, () => click({ x: 0, y: 0 })),
-    });
+    );
     h.m.newGame(); // target 3
     expect(h.m.executeHint()).toBeNull();
     expect(h.m.formatAsText()).toBe("count=3");
@@ -2368,34 +2390,34 @@ describe("Midend executeHint plays a step's gesture, never its move", () => {
   });
 
   it("refuses a gesture that makes a move off its step", () => {
-    const h = harness({
-      ...fakeGame,
-      hintGesture: () => [click({ x: 0, y: 0 }, "secondary")],
-    });
+    const h = harness(
+      withHint({ gesture: () => [click({ x: 0, y: 0 }, "secondary")] }),
+    );
     h.m.newGame();
     expect(() => h.m.executeHint()).toThrow(/makes a move off its step: "dec"/);
   });
 
   it("refuses a key that no on-screen control sends", () => {
-    const h = harness({ ...fakeGame, hintGesture: () => [key(65)] });
+    const h = harness(withHint({ gesture: () => [key(65)] }));
     h.m.newGame();
     expect(() => h.m.executeHint()).toThrow(/presses key 65, which no on-screen/);
   });
 
   it("refuses a gesture that ends without completing its step", () => {
     const h = harness({
-      ...fakeGame,
+      ...withHint({ gesture: () => [key(65)] }),
       requestKeys: () => [{ button: 65, label: "A" }],
-      hintGesture: () => [key(65)],
     });
     h.m.newGame();
     expect(() => h.m.executeHint()).toThrow(/does not complete its step/);
   });
 
-  it("refuses to play a hint with no gesture", () => {
-    const h = harness({ ...fakeGame, hintGesture: undefined });
+  it("refuses to play a hint with neither a gesture nor targets", () => {
+    const h = harness(withHint({ gesture: undefined }));
     h.m.newGame();
-    expect(() => h.m.executeHint()).toThrow(/has a hint but no hintGesture/);
+    expect(() => h.m.executeHint()).toThrow(
+      /names its gesture, or its targets and verbs/,
+    );
   });
 });
 
@@ -2448,7 +2470,7 @@ describe("Midend mistake overlay (findMistakes lifecycle)", () => {
     expect(h.m.findMistakes()).toBe(0);
     expect(h.m.check()).toEqual({ kind: "sound", mistakesChecked: false });
     // A game with neither hook cannot check at all.
-    const bare = new Midend({ ...fakeGame, hint: undefined });
+    const bare = new Midend({ ...fakeGame, hint: DRAFT_HINT });
     expect(bare.getStaticProperties().canCheck).toBe(false);
   });
 
@@ -2457,13 +2479,17 @@ describe("Midend mistake overlay (findMistakes lifecycle)", () => {
     // says it only with the mistakes on the overlay Check & Save uses, and
     // never asks the game to deduce from a wrong board.
     let asked = 0;
-    const h = harness({
-      ...mistakeGame,
-      hint: (s) => {
-        asked++;
-        return fakeGame.hint?.(s) ?? { ok: false, error: NO_MOVE_WORTH_MAKING };
-      },
-    });
+    const h = harness(
+      withHint(
+        {
+          plan: (s) => {
+            asked++;
+            return fakeGame.hint.plan(s);
+          },
+        },
+        mistakeGame,
+      ),
+    );
     h.m.newGame();
     // Move to count 1 → the board now has a mistake, and no overlay yet.
     h.m.processInput(0, 0, LEFT_BUTTON);
@@ -2480,13 +2506,14 @@ describe("Midend mistake overlay (findMistakes lifecycle)", () => {
 
   it("refuses a hint on a finished board itself, without asking the game", () => {
     let asked = 0;
-    const h = harness({
-      ...fakeGame,
-      hint: (s) => {
-        asked++;
-        return fakeGame.hint?.(s) ?? { ok: false, error: NO_MOVE_WORTH_MAKING };
-      },
-    });
+    const h = harness(
+      withHint({
+        plan: (s) => {
+          asked++;
+          return fakeGame.hint.plan(s);
+        },
+      }),
+    );
     h.m.newGame();
     for (let i = 0; i < 3; i++) h.m.processInput(0, 0, LEFT_BUTTON);
     expect(h.state()?.status).toBe("solved");
@@ -2496,10 +2523,12 @@ describe("Midend mistake overlay (findMistakes lifecycle)", () => {
   });
 
   it("a game's own refusal on a sound board highlights nothing", () => {
-    const h = harness({
-      ...mistakeGame,
-      hint: () => ({ ok: false, error: NO_MOVE_WORTH_MAKING }),
-    });
+    const h = harness(
+      withHint(
+        { plan: () => ({ ok: false, error: NO_MOVE_WORTH_MAKING }) },
+        mistakeGame,
+      ),
+    );
     h.m.newGame(); // count 0 ⇒ findMistakes returns []
     expect(h.m.hint()).toBe(NO_MOVE_WORTH_MAKING);
     const after = recordingDrawing();

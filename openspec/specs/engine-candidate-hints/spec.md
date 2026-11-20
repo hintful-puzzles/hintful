@@ -63,7 +63,7 @@ sees the cleaned board.
 
 - **WHEN** the populate-plus-clean journey is followed, undone/redone, or re-requested
 - **THEN** the `pencilStrike` cleanup replays exactly (its marks were baked at plan time),
-  `hintKeepTrack` and `refreshHintStep` treat it as an ordinary strike step, and the hint
+  `hint.keepTrack` and `hint.refreshStep` treat it as an ordinary strike step, and the hint
   resume guarantees hold
 
 ### Requirement: The obvious-candidate cleanup fires once, and only when it strikes
@@ -902,7 +902,7 @@ the player can see.
 The candidate walk SHALL stamp the steps it builds: a placement or a strike
 with the kind of the reason it narrates, and its own setup steps and a
 placement's cull with ids the engine owns. A game on the walk SHALL therefore
-write its `hintRungs` list and no stamp. Where a game's words for a placement narrate
+write its `hint.rungs` list and no stamp. Where a game's words for a placement narrate
 another of its reasons than the one the walk handed it, the game SHALL say
 which, so that a step's rung and its sentence name the same deduction.
 

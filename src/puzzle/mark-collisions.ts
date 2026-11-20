@@ -19,6 +19,7 @@
  * Dev/test-only; never imported by production code.
  */
 
+import { hasHint } from "../engine/game.ts";
 import { Midend } from "../engine/midend.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { dealt } from "../engine/testing/dealt.ts";
@@ -230,14 +231,14 @@ function playedFrames(
   deal();
   const frames = [capture()];
   let whole = 0;
-  if (game.hint) {
+  if (hasHint(game)) {
     whole = play(MAX_STEPS);
     deal();
     play(Math.floor(whole / 2));
     frames.push(capture());
     if (!midend.hint()) frames.push(capture());
   }
-  return { frames, tileSize: game.preferredTileSize ?? 32, steps: whole };
+  return { frames, tileSize: game.preferredTileSize, steps: whole };
 }
 
 /** A solve longer than this is cut off; half of it is still a board with play

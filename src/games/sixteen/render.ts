@@ -68,7 +68,7 @@ const HINTED = "hinted";
 // --- hint highlights --------------------------------------------------
 
 /** A hint step's plan data: the tile the step moves and where it lands, which
- * the next step's journey and `hintKeepTrack` read. */
+ * the next step's journey and `hint.keepTrack` read. */
 export interface SixteenHintHighlights {
   /** The tile number being moved closer to its target. */
   tile: number;

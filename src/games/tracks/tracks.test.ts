@@ -217,7 +217,7 @@ describe("tracks findMistakes + solve", () => {
 
   it("solve() drives a blank board to completion", () => {
     const st = newState(SMALL.p, SMALL.desc);
-    const result = tracksGame.solve?.(st, st);
+    const result = tracksGame.solve(st, st);
     expect(result?.ok).toBe(true);
     if (result?.ok) {
       expect(tracksGame.status(executeMove(st, result.move))).toBe("solved");
@@ -346,9 +346,9 @@ describe("tracks render", () => {
     const st = newState(SMALL.p, SMALL.desc);
     const solved = executeMove(
       st,
-      (tracksGame.solve?.(st, st) as { ok: true; move: never }).move,
+      (tracksGame.solve(st, st) as { ok: true; move: never }).move,
     );
-    const ds = newDrawState(solved, tracksGame.preferredTileSize ?? 33);
+    const ds = newDrawState(solved, tracksGame.preferredTileSize);
     const dr = new RecordingDrawing(tracksGame.colors(DEFAULT_BACKGROUND));
     redraw(dr, ds, null, solved, 1, tracksGame.newUi(solved), 0, NO_FLASH);
     expect(dr.ops.some((o) => o.op === "text")).toBe(true);
@@ -370,7 +370,7 @@ describe("tracks render", () => {
     const bad = executeMove(st, {
       ops: [sq(notrackCell % w, Math.floor(notrackCell / w), true, true)],
     });
-    const ds = newDrawState(bad, tracksGame.preferredTileSize ?? 33);
+    const ds = newDrawState(bad, tracksGame.preferredTileSize);
     const ui = tracksGame.newUi(bad);
     const palette = tracksGame.colors(DEFAULT_BACKGROUND);
 

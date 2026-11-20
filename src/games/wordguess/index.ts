@@ -348,8 +348,7 @@ export const wordguessGame: Game<
   newState,
   newUi,
   changedState,
-  encodeUi,
-  decodeUi,
+  uiCodec: { encode: encodeUi, decode: decodeUi },
 
   interpretMove,
   // A tap only selects; there is no second action to hold a finger for.
@@ -371,25 +370,27 @@ export const wordguessGame: Game<
   solve(_orig, curr) {
     return { ok: true, move: { type: "guess", letters: curr.answer.slice() } };
   },
-  hint: (state) => wordguessHint(state),
-  hintRungs: WORDGUESS_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the squares of the row you are writing: *the ringed squares* the suggested word goes in.",
+  hint: {
+    plan: (state) => wordguessHint(state),
+    rungs: WORDGUESS_RUNGS,
+    marks: {
+      roles: {
+        ring: "the squares of the row you are writing: *the ringed squares* the suggested word goes in.",
+      },
     },
-  },
-  hintKeepTrack: wordguessHintKeepTrack,
-  // A tap selects a square of the row being written, and a letter key types
-  // the letter there.
-  hintGesture(state, ui, ds, m): readonly PointerAction[] {
-    const letterKey = (v: number) => key(letterOf(v).toUpperCase().charCodeAt(0));
-    const ts = ds.tileSize;
-    const typed = m.letters.flatMap((v, pos) =>
-      ui.entries[pos] === v
-        ? []
-        : [click(centerOf(tileRect(ts, state.rows.length, pos))), letterKey(v)],
-    );
-    return [...typed, key(SUBMIT_BUTTON)];
+    keepTrack: wordguessHintKeepTrack,
+    // A tap selects a square of the row being written, and a letter key types
+    // the letter there.
+    gesture(state, ui, ds, m): readonly PointerAction[] {
+      const letterKey = (v: number) => key(letterOf(v).toUpperCase().charCodeAt(0));
+      const ts = ds.tileSize;
+      const typed = m.letters.flatMap((v, pos) =>
+        ui.entries[pos] === v
+          ? []
+          : [click(centerOf(tileRect(ts, state.rows.length, pos))), letterKey(v)],
+      );
+      return [...typed, key(SUBMIT_BUTTON)];
+    },
   },
 
   colors,

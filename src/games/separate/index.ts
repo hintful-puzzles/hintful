@@ -29,7 +29,7 @@ import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { interpretTargetVerbs, verbClicks } from "../../engine/target-verb.ts";
+import { interpretTargetVerbs } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSeparateDesc } from "./generator.ts";
 import {
@@ -169,29 +169,23 @@ export const separateGame: Game<
     const edits = revealBorderEdge(state, solved);
     return edits === null ? null : { type: "edges", edits };
   },
-  hint: separateHint,
-  judgeMove: separateJudgeMove,
-  hintMarks: {
-    roles: {
-      ring: BORDER_RING_LEGEND,
-      outline:
-        "a second region the step reasons from, or a lone square, which the sentence names by its letter or calls a square.",
-      stripes: "the region the sentence is about, which can be a lone square.",
+  hint: {
+    plan: separateHint,
+    judgeMove: separateJudgeMove,
+    marks: {
+      roles: {
+        ring: BORDER_RING_LEGEND,
+        outline:
+          "a second region the step reasons from, or a lone square, which the sentence names by its letter or calls a square.",
+        stripes: "the region the sentence is about, which can be a lone square.",
+      },
     },
-  },
-  hintRungs: SEPARATE_RUNGS,
-  hintKeepTrack: separateHintKeepTrack,
-  hintGesture: (s, ui, ds, m, step) => {
-    if (m.type !== "edges") throw new Error("separate: a hint only sets edges");
-    return verbClicks(
-      targetVerbs,
-      { executeMove, hintKeepTrack: separateHintKeepTrack },
-      s,
-      ui,
-      ds,
-      step,
-      [borderStepEdge(m.edits)],
-    );
+    rungs: SEPARATE_RUNGS,
+    keepTrack: separateHintKeepTrack,
+    targets: (_s, m) => {
+      if (m.type !== "edges") throw new Error("separate: a hint only sets edges");
+      return [borderStepEdge(m.edits)];
+    },
   },
 
   textFormat,

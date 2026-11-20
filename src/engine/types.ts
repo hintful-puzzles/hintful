@@ -146,7 +146,7 @@ export type NotifyGameStateChange = {
    */
   pencilMode: boolean;
   /**
-   * This game's saveable `Ui`, as `Game.encodeUi` renders it — left out
+   * This game's saveable `Ui`, as `Game.uiCodec` encodes it — left out
    * entirely for a game that has no such hook, which is most of them.
    *
    * The app autosaves when something it observes changes, and before this it
@@ -200,7 +200,7 @@ export interface NotifyStatusBarChange {
    */
   activeHintMarks?: string[];
   /**
-   * The words shown are a check's verdict on the last move (`Game.judgeMove`)
+   * The words shown are a check's verdict on the last move (`Game.hint.judgeMove`)
    * and not a hint step: whether a deduction reached it. Absent for a hint.
    */
   activeCheck?: "followed" | "unforced";
@@ -319,7 +319,7 @@ export type GameStatus = NotifyGameStateChange["status"];
  *   report may say "no mistakes".
  *
  * `judged` on a sound or unsettled board: the last move was judged
- * (`Game.judgeMove`), and its verdict is shown under the board.
+ * (`Game.hint.judgeMove`), and its verdict is shown under the board.
  */
 export type CheckVerdict =
   | { kind: "mistakes"; count: number }
@@ -385,11 +385,11 @@ export interface PaletteScheme {
  * far end easy to forget: `contract-surface.test.ts` sweeps this interface, as
  * it sweeps `Game`, for a field nothing reads.
  *
- * There is no `canConfigure`: every game declares a `paramConfig`
- * (`custom-params.test.ts`), so the "Custom type…" entry is unconditional.
+ * There is no `canConfigure` and no `canSolve`: every game has a `paramConfig`
+ * and a `solve` (`Game` requires both), so the "Custom type…" and "Show
+ * solution…" entries are unconditional.
  */
 export interface PuzzleStaticAttributes {
-  canSolve: boolean;
   canHint: boolean;
   /** The board can be checked (`EngineCore.check`): the game finds mistakes,
    * or has a hint to ask whether the position is a dead end. */

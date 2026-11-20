@@ -16,12 +16,10 @@ import { type Answer, solveFromAnswer } from "../../engine/answer-search.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
-  type HintStep,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   gridCursorMove,
@@ -46,17 +44,10 @@ import {
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
-import {
-  type ClustersHint,
-  clustersHint,
-  clustersJudgeMove,
-  clustersKeepTrack,
-  clustersRefreshHintStep,
-} from "./hint.ts";
+import { type ClustersHint, clustersHint } from "./hint.ts";
 import {
   border,
   type ClustersDrawState,
@@ -332,25 +323,10 @@ function revealOne(state: ClustersState, solved: ClustersState): ClustersMove | 
 }
 
 /** A tap on each cell the step colors. */
-function hintGesture(
-  state: ClustersState,
-  ui: ClustersUi,
-  ds: ClustersDrawState,
-  move: ClustersMove,
-  step: HintStep<ClustersMove, ClustersHint>,
-): readonly PointerAction[] {
+function hintTargets(state: ClustersState, move: ClustersMove): Point[] {
   if (move.kind !== "paint") return [];
   const { w } = state;
-  const cells = move.cells.map(({ index }) => ({ x: index % w, y: (index / w) | 0 }));
-  return verbClicks(
-    targetVerbs,
-    { executeMove, hintKeepTrack: clustersKeepTrack },
-    state,
-    ui,
-    ds,
-    step,
-    cells,
-  );
+  return move.cells.map(({ index }) => ({ x: index % w, y: (index / w) | 0 }));
 }
 
 /** Clusters' difficulty contract (`engine/difficulty.ts`). Below Unreasonable
@@ -393,19 +369,18 @@ export const clustersGame: Game<
 
   solve,
   difficulty,
-  hint: clustersHint,
-  judgeMove: clustersJudgeMove,
-  hintMarks: {
-    roles: {
-      ring: "the square the step colors. It is drawn empty: the sentence says which color it must be.",
-      outline:
-        "the squares the step reasons from, each in a thin ring: the dot or square where the other color would break a rule, or, on Normal boards, the two whose counts the step reads.",
+  hint: {
+    ...clustersHint,
+    marks: {
+      roles: {
+        ring: "the square the step colors. It is drawn empty: the sentence says which color it must be.",
+        outline:
+          "the squares the step reasons from, each in a thin ring: the dot or square where the other color would break a rule, or, on Normal boards, the two whose counts the step reads.",
+      },
     },
+    rungs: CLUSTERS_RUNGS,
+    targets: hintTargets,
   },
-  hintRungs: CLUSTERS_RUNGS,
-  hintKeepTrack: clustersKeepTrack,
-  refreshHintStep: clustersRefreshHintStep,
-  hintGesture,
   findMistakes,
   clearMistakes,
   revealOne,

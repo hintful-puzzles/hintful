@@ -491,7 +491,7 @@ describe("on-screen keys (requestKeys)", () => {
 describe("unequal: the win flash sweeps the cells", () => {
   const TS = PREFERRED_TILE_SIZE;
   const start = gen(4, "easy", "win-flash").st;
-  const answer = unequalGame.solve?.(start, start);
+  const answer = unequalGame.solve(start, start);
   if (!answer?.ok) throw new Error("the board does not solve");
   const state = unequalGame.executeMove(start, answer.move);
   const cells = state.order * state.order;

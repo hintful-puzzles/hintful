@@ -319,22 +319,23 @@ export const sokobanGame: Game<
 
   solve,
   hasNoSolution,
-
-  hint,
-  hintMarks: HINT_MARKS,
-  hintRungs: SOKOBAN_RUNGS,
-  hintKeepTrack,
-  // What a player does: drag the barrel the way it goes, which walks round
-  // behind it first.
-  hintGesture(_s, _ui, ds, m) {
-    if (m.type !== "push") return [];
-    const ts = ds.tileSize;
-    return [
-      drag(
-        tileCenter(m.x, m.y, ts),
-        tileCenter(m.x + m.n * m.dx, m.y + m.n * m.dy, ts),
-      ),
-    ];
+  hint: {
+    plan: hint,
+    marks: HINT_MARKS,
+    rungs: SOKOBAN_RUNGS,
+    keepTrack: hintKeepTrack,
+    // What a player does: drag the barrel the way it goes, which walks round
+    // behind it first.
+    gesture(_s, _ui, ds, m) {
+      if (m.type !== "push") return [];
+      const ts = ds.tileSize;
+      return [
+        drag(
+          tileCenter(m.x, m.y, ts),
+          tileCenter(m.x + m.n * m.dx, m.y + m.n * m.dy, ts),
+        ),
+      ];
+    },
   },
 
   colors,

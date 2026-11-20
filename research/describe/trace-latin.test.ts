@@ -85,9 +85,9 @@ it("trace", () => {
         lines.push(`${name} ${g.encodeParams(p, true)} ${s}: ${desc}`);
         let state = g.newState(p, desc);
         for (let k = 0; k < STEPS; k++) {
-          const h = g.hint?.(state);
-          if (!h?.ok || h.steps.length === 0) {
-            lines.push(`  end ${JSON.stringify(h?.ok === false ? h : "done")}`);
+          const h = g.hint.plan(state);
+          if (!h.ok || h.steps.length === 0) {
+            lines.push(`  end ${JSON.stringify(h.ok === false ? h : "done")}`);
             break;
           }
           const step = h.steps[0];

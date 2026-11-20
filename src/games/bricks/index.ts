@@ -16,14 +16,12 @@
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import {
   type Game,
-  type HintStep,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { UNSHADED_NAME } from "../../engine/piece.ts";
 import {
   cursorDelta,
@@ -50,7 +48,6 @@ import {
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBricksDesc } from "./generator.ts";
@@ -366,27 +363,12 @@ function solve(orig: BricksState): SolveResult<BricksMove> {
 }
 
 /** A tap on each cell the step paints. */
-function hintGesture(
-  state: BricksState,
-  ui: BricksUi,
-  ds: BricksDrawState,
-  move: BricksMove,
-  step: HintStep<BricksMove, BricksHint>,
-): readonly PointerAction[] {
+function hintTargets(state: BricksState, move: BricksMove): Point[] {
   if (move.kind !== "paint") return [];
-  const cells = move.cells.map(({ index }) => ({
+  return move.cells.map(({ index }) => ({
     x: index % state.w,
     y: (index / state.w) | 0,
   }));
-  return verbClicks(
-    targetVerbs,
-    { executeMove, hintKeepTrack: bricksKeepTrack },
-    state,
-    ui,
-    ds,
-    step,
-    cells,
-  );
 }
 
 /** Bricks' difficulty contract: Easy where the ladder finishes the board from
@@ -433,19 +415,21 @@ export const bricksGame: Game<
 
   solve,
   difficulty,
-  hint: bricksHint,
-  judgeMove: bricksJudgeMove,
-  hintRungs: BRICKS_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the cell the step decides, on the cell's own border. The sentence says whether it must be shaded or stay clear.",
-      outline:
-        "what the step reasons from, as a smaller ring inside the cell: a number, the shaded bricks beside the cell, the cells beneath it or the brick above it.",
+  hint: {
+    plan: bricksHint,
+    judgeMove: bricksJudgeMove,
+    rungs: BRICKS_RUNGS,
+    marks: {
+      roles: {
+        ring: "the cell the step decides, on the cell's own border. The sentence says whether it must be shaded or stay clear.",
+        outline:
+          "what the step reasons from, as a smaller ring inside the cell: a number, the shaded bricks beside the cell, the cells beneath it or the brick above it.",
+      },
     },
+    keepTrack: bricksKeepTrack,
+    refreshStep: bricksRefreshHintStep,
+    targets: hintTargets,
   },
-  hintKeepTrack: bricksKeepTrack,
-  refreshHintStep: bricksRefreshHintStep,
-  hintGesture,
   findMistakes,
   clearMistakes,
   revealOne,

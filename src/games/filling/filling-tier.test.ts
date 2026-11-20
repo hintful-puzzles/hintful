@@ -224,7 +224,7 @@ describe("an Unreasonable Filling board", () => {
       expect(solveFilling(state.clues, p.w, p.h).solved, desc).toBe(false);
       expect(countAnswers(state.clues, p.w, p.h), desc).toBe(1);
       // And the answer Solve and the mistake check go by is that grid.
-      const solved = fillingGame.solve?.(state, state);
+      const solved = fillingGame.solve(state, state);
       if (!solved?.ok) throw new Error(`${desc}: no answer found`);
       expect(status(fillingGame.executeMove(state, solved.move)), desc).toBe("solved");
     }
@@ -327,9 +327,9 @@ describe("the hint on an Unreasonable Filling board", () => {
     const followHint = (): number => {
       let steps = 0;
       for (
-        let plan = fillingGame.hint?.(state);
+        let plan = fillingGame.hint.plan(state);
         plan?.ok;
-        plan = fillingGame.hint?.(state)
+        plan = fillingGame.hint.plan(state)
       )
         for (const step of plan.steps) {
           state = fillingGame.executeMove(state, step.move);

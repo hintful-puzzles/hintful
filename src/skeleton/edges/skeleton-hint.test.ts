@@ -59,7 +59,7 @@ describe("skeleton hint plans", () => {
       // The plan is capped, so it is asked again until the board is done.
       for (let asked = 0; skeletonGame.status(state) !== "solved"; asked++) {
         expect(asked).toBeLessThan(state.edges.length);
-        const result = skeletonGame.hint?.(state);
+        const result = skeletonGame.hint.plan(state);
         if (!result?.ok) throw new Error(`refused on ${seed}`);
         for (const step of result.steps) {
           if (step.move.kind !== "edges") throw new Error("a step marks edges");
@@ -75,7 +75,7 @@ describe("skeleton hint plans", () => {
 
   it("a step rings exactly the edges its move marks", () => {
     const state = deal(BOARDS[1], "rings");
-    const result = skeletonGame.hint?.(state);
+    const result = skeletonGame.hint.plan(state);
     if (!result?.ok) throw new Error("refused");
     for (const step of result.steps) {
       if (step.move.kind !== "edges") throw new Error("a step marks edges");
@@ -91,7 +91,7 @@ describe("skeleton hint plans", () => {
     if (step.move.kind !== "edges") throw new Error("a step marks edges");
     const [first, ...rest] = step.move.changes;
     const copy = { ...step, move: structuredClone(step.move) };
-    const verdict = skeletonGame.hintKeepTrack?.(
+    const verdict = skeletonGame.hint.keepTrack(
       { kind: "edges", changes: [first] },
       copy,
       state,
@@ -105,7 +105,7 @@ describe("skeleton hint plans", () => {
     if (step.move.kind !== "edges") throw new Error("a step marks edges");
     const { edge } = step.move.changes[0];
     expect(
-      skeletonGame.hintKeepTrack?.(
+      skeletonGame.hint.keepTrack(
         { kind: "edges", changes: [{ edge, mark: CROSS }] },
         step,
         state,

@@ -85,7 +85,7 @@ the auto-play preview.
 ### Requirement: A player move is classified against the stored plan
 
 While a plan is active, displayed or not, the `Midend` SHALL classify each
-player move by the game's `hintKeepTrack(move, currentStep, state)` verdict.
+player move by the game's `hint.keepTrack(move, currentStep, state)` verdict.
 `"completed"` SHALL advance the plan and hide the display. `"onTrack"` SHALL
 keep the current step, with any adjustment the game made to its move, displayed
 only where it was displayed before the move. `"off"` SHALL drop the plan. A
@@ -256,7 +256,7 @@ once. The completion flash SHALL keep its own length.
 
 #### Scenario: A step that takes two moves
 
-- **WHEN** a hint step is played by two moves, and `hintKeepTrack` calls only
+- **WHEN** a hint step is played by two moves, and `hint.keepTrack` calls only
   the second `"completed"`
 - **THEN** only the second is stretched to the shared duration, and the first
   lands with no stretch
@@ -291,7 +291,7 @@ a later step naming what the player cleared.
   candidate: the midend drops the dead mark (advancing or recomputing the plan
   as needed) so every displayed elimination is still live
 
-### Requirement: refreshHintStep re-validates a stored step
+### Requirement: hint.refreshStep re-validates a stored step
 
 The re-validation SHALL use the optional `Game.refreshHintStep(step, state)`.
 Given a stored step and the current state, the game SHALL return the step with
@@ -309,7 +309,7 @@ effects.
 
 ### Requirement: The midend refreshes the current step before every display
 
-The `Midend` SHALL call `refreshHintStep` before it displays or re-displays the
+The `Midend` SHALL call `hint.refreshStep` before it displays or re-displays the
 plan's current step: on a `midend.hint()` re-show, after a kept manual move
 advances or shrinks the plan, and after an executed-hint step settles. It SHALL
 advance past any step the hook reports fully resolved, and SHALL recompute a
@@ -319,13 +319,13 @@ keep the plan, and a conflicting move (`"off"`) SHALL still drop it.
 #### Scenario: A displayed step is re-validated before showing
 
 - **WHEN** the midend is about to (re-)display the current step of a stored plan
-- **THEN** it calls the game's `refreshHintStep` (when provided) and shows the
+- **THEN** it calls the game's `hint.refreshStep` (when provided) and shows the
   refreshed step, advancing past any step reported fully resolved and
   recomputing a fresh plan if every stored step has been resolved
 
-### Requirement: hintKeepTrack judges a move against the board before it
+### Requirement: hint.keepTrack judges a move against the board before it
 
-The `Midend` SHALL classify a player move with `hintKeepTrack(move, step,
+The `Midend` SHALL classify a player move with `hint.keepTrack(move, step,
 state)` against the pre-move state, the state the move is about to be applied
 to, so a game can apply the move itself to reason about its result (a slide
 puzzle computing the landing cell). A game classifying a candidate toggle SHALL
@@ -1641,7 +1641,7 @@ outline's ink.
 
 ### Requirement: A bound hint step's words SHALL name exactly the marks it draws
 
-A game that declares the `hintMarks` section of its contract, what each role
+A game that declares the `hint.marks` section of its contract, what each role
 marks in that game, is bound. Every hint step of a bound game SHALL carry its
 sentence as words built from references to marks, with the explanation equal to
 their text. A bound game's renderer SHALL paint every hint mark from the step's
@@ -1710,29 +1710,35 @@ so the sentence never names a note the step no longer strikes.
 
 ### Requirement: Every hinted game SHALL be bound
 
-Every game that declares a `hint` SHALL declare the `hintMarks` section, so
-every hint step in the collection names exactly the marks it draws, and every
-hinted game's help page SHALL list its marks from its legend.
+Every game's hint SHALL declare its legend, `hint.marks`, so every hint step
+in the collection names exactly the marks it draws, and every hinted game's
+help page SHALL list its marks from its legend.
 
-#### Scenario: A hinted game without a legend
+#### Scenario: A hint without a legend
 
-- **WHEN** a registered game declares `hint` and not `hintMarks`
-- **THEN** the hint-quality suite fails, naming the game
+- **WHEN** a game's hint object leaves out `marks`
+- **THEN** the game does not compile
 
 ### Requirement: A hint step is played by the pointer gesture that makes it
 
-Every game with a `hint` SHALL declare `hintGesture(state, ui, ds, move,
-step)`, returning the taps, drags and on-screen keys by which a pointer alone
-makes a hint step's move from the live board and `Ui`. `step` is the whole step
-on display, so a gesture can be found by asking the game's `hintKeepTrack`. A
-key in a gesture SHALL be one the game's on-screen keypad offers, or the
-mark-all control where the game has one.
+Every written hint SHALL declare exactly one of `hint.gesture(state, ui, ds,
+move, step)`, the taps, drags and on-screen keys by which a pointer alone
+makes a step's move, and `hint.targets(state, move, step)`, which the engine
+clicks through the game's verbs. A gesture may ask the game's
+`hint.keepTrack` about the step on display. A key in it SHALL be one the
+game's on-screen keypad offers, or the mark-all control.
+
+#### Scenario: A hint that names neither, or both
+
+- **WHEN** a game is registered whose hint has both `gesture` and `targets`,
+  or neither, or `targets` without `targetVerbs`
+- **THEN** registration throws, naming the game
 
 #### Scenario: A step the pointer cannot make fails the walk
 
 - **WHEN** a hinted game's plan contains a step whose move no tap, drag or
   on-screen key makes
-- **THEN** its gesture either makes some other move, which `hintKeepTrack`
+- **THEN** its gesture either makes some other move, which `hint.keepTrack`
   calls off, or makes none, and the gesture walk fails for that game
 
 ### Requirement: executeHint sends the gesture and never applies the move
@@ -1741,7 +1747,7 @@ mark-all control where the game has one.
 gesture through the game's `interpretMove` as the frontend delivers pointer
 input (a click as a press and its release, a drag as a press, its drag events
 and a release, a declined press as its release alone, and a key at the origin),
-and SHALL judge each move that makes with the game's `hintKeepTrack`.
+and SHALL judge each move that makes with the game's `hint.keepTrack`.
 
 #### Scenario: A step made in several moves completes on the last
 
@@ -1753,9 +1759,9 @@ and SHALL judge each move that makes with the game's `hintKeepTrack`.
 ### Requirement: A gesture that does not make its step throws
 
 The midend SHALL throw, naming the step and the gesture, when the gesture makes
-a move `hintKeepTrack` calls off the step, makes a move after the step
+a move `hint.keepTrack` calls off the step, makes a move after the step
 completed, presses a key no on-screen control sends, or ends without completing
-the step, and when a hinted game has no `hintGesture`. A cross-game walk SHALL
+the step, and when a hint has neither a gesture nor targets. A cross-game walk SHALL
 play every hinted game's plans with `executeHint` on every gate preset.
 
 #### Scenario: A key the player has no control for is refused
@@ -1768,19 +1774,20 @@ play every hinted game's plans with `executeHint` on every gate preset.
 
 A game declaring `Game.targetVerbs` SHALL make a hint step that is one click on
 each of some targets through the engine's `verbClicks`, supplying only the
-step's targets in order. A step made otherwise (a drag, or several presses of
-one target over values the step accepts) stays the game's own gesture.
+step's targets in order, as `hint.targets`. A step made otherwise (a drag, or
+several presses of one target over values the step accepts) stays the game's
+own gesture.
 
 #### Scenario: A wrong target fails the walk
 
-- **WHEN** a game's `hintGesture` names a target the step does not decide
+- **WHEN** a game's `hint.targets` names a target the step does not decide
 - **THEN** `verbClicks` throws naming that target, and the gesture walk fails
   for that game
 
 ### Requirement: verbClicks chooses each click's button by the verb the step keeps
 
 The engine SHALL judge each button's verb at a target with the game's
-`hintKeepTrack`, on copies of the step and the `Ui`, and of the buttons the
+`hint.keepTrack`, on copies of the step and the `Ui`, and of the buttons the
 step keeps SHALL take one that completes it, then one that shrinks it, then
 the first, left before right. It SHALL aim each click at `pointAt`, SHALL end
 the gesture at the click that completes the step, and SHALL throw, naming the
@@ -1795,13 +1802,13 @@ target, where no button's verb keeps the step.
 
 #### Scenario: A press only on the way is not the gesture's
 
-- **WHEN** a press cycle's `hintKeepTrack` keeps the left button's click as on
+- **WHEN** a press cycle's `hint.keepTrack` keeps the left button's click as on
   the way to the step's mark, and the right button's click makes the mark
 - **THEN** `verbClicks` clicks with the right button
 
 #### Scenario: The step and the Ui are left as they were
 
-- **WHEN** `verbClicks` derives a gesture for a step whose `hintKeepTrack`
+- **WHEN** `verbClicks` derives a gesture for a step whose `hint.keepTrack`
   shrinks the step as it is followed
 - **THEN** the step the midend holds, and the player's `Ui`, are unchanged by
   the derivation
@@ -2202,9 +2209,9 @@ so that a game cannot write it beside rivals nobody judged.
 ### Requirement: A hint step SHALL name the rung it speaks
 
 Every hint step SHALL carry `rung`, the id of the deduction it is, and every
-game that declares a `hint` SHALL declare `hintRungs`, the list of every rung a
-step of its hint can be, each once. A step's rung SHALL be one of its game's
-`hintRungs`. `HintStep` and `Game` SHALL be typed by the game's rung union, so
+game's hint SHALL declare `hint.rungs`, the list of every rung a step of its
+hint can be, each once. A step's rung SHALL be one of its game's
+`hint.rungs`. `HintStep` and `Game` SHALL be typed by the game's rung union, so
 that a game whose steps are typed by its list fails to compile when a step is
 stamped with an id the list lacks.
 
@@ -2215,14 +2222,13 @@ stamped with an id the list lacks.
 
 #### Scenario: A hinted game without a list
 
-- **WHEN** a registered game declares `hint` and not `hintRungs`, or lists a
-  rung twice
+- **WHEN** a game's hint lists a rung twice
 - **THEN** the hint-quality suite fails, naming the game
 
 #### Scenario: A step of a rung the list lacks
 
 - **WHEN** the hint-quality walk meets a step whose rung is not in its game's
-  `hintRungs`
+  `hint.rungs`
 - **THEN** it fails, quoting the step's sentence
 
 ### Requirement: A rung is the deduction at the grain the game names it

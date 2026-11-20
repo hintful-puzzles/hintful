@@ -189,7 +189,7 @@ describe("pearl input + executeMove", () => {
 
   it("Solve fills in the unique solution", () => {
     const state = generate(EASY_6, "solve");
-    const res = pearlGame.solve?.(state, state);
+    const res = pearlGame.solve(state, state);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const done = executeMove(state, res.move);
@@ -300,7 +300,7 @@ describe("pearl mistake overlay is in the diff key (paint-twice)", () => {
     expect(mistakes.length).toBeGreaterThan(0);
 
     const ui = pearlGame.newUi(wrong);
-    const ds = newDrawState(wrong, pearlGame.preferredTileSize ?? 32);
+    const ds = newDrawState(wrong, pearlGame.preferredTileSize);
     const palette = pearlGame.colors([0.9, 0.9, 0.9]);
 
     // Frame 1: warm the cache with NO mistakes (draws the laid segment).

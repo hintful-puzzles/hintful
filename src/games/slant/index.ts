@@ -380,48 +380,50 @@ export const slantGame: Game<
           ? { type: "set", x, y, v: 0 }
           : { type: "alike", x, y, dir, on: false },
     ),
-  hint: slantHint,
-  judgeMove: slantJudgeMove,
-  hintMarks: {
-    roles: {
-      ring: "what the step decides: the squares a clue forces, all ringed together because they share its reason, or the same-slant mark to put down, drawn in the hint color. The sentence says which way a square must slant.",
-      outline:
-        "what the step reasons from: the clues it reads, drawn in the hint color; the diagonals already around them, the chain a loop would close or the pairs along a line of 2s; the marks it relies on; and, doubled, a square already drawn that a mark ties the ringed one to.",
+  hint: {
+    plan: slantHint,
+    judgeMove: slantJudgeMove,
+    marks: {
+      roles: {
+        ring: "what the step decides: the squares a clue forces, all ringed together because they share its reason, or the same-slant mark to put down, drawn in the hint color. The sentence says which way a square must slant.",
+        outline:
+          "what the step reasons from: the clues it reads, drawn in the hint color; the diagonals already around them, the chain a loop would close or the pairs along a line of 2s; the marks it relies on; and, doubled, a square already drawn that a mark ties the ringed one to.",
+      },
     },
-  },
-  hintRungs: SLANT_RUNGS,
-  hintKeepTrack: slantHintKeepTrack,
-  hintGesture: (s, ui, ds, m): PointerAction[] => {
-    if (m.type === "set") {
-      // Each button cycles the three states its own way round, so one of them
-      // reaches the step's line in one press, whichever way the buttons are
-      // swapped.
-      const at = { x: m.x, y: m.y };
-      const left = targetVerbs.primary.apply(s, at, ui);
-      const reaches =
-        typeof left === "object" && left?.type === "set" && left.v === m.v;
-      const press = verbGesture(
-        targetVerbs,
-        s,
-        ds,
-        ui,
-        [at],
-        reaches ? "primary" : "secondary",
+    rungs: SLANT_RUNGS,
+    keepTrack: slantHintKeepTrack,
+    gesture: (s, ui, ds, m): PointerAction[] => {
+      if (m.type === "set") {
+        // Each button cycles the three states its own way round, so one of them
+        // reaches the step's line in one press, whichever way the buttons are
+        // swapped.
+        const at = { x: m.x, y: m.y };
+        const left = targetVerbs.primary.apply(s, at, ui);
+        const reaches =
+          typeof left === "object" && left?.type === "set" && left.v === m.v;
+        const press = verbGesture(
+          targetVerbs,
+          s,
+          ds,
+          ui,
+          [at],
+          reaches ? "primary" : "secondary",
+        );
+        // In notes mode the same press marks a side instead.
+        if (!ui.pencilMode) return press;
+        return [key(PENCIL_MODE_BUTTON), ...press, key(PENCIL_MODE_BUTTON)];
+      }
+      if (m.type !== "alike") throw new Error("slant: a hint never solves");
+      // A notes-mode tap marks the side of its square it lands nearest: here,
+      // the one facing the square below or to the right.
+      const g = squareEdges(s.w, s.h);
+      const i = m.y * s.w + m.x;
+      const tap = click(
+        pointAtSide(g, layout(ds), { cell: i, dir: m.dir === "right" ? RIGHT : DOWN }),
       );
-      // In notes mode the same press marks a side instead.
-      if (!ui.pencilMode) return press;
-      return [key(PENCIL_MODE_BUTTON), ...press, key(PENCIL_MODE_BUTTON)];
-    }
-    if (m.type !== "alike") throw new Error("slant: a hint never solves");
-    // A notes-mode tap marks the side of its square it lands nearest: here,
-    // the one facing the square below or to the right.
-    const g = squareEdges(s.w, s.h);
-    const i = m.y * s.w + m.x;
-    const tap = click(
-      pointAtSide(g, layout(ds), { cell: i, dir: m.dir === "right" ? RIGHT : DOWN }),
-    );
-    if (ui.pencilMode) return [tap];
-    return [key(PENCIL_MODE_BUTTON), tap, key(PENCIL_MODE_BUTTON)];
+      if (ui.pencilMode) return [tap];
+      return [key(PENCIL_MODE_BUTTON), tap, key(PENCIL_MODE_BUTTON)];
+    },
   },
 
   textFormat,

@@ -36,7 +36,7 @@ function freshState(p: LightupParams, seed: string): LightupState {
 }
 
 function planSteps(state: LightupState): Step[] {
-  const res = lightupGame.hint?.(state);
+  const res = lightupGame.hint.plan(state);
   if (!res?.ok) throw new Error(`hint refused: ${res?.error}`);
   // The Game interface erases the highlights type; restore it.
   return res.steps as Step[];
@@ -244,7 +244,7 @@ describe("refusals", () => {
     let state = freshState(UNREASONABLE, "lh-unreasonable");
     // Follow freshly-recomputed hints until the guess point.
     for (let moves = 0; moves < 200; moves++) {
-      const res = lightupGame.hint?.(state);
+      const res = lightupGame.hint.plan(state);
       if (!res) throw new Error("no hint()");
       if (!res.ok) {
         expect(res.error).toMatch(/trial and error/);
@@ -292,7 +292,7 @@ describe("hintKeepTrack", () => {
     if (!hl) throw new Error("no highlights");
     const before = hl.targets.length;
     const first = hl.targets[0];
-    const verdict = lightupGame.hintKeepTrack?.(
+    const verdict = lightupGame.hint.keepTrack(
       { ops: [{ kind: hl.kind, x: first.x, y: first.y }] },
       step,
       state,
@@ -307,12 +307,12 @@ describe("hintKeepTrack", () => {
     const hl = step.highlights;
     if (!hl) throw new Error("no highlights");
     // Whole step in one grouped move → completed.
-    expect(lightupGame.hintKeepTrack?.(step.move, step, state)).toBe("completed");
+    expect(lightupGame.hint.keepTrack(step.move, step, state)).toBe("completed");
     // A move of the wrong kind on a target → off.
     const t = hl.targets[0];
     const wrongKind = hl.kind === "light" ? "impossible" : "light";
     expect(
-      lightupGame.hintKeepTrack?.(
+      lightupGame.hint.keepTrack(
         { ops: [{ kind: wrongKind, x: t.x, y: t.y }] },
         step,
         state,
@@ -330,7 +330,7 @@ describe("hintKeepTrack", () => {
     }
     if (!elsewhere) throw new Error("no non-target square");
     expect(
-      lightupGame.hintKeepTrack?.(
+      lightupGame.hint.keepTrack(
         { ops: [{ kind: hl.kind, x: elsewhere.x, y: elsewhere.y }] },
         step,
         state,
@@ -350,7 +350,7 @@ describe("refreshHintStep", () => {
     state = lightupGame.executeMove(state, {
       ops: [{ kind: hl.kind, x: first.x, y: first.y }],
     });
-    const refreshed = lightupGame.refreshHintStep?.(step, state) as Step | null;
+    const refreshed = lightupGame.hint.refreshStep?.(step, state) as Step | null;
     if (hl.targets.length === 1) {
       expect(refreshed).toBeNull();
     } else {
@@ -359,7 +359,7 @@ describe("refreshHintStep", () => {
       // Fully applied → resolved.
       let done = state;
       if (refreshed) done = lightupGame.executeMove(done, refreshed.move);
-      expect(lightupGame.refreshHintStep?.(step, done)).toBeNull();
+      expect(lightupGame.hint.refreshStep?.(step, done)).toBeNull();
     }
   });
 });

@@ -110,14 +110,15 @@ export interface DescribedHintSpec<
   say: { [K in keyof Says & string]?: (spoken: Spoken<Says[K]["terms"]>) => Sentence };
 }
 
-/** The hooks a game takes from its description. */
+/** The part of a game's hint (`Game.hint`) its description builds: the game
+ * spreads it and adds what only it knows, its marks and its gesture. */
 export interface DescribedHint<State, Move, Kind extends string> {
-  hint(state: State): HintResult<Move, CellHint, Kind>;
-  /** What Check & save says of the last move (`Game.judgeMove`). */
+  plan(state: State): HintResult<Move, CellHint, Kind>;
+  /** What Check & save says of the last move. */
   judgeMove(before: State, after: State): MoveVerdict | null;
-  hintKeepTrack(m: Move, step: HintStep<Move, CellHint, Kind>): HintTrackVerdict;
+  keepTrack(m: Move, step: HintStep<Move, CellHint, Kind>): HintTrackVerdict;
   /** The kinds a step can speak: the techniques that have a sentence. */
-  hintRungs: readonly Kind[];
+  rungs: readonly Kind[];
 }
 
 /** Whether two moves are the same move, as plain data. */
@@ -282,11 +283,11 @@ export function describedHint<
     judgeWalked(before, after, spec.marks, (judging) => stepsFrom(before, judging));
 
   return {
-    hint,
+    plan: hint,
     judgeMove,
     // A move completes the step iff it is the step's move; anything else drops
     // the plan to recompute.
-    hintKeepTrack: (m, step) => (sameMove(m, step.move) ? "completed" : "off"),
-    hintRungs: kinds,
+    keepTrack: (m, step) => (sameMove(m, step.move) ? "completed" : "off"),
+    rungs: kinds,
   };
 }

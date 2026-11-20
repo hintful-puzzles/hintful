@@ -366,7 +366,7 @@ describe("what the plan shows, and what it keeps to itself", () => {
     // crosses, which zeroes `possibles` and takes the span out of the ladder.
     const params = BRIDGES_PRESETS[2];
     const start = makeBoard(params, "bh-a");
-    const first = bridgesGame.hint?.(start, undefined, bridgesGame.newUi(start));
+    const first = bridgesGame.hint.plan(start, undefined, bridgesGame.newUi(start));
     expect(first?.ok).toBe(true);
     if (!first?.ok) return;
     const target = first.steps[0].move.ops.find((op) => op.op === "L");
@@ -375,7 +375,7 @@ describe("what the plan shows, and what it keeps to itself", () => {
     const crossed = bridgesGame.executeMove(start, {
       ops: [{ op: "N", x1: target.x1, y1: target.y1, x2: target.x2, y2: target.y2 }],
     });
-    const again = bridgesGame.hint?.(crossed, undefined, bridgesGame.newUi(crossed));
+    const again = bridgesGame.hint.plan(crossed, undefined, bridgesGame.newUi(crossed));
     if (!again?.ok) return;
     for (const step of again.steps) {
       for (const op of step.move.ops) {
@@ -481,7 +481,7 @@ describe("following a step", () => {
           },
         ],
       };
-      verdict = bridgesGame.hintKeepTrack?.(move, step, state) ?? null;
+      verdict = bridgesGame.hint.keepTrack(move, step, state) ?? null;
       state = bridgesGame.executeMove(state, move);
       if (verdict === "completed") break;
       expect(verdict, `leg ${legs}`).toBe("onTrack");
@@ -491,7 +491,7 @@ describe("following a step", () => {
   });
 
   it("calls an unrelated move off-plan", () => {
-    const r = bridgesGame.hint?.(start, undefined, ui);
+    const r = bridgesGame.hint.plan(start, undefined, ui);
     expect(r?.ok, "no plan to go off").toBe(true);
     const step = r?.ok ? r.steps[0] : undefined;
     // Every island the step's own move does not touch, that still has a
@@ -520,7 +520,7 @@ describe("following a step", () => {
           },
         ],
       };
-      expect(bridgesGame.hintKeepTrack?.(move, step, start)).toBe("off");
+      expect(bridgesGame.hint.keepTrack(move, step, start)).toBe("off");
     }
     expect(checked).toBe(elsewhere.length);
   });
@@ -536,7 +536,7 @@ describe("following a step", () => {
       highlights: { targets: [], focus: null, islands: [], spans: [] },
     });
     const track = (m: BridgesMove, want: BridgesMove["ops"][number], on = board) =>
-      bridgesGame.hintKeepTrack?.(m, stepTo(want), on);
+      bridgesGame.hint.keepTrack(m, stepTo(want), on);
 
     it("is followed by the limit the drag leaves, not by the ops that leave it", () => {
       const atMostOne = { op: "C" as const, ...span, n: 1 };
@@ -577,7 +577,7 @@ describe("a board shared without its difficulty", () => {
     const ui = bridgesGame.newUi(state);
     let moves = 0;
     while (bridgesGame.status(state) !== "solved" && moves < 200) {
-      const r = bridgesGame.hint?.(state, undefined, ui);
+      const r = bridgesGame.hint.plan(state, undefined, ui);
       if (!r?.ok) throw new Error(`move ${moves}: ${r?.error}`);
       state = bridgesGame.executeMove(state, r.steps[0].move);
       moves++;
@@ -620,7 +620,7 @@ describe("refusing", () => {
   const ui = bridgesGame.newUi(start);
 
   it("counts a solved board as finished, so the midend refuses it", () => {
-    const solved = bridgesGame.solve?.(start, start);
+    const solved = bridgesGame.solve(start, start);
     expect(solved?.ok).toBe(true);
     if (!solved?.ok) return;
     const done = bridgesGame.executeMove(start, solved.move);
@@ -655,10 +655,10 @@ describe("refusing", () => {
   it("keeps a step displayed through an island's done-mark being toggled", () => {
     // A drag cannot start from a marked island, so a hint's gesture takes the
     // mark off first; that tap must not drop the plan.
-    const res = bridgesGame.hint?.(start, undefined, ui);
+    const res = bridgesGame.hint.plan(start, undefined, ui);
     if (!res?.ok) throw new Error("no hint on the opening board");
     const first = start.islands[0];
-    const verdict = bridgesGame.hintKeepTrack?.(
+    const verdict = bridgesGame.hint.keepTrack(
       { ops: [{ op: "M", x: first.x, y: first.y }] },
       res.steps[0],
       start,
@@ -676,7 +676,7 @@ describe("refusing", () => {
     expect(bridgesGame.findMistakes?.(marked)).toEqual([{ x: first.x, y: first.y }]);
 
     // The same mark on the island once its bridges are all there is true.
-    const solution = bridgesGame.solve?.(start, start);
+    const solution = bridgesGame.solve(start, start);
     if (!solution?.ok) throw new Error("the board did not solve");
     const solved = bridgesGame.executeMove(start, solution.move);
     expect(bridgesGame.findMistakes?.(bridgesGame.executeMove(solved, mark))).toEqual(
@@ -761,7 +761,7 @@ describe("the marks", () => {
       for (const seed of SEEDS) {
         let state = makeBoard(params, seed);
         for (let step = 0; step < 40; step++) {
-          const r = bridgesGame.hint?.(state, undefined, bridgesGame.newUi(state));
+          const r = bridgesGame.hint.plan(state, undefined, bridgesGame.newUi(state));
           if (!r?.ok) break;
           const hl = r.steps[0].highlights as BridgesHighlights;
           expect(hl.targets.length, "a step that decides nothing").toBeGreaterThan(0);

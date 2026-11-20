@@ -28,7 +28,7 @@ const DESC = "f6pCkC,2,3,3,2,3,S3,3,S3,3,3,2,2";
 
 function solved(): TracksState {
   const start = newState(P, DESC);
-  const answer = tracksGame.solve?.(start, start);
+  const answer = tracksGame.solve(start, start);
   if (!answer?.ok) throw new Error("the fixture does not solve");
   return tracksGame.executeMove(start, answer.move);
 }

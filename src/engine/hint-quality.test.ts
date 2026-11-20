@@ -416,7 +416,7 @@ describe("hint narration form, cross-game", () => {
         for (const seed of SEEDS) {
           const { desc, aux } = dealt(game, params, seed);
           const state = game.newState(params, desc);
-          const res = game.hint?.(state, aux);
+          const res = game.hint.plan(state, aux);
           if (!res?.ok) continue;
           res.steps.forEach((step, i) => {
             const at = `${name}/${title}/${seed} step ${i}: "${step.explanation}"`;
@@ -477,10 +477,10 @@ describe("hint narration form, cross-game", () => {
  * (`testing/hint-binding.ts`), through the whole game rather than its opening
  * plan: each plan is checked, played out, and recomputed until the board is
  * finished or the hint refuses. Every stored step is also checked as
- * `refreshHintStep` returns it after the moves before it, because a refresh
+ * `hint.refreshStep` returns it after the moves before it, because a refresh
  * that shrinks a step's marks has to shrink its words with them.
  */
-const BOUND_GAMES = HINT_GAMES.filter(([, g]) => g.hintMarks !== undefined);
+const BOUND_GAMES = HINT_GAMES.filter(([, g]) => g.hint.marks !== undefined);
 
 /** The games whose hint searches: a move other than the offered one can be as
  * good, so a "so" there is a claim about the rivals. Derived, as the two
@@ -700,7 +700,7 @@ describe("a bound hint's words name exactly the marks it draws", () => {
     it("every hinted game is bound", () => {
       // A hint whose game declares no legend is checked by nothing here, so an
       // unbound hint is named rather than passed over.
-      expect(HINT_GAMES.filter(([, g]) => !g.hintMarks).map(([name]) => name)).toEqual(
+      expect(HINT_GAMES.filter(([, g]) => !g.hint.marks).map(([name]) => name)).toEqual(
         [],
       );
       // Vacuity: the population itself, so an empty registry cannot pass.
@@ -713,7 +713,7 @@ describe("a bound hint's words name exactly the marks it draws", () => {
       // The walk below holds every step's rung to this list, and the pin harness
       // requires a pinned position for each entry (`testing/hint-positions.ts`).
       for (const [name, game] of HINT_GAMES) {
-        const rungs = game.hintRungs ?? [];
+        const rungs = game.hint.rungs ?? [];
         expect(rungs.length, `${name} declares no hintRungs`).toBeGreaterThan(0);
         expect(new Set(rungs).size, `${name} lists a rung twice`).toBe(rungs.length);
       }
@@ -735,8 +735,8 @@ describe("a bound hint's words name exactly the marks it draws", () => {
           defects.push(`${at}: "${step.explanation}": ${d}`);
         for (const d of formDefects(step, SEARCHING.has(name)))
           defects.push(`${at}: "${step.explanation}": ${d}`);
-        if (step.words && game.hintMarks)
-          for (const d of referenceDefects(step.words, game.hintMarks))
+        if (step.words && game.hint.marks)
+          for (const d of referenceDefects(step.words, game.hint.marks))
             defects.push(`${at} (${step.rung}): "${step.explanation}": ${d}`);
         if (legs > 1) heard(JOURNEY, name);
         for (const d of journeyDefects(step.explanation, leg, legs))
@@ -765,7 +765,7 @@ describe("a bound hint's words name exactly the marks it draws", () => {
               round < 60 && walked < BOUND_STEPS && game.status(state) === "ongoing";
               round++
             ) {
-              const res = game.hint?.(state, aux, ui);
+              const res = game.hint.plan(state, aux, ui);
               if (!res?.ok) break;
               // Each step over the board it is narrated for: the state after
               // the steps before it.
@@ -774,8 +774,8 @@ describe("a bound hint's words name exactly the marks it draws", () => {
                 const journey = journeyOf(res.steps, i);
                 check(state, ui, step, `${at} round ${round} step ${i}`, journey);
                 // `null` is a step already resolved: the midend skips it.
-                const live = game.refreshHintStep
-                  ? game.refreshHintStep(step, state)
+                const live = game.hint.refreshStep
+                  ? game.hint.refreshStep(step, state)
                   : step;
                 if (live === null) continue;
                 if (live !== step)
@@ -863,7 +863,7 @@ describe("no hint leaves a chain for the player to carry, at any tier", () => {
             continue; // ungenerable at this size; difficulty-contract.test.ts owns that
           }
           const { desc, aux } = board;
-          const res = game.hint?.(game.newState(params, desc), aux);
+          const res = game.hint.plan(game.newState(params, desc), aux);
           if (!res?.ok) continue;
           checked++;
           for (const step of res.steps) {
@@ -914,7 +914,7 @@ function speaksOn(name: string, id: string, rungs: readonly string[]): boolean {
   let state = game.newState(game.decodeParams(id.slice(0, colon)), id.slice(colon + 1));
   for (let round = 0; round < LINT_ROUNDS; round++) {
     if (game.status(state) === "solved") break;
-    const res = game.hint?.(state);
+    const res = game.hint.plan(state);
     if (!res?.ok) break;
     for (const step of res.steps) {
       const text = step.explanation;
@@ -942,7 +942,7 @@ describe("hint narration stays readable at a glance", () => {
           let state = game.newState(params, desc);
           for (let round = 0; round < LINT_ROUNDS; round++) {
             if (game.status(state) === "solved") break;
-            const res = game.hint?.(state, aux);
+            const res = game.hint.plan(state, aux);
             if (!res?.ok) break;
             for (const step of res.steps) {
               const text = step.explanation;
@@ -950,7 +950,7 @@ describe("hint narration stays readable at a glance", () => {
               // The same walk holds a step's rung to the game's list: a
               // step built outside the typed path could carry any string.
               expect(
-                game.hintRungs ?? [],
+                game.hint.rungs ?? [],
                 `${name} ${label}/${seed}: "${text}" is of a rung hintRungs does not list`,
               ).toContain(step.rung);
               expect(
@@ -994,7 +994,7 @@ describe("hint narration stays readable at a glance", () => {
         for (const [g, game] of HINT_GAMES)
           if (e.games.includes(g))
             for (const rung of e.rungs)
-              expect(game.hintRungs ?? [], `${g} has no rung ${rung}`).toContain(rung);
+              expect(game.hint.rungs ?? [], `${g} has no rung ${rung}`).toContain(rung);
         for (const g of e.games)
           expect(hinting.has(g), `${g} ships no hint()`).toBe(true);
       }

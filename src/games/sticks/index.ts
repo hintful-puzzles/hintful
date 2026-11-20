@@ -18,13 +18,11 @@
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import {
   type Game,
-  type HintStep,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_LEFT,
@@ -51,17 +49,10 @@ import {
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSticksDesc } from "./generator.ts";
-import {
-  type SticksHint,
-  sticksHint,
-  sticksJudgeMove,
-  sticksKeepTrack,
-  sticksRefreshHintStep,
-} from "./hint.ts";
+import { type SticksHint, sticksHint } from "./hint.ts";
 import {
   border,
   colors,
@@ -348,25 +339,10 @@ function revealOne(state: SticksState, solved: SticksState): SticksMove | null {
 }
 
 /** A tap on each square the step sets. */
-function hintGesture(
-  state: SticksState,
-  ui: SticksUi,
-  ds: SticksDrawState,
-  m: SticksMove,
-  step: HintStep<SticksMove, SticksHint>,
-): readonly PointerAction[] {
+function hintTargets(state: SticksState, m: SticksMove): Point[] {
   if (m.kind !== "set") return [];
   const { w } = state;
-  const squares = m.changes.map(({ index }) => ({ x: index % w, y: (index / w) | 0 }));
-  return verbClicks(
-    targetVerbs,
-    { executeMove, hintKeepTrack: sticksKeepTrack },
-    state,
-    ui,
-    ds,
-    step,
-    squares,
-  );
+  return m.changes.map(({ index }) => ({ x: index % w, y: (index / w) | 0 }));
 }
 
 export const sticksGame: Game<
@@ -418,19 +394,18 @@ export const sticksGame: Game<
           },
         ],
   revealOne,
-  hint: sticksHint,
-  judgeMove: sticksJudgeMove,
-  hintRungs: STICKS_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the square the step decides, as the line it asks you to place, drawn in the hint color and running the way it must go: across for horizontal, up and down for vertical.",
-      outline:
-        "the squares the step reasons from: the squares a numbered line runs through or could still reach, or a block together with the lines already running into it or the squares beside it where one still could.",
+  hint: {
+    ...sticksHint,
+    rungs: STICKS_RUNGS,
+    marks: {
+      roles: {
+        ring: "the square the step decides, as the line it asks you to place, drawn in the hint color and running the way it must go: across for horizontal, up and down for vertical.",
+        outline:
+          "the squares the step reasons from: the squares a numbered line runs through or could still reach, or a block together with the lines already running into it or the squares beside it where one still could.",
+      },
     },
+    targets: hintTargets,
   },
-  hintKeepTrack: sticksKeepTrack,
-  refreshHintStep: sticksRefreshHintStep,
-  hintGesture,
   textFormat,
 
   colors,

@@ -31,6 +31,7 @@
  * board, the game pins one with the moves that make it wrong ({@link WRONG}).
  */
 import { describe, expect, it } from "vitest";
+import { hasHint } from "./game.ts";
 import type { MarkRole } from "./hint-words.ts";
 import { dealt } from "./testing/dealt.ts";
 import {
@@ -231,8 +232,8 @@ describe("a warm frame matches a fresh one", () => {
       }
     }
 
-    const legend = game.hintMarks?.roles ?? {};
-    if (typeof game.hint !== "function") {
+    const legend = game.hint.marks.roles;
+    if (!hasHint(game)) {
       expect(Object.keys(legend)).toEqual([]);
       return;
     }

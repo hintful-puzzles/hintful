@@ -667,7 +667,7 @@ export function verdictOf(judged: Judged): MoveVerdict {
 }
 
 /**
- * `Game.judgeMove` for a hint whose steps a game builds from its own walk:
+ * `Game.hint.judgeMove` for a hint whose steps a game builds from its own walk:
  * the move's facts are the difference of the marks the hint reads off the
  * board before and after it (`marks`, `null` where the board breaks the
  * rules), and `walk` runs the hint's walk from the position before, aimed by

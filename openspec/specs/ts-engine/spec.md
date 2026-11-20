@@ -120,10 +120,10 @@ or an older one whose fields are missing or malformed, SHALL be rejected.
 
 ### Requirement: A move a save holds keeps replaying
 
-A save holds each move as its game wrote it: what `serializeMove` returns, or
+A save holds each move as its game wrote it: what `moveCodec.serialize` returns, or
 the move itself where the game has no such hook. A game that renames a move's
 field, changes what a field means or stops making a kind of move SHALL keep
-reading the earlier shape, in `deserializeMove` or in `executeMove`, so a save
+reading the earlier shape, in `moveCodec.deserialize` or in `executeMove`, so a save
 written before the change still loads. Ceasing to read one is a compatibility
 decision that SHALL go to the owner beforehand, with its cost stated.
 
@@ -302,24 +302,23 @@ solution as unknown for those.
 
 ### Requirement: The engine serializes Ui state a move-log replay cannot reconstruct
 
-The engine SHALL support optional `encodeUi(ui): string` and
-`decodeUi(ui, encoded, state): void` hooks on `Game`. The midend SHALL write
-`encodeUi(ui)` into the save envelope's `ui` field when the hook is present,
-and SHALL restore it through `decodeUi` after rebuilding state 0 and replaying
-the move log on load: replay goes through `executeMove` and never
-`interpretMove`. A game without the hooks SHALL save no `ui` field, and its
-`Ui` SHALL be rebuilt from `newUi` and the replay alone.
+The engine SHALL support an optional `Game.uiCodec` of `encode(ui): string`
+and `decode(ui, encoded, state)`. The midend SHALL write `encode(ui)` into the
+save envelope's `ui` field when it is present, and SHALL restore it through
+`decode` after replaying the move log on load, since replay runs
+`executeMove` and never `interpretMove`. A game without the codec SHALL save
+no `ui` field, and its `Ui` SHALL be rebuilt from `newUi` and the replay.
 
 #### Scenario: A persistent Ui counter survives a save
 
-- **WHEN** a game with `encodeUi` and `decodeUi` accumulates ui-only state,
+- **WHEN** a game with `uiCodec.encode` and `uiCodec.decode` accumulates ui-only state,
   such as Mines' death count, is saved and is reloaded
 - **THEN** the reloaded game shows the same ui-only state, though the move log
   alone does not hold it
 
 ### Requirement: A restored Ui is decoded against the replayed board
 
-`decodeUi` SHALL be given the state the replay reached, so a `Ui` field
+`uiCodec.decode` SHALL be given the state the replay reached, so a `Ui` field
 judged against the board is judged on load as it was in play.
 
 #### Scenario: A restored Ui is judged against the restored board
@@ -330,7 +329,7 @@ judged against the board is judged on load as it was in play.
 
 ### Requirement: The midend reports a game's saveable Ui with every state change
 
-The midend SHALL report the game's current `encodeUi` encoding to the app on
+The midend SHALL report the game's current `uiCodec.encode` encoding to the app on
 the `game-state-change` notification, as `uiState`, for a game that has the
 hook and not otherwise. It SHALL report the encoding and not a flag that the
 Ui changed, so the value the app compares is the part of the save that would
@@ -339,9 +338,9 @@ not a move.
 
 #### Scenario: A game's saveable Ui is reported with every state change
 
-- **WHEN** a game declaring `encodeUi` reaches any state change
+- **WHEN** a game declaring `uiCodec.encode` reaches any state change
 - **THEN** the `game-state-change` notification carries that game's current
-  encoding, and a game declaring no `encodeUi` carries none
+  encoding, and a game declaring no `uiCodec.encode` carries none
 
 #### Scenario: A Ui edit that is not a move is reported
 
@@ -666,36 +665,35 @@ absence has one spelling.
 
 ### Requirement: Solve, the status bar and text export follow from the game's methods
 
-The `Midend` SHALL derive `canSolve` from the presence of `Game.solve` and
-`wantsStatusbar` from the presence of `Game.statusbarText`, and SHALL offer a
-text rendering exactly when `Game.textFormat` is present and returns one. The
-`Game` contract SHALL carry no flag restating any of the three, so a game
-cannot advertise a capability it has no method behind.
+Every game SHALL implement `Game.solve`, so every game offers Solve, and a
+solver that cannot answer SHALL refuse with a `SolveFailure`. The `Midend`
+SHALL derive `wantsStatusbar` from the presence of `Game.statusbarText`, and
+SHALL offer a text rendering exactly when `Game.textFormat` is present and
+returns one. The `Game` contract SHALL carry no flag restating any of these,
+so a game cannot advertise a capability it has no method behind.
 
-#### Scenario: A game without the methods offers neither Solve nor a status bar
+#### Scenario: A game without a status bar
 
-- **WHEN** a game provides neither `solve` nor `statusbarText`
-- **THEN** its static properties report `canSolve` and `wantsStatusbar` false
-- **AND** `Midend.solve()` refuses with "This game does not support solving"
+- **WHEN** a game provides no `statusbarText`
+- **THEN** its static properties report `wantsStatusbar` false
 
-#### Scenario: A game with the methods offers both
+#### Scenario: A game whose solver cannot answer
 
-- **WHEN** a game provides `solve` and `statusbarText`
-- **THEN** its static properties report `canSolve` and `wantsStatusbar` true
+- **WHEN** a game's `solve` returns a `SolveFailure`
+- **THEN** Solve shows that failure's words and changes nothing
 
 ### Requirement: A game's contract sections are implemented, not applicable, or absent, and an absent one makes it a draft
 
-The engine SHALL name the contract sections whose absence makes a game a draft
-(`src/engine/sections.ts`): `hint`, `findMistakes`, `solve` and
-`transposeParams`. Each section of a game SHALL be in exactly one of three
-states: implemented (the member is present), not applicable (the game gives the
-reason in `Game.notApplicable`), or absent. A game with any absent section
-SHALL be a draft. Draft SHALL be computed from these states and never declared
-by a game about itself.
+The engine SHALL name the sections whose absence makes a game a draft
+(`src/engine/sections.ts`): `hint`, `findMistakes` and `transposeParams`.
+Each SHALL be implemented, not applicable (with the reason in
+`Game.notApplicable`), or absent; an unwritten hint is the engine's
+`DRAFT_HINT`. A game with any absent section SHALL be a draft, computed from
+these states and never declared by a game about itself.
 
 #### Scenario: A hintless game is a draft
 
-- **WHEN** a registered game declares no `hint`
+- **WHEN** a registered game's hint is `DRAFT_HINT`
 - **THEN** its draft sections include "Hints", whatever else it declares
 
 ### Requirement: A not-applicable reason is a fact about the puzzle
@@ -720,7 +718,8 @@ refused wherever the section state is read, including the production build.
 
 #### Scenario: A game cannot both have a section and excuse it
 
-- **WHEN** a game implements `solve` and also gives a `solve` reason
+- **WHEN** a game implements `findMistakes` and also gives a `findMistakes`
+  reason
 - **THEN** reading its section state throws, naming the game and the section
 
 ### Requirement: A member joins the sections only when its absences can be told apart

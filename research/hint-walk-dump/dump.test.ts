@@ -73,9 +73,9 @@ it(`dumps every hint plan of ${id}`, () => {
             end = "solved";
             break;
           }
-          const res = game.hint?.(state, aux);
-          if (!res?.ok) {
-            end = `refused ${res?.error}`;
+          const res = game.hint.plan(state, aux);
+          if (!res.ok) {
+            end = `refused ${res.error}`;
             break;
           }
           for (const s of res.steps) {

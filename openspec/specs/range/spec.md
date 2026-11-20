@@ -342,15 +342,15 @@ white cells connected).
 - **THEN** its narration says the clue already sees its count of cells and
   that the cell just past them must be shaded
 
-### Requirement: Hint: Range's hintKeepTrack follows the hinted cell and value
+### Requirement: Hint: Range's hint.keepTrack follows the hinted cell and value
 
-`hintKeepTrack` SHALL report `"completed"` when the player's move sets the
+`hint.keepTrack` SHALL report `"completed"` when the player's move sets the
 hinted cell to the hinted value and `"off"` otherwise.
 
 #### Scenario: Following the hint advances the plan
 
 - **WHEN** the player makes the move the current hint step describes
-- **THEN** `hintKeepTrack` returns `"completed"`
+- **THEN** `hint.keepTrack` returns `"completed"`
 - **AND** a move that sets a different cell, or the hinted cell to a different
   value, returns `"off"`
 

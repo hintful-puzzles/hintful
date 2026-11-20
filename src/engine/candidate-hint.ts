@@ -717,7 +717,7 @@ function adapterOf<M>(adapter?: CandidateMoveAdapter<M>): CandidateMoveAdapter<M
 }
 
 /**
- * How the pointer makes a candidate step's move (`Game.hintGesture`): the
+ * How the pointer makes a candidate step's move (`Game.hint.gesture`): the
  * mark-all control for a fill-all, and otherwise the note-taking cell's taps
  * and keys (`noteEntryGesture`), one key per value or note, notes cell by cell
  * in reading order. `at` is the middle of a cell in pixels and `code` the

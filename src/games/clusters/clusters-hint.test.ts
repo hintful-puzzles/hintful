@@ -66,7 +66,7 @@ type Step = HintStep<ClustersMove, ClustersHint, string>;
 
 /** The steps of the hint on `state`, none where it refuses. */
 function stepsOf(state: ClustersState): Step[] {
-  const res = clustersGame.hint?.(state);
+  const res = clustersGame.hint.plan(state);
   return res?.ok ? (res.steps as Step[]) : [];
 }
 
@@ -236,7 +236,7 @@ describe("the hint's plan", () => {
     expect(
       tiles.filter((t) => neighborsOf(t, P.w, P.h).includes(hit.index)),
     ).toHaveLength(1);
-    const solved = clustersGame.solve?.(hit.state, hit.state);
+    const solved = clustersGame.solve(hit.state, hit.state);
     if (!solved?.ok || solved.move.kind !== "solve") throw new Error("no answer");
     expect(solved.move.fills[hit.index]).toBe(hit.fill);
   });
@@ -245,7 +245,7 @@ describe("the hint's plan", () => {
 describe("hint", () => {
   it("narrates each reason kind with its rule and highlights the danger tile", () => {
     const state = generate("plan-a");
-    const res = clustersGame.hint?.(state);
+    const res = clustersGame.hint.plan(state);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     for (const step of res.steps as Step[]) {
@@ -299,7 +299,7 @@ describe("hint", () => {
 
   it("counts a solved board as finished, so the midend refuses it", () => {
     const state = generate("plan-a");
-    const solved = clustersGame.solve?.(state, state);
+    const solved = clustersGame.solve(state, state);
     if (!solved?.ok) throw new Error("solve refused");
     expect(clustersGame.status(clustersGame.executeMove(state, solved.move))).toBe(
       "solved",
@@ -394,7 +394,7 @@ describe("hintKeepTrack", () => {
   const fresh = (): Step => stepsOf(state)[0];
   const { index, fill } = decided(fresh());
   const other = fill === F_COLOR_0 ? F_COLOR_1 : F_COLOR_0;
-  const track = clustersGame.hintKeepTrack;
+  const track = clustersGame.hint.keepTrack;
   const elsewhere = state.grid.findIndex((tile, i) => tile === 0 && i !== index);
 
   it("completes on exactly the hinted paint", () => {

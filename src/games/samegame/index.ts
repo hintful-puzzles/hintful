@@ -255,18 +255,19 @@ export const samegameGame: Game<
   },
   solve,
   hasNoSolution,
-
-  hint,
-  hintMarks: HINT_MARKS,
-  hintRungs: SAMEGAME_RUNGS,
-  hintKeepTrack,
-  // The two clicks a player makes on a square of the group: one highlights
-  // it, the next removes it. One click where it is already highlighted.
-  hintGesture(s, ui, ds, m) {
-    if (m.type !== "remove") return [];
-    const i = m.tiles[0];
-    const t = { x: i % s.w, y: Math.floor(i / s.w) };
-    return verbGesture(targetVerbs, s, ds, ui, ui.selected[i] ? [t] : [t, t]);
+  hint: {
+    plan: hint,
+    marks: HINT_MARKS,
+    rungs: SAMEGAME_RUNGS,
+    keepTrack: hintKeepTrack,
+    // The two clicks a player makes on a square of the group: one highlights
+    // it, the next removes it. One click where it is already highlighted.
+    gesture(s, ui, ds, m) {
+      if (m.type !== "remove") return [];
+      const i = m.tiles[0];
+      const t = { x: i % s.w, y: Math.floor(i / s.w) };
+      return verbGesture(targetVerbs, s, ds, ui, ui.selected[i] ? [t] : [t, t]);
+    },
   },
 
   textFormat,

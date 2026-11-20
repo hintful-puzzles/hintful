@@ -746,63 +746,62 @@ export const sixteenGame: Game<
   },
 
   solve: () => ({ ok: true, move: { type: "solve" } }),
-
-  hint,
-  hintRungs: SIXTEEN_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "what the step decides: the tile it is moving, with the arrow to click ringed beside its line, and the square the move takes it to. When the tile is on a journey of two moves, one along a row and one along a column, both squares are ringed: the nearer one, where this move lands it, and the other.",
+  hint: {
+    plan: hint,
+    rungs: SIXTEEN_RUNGS,
+    marks: {
+      roles: {
+        ring: "what the step decides: the tile it is moving, with the arrow to click ringed beside its line, and the square the move takes it to. When the tile is on a journey of two moves, one along a row and one along a column, both squares are ringed: the nearer one, where this move lands it, and the other.",
+      },
     },
-  },
+    // One click per square on the gutter arrow the hint marks: a click slides
+    // the line by one, and the step's delta is the in-grid run toward its target.
+    gesture(state, _ui, ds, m): readonly PointerAction[] {
+      if (m.type !== "slide") return [];
+      const ts = ds.tileSize;
+      const ahead = m.delta > 0;
+      const at =
+        m.axis === "row"
+          ? { x: cellCenter(ahead ? state.w : -1, ts), y: cellCenter(m.index, ts) }
+          : { x: cellCenter(m.index, ts), y: cellCenter(ahead ? state.h : -1, ts) };
+      return Array.from({ length: Math.abs(m.delta) }, () => click(at));
+    },
+    keepTrack(
+      m: SixteenMove,
+      step: HintStep<SixteenMove, SixteenHintHighlights>,
+      state: SixteenState,
+    ): HintTrackVerdict {
+      if (m.type !== "slide" || step.move.type !== "slide") return "off";
 
-  // One click per square on the gutter arrow the hint marks: a click slides
-  // the line by one, and the step's delta is the in-grid run toward its target.
-  hintGesture(state, _ui, ds, m): readonly PointerAction[] {
-    if (m.type !== "slide") return [];
-    const ts = ds.tileSize;
-    const ahead = m.delta > 0;
-    const at =
-      m.axis === "row"
-        ? { x: cellCenter(ahead ? state.w : -1, ts), y: cellCenter(m.index, ts) }
-        : { x: cellCenter(m.index, ts), y: cellCenter(ahead ? state.h : -1, ts) };
-    return Array.from({ length: Math.abs(m.delta) }, () => click(at));
-  },
+      // Only slides of the hinted row/column relate to the step at all.
+      if (m.axis !== step.move.axis || m.index !== step.move.index) {
+        return "off";
+      }
 
-  hintKeepTrack(
-    m: SixteenMove,
-    step: HintStep<SixteenMove, SixteenHintHighlights>,
-    state: SixteenState,
-  ): HintTrackVerdict {
-    if (m.type !== "slide" || step.move.type !== "slide") return "off";
+      const hl = step.highlights;
+      if (!hl) return "off";
 
-    // Only slides of the hinted row/column relate to the step at all.
-    if (m.axis !== step.move.axis || m.index !== step.move.index) {
-      return "off";
-    }
+      // A slide of the hinted line that lands the tile on the step's
+      // target completes the step. This is safe exactly because a line
+      // slide is determined by its displacement: any slide landing the
+      // tile there produces the same permutation as the planned move,
+      // so the post-move state matches the plan and the remaining
+      // steps stay valid.
+      const nextState = executeMove(state, m);
+      const tilePos = nextState.tiles.indexOf(hl.tile);
+      if (tilePos === hl.targetPos) return "completed";
 
-    const hl = step.highlights;
-    if (!hl) return "off";
-
-    // A slide of the hinted line that lands the tile on the step's
-    // target completes the step. This is safe exactly because a line
-    // slide is determined by its displacement: any slide landing the
-    // tile there produces the same permutation as the planned move,
-    // so the post-move state matches the plan and the remaining
-    // steps stay valid.
-    const nextState = executeMove(state, m);
-    const tilePos = nextState.tiles.indexOf(hl.tile);
-    if (tilePos === hl.targetPos) return "completed";
-
-    // Any other slide of the line is partial progress (or a detour):
-    // shrink the step's move to the remaining in-grid distance so a
-    // later executeHint doesn't overshoot.
-    const curR = Math.floor(tilePos / state.w);
-    const curC = tilePos % state.w;
-    const tgtR = Math.floor(hl.targetPos / state.w);
-    const tgtC = hl.targetPos % state.w;
-    const remaining = step.move.axis === "row" ? tgtC - curC : tgtR - curR;
-    step.move = { ...step.move, delta: remaining };
-    return "onTrack";
+      // Any other slide of the line is partial progress (or a detour):
+      // shrink the step's move to the remaining in-grid distance so a
+      // later executeHint doesn't overshoot.
+      const curR = Math.floor(tilePos / state.w);
+      const curC = tilePos % state.w;
+      const tgtR = Math.floor(hl.targetPos / state.w);
+      const tgtC = hl.targetPos % state.w;
+      const remaining = step.move.axis === "row" ? tgtC - curC : tgtR - curR;
+      step.move = { ...step.move, delta: remaining };
+      return "onTrack";
+    },
   },
 
   textFormat,

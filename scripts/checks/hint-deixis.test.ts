@@ -147,7 +147,7 @@ it("reports every hint step that points bare while a second mark is displayed", 
           continue; // ungenerable at this size; difficulty-contract.test.ts owns that
         }
         const { desc, aux } = board;
-        const res = game.hint?.(game.newState(params, desc), aux);
+        const res = game.hint.plan(game.newState(params, desc), aux);
         if (!res?.ok) continue;
         for (const step of res.steps) {
           examined++;

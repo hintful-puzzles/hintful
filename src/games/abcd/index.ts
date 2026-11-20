@@ -363,33 +363,35 @@ export const abcdGame: Game<
   clearMistakes: (_state, mistakes) => clearEntries(abcdEntryMoves, mistakes),
   revealOne: (state, solved) =>
     revealEntry(abcdEntryMoves, state.grid, solved.grid, state.params.w),
-  hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
-  judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
-  hintRungs: ABCD_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the cell the step fills in with a letter.",
-      strike: "the pencil marks the step crosses out.",
-      outline:
-        'the particular cells the reason rests on: "this cell", whose pencil marks it crosses out, the letters a row already holds, the cells that can still take a letter, or the letter just placed. The number the sentence reads ("its one A", "needs 2 more Bs") is drawn in the hint color among the clues.',
-      stripes: 'the row or column the step reasons from: "this row", "this column".',
+  hint: {
+    plan: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+    judgeMove: (before, after, ui) =>
+      candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
+    rungs: ABCD_RUNGS,
+    marks: {
+      roles: {
+        ring: "the cell the step fills in with a letter.",
+        strike: "the pencil marks the step crosses out.",
+        outline:
+          'the particular cells the reason rests on: "this cell", whose pencil marks it crosses out, the letters a row already holds, the cells that can still take a letter, or the letter just placed. The number the sentence reads ("its one A", "needs 2 more Bs") is drawn in the hint color among the clues.',
+        stripes: 'the row or column the step reasons from: "this row", "this column".',
+      },
     },
+    keepTrack: hintKeepTrack,
+    gesture: (s, ui, ds, m) => {
+      const ts = ds.tileSize;
+      const mid = (v: number) => innerCoord(v, ts, s.params.n) + ((ts / 2) | 0);
+      const keys = requestKeys(s.params);
+      return hintGesture(
+        ui,
+        (x, y) => ({ x: mid(x), y: mid(y) }),
+        (n) => keys[n - 1].button,
+        m,
+        markAll(s),
+      );
+    },
+    refreshStep: refreshHintStep,
   },
-  hintKeepTrack,
-  hintGesture: (s, ui, ds, m) => {
-    const ts = ds.tileSize;
-    const mid = (v: number) => innerCoord(v, ts, s.params.n) + ((ts / 2) | 0);
-    const keys = requestKeys(s.params);
-    return hintGesture(
-      ui,
-      (x, y) => ({ x: mid(x), y: mid(y) }),
-      (n) => keys[n - 1].button,
-      m,
-      markAll(s),
-    );
-  },
-  refreshHintStep,
   requestKeys,
   textFormat,
 

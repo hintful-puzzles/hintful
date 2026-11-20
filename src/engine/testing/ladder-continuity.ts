@@ -177,7 +177,7 @@ export function ladderContinuity(
 ): LadderContinuity {
   const { tally, restore } = measureLadderContinuity();
   try {
-    game.hint?.(state, undefined, ui);
+    game.hint.plan(state, undefined, ui);
   } finally {
     restore();
   }

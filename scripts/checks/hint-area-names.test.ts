@@ -118,7 +118,7 @@ it("reports every reference that names one thing and paints an area", () => {
 
   for (const [name, game] of HINT_GAMES) {
     const palette = game.colors(DEFAULT_BACKGROUND);
-    const tile = game.preferredTileSize ?? 32;
+    const tile = game.preferredTileSize;
     for (const { params } of gatePresets(game))
       for (const seed of SEEDS) {
         const { desc, aux } = dealt(game, params, seed);
@@ -133,7 +133,7 @@ it("reports every reference that names one thing and paints an area", () => {
         let walked = 0;
         for (let round = 0; round < 40 && walked < STEPS; round++) {
           if (game.status(state) !== "ongoing") break;
-          const res = game.hint?.(state, aux, ui);
+          const res = game.hint.plan(state, aux, ui);
           if (!res?.ok) break;
           for (const step of res.steps) {
             if (walked++ >= STEPS) break;
@@ -167,8 +167,8 @@ it("reports every reference that names one thing and paints an area", () => {
                 .replace(/\d+/g, "#");
               row.said.set(said, (row.said.get(said) ?? 0) + 1);
             }
-            const live = game.refreshHintStep
-              ? game.refreshHintStep(step, state)
+            const live = game.hint.refreshStep
+              ? game.hint.refreshStep(step, state)
               : step;
             if (live === null) continue;
             state = game.executeMove(state, live.move);

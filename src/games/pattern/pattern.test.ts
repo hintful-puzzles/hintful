@@ -512,7 +512,7 @@ describe("pattern render", () => {
     const isLit = (color: number) =>
       (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color).size > 0;
     const run = winFlashRun(paint, (ops) => {
-      const ts = patternGame.preferredTileSize ?? 0;
+      const ts = patternGame.preferredTileSize;
       const cells: number[] = [];
       let clear = 0;
       for (const o of ops) {

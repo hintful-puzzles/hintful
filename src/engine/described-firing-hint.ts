@@ -237,7 +237,21 @@ export type FiringHintSpec<
     | { journey: Journey<Move, Target, State>; move?: never }
   );
 
-/** The hooks a game takes from its description. */
+/** The part of a game's hint (`Game.hint`) its description builds: the game
+ * spreads it and adds what only it knows, its marks and its targets. */
+export interface FiringHintParts<State, Move, H, Kind extends string> {
+  plan(state: State): HintResult<Move, H, Kind>;
+  /** What Check & save says of the last move. */
+  judgeMove(before: State, after: State): MoveVerdict | null;
+  /** Judges a move against a step of any kind: the kind is no part of it. */
+  keepTrack(m: Move, step: HintStep<Move, H>, state: State): HintTrackVerdict;
+  /** A step the player has already made some of (undo and redo move the board
+   * under a shown step) is shown for what is left, or `null` where nothing is. */
+  refreshStep(step: HintStep<Move, H>, state: State): HintStep<Move, H> | null;
+}
+
+/** What a game takes from its description: its hint's part, and what a
+ * placement rules out where the spec has the description's. */
 export interface DescribedFiringHint<
   State,
   Move,
@@ -245,16 +259,8 @@ export interface DescribedFiringHint<
   Kind extends string,
   H extends { targets: Target[] } = FiringHint<Target>,
 > {
-  hint(state: State): HintResult<Move, H, Kind>;
-  /** What Check & save says of the last move (`Game.judgeMove`). */
-  judgeMove(before: State, after: State): MoveVerdict | null;
-  /** What a placement rules out, where the spec has the description's. */
+  hint: FiringHintParts<State, Move, H, Kind>;
   rulesOut?: RulesOut<State, Move>;
-  /** Judges a move against a step of any kind: the kind is no part of it. */
-  hintKeepTrack(m: Move, step: HintStep<Move, H>, state: State): HintTrackVerdict;
-  /** A step the player has already made some of (undo and redo move the board
-   * under a shown step) is shown for what is left, or `null` where nothing is. */
-  refreshHintStep(step: HintStep<Move, H>, state: State): HintStep<Move, H> | null;
 }
 
 /** A line of squares by its noun, for a stated clause's `{unit}`. */
@@ -493,16 +499,13 @@ export function describedFiringHint<
   };
 
   const { rulesOut, move } = spec;
-  return {
-    hint,
+  const described: FiringHintParts<State, Move, H, Kind> = {
+    plan: hint,
     judgeMove,
-    ...(rulesOut && move
-      ? { rulesOut: describedRulesOut(rulesOut, { ...spec, move }) }
-      : {}),
     // The squares the move changed must be ones the step asks for, set as it
     // asks; the step then shrinks to the squares not yet set. A journey's leg
     // is judged by its own squares, and the step does not shrink.
-    hintKeepTrack: (m, step, state) => {
+    keepTrack: (m, step, state) => {
       const hl = step.highlights;
       if (spec.foreign(m) || !hl) return "off";
       const after = spec.execute(state, m);
@@ -531,7 +534,7 @@ export function describedFiringHint<
       }
       return verdict;
     },
-    refreshHintStep: (step, state) => {
+    refreshStep: (step, state) => {
       const hl = step.highlights;
       if (!hl || spec.journey !== undefined) return step;
       const w = spec.width(state);
@@ -543,6 +546,12 @@ export function describedFiringHint<
         ? step
         : { ...step, ...narrowedTo(step, left, state) };
     },
+  };
+  return {
+    hint: described,
+    ...(rulesOut && move
+      ? { rulesOut: describedRulesOut(rulesOut, { ...spec, move }) }
+      : {}),
   };
 
   /** What `step` becomes where only the targets `left` are still to make: its

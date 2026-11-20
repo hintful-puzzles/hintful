@@ -80,7 +80,7 @@ describe("renderScenario", () => {
 
   it("shows a pinned plan's later leg, with the legs before it played", () => {
     const state = palisadeGame.newState(P, ID.slice(ID.indexOf(":") + 1));
-    const plan = palisadeGame.hint?.(state);
+    const plan = palisadeGame.hint.plan(state);
     if (!plan?.ok) throw new Error("the board has a plan");
     const { steps } = plan;
     expect(steps.length).toBeGreaterThan(1);

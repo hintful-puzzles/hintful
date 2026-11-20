@@ -9,14 +9,8 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import {
-  type Game,
-  type HintStep,
-  UI_UPDATE,
-  type UiUpdate,
-} from "../../engine/game.ts";
+import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   dimensionParamConfig,
   parseConfigInt,
@@ -30,7 +24,6 @@ import {
   rulingOut,
   type TargetGeometry,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { answerCount, newDesc } from "./answer.ts";
@@ -356,23 +349,13 @@ function revealOne(s: BlackboxState, solved: BlackboxState): BlackboxMove | null
 
 /** A click on the square the step's move acts on: a box square, a laser's
  * range square, or the corner button. */
-function hintGesture(
-  state: BlackboxState,
-  ui: BlackboxUi,
-  ds: BlackboxDrawState,
-  move: BlackboxMove,
-  step: HintStep<BlackboxMove>,
-): readonly PointerAction[] {
-  let target: Point;
+function hintTargets(state: BlackboxState, move: BlackboxMove): Point[] {
   if (move.type === "toggleBall" || move.type === "toggleLock")
-    target = { x: move.x, y: move.y };
-  else if (move.type === "fire")
-    target = range2grid(state.w, state.h, move.rangeno) as Point;
-  else if (move.type === "reveal") target = { x: 0, y: 0 };
-  else return [];
-  return verbClicks(targetVerbs, { executeMove, hintKeepTrack }, state, ui, ds, step, [
-    target,
-  ]);
+    return [{ x: move.x, y: move.y }];
+  if (move.type === "fire")
+    return [range2grid(state.w, state.h, move.rangeno) as Point];
+  if (move.type === "reveal") return [{ x: 0, y: 0 }];
+  return [];
 }
 
 // --- status bar -------------------------------------------------------
@@ -469,12 +452,13 @@ export const blackboxGame: Game<
     // beside the player's guesses, scored as a loss.
     return { ok: true, move: { type: "solve" } };
   },
-
-  hint,
-  hintMarks: HINT_MARKS,
-  hintRungs: BLACKBOX_RUNGS,
-  hintKeepTrack,
-  hintGesture,
+  hint: {
+    plan: hint,
+    marks: HINT_MARKS,
+    rungs: BLACKBOX_RUNGS,
+    keepTrack: hintKeepTrack,
+    targets: hintTargets,
+  },
 
   statusbarText,
 

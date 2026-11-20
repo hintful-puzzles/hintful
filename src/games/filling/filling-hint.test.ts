@@ -126,7 +126,7 @@ describe("a player's position on a board the ladder finishes", () => {
 describe("hint", () => {
   it("returns a plan whose moves are legal and solve the board", () => {
     const st = fromSeed("9x7", "filling-hint-plan");
-    const res = fillingGame.hint?.(st);
+    const res = fillingGame.hint.plan(st);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     expect(res.steps.length).toBeGreaterThan(0);
@@ -142,7 +142,7 @@ describe("hint", () => {
   it("never shades a target cell in its own area", () => {
     for (const seed of SEEDS) {
       const st = fromSeed("9x7", seed);
-      const res = fillingGame.hint?.(st);
+      const res = fillingGame.hint.plan(st);
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
         const marks = stepMarks(step);
@@ -154,7 +154,7 @@ describe("hint", () => {
 
   it("counts the board its plan finishes as solved, so the midend refuses it", () => {
     const st = fromSeed("9x7", "filling-hint-solved");
-    const res0 = fillingGame.hint?.(st);
+    const res0 = fillingGame.hint.plan(st);
     if (!res0?.ok) throw new Error("expected a plan");
     let cur = st;
     for (const step of res0.steps) cur = fillingGame.executeMove(cur, step.move);
@@ -181,14 +181,14 @@ describe("hint", () => {
 describe("hintKeepTrack", () => {
   it("completes on a full fill, off on the wrong value or an extra cell", () => {
     const st = fromSeed("9x7", "filling-hint-track");
-    const res = fillingGame.hint?.(st);
+    const res = fillingGame.hint.plan(st);
     if (!res?.ok) throw new Error("expected a plan");
     const step = res.steps[0];
     const hl = step.highlights as FillingHint;
 
     // Filling all the step's cells with the hinted value → completed.
     const all = { type: "set" as const, cells: [...hl.cells], value: hl.value };
-    expect(fillingGame.hintKeepTrack?.(all, step, st)).toBe("completed");
+    expect(fillingGame.hint.keepTrack(all, step, st)).toBe("completed");
 
     // The hinted cells, but the wrong value → off.
     const wrongValue = {
@@ -196,26 +196,26 @@ describe("hintKeepTrack", () => {
       cells: [...hl.cells],
       value: hl.value === 1 ? 2 : 1,
     };
-    expect(fillingGame.hintKeepTrack?.(wrongValue, step, st)).toBe("off");
+    expect(fillingGame.hint.keepTrack(wrongValue, step, st)).toBe("off");
 
     // A cell outside the step → off.
     const stray = st.clues.findIndex((v, i) => v === 0 && !hl.cells.includes(i));
     const elsewhere = { type: "set" as const, cells: [stray], value: hl.value };
-    expect(fillingGame.hintKeepTrack?.(elsewhere, step, st)).toBe("off");
+    expect(fillingGame.hint.keepTrack(elsewhere, step, st)).toBe("off");
   });
 
   it("stays on track and shrinks the step on a partial fill of a group", () => {
     // The 4x1 "4c" board forces three squares in one step; filling one of them
     // keeps the step on track with the other two still to go.
     const st = newState(decodeParams("4x1"), "4c");
-    const res = fillingGame.hint?.(st);
+    const res = fillingGame.hint.plan(st);
     if (!res?.ok) throw new Error("expected a plan");
     const step = res.steps[0];
     const hl = step.highlights as FillingHint;
     expect(hl.cells.length).toBe(3);
 
     const one = { type: "set" as const, cells: [hl.cells[0]], value: hl.value };
-    expect(fillingGame.hintKeepTrack?.(one, step, st)).toBe("onTrack");
+    expect(fillingGame.hint.keepTrack(one, step, st)).toBe("onTrack");
     // The step shrank to the remaining two squares.
     expect((step.highlights as FillingHint).cells).toHaveLength(2);
     expect((step.highlights as FillingHint).cells).not.toContain(hl.cells[0]);

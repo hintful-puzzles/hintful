@@ -237,7 +237,7 @@ const entryMoves = (w: number): EntryMoves<FillingMove> => ({
 
 // --- hint ------------------------------------------------------------------
 
-/** Plan data for a Filling hint step, read by `hintKeepTrack`. `cells` are the
+/** Plan data for a Filling hint step, read by `hint.keepTrack`. `cells` are the
  * empty squares the deduction forces (a single firing usually pins a group),
  * as grid indices, and `value` the forced number, never drawn: the narration
  * names it ("the region of N", "a 1"). */
@@ -397,20 +397,22 @@ export const fillingGame: Game<
 
   solve,
   difficulty,
-  hint,
-  judgeMove,
-  hintMarks: {
-    roles: {
-      ring: "each square the step fills. The number to write there is the one the sentence names.",
-      outline:
-        "the neighbors the reason rests on, when it is about the number a square can take rather than about one region.",
-      stripes:
-        "the region the sentence names: a group of equal numbers already on the board that is not yet as big as its number. The squares the step fills take that same number.",
+  hint: {
+    plan: hint,
+    judgeMove,
+    marks: {
+      roles: {
+        ring: "each square the step fills. The number to write there is the one the sentence names.",
+        outline:
+          "the neighbors the reason rests on, when it is about the number a square can take rather than about one region.",
+        stripes:
+          "the region the sentence names: a group of equal numbers already on the board that is not yet as big as its number. The squares the step fills take that same number.",
+      },
     },
+    rungs: FILLING_RUNGS,
+    keepTrack: hintKeepTrack,
+    gesture: hintGesture,
   },
-  hintRungs: FILLING_RUNGS,
-  hintKeepTrack,
-  hintGesture,
   findMistakes,
   clearMistakes: (state, mistakes) => clearEntries(entryMoves(state.w), mistakes),
   revealOne: (state, solved) =>

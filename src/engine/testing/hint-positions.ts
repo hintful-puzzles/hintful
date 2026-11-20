@@ -6,7 +6,7 @@
  * for it (an input, never a seed: docs/method.md), and the costly one to
  * keep, because the scan that found it used to be written for the occasion and
  * deleted. {@link describeHintPins} keeps the scan beside the pins: it pins one
- * position for every rung the game declares (`Game.hintRungs`), and a pin that
+ * position for every rung the game declares (`Game.hint.rungs`), and a pin that
  * stops firing fails with the command that scans again, `npm run hint-scan`
  * (`scripts/hint-scan.ts`), which writes the pins into the test file.
  *
@@ -147,7 +147,7 @@ function loadPosition<P, S, M, U, D, H, R extends string>(
   let state = game.newState(params, id.slice(colon + 1));
   for (const m of moves) state = game.executeMove(state, m);
   const ui = scan.ui?.(state) ?? game.newUi(state);
-  const plan = game.hint?.(state, undefined, ui) ?? null;
+  const plan = game.hint.plan(state, undefined, ui);
   return { state, plan };
 }
 
@@ -159,8 +159,7 @@ function scanHintPositions<P, S, M, U, D, H, R extends string>(
   kinds: Record<string, { held: number; pin: string | null }>;
 } {
   const { game, descOf } = scan;
-  const hint = game.hint?.bind(game);
-  if (!hint) throw new Error(`${game.id} has no hint to scan`);
+  const { hint } = game;
   const names = Object.keys(scan.kinds);
   /** A kind's best position so far: where its step opens the plan before
    * where it comes later, then the fewest moves played, which is the shortest
@@ -195,7 +194,7 @@ function scanHintPositions<P, S, M, U, D, H, R extends string>(
         for (let k = 0; k < (scan.maxSteps ?? 400); k++) {
           if (game.status(state) !== "ongoing") break;
           // With no `aux`, as a pin is loaded: a `params:desc` carries none.
-          const plan = hint(state, undefined, ui);
+          const plan = hint.plan(state, undefined, ui);
           const steps = plan.ok ? plan.steps : [];
           if (steps.length > 0) walked++;
           for (const name of steps.length > 0 ? names : []) {
@@ -386,7 +385,7 @@ function declarePins<P, S, M, U, D, H, R extends string>(
 
 /**
  * Declare a game's pinned hint positions, one for every rung it declares
- * (`Game.hintRungs`) and one for each further kind, and return the loader a
+ * (`Game.hint.rungs`) and one for each further kind, and return the loader a
  * test reads them through.
  *
  * It declares two tests: every pin's plan still fires its kind, and what each
@@ -429,7 +428,7 @@ export function describeHintPins<
   },
 ): (kind: Exclude<R, X> | K) => PinnedPosition<S, M, H, R> {
   const { game } = spec;
-  const rungs = game.hintRungs;
+  const rungs = game.hint.rungs;
   if (!rungs) throw new Error(`${game.id} declares no hintRungs to pin`);
   const unreached = Object.keys(spec.unreached ?? {});
   const further = (spec.kinds ?? {}) as Record<string, HintKind<S, M, H, R>>;

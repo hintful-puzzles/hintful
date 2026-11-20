@@ -174,7 +174,7 @@ const stepsCache = new Map<LoopyState, Step[]>();
 const stepsOf = (state: LoopyState): Step[] => {
   const cached = stepsCache.get(state);
   if (cached) return cached;
-  const res = loopyGame.hint?.(state);
+  const res = loopyGame.hint.plan(state);
   if (!res?.ok) throw new Error(`loopy hint refused: ${res?.error}`);
   stepsCache.set(state, res.steps);
   return res.steps;
@@ -470,7 +470,7 @@ describe("Loopy hint: soundness on every tiling", () => {
   /**
    * The auto rule-out aid extends a player's line move with the exclusions that
    * line forces, so a player following a hint with the aid on sends a **superset**
-   * of the step's ops. `hintKeepTrack` rejects an op the step did not ask for — for
+   * of the step's ops. `hint.keepTrack` rejects an op the step did not ask for — for
    * good reason, since a player who set something else has gone their own way — so
    * without an allowance for these the plan drops on a step the player *did* take.
    *

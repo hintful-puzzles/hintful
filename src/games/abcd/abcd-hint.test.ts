@@ -70,7 +70,7 @@ function boards(): Board[] {
 
 function planOf(label: string, state: AbcdState, reading?: CandidateReading): Step[] {
   const ui = abcdGame.newUi(state);
-  const r = abcdGame.hint?.(state, undefined, {
+  const r = abcdGame.hint.plan(state, undefined, {
     ...ui,
     candidateReading: reading ?? ui.candidateReading,
   });
@@ -113,7 +113,7 @@ const pinned = describeHintPins({
   }),
   stray: (state, turn, hinted): AbcdMove | null => {
     if (turn > 0) return hinted;
-    const solved = abcdGame.solve?.(state, state);
+    const solved = abcdGame.solve(state, state);
     if (!solved?.ok || solved.move.type !== "solve") throw new Error("unsolvable");
     const at = state.params.w + 1;
     return { type: "enter", x: 1, y: 1, letter: solved.move.grid[at] };
@@ -267,7 +267,7 @@ function firstBoard(pred: (b: Board) => boolean): Board {
 describe("the player's own board", () => {
   it("flags a note that has crossed out its cell's answer, so the midend refuses it", () => {
     const { label, state: start } = firstBoard((b) => b.params.removenums);
-    const solved = abcdGame.solve?.(start, start);
+    const solved = abcdGame.solve(start, start);
     if (!solved?.ok || solved.move.type !== "solve")
       throw new Error(`${label}: unsolvable`);
     const answer = solved.move.grid[0];
@@ -279,7 +279,7 @@ describe("the player's own board", () => {
 
   it("clears the obvious notes on a board the player filled into without notes", () => {
     const { label, params, state: start } = firstBoard((b) => !b.params.removenums);
-    const solved = abcdGame.solve?.(start, start);
+    const solved = abcdGame.solve(start, start);
     if (!solved?.ok || solved.move.type !== "solve")
       throw new Error(`${label}: unsolvable`);
     const state = abcdGame.executeMove(start, {

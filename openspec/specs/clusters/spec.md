@@ -214,7 +214,7 @@ conclusion.
 ### Requirement: Hint: The tile the other color would break is outlined, in a hue the error frame does not use
 
 What the ring and the outline of a step stand for SHALL be the legend's
-(`hintMarks`). When the contradiction lands on a tile other than the target,
+(`hint.marks`). When the contradiction lands on a tile other than the target,
 that tile SHALL carry a second mark, the outline, as a frame in a hue the
 live-error frame does not use, and a count step SHALL outline both tiles it
 reads the same way. When the contradiction lands on the target itself, the

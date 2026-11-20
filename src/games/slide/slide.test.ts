@@ -203,7 +203,7 @@ describe("slide params", () => {
   });
 
   it("round-trips the custom-params form, including a negative limit", () => {
-    const items = slideGame.paramConfig ?? [];
+    const items = slideGame.paramConfig;
     const p = P(7, 6, 25);
     const copy = { ...defaultParams() };
     for (const item of items) {
@@ -950,7 +950,7 @@ describe("slide solve", () => {
       P(FW, FH, -1),
       encodeDesc(FWH, packed, new Uint8Array(FWH), 3, 2, 0),
     );
-    expect(slideGame.solve?.(s, s)).toEqual({
+    expect(slideGame.solve(s, s)).toEqual({
       ok: false,
       error: NO_SOLUTION,
     });

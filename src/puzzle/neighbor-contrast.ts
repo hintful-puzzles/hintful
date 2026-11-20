@@ -13,6 +13,7 @@
  * Dev/test-only; never imported by production code.
  */
 
+import { hasHint } from "../engine/game.ts";
 import { Midend } from "../engine/midend.ts";
 import { getTsGame } from "../engine/registry.ts";
 import {
@@ -76,12 +77,12 @@ export function sampleFrames(id: string): { frames: DrawOp[][]; size: Size } {
     return recording.ops;
   };
   const frames = [capture()];
-  if (game.hint) {
+  if (hasHint(game)) {
     for (let i = 0; i < HINT_STEPS; i++)
       if (midend.hint() || midend.executeHint(true)) break;
     frames.push(capture());
   }
-  return { frames, size: game.computeSize(params, game.preferredTileSize ?? 32) };
+  return { frames, size: game.computeSize(params, game.preferredTileSize) };
 }
 
 /** Every pair of neighboring indices on a game's sample frames, with its

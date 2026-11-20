@@ -313,26 +313,28 @@ export const seismicGame: Game<
   findMistakes,
   clearMistakes: (_state, mistakes) => clearEntries(setMoves, mistakes),
   revealOne: (state, solved) => revealEntry(setMoves, state.grid, solved.grid, state.w),
-  hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
-  judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
-  hintRungs: SEISMIC_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the cell the step fills in: the number to enter there, or the marks to write.",
-      strike: "the pencil marks the step crosses out.",
-      outline:
-        "“this cell”, whose pencil marks the step crosses out, and the number just placed, when a step crosses that number out of the cells it rules out.",
-      stripes: "the area the step reasons from.",
+  hint: {
+    plan: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+    judgeMove: (before, after, ui) =>
+      candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
+    rungs: SEISMIC_RUNGS,
+    marks: {
+      roles: {
+        ring: "the cell the step fills in: the number to enter there, or the marks to write.",
+        strike: "the pencil marks the step crosses out.",
+        outline:
+          "“this cell”, whose pencil marks the step crosses out, and the number just placed, when a step crosses that number out of the cells it rules out.",
+        stripes: "the area the step reasons from.",
+      },
     },
+    keepTrack: hintKeepTrack,
+    gesture: (s, ui, ds, m) => {
+      const ts = ds.tileSize;
+      const mid = (v: number) => origin(ts) + v * ts + ((ts / 2) | 0);
+      return hintGesture(ui, (x, y) => ({ x: mid(x), y: mid(y) }), m, markAll(s));
+    },
+    refreshStep: refreshHintStep,
   },
-  hintKeepTrack,
-  hintGesture: (s, ui, ds, m) => {
-    const ts = ds.tileSize;
-    const mid = (v: number) => origin(ts) + v * ts + ((ts / 2) | 0);
-    return hintGesture(ui, (x, y) => ({ x: mid(x), y: mid(y) }), m, markAll(s));
-  },
-  refreshHintStep,
   // Sized to the regions the generator *makes*, not the nine the format admits:
   // entry is capped at the cell's region size, so a digit no region can hold is
   // a button that does nothing — and on touch the panel is the only way to type.

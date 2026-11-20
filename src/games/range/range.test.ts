@@ -180,7 +180,7 @@ describe("solve + findMistakes", () => {
   it("solves a generated board and clears all undecided cells", () => {
     const id = "9x6#range-solve";
     const st = makeFromId(id);
-    const res = rangeGame.solve?.(st, st);
+    const res = rangeGame.solve(st, st);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const solved = rangeGame.executeMove(st, res.move);
@@ -192,7 +192,7 @@ describe("solve + findMistakes", () => {
   it("flags a wrong black and clears on a consistent board", () => {
     const id = "9x6#range-mistake";
     const st = makeFromId(id);
-    const res = rangeGame.solve?.(st, st);
+    const res = rangeGame.solve(st, st);
     if (!res?.ok) throw new Error("expected solvable");
     const solved = rangeGame.executeMove(st, res.move);
     // A consistent (fully solved) board has no mistakes.

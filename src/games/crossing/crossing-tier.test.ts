@@ -221,7 +221,7 @@ describe("an Unreasonable Crossing board", () => {
         if (!wall) expect(Math.max(acrossRun[i] ?? -1, downRun[i] ?? -1)).not.toBe(-1);
       });
       // And the answer Solve and the mistake check go by is that grid.
-      const solved = crossingGame.solve?.(state, state);
+      const solved = crossingGame.solve(state, state);
       if (!solved?.ok) throw new Error(`${desc}: no answer found`);
       expect(status(crossingGame.executeMove(state, solved.move)), desc).toBe("solved");
     }
@@ -299,9 +299,9 @@ describe("the hint on an Unreasonable Crossing board", () => {
     const followHint = (): number => {
       let steps = 0;
       for (
-        let plan = crossingGame.hint?.(state);
+        let plan = crossingGame.hint.plan(state);
         plan?.ok;
-        plan = crossingGame.hint?.(state)
+        plan = crossingGame.hint.plan(state)
       )
         for (const step of plan.steps) {
           state = crossingGame.executeMove(state, step.move);

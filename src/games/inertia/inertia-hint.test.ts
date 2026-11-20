@@ -473,12 +473,14 @@ describe("inertia hint tracking", () => {
    * *re-shown* plan from a *recomputed* one. */
   function counting() {
     let computed = 0;
-    const game = {
+    const game: typeof inertiaGame = {
       ...inertiaGame,
-      hint: (s: InertiaState, aux?: string, ui?: never) => {
-        computed++;
-        // biome-ignore lint/style/noNonNullAssertion: inertia has a hint.
-        return inertiaGame.hint!(s, aux, ui);
+      hint: {
+        ...inertiaGame.hint,
+        plan: (s, aux, ui) => {
+          computed++;
+          return inertiaGame.hint.plan(s, aux, ui);
+        },
       },
     };
     const m = new Midend(game);
@@ -487,8 +489,8 @@ describe("inertia hint tracking", () => {
   }
 
   it("keeps the plan when the player follows it — no recompute, so the subgoal holds", () => {
-    // Without `hintKeepTrack` the midend drops the plan on *every* player move,
-    // including one that faithfully follows the hint (see `hintKeepTrack`).
+    // Without `hint.keepTrack` the midend drops the plan on *every* player move,
+    // including one that faithfully follows the hint (see `hint.keepTrack`).
     const { m, computed } = counting();
     expect(m.hint()).toBeNull();
     expect(computed()).toBe(1);

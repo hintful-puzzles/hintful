@@ -322,28 +322,30 @@ export const slideGame: Game<
   },
 
   solve,
-
-  hint,
-  hintMarks: {
-    roles: {
-      ring: "the block to slide (*the ringed block*).",
-      outline:
-        "the block the slide makes room for: its own slide, which comes later, needs a square the ringed block is leaving (*the outlined block*).",
-      stripes: "the squares the ringed block slides onto (*the striped space*).",
+  hint: {
+    plan: hint,
+    marks: {
+      roles: {
+        ring: "the block to slide (*the ringed block*).",
+        outline:
+          "the block the slide makes room for: its own slide, which comes later, needs a square the ringed block is leaving (*the outlined block*).",
+        stripes: "the squares the ringed block slides onto (*the striped space*).",
+      },
     },
-  },
-  hintRungs: SLIDE_RUNGS,
-  hintKeepTrack,
-  // The drag a player makes: press the block's anchor square and let go
-  // where the anchor lands, which the drag lands on exactly because it is
-  // reachable (`nearestReachable` at distance 0).
-  hintGesture(s, _ui, ds, m) {
-    if (m.kind !== "move") return [];
-    const at = (i: number): Point => ({
-      x: coord(i % s.w, ds.tileSize, BORDER) + Math.floor(ds.tileSize / 2),
-      y: coord(Math.floor(i / s.w), ds.tileSize, BORDER) + Math.floor(ds.tileSize / 2),
-    });
-    return [drag(at(m.from), at(m.to))];
+    rungs: SLIDE_RUNGS,
+    keepTrack: hintKeepTrack,
+    // The drag a player makes: press the block's anchor square and let go
+    // where the anchor lands, which the drag lands on exactly because it is
+    // reachable (`nearestReachable` at distance 0).
+    gesture(s, _ui, ds, m) {
+      if (m.kind !== "move") return [];
+      const at = (i: number): Point => ({
+        x: coord(i % s.w, ds.tileSize, BORDER) + Math.floor(ds.tileSize / 2),
+        y:
+          coord(Math.floor(i / s.w), ds.tileSize, BORDER) + Math.floor(ds.tileSize / 2),
+      });
+      return [drag(at(m.from), at(m.to))];
+    },
   },
 
   textFormat,

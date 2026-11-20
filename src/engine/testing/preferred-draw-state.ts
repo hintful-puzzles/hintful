@@ -14,5 +14,5 @@ export function preferredDrawState<Params, State, Move, Ui, DrawState>(
   game: Game<Params, State, Move, Ui, DrawState>,
   state: State,
 ): DrawState {
-  return game.newDrawState(state, game.preferredTileSize ?? 32);
+  return game.newDrawState(state, game.preferredTileSize);
 }

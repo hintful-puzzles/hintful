@@ -214,10 +214,10 @@ export interface EdgeHintSpec<
       };
 }
 
-/** What the builder hands a game: its hint, and what Check & save says of
- * the last move (`Game.judgeMove`). */
+/** The part of a game's hint (`Game.hint`) the builder makes: its plan, and
+ * what Check & save says of the last move. The game spreads it. */
 export interface DescribedEdgeHint<State, Move, H, Kind extends string> {
-  hint(state: State): HintResult<Move, H, Kind>;
+  plan(state: State): HintResult<Move, H, Kind>;
   judgeMove(before: State, after: State): MoveVerdict | null;
 }
 
@@ -449,5 +449,5 @@ export function describedEdgeHint<
       : { ok: true, steps };
   };
 
-  return { hint, judgeMove };
+  return { plan: hint, judgeMove };
 }

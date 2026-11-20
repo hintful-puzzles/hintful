@@ -194,7 +194,7 @@ describe("tents solve()", () => {
   it("recovers the solution (aux path) and matches the re-solve", () => {
     const p = { w: 8, h: 8, diff: DIFF_EASY };
     const { state, soln, aux } = genBoard(p, "solve-0");
-    const res = tentsGame.solve?.(state, state, aux);
+    const res = tentsGame.solve(state, state, aux);
     expect(res?.ok).toBe(true);
     if (res?.ok) {
       expect(tentsGame.status(executeMove(state, res.move))).toBe("solved");
@@ -208,7 +208,7 @@ describe("tents solve()", () => {
   it("recovers without aux (re-solve path)", () => {
     const p = { w: 8, h: 8, diff: DIFF_TRICKY };
     const { state } = genBoard(p, "solve-1");
-    const res = tentsGame.solve?.(state, state);
+    const res = tentsGame.solve(state, state);
     expect(res?.ok).toBe(true);
     if (res?.ok) expect(tentsGame.status(executeMove(state, res.move))).toBe("solved");
   });
@@ -563,7 +563,7 @@ describe("tents: the win flash sweeps the squares", () => {
   const TS = 32;
   const p = { w: 8, h: 8, diff: DIFF_EASY };
   const start = genBoard(p, "win-flash").state;
-  const answer = tentsGame.solve?.(start, start);
+  const answer = tentsGame.solve(start, start);
   if (!answer?.ok) throw new Error("the board does not solve");
   const state = tentsGame.executeMove(start, answer.move);
   const squares = p.w * p.h;

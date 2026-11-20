@@ -532,7 +532,7 @@ describe("solver", () => {
     const p = squareParams(5, 5, DIFF_EASY);
     const { desc } = newDesc(p, randomNew("solve"));
     const s = newState(p, desc);
-    const result = loopyGame.solve?.(s, s);
+    const result = loopyGame.solve(s, s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const solved = loopyGame.executeMove(s, result.move);
@@ -691,7 +691,6 @@ describe("presets", () => {
 describe("game registration", () => {
   it("declares the capabilities the app keys off", () => {
     expect(loopyGame.id).toBe("loopy");
-    expect(loopyGame.solve).toBeDefined();
     expect(loopyGame.statusbarText).toBeUndefined();
   });
 

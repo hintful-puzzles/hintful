@@ -14,7 +14,9 @@ import type { GameStatus } from "./types.ts";
 /** What {@link hintFinishes} reads off a game. */
 interface Deducing<State, Move> {
   readonly id: string;
-  hint?(state: State): { ok: true; steps: { move: Move }[] } | { ok: false };
+  readonly hint: {
+    plan(state: State): { ok: true; steps: { move: Move }[] } | { ok: false };
+  };
   executeMove(s: State, m: Move): State;
   status(s: State): GameStatus;
 }
@@ -48,11 +50,10 @@ export function hintFinishes<State, Move>(
   game: Deducing<State, Move>,
   state: State,
 ): boolean {
-  if (game.hint === undefined) throw new Error(`${game.id}: hintFinishes needs a hint`);
   let board = state;
   for (let plans = 0; plans < PLAN_LIMIT; plans++) {
     if (game.status(board) === "solved") return true;
-    const plan = game.hint(board);
+    const plan = game.hint.plan(board);
     if (!plan.ok) return false;
     for (const step of plan.steps) board = game.executeMove(board, step.move);
   }

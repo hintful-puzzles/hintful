@@ -35,7 +35,7 @@ const varied = Object.entries(texts).flatMap(([path, text]) => {
 function offered(id: string, name: string): string[] {
   const game = getTsGame(id);
   if (game === null) return [`no game ${id}`];
-  const config = game.paramConfig ?? [];
+  const config = game.paramConfig;
   return [
     ...(rulesetField(game)?.rulesets.some((r) => r.name === name) ? ["ruleset"] : []),
     ...config.filter((i) => i.modifier?.words === name).map(() => "modifier"),

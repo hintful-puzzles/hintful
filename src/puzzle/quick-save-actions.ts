@@ -56,7 +56,7 @@ export function mistakesFound(n: number): string {
  * **Success is confirmed on the button itself** (owner, 2026-09-25: the save
  * "shouldn't be that special"): it reads "Saved" for a moment through
  * {@link justSaved}, and a screen reader hears the same thing. Where the check
- * judged the last move (`Game.judgeMove`), its verdict is under the board.
+ * judged the last move (`Game.hint.judgeMove`), its verdict is under the board.
  *
  * **"Checkpoint" is the history panel's word and only its word**: this is the
  * one-slot quick-save, a different feature from the panel's numbered,

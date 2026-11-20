@@ -55,6 +55,19 @@ export function assertRegistrable<P, S, M, U, D>(game: Game<P, S, M, U, D>): voi
       `${game.id}: a game with a mistake check says how a mistake is taken off (clearMistakes)`,
     );
   }
+  // The gesture a hint step is played by is the hint's, or made from its
+  // targets through the game's verbs: one or the other, so it is never in doubt.
+  const { gesture, targets } = game.hint;
+  if ((gesture === undefined) === (targets === undefined)) {
+    throw new Error(
+      `${game.id}: a hint has its gesture or its targets, one of the two (GameHint.gesture)`,
+    );
+  }
+  if (targets !== undefined && game.targetVerbs === undefined) {
+    throw new Error(
+      `${game.id}: a hint's targets are played through the game's targetVerbs, which it lacks`,
+    );
+  }
   if (offersSearch(game) && game.revealOne === undefined) {
     throw new Error(
       `${game.id}: a game with a tier that allows trial and error says how one element of the answer is put on the board (revealOne)`,

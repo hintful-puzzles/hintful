@@ -11,10 +11,13 @@
  * game lacking it either has a reason in the puzzle's rules or is unfinished
  * work. Members whose absence says nothing either way (`difficulty`,
  * `textFormat`, and the affordances such as `hover` and `reference`) stay
- * optional and outside.
+ * optional and outside, and a member every game has is required by `Game`.
+ *
+ * The hint is required too, and every game has one written or is a draft: a
+ * game whose hint is still {@link DRAFT_HINT} has that section absent.
  */
 
-import type { Game } from "./game.ts";
+import { DRAFT_HINT, type Game } from "./game.ts";
 
 /** Each section, in the order the help lists them, with the name a player
  * knows the feature by. A hint is never not applicable: a game without one is
@@ -26,7 +29,6 @@ const SECTIONS = [
     feature: "Checking for mistakes",
     mayBeNotApplicable: true,
   },
-  { member: "solve", feature: "Show solution", mayBeNotApplicable: true },
   {
     member: "transposeParams",
     feature: "Turning the board to fit the screen",
@@ -67,7 +69,7 @@ type AnyGame = Pick<Game<unknown, unknown, unknown>, "id" | "notApplicable"> & {
 /** The state of one section of `game`. Throws when the game both implements a
  * section and declares it not applicable, since one of the two is false. */
 export function sectionState(game: AnyGame, section: Section): SectionState {
-  const implemented = game[section] !== undefined;
+  const implemented = game[section] !== undefined && game[section] !== DRAFT_HINT;
   const reason = section === "hint" ? null : (game.notApplicable?.[section] ?? null);
   if (implemented && reason !== null) {
     throw new Error(

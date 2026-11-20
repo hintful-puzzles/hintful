@@ -178,7 +178,7 @@ function signpostWalk(state: SignpostState): {
  * link. Refuses only when no link is forced, which on an Unreasonable board
  * is before the end.
  */
-export const { hint: signpostHint, judgeMove: signpostJudgeMove } = describedEdgeHint<
+export const { plan: signpostHint, judgeMove: signpostJudgeMove } = describedEdgeHint<
   SignpostState,
   SignpostMove,
   SignpostHint,

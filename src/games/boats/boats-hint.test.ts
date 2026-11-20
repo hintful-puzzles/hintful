@@ -106,7 +106,7 @@ function isSolved(state: BoatsState): boolean {
 }
 
 function hintOf(state: BoatsState) {
-  const r = boatsGame.hint?.(state);
+  const r = boatsGame.hint.plan(state);
   if (!r) throw new Error("boats declares no hint()");
   return r;
 }
@@ -532,7 +532,7 @@ describe("boats hint — one deduction is one hint", () => {
 describe("boats hint — refusals", () => {
   it("counts a solved board as finished, so the midend refuses it", () => {
     const state = board(0, "refuse-solved");
-    const solved = boatsGame.solve?.(state, state);
+    const solved = boatsGame.solve(state, state);
     expect(solved?.ok).toBe(true);
     if (!solved?.ok) return;
     expect(boatsGame.status(play(state, solved.move))).toBe("solved");
@@ -604,7 +604,7 @@ describe("boats hint — keeping track", () => {
     expect(legTargets.length).toBeGreaterThan(0);
 
     // The step's own move finishes the leg it belongs to.
-    expect(boatsGame.hintKeepTrack?.(leg, step, state)).toBe("completed");
+    expect(boatsGame.hint.keepTrack(leg, step, state)).toBe("completed");
 
     const one = legTargets[0];
     const single = (to: "B" | "W"): BoatsMove => ({
@@ -618,12 +618,12 @@ describe("boats hint — keeping track", () => {
     });
 
     if (legTargets.length > 1)
-      expect(boatsGame.hintKeepTrack?.(single(one.ship ? "B" : "W"), step, state)).toBe(
+      expect(boatsGame.hint.keepTrack(single(one.ship ? "B" : "W"), step, state)).toBe(
         "onTrack",
       );
 
     // Setting one of the leg's squares to the opposite is off-plan.
-    expect(boatsGame.hintKeepTrack?.(single(one.ship ? "W" : "B"), step, state)).toBe(
+    expect(boatsGame.hint.keepTrack(single(one.ship ? "W" : "B"), step, state)).toBe(
       "off",
     );
   });
@@ -639,7 +639,7 @@ describe("boats hint — keeping track", () => {
 
     let at = state;
     for (const step of r.steps) {
-      const verdict = boatsGame.hintKeepTrack?.(step.move, step, at);
+      const verdict = boatsGame.hint.keepTrack(step.move, step, at);
       expect(verdict).toBe("completed");
       at = play(at, step.move);
       if (step === r.steps[1]) break;

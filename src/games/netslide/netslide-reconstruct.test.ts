@@ -165,7 +165,7 @@ describe("a board with no `aux` at all (the reported bug)", () => {
     expect(isComplete(at)).toBe(false);
 
     for (let move = 0; move < 60 && !isComplete(at); move++) {
-      const res = netslideGame.hint?.(at, undefined);
+      const res = netslideGame.hint.plan(at, undefined);
       expect(res?.ok, `hint refused after ${move} moves`).toBe(true);
       if (!res?.ok) return;
       expect(res.steps[0].explanation.length).toBeGreaterThan(0);
@@ -176,7 +176,7 @@ describe("a board with no `aux` at all (the reported bug)", () => {
 
   it("solves the reported board", () => {
     const at = newState(REPORTED_PARAMS, REPORTED.desc);
-    const res = netslideGame.solve?.(at, at, undefined);
+    const res = netslideGame.solve(at, at, undefined);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     expect(isComplete(netslideGame.executeMove(at, res.move))).toBe(true);
@@ -201,7 +201,7 @@ describe("a board with no `aux` at all (the reported bug)", () => {
         let at = netslideGame.newState(params, desc);
 
         for (let ask = 0; ask < 40 && !isComplete(at); ask++) {
-          const res = netslideGame.hint?.(at, undefined);
+          const res = netslideGame.hint.plan(at, undefined);
           expect(res?.ok, `${label}/${seed}: hint gave up`).toBe(true);
           if (!res?.ok) break;
 

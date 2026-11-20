@@ -496,7 +496,7 @@ function pearlWalk(state: PearlState): {
  * takes a Normal firing while an Easy one is left, which is the
  * easiest-first order a hint wants anyway.
  */
-export const { hint: pearlHint, judgeMove: pearlJudgeMove } = describedEdgeHint<
+export const { plan: pearlHint, judgeMove: pearlJudgeMove } = describedEdgeHint<
   PearlState,
   PearlMove,
   PearlHint,

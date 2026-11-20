@@ -226,7 +226,7 @@ describe("Fifteen solve", () => {
   it("snaps to the solved board, counting as one move", () => {
     const rng = randomNew("solve-test");
     const state = newState({ w: 4, h: 4 }, newDesc({ w: 4, h: 4 }, rng).desc);
-    const result = fifteenGame.solve?.(state, state);
+    const result = fifteenGame.solve(state, state);
     expect(result?.ok).toBe(true);
     if (!result?.ok) throw new Error("expected solve");
     const solved = executeMove(state, result.move);
@@ -325,7 +325,7 @@ describe("Fifteen hint", () => {
   it("returns a full multi-step plan that solves the board", () => {
     const p = { w: 4, h: 4 };
     let state = newState(p, newDesc(p, randomNew("hint-plan")).desc);
-    const result = fifteenGame.hint?.(state);
+    const result = fifteenGame.hint.plan(state);
     expect(result?.ok).toBe(true);
     if (!result?.ok) throw new Error("expected a plan");
     // Like Sixteen, the plan is the whole solution, not a single step.
@@ -341,7 +341,7 @@ describe("Fifteen hint", () => {
   it("narrates a final-placement step as 'home' and a maneuvering step otherwise", () => {
     const p = { w: 4, h: 4 };
     const state = newState(p, newDesc(p, randomNew("hint-why")).desc);
-    const result = fifteenGame.hint?.(state);
+    const result = fifteenGame.hint.plan(state);
     expect(result?.ok).toBe(true);
     if (!result?.ok) throw new Error("expected a plan");
 
@@ -394,7 +394,7 @@ describe("Fifteen hint", () => {
     ] as const) {
       const p = { w, h };
       let board = newState(p, newDesc(p, randomNew(seed)).desc);
-      const result = fifteenGame.hint?.(board);
+      const result = fifteenGame.hint.plan(board);
       if (!result?.ok) throw new Error("expected a plan");
       /** The tile each step slides. */
       const slid: number[] = [];
@@ -418,7 +418,7 @@ describe("Fifteen hint", () => {
     // must not claim "closer".
     const p = { w: 4, h: 4 };
     const state = newState(p, "1,2,3,4,5,6,7,12,9,11,15,8,13,10,14,0");
-    const result = fifteenGame.hint?.(state);
+    const result = fifteenGame.hint.plan(state);
     expect(result?.ok).toBe(true);
     if (!result?.ok) throw new Error("expected a plan");
     const first = result.steps[0];
@@ -441,7 +441,7 @@ describe("Fifteen hint", () => {
     // into place".
     const p = { w: 4, h: 4 };
     const state = newState(p, "1,2,3,4,5,6,7,0,9,11,15,12,13,10,14,8");
-    const result = fifteenGame.hint?.(state);
+    const result = fifteenGame.hint.plan(state);
     expect(result?.ok).toBe(true);
     if (!result?.ok) throw new Error("expected a plan");
 
@@ -476,7 +476,7 @@ describe("Fifteen hint", () => {
     let closerSteps = 0;
     for (let s = 0; s < 20; s++) {
       let board = newState(p, newDesc(p, randomNew(`closer-${s}`)).desc);
-      const result = fifteenGame.hint?.(board);
+      const result = fifteenGame.hint.plan(board);
       if (!result?.ok) continue;
       for (const step of result.steps) {
         if (step.move.type !== "move") continue;
@@ -502,11 +502,11 @@ describe("Fifteen hint", () => {
   it("hintKeepTrack completes the step on the hinted move and drops it otherwise", () => {
     const p = { w: 4, h: 4 };
     const state = newState(p, newDesc(p, randomNew("hint-track")).desc);
-    const result = fifteenGame.hint?.(state);
+    const result = fifteenGame.hint.plan(state);
     if (!result?.ok) throw new Error("expected a plan");
     const step = result.steps[0];
     // Making exactly the hinted move completes the step (plan advances).
-    expect(fifteenGame.hintKeepTrack?.(step.move, step, state)).toBe("completed");
+    expect(fifteenGame.hint.keepTrack(step.move, step, state)).toBe("completed");
     // A different legal slide (toward a cell sharing the other gap axis)
     // deviates from the plan and drops it.
     const gx = state.gapPos % p.w;
@@ -518,7 +518,7 @@ describe("Fifteen hint", () => {
       hinted && hinted.y === gy
         ? { type: "move", x: gx, y: gy === 0 ? gy + 1 : gy - 1 } // vertical instead
         : { type: "move", x: gx === 0 ? gx + 1 : gx - 1, y: gy }; // horizontal instead
-    const verdict = fifteenGame.hintKeepTrack?.(other, step, state);
+    const verdict = fifteenGame.hint.keepTrack(other, step, state);
     expect(verdict).toBe("off");
   });
 });

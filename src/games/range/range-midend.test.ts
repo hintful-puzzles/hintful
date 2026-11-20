@@ -63,7 +63,7 @@ describe("midend integration", () => {
 
     // Make the hinted move as a real click (processInput runs the hint
     // keep-track, which advances+hides the plan) → the banner clears.
-    const plan = rangeGame.hint?.(newState(params, desc));
+    const plan = rangeGame.hint.plan(newState(params, desc));
     if (!plan?.ok) throw new Error("expected a plan");
     const [t] = (plan.steps[0].highlights as RangeHint).targets;
     const ts = 32;

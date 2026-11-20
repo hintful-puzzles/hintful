@@ -614,29 +614,31 @@ export const dominosaGame: Game<
     watches: (ui) => `${ui.highlightPair}`,
     select: selectReference,
   },
-  hint: dominosaHint,
-  judgeMove: dominosaJudgeMove,
-  hintMarks: {
-    roles: {
-      ring: "the spot the step is about, round its two squares as one domino: empty where a domino must go, or with a thick line across its middle where one can't. That line is the one the step asks you to draw.",
-      outline:
-        "the squares the reason rests on, such as a square with only one neighbor left to pair with, or the spots left for a domino.",
+  hint: {
+    plan: dominosaHint,
+    judgeMove: dominosaJudgeMove,
+    marks: {
+      roles: {
+        ring: "the spot the step is about, round its two squares as one domino: empty where a domino must go, or with a thick line across its middle where one can't. That line is the one the step asks you to draw.",
+        outline:
+          "the squares the reason rests on, such as a square with only one neighbor left to pair with, or the spots left for a domino.",
+      },
     },
-  },
-  hintRungs: DOMINOSA_RUNGS,
-  hintKeepTrack: dominosaHintKeepTrack,
-  hintGesture: (s, ui, ds, m) => {
-    if (m.type === "solve") throw new Error("dominosa: a hint never solves");
-    const { d1, d2 } = m;
-    const across = d2 === d1 + 1;
-    const pair = pairAt(
-      s.w,
-      2 * (d1 % s.w) + (across ? 1 : 0),
-      2 * Math.floor(d1 / s.w) + (across ? 0 : 1),
-    );
-    if (pair === null) throw new Error(`dominosa: no pair for ${JSON.stringify(m)}`);
-    const button = m.type === "domino" ? "primary" : "secondary";
-    return verbGesture(targetVerbs, s, ds, ui, [pair], button);
+    rungs: DOMINOSA_RUNGS,
+    keepTrack: dominosaHintKeepTrack,
+    gesture: (s, ui, ds, m) => {
+      if (m.type === "solve") throw new Error("dominosa: a hint never solves");
+      const { d1, d2 } = m;
+      const across = d2 === d1 + 1;
+      const pair = pairAt(
+        s.w,
+        2 * (d1 % s.w) + (across ? 1 : 0),
+        2 * Math.floor(d1 / s.w) + (across ? 0 : 1),
+      );
+      if (pair === null) throw new Error(`dominosa: no pair for ${JSON.stringify(m)}`);
+      const button = m.type === "domino" ? "primary" : "secondary";
+      return verbGesture(targetVerbs, s, ds, ui, [pair], button);
+    },
   },
 
   textFormat,

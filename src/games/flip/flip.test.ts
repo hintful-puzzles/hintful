@@ -170,7 +170,7 @@ describe("Flip params", () => {
 describe("Flip interpretMove", () => {
   const p: FlipParams = { w: 3, h: 3, matrixType: "crosses" };
   const desc = flipGame.newDesc(p, randomNew("flip-im")).desc;
-  const tile = flipGame.preferredTileSize ?? 32;
+  const tile = flipGame.preferredTileSize;
   const border = tile >> 1;
   const at = (cx: number, cy: number) =>
     ({ x: cx * tile + border + 1, y: cy * tile + border + 1 }) as const;
@@ -307,7 +307,7 @@ describe("Flip redraw", () => {
   it("draws the grid once, then the per-tile cache suppresses redundant redraws", () => {
     const s = flipGame.newState(p, desc);
     const ui = flipGame.newUi(s);
-    const ds = flipGame.newDrawState(s, flipGame.preferredTileSize ?? 32);
+    const ds = flipGame.newDrawState(s, flipGame.preferredTileSize);
 
     const a = recordingDrawing();
     flipGame.redraw(a.dr, ds, null, s, 1, ui, 0, NO_FLASH);
@@ -334,7 +334,7 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
   it("canvasCleared after a same-tile reshape repaints bg + grid lines", () => {
     const p3: FlipParams = { w: 3, h: 3, matrixType: "crosses" };
     const p5: FlipParams = { w: 5, h: 5, matrixType: "crosses" };
-    const TILE = flipGame.preferredTileSize ?? 32;
+    const TILE = flipGame.preferredTileSize;
     const { desc: desc3 } = flipGame.newDesc(p3, randomNew("flip-reshape-3"));
     const { desc: desc5 } = flipGame.newDesc(p5, randomNew("flip-reshape-5"));
 
@@ -394,7 +394,7 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
 
 describe("Flip win flash", () => {
   const params: FlipParams = { w: 4, h: 3, matrixType: "crosses" };
-  const TILE = flipGame.preferredTileSize ?? 32;
+  const TILE = flipGame.preferredTileSize;
   /** The squares whose ground a frame's ops fill in the flash color, by cell. */
   const lit = (ops: RecordingDrawing["ops"]): number[] =>
     opsOfKind(ops, "rect")
@@ -503,7 +503,7 @@ describe("Flip animation/redraw lifecycle (regression: clicks not rendered)", ()
     expect(timerActive()).toBe(false); // settled, no animation yet
     const afterLoad = redraws();
 
-    const tile = flipGame.preferredTileSize ?? 32;
+    const tile = flipGame.preferredTileSize;
     const border = tile >> 1;
     // Click cell (0,0): a crosses cell always toggles ⇒ a real move.
     expect(me.processInput(border + 1, border + 1, 0x0200)).toBe(true);

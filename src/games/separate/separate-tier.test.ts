@@ -236,7 +236,7 @@ describe("an Unreasonable Separate board", () => {
       expect(solveToBorders(p, state.letters), desc).toBeNull();
       expect(countDivisions(p, state.letters), desc).toBe(1);
       // And the answer Solve and the mistake check go by is that division.
-      const solved = separateGame.solve?.(state, state);
+      const solved = separateGame.solve(state, state);
       if (!solved?.ok) throw new Error(`${desc}: no answer found`);
       expect(status(separateGame.executeMove(state, solved.move)), desc).toBe("solved");
     }
@@ -366,9 +366,9 @@ describe("the hint on an Unreasonable Separate board", () => {
     const followHint = (): number => {
       let steps = 0;
       for (
-        let plan = separateGame.hint?.(state);
+        let plan = separateGame.hint.plan(state);
         plan?.ok;
-        plan = separateGame.hint?.(state)
+        plan = separateGame.hint.plan(state)
       )
         for (const step of plan.steps) {
           state = separateGame.executeMove(state, step.move);

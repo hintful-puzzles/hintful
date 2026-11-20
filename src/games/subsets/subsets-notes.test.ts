@@ -288,7 +288,7 @@ interface WalkTally {
  * the firing it sits beside; and the firing then follows from the board.
  */
 function walkClaims(start: SubsetsState, tally: WalkTally): void {
-  const res = subsetsGame.hint?.(start);
+  const res = subsetsGame.hint.plan(start);
   if (!res?.ok) throw new Error("no hint on a fresh board");
   const { solved } = solveCopy(start);
   const steps = res.steps as Step[];
@@ -417,7 +417,7 @@ describe("the hint places the rule-outs it rests on", () => {
     let resumed = 0;
     for (let seed = 0; seed < 8; seed++) {
       const start = gen(DIFF_NORMAL, `notes-resume-${seed}`);
-      const res = subsetsGame.hint?.(start);
+      const res = subsetsGame.hint.plan(start);
       if (!res?.ok) throw new Error("no hint");
       // Make every other rule-out the plan would, in reverse order, first.
       const rules = res.steps.map((st) => st.move).filter((m) => m.kind === "rule");

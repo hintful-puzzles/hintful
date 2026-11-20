@@ -40,7 +40,7 @@ import { dealRare } from "./dealt.ts";
 import { deepBudget, itSlow } from "./slow.ts";
 
 interface DealingGame<Params> {
-  paramConfig?: readonly ParamConfigItem<Params>[];
+  paramConfig: readonly ParamConfigItem<Params>[];
   validateParams?(p: Params, full: boolean): string | null;
   decodeParams(s: string): Params;
   newDesc(p: Params, rng: RandomState): { desc: string };

@@ -14,7 +14,7 @@
  */
 
 /** Where the help page of a game whose hint can be a wing (`"wing"` among
- * its `hintRungs`) writes {@link wingHelp}, among the ideas its hint teaches:
+ * its `hint.rungs`) writes {@link wingHelp}, among the ideas its hint teaches:
  * `{{wing}}`, or `{{wing:cell}}` where the game calls a square a cell. */
 export const WING_PLACEHOLDER = /\{\{wing(?::([a-z]+))?\}\}/g;
 

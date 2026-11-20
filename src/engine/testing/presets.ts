@@ -32,7 +32,7 @@ export function firstLeaf<P>(menu: PresetMenu<P>): P {
  * and to drop the rest in silence.
  */
 export function leafPresets<P>(game: {
-  paramConfig?: readonly ParamConfigItem<P>[];
+  paramConfig: readonly ParamConfigItem<P>[];
   menu: PresetBoards<P>;
 }): { title: string; params: P }[] {
   const walk = (menu: TitledPresetMenu<P>): { title: string; params: P }[] =>
@@ -98,12 +98,12 @@ export interface PresetAxis<Params> {
  * the scalar/discrete split and the menu-order tie-break are actually pinned.
  */
 export function presetAxes<Params>(
-  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
+  game: { paramConfig: readonly ParamConfigItem<Params>[] },
   presets: readonly { params: Params }[],
   opts: SliceOptions = {},
 ): PresetAxis<Params>[] {
   const axes: PresetAxis<Params>[] = [];
-  for (const item of game.paramConfig ?? []) {
+  for (const item of game.paramConfig) {
     const read = (params: Params): AxisValue => item.get(params);
     const values = [...new Set(presets.map((e) => read(e.params)))];
     if (values.length < 2) continue;
@@ -174,7 +174,7 @@ function wantedValues(
  * modes.
  */
 export function axisSlice<Params, Entry extends { params: Params }>(
-  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
+  game: { paramConfig: readonly ParamConfigItem<Params>[] },
   presets: readonly Entry[],
   opts: SliceOptions = {},
 ): Entry[] {
@@ -195,7 +195,7 @@ export function axisSlice<Params, Entry extends { params: Params }>(
 
 /** What {@link unofferedValues} and {@link dealtBoards} read off a game. */
 interface OfferingGame<Params> extends Dealing<Params> {
-  paramConfig?: readonly ParamConfigItem<Params>[];
+  paramConfig: readonly ParamConfigItem<Params>[];
   validateParams?(p: Params, full: boolean): string | null;
 }
 
@@ -241,7 +241,7 @@ export function unofferedValues<Params>(
   presets: readonly { title: string; params: Params }[],
 ): UnofferedValue<Params>[] {
   const out: UnofferedValue<Params>[] = [];
-  for (const item of game.paramConfig ?? []) {
+  for (const item of game.paramConfig) {
     if (item.type === "string") continue;
     const held = new Set<AxisValue>(presets.map((e) => item.get(e.params)));
     const offered: [AxisValue, string][] =
@@ -291,14 +291,14 @@ export function dealtBoards<Params>(
 }
 
 interface SizedGame<Params> {
-  paramConfig?: readonly ParamConfigItem<Params>[];
+  paramConfig: readonly ParamConfigItem<Params>[];
   validateParams?(p: Params, full: boolean): string | null;
   menu: PresetBoards<Params>;
 }
 
 /** A game's dimension pair, `dimensionParamConfig`'s `width` and `height`. */
 function dimensionItems<Params>(game: SizedGame<Params>) {
-  const items = game.paramConfig ?? [];
+  const items = game.paramConfig;
   const width = items.find((i) => i.kw === "width");
   const height = items.find((i) => i.kw === "height");
   return width?.type === "string" && height?.type === "string"

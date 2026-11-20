@@ -28,7 +28,7 @@ function freshState(w: number, h: number, diff: number, seed: string): SlantStat
 /** Apply every hint step's move in order; returns the resulting board. */
 function applyPlan(state: SlantState): SlantState {
   let s = state;
-  const res = slantGame.hint?.(s);
+  const res = slantGame.hint.plan(s);
   if (!res?.ok) throw new Error("expected a plan");
   for (const step of res.steps) s = executeMove(s, step.move);
   return s;
@@ -106,7 +106,7 @@ describe("slant hint", () => {
         expect(slantGame.status(solved)).toBe("solved");
 
         // Mid-solve: apply half the plan, re-request, finish.
-        const res = slantGame.hint?.(s);
+        const res = slantGame.hint.plan(s);
         if (!res?.ok) throw new Error("expected plan");
         let mid = s;
         const half = Math.floor(res.steps.length / 2);
@@ -120,7 +120,7 @@ describe("slant hint", () => {
   test("every step is narrated in the necessity voice with visible evidence", () => {
     for (let seed = 0; seed < 12; seed++) {
       const s = freshState(8, 8, DIFF_HARD, `voice-${seed}`);
-      const res = slantGame.hint?.(s);
+      const res = slantGame.hint.plan(s);
       if (!res?.ok) throw new Error("expected plan");
       for (const step of res.steps) {
         expect(step.explanation.length).toBeGreaterThan(0);
@@ -189,7 +189,7 @@ describe("slant hint", () => {
     const y = Math.floor(at / s.w);
     let mid = executeMove(s, { type: "set", x, y, v: sol.soln[at] as 1 | -1 });
     mid = executeMove(mid, { type: "alike", x, y, dir: "right", on: true });
-    const res = slantGame.hint?.(mid);
+    const res = slantGame.hint.plan(mid);
     if (!res?.ok) throw new Error("expected a plan");
     expect(["clue-fill", "clue-empty"]).toContain(res.steps[0].rung);
   });
@@ -202,7 +202,7 @@ describe("slant hint", () => {
       { w: 12, h: 10, diff: DIFF_HARD },
       "g1f133b1a11a1113c1213b2b112d2b11c1a3a12d13c12b2a2b3b11a1a1a1c32c3a12a1b3a13c212b321d1a13e1111e",
     );
-    const res = slantGame.hint?.(s);
+    const res = slantGame.hint.plan(s);
     if (!res?.ok) throw new Error("expected a plan");
     for (const step of res.steps) {
       seen.add(step.rung);
@@ -219,10 +219,10 @@ describe("slant hint", () => {
 
   test("hintKeepTrack: the hinted move completes, a wrong move drops the plan", () => {
     const s = freshState(8, 8, DIFF_HARD, "track-1");
-    const res = slantGame.hint?.(s);
+    const res = slantGame.hint.plan(s);
     if (!res?.ok) throw new Error("expected plan");
     const step = res.steps[0];
-    expect(slantGame.hintKeepTrack?.(step.move, step, s)).toBe("completed");
+    expect(slantGame.hint.keepTrack(step.move, step, s)).toBe("completed");
     // The opposite slash on the same square is off-plan.
     const m = step.move as Extract<SlantMove, { type: "set" }>;
     const wrong: SlantMove = {
@@ -231,6 +231,6 @@ describe("slant hint", () => {
       y: m.y,
       v: (m.v === 1 ? -1 : 1) as 1 | -1,
     };
-    expect(slantGame.hintKeepTrack?.(wrong, step, s)).toBe("off");
+    expect(slantGame.hint.keepTrack(wrong, step, s)).toBe("off");
   });
 });

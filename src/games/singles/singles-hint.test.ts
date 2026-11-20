@@ -5,7 +5,7 @@
  * boards for the rarer once-only rules, generated boards for the cascade /
  * connectivity / offset rules); `hint()` returns a plan that solves the
  * board, groups a two-cell firing into one step, gives every step visible
- * evidence, and refuses on a solved/mistaken board; `hintKeepTrack`
+ * evidence, and refuses on a solved/mistaken board; `hint.keepTrack`
  * completes/onTracks/offs. Tier 2.5: a render-scenario snapshot of a hint
  * frame (the blue target + evidence, numbers still drawn).
  */
@@ -156,7 +156,7 @@ const pinned = describeHintPins({
 
 /** The steps a hint gives on a board. */
 function plan(s: SinglesState): Step[] {
-  const res = singlesGame.hint?.(s);
+  const res = singlesGame.hint.plan(s);
   if (!res?.ok) throw new Error("expected a plan");
   return res.steps;
 }
@@ -268,7 +268,7 @@ describe("a hint step names the deduction that forces its cells", () => {
 describe("hint", () => {
   it("returns a plan whose moves are legal and solve the board", () => {
     const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, "hint-plan");
-    const res = singlesGame.hint?.(s);
+    const res = singlesGame.hint.plan(s);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     expect(res.steps.length).toBeGreaterThan(0);
@@ -297,7 +297,7 @@ describe("hint", () => {
       let guard = 0;
       while (singlesGame.status(s) !== "solved") {
         expect(guard++).toBeLessThan(200);
-        const res = singlesGame.hint?.(s);
+        const res = singlesGame.hint.plan(s);
         expect(res?.ok).toBe(true); // never "no further move" on a solvable board
         if (!res?.ok) break;
         s = singlesGame.executeMove(s, res.steps[0].move);
@@ -320,7 +320,7 @@ describe("hint", () => {
   it("gives every step visible evidence (an area to shade or a premise to ring)", () => {
     for (const seed of ["hint-plan", "sh-1", "sh-2", "evidence-3"]) {
       const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, seed);
-      const res = singlesGame.hint?.(s);
+      const res = singlesGame.hint.plan(s);
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
         const hl = step.highlights as SinglesHint;
@@ -343,7 +343,7 @@ describe("hint", () => {
     // 2×2 = [[4,3],[5,3]] → the two 3s match (evidence), the 4 is the
     // protected corner (strand), the 5 is forced white (target).
     const s = craft(2, 2, [4, 3, 5, 3]);
-    const res = singlesGame.hint?.(s);
+    const res = singlesGame.hint.plan(s);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const cornerStep = res.steps.find(
@@ -368,7 +368,7 @@ describe("hint", () => {
 
   it("counts the board its plan finishes as solved, so the midend refuses it", () => {
     const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, "hint-solved");
-    const res0 = singlesGame.hint?.(s);
+    const res0 = singlesGame.hint.plan(s);
     if (!res0?.ok) throw new Error("expected a plan");
     let cur = s;
     for (const step of res0.steps) cur = singlesGame.executeMove(cur, step.move);
@@ -396,11 +396,11 @@ describe("hintKeepTrack", () => {
     const t = (step.highlights as SinglesHint).targets[0];
 
     const right: SinglesMove = { sets: [{ x: t.x, y: t.y, value: t.value }] };
-    expect(singlesGame.hintKeepTrack?.(right, step, s)).toBe("completed");
+    expect(singlesGame.hint.keepTrack(right, step, s)).toBe("completed");
 
     const wrongValue = t.value === "black" ? "circle" : "black";
     expect(
-      singlesGame.hintKeepTrack?.(
+      singlesGame.hint.keepTrack(
         { sets: [{ x: t.x, y: t.y, value: wrongValue }] },
         step,
         s,
@@ -408,7 +408,7 @@ describe("hintKeepTrack", () => {
     ).toBe("off");
 
     expect(
-      singlesGame.hintKeepTrack?.(
+      singlesGame.hint.keepTrack(
         { sets: [{ x: (t.x + 1) % s.w, y: t.y, value: t.value }] },
         step,
         s,
@@ -422,7 +422,7 @@ describe("hintKeepTrack", () => {
 
     // Fill the first cell only → onTrack, step shrinks to the second.
     expect(
-      singlesGame.hintKeepTrack?.(
+      singlesGame.hint.keepTrack(
         { sets: [{ x: a.x, y: a.y, value: a.value }] },
         step as never,
         state,
@@ -440,7 +440,7 @@ describe("hintKeepTrack", () => {
 
     // Now fill the second → completed.
     expect(
-      singlesGame.hintKeepTrack?.(
+      singlesGame.hint.keepTrack(
         { sets: [{ x: b.x, y: b.y, value: b.value }] },
         step as never,
         state,

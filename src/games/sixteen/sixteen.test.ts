@@ -418,13 +418,13 @@ describe("Sixteen hint", () => {
   // a board apiece made these four a fifth of this file's cost in CI.
   let dealtHint: {
     s: SixteenState;
-    result: ReturnType<NonNullable<typeof sixteenGame.hint>> | null;
+    result: ReturnType<typeof sixteenGame.hint.plan> | null;
   } | null = null;
   const hintOfDealt = () => {
     if (dealtHint === null) {
       const { desc } = newDesc(defaultParams(), randomNew("hint-test"));
       const s = newState(defaultParams(), desc);
-      dealtHint = { s, result: sixteenGame.hint?.(s) ?? null };
+      dealtHint = { s, result: sixteenGame.hint.plan(s) ?? null };
     }
     return dealtHint;
   };
@@ -464,7 +464,7 @@ describe("Sixteen hint", () => {
     const rng = randomNew("hint-improves");
     const { desc } = newDesc(defaultParams(), rng);
     const s = newState(defaultParams(), desc);
-    const result = sixteenGame.hint?.(s);
+    const result = sixteenGame.hint.plan(s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const next = executeMove(s, result.steps[0].move);
@@ -524,7 +524,7 @@ describe("Sixteen hint", () => {
       tiles: new Int32Array([3, 4, 1, 8, 5, 6, 2, 7, 9, 10, 11, 12, 13, 14, 15, 16]),
     };
     for (let round = 0; round < 10 && !isCompleted(s); round++) {
-      const result = sixteenGame.hint?.(s);
+      const result = sixteenGame.hint.plan(s);
       expect(result?.ok).toBe(true);
       if (!result?.ok) return;
       for (const step of result.steps) s = executeMove(s, step.move);
@@ -538,7 +538,7 @@ describe("Sixteen hint", () => {
       ...solvedState(4, 4),
       tiles: new Int32Array([4, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
     };
-    const result = sixteenGame.hint?.(s);
+    const result = sixteenGame.hint.plan(s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     // The hint should recommend sliding row 0, prioritizing tile 1 (the lowest out-of-place tile on row 0).
@@ -570,7 +570,7 @@ describe("Sixteen hint", () => {
         const { desc } = newDesc(p, randomNew(seed));
         let s = newState(p, desc);
         for (let round = 0; round < 150 && !isCompleted(s); round++) {
-          const result = sixteenGame.hint?.(s);
+          const result = sixteenGame.hint.plan(s);
           if (!result?.ok) break;
           for (const step of result.steps) {
             const hl = step.highlights as SixteenHintHighlights;
@@ -608,7 +608,7 @@ describe("Sixteen hint", () => {
         23, 24, 25,
       ]),
     };
-    const result = sixteenGame.hint?.(s);
+    const result = sixteenGame.hint.plan(s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     // Only the exact bidirectional search can cross this hill, so a plan that
@@ -694,7 +694,7 @@ describe("Sixteen hint", () => {
           ...solvedState(w, h),
           tiles: new Int32Array(tiles),
         };
-        const result = sixteenGame.hint?.(state);
+        const result = sixteenGame.hint.plan(state);
         expect(result?.ok, `${label}: the hint gave up`).toBe(true);
         if (!result?.ok) continue;
         expect(
@@ -755,7 +755,7 @@ describe("Sixteen hint", () => {
       let moves = 0;
       for (; moves < maxMoves; moves++) {
         if (isCompleted(state)) break;
-        const res = sixteenGame.hint?.(state);
+        const res = sixteenGame.hint.plan(state);
         expect(res?.ok, `${label}: the hint gave up after ${moves} moves`).toBe(true);
         if (!res?.ok) return;
         state = executeMove(state, res.steps[0].move);
@@ -786,7 +786,7 @@ describe("Sixteen hint", () => {
     let first = 0;
     let steps = 0;
     while (!isCompleted(s)) {
-      const result = sixteenGame.hint?.(s);
+      const result = sixteenGame.hint.plan(s);
       expect(result?.ok, `stalled after ${steps} moves`).toBe(true);
       if (!result?.ok) return;
       if (previous === null) first = result.steps.length;
@@ -817,7 +817,7 @@ describe("Sixteen hint", () => {
       ]),
       moveCount: 34,
     };
-    const result = sixteenGame.hint?.(s);
+    const result = sixteenGame.hint.plan(s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     expect(result.steps.length).toBeGreaterThan(0);
@@ -848,7 +848,7 @@ describe("Sixteen hint", () => {
       ]),
       moveCount: 34,
     };
-    const result = sixteenGame.hint?.(s);
+    const result = sixteenGame.hint.plan(s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const [step1, step2] = result.steps;
@@ -874,17 +874,17 @@ describe("Sixteen hint", () => {
 
     // Doing the second leg before the first genuinely diverges (row and
     // column slides do not commute) and must drop the plan.
-    expect(sixteenGame.hintKeepTrack?.(step2.move, step1, s)).toBe("off");
+    expect(sixteenGame.hint.keepTrack(step2.move, step1, s)).toBe("off");
 
     // (a) faithful in-order following: leg 1 completes step 1...
-    expect(sixteenGame.hintKeepTrack?.(step1.move, step1, s)).toBe("completed");
+    expect(sixteenGame.hint.keepTrack(step1.move, step1, s)).toBe("completed");
     s = executeMove(s, step1.move);
     // ...and leg 2 completes step 2, whether played as planned or as
     // the equivalent wrap-around slide of the same line.
-    expect(sixteenGame.hintKeepTrack?.(step2.move, step2, s)).toBe("completed");
+    expect(sixteenGame.hint.keepTrack(step2.move, step2, s)).toBe("completed");
     if (step2.move.type === "slide") {
       const equivalent = { ...step2.move, delta: step2.move.delta + 5 };
-      expect(sixteenGame.hintKeepTrack?.(equivalent, step2, s)).toBe("completed");
+      expect(sixteenGame.hint.keepTrack(equivalent, step2, s)).toBe("completed");
     }
   });
 
@@ -901,7 +901,7 @@ describe("Sixteen hint", () => {
         13, 14, 15, 16,
       ]),
     };
-    const homeRes = sixteenGame.hint?.(homeBoard);
+    const homeRes = sixteenGame.hint.plan(homeBoard);
     expect(homeRes?.ok).toBe(true);
     if (!homeRes?.ok) return;
     const homeStep = homeRes.steps[0];
@@ -915,7 +915,7 @@ describe("Sixteen hint", () => {
     // present on a scrambled board.
     const { desc } = newDesc(defaultParams(), randomNew("hint-why-sixteen"));
     const s = newState(defaultParams(), desc);
-    const res = sixteenGame.hint?.(s);
+    const res = sixteenGame.hint.plan(s);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     let sawStaging = false;
@@ -946,7 +946,7 @@ describe("Sixteen hint", () => {
     let rounds = 0;
     const maxRounds = 50;
     while (!isCompleted(s) && rounds < maxRounds) {
-      const result = sixteenGame.hint?.(s);
+      const result = sixteenGame.hint.plan(s);
       if (!result?.ok) break;
       for (const step of result.steps) s = executeMove(s, step.move);
       rounds++;
@@ -963,7 +963,7 @@ describe("Sixteen hint", () => {
     let rounds = 0;
     const maxRounds = 100;
     while (!isCompleted(s) && rounds < maxRounds) {
-      const result = sixteenGame.hint?.(s);
+      const result = sixteenGame.hint.plan(s);
       expect(result?.ok, `round ${rounds}, board ${s.tiles.join(",")}`).toBe(true);
       if (!result?.ok) break;
       for (const step of result.steps) s = executeMove(s, step.move);
@@ -985,7 +985,7 @@ describe("Sixteen hint", () => {
 
       for (const delta of [1, 2]) {
         const s1 = executeMove(s0, { type: "slide", axis: "row", index: 0, delta });
-        const hint = sixteenGame.hint?.(s1);
+        const hint = sixteenGame.hint.plan(s1);
         expect(hint?.ok).toBe(true);
         if (!hint?.ok) continue;
         expect(hint.steps, `slide by ${delta}`).toHaveLength(1);
@@ -1000,7 +1000,7 @@ describe("Sixteen hint", () => {
       tiles: new Int32Array([1, 2, 14, 8, 5, 6, 15, 7, 9, 10, 11, 12, 4, 13, 3, 16]),
       moveCount: 16,
     };
-    const result = sixteenGame.hint?.(s);
+    const result = sixteenGame.hint.plan(s);
     expect(result?.ok).toBe(true);
   });
 
@@ -1013,7 +1013,7 @@ describe("Sixteen hint", () => {
       ...solvedState(3, 3),
       tiles: new Int32Array([4, 3, 9, 1, 6, 5, 8, 2, 7]),
     };
-    const result = sixteenGame.hint?.(s);
+    const result = sixteenGame.hint.plan(s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
 
@@ -1045,7 +1045,7 @@ describe("Sixteen hint", () => {
       ...solvedState(3, 3),
       tiles: new Int32Array([4, 6, 3, 9, 2, 5, 8, 1, 7]),
     };
-    const result = sixteenGame.hint?.(s);
+    const result = sixteenGame.hint.plan(s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
 
@@ -1074,7 +1074,7 @@ describe("Sixteen hint rendering", () => {
     const rng = randomNew("render-test");
     const { desc } = newDesc(defaultParams(), rng);
     const s = newState(defaultParams(), desc);
-    const result = sixteenGame.hint?.(s);
+    const result = sixteenGame.hint.plan(s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
 
@@ -1099,7 +1099,7 @@ describe("Sixteen hint rendering", () => {
     const rng = randomNew("two-move-hint");
     const { desc } = newDesc(defaultParams(), rng);
     const s = newState(defaultParams(), desc);
-    const result = sixteenGame.hint?.(s);
+    const result = sixteenGame.hint.plan(s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
 
@@ -1245,7 +1245,7 @@ describe("Sixteen hint track and direction fixes", () => {
     const s = solvedState(3, 3); // Tile 1 is at index 0 (col 0, row 0).
     const m1: SixteenMove = { type: "slide", axis: "row", index: 0, delta: 1 };
     const h1 = step();
-    expect(sixteenGame.hintKeepTrack?.(m1, h1, s)).toBe("onTrack");
+    expect(sixteenGame.hint.keepTrack(m1, h1, s)).toBe("onTrack");
     expect(h1.move).toEqual({ type: "slide", axis: "row", index: 0, delta: 1 });
 
     // Case 2: same line and the move lands the tile on the target —
@@ -1254,11 +1254,11 @@ describe("Sixteen hint track and direction fixes", () => {
     sWithTileAt1.tiles[0] = 2;
     sWithTileAt1.tiles[1] = 1; // Tile 1 is at index 1
     const m2: SixteenMove = { type: "slide", axis: "row", index: 0, delta: 1 };
-    expect(sixteenGame.hintKeepTrack?.(m2, step(), sWithTileAt1)).toBe("completed");
+    expect(sixteenGame.hint.keepTrack(m2, step(), sWithTileAt1)).toBe("completed");
 
     // Case 3: a different line (unrelated move) — off.
     const m3: SixteenMove = { type: "slide", axis: "row", index: 1, delta: 1 };
-    expect(sixteenGame.hintKeepTrack?.(m3, step(), s)).toBe("off");
+    expect(sixteenGame.hint.keepTrack(m3, step(), s)).toBe("off");
 
     // Case 4: same line but sliding *away* — still onTrack, with the
     // remaining delta grown to compensate (tile 1: col 0 → col 2 is
@@ -1272,7 +1272,7 @@ describe("Sixteen hint track and direction fixes", () => {
       highlights: { tile: 1, targetPos: 2, ultimatePos: null },
     };
     const m4: SixteenMove = { type: "slide", axis: "row", index: 0, delta: -1 };
-    expect(sixteenGame.hintKeepTrack?.(m4, h4, s4)).toBe("onTrack");
+    expect(sixteenGame.hint.keepTrack(m4, h4, s4)).toBe("onTrack");
     // tile 1 now at col 3; target col 2 ⇒ remaining in-grid delta -1.
     expect(h4.move).toEqual({ type: "slide", axis: "row", index: 0, delta: -1 });
   });

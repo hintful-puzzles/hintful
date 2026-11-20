@@ -132,20 +132,21 @@ export const pathGame: Game<
     ),
   revealOne: input.revealLine,
   textFormat,
-
-  hint: pathHint,
-  judgeMove: pathJudgeMove,
-  hintRungs: PATH_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the edges the step decides, drawn as the line or cross it asks for.",
-      outline:
-        "the squares it reasons from, and the edges it tries lines on, drawn thin.",
+  hint: {
+    plan: pathHint,
+    judgeMove: pathJudgeMove,
+    rungs: PATH_RUNGS,
+    marks: {
+      roles: {
+        ring: "the edges the step decides, drawn as the line or cross it asks for.",
+        outline:
+          "the squares it reasons from, and the edges it tries lines on, drawn thin.",
+      },
     },
+    keepTrack: pathKeepTrack,
+    gesture: (state, _ui, ds, move) =>
+      move.kind === "edges" ? input.hintGesture(state, ds, move.changes) : [],
   },
-  hintKeepTrack: pathKeepTrack,
-  hintGesture: (state, _ui, ds, move) =>
-    move.kind === "edges" ? input.hintGesture(state, ds, move.changes) : [],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

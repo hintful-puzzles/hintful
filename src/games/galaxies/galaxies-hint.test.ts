@@ -40,7 +40,7 @@ function board(params: typeof NORMAL_7, seed: string): GalaxiesState {
 }
 
 function hintOf(s: GalaxiesState): Step[] {
-  const res = galaxiesGame.hint?.(s);
+  const res = galaxiesGame.hint.plan(s);
   if (!res?.ok) throw new Error(`hint refused: ${res && !res.ok ? res.error : "?"}`);
   return res.steps;
 }
@@ -183,7 +183,7 @@ describe("the plan is sound: every step agrees with the unique solution", () => 
         for (let i = 0; i < 400 && galaxiesGame.status(s) === "ongoing"; i++) {
           // An Unreasonable board may legitimately run out of deduction; what
           // is under test is that nothing the hint *did* say was wrong.
-          const res = galaxiesGame.hint?.(s);
+          const res = galaxiesGame.hint.plan(s);
           if (!res?.ok && params.diff === GalaxiesDiff.Unreasonable) break;
           const steps = hintOf(s);
           for (const step of steps) {
@@ -235,7 +235,7 @@ describe("a square settled for its one owner is the one a drag rings", () => {
           batch < 60 && galaxiesGame.status(s) === "ongoing";
           batch++
         ) {
-          const res = galaxiesGame.hint?.(s);
+          const res = galaxiesGame.hint.plan(s);
           if (!res?.ok) break;
           for (const step of res.steps) {
             const at = step.highlights?.focus;
@@ -309,7 +309,7 @@ describe("the hint never guesses, and says so when that is the end of the road",
           batch < 40 && galaxiesGame.status(s) === "ongoing";
           batch++
         ) {
-          const res = galaxiesGame.hint?.(s);
+          const res = galaxiesGame.hint.plan(s);
           if (!res?.ok) break;
           for (const step of res.steps) {
             expect(
@@ -331,7 +331,7 @@ describe("the hint never guesses, and says so when that is the end of the road",
         const params = { w: size, h: size, diff: GalaxiesDiff.Normal };
         let s = board(params, `${seed}-${size}`);
         for (let b = 0; b < 40 && galaxiesGame.status(s) === "ongoing"; b++) {
-          const res = galaxiesGame.hint?.(s);
+          const res = galaxiesGame.hint.plan(s);
           expect(res?.ok, `${seed}/${size}: Easy board stalled`).toBe(true);
           if (!res?.ok) break;
           for (const step of res.steps) s = galaxiesGame.executeMove(s, step.move);
@@ -348,7 +348,7 @@ describe("the hint never guesses, and says so when that is the end of the road",
     for (const seed of ["gu-a", "gu-b", "gu-c", "gu-d"]) {
       let s = board(UNREASONABLE_7, seed);
       for (let b = 0; b < 40 && galaxiesGame.status(s) === "ongoing"; b++) {
-        const res = galaxiesGame.hint?.(s);
+        const res = galaxiesGame.hint.plan(s);
         if (!res?.ok) {
           refusals++;
           expect(res?.error).toMatch(/^Nothing further follows by deduction here\./);
@@ -385,7 +385,7 @@ describe("a deduction the player cannot act on never costs the plan a step", () 
       // The class is a dot inside its own cell: its cell is forced and no
       // arrow is drawable there.
       sawUnshowable ||= s.dots.some((d) => d.x % 2 === 1 && d.y % 2 === 1);
-      const res = galaxiesGame.hint?.(s);
+      const res = galaxiesGame.hint.plan(s);
       // A refusal *deep* in an Unreasonable board is legitimate — deduction
       // can genuinely run out there. Refusing at the first ask, on a board
       // with a hundred moves left, is the bug this pins.
@@ -458,7 +458,7 @@ describe("the picture carries the argument", () => {
     for (const seed of ["gh-scan-0", "gh-scan-1", "gh-scan-2", "gh-scan-3"]) {
       let s = board(UNREASONABLE_7, seed);
       for (let i = 0; i < 400 && galaxiesGame.status(s) === "ongoing"; i++) {
-        const res = galaxiesGame.hint?.(s);
+        const res = galaxiesGame.hint.plan(s);
         if (!res?.ok) break; // deduction ran out — legitimate on this tier
         const step = res.steps[0];
         said.forEach(({ word, mark }, k) => {
@@ -507,7 +507,7 @@ describe("the picture carries the argument", () => {
 describe("refusals", () => {
   it("counts a solved board as finished, so the midend refuses it", () => {
     let s = board(NORMAL_7, "refuse-solved");
-    const res = galaxiesGame.solve?.(s, s);
+    const res = galaxiesGame.solve(s, s);
     expect(res?.ok).toBe(true);
     if (res?.ok) s = galaxiesGame.executeMove(s, res.move);
     expect(galaxiesGame.status(s)).toBe("solved");
@@ -558,7 +558,7 @@ describe("following the plan", () => {
       solving: false,
     };
     expect(["completed", "onTrack"]).toContain(
-      galaxiesGame.hintKeepTrack?.(byCell, step, state),
+      galaxiesGame.hint.keepTrack(byCell, step, state),
     );
   });
 
@@ -578,7 +578,7 @@ describe("following the plan", () => {
       ],
       solving: false,
     };
-    const verdict = galaxiesGame.hintKeepTrack?.(one, found.step, found.state);
+    const verdict = galaxiesGame.hint.keepTrack(one, found.step, found.state);
     // Either the pair the game commits atomically finished the step, or the
     // step wants more cells and stays displayed — never "off".
     expect(["completed", "onTrack"]).toContain(verdict);
@@ -596,7 +596,7 @@ describe("following the plan", () => {
       ops: [{ kind: "assoc", x: t.x, y: t.y, ax: hl.targetDot.x, ay: hl.targetDot.y }],
       solving: false,
     });
-    const live = galaxiesGame.refreshHintStep?.(found.step, s);
+    const live = galaxiesGame.hint.refreshStep?.(found.step, s);
     if (!live) throw new Error("the step was left half made");
     expect(live.highlights?.targets).toHaveLength(2);
     expect(live.explanation).toMatch(/^Both ringed squares must belong to/);
@@ -618,13 +618,13 @@ describe("following the plan", () => {
     }
     expect(elsewhere).not.toBeNull();
     if (!elsewhere) return;
-    expect(galaxiesGame.hintKeepTrack?.(elsewhere, step, state)).toBe("off");
+    expect(galaxiesGame.hint.keepTrack(elsewhere, step, state)).toBe("off");
   });
 
   it("refreshes a step away once the board already shows it", () => {
     const { step, state } = pinned("association");
-    expect(galaxiesGame.refreshHintStep?.(step, state)).toBe(step);
+    expect(galaxiesGame.hint.refreshStep?.(step, state)).toBe(step);
     const after = galaxiesGame.executeMove(state, step.move);
-    expect(galaxiesGame.refreshHintStep?.(step, after)).toBeNull();
+    expect(galaxiesGame.hint.refreshStep?.(step, after)).toBeNull();
   });
 });

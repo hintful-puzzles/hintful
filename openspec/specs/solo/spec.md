@@ -512,7 +512,7 @@ no sentence says a cage's other cells are filled while any is open.
 ### Requirement: Hint: Solo's hint is the candidate walk's, started on the implicit reading
 
 Solo's hint SHALL be a plan of the shared candidate walk, its marks its
-legend's (`hintMarks`), run on the player's notes (`engine-candidate-hints`,
+legend's (`hint.marks`), run on the player's notes (`engine-candidate-hints`,
 "A described technique is a rung read off the notes"): each technique a step
 can teach SHALL be a rung, its reason built from what it says, at the
 board's tiers on both scales. A value with one place left in a block SHALL

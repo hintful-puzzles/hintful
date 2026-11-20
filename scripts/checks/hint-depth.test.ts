@@ -91,7 +91,7 @@ it("reports each rung's depth, and the steps out of order with their tier", () =
         let walked = 0;
         for (let round = 0; round < ROUNDS && walked < STEPS; round++) {
           if (game.status(state) !== "ongoing") break;
-          const res = game.hint?.(state, aux, ui);
+          const res = game.hint.plan(state, aux, ui);
           if (!res?.ok) break;
           for (const step of res.steps) {
             if (walked++ >= STEPS) break;
@@ -110,8 +110,8 @@ it("reports each rung's depth, and the steps out of order with their tier", () =
               if (!r.said.has(depth))
                 r.said.set(depth, step.explanation.replace(/\d+/g, "#"));
             }
-            const live = game.refreshHintStep
-              ? game.refreshHintStep(step, state)
+            const live = game.hint.refreshStep
+              ? game.hint.refreshStep(step, state)
               : step;
             if (live === null) continue;
             state = game.executeMove(state, live.move);

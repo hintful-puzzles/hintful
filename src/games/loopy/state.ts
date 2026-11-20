@@ -331,7 +331,7 @@ export function autofollowEdges(
  * true. Only a `LINE_YES` op can trigger anything, and one pass is enough: an
  * excluded edge adds no line, so it completes neither another dot nor another clue.
  *
- * `hintKeepTrack` calls it too, on the *hint's* own ops, so a player who follows a
+ * `hint.keepTrack` calls it too, on the *hint's* own ops, so a player who follows a
  * hint with the aid on is still judged to have taken that step rather than a
  * different one.
  */

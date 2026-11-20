@@ -209,7 +209,7 @@ const speak = voice<number>({ kind: TILE, value: String });
  * step, so the banner stays populated through an auto-hint run instead of
  * clearing and recomputing on every step, as Sixteen's plan does. The
  * solver is cheap, and the plan is recomputed only when the player
- * deviates (see `hintKeepTrack`). */
+ * deviates (see `hint.keepTrack`). */
 function hint(state: FifteenState): HintResult<FifteenMove, unknown, FifteenRung> {
   /** One slide of the solution, with what its sentence is told from. */
   const slides: {
@@ -297,19 +297,20 @@ export const fifteenGame: Game<
   },
 
   solve: () => ({ ok: true, move: { type: "solve" } }),
-
-  hint,
-  hintRungs: FIFTEEN_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "what the step decides: the tile to slide, filled in the hint's color.",
+  hint: {
+    plan: hint,
+    rungs: FIFTEEN_RUNGS,
+    marks: {
+      roles: {
+        ring: "what the step decides: the tile to slide, filled in the hint's color.",
+      },
     },
+    keepTrack: hintKeepTrack,
+    gesture: (_s, _ui, ds, m) =>
+      m.type === "move"
+        ? [click({ x: cellCenter(m.x, ds.tileSize), y: cellCenter(m.y, ds.tileSize) })]
+        : [],
   },
-  hintKeepTrack,
-  hintGesture: (_s, _ui, ds, m) =>
-    m.type === "move"
-      ? [click({ x: cellCenter(m.x, ds.tileSize), y: cellCenter(m.y, ds.tileSize) })]
-      : [],
 
   textFormat,
   statusbarText,

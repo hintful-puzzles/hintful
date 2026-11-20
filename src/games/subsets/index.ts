@@ -813,11 +813,27 @@ export const subsetsGame: Game<
   SubsetsRung
 > = {
   id: "subsets",
-  // Touching the reference aid (tally / inspect icon / cursor) dismisses a
-  // displayed hint, so the aid isn't suppressed by a still-active hint overlay.
-  // Except on a rule-out step: following it by hand starts with the inspect
-  // icon, which puts its cell in focus for the tally press that makes it.
-  uiUpdateClearsHint: (step) => step.move.kind !== "rule",
+  hint: {
+    // Touching the reference aid (tally / inspect icon / cursor) dismisses a
+    // displayed hint, so the aid isn't suppressed by a still-active hint overlay.
+    // Except on a rule-out step: following it by hand starts with the inspect
+    // icon, which puts its cell in focus for the tally press that makes it.
+    uiUpdateClears: (step) => step.move.kind !== "rule",
+    plan: hint,
+    judgeMove,
+    rungs: SUBSETS_RUNGS,
+    marks: {
+      roles: {
+        ring: "what the step decides: the one letter position it marks present or clears, which the sentence names by its letter, or, when it rules a whole set out of a cell, that cell and the set's entry in the tally.",
+        outline:
+          "what the step reasons from: the neighbor across a horseshoe, or the cell where a set is already placed, framed in a second color; and the sets it counts, such as the only ones that can still go in the cell, boxed in the tally in that color.",
+        stripes:
+          "the one cell a set still fits, when the sentence says the set can go nowhere else.",
+      },
+    },
+    keepTrack: hintKeepTrack,
+    gesture: hintGesture,
+  },
 
   defaultParams,
   menu,
@@ -845,20 +861,6 @@ export const subsetsGame: Game<
 
   solve,
   difficulty,
-  hint,
-  judgeMove,
-  hintRungs: SUBSETS_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "what the step decides: the one letter position it marks present or clears, which the sentence names by its letter, or, when it rules a whole set out of a cell, that cell and the set's entry in the tally.",
-      outline:
-        "what the step reasons from: the neighbor across a horseshoe, or the cell where a set is already placed, framed in a second color; and the sets it counts, such as the only ones that can still go in the cell, boxed in the tally in that color.",
-      stripes:
-        "the one cell a set still fits, when the sentence says the set can go nowhere else.",
-    },
-  },
-  hintKeepTrack,
-  hintGesture,
   findMistakes,
   clearMistakes,
   textFormat,

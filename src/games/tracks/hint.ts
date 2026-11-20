@@ -309,7 +309,7 @@ const PIECE_OF_ELEMENT = PIECE as unknown as MarkKind<Element>;
 const PIECE_TERMS = ["shut", "unmet", "unable", "lineClue", "crossing", "clueAt"];
 
 /** Deduce the hint's steps from the player's current marks. */
-export const { hint: tracksHint, judgeMove: tracksJudgeMove } = describedEdgeHint<
+export const { plan: tracksHint, judgeMove: tracksJudgeMove } = describedEdgeHint<
   TracksState,
   TracksMove,
   undefined,

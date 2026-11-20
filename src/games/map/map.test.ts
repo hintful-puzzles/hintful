@@ -422,7 +422,7 @@ describe("map solve + findMistakes", () => {
   it("solve (re-derived) colors every region correctly", () => {
     const { state, aux } = makeGame(p, "solve-1");
     const sol = solutionFromAux(aux, p.n);
-    const res = mapGame.solve?.(state, state, undefined);
+    const res = mapGame.solve(state, state, undefined);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const done = mapGame.executeMove(state, res.move);
@@ -432,7 +432,7 @@ describe("map solve + findMistakes", () => {
 
   it("solve via aux matches re-derivation", () => {
     const { state, aux } = makeGame(p, "solve-2");
-    const res = mapGame.solve?.(state, state, aux);
+    const res = mapGame.solve(state, state, aux);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const done = mapGame.executeMove(state, res.move);

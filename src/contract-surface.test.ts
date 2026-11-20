@@ -76,7 +76,7 @@ const sources = [
     }) as Record<string, string>,
   ).map(([p, text]) => [p.replace(/^\.\//, "src/"), text] as const),
   // The build ships what it reads too: the help pages' generated list of marks
-  // is `hintMarks` read by `vite-plugins/hint-marks.ts`.
+  // is `hint.marks` read by `vite-plugins/hint-marks.ts`.
   ...Object.entries(
     import.meta.glob("../vite-plugins/*.ts", {
       query: "?raw",
@@ -88,21 +88,29 @@ const sources = [
 
 // --- what the contract offers ----------------------------------------------
 
-/** The optional members of the `Game` interface, read off its declaration. */
-function optionalGameMembers(): string[] {
+/** The optional members of interface `name` in `game.ts`, read off its
+ * declaration. */
+function optionalMembers(name: "Game" | "GameHint"): string[] {
   const [, text] = sources.find(([p]) => p === "src/engine/game.ts") ?? [];
   if (text === undefined) throw new Error("contract-surface: game.ts not found");
   const src = ts.createSourceFile("game.ts", text, ts.ScriptTarget.ESNext, true);
   for (const st of src.statements) {
-    if (!ts.isInterfaceDeclaration(st) || st.name.text !== "Game") continue;
+    if (!ts.isInterfaceDeclaration(st) || st.name.text !== name) continue;
     return st.members
       .filter((m) => m.questionToken !== undefined && m.name !== undefined)
       .map((m) => (m.name as ts.Identifier).text);
   }
-  throw new Error("contract-surface: no `Game` interface in game.ts");
+  throw new Error(`contract-surface: no \`${name}\` interface in game.ts`);
 }
 
-const OPTIONAL = optionalGameMembers();
+/** The optional members of the hint, `Game.hint`, a capability of its own. */
+const HINT_OPTIONAL = optionalMembers("GameHint");
+/** Every optional member of the contract: the game's and its hint's. */
+const OPTIONAL = [...optionalMembers("Game"), ...HINT_OPTIONAL];
+
+/** Whether `game` implements `member`, on itself or on its hint. */
+const implementsMember = (game: (typeof REGISTERED_GAMES)[number][1], member: string) =>
+  Object.hasOwn(HINT_OPTIONAL.includes(member) ? game.hint : game, member);
 
 /** The fields of `PuzzleStaticAttributes`, read off its declaration. */
 function staticAttributeFields(): string[] {
@@ -134,7 +142,7 @@ const STATIC_ATTRIBUTES = staticAttributeFields();
  * flag into `PuzzleStaticAttributes`, the `Puzzle` constructor relays that into
  * a field, and only the third hop decides anything — so a flag nothing branches
  * on looks identical to one that matters. A relay into a *differently*
- * named field is a real read — `canHint: this.game.hint !== undefined` is the
+ * named field is a real read — `canWrite: this.game.textFormat !== undefined` is the
  * engine deciding something — so the names have to match.
  */
 function relayTarget(access: ts.PropertyAccessExpression): string | null {
@@ -265,9 +273,12 @@ describe("the Game contract carries no capability without a consumer", () => {
     // an interface renamed out from under this file, would sweep an empty list
     // and report success. Floor is well under the 31 present when written.
     expect(OPTIONAL.length).toBeGreaterThan(25);
-    // And a spot check that it read real members rather than, say, every member.
-    expect(OPTIONAL).toContain("hint");
+    // And a spot check that it read real members rather than, say, every
+    // member, of both interfaces.
+    expect(OPTIONAL).toContain("findMistakes");
+    expect(OPTIONAL).toContain("refreshStep");
     expect(OPTIONAL).not.toContain("executeMove");
+    expect(OPTIONAL).not.toContain("plan");
   });
 
   it("every optional member has at least one game implementing it", () => {
@@ -276,7 +287,7 @@ describe("the Game contract carries no capability without a consumer", () => {
     const orphans: string[] = [];
     for (const member of OPTIONAL) {
       const implementers = REGISTERED_GAMES.filter(([, game]) =>
-        Object.hasOwn(game, member),
+        implementsMember(game, member),
       );
       if (implementers.length === 0) orphans.push(member);
     }
@@ -301,7 +312,9 @@ describe("the Game contract carries no capability without a consumer", () => {
     // never runs".
     const withImplementers = (names: string[]) =>
       names.map((m) => {
-        const n = REGISTERED_GAMES.filter(([, game]) => Object.hasOwn(game, m)).length;
+        const n = REGISTERED_GAMES.filter(([, game]) =>
+          implementsMember(game, m),
+        ).length;
         return `${m} (${n} implementers)`;
       });
 

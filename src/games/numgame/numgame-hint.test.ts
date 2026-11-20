@@ -56,7 +56,7 @@ describe("numgame hint plans", () => {
       let state = deal(p, seed);
       let fewest = reachOf(state.slots).fewestOps(state.target) ?? -1;
       while (numgameGame.status(state) !== "solved") {
-        const result = numgameGame.hint?.(state);
+        const result = numgameGame.hint.plan(state);
         if (!result?.ok) throw new Error(`refused on ${seed}`);
         expect(result.steps).toHaveLength(1);
         const [step] = result.steps;
@@ -72,7 +72,7 @@ describe("numgame hint plans", () => {
 
   it("works on the biggest number first, and counts the ways to start", () => {
     const state = newState({ large: 4, diff: 3 }, "100,75,50,25,6,3=952");
-    const result = numgameGame.hint?.(state);
+    const result = numgameGame.hint.plan(state);
     if (!result?.ok) throw new Error("refused");
     expect(result.steps[0].explanation).toBe(
       "You can finish in 5 more operations, starting 4 ways. One of them: 100 + 3 = 103.",
@@ -113,7 +113,7 @@ describe("numgame hint plans", () => {
   it("rings exactly the two numbers and the operator a step combines", () => {
     for (const seed of ["rings a", "rings b", "rings c"]) {
       const state = deal({ large: 2, diff: 3 }, seed);
-      const result = numgameGame.hint?.(state);
+      const result = numgameGame.hint.plan(state);
       if (!result?.ok) throw new Error("refused");
       const [step] = result.steps;
       if (step.move.kind !== "combine") throw new Error("a step combines");
@@ -129,7 +129,7 @@ describe("numgame hint plans", () => {
     const { state, step } = pinned("starts");
     if (step.move.kind !== "combine") throw new Error("a step combines");
     const { from, into, op } = step.move;
-    const keep = numgameGame.hintKeepTrack;
+    const keep = numgameGame.hint.keepTrack;
     expect(keep?.(step.move, step, state)).toBe("completed");
     expect(keep?.({ kind: "combine", from: into, into: from, op }, step, state)).toBe(
       "completed",

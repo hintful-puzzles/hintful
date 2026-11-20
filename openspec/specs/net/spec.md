@@ -446,7 +446,7 @@ the turn and the lock.
 
 ### Requirement: Hint: A turn short of a Net step's wiring keeps the step
 
-`hintKeepTrack` SHALL keep a turn step through a turn of its tile that leaves
+`hint.keepTrack` SHALL keep a turn step through a turn of its tile that leaves
 the tile short of the step's wiring, the step then asking for the rest of the
 turn, and SHALL complete it when the tile shows that wiring. A lock SHALL
 complete its step only on an unlocked tile showing the step's wiring, and a

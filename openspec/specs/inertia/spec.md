@@ -385,7 +385,7 @@ reach.
 
 ### Requirement: Hint: Following the hint keeps the plan
 
-The game SHALL implement `hintKeepTrack`, so that a move in the displayed step's
+The game SHALL implement `hint.keepTrack`, so that a move in the displayed step's
 direction **completes** that step and the plan is kept. Without it the plan is
 dropped on every player move, including one that faithfully follows the hint,
 and the next hint replans from scratch, which is what a stable subgoal exists

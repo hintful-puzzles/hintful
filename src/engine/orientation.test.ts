@@ -89,7 +89,7 @@ function boardsToTurn(game: AnyGame): AnyParams[] {
   const turn = game.transposeParams;
   if (turn === undefined) return out;
   for (const p of menuParams(game)) {
-    widen: for (const item of game.paramConfig ?? []) {
+    widen: for (const item of game.paramConfig) {
       if (item.type !== "string") continue;
       for (const extra of [1, 2]) {
         const q = structuredClone(p);
@@ -106,11 +106,11 @@ function boardsToTurn(game: AnyGame): AnyParams[] {
 }
 
 function drawn(game: AnyGame, p: AnyParams): Size {
-  return game.computeSize(p, game.preferredTileSize ?? 32);
+  return game.computeSize(p, game.preferredTileSize);
 }
 
 function hasWidthAndHeight(game: AnyGame): boolean {
-  const kws = new Set((game.paramConfig ?? []).map((item) => item.kw));
+  const kws = new Set(game.paramConfig.map((item) => item.kw));
   return kws.has("width") && kws.has("height");
 }
 

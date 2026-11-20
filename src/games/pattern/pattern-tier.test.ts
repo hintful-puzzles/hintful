@@ -274,9 +274,9 @@ describe("the hint on an Unreasonable Pattern board", () => {
     const followHint = (): number => {
       let steps = 0;
       for (
-        let plan = patternGame.hint?.(state);
+        let plan = patternGame.hint.plan(state);
         plan?.ok;
-        plan = patternGame.hint?.(state)
+        plan = patternGame.hint.plan(state)
       )
         for (const step of plan.steps) {
           state = executeMove(state, step.move);

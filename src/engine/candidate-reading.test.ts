@@ -22,6 +22,7 @@
 import { describe, expect, it } from "vitest";
 import { type CandidateReading, candidateHint } from "./candidate-hint.ts";
 import { permitsSearch } from "./difficulty.ts";
+import { DRAFT_HINT } from "./game.ts";
 import type { Narration } from "./hint-words.ts";
 import { dealt } from "./testing/dealt.ts";
 import { enrolledIn } from "./testing/enrollment.ts";
@@ -187,13 +188,13 @@ function withAndWithoutUi(
 ) {
   // What the player is shown and what is played, step by step. A plan's steps
   // also carry closures, which no two builds of the same plan share.
-  const shown = (res?: ReturnType<NonNullable<AnyGame["hint"]>>) =>
-    res?.ok
+  const shown = (res: ReturnType<AnyGame["hint"]["plan"]>) =>
+    res.ok
       ? res.steps.map((s) => JSON.stringify([s.rung, s.explanation, s.move]))
       : null;
   return {
-    bare: shown(game.hint?.(state, aux)),
-    own: shown(game.hint?.(state, aux, game.newUi(state))),
+    bare: shown(game.hint.plan(state, aux)),
+    own: shown(game.hint.plan(state, aux, game.newUi(state))),
   };
 }
 
@@ -202,14 +203,17 @@ describe("a hint asked for with no Ui", () => {
     // The defect the cases below exist for, on a game made to have it.
     const dropsIt: Pick<AnyGame, "hint" | "newUi"> = {
       newUi: () => ({ candidateReading: "implicit" }),
-      hint: (
-        state: unknown,
-        _aux?: string,
-        ui?: { candidateReading: CandidateReading },
-      ) =>
-        candidateHint(state, ui ?? null, (_state, prefs) => [
-          { move: null, rung: "only", explanation: prefs.reading },
-        ]),
+      hint: {
+        ...DRAFT_HINT,
+        plan: (
+          state: unknown,
+          _aux?: string,
+          ui?: { candidateReading: CandidateReading },
+        ) =>
+          candidateHint(state, ui ?? null, (_state, prefs) => [
+            { move: null, rung: "only", explanation: prefs.reading },
+          ]),
+      },
     };
     const { bare, own } = withAndWithoutUi(dropsIt, {});
     expect(bare).not.toEqual(own);
@@ -251,7 +255,7 @@ describe("the hint-notes preference", () => {
             const { desc, aux } = dealt(game, params);
             const width = boardWidth(game, params);
             let state = game.newState(params, desc);
-            const res = game.hint?.(state, aux, uiFor(game, state, reading));
+            const res = game.hint.plan(state, aux, uiFor(game, state, reading));
             if (!res?.ok) {
               // A tier that allows trial and error may need it from the first
               // move: Group's Unreasonable 6x6 does on most boards.
@@ -266,7 +270,7 @@ describe("the hint-notes preference", () => {
               // Refreshing a step against the board it is about to be shown on
               // changes nothing: no strike of a note the board lacks, no note
               // step for a note already written, no placement in a filled cell.
-              expect(game.refreshHintStep?.(step, state), step.explanation).toBe(step);
+              expect(game.hint.refreshStep?.(step, state), step.explanation).toBe(step);
               const next = game.executeMove(state, step.move);
               const effect = effectOf(state, next, width);
               effects.add(effect);
@@ -296,11 +300,11 @@ describe("the hint-notes preference", () => {
           let state = game.newState(params, desc);
           const other = READINGS.find((r) => r !== game.newUi(state).candidateReading);
           if (!other) throw new Error("two readings");
-          const first = game.hint?.(state, aux, uiFor(game, state, other));
+          const first = game.hint.plan(state, aux, uiFor(game, state, other));
           const stride = resumeStride(first?.ok ? first.steps.length : 0);
           for (let moves = 0; moves < 800; ) {
             if (game.status(state) === "solved") return;
-            const res = game.hint?.(state, aux, uiFor(game, state, other));
+            const res = game.hint.plan(state, aux, uiFor(game, state, other));
             if (!res?.ok) {
               expect(permitsSearch(game, params), `gave up after ${moves} moves`).toBe(
                 true,
@@ -313,8 +317,8 @@ describe("the hint-notes preference", () => {
             for (const step of res.steps) {
               if (played > 0 && game.status(state) === "solved") break;
               const live =
-                played > 0 && game.refreshHintStep
-                  ? game.refreshHintStep(step, state)
+                played > 0 && game.hint.refreshStep
+                  ? game.hint.refreshStep(step, state)
                   : step;
               if (live === null) continue;
               state = game.executeMove(state, live.move);

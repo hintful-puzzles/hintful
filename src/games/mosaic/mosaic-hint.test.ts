@@ -61,7 +61,7 @@ const pinned = describeHintPins({
  * the hint asked again, until it gives none. */
 function followed(state: MosaicState): HintStep<MosaicMove, unknown, string>[] {
   const steps: HintStep<MosaicMove, unknown, string>[] = [];
-  for (let res = mosaicHint(state); res.ok; res = mosaicHint(state))
+  for (let res = mosaicHint.plan(state); res.ok; res = mosaicHint.plan(state))
     for (const step of res.steps) {
       steps.push(step);
       state = executeMove(state, step.move);
@@ -217,7 +217,7 @@ describe("Mosaic's hint", () => {
     const seen = new Set<string>();
     for (let seed = 0; seed < 40; seed++) {
       const state = newState(U, newDesc(U, randomNew(`mosaic-hint-${seed}`)).desc);
-      const res = mosaicHint(state);
+      const res = mosaicHint.plan(state);
       if (!res.ok) throw new Error("no plan");
       for (const step of res.steps) {
         const numbers = stepMarks(step).of("outline", BLOCK);

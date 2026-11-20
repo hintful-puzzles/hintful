@@ -619,22 +619,23 @@ export const rectGame: Game<
     deductionFinishes: (s, cap) => ladderFinishes(s.w, s.h, s, cap),
     answerOf,
   }),
-
-  hint: rectHint,
-  judgeMove: rectJudgeMove,
-  hintMarks: {
-    roles: {
-      ring: "what the step draws: the rectangle it decides, or the one edge it makes a line.",
-      outline:
-        "what the step reasons from: a clue that blocks another rectangle, a clue that could cross the ringed edge, or a square only one clue can reach.",
-      stripes:
-        "the squares another clue covers wherever its rectangle goes, which no other rectangle can use.",
+  hint: {
+    plan: rectHint,
+    judgeMove: rectJudgeMove,
+    marks: {
+      roles: {
+        ring: "what the step draws: the rectangle it decides, or the one edge it makes a line.",
+        outline:
+          "what the step reasons from: a clue that blocks another rectangle, a clue that could cross the ringed edge, or a square only one clue can reach.",
+        stripes:
+          "the squares another clue covers wherever its rectangle goes, which no other rectangle can use.",
+      },
     },
+    rungs: RECT_RUNGS,
+    keepTrack: rectKeepTrack,
+    gesture: hintGesture,
+    refreshStep: rectRefreshStep,
   },
-  hintRungs: RECT_RUNGS,
-  hintKeepTrack: rectKeepTrack,
-  hintGesture,
-  refreshHintStep: rectRefreshStep,
 
   textFormat,
   statusbarText,

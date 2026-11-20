@@ -12,8 +12,7 @@ import { registerGame } from "../../engine/registry.ts";
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import type { Game, HintStep, SolveResult } from "../../engine/game.ts";
-import type { PointerAction } from "../../engine/hint-gesture.ts";
+import type { Game, SolveResult } from "../../engine/game.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
@@ -24,7 +23,6 @@ import {
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newStarbattleDesc } from "./generator.ts";
@@ -186,24 +184,10 @@ const difficulty: DifficultyContract<StarbattleParams> = {
 
 /** A click on each square the step decides, with the button that marks it
  * the way the step asks. */
-function hintGesture(
-  state: StarbattleState,
-  ui: StarbattleUi,
-  ds: StarbattleDrawState,
-  move: StarbattleMove,
-  step: HintStep<StarbattleMove, StarbattleHint>,
-): readonly PointerAction[] {
+function hintTargets(state: StarbattleState, move: StarbattleMove): Point[] {
   if (move.kind !== "mark") return [];
   const { size } = state;
-  return verbClicks(
-    targetVerbs,
-    { executeMove, hintKeepTrack: starbattleKeepTrack },
-    state,
-    ui,
-    ds,
-    step,
-    move.cells.map(({ index }) => ({ x: index % size, y: (index / size) | 0 })),
-  );
+  return move.cells.map(({ index }) => ({ x: index % size, y: (index / size) | 0 }));
 }
 
 export const starbattleGame: Game<
@@ -241,22 +225,23 @@ export const starbattleGame: Game<
   findMistakes,
   clearMistakes,
   textFormat,
-
-  hint: starbattleHint,
-  judgeMove: starbattleJudgeMove,
-  hintRungs: STARBATTLE_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the squares the step decides. The sentence says what they must be.",
-      stripes:
-        "the row, column or region the step is about, or several rows or columns counted together.",
-      outline:
-        "what else it reasons from: a star, a region, or the squares a star would block.",
+  hint: {
+    plan: starbattleHint,
+    judgeMove: starbattleJudgeMove,
+    rungs: STARBATTLE_RUNGS,
+    marks: {
+      roles: {
+        ring: "the squares the step decides. The sentence says what they must be.",
+        stripes:
+          "the row, column or region the step is about, or several rows or columns counted together.",
+        outline:
+          "what else it reasons from: a star, a region, or the squares a star would block.",
+      },
     },
+    keepTrack: starbattleKeepTrack,
+    refreshStep: starbattleRefreshHintStep,
+    targets: hintTargets,
   },
-  hintKeepTrack: starbattleKeepTrack,
-  refreshHintStep: starbattleRefreshHintStep,
-  hintGesture,
 
   rulesOut: starbattleRulesOut,
 

@@ -49,7 +49,7 @@ const spelled = (state: WordtrailState, trails: readonly number[]): string[] =>
   ].sort();
 
 /** The plan from the player's lines and crosses. */
-export const { hint: wordtrailHint, judgeMove: wordtrailJudgeMove } = describedEdgeHint<
+export const { plan: wordtrailHint, judgeMove: wordtrailJudgeMove } = describedEdgeHint<
   WordtrailState,
   WordtrailMove,
   WordtrailHighlights,

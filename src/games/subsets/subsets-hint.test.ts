@@ -398,7 +398,7 @@ describe("candidateCells (reference aid + hidden single)", () => {
 describe("hint", () => {
   it("narrates each firing with premise and conclusion, and highlights", () => {
     const state = gen("narrate-a");
-    const res = subsetsGame.hint?.(state);
+    const res = subsetsGame.hint.plan(state);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     for (const step of res.steps) {
@@ -440,7 +440,7 @@ describe("hint", () => {
 
   it("counts a solved board as finished, so the midend refuses it", () => {
     const state = gen("refuse-solved");
-    const solved = subsetsGame.solve?.(state, state);
+    const solved = subsetsGame.solve(state, state);
     if (!solved?.ok) throw new Error("solve refused");
     expect(subsetsGame.status(subsetsGame.executeMove(state, solved.move))).toBe(
       "solved",
@@ -507,21 +507,21 @@ describe("hintKeepTrack", () => {
   };
   it("completes on the exact letter toggle, off otherwise", () => {
     expect(
-      subsetsGame.hintKeepTrack?.(
+      subsetsGame.hint.keepTrack(
         { kind: "set", type: "known", pos: 5, bit: 2 },
         step,
         {} as SubsetsState,
       ),
     ).toBe("completed");
     expect(
-      subsetsGame.hintKeepTrack?.(
+      subsetsGame.hint.keepTrack(
         { kind: "set", type: "cleared", pos: 5, bit: 2 },
         step,
         {} as SubsetsState,
       ),
     ).toBe("off");
     expect(
-      subsetsGame.hintKeepTrack?.(
+      subsetsGame.hint.keepTrack(
         { kind: "set", type: "known", pos: 6, bit: 2 },
         step,
         {} as SubsetsState,
@@ -648,7 +648,7 @@ describe("subgoal continuation narration", () => {
       let state = gen(`cont-${s}`);
       for (let step = 0; step < 200; step++) {
         if (subsetsGame.status(state) === "solved") break;
-        const res = subsetsGame.hint?.(state);
+        const res = subsetsGame.hint.plan(state);
         if (!res?.ok) break;
         res.steps.forEach((st, k) => {
           if (!st.continuesPrevious) return;

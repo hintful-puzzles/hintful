@@ -321,10 +321,10 @@ set ("draw them all", "both must be walls").
 
 ### Requirement: Hint: Palisade's marks and its keep-track verdict are the border grid's
 
-A step's marks SHALL be the roles `hintMarks` declares: a ring along every
+A step's marks SHALL be the roles `hint.marks` declares: a ring along every
 edge its firing has yet to set, and an outline and stripes inside the cell
 body, all drawn by the layer of `border-grid`, "Border-grid games share the
-hint's notation layer". `hintKeepTrack` SHALL hand an `edges` move's edits to
+hint's notation layer". `hint.keepTrack` SHALL hand an `edges` move's edits to
 `borderHintKeepTrack`, whose verdict is `border-grid`, "A hinted edge's step
 is completed by the edit that sets it". Palisade SHALL depart from neither.
 

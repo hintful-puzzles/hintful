@@ -88,7 +88,7 @@ function planOf(
   reading?: CandidateReading,
 ): Step[] {
   const ui = seismicGame.newUi(state);
-  const r = seismicGame.hint?.(state, undefined, {
+  const r = seismicGame.hint.plan(state, undefined, {
     ...ui,
     candidateReading: reading ?? ui.candidateReading,
   });
@@ -515,7 +515,7 @@ describe("the player's own board", () => {
     const { label, state: start } = boardWhere(
       (b) => b.params.diff === DIFF_NORMAL && b.params.mode === MODE_SEISMIC,
     );
-    const solved = seismicGame.solve?.(start, start);
+    const solved = seismicGame.solve(start, start);
     if (!solved?.ok || solved.move.type !== "solve") throw new Error("unsolvable");
     const answer = solved.move.grid;
 

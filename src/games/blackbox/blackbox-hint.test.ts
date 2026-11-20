@@ -38,7 +38,7 @@ function deal(p: BlackboxParams, seed: string): { desc: string; state: BlackboxS
 
 /** The hint's first step from `s`, which must not be a refusal. */
 function next(s: BlackboxState) {
-  const res = game.hint?.(s);
+  const res = game.hint.plan(s);
   if (!res?.ok) throw new Error(`refused: ${res?.error}`);
   return res.steps[0];
 }
@@ -197,7 +197,7 @@ describe("Black Box's hint", () => {
     for (const seed of ["a", "b", "c"]) {
       let s = deal(P8, `bbh-hidden-${seed}`).state;
       for (let i = 0; i < 500 && game.status(s) !== "solved"; i++) {
-        const plan = game.hint?.(s);
+        const plan = game.hint.plan(s);
         const fired = [...s.exits.keys()].filter((l) => s.exits[l] !== LASER_EMPTY);
         let here = 0;
         for (let from = 0; from < P8.w * P8.h && here < 2; from++) {
@@ -215,7 +215,7 @@ describe("Black Box's hint", () => {
             here++;
             compared++;
             if (plan?.ok && plan.steps[0].move.type === "fire") atFire++;
-            expect(JSON.stringify(game.hint?.({ ...s, grid }))).toBe(
+            expect(JSON.stringify(game.hint.plan({ ...s, grid }))).toBe(
               JSON.stringify(plan),
             );
           }

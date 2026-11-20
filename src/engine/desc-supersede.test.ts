@@ -11,8 +11,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { Game } from "./game.ts";
+import { DRAFT_HINT, type Game } from "./game.ts";
 import { decodeSave, encodeSave } from "./save.ts";
+import { SOLUTION_UNKNOWN } from "./solve-failure.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 
 interface MinesishParams {
@@ -73,6 +74,10 @@ const minesish: Game<MinesishParams, MinesishState, MinesishMove, null, null> = 
   computeSize: () => ({ w: 10, h: 10 }),
   // Required members this double has nothing to say about; see
   // `Game.newDrawState`.
+  paramConfig: [],
+  solve: () => ({ ok: false, error: SOLUTION_UNKNOWN }),
+  hint: DRAFT_HINT,
+  preferredTileSize: 32,
   newDrawState: () => null,
   redraw: () => {},
 };

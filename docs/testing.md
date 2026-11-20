@@ -993,7 +993,7 @@ board reaches) into a fresh, sized, observed midend, and fails on a board the
 midend refuses, which a hand-written walk tended to skip in silence. A guard
 whose subject is not a press-read-apply loop (a repaint after a warm frame, a
 press mid-animation) takes its boards from `walkBoards` and drives the midend
-itself. A guard on `game.hint()` without a midend walks from `dealt`.
+itself. A guard on `game.hint.plan()` without a midend walks from `dealt`.
 
 ### One board of each kind, and the rest in the slow tier
 

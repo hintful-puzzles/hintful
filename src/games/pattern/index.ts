@@ -19,7 +19,6 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/hint-words.ts";
@@ -53,7 +52,6 @@ import {
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { voice } from "../../generated/games/pattern/pattern.compiled.ts";
@@ -421,25 +419,10 @@ function cellsChangedBy(m: PatternMove, state: PatternState): Map<number, GridVa
 
 /** A tap on each of the step's cells: a tap overwrites, where a drag would
  * paint only blank squares. */
-function hintGesture(
-  state: PatternState,
-  ui: PatternUi,
-  ds: PatternDrawState,
-  m: PatternMove,
-  step: HintStep<PatternMove, PatternHint>,
-): readonly PointerAction[] {
+function hintTargets(state: PatternState, m: PatternMove): Point[] {
   if (m.type !== "fillCells") return [];
   const { w } = state.common;
-  const cells = m.cells.map((i) => ({ x: i % w, y: (i / w) | 0 }));
-  return verbClicks(
-    targetVerbs,
-    { executeMove, hintKeepTrack },
-    state,
-    ui,
-    ds,
-    step,
-    cells,
-  );
+  return m.cells.map((i) => ({ x: i % w, y: (i / w) | 0 }));
 }
 
 /** Classify a player move against a (possibly multi-cell) hint step: it must
@@ -543,19 +526,21 @@ export const patternGame: Game<
 
   solve,
   difficulty,
-
-  hint,
-  judgeMove,
-  hintMarks: {
-    roles: {
-      ring: `the squares the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,
-      outline: `what the step reasons from: the numbers of its row or column, drawn in the hint color, and any squares already marked ${SHADED_NAME} or ${UNSHADED_NAME} that hold a run in place, outlined.`,
-      stripes: "the row or column the sentence names, running on through its numbers.",
+  hint: {
+    plan: hint,
+    judgeMove,
+    marks: {
+      roles: {
+        ring: `the squares the step decides; the sentence says whether they must be ${SHADED_NAME} or ${UNSHADED_NAME}.`,
+        outline: `what the step reasons from: the numbers of its row or column, drawn in the hint color, and any squares already marked ${SHADED_NAME} or ${UNSHADED_NAME} that hold a run in place, outlined.`,
+        stripes:
+          "the row or column the sentence names, running on through its numbers.",
+      },
     },
+    rungs: PATTERN_RUNGS,
+    keepTrack: hintKeepTrack,
+    targets: hintTargets,
   },
-  hintRungs: PATTERN_RUNGS,
-  hintKeepTrack,
-  hintGesture,
   findMistakes,
   clearMistakes,
   revealOne,

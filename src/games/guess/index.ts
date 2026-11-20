@@ -496,8 +496,7 @@ export const guessGame: Game<
   newState,
   newUi,
   changedState,
-  encodeUi,
-  decodeUi,
+  uiCodec: { encode: encodeUi, decode: decodeUi },
 
   interpretMove,
   executeMove,
@@ -521,36 +520,38 @@ export const guessGame: Game<
     const holds = new Array<boolean>(curr.params.npegs).fill(false);
     return { ok: true, move: { type: "guess", pegs: curr.solution.slice(), holds } };
   },
-  hint: (state, _aux, ui) => guessHint(state, ui),
-  hintRungs: GUESS_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the colors the step acts on, each with a frame beside it in the answer row: *the framed colors*, which the step rules out, or, when it suggests a guess, the color it picks for each slot.",
-      outline:
-        "an answer slot, in a second color: *the outlined slot*, one whose colors the step already knows and leans on.",
-      stripes: "a scored row, its score included: *the striped row* the step reads.",
+  hint: {
+    plan: (state, _aux, ui) => guessHint(state, ui),
+    rungs: GUESS_RUNGS,
+    marks: {
+      roles: {
+        ring: "the colors the step acts on, each with a frame beside it in the answer row: *the framed colors*, which the step rules out, or, when it suggests a guess, the color it picks for each slot.",
+        outline:
+          "an answer slot, in a second color: *the outlined slot*, one whose colors the step already knows and leans on.",
+        stripes: "a scored row, its score included: *the striped row* the step reads.",
+      },
     },
-  },
-  hintKeepTrack: guessHintKeepTrack,
-  refreshHintStep: guessRefreshHintStep,
-  // A tap selects a slot, and the row it is in decides whether a color key
-  // enters a peg or rules the color out of the answer.
-  hintGesture(state, ui, ds, m): readonly PointerAction[] {
-    const keys = requestKeys(state.params);
-    const colorKey = (color: number) => key(keys[color - 1].button);
-    if (m.type === "mark") {
-      return m.marks.flatMap((mark) => [
-        click(answerSlotPoint(ds, mark.pos)),
-        colorKey(mark.color),
-      ]);
-    }
-    if (m.type !== "guess") return [];
-    const typed = m.pegs.flatMap((color, pos) =>
-      ui.entries[pos] === color
-        ? []
-        : [click(guessSlotPoint(ds, state.nextGo, pos)), colorKey(color)],
-    );
-    return [...typed, key(SUBMIT_BUTTON)];
+    keepTrack: guessHintKeepTrack,
+    refreshStep: guessRefreshHintStep,
+    // A tap selects a slot, and the row it is in decides whether a color key
+    // enters a peg or rules the color out of the answer.
+    gesture(state, ui, ds, m): readonly PointerAction[] {
+      const keys = requestKeys(state.params);
+      const colorKey = (color: number) => key(keys[color - 1].button);
+      if (m.type === "mark") {
+        return m.marks.flatMap((mark) => [
+          click(answerSlotPoint(ds, mark.pos)),
+          colorKey(mark.color),
+        ]);
+      }
+      if (m.type !== "guess") return [];
+      const typed = m.pegs.flatMap((color, pos) =>
+        ui.entries[pos] === color
+          ? []
+          : [click(guessSlotPoint(ds, state.nextGo, pos)), colorKey(color)],
+      );
+      return [...typed, key(SUBMIT_BUTTON)];
+    },
   },
 
   colors,

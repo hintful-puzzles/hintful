@@ -453,26 +453,28 @@ export const signpostGame: Game<
   findMistakes,
   clearMistakes,
   revealOne,
-  hint: signpostHint,
-  judgeMove: signpostJudgeMove,
-  hintMarks: {
-    roles: {
-      ring: "the link the step decides, at both ends: the arrow it leaves by is drawn in the hint color, and the square it arrives at is ringed.",
-      outline:
-        "the other squares whose arrows point at the ringed square, when the sentence says why none of them can lead into it.",
-      stripes:
-        "the squares an arrow points at, when the sentence says which of them can come next.",
+  hint: {
+    plan: signpostHint,
+    judgeMove: signpostJudgeMove,
+    marks: {
+      roles: {
+        ring: "the link the step decides, at both ends: the arrow it leaves by is drawn in the hint color, and the square it arrives at is ringed.",
+        outline:
+          "the other squares whose arrows point at the ringed square, when the sentence says why none of them can lead into it.",
+        stripes:
+          "the squares an arrow points at, when the sentence says which of them can come next.",
+      },
     },
-  },
-  hintRungs: SIGNPOST_RUNGS,
-  hintKeepTrack: signpostKeepTrack,
-  hintGesture(_s, _ui, ds, m) {
-    if (m.type !== "link") return [];
-    const ts = ds.tileSize;
-    const mid = (v: number) => coord(v, ts) + Math.floor(ts / 2);
-    return [
-      drag({ x: mid(m.fromX), y: mid(m.fromY) }, { x: mid(m.toX), y: mid(m.toY) }),
-    ];
+    rungs: SIGNPOST_RUNGS,
+    keepTrack: signpostKeepTrack,
+    gesture(_s, _ui, ds, m) {
+      if (m.type !== "link") return [];
+      const ts = ds.tileSize;
+      const mid = (v: number) => coord(v, ts) + Math.floor(ts / 2);
+      return [
+        drag({ x: mid(m.fromX), y: mid(m.fromY) }, { x: mid(m.toX), y: mid(m.toY) }),
+      ];
+    },
   },
 
   textFormat,

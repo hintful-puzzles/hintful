@@ -51,7 +51,8 @@ The `Midend` SHALL build the app's `ConfigDescription` and initial
 submitted form by mapping the values onto a copy of the params and checking
 them with `paramsError`: on success it adopts the new params, so the app
 generates a new game at them, and on failure it returns the refusal and
-applies nothing. For a game with no `paramConfig` the form SHALL be empty.
+applies nothing. `paramConfig` is required of every game; for one with no
+fields the form SHALL be empty.
 
 #### Scenario: Valid values are applied
 
@@ -64,9 +65,9 @@ applies nothing. For a game with no `paramConfig` the form SHALL be empty.
 - **THEN** the engine returns the refusal and does not change the current
   params
 
-#### Scenario: A game without paramConfig has an empty form
+#### Scenario: A game with no custom fields has an empty form
 
-- **WHEN** a game declares no `paramConfig`
+- **WHEN** a game's `paramConfig` is empty
 - **THEN** its form has no fields and a submission changes nothing
 
 ### Requirement: No game ships an empty custom-params dialog
@@ -78,7 +79,7 @@ menu says, never an omission.
 
 #### Scenario: A game with no custom-params form is reported
 
-- **WHEN** a registered game declares no `paramConfig`, or an empty one
+- **WHEN** a registered game declares an empty `paramConfig`
 - **THEN** the check reports it by name, and does not skip it
 
 ### Requirement: A game can supersede its game description mid-play

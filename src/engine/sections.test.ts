@@ -4,6 +4,7 @@
  * with an absent section is a draft.
  */
 import { describe, expect, it } from "vitest";
+import { DRAFT_HINT, hasHint } from "./game.ts";
 import { getTsGame } from "./registry.ts";
 import { draftSections, notApplicableFeatures, sectionState } from "./sections.ts";
 import { REGISTERED_GAMES } from "./testing/enrollment.ts";
@@ -26,8 +27,8 @@ describe("contract sections", () => {
     // Every game ships a hint, so the positive is a finished game with its
     // hint taken away, and the rule holds for any game that lands without one.
     const hintless = [
-      { ...palisade, hint: undefined },
-      ...games().filter((g) => g.hint === undefined),
+      { ...palisade, hint: DRAFT_HINT },
+      ...games().filter((g) => !hasHint(g)),
     ];
     for (const game of hintless) expect(draftSections(game)).toContain("Hints");
     // Known negative: Palisade is the exemplar of a finished game.
@@ -51,9 +52,9 @@ describe("contract sections", () => {
   it("refuses a game that both implements a section and excuses it", () => {
     const both = {
       id: "both",
-      solve: () => null,
-      notApplicable: { solve: "It has no solution." },
+      transposeParams: () => null,
+      notApplicable: { transposeParams: "It has one shape." },
     };
-    expect(() => sectionState(both, "solve")).toThrow(/both|not applicable/);
+    expect(() => sectionState(both, "transposeParams")).toThrow(/both|not applicable/);
   });
 });

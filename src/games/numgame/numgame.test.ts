@@ -323,7 +323,7 @@ describe("numgame completion", () => {
 
   it("solves from the board as played where it can", () => {
     const played = executeMove(start, combo(0, "+", 4));
-    const solved = numgameGame.solve?.(start, played);
+    const solved = numgameGame.solve(start, played);
     if (!solved?.ok) throw new Error("expected a solution");
     expect(solved.move).toMatchObject({ kind: "solve", restart: false });
     expect(numgameGame.status(executeMove(played, solved.move))).toBe("solved");
@@ -333,7 +333,7 @@ describe("numgame completion", () => {
     // 100 × 75 × 50 = 375000, with 25, 6 and 3 left.
     const lost = executeMove(executeMove(start, combo(0, "*", 1)), combo(0, "*", 2));
     expect(numgameGame.hasNoSolution?.(lost)).toMatchObject({ ok: false });
-    const solved = numgameGame.solve?.(start, lost);
+    const solved = numgameGame.solve(start, lost);
     if (!solved?.ok) throw new Error("expected a solution");
     expect(solved.move).toMatchObject({ kind: "solve", restart: true });
     expect(numgameGame.status(executeMove(lost, solved.move))).toBe("solved");

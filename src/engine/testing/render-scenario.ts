@@ -198,7 +198,7 @@ function capture<Params, State, Move, Ui, DrawState, Mistake>(
 
   const size = game.computeSize(
     game.decodeParams(id.slice(0, id.search(/[:#]/))),
-    game.preferredTileSize ?? 32,
+    game.preferredTileSize,
   );
 
   return { recording, hint: hint ?? undefined, mistakeCount, size, palette, midend };

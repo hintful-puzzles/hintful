@@ -1394,7 +1394,7 @@ end of a relation a square is, restate the conclusion with that square as a
 in {big, small}`). **A game whose placing techniques
 decide what the board already shows** (a bulb lights its lines, and a player
 crosses none) passes `consequences: false`, so a step asks only for its
-firing's squares. `describedFiringHint` also owns `refreshHintStep` (a step the
+firing's squares. `describedFiringHint` also owns `hint.refreshStep` (a step the
 player has partly made, shown for what is left).
 
 **A step no technique's firing is states itself as `steps`**: a note the plan
@@ -1558,7 +1558,7 @@ change to what a firing reads is compared by
 [`research/hint-walk-dump/`](../research/hint-walk-dump/dump.test.ts)**, run
 here and in a worktree of `HEAD`, each step's marks listed with its words: the hint-walk fingerprint's few boards miss
 a rare rung, and a wrong `reads` set on Pearl's `earlyThrough` passed every
-test while the dump moved 1,349 lines. The game's own `hintKeepTrack`
+test while the dump moved 1,349 lines. The game's own `hint.keepTrack`
 stays: a bridge is drawn a drag at a time, which no fact is. **An edge game
 states its words as a cell game does** (Separate): its `STATED` goes to
 `describedEdgeHint` with `ringKind` (what a `{ring}` reference is drawn on, the

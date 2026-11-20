@@ -455,7 +455,7 @@ describe("lightup solve", () => {
       orig,
       light(wrongCell % orig.w, Math.floor(wrongCell / orig.w)),
     );
-    const res = lightupGame.solve?.(orig, curr);
+    const res = lightupGame.solve(orig, curr);
     if (!res?.ok) throw new Error("solve failed");
     const solved = lightupGame.executeMove(curr, res.move);
     expect(lightupGame.status(solved)).toBe("solved");
@@ -532,7 +532,7 @@ describe("lightup rendering", () => {
 
   it("the win flash sweeps the open squares from the bottom left to the top right", () => {
     const orig = newState(EASY_PARAMS, EASY.desc);
-    const res = lightupGame.solve?.(orig, orig);
+    const res = lightupGame.solve(orig, orig);
     if (!res?.ok) throw new Error("the fixture does not solve");
     const won = lightupGame.executeMove(orig, res.move);
     expect(lightupGame.status(won)).toBe("solved");

@@ -266,24 +266,25 @@ export const floodGame: Game<
   },
   // A bare verdict, so the hint is still asked: it leads home past the limit.
   hasNoSolution,
-
-  hint,
-  hintRungs: FLOOD_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "what the step decides: a ring round every square the named color's fill would join to your region, so you can see what it gains: *the ringed squares*, in its words.",
+  hint: {
+    plan: hint,
+    rungs: FLOOD_RUNGS,
+    marks: {
+      roles: {
+        ring: "what the step decides: a ring round every square the named color's fill would join to your region, so you can see what it gains: *the ringed squares*, in its words.",
+      },
     },
-  },
-  hintKeepTrack,
-  hintGesture: (s, ui, ds, m) => {
-    if (m.type !== "fill") throw new Error("flood: a hint only fills");
-    // One of the squares the step rings, which the fill it names would join;
-    // any square of that color makes the same fill.
-    const joined = joinedBy(s, m.color);
-    const i = joined.length > 0 ? joined[0] : s.grid.indexOf(m.color);
-    if (i < 0) throw new Error(`flood: no square shows color ${m.color}`);
-    const at = { x: i % s.w, y: Math.floor(i / s.w) };
-    return verbGesture(targetVerbs, s, ds, ui, [at]);
+    keepTrack: hintKeepTrack,
+    gesture: (s, ui, ds, m) => {
+      if (m.type !== "fill") throw new Error("flood: a hint only fills");
+      // One of the squares the step rings, which the fill it names would join;
+      // any square of that color makes the same fill.
+      const joined = joinedBy(s, m.color);
+      const i = joined.length > 0 ? joined[0] : s.grid.indexOf(m.color);
+      if (i < 0) throw new Error(`flood: no square shows color ${m.color}`);
+      const at = { x: i % s.w, y: Math.floor(i / s.w) };
+      return verbGesture(targetVerbs, s, ds, ui, [at]);
+    },
   },
 
   textFormat,

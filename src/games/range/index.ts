@@ -37,13 +37,7 @@ import {
   verbGesture,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
-import {
-  type RangeHint,
-  rangeHint,
-  rangeJudgeMove,
-  rangeKeepTrack,
-  rangeRefreshHintStep,
-} from "./hint.ts";
+import { type RangeHint, rangeHint } from "./hint.ts";
 import {
   border,
   colors,
@@ -248,33 +242,32 @@ export const rangeGame: Game<
     deductionFinishes: (s) => deductionFinishes(s.clues, s.w, s.h),
     answerOf,
   }),
-  hint: rangeHint,
-  judgeMove: rangeJudgeMove,
-  hintRungs: RANGE_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the square the step decides.",
-      outline: `what the step reasons from: the squares a clue already sees, the squares around one that ${SHADED_NAME} would cut off, or a ${SHADED_NAME} square beside it, which takes a doubled outline. The clue the step counts from has its number drawn in the hint color.`,
-      stripes:
-        "the run a clue has to see along, from the clue as far as the ringed square.",
+  hint: {
+    ...rangeHint,
+    rungs: RANGE_RUNGS,
+    marks: {
+      roles: {
+        ring: "the square the step decides.",
+        outline: `what the step reasons from: the squares a clue already sees, the squares around one that ${SHADED_NAME} would cut off, or a ${SHADED_NAME} square beside it, which takes a doubled outline. The clue the step counts from has its number drawn in the hint color.`,
+        stripes:
+          "the run a clue has to see along, from the clue as far as the ringed square.",
+      },
     },
-  },
-  hintKeepTrack: rangeKeepTrack,
-  refreshHintStep: rangeRefreshHintStep,
-  hintGesture: (s, ui, ds, m) => {
-    const [{ r, c, value }] = m.sets;
-    // The cycle has three states, so a left click reaches one of the other two
-    // and a right click the other.
-    const back = cycle(s.grid[idx(r, c, s.w)], false) === value;
-    const target = { x: c, y: r };
-    return verbGesture(
-      targetVerbs,
-      s,
-      ds,
-      ui,
-      [target],
-      back ? "primary" : "secondary",
-    );
+    gesture: (s, ui, ds, m) => {
+      const [{ r, c, value }] = m.sets;
+      // The cycle has three states, so a left click reaches one of the other two
+      // and a right click the other.
+      const back = cycle(s.grid[idx(r, c, s.w)], false) === value;
+      const target = { x: c, y: r };
+      return verbGesture(
+        targetVerbs,
+        s,
+        ds,
+        ui,
+        [target],
+        back ? "primary" : "secondary",
+      );
+    },
   },
   findMistakes,
   clearMistakes,

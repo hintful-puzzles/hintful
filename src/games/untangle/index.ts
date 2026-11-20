@@ -394,26 +394,27 @@ export const untangleGame: Game<
     transposeParams:
       "The points move about a square area, so the board is the same shape either way round.",
   },
-
-  // --- hint (the move that clears the most crossings; see hint.ts) ---
-  hint: (s, aux, ui) => deduceUntangleHintPlan(s, aux, ui?.snapToGrid ?? false),
-  hintRungs: UNTANGLE_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the move the step decides: the point to move, and the spot to drop it on (*a better spot* when the move cuts that point's crossings, *a new spot* when it only sets up a later move), each in a ring, with each ring holding its end of the line between them. When only a few crossings are left, the hint may move several points together so that none of their lines crosses anything; the other points it will move next are ringed too (*these 3 points* and *the other 2*, in its words), and it moves them one at a time.",
-      outline:
-        "the crossings the move clears, each with a ring round it, so you can count them.",
+  hint: {
+    // --- hint (the move that clears the most crossings; see hint.ts) ---
+    plan: (s, aux, ui) => deduceUntangleHintPlan(s, aux, ui?.snapToGrid ?? false),
+    rungs: UNTANGLE_RUNGS,
+    marks: {
+      roles: {
+        ring: "the move the step decides: the point to move, and the spot to drop it on (*a better spot* when the move cuts that point's crossings, *a new spot* when it only sets up a later move), each in a ring, with each ring holding its end of the line between them. When only a few crossings are left, the hint may move several points together so that none of their lines crosses anything; the other points it will move next are ringed too (*these 3 points* and *the other 2*, in its words), and it moves them one at a time.",
+        outline:
+          "the crossings the move clears, each with a ring round it, so you can count them.",
+      },
     },
+    keepTrack: untangleKeepTrack,
+    // Grab the point and drop it on the spot the hint marks.
+    gesture: (s, _ui, ds, m) =>
+      m.points.map(({ i, x, y, d }) =>
+        drag(vertexPixel(s, i, ds.tileSize), {
+          x: (x * ds.tileSize) / d,
+          y: (y * ds.tileSize) / d,
+        }),
+      ),
   },
-  hintKeepTrack: untangleKeepTrack,
-  // Grab the point and drop it on the spot the hint marks.
-  hintGesture: (s, _ui, ds, m) =>
-    m.points.map(({ i, x, y, d }) =>
-      drag(vertexPixel(s, i, ds.tileSize), {
-        x: (x * ds.tileSize) / d,
-        y: (y * ds.tileSize) / d,
-      }),
-    ),
 
   // --- solve (the solved layout, in the symmetry closest to the board) -
   solve: (_orig, curr, aux) => {

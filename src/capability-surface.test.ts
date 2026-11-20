@@ -87,8 +87,8 @@ describe("capability surface", () => {
     const has = (m: string) =>
       sets.filter((c) => c.members.includes(m)).map((c) => c.id);
 
-    // Hints: the enrollment the six cross-game hint guards already derive.
-    expect(has("hint").length).toBeGreaterThan(20);
+    // A hint's Check & save verdict, read off the hint the game hands over.
+    expect(has("hint.judgeMove").length).toBeGreaterThan(20);
     // Mistake checking: a deliberate-divergence feature, widely but not
     // universally offered.
     expect(has("findMistakes").length).toBeGreaterThan(20);

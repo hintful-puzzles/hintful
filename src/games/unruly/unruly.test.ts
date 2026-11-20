@@ -49,7 +49,7 @@ describe("params", () => {
     // The engine's get∘set round-trip guard cannot see a *swapped* mapping —
     // both accessors would name the same wrong field, so the round trip stays
     // the identity — so the fields are named here, where the fact lives.
-    const cfg = unrulyGame.paramConfig ?? [];
+    const cfg = unrulyGame.paramConfig;
     const width = cfg.find((i) => i.kw === "width");
     const height = cfg.find((i) => i.kw === "height");
     if (width?.type !== "string" || height?.type !== "string")

@@ -3,7 +3,7 @@
  *
  * Tier 1 — `hint` populates, strikes and places
  * with quality-bar narration (indication → necessity voice); refusal on
- * solved / on mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario
+ * solved / on mistakes; `hint.keepTrack` verdicts. Tier 2.5 — a render-scenario
  * snapshot of a clue-elimination journey frame (struck candidates in their ink,
  * the clue's line of sight hatched, clues still drawn).
  */
@@ -44,7 +44,7 @@ function gen(w: number, diff: TowersParams["diff"], seed: string) {
 }
 
 function solutionGrid(st: TowersState): number[] {
-  const r = towersGame.solve?.(st, st);
+  const r = towersGame.solve(st, st);
   if (!r?.ok || r.move.type !== "solve") throw new Error("solve failed");
   return r.move.grid;
 }
@@ -55,7 +55,7 @@ type AnyStep = any;
 // --- tier 1: hint plan ------------------------------------------------------
 
 function firstHint(st: TowersState) {
-  const res = towersGame.hint?.(st);
+  const res = towersGame.hint.plan(st);
   if (!res) throw new Error("no hint method");
   return res;
 }
@@ -127,7 +127,7 @@ describe("towers hint", () => {
     for (const diff of diffs) {
       for (let s = 0; s < 8; s++) {
         const { st } = gen(5, diff, `bleed-${diff}-${s}`);
-        const res = towersGame.hint?.(st);
+        const res = towersGame.hint.plan(st);
         if (!res?.ok) continue;
         for (const step of res.steps as AnyStep[]) {
           if (step.move.type !== "pencilStrike") continue;
@@ -175,13 +175,13 @@ describe("towers hint", () => {
     const populated = towersGame.executeMove(st, { type: "pencilAll" });
     const uiOn = newUi(populated);
     uiOn.autoPencil = true;
-    const on = towersGame.hint?.(populated, undefined, uiOn);
+    const on = towersGame.hint.plan(populated, undefined, uiOn);
     expect(on?.ok).toBe(true);
     if (on?.ok) expect(on.steps.some((s) => s.rung === "dup")).toBe(false);
 
     const uiOff = newUi(populated);
     uiOff.autoPencil = false;
-    const off = towersGame.hint?.(populated, undefined, uiOff);
+    const off = towersGame.hint.plan(populated, undefined, uiOff);
     expect(off?.ok).toBe(true);
     if (off?.ok) {
       // With auto-pencil off the player must clean notes by hand, so the hint
@@ -208,7 +208,7 @@ describe("towers hint", () => {
     for (let n = 1; n <= w; n++) if (n !== v) marks.push({ x, y, n });
     const narrowed = towersGame.executeMove(populated, { type: "pencilStrike", marks });
 
-    const res = towersGame.hint?.(narrowed);
+    const res = towersGame.hint.plan(narrowed);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     // The very next step places that cell (no populate needed — notes present).
@@ -226,7 +226,7 @@ describe("towers hint", () => {
 
   it("counts a solved board as finished and flags a wrong tower, the boards the midend refuses", () => {
     const { st } = gen(5, "easy", "hint-refuse");
-    const r = towersGame.solve?.(st, st);
+    const r = towersGame.solve(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const solved = towersGame.executeMove(st, r.move);
     expect(towersGame.status(solved)).toBe("solved");
@@ -384,11 +384,11 @@ describe("towers hintKeepTrack", () => {
     if (!res.ok) throw new Error("refused");
     const step = res.steps.find((s) => (s.move as TowersMove).type === "pencilAll");
     if (!step) throw new Error("no populate step");
-    expect(towersGame.hintKeepTrack?.({ type: "pencilAll" }, step, st)).toBe(
+    expect(towersGame.hint.keepTrack({ type: "pencilAll" }, step, st)).toBe(
       "completed",
     );
     expect(
-      towersGame.hintKeepTrack?.(
+      towersGame.hint.keepTrack(
         { type: "set", x: 0, y: 0, n: 1, pencil: false },
         step,
         st,
@@ -407,10 +407,10 @@ describe("towers hintKeepTrack", () => {
       // Always strike the *current* first remaining mark (the step shrinks).
       const m = (step.move as Extract<TowersMove, { type: "pencilStrike" }>).marks[0];
       const toggle: TowersMove = { type: "set", x: m.x, y: m.y, n: m.n, pencil: true };
-      // `hintKeepTrack` sees the PRE-move state (production passes the state the
+      // `hint.keepTrack` sees the PRE-move state (production passes the state the
       // move is applied to, before applying it — `Midend.processInput`), so
       // classify against `cur` *then* advance it.
-      const verdict = towersGame.hintKeepTrack?.(toggle, step, cur);
+      const verdict = towersGame.hint.keepTrack(toggle, step, cur);
       cur = towersGame.executeMove(cur, toggle);
       expect(verdict).toBe(k === total - 1 ? "completed" : "onTrack");
     }
@@ -433,7 +433,7 @@ describe("towers hintKeepTrack", () => {
       n: otherN,
       pencil: true,
     };
-    // Only off if (x,y,otherN) isn't itself one of the marks. `hintKeepTrack`
+    // Only off if (x,y,otherN) isn't itself one of the marks. `hint.keepTrack`
     // sees the PRE-move state (`state`). A step that struck every candidate in
     // the cell would leave nothing to reject, so the branch is asserted taken.
     const alsoStruck = (
@@ -442,15 +442,15 @@ describe("towers hintKeepTrack", () => {
     expect(alsoStruck, "the step struck every candidate — no non-target left").toBe(
       false,
     );
-    expect(towersGame.hintKeepTrack?.(nonTarget, step, state)).toBe("off");
+    expect(towersGame.hint.keepTrack(nonTarget, step, state)).toBe("off");
   });
 
   it("a placement step matches the entered height", () => {
     const { step, state } = pinned("placement");
     const move = step.move as Extract<TowersMove, { type: "set" }>;
-    expect(towersGame.hintKeepTrack?.(move, step, state)).toBe("completed");
+    expect(towersGame.hint.keepTrack(move, step, state)).toBe("completed");
     expect(
-      towersGame.hintKeepTrack?.({ ...move, n: (move.n % 5) + 1 }, step, state),
+      towersGame.hint.keepTrack({ ...move, n: (move.n % 5) + 1 }, step, state),
     ).toBe("off");
   });
 
@@ -465,7 +465,7 @@ describe("towers hintKeepTrack", () => {
     for (let i = 0; i < 30 && checked < 40; i++) {
       const { st } = gen(5, "easy", `mix-${i}`);
       const pop = towersGame.executeMove(st, { type: "pencilAll" });
-      const res = towersGame.hint?.(pop);
+      const res = towersGame.hint.plan(pop);
       if (!res?.ok) continue;
       for (const step of res.steps) {
         const m = step.move as TowersMove;

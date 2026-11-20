@@ -76,7 +76,7 @@ describe("Untangle render scenarios", () => {
     expect(borderLines.length).toBe(4);
 
     // Square board at the preferred tile size.
-    const ts = untangleGame.preferredTileSize ?? 32;
+    const ts = untangleGame.preferredTileSize;
     expect(size).toEqual({ w: coordLimit(n) * ts, h: coordLimit(n) * ts });
 
     expect(recording.ops).toMatchSnapshot();
@@ -89,7 +89,7 @@ describe("Untangle render scenarios", () => {
 
     // Mouse-down exactly on vertex 0's pixel (circle layout, d = tileSize
     // so the rational coordinate is already the pixel), then drag it.
-    const ts = untangleGame.preferredTileSize ?? 32;
+    const ts = untangleGame.preferredTileSize;
     const v0 = makeCircle(n, coordLimit(n))[0];
     const vx = Math.trunc((v0.x * ts) / v0.d);
     const vy = Math.trunc((v0.y * ts) / v0.d);
@@ -201,7 +201,7 @@ describe("Untangle render scenarios", () => {
     // point the step moves and its spot.
     expectRing(recording.ops, { rings: marked.length + 2 });
     const rings = ringsOf(recording.ops);
-    const ts = untangleGame.preferredTileSize ?? 32;
+    const ts = untangleGame.preferredTileSize;
     for (const v of marked) {
       const p = s.pts[v];
       const at = { x: Math.trunc((p.x * ts) / p.d), y: Math.trunc((p.y * ts) / p.d) };
@@ -246,10 +246,10 @@ describe("Untangle render scenarios", () => {
 
 describe("Untangle: the win flash sweeps the points", () => {
   const n = 10;
-  const ts = untangleGame.preferredTileSize ?? 32;
+  const ts = untangleGame.preferredTileSize;
   const { desc } = newUntangleDesc({ n }, randomNew("untangle-win-flash"));
   const start = untangleGame.newState({ n }, desc);
-  const answer = untangleGame.solve?.(start, start);
+  const answer = untangleGame.solve(start, start);
   if (!answer?.ok) throw new Error("the board does not solve");
   const state = untangleGame.executeMove(start, answer.move);
 

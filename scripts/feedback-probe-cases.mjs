@@ -237,12 +237,6 @@ export const MODULES = [
         replace: "      return undefined;",
       },
       {
-        within: "Midend.solve",
-        why: "Solve on a game without a solver reports success instead of refusing",
-        find: '      return "This game does not support solving";',
-        replace: "      return undefined;",
-      },
-      {
         within: "Midend.computeHintPlan",
         why: "Hint on a game without hints reports success instead of refusing",
         find: '      return "This game does not support hints";',

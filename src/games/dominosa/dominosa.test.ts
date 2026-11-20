@@ -290,14 +290,14 @@ describe("dominosa findMistakes + solve", () => {
     const { desc, aux } = newDominosaDesc(p, randomNew("solve"));
     const state = newState(p, desc);
 
-    const viaAux = dominosaGame.solve?.(state, state, aux);
+    const viaAux = dominosaGame.solve(state, state, aux);
     expect(viaAux?.ok).toBe(true);
     if (viaAux?.ok) {
       const solved = dominosaGame.executeMove(state, viaAux.move);
       expect(dominosaGame.status(solved)).toBe("solved");
     }
 
-    const viaSolver = dominosaGame.solve?.(state, state, undefined);
+    const viaSolver = dominosaGame.solve(state, state, undefined);
     expect(viaSolver?.ok).toBe(true);
     if (viaSolver?.ok) {
       const solved = dominosaGame.executeMove(state, viaSolver.move);
@@ -376,7 +376,7 @@ describe("dominosa reference aid", () => {
     const { desc } = newDominosaDesc(p, randomNew("ref-solved"));
     const state = newState(p, desc);
     const ui = dominosaGame.newUi(state);
-    const r = dominosaGame.solve?.(state, state);
+    const r = dominosaGame.solve(state, state);
     if (!r?.ok) throw new Error("solve failed");
     const solved = dominosaGame.executeMove(state, r.move);
     expect(dominosaGame.status(solved)).toBe("solved");
@@ -465,7 +465,7 @@ describe("dominosa render", () => {
     const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("flash"));
     const state = newState(p, desc);
-    const r = dominosaGame.solve?.(state, state);
+    const r = dominosaGame.solve(state, state);
     if (!r?.ok) throw new Error("solve failed");
     const solved = dominosaGame.executeMove(state, r.move);
     const { w, h, grid } = solved;

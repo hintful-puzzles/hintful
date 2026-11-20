@@ -163,20 +163,21 @@ export const wordtrailGame: Game<
     ),
   textFormat,
   reference: dictionary,
-
-  hint: wordtrailHint,
-  judgeMove: wordtrailJudgeMove,
-  hintRungs: WORDTRAIL_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the edges the step decides, drawn as the line or cross it asks for.",
-      outline: "the letter it reasons from.",
-      stripes: "the letters of the words it finds.",
+  hint: {
+    plan: wordtrailHint,
+    judgeMove: wordtrailJudgeMove,
+    rungs: WORDTRAIL_RUNGS,
+    marks: {
+      roles: {
+        ring: "the edges the step decides, drawn as the line or cross it asks for.",
+        outline: "the letter it reasons from.",
+        stripes: "the letters of the words it finds.",
+      },
     },
+    keepTrack: wordtrailKeepTrack,
+    gesture: (state, _ui, ds, move) =>
+      move.kind === "edges" ? input.hintGesture(state, ds, move.changes) : [],
   },
-  hintKeepTrack: wordtrailKeepTrack,
-  hintGesture: (state, _ui, ds, move) =>
-    move.kind === "edges" ? input.hintGesture(state, ds, move.changes) : [],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

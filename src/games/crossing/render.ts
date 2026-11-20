@@ -564,7 +564,7 @@ function drawCell(
   // The cursor cue on a wall. Everywhere else the highlight is the background
   // painted above, and it is the selection's to keep even under a hint, which matters
   // because the hint deliberately *stays* while the player works inside it
-  // (`uiUpdateClearsHint` in `index.ts`): they have to see where they are about
+  // (`hint.uiUpdateClears` in `index.ts`): they have to see where they are about
   // to type.
   if (flags & DF_KEYCUR)
     drawRectCorners(

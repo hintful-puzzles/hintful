@@ -157,7 +157,7 @@ describe("signpost generator + solver", () => {
     const p = { w: 5, h: 5, forceCornerStart: true, diff: DIFF_EASY };
     const { desc } = newSignpostDesc(p, randomNew("sp-solve-1"));
     const s0 = signpostGame.newState(p, desc);
-    const res = signpostGame.solve?.(s0, s0);
+    const res = signpostGame.solve(s0, s0);
     expect(res?.ok).toBe(true);
     if (res?.ok) {
       const solved = signpostGame.executeMove(s0, res.move);
@@ -173,7 +173,7 @@ describe("signpost findMistakes", () => {
     const s0 = signpostGame.newState(p, desc);
 
     // Get the unique solution's next[] via solve.
-    const res = signpostGame.solve?.(s0, s0);
+    const res = signpostGame.solve(s0, s0);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const solvedNext = (res.move as { type: "solve"; next: number[] }).next;

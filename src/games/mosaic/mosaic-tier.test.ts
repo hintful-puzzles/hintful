@@ -270,7 +270,7 @@ describe("an Unreasonable Mosaic board", () => {
       expect(solveGameActual(state.board), desc).toBeNull();
       expect(countAnswers(state.board), desc).toBe(1);
       // And the answer Solve and the mistake check go by is that picture.
-      const solved = mosaicGame.solve?.(state, state);
+      const solved = mosaicGame.solve(state, state);
       if (!solved?.ok) throw new Error(`${desc}: no answer found`);
       expect(status(mosaicGame.executeMove(state, solved.move)), desc).toBe("solved");
     }
@@ -376,9 +376,9 @@ describe("the hint on an Unreasonable Mosaic board", () => {
     const followHint = (): number => {
       let steps = 0;
       for (
-        let plan = mosaicGame.hint?.(state);
+        let plan = mosaicGame.hint.plan(state);
         plan?.ok;
-        plan = mosaicGame.hint?.(state)
+        plan = mosaicGame.hint.plan(state)
       )
         for (const step of plan.steps) {
           state = mosaicGame.executeMove(state, step.move);

@@ -238,10 +238,10 @@ describe("input", () => {
     const s = board("cigar");
     const ui = wordguessGame.newUi(s);
     typeWord(s, ui, "cr");
-    const encoded = wordguessGame.encodeUi?.(ui) ?? "";
+    const encoded = wordguessGame.uiCodec?.encode(ui) ?? "";
     expect(encoded).toBe("cr...");
     const back = wordguessGame.newUi(s);
-    wordguessGame.decodeUi?.(back, encoded, s);
+    wordguessGame.uiCodec?.decode(back, encoded, s);
     expect(back.entries).toEqual(ui.entries);
     expect(back.cursor.x).toBe(2);
   });
@@ -250,7 +250,7 @@ describe("input", () => {
     const ui = wordguessGame.newUi(s);
     typeWord(s, ui, "crane");
     const back = wordguessGame.newUi(s);
-    wordguessGame.decodeUi?.(back, wordguessGame.encodeUi?.(ui) ?? "", s);
+    wordguessGame.uiCodec?.decode(back, wordguessGame.uiCodec?.encode(ui) ?? "", s);
     expect(back.ready).toBe(true);
     expect(press(s, back, SUBMIT).result).toEqual({
       type: "guess",

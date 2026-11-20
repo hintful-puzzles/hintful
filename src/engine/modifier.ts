@@ -108,9 +108,9 @@ export function modifierItem<P>(
 
 /** The game's modifiers, in dialog order. */
 export function modifiersOf<P>(game: {
-  paramConfig?: readonly ParamConfigItem<P>[];
+  paramConfig: readonly ParamConfigItem<P>[];
 }): Modifier[] {
-  return (game.paramConfig ?? []).flatMap((i) => (i.modifier ? [i.modifier] : []));
+  return game.paramConfig.flatMap((i) => (i.modifier ? [i.modifier] : []));
 }
 
 /** The help page's list of modifiers, one line each: what a page's

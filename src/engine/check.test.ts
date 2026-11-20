@@ -5,7 +5,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { DESC_NO_SOLUTION } from "./desc-error.ts";
 import { type FakeMove, type FakeState, fakeGame } from "./fake-game.ts";
-import type { HintResult } from "./game.ts";
+import { DRAFT_HINT, type HintResult } from "./game.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
@@ -33,7 +33,7 @@ const REFUSALS: Record<number, () => HintResult<FakeMove>> = {
 
 function plan(s: FakeState): HintResult<FakeMove> {
   if (!fakeGame.hint) throw new Error("fakeGame has a hint");
-  return fakeGame.hint(s, undefined, null);
+  return fakeGame.hint.plan(s, undefined, null);
 }
 
 function checkedGame() {
@@ -43,7 +43,7 @@ function checkedGame() {
   const shown: (MarkedDeadEnd | null)[] = [];
   const game: typeof fakeGame = {
     ...fakeGame,
-    hint,
+    hint: { ...fakeGame.hint, plan: hint },
     findMistakes: (s) => (s.count === -9 ? ["wrong"] : []),
     redraw: (_dr, ds, _p, _s, _d, _ui, _a, _f, _h, _m, deadEnd) => {
       ds.redrawCalls += 1;
@@ -165,7 +165,7 @@ describe("the check behind Check & save", () => {
     expect(m.check()).toEqual({ kind: "sound", mistakesChecked: true });
     expect(hint).not.toHaveBeenCalled();
 
-    const bare = new Midend({ ...fakeGame, hint: undefined });
+    const bare = new Midend({ ...fakeGame, hint: DRAFT_HINT });
     bare.newGameFromId("t3:g3-0");
     expect(bare.check()).toEqual({ kind: "sound", mistakesChecked: false });
   });
@@ -186,7 +186,11 @@ describe("a position the game proves nothing finishes from", () => {
 
   function provingGame(proof: (s: FakeState) => boolean | MarkedDeadEnd) {
     const hint = vi.fn(plan);
-    const m = new Midend({ ...fakeGame, hint, hasNoSolution: proof });
+    const m = new Midend({
+      ...fakeGame,
+      hint: { ...fakeGame.hint, plan: hint },
+      hasNoSolution: proof,
+    });
     expect(m.newGameFromId("t3:g3-0")).toBeNull();
     return { m, hint };
   }
@@ -266,7 +270,7 @@ describe("the check's verdict on the last move", () => {
           }
         : null,
     );
-    const m = new Midend({ ...fakeGame, judgeMove: judge });
+    const m = new Midend({ ...fakeGame, hint: { ...fakeGame.hint, judgeMove: judge } });
     m.newGameFromId("t3:g3-0");
     const seen = observeMidend(m);
     const said = () => seen.last("status-bar-change");

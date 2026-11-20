@@ -750,9 +750,9 @@ game's. Exemplar: `mosaic/solver.ts`.
 ### `sections.ts` — contract sections and the draft label
 
 Read it when your game leaves out a contract section.
-`sectionState(game, section)` reads whether `hint`, `findMistakes`, `solve`
-or `transposeParams` is implemented, not applicable (with the reason from
-`Game.notApplicable`) or absent. `SQUARE_GRID` is the shared
+`sectionState(game, section)` reads whether `hint`, `findMistakes` or
+`transposeParams` is implemented, not applicable (with the reason from
+`Game.notApplicable`) or absent, a hint being absent when it is `DRAFT_HINT`. `SQUARE_GRID` is the shared
 `transposeParams` reason of a game whose grid has one side. `draftSections`
 and `notApplicableMarkdown` build the home screen's "Draft" label and the
 help's "Not in this game" section. **A guard that would excuse a game for
@@ -822,7 +822,8 @@ Reach for `describedHint` when a game's techniques are stated in a
 description and a placement is a fact: give it the state as the
 description's marks, the ladder, the move a fact makes, and a sentence for
 each technique as a function of its `says` terms and the cells it marks. It
-returns `hint`, `hintKeepTrack` and `hintRungs`; a step's kind is the
+returns the part of `Game.hint` it can make, `plan`, `judgeMove`, `keepTrack`
+and `rungs`, which the game spreads into its hint; a step's kind is the
 technique's id, its marks are the `says` marks, and a firing that fills
 several cells is a journey. Exemplar: `unruly/index.ts`. The `says` block is
 in [`descriptions.md`](./descriptions.md).
@@ -831,10 +832,12 @@ in [`descriptions.md`](./descriptions.md).
 
 `describedFiringHint` is the other shape, for a
 game whose step is a firing: one step decides every cell the firing does, and
-`hintKeepTrack` shrinks it as the player makes some (`hint-track.ts`). The
+`hint.keepTrack` shrinks it as the player makes some (`hint-track.ts`). The
 game gives the walk, how a fact is its highlights' target and the move that
 makes some, and a sentence a technique, which an `arms` technique reads by
-`spoken.arm`. Exemplar: `singles/index.ts`.
+`spoken.arm`. It returns the hint's part (`plan`, `judgeMove`, `keepTrack`,
+`refreshStep`) as `hint`, which the game spreads, and `rulesOut` beside it.
+Exemplar: `singles/index.ts`.
 
 ### `move-judge.ts` — whether the player's last move followed from the board
 
@@ -870,21 +873,23 @@ drag, a dot a press) judges progress itself. Exemplar: `pearl/hint.ts`.
 
 ### `hint-track.ts` — following a step that asks for several things
 
-`trackTargets` is the `hintKeepTrack` verdict for a step that decides
+`trackTargets` is the `hint.keepTrack` verdict for a step that decides
 several squares or edges, judged by what the player's move changed and not
 by its ops. `changedCells` is the diff for a board with one value per cell;
 a game whose elements are edges, links or flags writes its own. `keepTrackBy`
-is the whole `hintKeepTrack` from a codec: how the game executes a move,
+is the whole `hint.keepTrack` from a codec: how the game executes a move,
 diffs two boards, keys and values a target, rebuilds the shrunk move (or
 leaves the step whole, as a Tents link is) and keys a target's ring. Exemplars: `tents/hint.ts`, `pearl/hint.ts`. See [`hints-marks.md`](./hints-marks.md) § "Group one
 firing into one step".
 
 ### `hint-gesture.ts` — how the pointer makes a hint step
 
-Every hinted game writes `hintGesture`, returning a `PointerAction` built
-with `click`, `drag` or `key`. The midend plays a step by sending the
+A hinted game names a step's targets (`hint.targets`), which `hintGesture`
+in `target-verb.ts` clicks through its verbs, or writes `hint.gesture`,
+returning `PointerAction`s built with `click`, `drag` or `key`. The midend
+plays a step by sending the
 gesture through `interpretMove` and judging the result with
-`hintKeepTrack`; it never applies the step's move. A `key` must be one the
+`hint.keepTrack`; it never applies the step's move. A `key` must be one the
 game's keypad offers, the Marks key, or mark-all (`markAllPress`). See
 [`hints.md`](./hints.md) § "Every step is a gesture".
 
@@ -1282,7 +1287,7 @@ the `square-edges.ts` edge number, so one edge is one mark from either
 square; a side on the board's rim is named by its square and direction.
 `stepEdgeHints` reads a step's edges from its words, its move and the
 edges its sentence gives a shape (`ShapedEdge`), and `trackEdgeStep` is the
-`hintKeepTrack` of a step that sets edges, shrinking its move and its rings together.
+`hint.keepTrack` of a step that sets edges, shrinking its move and its rings together.
 `edgeHintWords` gives each square its tile-key word for those edges, set on
 both squares. In the tile, `drawEdgeHints` asks the game's declared
 `EdgeShapes` for its own line and cross in the outline's ink, and for where

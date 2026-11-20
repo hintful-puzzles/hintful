@@ -266,26 +266,27 @@ export const inertiaGame: Game<
   statusbarText,
 
   hasNoSolution,
-
-  // A nudge, not Solve: one slide at a time, and the midend does not count it
-  // as using the solver.
-  hint,
-  hintRungs: INERTIA_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the way to slide: an arrow on the ball, ringed with it. The words name it by the way it points: north, north-east, east, south-east, south, south-west, west or north-west.",
-      outline:
-        "the gem the hint is working on, circled in a second color: *the outlined gem*, in its words. It stays circled through every slide the hint spends working toward it. When the ball can no longer reach some gems and there is no hint to give, those are circled instead (*the outlined gems*).",
+  hint: {
+    // A nudge, not Solve: one slide at a time, and the midend does not count it
+    // as using the solver.
+    plan: hint,
+    rungs: INERTIA_RUNGS,
+    marks: {
+      roles: {
+        ring: "the way to slide: an arrow on the ball, ringed with it. The words name it by the way it points: north, north-east, east, south-east, south, south-west, west or north-west.",
+        outline:
+          "the gem the hint is working on, circled in a second color: *the outlined gem*, in its words. It stays circled through every slide the hint spends working toward it. When the ball can no longer reach some gems and there is no hint to give, those are circled instead (*the outlined gems*).",
+      },
     },
-  },
-  hintKeepTrack,
-  // The swipe: hold the ball and drag it out along the arrow the hint draws.
-  hintGesture(s, _ui, ds, m) {
-    if (m.type !== "move") return [];
-    const ts = ds.tileSize;
-    const mid = (v: number) => coord(v, ts, BORDER) + Math.floor(ts / 2);
-    const ball = { x: mid(s.px), y: mid(s.py) };
-    return [drag(ball, { x: mid(s.px + DX[m.dir]), y: mid(s.py + DY[m.dir]) })];
+    keepTrack: hintKeepTrack,
+    // The swipe: hold the ball and drag it out along the arrow the hint draws.
+    gesture(s, _ui, ds, m) {
+      if (m.type !== "move") return [];
+      const ts = ds.tileSize;
+      const mid = (v: number) => coord(v, ts, BORDER) + Math.floor(ts / 2);
+      const ball = { x: mid(s.px), y: mid(s.py) };
+      return [drag(ball, { x: mid(s.px + DX[m.dir]), y: mid(s.py + DY[m.dir]) })];
+    },
   },
 
   colors,

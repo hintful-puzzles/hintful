@@ -272,19 +272,19 @@ export const AREA_TOO_LARGE = "Width times height must not be unreasonably large
  */
 export function paramsError<P>(
   game: {
-    paramConfig?: readonly ParamConfigItem<P>[];
+    paramConfig: readonly ParamConfigItem<P>[];
     validateParams?(p: P, full: boolean): string | null;
   },
   p: P,
   full: boolean,
 ): string | null {
-  for (const item of game.paramConfig ?? []) {
+  for (const item of game.paramConfig) {
     const error = itemError(item, p, full);
     if (error !== null) return error;
   }
   // What a ruleset or a modifier leaves is what it deals: a board that arrives
   // already written is not held to it.
-  const only = full ? onlyError(game.paramConfig ?? [], (item) => item.get(p)) : null;
+  const only = full ? onlyError(game.paramConfig, (item) => item.get(p)) : null;
   if (only !== null) return only;
   return game.validateParams?.(p, full) ?? null;
 }

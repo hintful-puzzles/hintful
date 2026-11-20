@@ -10,8 +10,9 @@
 import { describe, expect, it } from "vitest";
 import { mapGame } from "../games/map/index.ts";
 import { fakeGame } from "./fake-game.ts";
-import type { Game } from "./game.ts";
+import { DRAFT_HINT, type Game } from "./game.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
+import { SOLUTION_UNKNOWN } from "./solve-failure.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import type { ConfigValues } from "./types.ts";
 
@@ -58,6 +59,10 @@ const prefGame: Game<{ n: number }, PrefState, "noop", PrefUi> = {
   // Required members this double has nothing to say about.
   newDrawState: () => null,
   redraw: () => {},
+  paramConfig: [],
+  solve: () => ({ ok: false, error: SOLUTION_UNKNOWN }),
+  hint: DRAFT_HINT,
+  preferredTileSize: 32,
   prefs: [
     {
       kw: "highlight",

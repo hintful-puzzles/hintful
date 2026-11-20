@@ -486,7 +486,7 @@ describe("Twiddle game object", () => {
   });
 
   it("solve returns the solve move", () => {
-    const result = twiddleGame.solve?.(
+    const result = twiddleGame.solve(
       stateFromNumbers(params(), [2, 5, 3, 1, 4, 6, 7, 8, 9]),
       stateFromNumbers(params(), [2, 5, 3, 1, 4, 6, 7, 8, 9]),
     );

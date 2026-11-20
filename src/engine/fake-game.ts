@@ -60,6 +60,7 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
     return { target: Number(m[1]) };
   },
   validateParams: (p) => (p.target > 0 ? null : "Target must be positive."),
+  paramConfig: [],
 
   newDesc: (p, rng) => {
     // Exercise the retained bit-identical RNG; desc is deterministic
@@ -86,27 +87,31 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
 
   status: (s) => (s.count >= s.target ? "solved" : "ongoing"),
   solve: () => ({ ok: true, move: "solve" }),
-  // The hint plan is the full remaining path to the target, one `inc`
-  // per step, each narrated for the count it applies to — the
-  // smallest game exercising the midend's plan store/advance/drop.
-  // Never asked about a solved board: the midend refuses that itself.
-  hint: (s) =>
-    s.count >= s.target
-      ? { ok: false, error: DEDUCTION_EXHAUSTED }
-      : {
-          ok: true,
-          steps: Array.from({ length: s.target - s.count }, (_, i) => ({
-            move: "inc" as FakeMove,
-            rung: "inc",
-            explanation: `Increment the counter to ${s.count + i + 1}`,
-          })),
-        },
-  // `inc` always lands exactly where the plan expects (one step has
-  // exactly one shape), so it completes the current step; anything
-  // else deviates.
-  hintKeepTrack: (m) => (m === "inc" ? "completed" : "off"),
-  // A left click is `inc`, the only move a plan asks for.
-  hintGesture: () => [click({ x: 0, y: 0 })],
+  hint: {
+    // The hint plan is the full remaining path to the target, one `inc`
+    // per step, each narrated for the count it applies to — the
+    // smallest game exercising the midend's plan store/advance/drop.
+    // Never asked about a solved board: the midend refuses that itself.
+    plan: (s) =>
+      s.count >= s.target
+        ? { ok: false, error: DEDUCTION_EXHAUSTED }
+        : {
+            ok: true,
+            steps: Array.from({ length: s.target - s.count }, (_, i) => ({
+              move: "inc" as FakeMove,
+              rung: "inc",
+              explanation: `Increment the counter to ${s.count + i + 1}`,
+            })),
+          },
+    // `inc` always lands exactly where the plan expects (one step has
+    // exactly one shape), so it completes the current step; anything
+    // else deviates.
+    keepTrack: (m) => (m === "inc" ? "completed" : "off"),
+    rungs: ["inc"],
+    marks: { roles: {} },
+    // A left click is `inc`, the only move a plan asks for.
+    gesture: () => [click({ x: 0, y: 0 })],
+  },
   textFormat: (s) => `count=${s.count}`,
   statusbarText: (s) => `count ${s.count}/${s.target}`,
 

@@ -264,7 +264,7 @@ export interface LightupTarget extends Point {
 }
 
 /** Plan data for a Light Up hint step. `kind` is the mark the step places on
- * its `targets`, which `hintKeepTrack` and `refreshHintStep` read. `dark` is
+ * its `targets`, which `hint.keepTrack` and `hint.refreshStep` read. `dark` is
  * the unlit square the deduction is about and `clue` the driving clue: the
  * words outline both alongside the rest of the evidence, and the renderer
  * reads them here to tell the clue's ring on its wall from a square's. */
@@ -330,8 +330,6 @@ const described = describedFiringHint<
   stated: STATED,
   say: {},
 });
-
-const { hint, hintKeepTrack, refreshHintStep, judgeMove } = described;
 
 /** The solver's rules, by the kind of step each makes: a technique's id, and
  * for `square` the arm of it that held. */
@@ -424,28 +422,26 @@ export const lightupGame: Game<
   clearMistakes,
   revealOne,
   difficulty,
-
-  hint,
-  judgeMove,
-  hintRungs: LIGHTUP_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: 'each square the step decides: it takes a bulb, or, when the sentence says it "can\'t hold a bulb", a cross.',
-      outline:
-        "what the step reasons from, told apart by the sentence's nouns: “the outlined clue” has a ring round its wall, and “the outlined dark square”, which still has to be lit, and the other squares the reason rests on, such as a clue's bulbs, have a double ring.",
+  hint: {
+    ...described.hint,
+    rungs: LIGHTUP_RUNGS,
+    marks: {
+      roles: {
+        ring: 'each square the step decides: it takes a bulb, or, when the sentence says it "can\'t hold a bulb", a cross.',
+        outline:
+          "what the step reasons from, told apart by the sentence's nouns: “the outlined clue” has a ring round its wall, and “the outlined dark square”, which still has to be lit, and the other squares the reason rests on, such as a clue's bulbs, have a double ring.",
+      },
     },
+    gesture: (s, ui, ds, m) =>
+      verbGesture(
+        targetVerbs,
+        s,
+        ds,
+        ui,
+        m.ops,
+        m.ops[0]?.kind === "light" ? "primary" : "secondary",
+      ),
   },
-  hintKeepTrack,
-  hintGesture: (s, ui, ds, m) =>
-    verbGesture(
-      targetVerbs,
-      s,
-      ds,
-      ui,
-      m.ops,
-      m.ops[0]?.kind === "light" ? "primary" : "secondary",
-    ),
-  refreshHintStep,
 
   textFormat,
 

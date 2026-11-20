@@ -4,10 +4,11 @@
  * A hint teaches the player to make its move themselves, so every step must be
  * one a pointer can make on its own: a finger and a mouse are one input here
  * (two buttons, clicks and drags, no key held), and the on-screen keys are part
- * of it. The midend never applies a hint step's move. It asks the game for the
- * step's gesture ({@link Game.hintGesture}) and plays it through the game's own
+ * of it. The midend never applies a hint step's move. It asks for the step's
+ * gesture (`hintGesture` in `target-verb.ts`: the hint's own, or clicks on its
+ * targets through the game's verbs) and plays it through the game's own
  * `interpretMove`, exactly as the frontend delivers a tap or a drag, and the
- * game's `hintKeepTrack` judges what that made. A step no gesture makes cannot
+ * game's `hint.keepTrack` judges what that made. A step no gesture makes cannot
  * be played, so it cannot pass a walk of the hint.
  *
  * Keys the keyboard alone would press are not gestures: a gesture may press

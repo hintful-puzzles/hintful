@@ -87,7 +87,7 @@ export interface DifficultyContract<Params> {
  * assertion.
  */
 export function difficultyTiers<Params>(game: {
-  paramConfig?: readonly ParamConfigItem<Params>[];
+  paramConfig: readonly ParamConfigItem<Params>[];
 }): readonly string[] | null {
   return difficultyChoiceItem(game)?.choices ?? null;
 }
@@ -97,7 +97,7 @@ export function difficultyTiers<Params>(game: {
  * difficulty choice.
  */
 export function tierNameOf<Params>(
-  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
+  game: { paramConfig: readonly ParamConfigItem<Params>[] },
   params: Params,
 ): string | null {
   const item = difficultyChoiceItem(game);
@@ -107,7 +107,7 @@ export function tierNameOf<Params>(
 /** Which tier these params request, as an index into {@link difficultyTiers}.
  * A game with no difficulty item has none to request, so this throws. */
 export function tierOf<Params>(
-  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
+  game: { paramConfig: readonly ParamConfigItem<Params>[] },
   params: Params,
 ): number {
   return requireItem(game).get(params);
@@ -116,7 +116,7 @@ export function tierOf<Params>(
 /** The same params at a different tier. Pure — a new object, `params` left
  * alone — so a caller may probe every tier of one params object. */
 export function withTier<Params>(
-  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
+  game: { paramConfig: readonly ParamConfigItem<Params>[] },
   params: Params,
   tier: number,
 ): Params {
@@ -126,7 +126,7 @@ export function withTier<Params>(
 }
 
 function requireItem<Params>(game: {
-  paramConfig?: readonly ParamConfigItem<Params>[];
+  paramConfig: readonly ParamConfigItem<Params>[];
 }): Extract<ParamConfigItem<Params>, { type: "choices" }> {
   const item = difficultyChoiceItem(game);
   if (item === null) throw new Error("this game declares no difficulty item");
@@ -197,7 +197,7 @@ export function difficultyItem<P>(
  * hint that runs out of deduction on one of its boards is a defect.
  */
 export function permitsSearch<Params>(
-  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
+  game: { paramConfig: readonly ParamConfigItem<Params>[] },
   params: Params,
 ): boolean {
   return tierNameOf(game, params) === SEARCH_TIER;
@@ -205,7 +205,7 @@ export function permitsSearch<Params>(
 
 /** Does the game have a tier that allows trial and error at all? */
 export function offersSearch<Params>(game: {
-  paramConfig?: readonly ParamConfigItem<Params>[];
+  paramConfig: readonly ParamConfigItem<Params>[];
 }): boolean {
   return difficultyTiers(game)?.includes(SEARCH_TIER) ?? false;
 }
@@ -213,7 +213,7 @@ export function offersSearch<Params>(game: {
 /** The game's {@link difficultyItem}, whole, or `null` for a game without
  * tiers. */
 export function difficultyChoiceItem<Params>(game: {
-  paramConfig?: readonly ParamConfigItem<Params>[];
+  paramConfig: readonly ParamConfigItem<Params>[];
 }): Extract<ParamConfigItem<Params>, { type: "choices" }> | null {
   const item = game.paramConfig?.find((i) => i.kw === DIFFICULTY_KW);
   return item?.type === "choices" ? item : null;

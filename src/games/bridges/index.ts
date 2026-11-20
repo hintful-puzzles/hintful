@@ -585,23 +585,25 @@ export const bridgesGame: Game<
   colors,
   computeSize,
   newDrawState,
-  hint: bridgesHint,
-  judgeMove: bridgesJudgeMove,
-  hintMarks: {
-    roles: {
-      ring: "what the step decides along a line, in the hint color. Bridges drawn in the hint color are the ones to add; a line that already carries a bridge keeps it in the board's own ink, so you can see how many the hint is asking you to add. A pair of small crosses means no bridge may ever run there, and a ≤1 means at most one may: the same marks you draw yourself with the right mouse button, and later hints count on them being there. The sentence calls the line they lie on “the ringed line”.",
-      outline:
-        "what the step reasons from. The island the sentence is about (“this 5”) is recolored, and the islands it counts, and the bridges between them, are outlined, each in the color of the words that name them: when a hint says “these 2 islands” or “the outlined group”, these are the ones it means.",
+  hint: {
+    plan: bridgesHint,
+    judgeMove: bridgesJudgeMove,
+    marks: {
+      roles: {
+        ring: "what the step decides along a line, in the hint color. Bridges drawn in the hint color are the ones to add; a line that already carries a bridge keeps it in the board's own ink, so you can see how many the hint is asking you to add. A pair of small crosses means no bridge may ever run there, and a ≤1 means at most one may: the same marks you draw yourself with the right mouse button, and later hints count on them being there. The sentence calls the line they lie on “the ringed line”.",
+        outline:
+          "what the step reasons from. The island the sentence is about (“this 5”) is recolored, and the islands it counts, and the bridges between them, are outlined, each in the color of the words that name them: when a hint says “these 2 islands” or “the outlined group”, these are the ones it means.",
+      },
     },
+    rungs: BRIDGES_RUNGS,
+    keepTrack: (
+      m: BridgesMove,
+      step: HintStep<BridgesMove>,
+      state: BridgesState,
+    ): HintTrackVerdict =>
+      bridgesKeepTrack(m, step as HintStep<BridgesMove, BridgesHighlights>, state),
+    gesture: hintGesture,
   },
-  hintRungs: BRIDGES_RUNGS,
-  hintKeepTrack: (
-    m: BridgesMove,
-    step: HintStep<BridgesMove>,
-    state: BridgesState,
-  ): HintTrackVerdict =>
-    bridgesKeepTrack(m, step as HintStep<BridgesMove, BridgesHighlights>, state),
-  hintGesture,
 
   redraw(
     dr,

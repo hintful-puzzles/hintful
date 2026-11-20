@@ -37,7 +37,6 @@ import {
   pressTarget,
   squareGrid,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { firstOpen } from "./generator.ts";
@@ -322,8 +321,7 @@ export const minesGame: Game<
       cursor: newCursor(),
     };
   },
-  encodeUi,
-  decodeUi,
+  uiCodec: { encode: encodeUi, decode: decodeUi },
 
   targetVerbs,
 
@@ -547,29 +545,22 @@ export const minesGame: Game<
   finishesByDeduction(s: MinesState): boolean {
     return !s.mines || hintFinishes(minesGame, s);
   },
-  hint: (s) => minesHint(s, minesGame.executeMove),
-  hintRungs: MINES_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "each square the step decides: it must be a mine, or it must be safe, as the sentence says.",
-      outline:
-        "what the step reasons from: the numbers it counts, and the mines one of them already touches.",
-      stripes:
-        "one set of squares the reasoning treats as a whole: the squares two numbers share, a number's squares beyond another's, or the squares a count of the mines left covers.",
+  hint: {
+    plan: (s) => minesHint(s, minesGame.executeMove),
+    rungs: MINES_RUNGS,
+    marks: {
+      roles: {
+        ring: "each square the step decides: it must be a mine, or it must be safe, as the sentence says.",
+        outline:
+          "what the step reasons from: the numbers it counts, and the mines one of them already touches.",
+        stripes:
+          "one set of squares the reasoning treats as a whole: the squares two numbers share, a number's squares beyond another's, or the squares a count of the mines left covers.",
+      },
     },
+    keepTrack: keepTrack,
+    targets: (_s, _m, step) => step.highlights?.targets ?? [],
+    refreshStep: minesRefreshHintStep,
   },
-  hintKeepTrack: keepTrack,
-  hintGesture: (s, ui, ds, _m, step) =>
-    verbClicks(
-      targetVerbs,
-      { executeMove: minesGame.executeMove, hintKeepTrack: keepTrack },
-      s,
-      ui,
-      ds,
-      step,
-      step.highlights?.targets ?? [],
-    ),
-  refreshHintStep: minesRefreshHintStep,
 };
 
 registerGame(minesGame);

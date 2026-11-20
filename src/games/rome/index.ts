@@ -732,26 +732,27 @@ export const romeGame: Game<
   revealOne: (state, solved) =>
     revealEntry(romeEntryMoves, arrowsOf(state.grid), arrowsOf(solved.grid), state.w),
   requestKeys: () => ARROW_KEYS,
-
-  // Rome has no auto-pencil preference, so a placement's area cull is always
-  // taught as an explicit strike rather than folded into the placement.
-  hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
-  judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
-  hintRungs: ROME_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the square the step decides: the arrow to place, or the marks to pencil in.",
-      strike: "the marks the step crosses off.",
-      outline:
-        'the squares it reasons from: "this square", whose marks it crosses off, the arrow the area already has, a neighbor that can only point two ways, or the two squares of a pair. A trail of arrows is outlined when a sentence says "the arrows from the square below lead back to this square": follow the arrows from the square next door.',
-      stripes:
-        'the area the sentence calls "its area" or "this area", or "the striped group": a goal and the squares already leading into it.',
+  hint: {
+    // Rome has no auto-pencil preference, so a placement's area cull is always
+    // taught as an explicit strike rather than folded into the placement.
+    plan: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
+    judgeMove: (before, after, ui) =>
+      candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
+    rungs: ROME_RUNGS,
+    marks: {
+      roles: {
+        ring: "the square the step decides: the arrow to place, or the marks to pencil in.",
+        strike: "the marks the step crosses off.",
+        outline:
+          'the squares it reasons from: "this square", whose marks it crosses off, the arrow the area already has, a neighbor that can only point two ways, or the two squares of a pair. A trail of arrows is outlined when a sentence says "the arrows from the square below lead back to this square": follow the arrows from the square next door.',
+        stripes:
+          'the area the sentence calls "its area" or "this area", or "the striped group": a goal and the squares already leading into it.',
+      },
     },
+    keepTrack: hintKeepTrack,
+    gesture: hintGesture,
+    refreshStep: refreshHintStep,
   },
-  hintKeepTrack,
-  hintGesture,
-  refreshHintStep,
 
   // Upstream's two highlight preferences, with its own keywords and defaults,
   // then the note-taking cell's two.

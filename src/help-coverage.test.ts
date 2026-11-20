@@ -17,7 +17,6 @@
  * inferred from the sweep passing.
  */
 
-import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { renderHelpPage } from "./describe/help-page.ts";
 import {
@@ -31,6 +30,7 @@ import { descriptionPath } from "./describe/paths.ts";
 import { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "./engine/candidate-hint.ts";
 import { TWO, wordOf } from "./engine/color/colors.ts";
 import { difficultyChoiceItem, difficultyTiers } from "./engine/difficulty.ts";
+import { hasHint } from "./engine/game.ts";
 import { HINT_MARKS_PLACEHOLDER } from "./engine/hint-words.ts";
 import {
   MODIFIERS_PLACEHOLDER,
@@ -51,7 +51,10 @@ import {
   rulesetsMarkdown,
 } from "./engine/ruleset.ts";
 import { CONTROLS_PLACEHOLDER, DONE_CLUES_PLACEHOLDER } from "./engine/target-verb.ts";
-import { REGISTERED_GAMES } from "./engine/testing/enrollment.ts";
+import {
+  OPTIONAL_GAME_MEMBERS,
+  REGISTERED_GAMES,
+} from "./engine/testing/enrollment.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 import { itOverWholeSweep } from "./engine/testing/slow.ts";
 import { TOUCH_PLACEHOLDER } from "./engine/touch-help.ts";
@@ -126,7 +129,7 @@ describe("every game's page has the one skeleton", () => {
   // A hint's sentence names its marks ("the striped and outlined regions", "the
   // ringed dot"), and a player who was never told what they mean has to decode
   // them on the spot, which is what the Hints section is for. For a game whose
-  // hint declares `hintMarks`, the list of marks is generated from it (the
+  // hint declares `hint.marks`, the list of marks is generated from it (the
   // placeholder check below). For the rest, the check is PRESENCE, NOT
   // CONTENT: a field proves a section exists and nothing about whether it
   // teaches the marks.
@@ -171,7 +174,8 @@ describe("every game's page has the one skeleton", () => {
   // placeholder the build fills, and no other page does. The build refuses both
   // mismatches too; this says so before a ten-minute gate reaches `vite build`.
   it.each(puzzleIds)("%s: carries the list-of-marks placeholder iff bound", (id) => {
-    const bound = getTsGame(id)?.hintMarks !== undefined;
+    const game = getTsGame(id);
+    const bound = game !== null && hasHint(game);
     expect(helpPage(id).includes(HINT_MARKS_PLACEHOLDER), descriptionPath(id)).toBe(
       bound,
     );
@@ -185,7 +189,7 @@ describe("every game's page has the one skeleton", () => {
     puzzleIds,
   )("%s: carries the wing placeholder iff its hint can be one", (id) => {
     const page = helpPage(id);
-    const owed = getTsGame(id)?.hintRungs?.includes("wing") ?? false;
+    const owed = getTsGame(id)?.hint.rungs.includes("wing") ?? false;
     const count = (text: string) => text.match(WING_PLACEHOLDER)?.length ?? 0;
     expect(count(gameHelp(id).hints ?? ""), descriptionPath(id)).toBe(owed ? 1 : 0);
     expect(count(page)).toBe(owed ? 1 : 0);
@@ -342,7 +346,7 @@ describe("every game's page has the one skeleton", () => {
     const page = helpPage(id);
     const game = getTsGame(id);
     if (!game) throw new Error(`${id} is not registered`);
-    const config = game.paramConfig ?? [];
+    const config = game.paramConfig;
     expect(() => expandChoices(config, page), `${descriptionPath(id)}`).not.toThrow();
     expanded += page.split("{{choice:").length - 1;
 
@@ -407,7 +411,7 @@ describe("a game's page stands alone for a newcomer", () => {
         rulesetsMarkdown(rulesetField(game)?.rulesets ?? []),
       )
       .replace(MODIFIERS_PLACEHOLDER, modifiersMarkdown(modifiersOf(game)));
-    return expandPair(expandChoices(game.paramConfig ?? [], lists));
+    return expandPair(expandChoices(game.paramConfig, lists));
   };
 
   it.each(puzzleIds)("%s: its rules are a summary", (id) => {
@@ -462,7 +466,6 @@ describe("a game's page stands alone for a newcomer", () => {
         canUndo: on,
         canRedo: on,
         canHint: true,
-        canSolve: on,
         canCheck: on,
         isSolved: on,
         hintPending: on,
@@ -548,14 +551,6 @@ describe("a help page introduces the puzzle, not its implementation", () => {
  * someone saying, in one line, where a player is told about it.
  */
 
-/** The `game.ts` source, for the same AST read `contract-surface.test.ts` does.
- * Read through Vite so this file stays in the browser-shaped type world. */
-const gameContractSource = import.meta.glob<string>("./engine/game.ts", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-})["./engine/game.ts"];
-
 /** `help/features.md`, the page the site-level coverage is asserted against. */
 const featuresPage = import.meta.glob<string>("../help/features.md", {
   query: "?raw",
@@ -583,26 +578,6 @@ const iconsSource = import.meta.glob<string>("./icons.ts", {
   import: "default",
   eager: true,
 })["./icons.ts"];
-
-/** The optional members of the `Game` interface, read off its declaration. */
-function optionalGameMembers(): string[] {
-  if (gameContractSource === undefined) {
-    throw new Error("help-coverage: engine/game.ts not found");
-  }
-  const src = ts.createSourceFile(
-    "game.ts",
-    gameContractSource,
-    ts.ScriptTarget.ESNext,
-    true,
-  );
-  for (const st of src.statements) {
-    if (!ts.isInterfaceDeclaration(st) || st.name.text !== "Game") continue;
-    return st.members
-      .filter((m) => m.questionToken !== undefined && m.name !== undefined)
-      .map((m) => (m.name as ts.Identifier).text);
-  }
-  throw new Error("help-coverage: no `Game` interface in game.ts");
-}
 
 /**
  * Where a player is told about each optional capability.
@@ -640,7 +615,7 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     anchor: "checking",
     why: "the mistake overlay, and the save it gates",
   },
-  judgeMove: {
+  "hint.judgeMove": {
     kind: "features",
     anchor: "checking",
     why: "Check & save's word on the last move",
@@ -707,9 +682,7 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   },
 
   // --- the original collection's, covered by the manual features.md links to ---
-  solve: { kind: "upstream", why: "Solve is upstream's, with upstream's meaning" },
   prefs: { kind: "upstream", why: "per-game preferences" },
-  paramConfig: { kind: "upstream", why: "the Custom type dialog" },
   validateParams: {
     kind: "upstream",
     why: "the Custom dialog's refusal, beside the ranges the Parameters section states",
@@ -723,15 +696,13 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   },
   supersededDesc: { kind: "internal", why: "how a save rebuilds a board that moved" },
   changedState: { kind: "internal", why: "a game's own bookkeeping across a move" },
-  hintKeepTrack: { kind: "internal", why: "how a plan survives the player's own move" },
-  hintGesture: { kind: "internal", why: "how auto-hint plays a step with the pointer" },
-  hintMarks: {
+  "hint.gesture": {
     kind: "internal",
-    why: "the game page's list of marks, generated from it rather than told once",
+    why: "how auto-hint plays a step with the pointer",
   },
-  hintRungs: {
+  "hint.targets": {
     kind: "internal",
-    why: "the ids a hint step's deduction goes by, which no player sees",
+    why: "how auto-hint plays a step with the pointer, through the game's verbs",
   },
   targetVerbs: {
     kind: "internal",
@@ -741,17 +712,17 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     kind: "internal",
     why: "the game page's sentence on marking a clue done, generated from it",
   },
-  refreshHintStep: { kind: "internal", why: "re-validating a stored step" },
-  uiUpdateClearsHint: { kind: "internal", why: "when a UI change invalidates a step" },
-  preferredTileSize: { kind: "internal", why: "layout" },
+  "hint.refreshStep": { kind: "internal", why: "re-validating a stored step" },
+  "hint.uiUpdateClears": {
+    kind: "internal",
+    why: "when a UI change invalidates a step",
+  },
   paletteScheme: { kind: "internal", why: "how the palette adapts to a scheme" },
   animLength: { kind: "internal", why: "animation timing" },
   flashLength: { kind: "internal", why: "animation timing" },
   timerHolds: { kind: "internal", why: "when the solve timer waits" },
-  serializeMove: { kind: "internal", why: "save format" },
-  deserializeMove: { kind: "internal", why: "save format" },
-  encodeUi: { kind: "internal", why: "save format" },
-  decodeUi: { kind: "internal", why: "save format" },
+  moveCodec: { kind: "internal", why: "save format" },
+  uiCodec: { kind: "internal", why: "save format" },
 };
 
 /** Every `{#anchor}` defined by a heading in `features.md`. */
@@ -765,13 +736,14 @@ function featuresAnchors(): Set<string> {
 }
 
 describe("every player-facing capability is documented somewhere", () => {
-  const members = optionalGameMembers();
+  const members = OPTIONAL_GAME_MEMBERS;
 
   it("inspects the whole optional surface of the contract", () => {
     // Vacuity: an AST read that matched nothing would pass every assertion
     // below over an empty list and report health.
     expect(members.length).toBeGreaterThan(20);
-    expect(members).toContain("hint");
+    expect(members).toContain("findMistakes");
+    expect(members).toContain("hint.judgeMove");
   });
 
   it("classifies every optional member — a new capability cannot slip through", () => {

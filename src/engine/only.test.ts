@@ -365,7 +365,7 @@ describe("the Custom dialog cannot submit what an `only` refusal would refuse", 
   });
 
   it.each(narrowing)("$id", ({ g, form }) => {
-    const config = g.paramConfig ?? [];
+    const config = g.paramConfig;
     // The deciding fields and every field one of them narrows, at every value
     // a form control can hold.
     const ids = new Set(

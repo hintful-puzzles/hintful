@@ -213,22 +213,22 @@ forced remainder) SHALL be one journey.
 - **AND** the per-cell techniques (three-in-a-row, unique rows) emit independent
   steps
 
-### Requirement: Hint: hintKeepTrack completes on the hinted cell and value
+### Requirement: Hint: hint.keepTrack completes on the hinted cell and value
 
-`hintKeepTrack` SHALL report `"completed"` when the player's move sets the
+`hint.keepTrack` SHALL report `"completed"` when the player's move sets the
 hinted cell to the hinted value and `"off"` otherwise.
 
 #### Scenario: Following the hint advances the plan
 
 - **WHEN** the player makes the move the current hint step describes
-- **THEN** `hintKeepTrack` returns `"completed"`
+- **THEN** `hint.keepTrack` returns `"completed"`
 - **AND** a move that sets a different cell, or the hinted cell to a different
   value, returns `"off"`
 
 ### Requirement: Hint: Every step shows the evidence it rests on
 
 What the ring, the outline and the stripes of a displayed step stand for SHALL
-be the legend's (`hintMarks`). Every step SHALL carry visible evidence, never
+be the legend's (`hint.marks`). Every step SHALL carry visible evidence, never
 a bare conclusion.
 
 #### Scenario: Every hint step shows visible evidence

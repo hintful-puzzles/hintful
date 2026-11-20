@@ -66,7 +66,7 @@ function walk(
   const texts: string[] = [];
   const steps: HintStep<unknown, SaladHint>[] = [];
   for (let i = 0; i < cap && saladGame.status(state) === "ongoing"; i++) {
-    const res = saladGame.hint?.(state);
+    const res = saladGame.hint.plan(state);
     if (!res?.ok) break;
     for (const s of res.steps) {
       texts.push(s.explanation);
@@ -212,7 +212,7 @@ describe("salad hint — journeys and highlights", () => {
     for (const seed of ["j1", "j2", "j3", "j4"]) {
       let state = board(NUMBERS, seed);
       for (let i = 0; i < 60 && saladGame.status(state) === "ongoing"; i++) {
-        const res = saladGame.hint?.(state);
+        const res = saladGame.hint.plan(state);
         if (!res?.ok) break;
         for (let k = 1; k < res.steps.length; k++) {
           const prev = res.steps[k - 1];
@@ -357,7 +357,7 @@ describe("salad hint — narration arms", () => {
 describe("salad hint — refusals and resumption", () => {
   it("counts a solved board as finished, so the midend refuses it", () => {
     const state = board(LETTERS, "r1");
-    const res = saladGame.solve?.(state, state);
+    const res = saladGame.solve(state, state);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     expect(saladGame.status(saladGame.executeMove(state, res.move))).toBe("solved");
@@ -390,7 +390,7 @@ describe("salad hint — refusals and resumption", () => {
 
   it("resumes from a partly-followed plan without repeating or stalling", () => {
     const state = board(LETTERS, "r3");
-    const first = saladGame.hint?.(state);
+    const first = saladGame.hint.plan(state);
     expect(first?.ok).toBe(true);
     if (!first?.ok) return;
     // Play the plan's first two steps by hand — the app drops the stored plan on
@@ -398,7 +398,7 @@ describe("salad hint — refusals and resumption", () => {
     let after = state;
     const played = first.steps.slice(0, 2);
     for (const s of played) after = saladGame.executeMove(after, s.move);
-    const again = saladGame.hint?.(after);
+    const again = saladGame.hint.plan(after);
     expect(again?.ok).toBe(true);
     if (!again?.ok) return;
     const key = (m: unknown): string => JSON.stringify(m);
@@ -517,7 +517,7 @@ function descWalk(
   for (const m of setup) state = saladGame.executeMove(state, m);
   const texts: string[] = [];
   for (let i = 0; i < 400 && saladGame.status(state) === "ongoing"; i++) {
-    const res = saladGame.hint?.(state);
+    const res = saladGame.hint.plan(state);
     if (!res?.ok) break;
     texts.push(res.steps[0].explanation);
     state = saladGame.executeMove(state, res.steps[0].move);
@@ -572,7 +572,7 @@ describe("salad hint — the opener never destroys the player's own notes", () =
     const narrowed = s.pencil[narrow as number];
     expect(s.pencil[blank as number]).toBe(0);
 
-    const res = saladGame.hint?.(s);
+    const res = saladGame.hint.plan(s);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     // The opener is the *additive* fill, never upstream's resetting `markAll`.
@@ -651,10 +651,10 @@ describe("salad hint — the strike move", () => {
       y: number;
       value: "cross" | "circle";
     };
-    expect(saladGame.hintKeepTrack?.(move, step as never, state)).toBe("completed");
+    expect(saladGame.hint.keepTrack(move, step as never, state)).toBe("completed");
     // A different marker on the same square is off-plan.
     expect(
-      saladGame.hintKeepTrack?.(
+      saladGame.hint.keepTrack(
         { ...move, value: move.value === "cross" ? "circle" : "cross" },
         step as never,
         state,
@@ -662,7 +662,7 @@ describe("salad hint — the strike move", () => {
     ).toBe("off");
     // And the step is resolved (dropped) once the board already shows it.
     const done = saladGame.executeMove(state, move);
-    expect(saladGame.refreshHintStep?.(step as never, done)).toBeNull();
+    expect(saladGame.hint.refreshStep?.(step as never, done)).toBeNull();
     expect(done.holes[move.y * state.order + move.x]).toBe(
       move.value === "cross" ? CROSS : CIRCLE,
     );

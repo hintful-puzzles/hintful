@@ -461,7 +461,7 @@ describe("inertia Solve", () => {
 
   it("slides the ball along the whole route, collecting every gem", () => {
     const s0 = newState(TWO_GEM.params, TWO_GEM.desc);
-    const result = inertiaGame.solve?.(s0, s0);
+    const result = inertiaGame.solve(s0, s0);
     if (!result?.ok || result.move.type !== "solution")
       throw new Error("expected a route");
     expect(result.move.route.length).toBeGreaterThan(1);
@@ -480,7 +480,7 @@ describe("inertia Solve", () => {
     const one = board(["Sbbg", "wwww"]);
     const done = play(newState(one.params, one.desc), E);
     expect(done.gems).toBe(0);
-    expect(inertiaGame.solve?.(done, done)).toEqual({
+    expect(inertiaGame.solve(done, done)).toEqual({
       ok: false,
       error: ALREADY_SOLVED,
     });
@@ -683,7 +683,7 @@ describe("inertia rendering", () => {
   it("the win flash sweeps the squares from the bottom left to the top right", () => {
     const { params, desc } = board(["Sbbg", "bwbw", "bbbb", "gbbb"]);
     const s0 = newState(params, desc);
-    const result = inertiaGame.solve?.(s0, s0);
+    const result = inertiaGame.solve(s0, s0);
     if (!result?.ok) throw new Error("the fixture does not solve");
     const won = inertiaGame.executeMove(s0, result.move);
     expect(inertiaGame.status(won)).toBe("solved");

@@ -210,13 +210,13 @@ describe("Pegs moves", () => {
 describe("Pegs move serialization", () => {
   it("round-trips a jump move", () => {
     const move: PegsMove = { type: "jump", sx: 3, sy: 5, tx: 3, ty: 7 };
-    const raw = G.serializeMove?.(move);
-    const restored = G.deserializeMove?.(raw);
+    const raw = G.moveCodec?.serialize(move);
+    const restored = G.moveCodec?.deserialize(raw);
     expect(restored).toEqual(move);
   });
 
   it("rejects invalid serialized move", () => {
-    expect(() => G.deserializeMove?.("invalid")).toThrow();
+    expect(() => G.moveCodec?.deserialize("invalid")).toThrow();
   });
 });
 

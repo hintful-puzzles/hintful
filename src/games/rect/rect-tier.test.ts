@@ -261,8 +261,8 @@ describe("an Unreasonable Rectangles board", () => {
       if (p.w * p.h <= 49) expect(countDivisions(p.w, p.h, state.grid), desc).toBe(1);
       // The answer the mistake check goes by is the division the board was
       // drawn as, which Solve replays.
-      const searched = rectGame.solve?.(state, state);
-      const replayed = rectGame.solve?.(state, state, aux);
+      const searched = rectGame.solve(state, state);
+      const replayed = rectGame.solve(state, state, aux);
       if (!searched?.ok || !replayed?.ok) throw new Error(`${desc}: no answer found`);
       expect(searched.move).toEqual(replayed.move);
       expect(isSolved(executeMove(state, searched.move)), desc).toBe(true);
@@ -417,7 +417,11 @@ describe("the hint on an Unreasonable Rectangles board", () => {
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
       let steps = 0;
-      for (let plan = rectGame.hint?.(state); plan?.ok; plan = rectGame.hint?.(state))
+      for (
+        let plan = rectGame.hint.plan(state);
+        plan?.ok;
+        plan = rectGame.hint.plan(state)
+      )
         for (const step of plan.steps) {
           state = rectGame.executeMove(state, step.move);
           me.playMoves([step.move]);

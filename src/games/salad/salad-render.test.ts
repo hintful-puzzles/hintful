@@ -100,7 +100,7 @@ describe("salad render scenarios", () => {
     // right-hand clue lost its outer cell border. Assert the invariant (no
     // background fill may cover a boundary line) rather than the pixel offset,
     // so a different fix still passes.
-    const ts = saladGame.preferredTileSize ?? 32;
+    const ts = saladGame.preferredTileSize;
     const o = LETTERS_P.order;
     const { recording } = renderScenario({ game: saladGame, id: LETTERS_ID });
 
@@ -349,7 +349,7 @@ function paint(
   ui: ReturnType<typeof newUi>,
   flash: Flash = NO_FLASH,
 ): RecordingDrawing {
-  const ds = newDrawState(state, saladGame.preferredTileSize ?? 32);
+  const ds = newDrawState(state, saladGame.preferredTileSize);
   const rec = new RecordingDrawing(saladGame.colors(DEFAULT_BACKGROUND));
   redraw(rec, ds, null, state, 0, ui, 0, flash);
   return rec;

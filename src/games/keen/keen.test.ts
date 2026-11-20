@@ -108,7 +108,7 @@ function gen(p: KeenParams, seed: string) {
 }
 
 function solutionGrid(st: KeenState): number[] {
-  const r = keenGame.solve?.(st, st);
+  const r = keenGame.solve(st, st);
   if (!r?.ok || r.move.type !== "solve") throw new Error("solve failed");
   return r.move.grid;
 }
@@ -374,7 +374,7 @@ describe("keen moves", () => {
 
   it("Solve completes the board, and breaking it un-solves it", () => {
     const st = newState(P4, D4);
-    const r = keenGame.solve?.(st, st);
+    const r = keenGame.solve(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const done = keenGame.executeMove(st, r.move);
     expect(keenGame.status(done)).toBe("solved");
@@ -465,10 +465,10 @@ describe("keen render", () => {
 
   it("the win flash sweeps the cells from the bottom left to the top right", () => {
     const start = newState(P4, D4);
-    const r = keenGame.solve?.(start, start);
+    const r = keenGame.solve(start, start);
     if (!r?.ok) throw new Error("the fixture does not solve");
     const st = keenGame.executeMove(start, r.move);
-    const ts = keenGame.preferredTileSize ?? 48;
+    const ts = keenGame.preferredTileSize;
     /** The cells filled with the flash color, as `column,row`. A cage's edge
      * moves a cell's fill by the edge's width, so by the cell it falls in. */
     const cell = (v: number) => Math.floor((v - border(ts)) / ts);
@@ -497,7 +497,7 @@ describe("keen render", () => {
 
   it("shows the pencil-mode indicator glyph when sticky pencil is on", () => {
     const palette = keenGame.colors(DEFAULT_BACKGROUND);
-    const ts = keenGame.preferredTileSize ?? 48;
+    const ts = keenGame.preferredTileSize;
     const render = (pencilMode: boolean): RecordingDrawing => {
       const st = newState(P4, D4);
       const ui = newUi(st);
@@ -536,7 +536,7 @@ describe("keen render", () => {
   // background inside a cage, so erasing it repaints that neighbor too.
   it("a withdrawn hint ring leaves the canvas a fresh paint would show", () => {
     const st = newState(P4, D4);
-    const ts = keenGame.preferredTileSize ?? 48;
+    const ts = keenGame.preferredTileSize;
     const palette = keenGame.colors(DEFAULT_BACKGROUND);
     const size = keenGame.computeSize(P4, ts);
     const ui = newUi(st);

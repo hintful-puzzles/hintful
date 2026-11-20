@@ -53,7 +53,7 @@ describeHintPins({
 
 /** The steps of the hint on a state, none where it refuses. */
 function stepsOf(state: RangeState): HintStep<RangeMove, RangeHint, string>[] {
-  const res = rangeGame.hint?.(state);
+  const res = rangeGame.hint.plan(state);
   return res?.ok ? (res.steps as HintStep<RangeMove, RangeHint, string>[]) : [];
 }
 
@@ -141,7 +141,7 @@ describe("the hint's steps", () => {
 describe("hint", () => {
   it("returns a plan whose moves are legal and solve the board", () => {
     const st = fromSeed("9x6", "range-hint-plan");
-    const res = rangeGame.hint?.(st);
+    const res = rangeGame.hint.plan(st);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     expect(res.steps.length).toBeGreaterThan(0);
@@ -163,7 +163,7 @@ describe("hint", () => {
     // striped reach run, or an outlined black premise cell.
     for (const seed of ["range-hint-plan", "range-evidence-2", "range-evidence-3"]) {
       const st = fromSeed("9x6", seed);
-      const res = rangeGame.hint?.(st);
+      const res = rangeGame.hint.plan(st);
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
         const [target] = (step.highlights as RangeHint).targets;
@@ -191,7 +191,7 @@ describe("hint", () => {
     for (const seed of ["range-hint-plan", "range-evidence-2", "range-evidence-3"]) {
       let cur = fromSeed("9x6", seed);
       for (let round = 0; round < 40; round++) {
-        const res = rangeGame.hint?.(cur);
+        const res = rangeGame.hint.plan(cur);
         if (!res?.ok) break;
         for (let i = 0; i < res.steps.length; i++) {
           const step = res.steps[i];
@@ -231,7 +231,7 @@ describe("hint", () => {
 
   it("counts the board its plan finishes as solved, so the midend refuses it", () => {
     const st = fromSeed("9x6", "range-hint-solved");
-    const res0 = rangeGame.hint?.(st);
+    const res0 = rangeGame.hint.plan(st);
     if (!res0?.ok) throw new Error("expected a plan");
     let cur = st;
     for (const step of res0.steps) cur = rangeGame.executeMove(cur, step.move);
@@ -240,7 +240,7 @@ describe("hint", () => {
 
   it("flags a cell dotted against the solution, so the midend refuses it", () => {
     const st = fromSeed("9x6", "range-hint-mistake");
-    const solution = rangeGame.solve?.(st, st);
+    const solution = rangeGame.solve(st, st);
     if (!solution?.ok) throw new Error("expected solvable");
     const solved = rangeGame.executeMove(st, solution.move);
     const blackCell = solved.grid.indexOf(BLACK);
@@ -255,7 +255,7 @@ describe("hint", () => {
 describe("hintKeepTrack", () => {
   it("completes when the move sets the hinted cell, off otherwise", () => {
     const st = fromSeed("9x6", "range-hint-track");
-    const res = rangeGame.hint?.(st);
+    const res = rangeGame.hint.plan(st);
     if (!res?.ok) throw new Error("expected a plan");
     const step = res.steps[0];
     const [hinted] = (step.highlights as RangeHint).targets;
@@ -269,14 +269,14 @@ describe("hintKeepTrack", () => {
     const right: RangeMove = {
       sets: [{ r: target.r, c: target.c, value: target.value }],
     };
-    expect(rangeGame.hintKeepTrack?.(right, step, st)).toBe("completed");
+    expect(rangeGame.hint.keepTrack(right, step, st)).toBe("completed");
 
     // The hinted cell, but the wrong value → off.
     const wrongValue: RangeCellValue = target.value === "black" ? "white" : "black";
     const wrong: RangeMove = {
       sets: [{ r: target.r, c: target.c, value: wrongValue }],
     };
-    expect(rangeGame.hintKeepTrack?.(wrong, step, st)).toBe("off");
+    expect(rangeGame.hint.keepTrack(wrong, step, st)).toBe("off");
 
     // A different cell → off.
     const other = st.grid.findIndex(
@@ -285,6 +285,6 @@ describe("hintKeepTrack", () => {
     const elsewhere: RangeMove = {
       sets: [{ r: Math.floor(other / st.w), c: other % st.w, value: target.value }],
     };
-    expect(rangeGame.hintKeepTrack?.(elsewhere, step, st)).toBe("off");
+    expect(rangeGame.hint.keepTrack(elsewhere, step, st)).toBe("off");
   });
 });

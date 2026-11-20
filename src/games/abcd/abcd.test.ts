@@ -277,7 +277,7 @@ describe("abcd moves through a Midend", () => {
     // letter already in a cell, or clearing an already-empty one, must not
     // commit a move the player then has to undo.
     const p = P(5, 5, 4);
-    const ts = abcdGame.preferredTileSize ?? 36;
+    const ts = abcdGame.preferredTileSize;
     const st = newState(p, newAbcdDesc(p, randomNew("noop-1")).desc);
     const ds = newDrawState(st, ts);
     const at = (s: AbcdState, x: number, y: number): AbcdUi => {
@@ -402,7 +402,7 @@ describe("abcd moves through a Midend", () => {
 });
 
 describe("abcd input (interpretMove)", () => {
-  const ts = abcdGame.preferredTileSize ?? 36;
+  const ts = abcdGame.preferredTileSize;
   // Cell (gx, gy) center in pixels: the board is inset by the pencil
   // indicator's margin, and FROMCOORD is floor((px - margin)/ts) - n, so cell x
   // starts at the margin plus (x + n) * ts.
@@ -560,7 +560,7 @@ describe("abcd render", () => {
       letter: 0,
     });
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
-    const ds = newDrawState(withMark, abcdGame.preferredTileSize ?? 36);
+    const ds = newDrawState(withMark, abcdGame.preferredTileSize);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, withMark, 1, ui, 0, NO_FLASH);
     // The highlighted cursor cell fills its background with the wash.
@@ -578,7 +578,7 @@ describe("abcd render", () => {
       const ui = newUi(st);
       ui.pencilMode = pencilMode;
       ui.cursor.visible = pencilMode;
-      const ds = newDrawState(st, abcdGame.preferredTileSize ?? 36);
+      const ds = newDrawState(st, abcdGame.preferredTileSize);
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH);
       return dr;
@@ -595,7 +595,7 @@ describe("abcd render", () => {
     let s = abcdGame.executeMove(st, { type: "enter", x: 0, y: 0, letter: 0 });
     s = abcdGame.executeMove(s, { type: "enter", x: 1, y: 0, letter: 0 });
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
-    const ds = newDrawState(s, abcdGame.preferredTileSize ?? 36);
+    const ds = newDrawState(s, abcdGame.preferredTileSize);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, s, 1, newUi(s), 0, NO_FLASH);
     expect(dr.ops.some((o) => o.op === "text" && o.color === COL_ERROR)).toBe(true);
@@ -627,7 +627,7 @@ describe("abcd render", () => {
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
     const paint = (flash: Flash) => {
       const dr = new RecordingDrawing(palette);
-      const ds = newDrawState(s, abcdGame.preferredTileSize ?? 36);
+      const ds = newDrawState(s, abcdGame.preferredTileSize);
       redraw(dr, ds, null, s, 1, newUi(s), 0, flash);
       return dr;
     };

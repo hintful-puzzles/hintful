@@ -106,7 +106,7 @@ export function wrappingRulesetItem<P extends { wrapping: boolean }>(
 
 /** The game's {@link rulesetItem}, or `null` for a game with one puzzle. */
 export function rulesetField<P>(game: {
-  paramConfig?: readonly ParamConfigItem<P>[];
+  paramConfig: readonly ParamConfigItem<P>[];
 }): (ChoicesItem<P> & { rulesets: readonly Ruleset[] }) | null {
   const item = game.paramConfig?.find((i) => i.kw === RULESET_KW);
   if (item?.type !== "choices" || !item.rulesets) return null;

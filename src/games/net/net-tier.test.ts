@@ -416,7 +416,7 @@ describe("an Unreasonable Net board", () => {
       const answer = answerOf(state);
       if (answer.kind !== "one") throw new Error(`${desc}: no answer found`);
       expect(Array.from(answer.solution, (t) => t.toString(16)).join("")).toBe(aux);
-      const solved = netGame.solve?.(state, state);
+      const solved = netGame.solve(state, state);
       if (!solved?.ok) throw new Error(`${desc}: Solve found no answer`);
       expect(netGame.status(netGame.executeMove(state, solved.move)), desc).toBe(
         "solved",
@@ -561,7 +561,11 @@ describe("the hint on an Unreasonable Net board", () => {
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
       let steps = 0;
-      for (let plan = netGame.hint?.(state); plan?.ok; plan = netGame.hint?.(state))
+      for (
+        let plan = netGame.hint.plan(state);
+        plan?.ok;
+        plan = netGame.hint.plan(state)
+      )
         for (const step of plan.steps) {
           state = netGame.executeMove(state, step.move);
           me.playMoves([step.move]);

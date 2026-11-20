@@ -67,6 +67,4 @@ const described = describedFiringHint<
   say: {},
 });
 
-export const { hint: rangeHint, hintKeepTrack: rangeKeepTrack } = described;
-export const rangeRefreshHintStep = described.refreshHintStep;
-export const rangeJudgeMove = described.judgeMove;
+export const rangeHint = described.hint;

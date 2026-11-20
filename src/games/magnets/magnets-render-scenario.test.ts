@@ -236,7 +236,7 @@ describe("magnets render scenarios", () => {
 
   it("the win flash sweeps the dominoes from the bottom left to the top right", () => {
     const { state: start, aux } = board(P, "mrs-0");
-    const res = magnetsGame.solve?.(start, start, aux);
+    const res = magnetsGame.solve(start, start, aux);
     if (!res?.ok) throw new Error("the fixture does not solve");
     const state = magnetsGame.executeMove(start, res.move);
     expect(magnetsGame.status(state)).toBe("solved");

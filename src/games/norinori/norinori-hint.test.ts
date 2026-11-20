@@ -126,7 +126,7 @@ function expectPlansFinish(start: NorinoriState, label: string): void {
   // The plan is capped, so it is asked again until the board is done.
   for (let asked = 0; norinoriGame.status(state) !== "solved"; asked++) {
     expect(asked).toBeLessThan(state.grid.length);
-    const result = norinoriGame.hint?.(state);
+    const result = norinoriGame.hint.plan(state);
     if (!result?.ok) throw new Error(`refused on ${label}`);
     for (const step of result.steps) {
       if (step.move.kind !== "mark") throw new Error("a step marks squares");
@@ -147,7 +147,7 @@ describe("norinori hint plans", () => {
 
   it("a step rings exactly the squares its move marks", () => {
     const state = board(WRITTEN[1]);
-    const result = norinoriGame.hint?.(state);
+    const result = norinoriGame.hint.plan(state);
     if (!result?.ok) throw new Error("refused");
     for (const step of result.steps) {
       if (step.move.kind !== "mark") throw new Error("a step marks squares");
@@ -163,7 +163,7 @@ describe("norinori hint plans", () => {
     if (step.move.kind !== "mark") throw new Error("a step marks squares");
     const [first, ...rest] = step.move.cells;
     const copy = { ...step, move: structuredClone(step.move) };
-    const verdict = norinoriGame.hintKeepTrack?.(
+    const verdict = norinoriGame.hint.keepTrack(
       { kind: "mark", cells: [first] },
       copy,
       state,
@@ -178,7 +178,7 @@ describe("norinori hint plans", () => {
     const { index, mark } = step.move.cells[0];
     const other = mark === 1 ? 2 : 1;
     expect(
-      norinoriGame.hintKeepTrack?.(
+      norinoriGame.hint.keepTrack(
         { kind: "mark", cells: [{ index, mark: other }] },
         step,
         state,

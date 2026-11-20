@@ -66,7 +66,7 @@ function solveByHints(
   // cap only stops a walk that wanders. It is not the first plan's length: a
   // game may cut a plan short (Mosaic's 24 steps), and a 50×50 Mosaic takes
   // more than a thousand moves.
-  const first = game.hint?.(state, aux);
+  const first = game.hint.plan(state, aux);
   const planned = first?.ok ? first.steps.length : 0;
   const cap = Math.max(MOVE_CAP, 2 * planned);
   const stride = resumeStride(planned);
@@ -82,7 +82,7 @@ function solveByHints(
         `${at}:findMistakes reports ${wrong} after ${moves} hinted moves`,
       );
     }
-    const res = game.hint?.(state, aux);
+    const res = game.hint.plan(state, aux);
     if (!res) throw new Error(`${at}:game has no hint() method`);
     if (!res.ok) {
       if (boundedSearch) {
@@ -112,7 +112,7 @@ function solveByHints(
     for (const step of res.steps) {
       if (played > 0 && game.status(state) === "solved") break;
       const live =
-        played > 0 && game.refreshHintStep ? game.refreshHintStep(step, state) : step;
+        played > 0 && game.hint.refreshStep ? game.hint.refreshStep(step, state) : step;
       if (live === null) continue;
       state = game.executeMove(state, live.move);
       if (++played === stride) break;
@@ -346,7 +346,7 @@ describe("a kept hint plan leaves the board alone, and its every step changes it
         // intact, a render bug drew the struck candidate invisibly, but the
         // guarantee is worth asserting directly: `hint()` is pure on the state.)
         const before = stateKey(state);
-        const res = game.hint?.(state, aux);
+        const res = game.hint.plan(state, aux);
         expect(stateKey(state), `${at}: hint() mutated the state`).toBe(before);
         if (!res?.ok) continue; // a refusal has no steps to check
         let plain = frameOf(game, state);
@@ -458,7 +458,7 @@ if (SHARE_LATIN.length > 0)
             plans < 200 && game.status(state) === "ongoing";
             plans++
           ) {
-            const res = game.hint?.(state, aux);
+            const res = game.hint.plan(state, aux);
             if (!res?.ok) break;
             for (const step of res.steps) {
               // biome-ignore lint/suspicious/noExplicitAny: structural move/state access.

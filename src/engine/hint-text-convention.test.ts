@@ -69,7 +69,7 @@ function speaks(id: string): boolean {
         continue;
       }
       const { desc, aux } = board;
-      const res = game.hint?.(game.newState(params, desc), aux);
+      const res = game.hint.plan(game.newState(params, desc), aux);
       if (res?.ok && res.steps.some((s) => s.explanation !== "")) return true;
     }
   }

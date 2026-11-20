@@ -49,7 +49,6 @@ import {
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
@@ -634,34 +633,26 @@ export const tracksGame: Game<
   difficulty,
   findMistakes,
   clearMistakes,
-  hint: tracksHint,
-  judgeMove: tracksJudgeMove,
-  hintMarks: {
-    roles: {
-      ring: "what the step decides, in the hint color: a ring round a square means that square is settled (with a cross in it as well, it must be empty; a ring on its own means it must carry track, though not yet which way); a short pair of rail ends poking through a side means the track must cross that side, and a cross on a side means it must not.",
-      outline:
-        "what the step reasons from: an outline round the squares it counts and a short bar on a side whose state is part of the argument, both in a second color, and the clue number it counts with, drawn in the hint color in the margin.",
-      stripes:
-        "the row or column the sentence calls “this row” or “this column”, striped through its clue, or the closed block a sentence about crossings is about.",
+  hint: {
+    plan: tracksHint,
+    judgeMove: tracksJudgeMove,
+    marks: {
+      roles: {
+        ring: "what the step decides, in the hint color: a ring round a square means that square is settled (with a cross in it as well, it must be empty; a ring on its own means it must carry track, though not yet which way); a short pair of rail ends poking through a side means the track must cross that side, and a cross on a side means it must not.",
+        outline:
+          "what the step reasons from: an outline round the squares it counts and a short bar on a side whose state is part of the argument, both in a second color, and the clue number it counts with, drawn in the hint color in the margin.",
+        stripes:
+          "the row or column the sentence calls “this row” or “this column”, striped through its clue, or the closed block a sentence about crossings is about.",
+      },
     },
-  },
-  hintRungs: TRACKS_RUNGS,
-  hintKeepTrack: tracksKeepTrack,
-  // One click per op, on its square or edge of the half-grid.
-  hintGesture(state, ui, ds, m, step) {
-    const targets = m.ops.map((op) => {
-      const dir = op.kind === "edge" ? (op.dir ?? 0) : 0;
-      return { x: 2 * op.x + 1 + dirX(dir), y: 2 * op.y + 1 + dirY(dir) };
-    });
-    return verbClicks(
-      targetVerbs,
-      { executeMove, hintKeepTrack: tracksKeepTrack },
-      state,
-      ui,
-      ds,
-      step,
-      targets,
-    );
+    rungs: TRACKS_RUNGS,
+    keepTrack: tracksKeepTrack,
+    // One click per op, on its square or edge of the half-grid.
+    targets: (_s, m) =>
+      m.ops.map((op) => {
+        const dir = op.kind === "edge" ? (op.dir ?? 0) : 0;
+        return { x: 2 * op.x + 1 + dirX(dir), y: 2 * op.y + 1 + dirY(dir) };
+      }),
   },
 
   textFormat,

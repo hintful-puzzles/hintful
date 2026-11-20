@@ -117,7 +117,7 @@ describe("dominosa hint — refusal", () => {
       "25655326346361502346651410062120443426101135023020554413",
     );
     expect(solveNumbers(state.params, state.numbers, DIFFCOUNT).result).not.toBe(1);
-    const res = dominosaGame.hint?.(state);
+    const res = dominosaGame.hint.plan(state);
     expect(res?.ok).toBe(false);
   });
 
@@ -154,7 +154,7 @@ describe("dominosa hint — narration + plan", () => {
     let barrierSeen = false;
     for (let i = 0; i < 800; i++) {
       if (dominosaGame.status(s) === "solved") break;
-      const res = dominosaGame.hint?.(s);
+      const res = dominosaGame.hint.plan(s);
       expect(res?.ok, `stuck at move ${i}`).toBe(true);
       if (!res?.ok) break;
       if (res.steps[0].move.type === "edge") barrierSeen = true;

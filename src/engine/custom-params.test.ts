@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { Game, ParamConfigItem, PresetMenu } from "./game.ts";
+import {
+  DRAFT_HINT,
+  type Game,
+  type ParamConfigItem,
+  type PresetMenu,
+} from "./game.ts";
 import { Midend } from "./midend.ts";
 import { presetMenu } from "./param-label.ts";
+import { SOLUTION_UNKNOWN } from "./solve-failure.ts";
 import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 
 // A tiny game exercising all three `paramConfig` types (string / boolean
@@ -70,10 +76,13 @@ function makeGame(
     interpretMove: () => null,
     executeMove: (s) => s,
     status: () => "ongoing",
+    solve: () => ({ ok: false, error: SOLUTION_UNKNOWN }),
+    hint: DRAFT_HINT,
     colors: () => [
       [1, 1, 1],
       [0, 0, 0],
     ],
+    preferredTileSize: 32,
     computeSize: () => ({ w: 10, h: 10 }),
     // Required on `Game`: a game that draws nothing is not a game. This double
     // genuinely draws nothing, so its DrawState is `null`.
@@ -98,12 +107,12 @@ describe("Midend custom-params round-trip", () => {
 
   it("says a field's max in its label where the field shows it, and names the bare field in a refusal", () => {
     const game = makeGame();
-    const [width] = game.paramConfig ?? [];
+    const [width] = game.paramConfig;
     if (width?.type !== "string") throw new Error("the double's first field is Width");
     const shown = { ...width, bounds: { min: 1, max: 12, maxShown: true } };
     const m = new Midend({
       ...game,
-      paramConfig: [shown, ...(game.paramConfig ?? []).slice(1)],
+      paramConfig: [shown, ...game.paramConfig.slice(1)],
     });
     expect(m.getCustomParamsConfig().items["width"]).toEqual({
       type: "string",
@@ -173,9 +182,9 @@ describe("Midend custom-params round-trip", () => {
   });
 });
 
-describe("A game without paramConfig keeps an empty custom dialog", () => {
+describe("A game with no custom fields keeps an empty custom dialog", () => {
   it("yields empty items and setCustomParams is a no-op", () => {
-    const m = new Midend(makeGame({ paramConfig: undefined }));
+    const m = new Midend(makeGame({ paramConfig: [] }));
     const cfg = m.getCustomParamsConfig();
     expect(cfg.items).toEqual({});
     expect(m.getCustomParams()).toEqual({});
@@ -212,21 +221,19 @@ describe("Every registered game with paramConfig round-trips its presets", () =>
   });
 
   it("no game ships a blank Custom type… dialog", () => {
-    // The `continue` below skips a game with no `paramConfig` **in silence**,
-    // and the type menu offers "Custom type…" for every game unconditionally,
-    // so a port that forgets the hook ships a dialog with no fields in it and
-    // nothing objects.
+    // The type menu offers "Custom type…" for every game unconditionally, and
+    // `paramConfig` is required but may be empty, so a port that writes `[]`
+    // ships a dialog with no fields in it and nothing else objects.
     //
     // If a genuinely preset-only game ever arrives, this is the prompt to
     // decide what its menu should say, rather than to add an exception.
-    const blank = REGISTERED_GAMES.filter(([, g]) => !g.paramConfig?.length).map(
+    const blank = REGISTERED_GAMES.filter(([, g]) => g.paramConfig.length === 0).map(
       ([id]) => id,
     );
     expect(blank, "games whose custom-params dialog would open empty").toEqual([]);
   });
 
   for (const [id, game] of REGISTERED_GAMES) {
-    if (!game.paramConfig) continue;
     it(`${id}: getCustomParams∘setCustomParams ≡ identity through ConfigValues`, () => {
       // Deliberately typed loose: this guard drives the non-generic
       // engine surface only.

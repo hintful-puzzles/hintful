@@ -76,7 +76,7 @@ interface Rung {
  * and the ones documented together with it (Height, with Width). */
 function sizeItems(game: AnyGame): NumericItem[] {
   const out: NumericItem[] = [];
-  for (const item of (game.paramConfig ?? []) as Item[]) {
+  for (const item of game.paramConfig as Item[]) {
     if (item.type !== "string") continue;
     const withSize =
       typeof item.doc === "object" &&
@@ -98,7 +98,7 @@ function ladders(game: AnyGame): Rung[][] {
   // is neither a size nor the tier.
   const feet = new Map<string, Params>();
   for (const { params } of leafPresets(game) as { params: Params }[]) {
-    const key = ((game.paramConfig ?? []) as Item[])
+    const key = (game.paramConfig as Item[])
       .filter((item) => item !== tierItem && !sizes.includes(item as NumericItem))
       .map((item) => String(item.get(params)))
       .join("|");

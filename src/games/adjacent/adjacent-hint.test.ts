@@ -48,7 +48,7 @@ describe("adjacent hint", () => {
   it("every deduction conclusion uses the necessity voice", () => {
     const { st } = gen(ADJ, "voice-adjacent");
     const populated = adjacentGame.executeMove(st, { type: "pencilAll" });
-    const res = adjacentGame.hint?.(populated);
+    const res = adjacentGame.hint.plan(populated);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     // A strike concludes "we must cross out …" or "… cross them out"; a
@@ -69,7 +69,7 @@ describe("adjacent hint", () => {
     // away from N".
     const { st } = gen(ADJ, "adj-extreme");
     const populated = adjacentGame.executeMove(st, { type: "pencilAll" });
-    const res = adjacentGame.hint?.(populated);
+    const res = adjacentGame.hint.plan(populated);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     for (const s of res.steps) {
@@ -81,7 +81,7 @@ describe("adjacent hint", () => {
     let checked = 0;
     for (let s = 0; s < 8; s++) {
       const { st } = gen(ADJ, `bleed-adjacent-${s}`);
-      const res = adjacentGame.hint?.(st);
+      const res = adjacentGame.hint.plan(st);
       if (!res?.ok) continue;
       for (const step of res.steps as AnyStep[]) {
         if (step.move.type !== "pencilStrike") continue;
@@ -112,7 +112,7 @@ describe("adjacent hint resumes to solved", () => {
     let state = start;
     for (let moves = 0; moves < 600; moves++) {
       if (status(state) === "solved") return;
-      const res = adjacentGame.hint?.(state, aux);
+      const res = adjacentGame.hint.plan(state, aux);
       expect(res?.ok).toBe(true);
       if (!res?.ok) throw new Error(`gave up: ${res?.error}`);
       state = adjacentGame.executeMove(state, res.steps[0].move);

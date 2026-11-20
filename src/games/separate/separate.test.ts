@@ -197,7 +197,7 @@ describe("separate solve", () => {
   it("Solve produces a completed board", () => {
     const { desc } = newSeparateDesc(P5, randomNew("sep-solve"));
     const s0 = newState(P5, desc);
-    const result = separateGame.solve?.(s0, s0, undefined);
+    const result = separateGame.solve(s0, s0, undefined);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const solved = executeMove(s0, result.move);

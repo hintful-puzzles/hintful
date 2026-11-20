@@ -307,24 +307,24 @@ export const pegsGame: Game<
 
   solve,
   hasNoSolution,
-
-  hint,
-  hintMarks: HINT_MARKS,
-  hintRungs: PEGS_RUNGS,
-  hintKeepTrack,
-  // The drag a player makes: pick the peg up and drop it in the hole.
-  hintGesture(_s, _ui, ds, m) {
-    if (m.type !== "jump") return [];
-    const at = (x: number, y: number) => ({
-      x: tileCenter(x, ds.tileSize),
-      y: tileCenter(y, ds.tileSize),
-    });
-    return [drag(at(m.sx, m.sy), at(m.tx, m.ty))];
+  hint: {
+    plan: hint,
+    marks: HINT_MARKS,
+    rungs: PEGS_RUNGS,
+    keepTrack: hintKeepTrack,
+    // The drag a player makes: pick the peg up and drop it in the hole.
+    gesture(_s, _ui, ds, m) {
+      if (m.type !== "jump") return [];
+      const at = (x: number, y: number) => ({
+        x: tileCenter(x, ds.tileSize),
+        y: tileCenter(y, ds.tileSize),
+      });
+      return [drag(at(m.sx, m.sy), at(m.tx, m.ty))];
+    },
   },
 
   textFormat,
-  serializeMove,
-  deserializeMove,
+  moveCodec: { serialize: serializeMove, deserialize: deserializeMove },
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

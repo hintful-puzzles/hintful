@@ -61,10 +61,4 @@ const described = describedFiringHint<
   say: {},
 });
 
-export const {
-  hint: norinoriHint,
-  hintKeepTrack: norinoriKeepTrack,
-  rulesOut: norinoriRulesOut,
-} = described;
-export const norinoriRefreshHintStep = described.refreshHintStep;
-export const norinoriJudgeMove = described.judgeMove;
+export const { hint: norinoriHint, rulesOut: norinoriRulesOut } = described;

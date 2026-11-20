@@ -3,7 +3,7 @@
  *
  * Tier 1 — `hint` populates, strikes (deductive eliminations + basic
  * region culls) and places with quality-bar narration; refusal on solved / on
- * mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario snapshot of a
+ * mistakes; `hint.keepTrack` verdicts. Tier 2.5 — a render-scenario snapshot of a
  * deductive elimination journey frame (struck candidate `COL_PENCIL`
  * strikethrough, the named region hatched, grid/clues still drawn).
  */
@@ -420,7 +420,7 @@ describe("solo killer steps", () => {
 describe("solo hint", () => {
   it("populates before the first elimination", () => {
     const { st } = gen(ADV, "hint-empty");
-    const res = soloGame.hint?.(st, undefined, populating(st));
+    const res = soloGame.hint.plan(st, undefined, populating(st));
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const moves = res.steps.map((s) => (s.move as SoloMove).type);
@@ -433,7 +433,7 @@ describe("solo hint", () => {
   it("skips populate once notes are present", () => {
     const { st } = gen(ADV, "hint-pop");
     const populated = soloGame.executeMove(st, { type: "pencilAll" });
-    const res = soloGame.hint?.(populated);
+    const res = soloGame.hint.plan(populated);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     expect((res.steps[0].move as SoloMove).type).not.toBe("pencilAll");
@@ -446,7 +446,7 @@ describe("solo hint", () => {
     for (const p of [easy, BASIC]) {
       for (const seed of ["singles-1", "singles-2", "singles-3"]) {
         const { st } = gen(p, seed);
-        const res = soloGame.hint?.(st);
+        const res = soloGame.hint.plan(st);
         if (!res?.ok) throw new Error(`refused on ${seed}`);
         const kinds = res.steps.map((s) => (s.move as SoloMove).type);
         expect(new Set(kinds)).toEqual(new Set(["set"]));
@@ -459,7 +459,7 @@ describe("solo hint", () => {
 
   it("surfaces a naked single as the next move ahead of any elimination", () => {
     const { st } = gen(ADV, "hint-naked");
-    const r = soloGame.solve?.(st, st);
+    const r = soloGame.solve(st, st);
     if (!r?.ok || r.move.type !== "solve") throw new Error("solve failed");
     const cr = st.cr;
     // Pick a non-given cell, narrow it to its solution value.
@@ -476,7 +476,7 @@ describe("solo hint", () => {
     const marks = [];
     for (let n = 1; n <= cr; n++) if (n !== v) marks.push({ x, y, n });
     const narrowed = soloGame.executeMove(populated, { type: "pencilStrike", marks });
-    const res = soloGame.hint?.(narrowed);
+    const res = soloGame.hint.plan(narrowed);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     // Auto-pencil defaults off → the placement carries `autoElim: false`.
@@ -494,7 +494,7 @@ describe("solo hint", () => {
   it("every deduction conclusion uses the necessity voice", () => {
     const { st } = gen(ADV, "voice");
     const populated = soloGame.executeMove(st, { type: "pencilAll" });
-    const res = soloGame.hint?.(populated);
+    const res = soloGame.hint.plan(populated);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     // The bare "cross out" is the obvious-clean setup step's.
@@ -512,7 +512,7 @@ describe("solo hint", () => {
       for (const p of [INTER, ADV, KILLER]) {
         for (let s = 0; s < 6; s++) {
           const { st } = gen(p, `bleed-${p.diff}-${p.killer}-${s}`);
-          const res = soloGame.hint?.(st);
+          const res = soloGame.hint.plan(st);
           if (!res?.ok) continue;
           for (const step of res.steps as AnyStep[]) {
             if (step.move.type !== "pencilStrike") continue;
@@ -538,10 +538,10 @@ describe("solo hint", () => {
     const { st } = gen(ADV, "autopencil");
     const uiOn = soloGame.newUi(st);
     uiOn.autoPencil = true;
-    const on = soloGame.hint?.(st, undefined, uiOn);
+    const on = soloGame.hint.plan(st, undefined, uiOn);
     const uiOff = soloGame.newUi(st);
     uiOff.autoPencil = false;
-    const off = soloGame.hint?.(st, undefined, uiOff);
+    const off = soloGame.hint.plan(st, undefined, uiOff);
     expect(on?.ok && off?.ok).toBe(true);
     if (!on?.ok || !off?.ok) return;
     const dupCount = (r: typeof on) => r.steps.filter((s) => s.rung === "dup").length;
@@ -581,7 +581,7 @@ describe("solo hint", () => {
       let state: SoloState = st;
       const cr = st.cr;
       for (let ask = 0; ask < 200 && soloStatus(state) === "ongoing"; ask++) {
-        const res = soloGame.hint?.(state, aux);
+        const res = soloGame.hint.plan(state, aux);
         if (!res?.ok) break;
         for (const step of res.steps) {
           const m = step.move as AnyStep;
@@ -621,7 +621,7 @@ describe("solo hint", () => {
   it("shows the region a deduced extra-cage counted", () => {
     const { state: st, step: pinnedStep } = pinned("extraCage");
     const step = pinnedStep as AnyStep;
-    const solved = soloGame.solve?.(st, st);
+    const solved = soloGame.solve(st, st);
     if (!solved?.ok) throw new Error("solve failed");
     const sol = (solved.move as { type: "solve"; grid: number[] }).grid;
     const cr = st.cr;
@@ -690,7 +690,7 @@ describe("solo hint", () => {
 
   it("counts a solved board as finished and flags a wrong digit, the boards the midend refuses", () => {
     const { st } = gen(BASIC, "refuse");
-    const r = soloGame.solve?.(st, st);
+    const r = soloGame.solve(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const solved = soloGame.executeMove(st, r.move);
     expect(soloGame.status(solved)).toBe("solved");
@@ -754,7 +754,7 @@ describe("solo killer cages forbid repeats", () => {
     for (const start of boards) {
       for (const ui of [undefined, populating(start)]) {
         let state = start;
-        const res = soloGame.hint?.(state, undefined, ui);
+        const res = soloGame.hint.plan(state, undefined, ui);
         if (!res?.ok) throw new Error("hint refused");
         const cages = state.killerData?.kblocks;
         if (!cages) throw new Error("not a killer board");
@@ -788,7 +788,7 @@ describe("solo killer cages forbid repeats", () => {
     // Killer boards it deals. Planted the same day, the culls reading no cage,
     // the throw comes at the first ask.
     let state = newState(KILLER, DESC);
-    const res = soloGame.hint?.(state);
+    const res = soloGame.hint.plan(state);
     if (!res?.ok) throw new Error("hint refused");
     const placed: { cell: number; n: number }[] = [];
     let checked = 0;
@@ -813,7 +813,7 @@ describe("solo killer cages forbid repeats", () => {
 
   it("auto-pencil strikes a placed digit from its cage-mates' notes", () => {
     const st = newState(KILLER, DESC);
-    const res = soloGame.hint?.(st, undefined, populating(st));
+    const res = soloGame.hint.plan(st, undefined, populating(st));
     if (!res?.ok) throw new Error("hint refused");
     const noted = soloGame.executeMove(st, res.steps[0].move);
     const cr = noted.cr;
@@ -916,13 +916,13 @@ describe("solo no-repeat region names", () => {
 describe("solo hintKeepTrack", () => {
   it("matches a populate step, rejects anything else", () => {
     const { st } = gen(ADV, "kt-pop");
-    const res = soloGame.hint?.(st, undefined, populating(st));
+    const res = soloGame.hint.plan(st, undefined, populating(st));
     if (!res?.ok) throw new Error("refused");
     const step = res.steps.find((s) => (s.move as SoloMove).type === "pencilAll");
     if (!step) throw new Error("no populate step");
-    expect(soloGame.hintKeepTrack?.({ type: "pencilAll" }, step, st)).toBe("completed");
+    expect(soloGame.hint.keepTrack({ type: "pencilAll" }, step, st)).toBe("completed");
     expect(
-      soloGame.hintKeepTrack?.(
+      soloGame.hint.keepTrack(
         { type: "set", x: 0, y: 0, n: 1, pencil: false },
         step,
         st,
@@ -938,7 +938,7 @@ describe("solo hintKeepTrack", () => {
     let cur = populated;
     for (let k = 0; k < marks.length; k++) {
       const mk = marks[k];
-      const v = soloGame.hintKeepTrack?.(
+      const v = soloGame.hint.keepTrack(
         { type: "set", x: mk.x, y: mk.y, n: mk.n, pencil: true },
         step,
         cur,

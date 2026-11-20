@@ -438,7 +438,7 @@ and is not required to paint the frames between.
 ### Requirement: Every hint mark a renderer asks for is painted by some run
 
 For a game with a hint, the test SHALL require that every mark the renderer
-asked for, in a role the game's `hintMarks` legend lists, was painted by the
+asked for, in a role the game's `hint.marks` legend lists, was painted by the
 seeded run or by a board the search tried. It SHALL also require that every
 role the legend lists is one the renderer asks for. A mark that no board
 reaches SHALL be named, with the reason, in a ledger the test holds exact.

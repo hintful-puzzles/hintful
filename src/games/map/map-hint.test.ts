@@ -249,7 +249,7 @@ function stateOf(id: string): MapState {
 }
 
 function plan(state: MapState): MapHintStep[] {
-  const res = mapGame.hint?.(state);
+  const res = mapGame.hint.plan(state);
   if (!res?.ok) throw new Error(`refused: ${res?.error}`);
   return res.steps as MapHintStep[];
 }
@@ -619,7 +619,7 @@ describe("map hint rendering", () => {
     // The evidence is a dashed line, never a strip along a whole tile side: a
     // solid one beside the target's band read as one thick line (owner
     // playtest, 2026-09-25).
-    const ts = mapGame.preferredTileSize ?? 32;
+    const ts = mapGame.preferredTileSize;
     for (const o of recording.ops)
       if (o.op === "polygon" && o.fill === COL_HINT_OUTLINE) {
         const xs = o.points.map(([x]) => x);
@@ -650,7 +650,7 @@ describe("map's Mark-all press and the populate reading", () => {
     [...s.coloring.keys()].filter((r) => s.coloring[r] < 0);
 
   const populatePlan = (s: MapState): MapHintStep[] => {
-    const res = mapGame.hint?.(s, undefined, {
+    const res = mapGame.hint.plan(s, undefined, {
       ...mapGame.newUi(s),
       candidateReading: "populate",
     });

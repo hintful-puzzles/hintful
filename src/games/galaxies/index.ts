@@ -826,7 +826,15 @@ function hintGesture(
   const out: PointerAction[] =
     edges.length === 0
       ? []
-      : verbClicks(targetVerbs, { executeMove, hintKeepTrack }, s, ui, ds, step, edges);
+      : verbClicks(
+          targetVerbs,
+          { executeMove, keepTrack: hintKeepTrack },
+          s,
+          ui,
+          ds,
+          step,
+          edges,
+        );
   for (const op of m.ops) {
     if (op.kind !== "assoc") continue;
     const dot = { x: op.ax, y: op.ay };
@@ -1181,19 +1189,21 @@ export const galaxiesGame: Game<
   findMistakes,
   clearMistakes,
   revealOne,
-  hint: galaxiesHint,
-  judgeMove: galaxiesJudgeMove,
-  hintRungs: GALAXIES_RUNGS,
-  hintKeepTrack,
-  hintGesture,
-  refreshHintStep,
-  hintMarks: {
-    roles: {
-      ring: "what the step decides: the square whose dot it settles, ringed twice, with the square opposite the dot (its partner) ringed once, since the same arrow brings it along; the line it asks you to draw; and the dot the arrow points at.",
-      outline:
-        "what the step reasons from: squares such as the ways out of a square or two partners across a dot, a wall it mirrors, and a dot it cites.",
-      stripes:
-        "the galaxy, or the piece of one, the sentence names: how far a galaxy can still stretch, or the piece cut off from its dot.",
+  hint: {
+    plan: galaxiesHint,
+    judgeMove: galaxiesJudgeMove,
+    rungs: GALAXIES_RUNGS,
+    keepTrack: hintKeepTrack,
+    gesture: hintGesture,
+    refreshStep: refreshHintStep,
+    marks: {
+      roles: {
+        ring: "what the step decides: the square whose dot it settles, ringed twice, with the square opposite the dot (its partner) ringed once, since the same arrow brings it along; the line it asks you to draw; and the dot the arrow points at.",
+        outline:
+          "what the step reasons from: squares such as the ways out of a square or two partners across a dot, a wall it mirrors, and a dot it cites.",
+        stripes:
+          "the galaxy, or the piece of one, the sentence names: how far a galaxy can still stretch, or the piece cut off from its dot.",
+      },
     },
   },
 

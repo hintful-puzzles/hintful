@@ -786,34 +786,36 @@ export const soloGame: Game<
 
   solve,
   difficulty,
-  hint,
-  judgeMove: (before, after, ui) =>
-    candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
-  hintRungs: SOLO_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the cell the step fills in with a number.",
-      strike: "the pencil marks the step crosses out.",
-      outline:
-        "the cells the reason rests on: “this cell”, whose pencil marks the step crosses out; a number just placed, whose copies are being crossed out around it; the other cells of a block, row or column that between them already account for some numbers; the cells a killer sum is left to; the only cells that several rows or columns leave for one number; or “the middle cell” a step weighs and the cells it reads.",
-      stripes:
-        'the row, column, block, diagonal or killer cage the sentence names, or the several rows or columns it names together: "in this block", "this killer cage", "these 2 columns".',
+  hint: {
+    plan: hint,
+    judgeMove: (before, after, ui) =>
+      candidateJudge(before, after, ui ?? newUi(before), buildSteps, NAMES),
+    rungs: SOLO_RUNGS,
+    marks: {
+      roles: {
+        ring: "the cell the step fills in with a number.",
+        strike: "the pencil marks the step crosses out.",
+        outline:
+          "the cells the reason rests on: “this cell”, whose pencil marks the step crosses out; a number just placed, whose copies are being crossed out around it; the other cells of a block, row or column that between them already account for some numbers; the cells a killer sum is left to; the only cells that several rows or columns leave for one number; or “the middle cell” a step weighs and the cells it reads.",
+        stripes:
+          'the row, column, block, diagonal or killer cage the sentence names, or the several rows or columns it names together: "in this block", "this killer cage", "these 2 columns".',
+      },
     },
+    keepTrack: hintKeepTrack,
+    gesture: (s, ui, ds, m) => {
+      const ts = ds.tileSize;
+      const mid = (v: number) => border(ts) + v * ts + ((ts / 2) | 0);
+      return candidateGesture(
+        m,
+        ui,
+        (x, y) => ({ x: mid(x), y: mid(y) }),
+        digitKeyCode,
+        undefined,
+        markAll(s),
+      );
+    },
+    refreshStep: refreshHintStep,
   },
-  hintKeepTrack,
-  hintGesture: (s, ui, ds, m) => {
-    const ts = ds.tileSize;
-    const mid = (v: number) => border(ts) + v * ts + ((ts / 2) | 0);
-    return candidateGesture(
-      m,
-      ui,
-      (x, y) => ({ x: mid(x), y: mid(y) }),
-      digitKeyCode,
-      undefined,
-      markAll(s),
-    );
-  },
-  refreshHintStep,
   findMistakes,
   clearMistakes: (_state, mistakes) => clearEntries(setMoves, mistakes),
   revealOne: (state, solved) =>

@@ -27,7 +27,6 @@ import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
-  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import type * as flip from "../../generated/games/flip/flip.compiled.ts";
@@ -276,23 +275,22 @@ export const flipGame: Game<
     if (!answer) return { ok: false, error: NO_SOLUTION };
     return { ok: true, move: { kind: "solution", mask: Array.from(answer.presses) } };
   },
-
-  hint,
-  hintRungs: FLIP_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the square to press.",
-      outline:
-        "the unlit squares the press is for: the ones only it can still light, no square further on flipping them, or on the last press every unlit square left.",
-      stripes: "the other squares that press flips, unlit or lit.",
+  hint: {
+    plan: hint,
+    rungs: FLIP_RUNGS,
+    marks: {
+      roles: {
+        ring: "the square to press.",
+        outline:
+          "the unlit squares the press is for: the ones only it can still light, no square further on flipping them, or on the last press every unlit square left.",
+        stripes: "the other squares that press flips, unlit or lit.",
+      },
     },
-  },
-  hintKeepTrack,
-  hintGesture: (s, ui, ds, m, step) => {
-    if (m.kind !== "flip") throw new Error("flip: a hint only presses a square");
-    return verbClicks(targetVerbs, { executeMove, hintKeepTrack }, s, ui, ds, step, [
-      { x: m.x, y: m.y },
-    ]);
+    keepTrack: hintKeepTrack,
+    targets: (_s, m) => {
+      if (m.kind !== "flip") throw new Error("flip: a hint only presses a square");
+      return [{ x: m.x, y: m.y }];
+    },
   },
 
   // Not `boxedGridText`: a square is three lines high, its 3x3 neighborhood.

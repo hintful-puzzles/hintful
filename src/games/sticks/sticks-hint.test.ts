@@ -53,7 +53,7 @@ const KINDS = STICKS_RUNGS;
 
 /** The steps a hint gives from a state. */
 function stepsOf(state: SticksState) {
-  const r = sticksGame.hint?.(state);
+  const r = sticksGame.hint.plan(state);
   if (!r?.ok) throw new Error("expected a hint");
   return r.steps;
 }
@@ -120,7 +120,7 @@ describe("sticks hint — technique coverage", () => {
 
 describe("sticks hint — narration", () => {
   const stepsFor = (seed: number) => {
-    const r = sticksGame.hint?.(board(seed).state);
+    const r = sticksGame.hint.plan(board(seed).state);
     if (!r?.ok) throw new Error("expected a hint");
     return r.steps;
   };
@@ -294,7 +294,7 @@ describe("sticks hint — lifecycle", () => {
     const plan = stepsOf(cur);
     for (const step of [plan[2], plan[0], plan[5]])
       cur = sticksGame.executeMove(cur, step.move);
-    const r = sticksGame.hint?.(cur);
+    const r = sticksGame.hint.plan(cur);
     expect(r?.ok).toBe(true);
     if (!r?.ok) return;
     expect(r.steps.length).toBeGreaterThan(0);
@@ -320,27 +320,27 @@ describe("sticks hint — lifecycle", () => {
 
   it("counts a solved board as finished, so the midend refuses it", () => {
     const { state } = board(1);
-    const r = sticksGame.solve?.(state, state);
+    const r = sticksGame.solve(state, state);
     if (!r?.ok) throw new Error("solve refused");
     expect(sticksGame.status(sticksGame.executeMove(state, r.move))).toBe("solved");
   });
 
   it("follows a step only when the hinted square gets the hinted orientation", () => {
     const { state } = board(1);
-    const r = sticksGame.hint?.(state);
+    const r = sticksGame.hint.plan(state);
     if (!r?.ok) throw new Error("expected a hint");
     const step = r.steps[0];
     const hl = decides(step);
     const other = hl.to === "hor" ? "ver" : "hor";
     expect(
-      sticksGame.hintKeepTrack?.(
+      sticksGame.hint.keepTrack(
         { kind: "set", changes: [{ index: hl.index, line: hl.to }] },
         step,
         state,
       ),
     ).toBe("completed");
     expect(
-      sticksGame.hintKeepTrack?.(
+      sticksGame.hint.keepTrack(
         { kind: "set", changes: [{ index: hl.index, line: other }] },
         step,
         state,

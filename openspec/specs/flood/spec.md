@@ -194,13 +194,13 @@ multi-step plan: each step is a fill, narrated by its color.
 
 ### Requirement: Hint: Flood's hint plan follows the player's fills
 
-`hintKeepTrack` SHALL advance the plan when the player makes the step's fill
+`hint.keepTrack` SHALL advance the plan when the player makes the step's fill
 and drop it otherwise.
 
 #### Scenario: Following the plan keeps it; deviating drops it
 
 - **WHEN** the player makes the current step's fill
-- **THEN** `hintKeepTrack` reports it completed and the plan advances
+- **THEN** `hint.keepTrack` reports it completed and the plan advances
 - **AND** a different fill reports `"off"`
 
 ### Requirement: Hint: Flood's hint refuses a grid flooded after the limit

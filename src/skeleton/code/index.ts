@@ -392,8 +392,7 @@ export const skeletonGame: Game<
   newState,
   newUi,
   changedState,
-  encodeUi,
-  decodeUi,
+  uiCodec: { encode: encodeUi, decode: decodeUi },
 
   interpretMove,
   // A tap only selects; there is no second action to hold a finger for.
@@ -419,17 +418,19 @@ export const skeletonGame: Game<
   solve(_orig, curr) {
     return { ok: true, move: { type: "guess", digits: curr.code.slice() } };
   },
-  hint: (state) => skeletonHint(state),
-  hintRungs: SKELETON_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "what the step acts on: *the ringed digits* in the answer row, which it rules out, or *the ringed squares* of the row you are filling, where the guess it suggests goes.",
-      stripes: "a scored row: *the striped row* the step reads.",
+  hint: {
+    plan: (state) => skeletonHint(state),
+    rungs: SKELETON_RUNGS,
+    marks: {
+      roles: {
+        ring: "what the step acts on: *the ringed digits* in the answer row, which it rules out, or *the ringed squares* of the row you are filling, where the guess it suggests goes.",
+        stripes: "a scored row: *the striped row* the step reads.",
+      },
     },
+    keepTrack: skeletonHintKeepTrack,
+    refreshStep: skeletonRefreshHintStep,
+    gesture: hintGesture,
   },
-  hintKeepTrack: skeletonHintKeepTrack,
-  refreshHintStep: skeletonRefreshHintStep,
-  hintGesture,
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

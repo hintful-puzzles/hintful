@@ -413,7 +413,7 @@ One firing of a technique SHALL be one step, and a technique SHALL fire for one 
 
 ### Requirement: Hint: A Bridges hint step is followed one drag at a time
 
-Where the player's move does part of what a step asks, `hintKeepTrack` SHALL
+Where the player's move does part of what a step asks, `hint.keepTrack` SHALL
 verdict `"onTrack"` and shrink the step in place. It SHALL judge a bridge count
 as progress when it moves toward what the step asks for, because one drag adds
 one bridge and not the whole count, and SHALL accept the span from either end,

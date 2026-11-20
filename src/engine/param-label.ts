@@ -58,7 +58,7 @@ export function choiceName<P>(
 
 /** The label of `p` after its ruleset's name: every slot's words. */
 function describeSlots<P>(
-  game: { paramConfig?: readonly ParamConfigItem<P>[] },
+  game: { paramConfig: readonly ParamConfigItem<P>[] },
   p: P,
 ): string {
   const slots: Record<Slot, string[]> = {
@@ -67,7 +67,7 @@ function describeSlots<P>(
     tier: [],
     tail: [],
   };
-  for (const item of game.paramConfig ?? []) {
+  for (const item of game.paramConfig) {
     const words = wordsOf(item, p);
     if (item.label && words) slots[item.label.slot].push(words);
   }
@@ -78,7 +78,7 @@ function describeSlots<P>(
 
 /** The label of params `p`, composed from the game's `paramConfig`. */
 export function describeParams<P>(
-  game: { paramConfig?: readonly ParamConfigItem<P>[] },
+  game: { paramConfig: readonly ParamConfigItem<P>[] },
   p: P,
 ): string {
   const slots = describeSlots(game, p);
@@ -104,7 +104,7 @@ export interface TitledPresetMenu<P> {
  * otherwise. What the app's Type menu shows.
  */
 export function presetMenu<P>(game: {
-  paramConfig?: readonly ParamConfigItem<P>[];
+  paramConfig: readonly ParamConfigItem<P>[];
   menu: PresetBoards<P>;
 }): TitledPresetMenu<P> {
   const leaf = (menu: PresetMenu<P>, sectioned: boolean): TitledPresetMenu<P> => {
@@ -118,7 +118,7 @@ export function presetMenu<P>(game: {
       ? { title: menu.title ?? "", submenu: menu.submenu.map(walk) }
       : leaf(menu, false);
 
-  const root = presetGrid(game.paramConfig ?? [], game.menu);
+  const root = presetGrid(game.paramConfig, game.menu);
   const item = rulesetField(game);
   if (item === null) return walk(root);
   // The rulesets are the sections: a section of the game's own could mix them.

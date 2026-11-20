@@ -105,7 +105,7 @@ export interface TargetCodec<State, Move, H, Target, Key, Value> {
   ring(t: Target, state: State): string;
 }
 
-/** A game's `hintKeepTrack` from how it spells its targets: the move is judged
+/** A game's `hint.keepTrack` from how it spells its targets: the move is judged
  * by {@link trackTargets}, and a step on track shrinks in place to what is
  * left, its words keeping only the rings of the targets left. */
 export function keepTrackBy<State, Move, H, Target, Key, Value>(

@@ -157,7 +157,7 @@ describe("starbattle completion", () => {
   const start = newState(P, DESC);
 
   it("the solve move finishes the board", () => {
-    const solved = starbattleGame.solve?.(start, start);
+    const solved = starbattleGame.solve(start, start);
     if (!solved?.ok) throw new Error("expected a solution");
     const end = executeMove(start, solved.move);
     expect(starbattleGame.status(end)).toBe("solved");

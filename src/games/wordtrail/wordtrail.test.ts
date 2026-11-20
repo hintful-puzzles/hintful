@@ -313,7 +313,7 @@ describe("wordtrail completion", () => {
     executeMove(state, draw(...paths));
 
   it("the solve move finishes the board", () => {
-    const solved = wordtrailGame.solve?.(start, start);
+    const solved = wordtrailGame.solve(start, start);
     if (!solved?.ok) throw new Error("expected a solution");
     expect(wordtrailGame.status(executeMove(start, solved.move))).toBe("solved");
   });

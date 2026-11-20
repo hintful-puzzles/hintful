@@ -941,22 +941,24 @@ export const undeadGame: Game<
 
   solve,
   difficulty,
-  hint,
-  hintRungs: UNDEAD_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the square the step fills, in the hint color.",
-      strike:
-        "the pencil marks the step crosses out. To cross one out yourself, right-click the square and type that monster's letter.",
-      outline:
-        "the *sightline* the step reasons from, in a second color: the squares, mirrors included, that a line of sight passes through between the two numbers at its ends.",
-      stripes:
-        "“this square” or “these squares”, the squares whose pencil marks the step crosses out.",
+  hint: {
+    plan: hint,
+    rungs: UNDEAD_RUNGS,
+    marks: {
+      roles: {
+        ring: "the square the step fills, in the hint color.",
+        strike:
+          "the pencil marks the step crosses out. To cross one out yourself, right-click the square and type that monster's letter.",
+        outline:
+          "the *sightline* the step reasons from, in a second color: the squares, mirrors included, that a line of sight passes through between the two numbers at its ends.",
+        stripes:
+          "“this square” or “these squares”, the squares whose pencil marks the step crosses out.",
+      },
     },
+    keepTrack: hintKeepTrack,
+    gesture: hintGesture,
+    refreshStep: refreshHintStep,
   },
-  hintKeepTrack,
-  hintGesture,
-  refreshHintStep,
   findMistakes,
   clearMistakes,
   revealOne,

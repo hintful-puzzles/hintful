@@ -392,7 +392,7 @@ first pending link be drawn anyway.
 ### Requirement: Hint: A Tents hint step says why and marks what it uses
 
 Each step SHALL say why it is forced in one sentence. What its ring, its
-outline and its stripes stand for SHALL be the legend's (`hintMarks`).
+outline and its stripes stand for SHALL be the legend's (`hint.marks`).
 
 #### Scenario: A line count's picture
 
@@ -402,7 +402,7 @@ outline and its stripes stand for SHALL be the legend's (`hintMarks`).
 
 ### Requirement: Hint: A Tents step's links are followed as its squares are
 
-What `hintKeepTrack` judges a move by SHALL be the links it changes as well as
+What `hint.keepTrack` judges a move by SHALL be the links it changes as well as
 the squares, so a step that places a tent joined to a tree is only partly made
 by the tent.
 

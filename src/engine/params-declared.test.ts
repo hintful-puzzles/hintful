@@ -36,7 +36,7 @@ describe("every paramConfig item says what it means", () => {
   it.each(
     GAMES,
   )("%s: a doc on every item, and a shared doc follows its partner", (id, g) => {
-    const config = g.paramConfig ?? [];
+    const config = g.paramConfig;
     config.forEach((item, i) => {
       if (typeof item.doc === "string") {
         expect(item.doc.trim(), `${id}: ${item.kw} has an empty doc`).not.toBe("");
@@ -51,7 +51,7 @@ describe("every paramConfig item says what it means", () => {
   // says what it is, or the mode goes unexplained.
   it.each(GAMES)("%s: a choices field's doc names each word choice", (id, g) => {
     const tiers = difficultyChoiceItem(g);
-    for (const item of g.paramConfig ?? []) {
+    for (const item of g.paramConfig) {
       if (item.type !== "choices" || item === tiers || typeof item.doc !== "string")
         continue;
       const doc = item.doc.toLowerCase();
@@ -65,7 +65,7 @@ describe("every paramConfig item says what it means", () => {
   it.each(
     GAMES,
   )("%s: bounds are a range, and the defaults are inside them", (id, g) => {
-    for (const item of g.paramConfig ?? []) {
+    for (const item of g.paramConfig) {
       if (item.type !== "string" || !item.bounds) continue;
       const { min, max } = item.bounds;
       if (min !== undefined && max !== undefined) expect(min).toBeLessThanOrEqual(max);
@@ -100,7 +100,7 @@ describe("one describer labels every params set", () => {
     // under one heading read the same.
     for (const lines of sections(menu))
       expect(new Set(lines).size, `${id}: ${lines.join(" | ")}`).toBe(lines.length);
-    for (const leaf of leaves(presetGrid(g.paramConfig ?? [], g.menu))) {
+    for (const leaf of leaves(presetGrid(g.paramConfig, g.menu))) {
       labeled++;
       expect(paramsError(g, leaf.params, true), `${id}: preset refused`).toBeNull();
       // A name is for what no field says; one that repeats the label is a

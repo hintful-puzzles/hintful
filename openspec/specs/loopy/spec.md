@@ -866,7 +866,7 @@ placed one link at a time.
 
 ### Requirement: Hint: A Loopy hint step's marks are its legend's
 
-What a step marks SHALL be what the legend `hintMarks` declares of each role,
+What a step marks SHALL be what the legend `hint.marks` declares of each role,
 painted from the step's words (`engine-hints`, "A bound hint step's words SHALL
 name exactly the marks it draws"), and Loopy makes no departure. A note is
 marked as an edge is: the note a step places takes the role of what it
@@ -1113,7 +1113,7 @@ Within a tier the hint SHALL take the firing that continues from its last steps,
 
 ### Requirement: Hint: A move that takes a hint step with the aids on still follows it
 
-`hintKeepTrack` SHALL count a line move as following a step where each edge it
+`hint.keepTrack` SHALL count a line move as following a step where each edge it
 sets beyond the step's own is one auto-follow would add from the step's edges,
 in the step's state, or an edge ruled out that `auto-rule-out` settles from
 them, and SHALL call any other extra edge off the step. A note move SHALL

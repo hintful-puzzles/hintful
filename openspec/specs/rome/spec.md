@@ -323,7 +323,7 @@ the squares of a loop, off by default, under the key `loop`.
 
 Rome's hint SHALL be a plan of the shared candidate walk
 (`engine-candidate-hints`, "A shared candidate-elimination hint plan"), its
-marks those of its legend (`hintMarks`) and its sentences in Rome's own
+marks those of its legend (`hint.marks`) and its sentences in Rome's own
 vocabulary of arrows, squares and areas. Rome SHALL start it on the implicit
 reading, under which a square with no marks holds every arrow its area has
 not used that does not point off the grid.

@@ -218,7 +218,7 @@ describe("seismic params", () => {
   });
 
   it("round-trips the custom-params form", () => {
-    const cfg = seismicGame.paramConfig ?? [];
+    const cfg = seismicGame.paramConfig;
     for (const p of PRESETS) {
       const copy = { ...p };
       for (const item of cfg) {

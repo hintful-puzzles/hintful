@@ -273,9 +273,9 @@ plan the exact search finds opens with such a slide.
 - **WHEN** a player slides a row of the solved board and asks for a hint
 - **THEN** the hint is the one move that slides it back
 
-### Requirement: Hint: hintKeepTrack follows slides of the hinted line
+### Requirement: Hint: hint.keepTrack follows slides of the hinted line
 
-Sixteen's `hintKeepTrack` SHALL report `"completed"` when a slide of the
+Sixteen's `hint.keepTrack` SHALL report `"completed"` when a slide of the
 hinted line lands the tile on the step's target, `"onTrack"` for other slides
 of that line, adjusting the step's remaining delta in place, and `"off"`
 otherwise.

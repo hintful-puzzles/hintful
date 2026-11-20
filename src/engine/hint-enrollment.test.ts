@@ -22,6 +22,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { difficultyTiers, tierOf } from "./difficulty.ts";
+import { hasHint } from "./game.ts";
 import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { axisSlice, dealtBoards, leafPresets, presetAxes } from "./testing/presets.ts";
@@ -111,7 +112,7 @@ describe("the per-commit preset slice is derived, and did not collapse", () => {
     // ends only, and asserting that here would just re-derive `wantedValues`.
     let discrete = 0;
     for (const { id, game, presets, slice } of rows) {
-      for (const item of game.paramConfig ?? []) {
+      for (const item of game.paramConfig) {
         if (item.type === "string") continue;
         discrete++;
         const offered = [...new Set(presets.map((e) => item.get(e.params)))].sort();
@@ -269,7 +270,7 @@ describe("every choice the Custom dialog offers is dealt", () => {
     game,
     // What a guard is handed: `gatePresets` for a hinting game, and the same
     // function beneath it for the rest, which `desc-error-games.test.ts` calls.
-    dealt: typeof game.hint === "function" ? gatePresets(game) : dealtBoards(game),
+    dealt: hasHint(game) ? gatePresets(game) : dealtBoards(game),
   }));
 
   it("deals a board for every value of every closed set, or says why not", () => {
@@ -279,7 +280,7 @@ describe("every choice the Custom dialog offers is dealt", () => {
     const undealt: string[] = [];
     let examined = 0;
     for (const { id, game, dealt } of rows) {
-      for (const item of game.paramConfig ?? []) {
+      for (const item of game.paramConfig) {
         if (item.type === "string") continue;
         const held = new Set(dealt.map((e) => item.get(e.params)));
         const offered: [boolean | number, string][] =

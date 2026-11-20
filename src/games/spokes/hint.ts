@@ -68,7 +68,7 @@ function stepOf(
   });
 }
 
-const { hint: spokesPlan, judgeMove: judgePlan } = describedEdgeHint<
+const { plan: spokesPlan, judgeMove: judgePlan } = describedEdgeHint<
   SpokesState,
   SpokesMove,
   SpokesHint,

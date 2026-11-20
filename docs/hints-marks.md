@@ -21,7 +21,7 @@ already does it.
    decides, an outline on what it reasons from, stripes on the line or region
    whose contents it reasons from, a strike on a note it rules out (`hints.md` § "Bind the words to
    the marks").
-2. Declare the roles the steps name as `hintMarks.roles` in `index.ts`, and
+2. Declare the roles the steps name as `hint.marks.roles` in `index.ts`, and
    put `{{hint-marks}}` in the `hints` of the game's description.
 3. In `render.ts`, give the outline a slot holding `HINT_OUTLINE`, and draw
    each mark in its role's ink and nothing else (§ "The engine colors the
@@ -75,7 +75,7 @@ already does it.
 | Marks on tiles vs marks on cells | your game's pieces move, and the hint marks one |
 | Placement animation as hint motion | your game has no move animation and Auto-Hint looks frozen |
 | Group one firing into one step | one deduction forces several cells |
-| – A journey completes leg by leg | a journey's `hintKeepTrack` never advances |
+| – A journey completes leg by leg | a journey's `hint.keepTrack` never advances |
 | – A move must not reach past the squares the step claimed | a move fills an area and not a named set of cells |
 | – Read what a firing did from a before/after comparison | a firing's cells come from a rule's return codes or progress flags |
 | – Bound a plan by the steps it offers | you cap a plan |
@@ -650,7 +650,7 @@ engine colors every hint mark".
   content of any color, and it keeps the ink's own coverage: stripes stay as
   translucent as the hatch.
 - **Color is never the only carrier**, and a color's name goes neither in a
-  sentence nor in the `hintMarks` legend (requirement "A legend color is
+  sentence nor in the `hint.marks` legend (requirement "A legend color is
   never the only cue"). A reference's color depends on the step, so the words
   tell references apart by their nouns, and the marks by their shapes.
 
@@ -664,7 +664,7 @@ would leave the old measure painting a ring the frame no longer draws.
 ## A hint that suppresses a game's aid dismisses on a UI update
 
 **When a displayed hint hides or takes over something the game also draws,
-implement `Game.uiUpdateClearsHint(step, state, ui)`.** `hintKeepTrack` is
+implement `Game.uiUpdateClearsHint(step, state, ui)`.** `hint.keepTrack` is
 consulted for moves only. In a game where a click is a `UI_UPDATE` (a
 selection), nothing else dismisses the hint, and the player who touches the
 suppressed surface sees no change and no way out. The midend calls the hook
@@ -692,7 +692,7 @@ true.
 
 The trigger is suppression, not selection: a selection game whose hint
 suppresses nothing does not set the hook. Population:
-`git grep -l uiUpdateClearsHint src/games`.
+`git grep -l hint.uiUpdateClears src/games`.
 
 ## Marks on tiles vs marks on cells
 
@@ -757,7 +757,7 @@ is one journey").
   as complete as the rules are monotone
   ([`solver-and-generator.md`](./solver-and-generator.md) § "No option
   switches the generator's checks off").
-- **`hintKeepTrack` handles a partly made step.** A move that sets the hinted
+- **`hint.keepTrack` handles a partly made step.** A move that sets the hinted
   value into a subset of the step's cells and nothing else is `"completed"`
   when it makes the last one, and otherwise `"onTrack"` with the step shrunk
   in place, its move and its words both, so a later play does not repeat
@@ -780,12 +780,12 @@ is one journey").
 Exemplars: `mustGrow` in
 [`filling.description.yaml`](../src/games/filling/filling.description.yaml),
 one firing that places every square a region cannot do without, the plan and
-`hintKeepTrack` in [`filling/index.ts`](../src/games/filling/index.ts), and
+`hint.keepTrack` in [`filling/index.ts`](../src/games/filling/index.ts), and
 `skeletonKeepTrack` in the skeleton's `hint.ts`.
 
 ### A journey completes leg by leg
 
-**`hintKeepTrack` judges the leg: the squares this step's own move asks
+**`hint.keepTrack` judges the leg: the squares this step's own move asks
 for.** The midend advances on `"completed"` and holds the same step on
 `"onTrack"`, so a hook that asks whether all of the journey's squares are
 placed never completes leg 1, and playing the hint repeats it forever. The
@@ -898,7 +898,7 @@ the case.
   slide", not "is pinned"): a guard aimed at the conclusion clause catches
   "is", and the guard is not loosened for it.
 - **A move over an arbitrary set of cells** lets one firing group cells that
-  do not touch and lets `hintKeepTrack` shrink it in place.
+  do not touch and lets `hint.keepTrack` shrink it in place.
 
 Exemplars: `packLeft`, `packRight` and `analyzeLine` in
 [`pattern/solver.ts`](../src/games/pattern/solver.ts), and `fillCells` in

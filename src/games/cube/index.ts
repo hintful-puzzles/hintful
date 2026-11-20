@@ -230,30 +230,31 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   },
 
   solve,
-
-  hint,
-  hintRungs: CUBE_RUNGS,
-  hintMarks: {
-    roles: {
-      ring: "the square to roll onto, in the hint's color.",
-      outline:
-        "the painted square the hint is working toward, in a second color: *the outlined square*, in its words. It stays outlined through every roll on the way to it.",
+  hint: {
+    plan: hint,
+    rungs: CUBE_RUNGS,
+    marks: {
+      roles: {
+        ring: "the square to roll onto, in the hint's color.",
+        outline:
+          "the painted square the hint is working toward, in a second color: *the outlined square*, in its words. It stays outlined through every roll on the way to it.",
+      },
     },
-  },
-  hintKeepTrack,
-  // A tap on the square the roll lands on, which `directionFromClick` reads
-  // as a roll toward it.
-  hintGesture(s, _ui, ds, m) {
-    if (!("dir" in m)) return [];
-    const dest = rollDest(s, DIR_CHARS.indexOf(m.dir));
-    if (dest < 0) return [];
-    const sq = s.grid[dest];
-    return [
-      click({
-        x: Math.trunc(sq.x * ds.tileSize) + ds.ox,
-        y: Math.trunc(sq.y * ds.tileSize) + ds.oy,
-      }),
-    ];
+    keepTrack: hintKeepTrack,
+    // A tap on the square the roll lands on, which `directionFromClick` reads
+    // as a roll toward it.
+    gesture(s, _ui, ds, m) {
+      if (!("dir" in m)) return [];
+      const dest = rollDest(s, DIR_CHARS.indexOf(m.dir));
+      if (dest < 0) return [];
+      const sq = s.grid[dest];
+      return [
+        click({
+          x: Math.trunc(sq.x * ds.tileSize) + ds.ox,
+          y: Math.trunc(sq.y * ds.tileSize) + ds.oy,
+        }),
+      ];
+    },
   },
 
   statusbarText,

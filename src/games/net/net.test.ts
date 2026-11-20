@@ -313,7 +313,7 @@ describe("moves", () => {
 
   it("solve powers and locks the whole board, and wins", () => {
     const { aux, state } = generate(p, "solve-seed");
-    const result = netGame.solve?.(state, state, aux);
+    const result = netGame.solve(state, state, aux);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const solved = netGame.executeMove(state, result.move);
@@ -324,7 +324,7 @@ describe("moves", () => {
 
   it("solve works without aux by searching for the answer", () => {
     const { state } = generate(p, "solve-noaux");
-    const result = netGame.solve?.(state, state);
+    const result = netGame.solve(state, state);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const solved = netGame.executeMove(state, result.move);

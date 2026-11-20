@@ -210,7 +210,7 @@ describe("magnets moves + findMistakes", () => {
     expect(magnetsGame.findMistakes?.(dirty) ?? []).not.toEqual([]);
 
     // Solve reaches completion.
-    const solveRes = magnetsGame.solve?.(s, s, aux);
+    const solveRes = magnetsGame.solve(s, s, aux);
     expect(solveRes?.ok).toBe(true);
     if (solveRes?.ok) {
       s = magnetsGame.executeMove(s, solveRes.move);

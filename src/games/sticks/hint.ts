@@ -80,9 +80,4 @@ const described = describedFiringHint<
   say: {},
 });
 
-export const {
-  hint: sticksHint,
-  hintKeepTrack: sticksKeepTrack,
-  refreshHintStep: sticksRefreshHintStep,
-  judgeMove: sticksJudgeMove,
-} = described;
+export const sticksHint = described.hint;

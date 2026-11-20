@@ -7,7 +7,6 @@ import { awaitsFirstBoard } from "./board-commands.ts";
 import { Puzzle } from "./puzzle.ts";
 
 const ATTRS: PuzzleStaticAttributes = {
-  canSolve: true,
   canHint: true,
   canCheck: true,
   referenceTitle: "Dominoes",

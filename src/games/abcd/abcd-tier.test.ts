@@ -203,7 +203,7 @@ describe("an Unreasonable ABCD board", () => {
       expect(countGrids(p, state.numbers), desc).toBe(1);
       expect(state.numbers.includes(NO_NUMBER), desc).toBe(p.removenums);
       // And the answer Solve and the mistake check go by is that grid.
-      const solved = abcdGame.solve?.(state, state);
+      const solved = abcdGame.solve(state, state);
       if (!solved?.ok) throw new Error(`${desc}: no answer found`);
       expect(status(abcdGame.executeMove(state, solved.move)), desc).toBe("solved");
     }
@@ -329,9 +329,9 @@ describe("the hint on an Unreasonable ABCD board", () => {
     const followHint = (): number => {
       let steps = 0;
       for (
-        let plan = abcdGame.hint?.(state, undefined, ui);
+        let plan = abcdGame.hint.plan(state, undefined, ui);
         plan?.ok;
-        plan = abcdGame.hint?.(state, undefined, ui)
+        plan = abcdGame.hint.plan(state, undefined, ui)
       )
         for (const step of plan.steps) {
           state = abcdGame.executeMove(state, step.move);

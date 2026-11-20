@@ -216,7 +216,7 @@ candidate-elimination hint plan" and "A row/column Latin square answers no
 question its regions already settle"), with no departure. Towers SHALL supply
 its clue techniques as rungs over the notes, each saying its clue, one rung of
 its own and its words, which the requirements below state. What its marks
-stand for SHALL be the legend's (`hintMarks`).
+stand for SHALL be the legend's (`hint.marks`).
 
 #### Scenario: A single on a Towers board
 

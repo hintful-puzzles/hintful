@@ -687,7 +687,7 @@ from the state it returns.
 
 Type a move as a discriminated union the compiler covers exhaustively, not a
 string to scan. A move must be structured-clone-safe as it is, for the save
-file, or the game supplies `serializeMove` and `deserializeMove`. Exemplar:
+file, or the game supplies a `moveCodec` to write and read it. Exemplar:
 `SkeletonMove` in the skeleton's [`state.ts`](../src/skeleton/grid/state.ts).
 
 ## A move you do not recognize is refused, never guessed
@@ -760,10 +760,11 @@ read [`hints.md`](./hints.md), and for `reference` "The reference aid".
 
 - **`wantsStatusbar` comes from `statusbarText`.** The timer is not in it and
   has its own chrome.
-- **`canSolve` comes from `solve`.** Test it through a real `Midend` when
-  `aux` matters.
-- **`canCheck` comes from `findMistakes` or `hint`.** A hint alone checks
-  only for a dead end ("Mistake checking is part of done").
+- **Every game has `solve`, so there is no `canSolve`.** A solver that
+  cannot answer returns a `SolveFailure`. Test it through a real `Midend`
+  when `aux` matters.
+- **`canCheck` comes from `findMistakes` or a written hint.** A hint alone
+  checks only for a dead end ("Mistake checking is part of done").
 - **`textFormat` present means a text panel.** A grid's is written with
   `grid-text.ts` ([`engine-catalog.md`](./engine-catalog.md) §
   "`grid-text.ts` — a grid's plain-text board").
@@ -783,9 +784,9 @@ read [`hints.md`](./hints.md), and for `reference` "The reference aid".
 
 ### Contract sections, and what makes a draft
 
-Four members are sections ([`sections.ts`](../src/engine/sections.ts)):
-`hint`, `findMistakes`, `solve` and `transposeParams`. Each is implemented,
-not applicable, or absent, and **an absent one makes the game a draft**:
+Three members are sections ([`sections.ts`](../src/engine/sections.ts)):
+`hint`, `findMistakes` and `transposeParams`. Each is implemented, not
+applicable, or absent, and **an absent one makes the game a draft**:
 still playable, labeled "Draft" on the home screen, never hidden
 (`ts-engine`, "A game's contract sections are implemented, not applicable,
 or absent, and an absent one makes it a draft"). The build
@@ -801,6 +802,12 @@ an object keyed by section. Exemplars:
   (`ts-engine`, "A not-applicable reason is a fact about the puzzle").
 - **A hint is never not applicable**, and a section implemented and excused
   at once is refused, the production build included.
+- **A game whose hint is unwritten registers `hint: DRAFT_HINT`**, which is
+  how the hint section is absent: `hint` is required, so a port cannot forget
+  it, and `hasHint(game)` is the test. The midend offers no Hint control for
+  it. `DRAFT_HINT.plan` throws rather than refuse, since a refusal would be
+  shown nowhere, and a guard that forgot to skip a draft should fail, not
+  read a refusal as a verdict.
 - **A guard that excuses a game for lacking a section reads the reason**
   with `sectionState` and keeps no ledger, as `orientation.test.ts` does.
 
@@ -848,17 +855,17 @@ bare `UI_UPDATE`, when the player is mid-edit.
 
 ## Ui that must survive a save
 
-Serialize with `encodeUi` and `decodeUi` exactly the `Ui` fields that are
-set in `interpretMove` and live outside the undo history. Replay runs
+Serialize with `uiCodec` (`encode` and `decode`, one object) exactly the `Ui`
+fields that are set in `interpretMove` and live outside the undo history. Replay runs
 `executeMove`, never `interpretMove`, so it cannot rebuild them: a count of
 deaths that outlasts undoing the death, or a half-composed row that reaches
 the log only when submitted. The midend restores them after the replay. A
-game whose `Ui` is fully derivable omits both hooks. Exemplars:
-`git grep -l encodeUi src/games`.
+game whose `Ui` is fully derivable has no `uiCodec`. Exemplars:
+`git grep -l uiCodec src/games`.
 
 A `Ui` edit is not a move and still takes a save: the encoding rides the
 `game-state-change` notification (`NotifyGameStateChange.uiState`), which is
-what the app watches for autosave; a game with no `encodeUi` sends nothing.
+what the app watches for autosave; a game with no `uiCodec` sends nothing.
 `midend-ui-state.test.ts` holds the
 derivation. Check the reload in a browser.
 

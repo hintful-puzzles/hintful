@@ -243,7 +243,7 @@ describe("an Unreasonable Sticks board", () => {
       expect(deductionFinishes(state), desc).toBe(false);
       expect(countFills(state), desc).toBe(1);
       // And the answer Solve and the mistake check go by is that fill.
-      const solved = sticksGame.solve?.(state, state);
+      const solved = sticksGame.solve(state, state);
       if (!solved?.ok) throw new Error(`${desc}: no answer found`);
       expect(sticksGame.status(sticksGame.executeMove(state, solved.move)), desc).toBe(
         "solved",
@@ -406,9 +406,9 @@ describe("the hint on an Unreasonable Sticks board", () => {
     const followHint = (): number => {
       let steps = 0;
       for (
-        let plan = sticksGame.hint?.(state);
+        let plan = sticksGame.hint.plan(state);
         plan?.ok;
-        plan = sticksGame.hint?.(state)
+        plan = sticksGame.hint.plan(state)
       )
         for (const step of plan.steps) {
           state = sticksGame.executeMove(state, step.move);

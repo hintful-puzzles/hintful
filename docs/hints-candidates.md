@@ -39,7 +39,7 @@ each of these the shared way is
    needs: § "The shared candidate-hint machinery", § "The row/column
    preset".
 8. Write `hint` as `candidateHint(state, ui ?? newUi(state), buildSteps)`,
-   `hintKeepTrack` as `keepCandidateHintTrack` and `refreshHintStep` as
+   `hint.keepTrack` as `keepCandidateHintTrack` and `hint.refreshStep` as
    `refreshCandidateHintStep`.
 9. Run the guards the game has joined by doing the above:
    `hint-frontier.test.ts`, `candidate-reading.test.ts`, `mark-all.test.ts`
@@ -760,8 +760,8 @@ game handles it at four sites. Exemplar:
   its own `apply`, and overrides `singles` and `placeable` where a lone note
   or a hidden single is a marker and not a value.
 - **The adapter reads the marker move as `null`**, and the game's
-  `hintKeepTrack` and `refreshHintStep` judge it before delegating.
-  `refreshHintStep` resolves a marker step from the marker array: the shared
+  `hint.keepTrack` and `hint.refreshStep` judge it before delegating.
+  `hint.refreshStep` resolves a marker step from the marker array: the shared
   refresh keeps any step whose move its adapter reads as `null`, so it would
   never resolve one.
 - **A marker is seeded on the technique's marks** where the game builds

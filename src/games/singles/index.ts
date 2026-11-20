@@ -318,30 +318,29 @@ export const singlesGame: Game<
 
   solve,
   difficulty,
-  hint: described.hint,
-  judgeMove: described.judgeMove,
-  hintRungs: SAYS_KINDS,
-  hintMarks: {
-    roles: {
-      ring: "the square the step decides. It is drawn empty: the sentence says whether to shade it or circle it.",
-      outline:
-        "the squares the step reasons from, such as two matching numbers one square apart. One you have already shaded or circled is outlined as well, and so is the corner a step keeps from being boxed in.",
-      stripes: 'the row or column the sentence calls "this row" or "this column".',
+  hint: {
+    ...described.hint,
+    rungs: SAYS_KINDS,
+    marks: {
+      roles: {
+        ring: "the square the step decides. It is drawn empty: the sentence says whether to shade it or circle it.",
+        outline:
+          "the squares the step reasons from, such as two matching numbers one square apart. One you have already shaded or circled is outlined as well, and so is the corner a step keeps from being boxed in.",
+        stripes: 'the row or column the sentence calls "this row" or "this column".',
+      },
     },
-  },
-  hintKeepTrack: described.hintKeepTrack,
-  refreshHintStep: described.refreshHintStep,
-  hintGesture: (s, ui, ds, m) =>
-    m.sets.flatMap((t) =>
-      verbGesture(
-        targetVerbs,
-        s,
-        ds,
-        ui,
-        [t],
-        t.value === "black" ? "primary" : "secondary",
+    gesture: (s, ui, ds, m) =>
+      m.sets.flatMap((t) =>
+        verbGesture(
+          targetVerbs,
+          s,
+          ds,
+          ui,
+          [t],
+          t.value === "black" ? "primary" : "secondary",
+        ),
       ),
-    ),
+  },
   findMistakes,
   clearMistakes,
 

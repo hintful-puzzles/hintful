@@ -1,5 +1,5 @@
 /**
- * Every game that judges a move (`Game.judgeMove`) says its own hint's moves
+ * Every game that judges a move (`Game.hint.judgeMove`) says its own hint's moves
  * followed from the board: a hint's step is made from the position it is
  * shown on, so the walk aimed at its move reaches it at its first firing, and
  * the verdict names a technique. A move made only of notes (Map's Mark-all)
@@ -76,7 +76,7 @@ describe("judgeMove", () => {
     const judging = HINT_GAMES.filter(([, g]) => !judgesNothing(g));
     expect(judging.length).toBeGreaterThan(40);
     expectLedger(
-      judging.filter(([, g]) => g.judgeMove === undefined).map(([id]) => id),
+      judging.filter(([, g]) => g.hint.judgeMove === undefined).map(([id]) => id),
       UNJUDGED,
       {
         table: "UNJUDGED",
@@ -97,18 +97,18 @@ describe("judgeMove", () => {
     const nothing = HINT_GAMES.filter(([, g]) => judgesNothing(g));
     expect(nothing.length).toBeGreaterThan(10);
     expect(
-      nothing.filter(([, g]) => g.judgeMove !== undefined).map(([id]) => id),
+      nothing.filter(([, g]) => g.hint.judgeMove !== undefined).map(([id]) => id),
     ).toEqual([]);
   });
 
   for (const [id, game] of HINT_GAMES) {
-    const judge = game.judgeMove;
+    const judge = game.hint.judgeMove;
     if (judge === undefined) continue;
     it(`${id}: a hint's own first moves followed, said directly`, () => {
       const params = game.defaultParams();
       const { desc, aux } = dealt(game, params);
       let state = game.newState(params, desc);
-      const res = game.hint?.(state, aux, game.newUi(state));
+      const res = game.hint.plan(state, aux, game.newUi(state));
       if (!res?.ok) throw new Error(`${id}: no hint on a fresh board`);
       let judged = 0;
       // Each step is shown on the board its move is made from, and the
@@ -137,7 +137,7 @@ describe("judgeMove", () => {
         const params = game.defaultParams();
         const { desc, aux } = dealt(game, params);
         const state = game.newState(params, desc);
-        const solved = game.solve?.(state, state, aux);
+        const solved = game.solve(state, state, aux);
         if (!solved?.ok) throw new Error(`${id}: no solve of its own board`);
         const after = game.executeMove(state, solved.move);
         const verdict = judge(state, after, game.newUi(state));

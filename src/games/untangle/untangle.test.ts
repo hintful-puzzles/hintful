@@ -352,7 +352,7 @@ describe("moves and solve", () => {
     for (let seed = 0; seed < 6; seed++) {
       const { desc, aux } = untangleGame.newDesc({ n: 10 }, randomNew(`solve-${seed}`));
       const init = untangleGame.newState({ n: 10 }, desc);
-      const res = untangleGame.solve?.(init, init, aux);
+      const res = untangleGame.solve(init, init, aux);
       expect(res?.ok).toBe(true);
       if (!res?.ok) continue;
       const solved = untangleGame.executeMove(init, res.move);
@@ -364,7 +364,7 @@ describe("moves and solve", () => {
     for (const n of [6, 10, 25]) {
       const { desc } = untangleGame.newDesc({ n }, randomNew(`no-aux-${n}`));
       const init = untangleGame.newState({ n }, desc);
-      const res = untangleGame.solve?.(init, init, undefined);
+      const res = untangleGame.solve(init, init, undefined);
       if (!res?.ok) throw new Error(`Solve refused n=${n}`);
       expect(untangleGame.status(untangleGame.executeMove(init, res.move))).toBe(
         "solved",
@@ -377,7 +377,7 @@ describe("moves and solve", () => {
       { n: 5 },
       "0-1,0-2,0-3,0-4,1-2,1-3,1-4,2-3,2-4,3-4",
     );
-    expect(untangleGame.solve?.(init, init, undefined)).toEqual({
+    expect(untangleGame.solve(init, init, undefined)).toEqual({
       ok: false,
       error: NO_SOLUTION,
     });

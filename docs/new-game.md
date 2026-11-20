@@ -457,7 +457,8 @@ A game, or a change to one, is done when all of these hold:
       ships a tier-2.5 test, and heavy tests are seed-deterministic and never
       clock-gated ([`testing.md`](./testing.md)).
 - [ ] An explained hint that meets the quality bar ([`hints.md`](./hints.md)).
-      A new game ships with its hint, and a game without one is a draft.
+      A new game ships with its hint; one registered with `hint: DRAFT_HINT`
+      is a draft.
 - [ ] A help page in the standard shape, which `src/help-coverage.test.ts`
       holds to the game ([`hints.md`](./hints.md) § "The help teaches the
       marks"). A mode the page names is written as a choice token

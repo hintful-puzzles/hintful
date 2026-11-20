@@ -41,7 +41,7 @@ function freshCube() {
   // Square 0 blue (top nibble bit 0x8), start on square 5.
   const desc = `8${"0".repeat(Math.floor((area + 3) / 4) - 1)},5`;
   const state = newState(p, desc);
-  const ds = newDrawState(state, cubeGame.preferredTileSize ?? 48);
+  const ds = newDrawState(state, cubeGame.preferredTileSize);
   return { p, state, ds };
 }
 
@@ -159,7 +159,7 @@ describe("Cube rendering", () => {
     };
     const paint = (flash: Flash): number[] => {
       const { dr, ops } = recordingDrawing();
-      const ds = newDrawState(state, cubeGame.preferredTileSize ?? 48);
+      const ds = newDrawState(state, cubeGame.preferredTileSize);
       redraw(dr, ds, null, state, 1, {}, 0, flash);
       return opsOfKind(ops, "polygon")
         .slice(0, state.grid.length)

@@ -180,7 +180,7 @@ export function planContinuity(
   width: number | null,
   ui?: object,
 ): Continuity {
-  const res = game.hint?.(state, undefined, ui);
+  const res = game.hint.plan(state, undefined, ui);
   if (!res?.ok) return { positions: 0, jumps: 0, avoidable: 0 };
   const firings = firingsOf(game, state as Record<string, unknown>, res.steps, width);
   const out: Continuity = { positions: 0, jumps: 0, avoidable: 0 };

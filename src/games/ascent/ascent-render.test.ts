@@ -146,7 +146,7 @@ describe("ascent render", () => {
   ])("%s: each link of a solved path points to the higher number, and 1 is ringed", (_mode, mode) => {
     const p = { ...RECT, mode };
     const start = newAscentState(p, newAscentDesc(p, randomNew("render-arrows")).desc);
-    const solved = ascentGame.solve?.(start, start);
+    const solved = ascentGame.solve(start, start);
     if (!solved?.ok) throw new Error("solve failed");
     const state = ascentGame.executeMove(start, solved.move);
     const ds = ascentGame.newDrawState(state, 48);
@@ -413,7 +413,7 @@ describe("ascent hint frames", () => {
 describe("ascent win flash", () => {
   const params = ascentGame.decodeParams("5x5mRdn");
   const start = ascentGame.newState(params, "25c6a1_3_8_7_22_16a11e12b18_14a");
-  const answer = ascentGame.solve?.(start, start);
+  const answer = ascentGame.solve(start, start);
   if (!answer?.ok) throw new Error("the fixture does not solve");
   const state = ascentGame.executeMove(start, answer.move);
 

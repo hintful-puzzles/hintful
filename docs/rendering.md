@@ -271,7 +271,7 @@ and thick lines.
 
 **A hinted game must have painted every mark its renderer asks for**: each
 `role|kind` read through `StepMarks.of(role, kind)` in a role the legend
-(`hintMarks`) lists, and every role in the legend must be asked for.
+(`hint.marks`) lists, and every role in the legend must be asked for.
 
 - **A mark the seeded run never shows is searched for**, over the boards
   every sweep deals, each mode's first then each one's next, up to

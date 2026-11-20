@@ -361,7 +361,7 @@ describe("Untangle hint", () => {
 
   it("counts a solved board as finished, so the midend refuses it", () => {
     const { state, aux } = generated(10, "hint-solved");
-    const res = untangleGame.solve?.(state, state, aux);
+    const res = untangleGame.solve(state, state, aux);
     if (!res?.ok) throw new Error("Solve failed");
     const solved = untangleGame.executeMove(state, res.move);
     expect(untangleGame.status(solved)).toBe("solved");

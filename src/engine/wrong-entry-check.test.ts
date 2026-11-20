@@ -55,11 +55,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { permitsSearch } from "./difficulty.ts";
+import { hasHint } from "./game.ts";
 import { hintFinishes } from "./hint-finishes.ts";
 import { CONTRADICTION_UNLOCALIZED } from "./hint-refusal.ts";
 import { Midend } from "./midend.ts";
 import { randomNew, randomUpto } from "./random/index.ts";
 import { NOT_STARTED } from "./solve-failure.ts";
+import { hintGesture } from "./target-verb.ts";
 import { dealt } from "./testing/dealt.ts";
 import {
   type AnyGame,
@@ -76,7 +78,7 @@ const GESTURES = 180;
 const PAIRS = 60;
 
 const CHECKED = REGISTERED_GAMES.filter(
-  ([, game]) => game.findMistakes && game.solve && game.hint,
+  ([, game]) => game.findMistakes && hasHint(game),
 );
 
 /** The games no gesture made a wrong entry in, each with why; a code-breaking
@@ -109,6 +111,10 @@ function sweep(id: string, game: AnyGame): Swept {
 
   let current: unknown = null;
   let made: unknown[] = [];
+  // A hint that names its targets has its clicks planned on the game's own
+  // moves, made on a copy of the board; those are not moves the midend made,
+  // so the plan reads the game as it is and only the midend's moves are heard.
+  const { targets: _planned, ...hint } = game.hint;
   const heard: AnyGame = {
     ...game,
     executeMove: (state: unknown, move: unknown) => {
@@ -116,6 +122,13 @@ function sweep(id: string, game: AnyGame): Swept {
       current = game.executeMove(state, move);
       return current;
     },
+    hint: game.hint.targets
+      ? {
+          ...hint,
+          gesture: (state, ui, ds, _move, step) =>
+            hintGesture(game, state, ui, ds, step),
+        }
+      : game.hint,
   };
   const fresh = (): Midend<unknown, unknown, unknown, unknown, unknown> => {
     const m = new Midend(heard);
@@ -165,7 +178,7 @@ function sweep(id: string, game: AnyGame): Swept {
 
   let start = game.newState(params, dealt(game, params).desc);
   for (const move of opening) start = game.executeMove(start, move);
-  const plan = deduced ? game.hint?.(start) : undefined;
+  const plan = deduced ? game.hint.plan(start) : undefined;
   const steps = plan?.ok ? plan.steps : [];
   const alone = steps.map((_, i) => [i]);
   // Drawn from a stream of their own, so the gestures stay the ones measured.

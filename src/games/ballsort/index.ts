@@ -303,21 +303,23 @@ export const ballsortGame: Game<
 
   solve,
   hasNoSolution,
-
-  hint,
-  hintMarks: HINT_MARKS,
-  hintRungs: BALLSORT_RUNGS,
-  hintKeepTrack,
-  // The drag a player makes: the run picked up out of one tube and dropped
-  // on the other, whatever was picked up before.
-  hintGesture(s, _ui, ds, m) {
-    if (m.type !== "pour") return [];
-    return [drag(tubeCenter(s, ds.tileSize, m.from), tubeCenter(s, ds.tileSize, m.to))];
+  hint: {
+    plan: hint,
+    marks: HINT_MARKS,
+    rungs: BALLSORT_RUNGS,
+    keepTrack: hintKeepTrack,
+    // The drag a player makes: the run picked up out of one tube and dropped
+    // on the other, whatever was picked up before.
+    gesture(s, _ui, ds, m) {
+      if (m.type !== "pour") return [];
+      return [
+        drag(tubeCenter(s, ds.tileSize, m.from), tubeCenter(s, ds.tileSize, m.to)),
+      ];
+    },
   },
 
   textFormat,
-  serializeMove,
-  deserializeMove,
+  moveCodec: { serialize: serializeMove, deserialize: deserializeMove },
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

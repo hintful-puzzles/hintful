@@ -67,12 +67,12 @@ const pinned = describeHintPins({
 
 /** `hint`/`solve` are optional on `Game`; assert Pattern provides them. */
 function doHint(state: PatternState) {
-  const r = patternGame.hint?.(state);
+  const r = patternGame.hint.plan(state);
   if (!r) throw new Error("pattern has no hint()");
   return r;
 }
 function doSolve(state: PatternState) {
-  const r = patternGame.solve?.(state, state);
+  const r = patternGame.solve(state, state);
   if (!r) throw new Error("pattern has no solve()");
   return r;
 }
@@ -293,7 +293,7 @@ describe("pattern hint — keep track", () => {
       cells: [h.cells[0]],
     };
     const clone = { ...step, highlights: { ...h }, move: step.move };
-    expect(patternGame.hintKeepTrack?.(partial, clone, state)).toBe("onTrack");
+    expect(patternGame.hint.keepTrack(partial, clone, state)).toBe("onTrack");
     expect((clone.highlights as PatternHint).cells).toEqual(h.cells.slice(1));
     // The shrunk step's words name only the cells left, and say so in its text.
     const filled = patternGame.executeMove(state, partial);
@@ -309,7 +309,7 @@ describe("pattern hint — keep track", () => {
       cells: [...h.cells],
     };
     expect(
-      patternGame.hintKeepTrack?.(all, { ...step, highlights: { ...h } }, state),
+      patternGame.hint.keepTrack(all, { ...step, highlights: { ...h } }, state),
     ).toBe("completed");
 
     // Wrong value on a target → off.
@@ -319,7 +319,7 @@ describe("pattern hint — keep track", () => {
       cells: [h.cells[0]],
     };
     expect(
-      patternGame.hintKeepTrack?.(wrongVal, { ...step, highlights: { ...h } }, state),
+      patternGame.hint.keepTrack(wrongVal, { ...step, highlights: { ...h } }, state),
     ).toBe("off");
   });
 });

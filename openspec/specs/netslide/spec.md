@@ -405,7 +405,7 @@ the legs of its journey, and SHALL mark that tile on the board.
 
 ### Requirement: Hint: Only the slide a Netslide step asks for keeps the plan
 
-`hintKeepTrack` SHALL complete a step on the slide the step asks for and
+`hint.keepTrack` SHALL complete a step on the slide the step asks for and
 SHALL drop the plan on any other move: a step is one slide of one line, so
 there is no progress part of the way through one.
 

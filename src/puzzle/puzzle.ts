@@ -167,7 +167,6 @@ export class Puzzle {
     private readonly worker: Pick<PuzzleWorker, "terminate">,
     remote: RemoteWorkerPuzzle,
     {
-      canSolve,
       canHint,
       canCheck,
       referenceTitle,
@@ -184,7 +183,6 @@ export class Puzzle {
     // directions, so `?? puzzleId` is unreachable for any puzzle the app can
     // route to.
     this.displayName = puzzleDataMap[puzzleId]?.name ?? puzzleId;
-    this.canSolve = canSolve;
     this.canHint = canHint;
     this.canCheck = canCheck;
     this.referenceTitle = referenceTitle;
@@ -352,7 +350,6 @@ export class Puzzle {
 
   // Static properties (no reactivity needed)
   public readonly displayName: string;
-  public readonly canSolve: boolean;
   public readonly canHint: boolean;
   public readonly canCheck: boolean;
   public readonly referenceTitle: string | null;

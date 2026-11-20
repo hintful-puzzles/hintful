@@ -62,7 +62,7 @@ export const HINT_MARKS_PLACEHOLDER = "{{hint-marks}}";
 
 /**
  * The Hints help section's list of marks for a game whose legend says what each
- * role marks there (`Game.hintMarks.roles`), one entry per role, in the
+ * role marks there (`Game.hint.marks.roles`), one entry per role, in the
  * engine's order and the engine's words for the role.
  */
 export function legendMarkdown(roles: Partial<Record<MarkRole, string>>): string {
