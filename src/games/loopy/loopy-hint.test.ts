@@ -98,13 +98,52 @@ interface Marked {
   readonly pairs: readonly LoopyPair[];
 }
 
-function board(name: string, p: LoopyParams, seed: string): Board {
-  const { desc } = loopyGame.newDesc(p, randomNew(`loopy-hint-${name}-${seed}`));
-  return {
-    name: `${name}/${seed}`,
-    id: `${encodeParams(p, true)}:${desc}`,
-    state: newState(p, desc),
-  };
+/**
+ * The corpus's boards, written down: what the generator dealt for each on seed
+ * `loopy-hint-<name>-<seed>`, 2026-11-20. Dealing them was half this file's
+ * time, most of it on four of the large tilings, and put Loopy over its CI
+ * budget; these tests are about the hint, not about what the generator deals.
+ */
+const DESCS: Readonly<Record<string, string>> = {
+  "squares-0/a": "h22c3a2c13a3a23d1a203a11c33a3a21a",
+  "squares-0/b": "b3201a23a22a32a12b2i33a1a3a1f3a3a3",
+  "squares-1/a": "a2332a33b01a232a1a322a1a122f2a1c1a23a2a23",
+  "squares-1/b": "a11a22a1a2a22d2a233b1g10221210d2233a",
+  "squares-2/a": "b1b33211a112a2a2a22b3e22a323223c2b2d",
+  "squares-2/b": "a3b22b122312222b232c2a2a01a2221a1a3233a2221a",
+  "squares-3/a": "212a22b1c2a2132212d2b1232b2b1d3333a23",
+  "squares-3/b": "0a3c22b2a3b2a1b22a2b23a22c2b2c2321b2a",
+  "square/a": "3221b1a1b3b122012e",
+  "triangular/a": "0_c12f112a2a2c12a22a11e0b111b011b2a211a",
+  "honeycomb/a": "c3a3a2a43a2c54a445a53",
+  "snubsquare/a": "0a1b1a3a2b1c111a3b2a10220a22b1a2a2b3n21c3a2",
+  "cairo/a": "2a2b1f3c223a4a34a3a3a3c3a32b2",
+  "greathexagonal/a":
+    "a1a23c12c1e3b01b5a2a4222224c1a3a2a22a211b2f2c2b3a22b4a2143c2a2c212c2a2a15b2c2324b",
+  "octagonal/a": "c6a6c33a6c36b36a5536a7f7a2a1a",
+  "kites/a":
+    "3b2b1b13a3b2a2c2j2e13b1a3a3223b123d2a2a31a2a12d3b2b21c2a3b2a3a111c22a2b2a2b20c22a2b2a3a31b2b3a2a21d123a1b",
+  "floret/a":
+    "b1a433a33h34a32a4g33d4b24e2b34a3b4c2a4a32c433a4a31i41e4c2a4c31a0c224b3223c4a4f",
+  "dodecagonal/a": "BAa42Ad2d92272bA7b50b2c2a0b20a2a5b9b2a28a70",
+  "greatdodecagonal/a":
+    "c4aAa3a4e3b36b233a3a333733a2292b3a3502b4e5a3a25a433a540a3c33d2b53b31c23a232a8b22Aa2a3B23a",
+  "penrose_p2_kite/a": "51UABUUUU_b322",
+  "penrose_p3_thick/a": "31XXXXXXX_3a21b",
+  "greatgreatdodecagonal/a":
+    "c3aAa322bA33332aA3e8a1184a423b2aAa4c2b2b7c2a2d28d333e32a444c1b43a2a33d244c332d34b2a32c35g423b0c3a2232c17355b2333a0745a3232a20b2c3c4433c3c1a9g4b",
+  "kagome/a": "d2a22b20a121a2b2c2a1a35e4e2b2a1a2c4a01a035a23b3a23a2b",
+  "compassdodecagonal/a":
+    "A2a2d12b61a22b2a12aAc221722b26a1222b22f22a8a00a2a22c720f20a26d36e72a1b3Aa8aB",
+  "hats/a": "1,1,10,10,3,F_3Ac04c77Cb",
+  "spectres/a": "20375X_3a7a4b0c",
+};
+
+function board(kind: string, p: LoopyParams, seed: string): Board {
+  const name = `${kind}/${seed}`;
+  const desc = DESCS[name];
+  if (desc === undefined) throw new Error(`no board written down for ${name}`);
+  return { name, id: `${encodeParams(p, true)}:${desc}`, state: newState(p, desc) };
 }
 
 let corpusCache: Board[] | null = null;
