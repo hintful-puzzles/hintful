@@ -1,6 +1,6 @@
 /** Fisher-Yates shuffle over the engine's `RandomState` (upstream `misc.c`
  * `shuffle()`, draw for draw). */
-import { type RandomState, randomUpto } from "./random/index.ts";
+import { type RandomState, randomUpto } from "../random/index.ts";
 
 export function shuffle<T>(arr: T[], rng: RandomState): void {
   for (let i = arr.length - 1; i > 0; i--) {

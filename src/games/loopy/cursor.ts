@@ -40,7 +40,7 @@
  * silently.
  */
 
-import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";
+import type { Grid, GridDot, GridEdge } from "../../engine/board/grid/index.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,

@@ -5,11 +5,11 @@
  */
 
 import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { divvyRectangle } from "../../engine/divvy.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { adjacentCells, redivide, regionsBeside } from "../../engine/redivide.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import {
   deduce,
   deduction,

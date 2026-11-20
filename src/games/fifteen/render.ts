@@ -6,6 +6,10 @@
  * function, both callers (`docs/mechanics.md`).
  */
 
+import {
+  coord as coordE,
+  fromCoord as fromCoordE,
+} from "../../engine/board/geometry.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { cellSurface, givenSurface, INK } from "../../engine/color/palette.ts";
 import { FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
@@ -16,7 +20,6 @@ import {
   raisedBevelWidth,
 } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { textBox } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";

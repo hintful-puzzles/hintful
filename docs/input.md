@@ -870,7 +870,7 @@ Upstream's shape cannot be copied here: its midend claims `n`, `u`, `r` and
 **A game that stores pixel-space coordinates in its state rounds pointer input
 to integers at the boundary.** `devicePixelRatio` scaling delivers sub-pixel
 coordinates. A game that converts a pixel to a cell with
-[`fromCoord`](../src/engine/geometry.ts) is unaffected. Check the integer
+[`fromCoord`](../src/engine/board/geometry.ts) is unaffected. Check the integer
 invariant again in `executeMove`, the one place a drag, a solve, a replay and
 a load all pass, so a bypass fails loudly. Exemplar: `placeDraggedPoint` in
 [`untangle/index.ts`](../src/games/untangle/index.ts).

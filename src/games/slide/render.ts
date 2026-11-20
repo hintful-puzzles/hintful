@@ -40,6 +40,8 @@
  * `maybeRect` calls below stay 1:1 with the C and auditable against it.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
+import { coord as gridCoord } from "../../engine/board/geometry.ts";
 import {
   mkhighlight,
   mkhighlightSpecific,
@@ -60,9 +62,7 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { coord as gridCoord } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";

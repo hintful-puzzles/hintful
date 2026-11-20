@@ -23,8 +23,8 @@
  *    is an error.
  */
 
-import { DESC_MALFORMED, type DescError } from "../desc-error.ts";
-import type { RandomState } from "../random/index.ts";
+import { DESC_MALFORMED, type DescError } from "../../desc-error.ts";
+import type { RandomState } from "../../random/index.ts";
 import type { GridType } from "./grid-tilings.ts";
 import { hatsNewDesc, hatsValidateDesc } from "./tilings/hat-grid.ts";
 import { penroseNewDesc, penroseValidateDesc } from "./tilings/penrose-grid.ts";

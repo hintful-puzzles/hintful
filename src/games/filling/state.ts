@@ -15,6 +15,8 @@ import {
   searchTierSegment,
 } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
+import { Dsf } from "../../engine/board/dsf.ts";
+import { boxedGridText } from "../../engine/board/grid-text.ts";
 import { digitValue } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -31,9 +33,7 @@ import {
   type GridSpace,
 } from "../../engine/describe-runtime.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { boxedGridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

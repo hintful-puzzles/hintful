@@ -12,6 +12,10 @@
  * form a runtime cycle (`module-layering.test.ts`).
  */
 
+import {
+  coord as coordE,
+  fromCoord as fromCoordE,
+} from "../../engine/board/geometry.ts";
 import { TWO } from "../../engine/color/colors.ts";
 import {
   cellSurface,
@@ -27,7 +31,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { drawMoveArrow, drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { MOVE, stepMarks } from "../../engine/hint-words.ts";

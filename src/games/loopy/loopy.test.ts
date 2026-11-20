@@ -8,6 +8,7 @@
  * purpose, and the retry paths the C reaches by aborting or hanging.
  */
 import { describe, expect, it } from "vitest";
+import type { GridDot } from "../../engine/board/grid/index.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -16,7 +17,6 @@ import {
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { GridDot } from "../../engine/grid/index.ts";
 import { presetMenu, type TitledPresetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { DELETE, LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";

@@ -4,11 +4,11 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { D, dirCount, L, R, U } from "../../engine/board/square-edges.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { D, dirCount, L, R, U } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

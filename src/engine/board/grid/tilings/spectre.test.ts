@@ -42,8 +42,8 @@ import {
   DESC_TOO_SHORT,
   type DescError,
   descBadCharacter,
-} from "../../desc-error.ts";
-import { randomNew } from "../../random/index.ts";
+} from "../../../desc-error.ts";
+import { randomNew } from "../../../random/index.ts";
 import { gridNew, gridNewDesc, gridValidateDesc } from "../index.ts";
 import {
   coordCmp,

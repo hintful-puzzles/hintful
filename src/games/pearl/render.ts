@@ -12,6 +12,18 @@
  * (docs/rendering.md § "The tile cache and the diff key").
  */
 
+import { fromCoord as cellAt } from "../../engine/board/geometry.ts";
+import {
+  clockwise,
+  D,
+  dirX,
+  dirY,
+  L,
+  R,
+  sideOf,
+  squareEdges,
+  U,
+} from "../../engine/board/square-edges.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLACK, WHITE } from "../../engine/color/colors.ts";
 import {
@@ -41,22 +53,10 @@ import {
   hintedSides,
 } from "../../engine/edge-hint.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { fromCoord as cellAt } from "../../engine/geometry.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { dragPreview } from "../../engine/line-drawing.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import {
-  clockwise,
-  D,
-  dirX,
-  dirY,
-  L,
-  R,
-  sideOf,
-  squareEdges,
-  U,
-} from "../../engine/square-edges.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, loopSteps, WIN_LEAD, walkLoop } from "../../engine/win-wave.ts";

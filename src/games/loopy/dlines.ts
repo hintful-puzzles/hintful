@@ -30,7 +30,7 @@
  * this with `DEBUG_DLINES` printfs; `dlines.test.ts` asserts it across all 18
  * tilings.
  */
-import type { Grid, GridDot, GridFace } from "../../engine/grid/index.ts";
+import type { Grid, GridDot, GridFace } from "../../engine/board/grid/index.ts";
 
 /** Number of dline slots a grid needs. */
 export function dlineCount(g: Grid): number {

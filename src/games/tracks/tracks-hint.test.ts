@@ -21,10 +21,10 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { D, dirX, dirY, opposite, R, U } from "../../engine/board/square-edges.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { D, dirX, dirY, opposite, R, U } from "../../engine/square-edges.ts";
 import type { Clauses } from "../../engine/stated.ts";
 import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

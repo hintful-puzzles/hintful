@@ -27,6 +27,7 @@
  * carrying them.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
 import type {
   CandidateReading,
   Mark,
@@ -35,7 +36,6 @@ import type {
 import { DESC_TOO_LONG } from "../../engine/desc-error.ts";
 import type { DescReader } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";

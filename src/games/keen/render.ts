@@ -15,7 +15,8 @@
  * overlay tracked in a sidecar so Check & Save repaints an already-drawn cell.
  */
 
-import { valueBit } from "../../engine/candidate-bits.ts";
+import { valueBit } from "../../engine/board/candidate-bits.ts";
+import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import {
   cellSurface,
   highlightWash,
@@ -34,7 +35,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import {
   HintMarks,
   type MarkBand,

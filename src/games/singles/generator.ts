@@ -5,10 +5,10 @@
  * grades it at the tier asked for.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { latinGenerateRect } from "../../engine/latin.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { layCovered, solveSpecific } from "./solver.ts";
 import {
   DIFF_EASY,

@@ -21,9 +21,9 @@
  * `random.ts` this reproduces the C desc for a given seed.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import {
   coordLimit,
   cross,

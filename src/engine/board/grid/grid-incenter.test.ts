@@ -33,13 +33,13 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { randomNew } from "../random/index.ts";
+import { randomNew } from "../../random/index.ts";
 import {
   bestByBruteForce,
   inscribedRadius,
   insidePolygon,
   type Ring,
-} from "../testing/polygon-yardstick.ts";
+} from "../../testing/polygon-yardstick.ts";
 import { gridFindIncenter } from "./grid-geometry.ts";
 import {
   ALL_GRID_TYPES,

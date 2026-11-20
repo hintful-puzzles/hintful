@@ -8,6 +8,8 @@
  * regions. `map[edge*wh + y*w+x]` with `edge ∈ {TE,BE,LE,RE}`.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { digitValue } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -19,10 +21,8 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { encodeRunLength } from "../../engine/run-length.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { gengraph, graphEdgeIndex } from "./graph.ts";
 import type { MapParams } from "./state.ts";
 

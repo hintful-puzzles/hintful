@@ -6,12 +6,12 @@
  * one way.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
+import { squareEdges } from "../../engine/board/square-edges.ts";
 import { drawRejected } from "../../engine/deal-census.ts";
 import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
-import { squareEdges } from "../../engine/square-edges.ts";
 import { drawAnswer, isCommon } from "../../engine/word-list/index.ts";
 import { solveWordtrail } from "./solver.ts";
 import {

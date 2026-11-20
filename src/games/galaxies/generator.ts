@@ -4,9 +4,9 @@
  * `new_game_desc` and `generate_pass`.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import type { Point } from "../../engine/types.ts";
 import { clearForSolve, type GalaxiesDiff, solverState } from "./solver.ts";
 import {

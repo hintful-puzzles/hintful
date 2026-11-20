@@ -3,6 +3,7 @@
  * unreleased `ascent.c` (© 2015 Lennard Sprong).
  */
 
+import { gridText } from "../../engine/board/grid-text.ts";
 import {
   DIFFICULTY_KW,
   type DifficultyContract,
@@ -17,7 +18,6 @@ import type {
   SolveResult,
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { clearKey, numberKeys } from "../../engine/key-labels.ts";
 import { modifierItem } from "../../engine/modifier.ts";

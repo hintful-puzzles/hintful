@@ -15,6 +15,15 @@
  * marked as holding no track holds the collection's ruled-out cross.
  */
 
+import {
+  bitDirection,
+  D,
+  dirCount,
+  L,
+  R,
+  squareEdges,
+  U,
+} from "../../engine/board/square-edges.ts";
 import { ORANGE_BOLD } from "../../engine/color/colors.ts";
 import {
   cellSurface,
@@ -51,15 +60,6 @@ import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import {
-  bitDirection,
-  D,
-  dirCount,
-  L,
-  R,
-  squareEdges,
-  U,
-} from "../../engine/square-edges.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";

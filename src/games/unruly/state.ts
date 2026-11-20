@@ -7,12 +7,12 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";

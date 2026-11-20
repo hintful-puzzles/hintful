@@ -5,8 +5,8 @@
  * `hint.ts`.
  */
 
+import { D, L, R, U } from "../../engine/board/square-edges.ts";
 import type { MarkKind } from "../../engine/hint-words.ts";
-import { D, L, R, U } from "../../engine/square-edges.ts";
 
 /** A square, one side of a square, or a clue in the margin (`0..w-1` columns,
  * then rows). One kind for all three, so one reference can name a clue with

@@ -2,8 +2,7 @@
 /**
  * Move source files and directories, and repoint everything that names them.
  *
- *   node scripts/move-modules.mjs src/engine/dsf.ts=src/engine/board/dsf.ts \
- *     src/engine/grid=src/engine/board/grid [--dry]
+ *   node scripts/move-modules.mjs src/a/one.ts=src/a/b/one.ts src/a/lib=src/a/b/lib [--dry]
  *
  * Each argument is `old=new`, a tracked file or directory, from the root. A
  * test file's vitest snapshot (`__snapshots__/<name>.snap`) moves with it.
@@ -17,9 +16,9 @@
  *   file is, so a file that moves deeper keeps reaching what it reached. A glob
  *   is repointed by its static prefix, which keeps `./**` meaning the directory
  *   it meant.
- * - **A path from the root in text**: `src/engine/dsf.ts`, a backticked
- *   `engine/dsf.ts`, a directory's `src/engine/grid/`, in code strings,
- *   comments and the guides. A path reached by `../` is a specifier's and is
+ * - **A path from the root in text**: `src/a/one.ts`, a backticked `a/one.ts`
+ *   (a bare `one.ts` is prose, true wherever the file lives), a directory's
+ *   `src/a/lib/`, in code strings, comments and the guides. A path reached by `../` is a specifier's and is
  *   left to the first pass.
  *
  * A description moved carries its compiled module's path with it

@@ -12,10 +12,10 @@
  * the generator, the solver's exact strength, and the codec together.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { subsetsSolveGame } from "./solver.ts";
 import {
   ADJTHAN,

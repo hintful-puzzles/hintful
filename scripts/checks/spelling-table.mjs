@@ -19,7 +19,7 @@
  *
  * ## What is deliberately absent
  *
- * - `spectre` — the aperiodic Spectre tiling (`src/engine/grid/tilings/`) is a
+ * - `spectre` — the aperiodic Spectre tiling (`src/engine/board/grid/tilings/`) is a
  *   proper noun, named by its discoverers.
  * - `towards`, `maths`, `anticlockwise`, `-wards`, `got/gotten` — vocabulary,
  *   not spelling; accepted in American English or already American here.
@@ -394,10 +394,10 @@ export const QUOTATIONS = {
   check_neighbours: ["openspec/specs/tracks/spec.md"],
   raise_colour: ["src/games/slide/render.ts"],
   net_neighbour: ["src/games/net/loops.ts"],
-  neighbour_fn_t: ["src/engine/findloop.ts"],
+  neighbour_fn_t: ["src/engine/board/findloop.ts"],
   nc_colour: ["openspec/specs/guess/spec.md"],
-  has_incentre: ["src/engine/grid/grid-core.ts"],
-  grid_find_incentre: ["src/engine/grid/grid-geometry.ts"],
+  has_incentre: ["src/engine/board/grid/grid-core.ts"],
+  grid_find_incentre: ["src/engine/board/grid/grid-geometry.ts"],
   face_colour: ["src/engine/loopgen.ts"],
   colour_mix: ["src/engine/color/color-mkhighlight.ts"],
   can_colour_face: ["src/engine/loopgen.ts"],

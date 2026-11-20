@@ -5,6 +5,8 @@
  * `clues` grid is shared frozen (upstream's ref-counted `shared_state`).
  */
 
+import { gridText } from "../../engine/board/grid-text.ts";
+import { D, L, R, U } from "../../engine/board/square-edges.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -15,12 +17,10 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import type { LineDrawingUi } from "../../engine/line-drawing.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
-import { D, L, R, U } from "../../engine/square-edges.ts";
 import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 
 // --- clue kinds (upstream NOCLUE / CORNER=black / STRAIGHT=white) ----------
@@ -29,7 +29,7 @@ export const CORNER = 1; // black pearl
 export const STRAIGHT = 2; // white pearl
 
 // --- square-state bitmasks (1 << <pair of directions>) --------------------
-// Directions are `engine/square-edges.ts`'s bits, the ones `lines`, `marks`
+// Directions are `engine/board/square-edges.ts`'s bits, the ones `lines`, `marks`
 // and a move's `l` are stored in.
 export const BLANK = 0;
 export const bLR = 1 << (L | R);

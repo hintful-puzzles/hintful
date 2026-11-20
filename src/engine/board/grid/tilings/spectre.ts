@@ -37,9 +37,9 @@ import {
   DESC_TOO_SHORT,
   type DescError,
   descBadCharacter,
-} from "../../desc-error.ts";
-import { type RandomState, randomNew, randomUpto } from "../../random/index.ts";
-import { retryLimit } from "../../retry-limit.ts";
+} from "../../../desc-error.ts";
+import { type RandomState, randomNew, randomUpto } from "../../../random/index.ts";
+import { retryLimit } from "../../../retry-limit.ts";
 import {
   HEX_DATA,
   HEX_LETTERS,

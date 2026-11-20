@@ -78,15 +78,17 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
   "engine/divvy.ts › divvyRectangleAttempt": [
     "each pass grows an omino by a square or returns null, and divvyRectangle counts the attempts",
   ],
-  "engine/grid/tilings/hat.ts › extendCoords": ["pushes a level each pass, up to n"],
-  "engine/grid/tilings/hat.ts › tryStepMetamap": [
-    "walks a finite rewrite table and returns on coming back to its first entry",
-  ],
-  "engine/grid/tilings/hat.ts › walkKites": ["an enumerator over the w×h kites"],
-  "engine/grid/tilings/penrose.ts › extendCoords": [
+  "engine/board/grid/tilings/hat.ts › extendCoords": [
     "pushes a level each pass, up to n",
   ],
-  "engine/grid/tilings/spectre.ts › extendCoords": [
+  "engine/board/grid/tilings/hat.ts › tryStepMetamap": [
+    "walks a finite rewrite table and returns on coming back to its first entry",
+  ],
+  "engine/board/grid/tilings/hat.ts › walkKites": ["an enumerator over the w×h kites"],
+  "engine/board/grid/tilings/penrose.ts › extendCoords": [
+    "pushes a level each pass, up to n",
+  ],
+  "engine/board/grid/tilings/spectre.ts › extendCoords": [
     "pushes a level each pass, up to n",
   ],
   "engine/latin.ts › matching": [

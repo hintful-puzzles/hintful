@@ -11,6 +11,7 @@
  * them, rather than all at once when the move lands.
  */
 
+import { coord as coordE } from "../../engine/board/geometry.ts";
 import { BLACK, WHITE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
@@ -28,7 +29,6 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { coord as coordE } from "../../engine/geometry.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";

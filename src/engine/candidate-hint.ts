@@ -9,7 +9,7 @@
  * `docs/hints-candidates.md` § "What every game does".
  */
 
-import { valueBit, valuesOneTo } from "./candidate-bits.ts";
+import { valueBit, valuesOneTo } from "./board/candidate-bits.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
 import { markAllPress, type PointerAction } from "./hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";

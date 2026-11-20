@@ -15,8 +15,8 @@
  * `exactlyOneLoop` clue rule — and the clue positions after a resize.
  */
 import { describe, expect, it } from "vitest";
+import { gridFindIncenter } from "../../engine/board/grid/index.ts";
 import { COL_BACKGROUND, COL_CURSOR } from "../../engine/color/roles.ts";
-import { gridFindIncenter } from "../../engine/grid/index.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

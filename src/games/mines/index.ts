@@ -8,9 +8,9 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { fromCoord } from "../../engine/board/geometry.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   type Game,

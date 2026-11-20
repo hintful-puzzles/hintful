@@ -23,6 +23,7 @@
  * time, each slide saying what it makes room for.
  */
 
+import { coord, fromCoord } from "../../engine/board/geometry.ts";
 import type {
   Game,
   ParamConfigItem,
@@ -30,7 +31,6 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { coord, fromCoord } from "../../engine/geometry.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { numberItem, parseConfigInt } from "../../engine/params.ts";

@@ -6,6 +6,7 @@
  * happen to make.
  */
 import { describe, expect, it } from "vitest";
+import { DOWN, LEFT, RIGHT, squareEdges, UP } from "./board/square-edges.ts";
 import {
   drawEdgeHints,
   EDGE,
@@ -15,7 +16,6 @@ import {
   hintedSides,
 } from "./edge-hint.ts";
 import { NOTHING_TO_CLEAR } from "./ring.ts";
-import { DOWN, LEFT, RIGHT, squareEdges, UP } from "./square-edges.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 const g = squareEdges(3, 2);

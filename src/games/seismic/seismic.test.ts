@@ -9,6 +9,7 @@
  * every test runs against a real upstream puzzle without generating one.
  */
 import { describe, expect, it } from "vitest";
+import { Dsf } from "../../engine/board/dsf.ts";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -17,7 +18,6 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/desc-error.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";

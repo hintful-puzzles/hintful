@@ -17,6 +17,7 @@ import {
   answerCache,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
+import { D, DIRECTIONS, L, R, U } from "../../engine/board/square-edges.ts";
 import {
   clueList,
   type GridSpace,
@@ -32,7 +33,6 @@ import {
   runLadder,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import { D, DIRECTIONS, L, R, U } from "../../engine/square-edges.ts";
 import { type SquareTiling, squareTiling } from "../../engine/square-tiling.ts";
 import * as net from "../../generated/games/net/net.compiled.ts";
 import { LOCKED, type NetState, NOTE_NONE, NOTE_WIRE, sideIndex } from "./state.ts";

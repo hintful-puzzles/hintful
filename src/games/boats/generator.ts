@@ -27,10 +27,10 @@
  * (docs/testing.md § "Byte-match: fidelity where there is a right answer").
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { fillRow, placeWater, solveBoats } from "./solver.ts";
 import {
   type BoatsBoard,

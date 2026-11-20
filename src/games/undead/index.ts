@@ -144,7 +144,7 @@ function anyEmptyLacksNotes(guess: Uint8Array, pencil: Uint8Array): boolean {
  * ring: column `0` and row `0` are clues, and the row of monster counts above
  * the grid is row `-1`.
  *
- * Truncation toward zero, which declines `fromCoord` of `engine/geometry.ts`:
+ * Truncation toward zero, which declines `fromCoord` of `engine/board/geometry.ts`:
  * it folds a press in the margin left of the grid onto column `0`, so the
  * margin beside a clue reaches that clue, where the helper's floor would
  * answer `-1` and put the press off the board.

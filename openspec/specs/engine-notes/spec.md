@@ -774,7 +774,7 @@ on a large screen does not grow it past the size of a toolbar icon.
 ### Requirement: The engine owns the candidate encoding
 
 A candidate value `n` SHALL be bit `n` of a 32-bit mask, through the engine's
-`valueBit` and `valuesOneTo` (`engine/candidate-bits.ts`), which SHALL refuse a
+`valueBit` and `valuesOneTo` (`engine/board/candidate-bits.ts`), which SHALL refuse a
 value the mask cannot hold rather than wrap. A game's largest value SHALL be at
 most `MAX_CANDIDATE_VALUE`.
 

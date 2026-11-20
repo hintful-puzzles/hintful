@@ -8,6 +8,7 @@
  * its chain's color, with the thin surface grid between squares.
  */
 
+import { fromCoord } from "../../engine/board/geometry.ts";
 import { BLUE_BOLD, PURPLE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
@@ -34,7 +35,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";

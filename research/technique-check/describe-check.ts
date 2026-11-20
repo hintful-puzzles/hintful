@@ -40,6 +40,7 @@ import {
 } from "../../src/describe/description.ts";
 import type { Binder, Expr } from "../../src/describe/expr.ts";
 import { parse } from "../../src/describe/expr.ts";
+import { type GridType, gridNew } from "../../src/engine/board/grid/index.ts";
 import {
   compass,
   describedSpace,
@@ -67,7 +68,6 @@ import {
   traceBeam,
   within,
 } from "../../src/engine/describe-runtime.ts";
-import { type GridType, gridNew } from "../../src/engine/grid/index.ts";
 import { blocks } from "../describe/space.ts";
 import { say } from "../progress.ts";
 import { asZ3, type B, fresh, type I, Z3 } from "./pzl.ts";

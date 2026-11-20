@@ -24,10 +24,14 @@
  * refuses a step whose ways this does not rule out as the ladder did.
  */
 
-import { Dsf } from "../../engine/dsf.ts";
+import { Dsf } from "../../engine/board/dsf.ts";
+import {
+  anticlockwise,
+  DIRECTIONS,
+  opposite,
+} from "../../engine/board/square-edges.ts";
 import type { FactGraph } from "../../engine/fact-graph.ts";
 import type { CellMarks } from "../../engine/ladder-runtime.ts";
-import { anticlockwise, DIRECTIONS, opposite } from "../../engine/square-edges.ts";
 import { offset } from "../../engine/wires.ts";
 import type { Dealt } from "../../generated/games/net/net.compiled.ts";
 import { type Fired, type NetGeometry, NONE, recordedMarks, WIRE } from "./solver.ts";

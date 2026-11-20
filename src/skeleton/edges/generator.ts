@@ -5,13 +5,13 @@
  * asked for.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
+import { edgeBetween, squareEdges } from "../../engine/board/square-edges.ts";
 import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import { LINE } from "../../engine/line-drawing.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
-import { edgeBetween, squareEdges } from "../../engine/square-edges.ts";
 import { solveSkeleton } from "./solver.ts";
 import { encodeDesc, type SkeletonParams } from "./state.ts";
 

@@ -10,7 +10,7 @@
  * pencil bitmap + error word + mistake bit).
  */
 
-import { valueBit } from "../../engine/candidate-bits.ts";
+import { valueBit } from "../../engine/board/candidate-bits.ts";
 import {
   cellSurface,
   givenSurface,
@@ -151,7 +151,7 @@ export function coord(pos: number, ts: number): number {
 
 /** `FROMCOORD` — display column/row for a pixel, the legend being −1.
  *
- * This declines the shared `fromCoord` (`engine/geometry.ts`) for its
+ * This declines the shared `fromCoord` (`engine/board/geometry.ts`) for its
  * `Math.trunc` override, with the legend as the row or column a margin press
  * folds onto: truncation toward zero gives a press in the outer margin, beyond
  * the legend, −1 as well, so the margin beside a heading grabs that heading

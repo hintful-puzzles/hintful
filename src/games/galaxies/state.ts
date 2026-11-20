@@ -6,9 +6,10 @@
  * typed arrays so a clone per move is cheap; a space's type and position follow
  * from its index.
  */
+
+import { Dsf } from "../../engine/board/dsf.ts";
 import { DESC_TOO_LONG, type DescParse } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { Point } from "../../engine/types.ts";
 
 // --- flag bits -----------------------------------------------------

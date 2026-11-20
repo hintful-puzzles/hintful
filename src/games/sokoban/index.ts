@@ -9,8 +9,8 @@
  */
 
 import { rejectMove } from "../../engine/assert-never.ts";
+import { fromCoord } from "../../engine/board/geometry.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/index.ts";

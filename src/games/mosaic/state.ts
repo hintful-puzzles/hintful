@@ -10,6 +10,7 @@ import {
   searchTiers,
 } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
 import { digitValue } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
@@ -20,7 +21,6 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

@@ -24,12 +24,12 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
+import { Dsf } from "../../engine/board/dsf.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
 } from "../../engine/describe-runtime.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   CellMarks,

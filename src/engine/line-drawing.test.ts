@@ -6,6 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { edgeBetween, squareEdges } from "./board/square-edges.ts";
 import { UI_UPDATE } from "./game.ts";
 import {
   CROSS,
@@ -30,7 +31,6 @@ import {
   MOD_SHFT,
   newCursor,
 } from "./pointer.ts";
-import { edgeBetween, squareEdges } from "./square-edges.ts";
 import type { Point } from "./types.ts";
 
 interface Board {

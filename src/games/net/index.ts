@@ -4,7 +4,7 @@
  * A `w × h` grid of wire tiles whose solved form is a spanning tree rooted at a
  * movable source; the player rotates each tile until every tile is powered. The
  * model (desc codec, spanning-tree generator, power flood) lives in
- * `engine/wires.ts`, shared with Netslide, over `engine/square-edges.ts`'s
+ * `engine/wires.ts`, shared with Netslide, over `engine/board/square-edges.ts`'s
  * direction bits; this file is the glue —
  * input, moves, solve, preferences, and the game object.
  */
@@ -15,9 +15,21 @@ import {
   solveFromAnswer,
 } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
+import { fromCoord } from "../../engine/board/geometry.ts";
+import {
+  anticlockwise,
+  clockwise,
+  D,
+  DIRECTIONS,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/board/square-edges.ts";
 import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   atof,
@@ -47,18 +59,6 @@ import {
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { wrappingRulesetItem } from "../../engine/ruleset.ts";
-import {
-  anticlockwise,
-  clockwise,
-  D,
-  DIRECTIONS,
-  dirX,
-  dirY,
-  L,
-  opposite,
-  R,
-  U,
-} from "../../engine/square-edges.ts";
 import {
   beginSweep,
   interpretTargetVerbs,

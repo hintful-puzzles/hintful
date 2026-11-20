@@ -24,7 +24,7 @@ itself named — Palisade — turned out to have received four of the five
 already, from a module keyed on the mechanic rather than on the topology.**
 
 1. **A general board model already exists in this repo, and 55 of 57 games
-   decline it.** `src/engine/grid/` is a full planar-graph model — faces, edges
+   decline it.** `src/engine/board/grid/` is a full planar-graph model — faces, edges
    and dots with complete incidence, `gridNearestEdge` for input hit-testing,
    `gridNewDesc`/`gridValidateDesc` for the desc codec, `gridSizeFor` for
    geometry, across all eighteen tilings. Its consumers are Loopy and Pearl.
@@ -86,7 +86,7 @@ withdrawal:
 
 ## Finding 1 — the general board model exists, and the collection declined it
 
-`src/engine/grid/` is not a square-grid helper. Its doc comment describes "the
+`src/engine/board/grid/` is not a square-grid helper. Its doc comment describes "the
 idiomatic TS port of upstream `grid.c` … which models any planar graph as
 faces, edges and dots with full reference incidence", split across
 `grid-core.ts` (the four incidence classes), `grid-tilings.ts` (fourteen
@@ -164,7 +164,7 @@ none of which follows from a topology, all of which follow from the puzzle.
 This is the deliverable with the most residue, so it is measured most carefully.
 Corrected counts, 2026-09-06:
 
-- **10 games import `engine/geometry.ts`** — clusters, fifteen, flood, inertia,
+- **10 games import `engine/board/geometry.ts`** — clusters, fifteen, flood, inertia,
   mines, samegame, sixteen, slide, spokes, twiddle.
 - **36 define their own `coord` / `fromCoord`**, of which 6 (fifteen, flood,
   inertia, samegame, sixteen, twiddle) are wrappers currying the engine

@@ -24,6 +24,8 @@
  * validity — the shared code never asks which game it is drawing.
  */
 
+import type { Dsf } from "./board/dsf.ts";
+import { squareEdges } from "./board/square-edges.ts";
 import {
   BORDER,
   DISABLED,
@@ -43,7 +45,6 @@ import {
   COL_HINT_OUTLINE,
 } from "./color/roles.ts";
 import { glyphFont } from "./draw.ts";
-import type { Dsf } from "./dsf.ts";
 import { drawEdgeHints, type EdgeHint, edgeHintWords } from "./edge-hint.ts";
 import type { GameDrawing } from "./game.ts";
 import { hatchPeriod } from "./hatch.ts";
@@ -51,7 +52,6 @@ import { drawMarkSides, MARK_ALL } from "./hint-mark.ts";
 import { CELL, type StepMarks } from "./hint-words.ts";
 import type { GridCursor } from "./pointer.ts";
 import { textBox } from "./ring.ts";
-import { squareEdges } from "./square-edges.ts";
 import { TileCache } from "./tile-cache.ts";
 import type { Rect, Size } from "./types.ts";
 import { WIN_BODY, WIN_LEAD, type WinTone } from "./win-wave.ts";

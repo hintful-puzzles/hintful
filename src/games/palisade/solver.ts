@@ -21,6 +21,7 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
+import { Dsf } from "../../engine/board/dsf.ts";
 import {
   BORDER,
   BORDER_D,
@@ -37,7 +38,6 @@ import {
   type GridSpace,
   rangeMask,
 } from "../../engine/describe-runtime.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import {
   CellMarks,
   describedLadder,

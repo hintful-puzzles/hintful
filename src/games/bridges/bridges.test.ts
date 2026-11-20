@@ -3,6 +3,7 @@
  * generator/solver differential is `bridges-differential.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_TOO_LONG,
@@ -21,7 +22,6 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { type RandomState, randomNew } from "../../engine/random/index.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,

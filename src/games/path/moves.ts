@@ -7,13 +7,13 @@
  * simulated-release preview lives in `moves.ts`").
  */
 
+import { across, squareEdges } from "../../engine/board/square-edges.ts";
 import {
   type EdgeChange,
   type EdgeMark,
   LINE,
   type LineRules,
 } from "../../engine/line-drawing.ts";
-import { across, squareEdges } from "../../engine/square-edges.ts";
 import { MODE_PATH, NO_END, type PathState } from "./state.ts";
 
 /** The lines each square takes, no loops, walls no input changes, and a

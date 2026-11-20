@@ -11,7 +11,8 @@
  * have used (the `spent` flags, mutable).
  */
 
-import { MAX_CANDIDATE_VALUE } from "../candidate-bits.ts";
+import { MAX_CANDIDATE_VALUE } from "../board/candidate-bits.ts";
+import { gridText } from "../board/grid-text.ts";
 import type { CandidateReading } from "../candidate-hint.ts";
 import {
   DESC_CONTRADICTORY,
@@ -22,7 +23,6 @@ import {
 import { readDesc } from "../desc-reader.ts";
 import { difficultyItem } from "../difficulty.ts";
 import type { GameDrawing, ParamConfigItem } from "../game.ts";
-import { gridText } from "../grid-text.ts";
 import type { Ladder } from "../ladder-runtime.ts";
 import type { LatinSolver } from "../latin.ts";
 import { numberItem, squareSize } from "../params.ts";
@@ -161,7 +161,7 @@ export function edgeClueParams(opts: {
   const paramConfig = [
     numberItem<EdgeClueParams>("size", "Size", "order", {
       doc: opts.sizeDoc,
-      // One more would not fit a candidate mask (`engine/candidate-bits.ts`).
+      // One more would not fit a candidate mask (`engine/board/candidate-bits.ts`).
       bounds: { min: 3, max: MAX_CANDIDATE_VALUE },
       label: { slot: "size", words: squareSize("order") },
     }),

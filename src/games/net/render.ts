@@ -11,6 +11,18 @@
  * edge has somewhere to draw its outline.
  */
 
+import {
+  anticlockwise,
+  clockwise,
+  D,
+  DIRECTIONS,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/board/square-edges.ts";
 import { TWO } from "../../engine/color/colors.ts";
 import {
   cellSurface,
@@ -43,18 +55,6 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import {
-  anticlockwise,
-  clockwise,
-  D,
-  DIRECTIONS,
-  dirX,
-  dirY,
-  L,
-  opposite,
-  R,
-  U,
-} from "../../engine/square-edges.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";

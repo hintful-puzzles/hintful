@@ -1,6 +1,6 @@
 /**
  * Loop detection for Net — an idiomatic port of upstream's `net_neighbour` +
- * `compute_loops_inner`, over the shared `engine/findloop.ts`.
+ * `compute_loops_inner`, over the shared `engine/board/findloop.ts`.
  *
  * A tile edge is *part of a loop* when it is a wire connecting two tiles that
  * are joined by some other path too — i.e. the edge is not a bridge. The
@@ -13,8 +13,8 @@
  * "this tile touches a loop".
  */
 
-import { findLoops } from "../../engine/findloop.ts";
-import { DIRECTIONS, opposite } from "../../engine/square-edges.ts";
+import { findLoops } from "../../engine/board/findloop.ts";
+import { DIRECTIONS, opposite } from "../../engine/board/square-edges.ts";
 import { offset } from "../../engine/wires.ts";
 import { LOCKED } from "./state.ts";
 

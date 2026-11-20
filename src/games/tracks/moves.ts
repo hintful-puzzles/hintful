@@ -5,7 +5,7 @@
  * (docs/rendering.md § "The tile cache and the diff key").
  */
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
-import { dirX, dirY } from "../../engine/square-edges.ts";
+import { dirX, dirY } from "../../engine/board/square-edges.ts";
 import {
   type Board,
   checkCompletion,

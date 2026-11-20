@@ -1,8 +1,8 @@
+import { gridText } from "../../engine/board/grid-text.ts";
 import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

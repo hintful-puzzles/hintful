@@ -6,6 +6,7 @@ import {
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
+import { D, L, R, U } from "../../engine/board/square-edges.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
@@ -17,7 +18,6 @@ import {
 } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
-import { D, L, R, U } from "../../engine/square-edges.ts";
 import type { Point } from "../../engine/types.ts";
 import {
   addBorderBarriers,

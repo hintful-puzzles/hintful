@@ -14,9 +14,9 @@
  *    below the board and never on it.
  */
 import { describe, expect, it } from "vitest";
+import type { Grid, GridFace } from "../../engine/board/grid/index.ts";
 import { COL_CURSOR } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import type { Grid, GridFace } from "../../engine/grid/index.ts";
 import { Midend } from "../../engine/midend.ts";
 import {
   CURSOR_DOWN,

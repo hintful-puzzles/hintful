@@ -12,6 +12,7 @@
  * paint-twice test in `mines.test.ts` guards that.
  */
 
+import { coord } from "../../engine/board/geometry.ts";
 import {
   BLACK,
   BLUE,
@@ -39,7 +40,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { coord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";

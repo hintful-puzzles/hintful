@@ -9,10 +9,11 @@
  * mode — remove clues in shuffled order while the board stays uniquely
  * solvable.
  */
+
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { dominoLayout } from "../../engine/laydomino.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import {
   cellValue,
   dealtOf,

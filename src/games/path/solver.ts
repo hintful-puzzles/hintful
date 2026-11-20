@@ -21,6 +21,11 @@ import {
   type Deduced,
   searchAnswers,
 } from "../../engine/answer-search.ts";
+import {
+  pieceThrough,
+  type SquareEdges,
+  squareEdges,
+} from "../../engine/board/square-edges.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -40,11 +45,6 @@ import {
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import { CROSS, type EdgeMark, LINE, OPEN } from "../../engine/line-drawing.ts";
-import {
-  pieceThrough,
-  type SquareEdges,
-  squareEdges,
-} from "../../engine/square-edges.ts";
 import * as path from "../../generated/games/path/path.compiled.ts";
 import {
   DIFF_TRICKY,
@@ -91,7 +91,7 @@ const TOP = DIFF_TRICKY;
 // --- the board as the description reads it -----------------------------------
 
 /** A board size's space, and its edges in both numberings: the game's
- * (`engine/square-edges.ts`) and the space's. */
+ * (`engine/board/square-edges.ts`) and the space's. */
 interface Geometry {
   sp: GridSpace;
   g: SquareEdges;

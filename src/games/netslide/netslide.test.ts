@@ -12,6 +12,15 @@
  */
 
 import { describe, expect, it } from "vitest";
+import {
+  D,
+  DIRECTIONS,
+  dirCount,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/board/square-edges.ts";
 import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_TOO_LONG,
@@ -30,15 +39,6 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { slidePieces } from "../../engine/slide-planner.ts";
-import {
-  D,
-  DIRECTIONS,
-  dirCount,
-  L,
-  opposite,
-  R,
-  U,
-} from "../../engine/square-edges.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";

@@ -8,9 +8,9 @@
  * is covered and the matrix stays interesting to solve.
  */
 
+import { SortedMultiset } from "../../engine/board/sorted-multiset.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { SortedMultiset } from "../../engine/sorted-multiset.ts";
 
 // --- RANDOM matrix generator ------------------------------------------
 

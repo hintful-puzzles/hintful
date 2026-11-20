@@ -154,7 +154,7 @@ never holds a bare cache array or a `started` flag.
   [`towers/render.ts`](../src/games/towers/render.ts).
 - **When the candidate set alone exceeds about 26 bits, key it in a word of
   its own**, not a digit and a pencil bitmap in one word. A `1 << n` mark for `n` up to 31 still fits an `Int32`, sign bit and
-  all. Candidate masks go through `engine/candidate-bits.ts`, which throws
+  all. Candidate masks go through `engine/board/candidate-bits.ts`, which throws
   where a shift would wrap. Exemplar:
   [`solo/render.ts`](../src/games/solo/render.ts) (`SoloDrawState`); Keen
   packs both in one word because its order leaves room.
@@ -244,7 +244,7 @@ names a game, the cause is one of these, and each is a rule:
   mode read in the painter and named by no key term leaves the past on
   screen. Give it a bit and make the painter read that bit.
 - **No field is wider than its lane.** A shift counts mod 32, so a value past
-  bit 31 lands on another field (`engine/candidate-bits.ts` throws).
+  bit 31 lands on another field (`engine/board/candidate-bits.ts` throws).
 - **A tile paints only its own box.** Paint to `ts - 1` and let the neighbor
   fill from its own edge.
 - **Tiles that share pixels repaint together.** A shared border row, or a

@@ -31,6 +31,7 @@
  * unchanged (the frame after the move that drew it).
  */
 
+import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import { BLUE_WASH } from "../../engine/color/colors.ts";
 import {
   cellSurface,
@@ -51,7 +52,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { drawRectOutline, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";

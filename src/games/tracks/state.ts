@@ -16,6 +16,19 @@
  * onto the adjacent cell, so the two never disagree.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
+import { findLoops } from "../../engine/board/findloop.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
+import {
+  D,
+  dirCount,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/board/square-edges.ts";
 import { c2nUpper, n2cUpper, UPPER_ALPHABET_SIZE } from "../../engine/desc-alphabet.ts";
 import {
   DESC_TOO_LONG,
@@ -26,23 +39,10 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
-import { Dsf } from "../../engine/dsf.ts";
-import { findLoops } from "../../engine/findloop.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
-import {
-  D,
-  dirCount,
-  dirX,
-  dirY,
-  L,
-  opposite,
-  R,
-  U,
-} from "../../engine/square-edges.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 
@@ -54,7 +54,7 @@ export const DIFF_COUNT = 3;
 const DIFF_NAMES: readonly string[] = tracks.tiers;
 const DIFF_CHARS = "eth"; // ENCODE chars, indexed by difficulty
 
-// --- directions (`engine/square-edges.ts`'s bits, upstream's R/U/L/D) ------
+// --- directions (`engine/board/square-edges.ts`'s bits, upstream's R/U/L/D) ------
 export const ALLDIR = 15;
 export const DIRS = [U, D, L, R] as const; // upstream dirs_const order
 

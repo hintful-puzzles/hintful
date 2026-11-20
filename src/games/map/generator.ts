@@ -10,11 +10,11 @@
  *   5. the difficulty-floor retry loop.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { growFromSeeds, regionNumbers, scatterSeeds } from "../../engine/divide.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { colorRegions, type FillChoice } from "../../engine/region-fill.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { gengraph, graphNeighbors } from "./graph.ts";
 import { encodeMapDesc } from "./map-data.ts";
 import { mapSolver, SOLVER_UNIQUE } from "./solver.ts";

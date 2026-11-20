@@ -4,6 +4,7 @@
  * edge-based `findMistakes` overlay.
  */
 import { describe, expect, it } from "vitest";
+import { D, L, opposite, R, U } from "../../engine/board/square-edges.ts";
 import {
   DESC_NOT_DEDUCIBLE,
   DESC_TOO_LONG,
@@ -15,7 +16,6 @@ import {
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { D, L, opposite, R, U } from "../../engine/square-edges.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";

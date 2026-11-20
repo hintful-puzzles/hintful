@@ -14,13 +14,13 @@
  */
 
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
+import { fromCoord } from "../../engine/board/geometry.ts";
 import {
   type Game,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { UNSHADED_NAME } from "../../engine/piece.ts";
 import {

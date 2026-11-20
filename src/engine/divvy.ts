@@ -11,10 +11,10 @@
  * root choice does not.
  */
 
-import { Dsf } from "./dsf.ts";
+import { Dsf } from "./board/dsf.ts";
+import { shuffle } from "./board/shuffle.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { RetryLimitExceeded } from "./retry-limit.ts";
-import { shuffle } from "./shuffle.ts";
 
 /**
  * `addremcommon`: walk the eight 8-adjacent neighbors of `(x, y)` in cyclic

@@ -12,6 +12,7 @@
  * could solve it dealt at that tier, and this keeps looking.
  */
 
+import { shuffle } from "../board/shuffle.ts";
 import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
@@ -20,7 +21,6 @@ import {
 } from "../latin.ts";
 import type { RandomState } from "../random/index.ts";
 import { retryLimit } from "../retry-limit.ts";
-import { shuffle } from "../shuffle.ts";
 import { solveEdgeClues } from "./solver.ts";
 import {
   ADJTHAN,

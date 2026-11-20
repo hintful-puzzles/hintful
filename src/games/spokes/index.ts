@@ -19,6 +19,7 @@
 
 import { solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
+import { fromCoord } from "../../engine/board/geometry.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   type Game,
@@ -28,7 +29,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   LEFT_BUTTON,

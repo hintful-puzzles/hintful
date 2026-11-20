@@ -30,7 +30,7 @@ const sourceModules = import.meta.glob<string>(
   [
     "../games/**/*.ts",
     "../engine/**/*.ts",
-    "!../engine/geometry.ts",
+    "!../engine/board/geometry.ts",
     "!../engine/testing/**",
   ],
   { query: "?raw", import: "default", eager: true },
@@ -187,7 +187,7 @@ describe("a game does not re-derive the pixel-to-cell conversion", () => {
     const unexplained = all.filter((c) => !(c.text in (OWN_CONVERSIONS[c.file] ?? {})));
     expect(
       unexplained.map((c) => `${c.file}:${c.line}  ${c.text}`),
-      "call fromCoord (engine/geometry.ts) where the conversion is exactly it; " +
+      "call fromCoord (engine/board/geometry.ts) where the conversion is exactly it; " +
         "where it is not, say why at the site, naming fromCoord as declined, " +
         "and enter the line in OWN_CONVERSIONS",
     ).toEqual([]);

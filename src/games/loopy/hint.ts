@@ -19,7 +19,7 @@
  * step cites more than two.
  */
 
-import { Dsf } from "../../engine/dsf.ts";
+import { Dsf } from "../../engine/board/dsf.ts";
 import { type FactGraph, placeNotes } from "../../engine/fact-graph.ts";
 import type {
   HintResult,

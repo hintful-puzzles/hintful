@@ -15,6 +15,8 @@
 
 import { searchTiers } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
+import { DOWN, RIGHT, squareEdges } from "../../engine/board/square-edges.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
@@ -26,7 +28,6 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import {
   CROSS,
   type EdgeChange,
@@ -37,7 +38,6 @@ import {
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
-import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
 import * as path from "../../generated/games/path/path.compiled.ts";
 
@@ -110,13 +110,13 @@ export interface PathPuzzle {
   readonly ends: Uint8Array;
   /** How many lines each square takes. */
   readonly takes: Uint8Array;
-  /** 1 on each edge the desc walls off, indexed as `engine/square-edges.ts`
+  /** 1 on each edge the desc walls off, indexed as `engine/board/square-edges.ts`
    * numbers them. */
   readonly walls: Uint8Array;
 }
 
 export interface PathState extends PathPuzzle {
-  /** An {@link EdgeMark} per edge, indexed as `engine/square-edges.ts`
+  /** An {@link EdgeMark} per edge, indexed as `engine/board/square-edges.ts`
    * numbers them. A wall's edge is a cross. */
   edges: Uint8Array;
 }
@@ -256,7 +256,7 @@ const isRunLetter = (c: string): boolean => c >= "a" && c <= "z";
  * between two that touch, and each run of squares without one a letter: `a`
  * for one square up to `z` for 26. Then, where there are walls, a comma and
  * the edges as a list of walls and gaps (`engine/wall-runs.ts`), whose order
- * is `engine/square-edges.ts`'s. */
+ * is `engine/board/square-edges.ts`'s. */
 export function encodeDesc(ends: Uint8Array, walls?: Uint8Array): string {
   let out = "";
   let run = 0;

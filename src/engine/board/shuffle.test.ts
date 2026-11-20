@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { randomNew } from "./random/index.ts";
+import { randomNew } from "../random/index.ts";
 import { permParity, shuffle } from "./shuffle.ts";
 
 describe("shuffle", () => {

@@ -11,13 +11,13 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { coord, fromCoord } from "../../engine/board/geometry.ts";
 import {
   type Game,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { coord, fromCoord } from "../../engine/geometry.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { transposeDimensions } from "../../engine/params.ts";

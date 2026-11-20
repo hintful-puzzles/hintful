@@ -9,6 +9,7 @@
  */
 
 import { solvedPositions } from "../../engine/answer-search.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
 import {
   growFromSeeds,
@@ -19,7 +20,6 @@ import {
 import { type MendJudge, mendDivision } from "../../engine/mend-division.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { StarbattleBoard, solveStarbattle } from "./solver.ts";
 import { BLANK, CROSSED, encodeDesc, STAR, type StarbattleParams } from "./state.ts";
 

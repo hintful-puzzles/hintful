@@ -1,9 +1,9 @@
+import { gridText } from "../../engine/board/grid-text.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";

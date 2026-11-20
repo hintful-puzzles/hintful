@@ -8,6 +8,7 @@
  * `w * tileSize + 1` wide, the 1 for the closing grid line.
  */
 
+import { fromCoord } from "../../engine/board/geometry.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { WHITE } from "../../engine/color/colors.ts";
 import {
@@ -28,7 +29,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { drawMoveArrow, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";

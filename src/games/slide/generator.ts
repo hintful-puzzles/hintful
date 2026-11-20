@@ -24,9 +24,9 @@
  * (docs/solver-and-generator.md § "Divergence and what it costs" rule 3).
  */
 
-import { Dsf } from "../../engine/dsf.ts";
+import { Dsf } from "../../engine/board/dsf.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { SEARCH_BUDGET, solveBoard } from "./solver.ts";
 import {
   ANCHOR,

@@ -7,7 +7,7 @@
  * comparison.
  */
 import { describe, expect, it } from "vitest";
-import { randomNew } from "../random/index.ts";
+import { randomNew } from "../../random/index.ts";
 import {
   APERIODIC_GRID_TYPES,
   type Grid,

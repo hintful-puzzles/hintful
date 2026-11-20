@@ -15,7 +15,7 @@
  * *every* loop, whichever one a seed happens to produce.
  */
 import { describe, expect, it } from "vitest";
-import { gridNewSquare } from "./grid/index.ts";
+import { gridNewSquare } from "./board/grid/index.ts";
 import {
   FACE_BLACK,
   FACE_GRAY,

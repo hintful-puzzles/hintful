@@ -11,6 +11,16 @@
  * changes (§ "A cue with no tile to live in").
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
+import {
+  DX,
+  DY,
+  type EdgeLayout,
+  edgeBetween,
+  type SquareEdges,
+  squareCenter,
+  squareEdges,
+} from "../../engine/board/square-edges.ts";
 import { FREE, FREE_TEXT } from "../../engine/color/colors.ts";
 import {
   cellSurface,
@@ -31,7 +41,6 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import { drawEdgeHints, edgeHintWords, stepEdgeHints } from "../../engine/edge-hint.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -49,15 +58,6 @@ import {
   pathStrokeThickness,
 } from "../../engine/path-arrow.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import {
-  DX,
-  DY,
-  type EdgeLayout,
-  edgeBetween,
-  type SquareEdges,
-  squareCenter,
-  squareEdges,
-} from "../../engine/square-edges.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
@@ -134,7 +134,7 @@ export function computeSize(p: WordtrailParams, ts: number): Size {
   };
 }
 
-/** The board's pixel layout, as `engine/square-edges.ts` aims at an edge in
+/** The board's pixel layout, as `engine/board/square-edges.ts` aims at an edge in
  * it. */
 export const layout = (ts: number): EdgeLayout => ({ tile: ts, border: border(ts) });
 

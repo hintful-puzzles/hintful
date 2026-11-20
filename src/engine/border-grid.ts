@@ -27,8 +27,7 @@
  * here have to happen in both games at once?"* — which the error model and the
  * cursor pass, being the rendering *of this mechanic*.
  */
-import { Dsf } from "./dsf.ts";
-import { cursorDelta, type GridCursor } from "./pointer.ts";
+import { Dsf } from "./board/dsf.ts";
 import {
   DOWN,
   type EdgeLayout,
@@ -40,7 +39,8 @@ import {
   sideMiddle,
   squareEdges,
   UP,
-} from "./square-edges.ts";
+} from "./board/square-edges.ts";
+import { cursorDelta, type GridCursor } from "./pointer.ts";
 import { rulingOut, type TargetGeometry, type TargetVerbs } from "./target-verb.ts";
 
 // --- the edge bit vocabulary -----------------------------------------------

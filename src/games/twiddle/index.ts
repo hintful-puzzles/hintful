@@ -7,9 +7,9 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { fromCoord } from "../../engine/board/geometry.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import {

@@ -9,15 +9,6 @@
  * game's: the app reads it as Next hint.
  */
 
-import { c2nUpper } from "../../engine/desc-alphabet.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
-import { type EdgeChange, LINE, lineDrawing } from "../../engine/line-drawing.ts";
-import { transposeDimensions } from "../../engine/params.ts";
-import { newCursor } from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
 import {
   bitDirection,
   D,
@@ -29,7 +20,16 @@ import {
   sideOf,
   squareEdges,
   U,
-} from "../../engine/square-edges.ts";
+} from "../../engine/board/square-edges.ts";
+import { c2nUpper } from "../../engine/desc-alphabet.ts";
+import type { DifficultyContract } from "../../engine/difficulty.ts";
+import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
+import { click, type PointerAction } from "../../engine/hint-gesture.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import { type EdgeChange, LINE, lineDrawing } from "../../engine/line-drawing.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import { newCursor } from "../../engine/pointer.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { newDesc } from "./generator.ts";
 import {
   PEARL_RUNGS,
@@ -82,7 +82,7 @@ function newUi(_state: PearlState): PearlUi {
   return { drag: null, cursor: newCursor(), guiStyle: GUI_MASYU };
 }
 
-/** The board's pixel layout, as `engine/square-edges.ts` aims at an edge in
+/** The board's pixel layout, as `engine/board/square-edges.ts` aims at an edge in
  * it. */
 function layout(ds: PearlDrawState): EdgeLayout {
   const m = metrics(ds.tileSize);

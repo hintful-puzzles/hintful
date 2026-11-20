@@ -10,8 +10,8 @@
  * check the hint's soundness rests on.
  */
 import { describe, expect, it } from "vitest";
+import { Dsf } from "../../engine/board/dsf.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";

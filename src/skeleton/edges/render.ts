@@ -10,6 +10,19 @@
  * on each of its sides, in a word of its own beside the word for the square.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
+import {
+  DOWN,
+  DX,
+  DY,
+  type EdgeLayout,
+  LEFT,
+  RIGHT,
+  reverse,
+  squareCenter,
+  squareEdges,
+  UP,
+} from "../../engine/board/square-edges.ts";
 import {
   cellSurface,
   DRAG_ADD,
@@ -27,7 +40,6 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import { drawEdgeHints, edgeHintWords, stepEdgeHints } from "../../engine/edge-hint.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
@@ -39,18 +51,6 @@ import {
   LINE,
 } from "../../engine/line-drawing.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import {
-  DOWN,
-  DX,
-  DY,
-  type EdgeLayout,
-  LEFT,
-  RIGHT,
-  reverse,
-  squareCenter,
-  squareEdges,
-  UP,
-} from "../../engine/square-edges.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
@@ -100,7 +100,7 @@ export function computeSize(p: SkeletonParams, ts: number): Size {
   return { w: p.w * ts + 2 * border(ts) + 1, h: p.h * ts + 2 * border(ts) + 1 };
 }
 
-/** The board's pixel layout, as `engine/square-edges.ts` aims at an edge in
+/** The board's pixel layout, as `engine/board/square-edges.ts` aims at an edge in
  * it. */
 export const layout = (ts: number): EdgeLayout => ({ tile: ts, border: border(ts) });
 

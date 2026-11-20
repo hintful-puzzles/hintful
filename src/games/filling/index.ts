@@ -9,6 +9,7 @@
  */
 
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
+import { coord, fromCoord } from "../../engine/board/geometry.ts";
 import {
   clearEntries,
   type EntryMoves,
@@ -26,7 +27,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { coord, fromCoord } from "../../engine/geometry.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { drag, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";

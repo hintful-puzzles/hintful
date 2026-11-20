@@ -11,10 +11,10 @@
 
 import { solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
+import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
   digitOf,

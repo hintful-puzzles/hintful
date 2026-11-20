@@ -28,6 +28,8 @@
  * `solver.ts` feasible, and what the generator's block-merge phase rewrites.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
+import { boxedGridText } from "../../engine/board/grid-text.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_MALFORMED,
@@ -37,9 +39,7 @@ import {
   descValue,
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { PresetBoards } from "../../engine/game.ts";
-import { boxedGridText } from "../../engine/grid-text.ts";
 import { endParams, parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";

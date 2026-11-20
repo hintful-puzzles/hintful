@@ -11,7 +11,8 @@
  * pencil bitmap + mistake + pencil-mode overlay).
  */
 
-import { valueBit } from "../candidate-bits.ts";
+import { valueBit } from "../board/candidate-bits.ts";
+import { fromCoord as fromCoordE } from "../board/geometry.ts";
 import { mkhighlight } from "../color/color-mkhighlight.ts";
 import {
   cellSurface,
@@ -33,7 +34,6 @@ import {
 } from "../color/roles.ts";
 import { drawStrike, glyphFont } from "../draw.ts";
 import type { GameDrawing, HintStep } from "../game.ts";
-import { fromCoord as fromCoordE } from "../geometry.ts";
 import { hatchPeriod } from "../hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell, ringTextBox } from "../hint-mark.ts";
 import { stepMarks } from "../hint-words.ts";

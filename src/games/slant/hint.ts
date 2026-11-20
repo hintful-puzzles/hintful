@@ -9,8 +9,8 @@
  * fact graph's (`placeNotes`).
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
 import { PLACE } from "../../engine/describe-runtime.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import { placeNotes } from "../../engine/fact-graph.ts";
 import type {
   HintResult,

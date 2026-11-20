@@ -21,6 +21,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { fromCoord } from "../../engine/board/geometry.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import {
   type Game,
@@ -32,7 +33,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   CONTRADICTION_UNLOCALIZED,

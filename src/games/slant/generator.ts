@@ -5,10 +5,10 @@
  * clue order) and every solver verdict in the clue-removal loop must match C
  * exactly for the desc to reproduce byte-for-byte.
  */
-import { Dsf } from "../../engine/dsf.ts";
+import { Dsf } from "../../engine/board/dsf.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { SOLVE_UNIQUE, slantSolve } from "./solver.ts";
 import { DIFF_EASY, encodeClues, type SlantParams, vertexDegree } from "./state.ts";
 

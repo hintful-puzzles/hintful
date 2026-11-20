@@ -7,11 +7,12 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
+import { DOWN, RIGHT, squareEdges } from "../../engine/board/square-edges.ts";
 import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import {
   CROSS,
   type EdgeChange,
@@ -21,7 +22,6 @@ import {
 } from "../../engine/line-drawing.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
-import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
 import * as skeleton from "../../generated/skeleton/edges/skeleton.compiled.ts";
 
@@ -52,7 +52,7 @@ export interface SkeletonParams {
 export interface SkeletonState {
   w: number;
   h: number;
-  /** 1 on each edge with a wall, indexed as `engine/square-edges.ts` numbers
+  /** 1 on each edge with a wall, indexed as `engine/board/square-edges.ts` numbers
    * them. Shared between states. */
   walls: Uint8Array;
   /** An {@link EdgeMark} per edge. A walled edge stays open. */

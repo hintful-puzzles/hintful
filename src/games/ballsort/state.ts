@@ -8,11 +8,11 @@
  */
 
 import { rejectMove } from "../../engine/assert-never.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
 import { type DescParse, descValue, puzzleDescError } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { numberItem } from "../../engine/params.ts";
 import { num, paramsCodec, size } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";

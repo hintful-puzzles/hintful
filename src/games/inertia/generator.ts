@@ -13,9 +13,9 @@
  * lists are *built* in, and nothing else.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { findGemCandidates } from "./solver.ts";
 import {
   BLANK,

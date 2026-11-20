@@ -16,10 +16,10 @@
  * a deduction rests on a pairing the board does not show.
  */
 
+import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { matching } from "../../engine/latin.ts";

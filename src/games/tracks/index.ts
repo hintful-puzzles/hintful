@@ -10,10 +10,11 @@
  * and edges, so the declared verbs serve both.
  */
 
+import { fromCoord } from "../../engine/board/geometry.ts";
+import { D, dirX, dirY, L, R, U } from "../../engine/board/square-edges.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -36,7 +37,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { D, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
 import {
   beginSweep,
   buttonVerb,

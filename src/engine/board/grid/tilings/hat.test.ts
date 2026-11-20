@@ -15,8 +15,8 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_SHORT,
   descBadCharacter,
-} from "../../desc-error.ts";
-import { randomNew } from "../../random/index.ts";
+} from "../../../desc-error.ts";
+import { randomNew } from "../../../random/index.ts";
 import { metatileCharToType } from "./hat.ts";
 import { gridNewHats, hatsNewDesc, hatsValidateDesc } from "./hat-grid.ts";
 import { children, hatsInMetatile, kitemap, metamap, nchildren } from "./hat-tables.ts";

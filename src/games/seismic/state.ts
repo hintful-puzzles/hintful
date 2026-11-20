@@ -17,6 +17,8 @@
  * min-dsf variant to "restore fidelity".
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
+import { boxedGridText } from "../../engine/board/grid-text.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, isDigit } from "../../engine/decimal.ts";
 import {
@@ -29,9 +31,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { boxedGridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

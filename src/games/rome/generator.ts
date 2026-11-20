@@ -27,11 +27,11 @@
  * draw order and the iteration order here are both fixed.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { mergeNeighbors } from "../../engine/divide.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { romeSolve, validateGame } from "./solver.ts";
 import {
   cloneState,

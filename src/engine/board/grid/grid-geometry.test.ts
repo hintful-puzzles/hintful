@@ -34,7 +34,7 @@ import {
   bestByBruteForce,
   inscribedRadius,
   type Ring,
-} from "../testing/polygon-yardstick.ts";
+} from "../../testing/polygon-yardstick.ts";
 import { gridFindIncenter, gridNearestEdge } from "./grid-geometry.ts";
 import { GridDot, GridFace, gridNew, gridNewSquare, makeConsistent } from "./index.ts";
 

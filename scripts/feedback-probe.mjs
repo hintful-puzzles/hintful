@@ -223,7 +223,7 @@ export function ownTests(modulePath, files = engineFiles()) {
  * How a module is labeled in the report.
  *
  * The path relative to `src/engine/`, not `basename()`. The engine has
- * subdirectories now, and `basename("src/engine/grid/index.ts")` is `index.ts` —
+ * subdirectories now, and `basename("src/engine/board/grid/index.ts")` is `index.ts` —
  * a name that says nothing and that a second barrel would collide with outright.
  */
 const label = (modulePath) => modulePath.replace(`${ENGINE}/`, "");

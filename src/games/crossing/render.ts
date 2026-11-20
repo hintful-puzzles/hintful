@@ -23,7 +23,7 @@
  * margin corner the engine picks.
  */
 
-import { valueBit } from "../../engine/candidate-bits.ts";
+import { valueBit } from "../../engine/board/candidate-bits.ts";
 import { BLUE_BOLD, ORANGE_BOLD } from "../../engine/color/colors.ts";
 import {
   cellSurface,

@@ -14,6 +14,7 @@
  *                  +-+-+-+
  */
 import { describe, expect, it } from "vitest";
+import { pointAtEdge, squareEdges } from "../../engine/board/square-edges.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import { Midend } from "../../engine/index.ts";
 import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
@@ -29,7 +30,6 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
-import { pointAtEdge, squareEdges } from "../../engine/square-edges.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import {
   paintsWith,

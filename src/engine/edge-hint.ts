@@ -13,12 +13,12 @@
  * what, and in which ink, is this module's.
  */
 
+import { type Side, type SquareEdges, sideOf } from "./board/square-edges.ts";
 import type { GameDrawing, HintStep, HintTrackVerdict } from "./game.ts";
 import { changedCells, trackTargets } from "./hint-track.ts";
 import type { MarkKind, MarkRole, StepMarks } from "./hint-words.ts";
 import { CROSS, type EdgeChange, type EdgeMark } from "./line-drawing.ts";
 import type { RingClear } from "./ring.ts";
-import { type Side, type SquareEdges, sideOf } from "./square-edges.ts";
 import type { Rect } from "./types.ts";
 
 /** An edge of the board, by its `square-edges.ts` number, so one edge named

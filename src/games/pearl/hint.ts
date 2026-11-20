@@ -10,14 +10,6 @@
  */
 
 import {
-  describedEdgeHint,
-  type Fired as FiredOf,
-} from "../../engine/described-edge-hint.ts";
-import type { SuppliedHooks } from "../../engine/described-hint.ts";
-import { EDGE } from "../../engine/edge-hint.ts";
-import { keepTrackBy } from "../../engine/hint-track.ts";
-import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
-import {
   bitDirection,
   D,
   DIRECTIONS,
@@ -28,7 +20,15 @@ import {
   R,
   squareEdges,
   U,
-} from "../../engine/square-edges.ts";
+} from "../../engine/board/square-edges.ts";
+import {
+  describedEdgeHint,
+  type Fired as FiredOf,
+} from "../../engine/described-edge-hint.ts";
+import type { SuppliedHooks } from "../../engine/described-hint.ts";
+import { EDGE } from "../../engine/edge-hint.ts";
+import { keepTrackBy } from "../../engine/hint-track.ts";
+import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
 import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 import { STATED } from "../../generated/games/pearl/pearl.compiled.ts";
 import { SQUARE } from "./kinds.ts";

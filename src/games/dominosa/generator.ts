@@ -8,10 +8,10 @@
  */
 
 import { DEALING_BUDGET } from "../../engine/answer-search.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { dominoLayout } from "../../engine/laydomino.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { dealsAt } from "./solver.ts";
 import {
   boardSize,

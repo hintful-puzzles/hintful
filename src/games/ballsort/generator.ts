@@ -7,10 +7,10 @@
  * the search is the whole of the gate.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { drawRejected } from "../../engine/deal-census.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { Reach } from "./solver.ts";
 import {
   type BallsortParams,

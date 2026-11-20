@@ -13,6 +13,7 @@
  * ladder finishes has one answer.
  */
 
+import { DIRECTIONS, dirX, dirY, opposite } from "../../engine/board/square-edges.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -28,7 +29,6 @@ import {
   runLadder,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import { DIRECTIONS, dirX, dirY, opposite } from "../../engine/square-edges.ts";
 import { type SquareTiling, squareTiling } from "../../engine/square-tiling.ts";
 import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 import { NOCLUE, type PearlState } from "./state.ts";

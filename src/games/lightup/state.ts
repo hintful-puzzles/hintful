@@ -10,6 +10,7 @@
  */
 
 import { searchTiers } from "../../engine/answer-search.ts";
+import { boxedGridText } from "../../engine/board/grid-text.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -22,7 +23,6 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { PresetBoards } from "../../engine/game.ts";
-import { boxedGridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, endParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";

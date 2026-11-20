@@ -3,9 +3,9 @@
  * a target from 100 to 999 whose fewest operations are exactly the tier's.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { Reach } from "./solver.ts";
 import {
   encodeDesc,

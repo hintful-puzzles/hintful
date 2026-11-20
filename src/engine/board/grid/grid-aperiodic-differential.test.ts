@@ -29,7 +29,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { randomNew } from "../random/index.ts";
+import { randomNew } from "../../random/index.ts";
 import reference from "./__fixtures__/grid-aperiodic-c-reference.json" with {
   type: "json",
 };

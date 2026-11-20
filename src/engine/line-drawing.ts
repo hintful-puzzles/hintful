@@ -40,6 +40,17 @@
  * `clickLine`).
  */
 
+import {
+  directionOf,
+  type EdgeLayout,
+  edgeAt,
+  edgeBetween,
+  edgeMiddle,
+  pointAtEdge,
+  squareAt,
+  squareCenter,
+  squareEdges,
+} from "./board/square-edges.ts";
 import { UI_UPDATE, type UiUpdate } from "./game.ts";
 import { click, drag as dragGesture, type PointerAction } from "./hint-gesture.ts";
 import {
@@ -62,17 +73,6 @@ import {
   showCursor,
   stripModifiers,
 } from "./pointer.ts";
-import {
-  directionOf,
-  type EdgeLayout,
-  edgeAt,
-  edgeBetween,
-  edgeMiddle,
-  pointAtEdge,
-  squareAt,
-  squareCenter,
-  squareEdges,
-} from "./square-edges.ts";
 import {
   beginSweep,
   dragMarkVerbs,

@@ -9,6 +9,8 @@
  * and the hint, which runs its strikes on the player's notes. No technique supposes anything, so a board
  * the ladder drives to its end is uniquely solved, at every tier.
  */
+
+import { Dsf } from "../../engine/board/dsf.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   DESC_CONTRADICTORY,
@@ -23,7 +25,6 @@ import {
   partition,
   rangeMask,
 } from "../../engine/describe-runtime.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import {
   CellMarks,
   describedLadder,

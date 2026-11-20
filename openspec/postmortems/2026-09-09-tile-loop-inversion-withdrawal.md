@@ -191,7 +191,7 @@ Walked item by item, which is the lesson row 4 paid for.
 | blitter sprites | **yes** — the `GameDrawing` blitter API | 8 games |
 | packing helpers that refuse silent truncation | — nothing checks a key's width | 0 |
 | decorations, ordered explicitly | — (it is plain source order) | — |
-| **the coordinate pair, one function both callers** | **shipped** — `unify-the-board-origin` (2026-09-06) | 31 games import `engine/geometry.ts` |
+| **the coordinate pair, one function both callers** | **shipped** — `unify-the-board-origin` (2026-09-06) | 31 games import `engine/board/geometry.ts` |
 
 And the shared *paint* helpers the vision does not list, which are the same kind
 of win arriving on the mechanic axis rather than the loop axis: `draw.ts` (32

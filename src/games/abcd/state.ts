@@ -19,6 +19,7 @@ import {
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
 import {
   type CandidateReading,
   DEFAULT_CANDIDATE_READING,
@@ -27,7 +28,6 @@ import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";

@@ -21,7 +21,7 @@
  * are exactly upstream's.
  */
 
-import { valueBit } from "../../engine/candidate-bits.ts";
+import { valueBit } from "../../engine/board/candidate-bits.ts";
 import {
   cellSurface,
   ERROR_WASH,
@@ -164,7 +164,7 @@ export function computeSize(p: { o: number }, ts: number): Size {
 /** Upstream `FROMCOORD`: C integer division **truncates**, so a pointer inside
  * the one-pixel border maps to row/column 0 rather than −1 (the Sticks
  * idiom). This declines the shared
- * `fromCoord` of `engine/geometry.ts`, whose floor would put that pointer off
+ * `fromCoord` of `engine/board/geometry.ts`, whose floor would put that pointer off
  * the grid. */
 export function fromCoord(v: number, ts: number): number {
   return Math.trunc((v - origin(ts)) / ts);

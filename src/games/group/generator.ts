@@ -13,9 +13,9 @@
  * clue-removal order), in C's order so generation matches it byte for byte.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { GROUP_DATA, GROUPS } from "./groupdata.ts";
 import { solveGroup } from "./solver.ts";
 import { encodeGrid, type GroupParams, toChar } from "./state.ts";

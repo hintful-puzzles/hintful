@@ -7,9 +7,9 @@
  * grid changes, and `newDesc` runs the whole thing and writes the desc.
  */
 
+import { SortedMultiset } from "../../engine/board/sorted-multiset.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { SortedMultiset } from "../../engine/sorted-multiset.ts";
 import {
   GRID_HOLE,
   GRID_OBST,

@@ -6,12 +6,12 @@
  * (docs/testing.md § "Pinning a hint's positions").
  */
 import { describe, expect, it } from "vitest";
+import { squareEdges } from "../../engine/board/square-edges.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { squareEdges } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";

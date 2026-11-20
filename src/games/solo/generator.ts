@@ -27,10 +27,10 @@
  * lives in `solver.ts`.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { divvyRectangle } from "../../engine/divvy.ts";
 import { type RandomState, randomBits, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { type Difficulty, runSolver } from "./solver.ts";
 import {
   type BlockStructure,

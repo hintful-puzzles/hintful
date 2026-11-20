@@ -6,6 +6,7 @@
  * layout); the canvas round it is the pencil-mode indicator's room (`origin`).
  */
 
+import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import { FOUR_FILL_MARKS, FOUR_FILLS } from "../../engine/color/colors.ts";
 import { cellSurface, ERROR_TEXT, INK } from "../../engine/color/palette.ts";
 import {
@@ -20,7 +21,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type PencilIndicatorStyle,

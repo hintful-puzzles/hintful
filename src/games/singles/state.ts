@@ -1,3 +1,4 @@
+import { gridText } from "../../engine/board/grid-text.ts";
 import { c2n, DESC_ALPHABET_SIZE, n2c } from "../../engine/desc-alphabet.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -7,7 +8,6 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

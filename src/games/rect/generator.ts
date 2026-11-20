@@ -27,10 +27,10 @@ import {
   DIFF_EASY,
   dealUnreasonable,
 } from "../../engine/answer-search.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import type { Point, Rect } from "../../engine/types.ts";
 import { firstTwoAnswers, ladderFinishes, searchAnswers } from "./solver.ts";
 import {

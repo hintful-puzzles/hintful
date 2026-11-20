@@ -29,7 +29,7 @@
  * first").
  */
 
-import { valueBit } from "../../engine/candidate-bits.ts";
+import { valueBit } from "../../engine/board/candidate-bits.ts";
 import { BLUE } from "../../engine/color/colors.ts";
 import {
   cellSurface,

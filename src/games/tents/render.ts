@@ -17,6 +17,7 @@
  * numbers diff a parallel key of their error flag and hatch.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
 import {
   BROWN,
   GREEN,
@@ -38,7 +39,6 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import {

@@ -35,7 +35,7 @@ import {
   type GridType,
   gridNew,
   gridNewDesc,
-} from "../../engine/grid/index.ts";
+} from "../../engine/board/grid/index.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
 

@@ -8,7 +8,9 @@
  * solver finding a unique solution at the requested difficulty (and failing
  * one tier easier), then greedily minimize the clues.
  */
-import { type Grid, gridNewSquare } from "../../engine/grid/index.ts";
+import { type Grid, gridNewSquare } from "../../engine/board/grid/index.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
+import { D, dirX, dirY, L, R, U } from "../../engine/board/square-edges.ts";
 import {
   FACE_BLACK,
   FACE_WHITE,
@@ -17,8 +19,6 @@ import {
 } from "../../engine/loopgen.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
-import { D, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
 import { pearlSolve } from "./solver.ts";
 import {
   bLD,

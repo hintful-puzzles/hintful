@@ -198,7 +198,7 @@ Put a promoted helper flat in `src/engine/`, unless it joins a family that
 already has a directory (`ls -d src/engine/*/`).
 
 - **A subdirectory is for members with no readership apart from each
-  other**, as in `engine/grid/` and `engine/color/`. Ask whether a reader
+  other**, as in `engine/board/grid/` and `engine/color/`. Ask whether a reader
   looking for the file would know to look there without being told; if the
   answer needs explaining, leave the file flat.
 - **`complexity/useLiteralKeys` is off in `biome.json` on purpose**: it

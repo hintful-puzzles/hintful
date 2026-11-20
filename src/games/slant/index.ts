@@ -13,10 +13,21 @@
  * then toggles the mark between it and a neighbor.
  */
 
+import { fromCoord } from "../../engine/board/geometry.ts";
+import {
+  DOWN,
+  type EdgeLayout,
+  edgeAt,
+  edgeBetween,
+  edgeMiddle,
+  isHorizontal,
+  pointAtSide,
+  RIGHT,
+  squareEdges,
+} from "../../engine/board/square-edges.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -36,17 +47,6 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
-import {
-  DOWN,
-  type EdgeLayout,
-  edgeAt,
-  edgeBetween,
-  edgeMiddle,
-  isHorizontal,
-  pointAtSide,
-  RIGHT,
-  squareEdges,
-} from "../../engine/square-edges.ts";
 import {
   beginSweep,
   dragMarkVerbs,
@@ -233,7 +233,7 @@ function interpretMove(
   return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
-/** The board's pixel layout, as `engine/square-edges.ts` aims at an edge in
+/** The board's pixel layout, as `engine/board/square-edges.ts` aims at an edge in
  * it. */
 const layout = (ds: SlantDrawState): EdgeLayout => ({
   tile: ds.tileSize,

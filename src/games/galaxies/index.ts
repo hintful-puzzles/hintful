@@ -4,14 +4,14 @@
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
+import { fromCoord } from "../../engine/board/geometry.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import {
   type DifficultyContract,
   difficultyItem,
   noSuchTier,
 } from "../../engine/difficulty.ts";
-import { fromCoord } from "../../engine/geometry.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
@@ -189,7 +189,7 @@ export { GalaxiesDiff };
  * grid-rounding in upstream's `interpret_move`. This and
  * {@link gridRoundDouble} divide for themselves: which edge or dot of a tile
  * the pointer is nearest is in the fraction of a tile, which `fromCoord` of
- * `engine/geometry.ts` floors away. */
+ * `engine/board/geometry.ts` floors away. */
 function coordRoundToEdge(
   px: number,
   py: number,

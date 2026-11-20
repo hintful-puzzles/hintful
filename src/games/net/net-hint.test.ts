@@ -11,10 +11,10 @@
 
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { anticlockwise, clockwise } from "../../engine/board/square-edges.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { anticlockwise, clockwise } from "../../engine/square-edges.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";

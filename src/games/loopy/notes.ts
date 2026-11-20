@@ -12,7 +12,7 @@
  * corner of every tiling against the face it belongs to.
  */
 
-import type { Grid, GridDot, GridFace } from "../../engine/grid/index.ts";
+import type { Grid, GridDot, GridFace } from "../../engine/board/grid/index.ts";
 import { isEraseKey, LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import type { LoopyCursor } from "./cursor.ts";
 import { dlineEnds, dlineIndexFromDot, dlineIndexFromFace } from "./dlines.ts";

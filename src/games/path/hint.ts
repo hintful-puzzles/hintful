@@ -19,6 +19,12 @@
  */
 
 import {
+  across,
+  pieceThrough,
+  type SquareEdges,
+  squareEdges,
+} from "../../engine/board/square-edges.ts";
+import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
@@ -27,12 +33,6 @@ import { EDGE, type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts"
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { MarkKind } from "../../engine/hint-words.ts";
 import { LINE, OPEN } from "../../engine/line-drawing.ts";
-import {
-  across,
-  pieceThrough,
-  type SquareEdges,
-  squareEdges,
-} from "../../engine/square-edges.ts";
 import type { Point } from "../../engine/types.ts";
 import { STATED, type SuppliedById } from "../../generated/games/path/path.compiled.ts";
 import {

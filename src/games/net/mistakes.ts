@@ -1,4 +1,4 @@
-import { D, R } from "../../engine/square-edges.ts";
+import { D, R } from "../../engine/board/square-edges.ts";
 /**
  * What Net's Check & Save flags: a lock or a side note the solution
  * contradicts. A tile turned wrong but not locked is not a mistake — it is the

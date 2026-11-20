@@ -13,7 +13,8 @@
  * (the upstream four-corner cache key).
  */
 
-import { valueBit } from "../../engine/candidate-bits.ts";
+import { valueBit } from "../../engine/board/candidate-bits.ts";
+import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import type { CandidateHighlights } from "../../engine/candidate-hint.ts";
 import {
   cellSurface,
@@ -35,7 +36,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import {
   HintMarks,

@@ -7,6 +7,7 @@
  * asserts the center-dot grid it draws.
  */
 import { describe, expect, it } from "vitest";
+import { D, L, R, U } from "../../engine/board/square-edges.ts";
 import {
   COL_ERROR,
   COL_FLASH,
@@ -16,7 +17,6 @@ import {
 import { EDGE } from "../../engine/edge-hint.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
-import { D, L, R, U } from "../../engine/square-edges.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

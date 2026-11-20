@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { valueBit } from "./candidate-bits.ts";
+import { valueBit } from "./board/candidate-bits.ts";
 import {
   CELL,
   mark,

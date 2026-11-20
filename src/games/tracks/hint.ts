@@ -12,6 +12,7 @@
  * words point at something visible.
  */
 
+import { D, dirX, dirY, L, opposite, R, U } from "../../engine/board/square-edges.ts";
 import { PLACE, STRIKE_EDGE } from "../../engine/describe-runtime.ts";
 import {
   describedEdgeHint,
@@ -20,7 +21,6 @@ import {
 import { keepTrackBy } from "../../engine/hint-track.ts";
 import type { MarkKind } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
-import { D, dirX, dirY, L, opposite, R, U } from "../../engine/square-edges.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 import {
   STATED,

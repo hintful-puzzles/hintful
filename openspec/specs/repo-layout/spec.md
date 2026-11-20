@@ -188,7 +188,7 @@ utilities under `testing/`.
 #### Scenario: A new member of a family joins it
 
 - **WHEN** a contributor adds a grid builder
-- **THEN** it lands under `src/engine/grid/` and is exported through the barrel
+- **THEN** it lands under `src/engine/board/grid/` and is exported through the barrel
 
 ### Requirement: No engine subdirectory is created for a grouping that has to be argued for
 

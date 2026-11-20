@@ -26,6 +26,7 @@
  * of its declared pointer verb.
  */
 
+import { fromCoord } from "./board/geometry.ts";
 import {
   type Game,
   type HintStep,
@@ -33,7 +34,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "./game.ts";
-import { fromCoord } from "./geometry.ts";
 import { click, key, type PointerAction } from "./hint-gesture.ts";
 import {
   BACKSPACE,

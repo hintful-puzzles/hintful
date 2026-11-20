@@ -16,8 +16,8 @@
  * never on both squares.
  */
 
+import type { Point } from "../types.ts";
 import { fromCoord } from "./geometry.ts";
-import type { Point } from "./types.ts";
 
 // --- directions -------------------------------------------------------------
 

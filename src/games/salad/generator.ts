@@ -22,10 +22,10 @@
  *   simply retries when that is not solvable.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { latinGenerate } from "../../engine/latin.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { saladSolve } from "./solver.ts";
 import {
   borderScans,

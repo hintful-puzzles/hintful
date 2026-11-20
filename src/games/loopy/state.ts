@@ -5,6 +5,20 @@
  * construction, so GC replaces upstream's refcount) plus three parallel arrays
  * over it: a clue per face, a line state per edge, and an error flag per edge.
  */
+
+import { Dsf } from "../../engine/board/dsf.ts";
+import type {
+  Grid,
+  GridDot,
+  GridEdge,
+  GridFace,
+  GridType,
+} from "../../engine/board/grid/index.ts";
+import {
+  GridTrimmedAwayError,
+  gridNew,
+  gridValidateDesc,
+} from "../../engine/board/grid/index.ts";
 import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
 import {
   DESC_TOO_LONG,
@@ -14,19 +28,6 @@ import {
   puzzleDescError,
 } from "../../engine/desc-error.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
-import { Dsf } from "../../engine/dsf.ts";
-import type {
-  Grid,
-  GridDot,
-  GridEdge,
-  GridFace,
-  GridType,
-} from "../../engine/grid/index.ts";
-import {
-  GridTrimmedAwayError,
-  gridNew,
-  gridValidateDesc,
-} from "../../engine/grid/index.ts";
 import { encodeRunLength } from "../../engine/run-length.ts";
 import { gridTypeOf, type LoopyParams } from "./params.ts";
 

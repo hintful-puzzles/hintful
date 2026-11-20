@@ -37,7 +37,7 @@ import * as netslide from "../../generated/games/netslide/netslide.compiled.ts";
  * Bit vocabulary.
  *
  * A tile's wires are a 4-bit mask; the same four bits name a neighbor
- * direction, `engine/square-edges.ts`'s. The barrier grid reuses those low four
+ * direction, `engine/board/square-edges.ts`'s. The barrier grid reuses those low four
  * bits for "there is a wall on this side" and the high four for the
  * corner-joining flags that let barrier junctions be drawn without a notch.
  */
@@ -49,7 +49,7 @@ import {
   dirX,
   dirY,
   opposite,
-} from "../../engine/square-edges.ts";
+} from "../../engine/board/square-edges.ts";
 
 /** Non-wire tile flags, OR'd into the value handed to the renderer. */
 export const FLASHING = 0x10;

@@ -9,8 +9,7 @@
  * § "A simulated-release preview lives in `moves.ts`").
  */
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
-import { Dsf } from "../../engine/dsf.ts";
-import { CROSS, LINE, type LineRules, OPEN } from "../../engine/line-drawing.ts";
+import { Dsf } from "../../engine/board/dsf.ts";
 import {
   D,
   dirCount,
@@ -20,7 +19,8 @@ import {
   R,
   sideOf,
   squareEdges,
-} from "../../engine/square-edges.ts";
+} from "../../engine/board/square-edges.ts";
+import { CROSS, LINE, type LineRules, OPEN } from "../../engine/line-drawing.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import { isSolved, pearlSolve } from "./solver.ts";
 import {

@@ -7,8 +7,10 @@
  * divergence anywhere in the solver changes which descriptions come out, and
  * why the description byte-match is such a strong differential.
  */
+
+import { APERIODIC_GRID_TYPES, type GridType } from "../../engine/board/grid/index.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { descVerdict } from "../../engine/desc-error.ts";
-import { APERIODIC_GRID_TYPES, type GridType } from "../../engine/grid/index.ts";
 import { FACE_BLACK, FACE_GRAY, generateLoop } from "../../engine/loopgen.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import {
@@ -16,7 +18,6 @@ import {
   RetryLimitExceeded,
   retryLimit,
 } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { buildLoopyGrid } from "./grid-build.ts";
 import { gridTypeOf, type LoopyParams } from "./params.ts";
 import { gameHasUniqueSoln } from "./solver.ts";

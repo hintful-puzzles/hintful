@@ -8,10 +8,10 @@
  * state immutably: `executeMove` clones, then mutates the copy.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
 import { isDigit } from "../../engine/decimal.ts";
 import { DESC_REPEATED, type DescParse } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import type { TileCache } from "../../engine/tile-cache.ts";
 

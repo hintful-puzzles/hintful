@@ -4,10 +4,10 @@
  * with the hint, whose words must be ones it shows as still fitting.
  */
 import { describe, expect, it } from "vitest";
+import { edgeBetween, squareEdges } from "../../engine/board/square-edges.ts";
 import { CROSS } from "../../engine/line-drawing.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { edgeBetween, squareEdges } from "../../engine/square-edges.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { ReferenceItem } from "../../engine/types.ts";

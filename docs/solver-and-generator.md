@@ -1357,7 +1357,7 @@ catch a refactor that moves a verdict.
   play. Exemplar: [`clusters/solver.ts`](../src/games/clusters/solver.ts).
 - **The root's identity.** Some deductions branch on which element the
   union-find's `canonify` returns, and the shared
-  [`Dsf`](../src/engine/dsf.ts) matches upstream `dsf.c`'s choice for that.
+  [`Dsf`](../src/engine/board/dsf.ts) matches upstream `dsf.c`'s choice for that.
   The shape is a `canonify` result used as an index and not as an identity to
   compare. Then ask which `dsf.c` the C was written for: code that says "the
   canonical index is the first square" and calls `dsf_canonify` is broken
@@ -1622,7 +1622,7 @@ symbol.
   exact whichever root union-by-size picks. First check whether the algorithm needs
   a minimum at all, or only a same-class test, and whether the root's
   identity matters elsewhere (§ "Solver-gated generation");
-  [`engine/dsf.ts`](../src/engine/dsf.ts)'s header says which call returns
+  [`engine/board/dsf.ts`](../src/engine/board/dsf.ts)'s header says which call returns
   what.
 - **What a solver does not do can decide boards as much as what it does.**
   Where upstream's shipped build skips a `usersolver` contradiction that sits

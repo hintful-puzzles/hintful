@@ -8,6 +8,7 @@
  * line contradicts its clue (`check_errors`).
  */
 
+import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import {
   CLEAR,
   CLEAR_MARK,
@@ -26,7 +27,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";

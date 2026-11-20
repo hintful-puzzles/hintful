@@ -129,7 +129,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/grid/index.ts",
+    module: "src/engine/board/grid/index.ts",
     cases: [
       {
         within: "gridNew",
@@ -383,7 +383,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/dsf.ts",
+    module: "src/engine/board/dsf.ts",
     cases: [
       {
         within: "Dsf.merge",
@@ -541,7 +541,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/square-edges.ts",
+    module: "src/engine/board/square-edges.ts",
     cases: [
       {
         within: "rot",
@@ -731,7 +731,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/findloop.ts",
+    module: "src/engine/board/findloop.ts",
     cases: [
       {
         within: "findLoops",
@@ -1273,7 +1273,7 @@ export const MODULES = [
     // where a clue digit is drawn. Neither reaches a description, a generator or
     // a solver, which is the boundary that makes float arithmetic safe here and
     // the reason none of these cases belongs to a differential.
-    module: "src/engine/grid/grid-geometry.ts",
+    module: "src/engine/board/grid/grid-geometry.ts",
     cases: [
       {
         within: "pointLineDistance",
@@ -1411,7 +1411,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/grid/grid-core.ts",
+    module: "src/engine/board/grid/grid-core.ts",
     cases: [
       {
         within: "makeConsistent",

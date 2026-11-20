@@ -14,9 +14,9 @@
  * the singles are spent (`seismic-hint.test.ts` holds it to the trial).
  */
 
+import type { Dsf } from "../../engine/board/dsf.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import { describedSpace, partition, rangeMask } from "../../engine/describe-runtime.ts";
-import type { Dsf } from "../../engine/dsf.ts";
 import {
   CellMarks,
   describedLadder,

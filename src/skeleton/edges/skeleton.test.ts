@@ -3,7 +3,7 @@
  * to a finished board, the mistake check, a save, and the frame.
  *
  * The board below is small enough to solve by eye. Edges are numbered as
- * `engine/square-edges.ts` numbers them: the twelve across first, in reading
+ * `engine/board/square-edges.ts` numbers them: the twelve across first, in reading
  * order of their left square, then the twelve up and down. The two walls are
  * edges 7 and 8.
  *
@@ -16,6 +16,7 @@
  *     + + + +      +-+ +-+
  */
 import { describe, expect, it } from "vitest";
+import { pointAtEdge, squareEdges } from "../../engine/board/square-edges.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import { Midend } from "../../engine/index.ts";
 import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
@@ -30,7 +31,6 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
-import { pointAtEdge, squareEdges } from "../../engine/square-edges.ts";
 import type { AnyGame } from "../../engine/testing/input-probe.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";

@@ -17,11 +17,11 @@
  * fixtures pin them.
  */
 
+import { Dsf } from "./board/dsf.ts";
+import { shuffle } from "./board/shuffle.ts";
 import { drawRejected } from "./deal-census.ts";
-import { Dsf } from "./dsf.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { adjacentCells } from "./redivide.ts";
-import { shuffle } from "./shuffle.ts";
 
 /** The rectangle to divide. */
 export interface DividedGrid {

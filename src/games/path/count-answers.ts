@@ -15,7 +15,7 @@
  * walked, a wall, or a number other than the next one due.
  */
 
-import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
+import { DOWN, RIGHT, squareEdges } from "../../engine/board/square-edges.ts";
 import { MODE_PATH, NO_END, type PathPuzzle } from "./state.ts";
 
 export function countAnswers(puzzle: PathPuzzle, limit = 2): number {

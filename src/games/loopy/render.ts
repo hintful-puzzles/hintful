@@ -23,6 +23,13 @@
  * app's own dark-mode pipeline. See {@link colors}.
  */
 
+import type {
+  Grid,
+  GridDot,
+  GridFace,
+  GridType,
+} from "../../engine/board/grid/index.ts";
+import { gridComputeSize, gridFindIncenter } from "../../engine/board/grid/index.ts";
 import {
   clueDoneColor,
   INK,
@@ -43,8 +50,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import type { Grid, GridDot, GridFace, GridType } from "../../engine/grid/index.ts";
-import { gridComputeSize, gridFindIncenter } from "../../engine/grid/index.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {
   drawPencilGlyph,

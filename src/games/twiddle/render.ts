@@ -5,6 +5,7 @@
  * `draw_tile` / `rotate` / `highlight_colour`.
  */
 
+import { coord as coordE } from "../../engine/board/geometry.ts";
 import { cellSurface, givenSurface, INK } from "../../engine/color/palette.ts";
 import {
   twiddleGentleHighlight,
@@ -18,7 +19,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { drawRecessedBorder, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { coord as coordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import {

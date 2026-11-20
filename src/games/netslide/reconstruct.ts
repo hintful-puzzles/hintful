@@ -36,8 +36,14 @@
  * would hand back the instability.)
  */
 
-import { Dsf } from "../../engine/dsf.ts";
-import { D, DIRECTIONS, dirCount, opposite, R } from "../../engine/square-edges.ts";
+import { Dsf } from "../../engine/board/dsf.ts";
+import {
+  D,
+  DIRECTIONS,
+  dirCount,
+  opposite,
+  R,
+} from "../../engine/board/square-edges.ts";
 import { offset } from "../../engine/wires.ts";
 import type { NetslideState } from "./state.ts";
 

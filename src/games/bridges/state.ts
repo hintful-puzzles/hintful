@@ -4,6 +4,8 @@
  * orthogonal neighbors (`points`). Upstream's refcounted `solver_state` (two
  * dsfs) is not part of the state; the solver builds its own dsf on demand.
  */
+
+import { gridText } from "../../engine/board/grid-text.ts";
 import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
 import {
   DESC_TOO_LONG,
@@ -16,7 +18,6 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";

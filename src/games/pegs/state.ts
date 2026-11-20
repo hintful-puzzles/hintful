@@ -4,11 +4,11 @@
  */
 
 import { rejectMove } from "../../engine/assert-never.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
 import { type DescParse, descValue, puzzleDescError } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";

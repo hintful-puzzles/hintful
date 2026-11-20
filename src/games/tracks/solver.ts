@@ -17,6 +17,7 @@
  * which the generator's progress measure and the mistake check read.
  */
 
+import { D, dirX, dirY, L, R, U } from "../../engine/board/square-edges.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -32,7 +33,6 @@ import {
   runLadder,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import { D, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 import {
   type Board,

@@ -6,11 +6,11 @@
  * `addClues` grades a bare board differently (see there).
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
+import { D, dirX, dirY, L, R, U } from "../../engine/board/square-edges.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
-import { D, dirX, dirY, L, R, U } from "../../engine/square-edges.ts";
 import { copyAndStrip, tracksSolve } from "./solver.ts";
 import {
   type Board,

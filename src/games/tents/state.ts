@@ -11,11 +11,11 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { boxedGridText } from "../../engine/board/grid-text.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { boxedGridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";

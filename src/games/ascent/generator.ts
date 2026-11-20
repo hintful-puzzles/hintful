@@ -9,10 +9,10 @@
  * by the graded solver, so a change to the solver changes which boards exist.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { matching } from "../../engine/latin.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { ascentSolve } from "./solver.ts";
 import {
   type AscentParams,

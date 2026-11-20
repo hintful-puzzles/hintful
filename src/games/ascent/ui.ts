@@ -10,9 +10,9 @@
  * `AscentMove` union.
  */
 
+import { fromCoord } from "../../engine/board/geometry.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,

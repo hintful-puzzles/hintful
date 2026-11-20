@@ -31,6 +31,8 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import type { Grid, GridDot, GridEdge } from "../../engine/board/grid/index.ts";
+import { gridNearestEdge } from "../../engine/board/grid/index.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   type Game,
@@ -40,8 +42,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";
-import { gridNearestEdge } from "../../engine/grid/index.ts";
 import {
   click,
   drag,
@@ -337,7 +337,7 @@ function setEdge(
 function edgeAt(g: Grid, tileSize: number, p: Point): GridEdge | null {
   // Screen coordinates to grid coordinates. This is a change of scale to the
   // tiling's own units and not a cell index, so it is not `fromCoord` of
-  // `engine/geometry.ts`: the nearest edge is found in those units below.
+  // `engine/board/geometry.ts`: the nearest edge is found in those units below.
   // `Math.trunc`, not `Math.floor`: this mirrors C's integer division, which
   // rounds towards zero, and grid coordinates are genuinely negative for
   // several tilings (and for any click in the border), where the two disagree.

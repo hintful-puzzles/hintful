@@ -49,8 +49,8 @@ import {
   DESC_TOO_SHORT,
   type DescError,
   descBadCharacter,
-} from "../../desc-error.ts";
-import { type RandomState, randomNew, randomUpto } from "../../random/index.ts";
+} from "../../../desc-error.ts";
+import { type RandomState, randomNew, randomUpto } from "../../../random/index.ts";
 
 // ---------------------------------------------------------------------------
 // Letters and the shape of the metatile hierarchy.

@@ -6,8 +6,8 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { boxedGridText } from "../../engine/board/grid-text.ts";
 import { descValue } from "../../engine/desc-error.ts";
-import { boxedGridText } from "../../engine/grid-text.ts";
 import type { GameStatus, Rect } from "../../engine/types.ts";
 import { linesAnswer } from "./solver.ts";
 import {

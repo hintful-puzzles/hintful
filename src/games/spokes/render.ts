@@ -21,6 +21,7 @@
  * clear, so a key-folded cursor could not be erased reliably.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
 import { BLUE, PURPLE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
@@ -37,7 +38,6 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";

@@ -142,7 +142,7 @@ export interface GridSpace {
   readonly cellAngles: readonly (readonly number[])[];
 }
 
-/** A tiling's dots, edges and faces, as `engine/grid` makes them: each
+/** A tiling's dots, edges and faces, as `engine/board/grid` makes them: each
  * dot's edges in one turn, each face's dots and edges round it. */
 export interface Tiling {
   readonly dots: readonly { readonly edges: readonly { readonly index: number }[] }[];

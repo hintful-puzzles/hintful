@@ -15,6 +15,7 @@
  * the ladder finishes has exactly one answer.
  */
 
+import { type SquareEdges, squareEdges } from "../../engine/board/square-edges.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -33,7 +34,6 @@ import {
   type Taken,
 } from "../../engine/ladder-runtime.ts";
 import { CROSS, type EdgeMark, LINE, OPEN } from "../../engine/line-drawing.ts";
-import { type SquareEdges, squareEdges } from "../../engine/square-edges.ts";
 import * as skeleton from "../../generated/skeleton/edges/skeleton.compiled.ts";
 import { DIFF_NORMAL, LINES_PER_SQUARE } from "./state.ts";
 
@@ -59,7 +59,7 @@ export interface SkeletonBoard {
 // --- the board as the description reads it -----------------------------------
 
 /** A board size's space, and its edges in both numberings: the game's
- * (`engine/square-edges.ts`) and the space's. */
+ * (`engine/board/square-edges.ts`) and the space's. */
 interface Geometry {
   sp: GridSpace;
   g: SquareEdges;

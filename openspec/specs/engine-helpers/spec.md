@@ -12,21 +12,21 @@ shared helper claims and which games adopt it.
 
 ### Requirement: The engine provides a shared disjoint-set forest (dsf)
 
-The engine SHALL provide the disjoint-set forest `Dsf` in `src/engine/dsf.ts`.
+The engine SHALL provide the disjoint-set forest `Dsf` in `src/engine/board/dsf.ts`.
 A game that needs union-find SHALL import it from there and SHALL NOT hold a
 copy of its own.
 
 #### Scenario: A game imports the shared Dsf
 
 - **WHEN** a game needs disjoint-set operations
-- **THEN** it imports `Dsf` from `src/engine/dsf.ts`
+- **THEN** it imports `Dsf` from `src/engine/board/dsf.ts`
 - **AND** no game directory contains a local `dsf.ts`
 
 ### Requirement: The engine provides shared grid-coordinate helpers
 
 The engine SHALL provide `coord(pos: number, tileSize: number, border: number):
 number` and `fromCoord(pixel: number, tileSize: number, border: number): number`
-in `src/engine/geometry.ts`, mapping between a cell index and its top-left
+in `src/engine/board/geometry.ts`, mapping between a cell index and its top-left
 pixel along one axis, with the caller supplying the game's own border.
 `fromCoord` SHALL be `Math.floor((pixel − border) / tileSize)` directly, which
 is correct for a pixel in the border region with no truncating-division
@@ -114,7 +114,7 @@ to a tiling's units, are not this mapping.
 ### Requirement: The engine provides a shared permutation-parity helper
 
 The engine SHALL provide `permParity(perm: Int32Array, n: number): number` in
-`src/engine/shuffle.ts`, returning the parity (0 or 1) of the number of
+`src/engine/board/shuffle.ts`, returning the parity (0 or 1) of the number of
 inversions in the first `n` entries of `perm`: the generator's parity check for
 a sliding-tile puzzle. Parity correction (which entries to swap, and under what
 condition) SHALL remain local to each game's generator.
@@ -202,7 +202,7 @@ count nothing.
 ### Requirement: The engine provides a shared loop-finding helper
 
 The engine SHALL provide `findLoops(nvertices, neighbors)` in
-`src/engine/findloop.ts`. It takes a neighbor callback `(vertex: number) => Iterable<number>` over
+`src/engine/board/findloop.ts`. It takes a neighbor callback `(vertex: number) => Iterable<number>` over
 an undirected graph and returns `{ anyLoop, isLoopEdge(u, v), isBridge(u, v)
 }`. An edge SHALL be a loop edge exactly when
 it is not a bridge. `isBridge` SHALL answer the vertex counts either side of a
@@ -261,7 +261,7 @@ a vitest file: a test that read `docs/` would make that shortcut unsafe.
 
 #### Scenario: A file is added inside a directory the catalog names
 
-- **WHEN** a module is added to `src/engine/grid/`, which the catalog names as
+- **WHEN** a module is added to `src/engine/board/grid/`, which the catalog names as
   one entry
 - **THEN** the check passes with no new entry, since the file is a part of
   that helper
@@ -689,7 +689,7 @@ judge. A game whose regions are its only clue SHALL mend its division there.
 
 ### Requirement: The engine numbers the edges of a square grid once
 
-The engine SHALL provide, in `src/engine/square-edges.ts`, a geometry of a `w × h` board's edges: each edge one number, the two squares it joins, a square's edges in one fixed order, the edge between two squares, the square across an edge, and the edge a press is aimed at. A game whose player marks the edges between squares SHALL take these from it and SHALL NOT write its own, except where a declined game's `design.md` says why.
+The engine SHALL provide, in `src/engine/board/square-edges.ts`, a geometry of a `w × h` board's edges: each edge one number, the two squares it joins, a square's edges in one fixed order, the edge between two squares, the square across an edge, and the edge a press is aimed at. A game whose player marks the edges between squares SHALL take these from it and SHALL NOT write its own, except where a declined game's `design.md` says why.
 
 #### Scenario: Two squares side by side share one edge
 
@@ -723,7 +723,7 @@ not typecheck.
 ### Requirement: The engine writes a grid's plain-text board
 
 The engine SHALL provide `gridText` and `boxedGridText` in
-`src/engine/grid-text.ts`, which write a grid's plain-text board from the
+`src/engine/board/grid-text.ts`, which write a grid's plain-text board from the
 text the game gives for each place: its cells, what goes between two cells
 of a row, a line between two rows, and each line's ends, or for a boxed grid
 its cells, edges and corners. A game whose `textFormat` is a walk over its

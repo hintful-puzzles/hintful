@@ -13,6 +13,18 @@
  * square sits, so the color runs from the 1 to the highest number.
  */
 
+import {
+  across,
+  DX,
+  DY,
+  type EdgeLayout,
+  edgeBetween,
+  pieceThrough,
+  reverse,
+  sideOf,
+  squareCenter,
+  squareEdges,
+} from "../../engine/board/square-edges.ts";
 import { BLACK, FREE, FREE_RAMP, FREE_TEXT } from "../../engine/color/colors.ts";
 import {
   cellSurface,
@@ -46,18 +58,6 @@ import {
 } from "../../engine/line-drawing.ts";
 import { textBox } from "../../engine/ring.ts";
 import { type PieceBox, spreadColors } from "../../engine/spread-colors.ts";
-import {
-  across,
-  DX,
-  DY,
-  type EdgeLayout,
-  edgeBetween,
-  pieceThrough,
-  reverse,
-  sideOf,
-  squareCenter,
-  squareEdges,
-} from "../../engine/square-edges.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
@@ -130,7 +130,7 @@ export function computeSize(p: PathParams, ts: number): Size {
   return { w: p.w * ts + 2 * border(ts) + 1, h: p.h * ts + 2 * border(ts) + 1 };
 }
 
-/** The board's pixel layout, as `engine/square-edges.ts` aims at an edge in
+/** The board's pixel layout, as `engine/board/square-edges.ts` aims at an edge in
  * it. */
 export const layout = (ts: number): EdgeLayout => ({ tile: ts, border: border(ts) });
 

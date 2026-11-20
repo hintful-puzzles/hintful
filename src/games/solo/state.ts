@@ -19,6 +19,7 @@
  * match `solo.c` exactly, so do not copy Keen's, whose convention differs.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
@@ -35,7 +36,6 @@ import {
   partition,
 } from "../../engine/describe-runtime.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";

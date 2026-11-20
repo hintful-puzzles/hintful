@@ -4,10 +4,10 @@
  * keep the board only if it needs exactly the tier asked for.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { solveSkeleton } from "./solver.ts";
 import { encodeDesc, NO_CLUE, neighbors, type SkeletonParams } from "./state.ts";
 

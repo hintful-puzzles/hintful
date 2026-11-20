@@ -21,8 +21,8 @@
  * survivor as a missing assertion.
  */
 import { describe, expect, it } from "vitest";
+import type { Dsf } from "./board/dsf.ts";
 import { divvyRectangle } from "./divvy.ts";
-import type { Dsf } from "./dsf.ts";
 import { randomNew } from "./random/index.ts";
 
 /** Cells grouped by their region root. */

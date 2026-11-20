@@ -22,6 +22,7 @@
  *   is left to the help text — see `narrateStep`.
  */
 
+import { D, dirCount, L, R, U } from "../../engine/board/square-edges.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import {
@@ -31,7 +32,6 @@ import {
   toroidalDist,
 } from "../../engine/slide-planner.ts";
 import { SOLUTION_UNKNOWN } from "../../engine/solve-failure.ts";
-import { D, dirCount, L, R, U } from "../../engine/square-edges.ts";
 import { voice } from "../../generated/games/netslide/netslide.compiled.ts";
 import { TILE } from "./kinds.ts";
 import { reconstructSolution } from "./reconstruct.ts";

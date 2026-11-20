@@ -42,9 +42,9 @@ import {
   type DescError,
   descBadCharacter,
   puzzleDescError,
-} from "../../desc-error.ts";
+} from "../../../desc-error.ts";
+import type { RandomState } from "../../../random/index.ts";
 import { nTimesRootK } from "../../n-times-root-k.ts";
-import type { RandomState } from "../../random/index.ts";
 import { type Grid, makeConsistent } from "../grid-core.ts";
 import { PENROSE_TILE_SIZE, TilingBuilder } from "../grid-tilings.ts";
 import { gridTrimVigorously } from "../grid-trim.ts";

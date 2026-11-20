@@ -12,8 +12,8 @@
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
+import { fromCoord } from "../../engine/board/geometry.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
   atof,

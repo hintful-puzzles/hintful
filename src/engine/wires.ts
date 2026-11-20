@@ -18,11 +18,7 @@
  * hard-coding one.
  */
 
-import type { DescParse } from "./desc-error.ts";
-import { readDesc } from "./desc-reader.ts";
-import type { RandomState } from "./random/index.ts";
-import { randomUpto } from "./random/index.ts";
-import { SortedMultiset } from "./sorted-multiset.ts";
+import { SortedMultiset } from "./board/sorted-multiset.ts";
 import {
   D,
   DIRECTIONS,
@@ -33,7 +29,11 @@ import {
   opposite,
   R,
   U,
-} from "./square-edges.ts";
+} from "./board/square-edges.ts";
+import type { DescParse } from "./desc-error.ts";
+import { readDesc } from "./desc-reader.ts";
+import type { RandomState } from "./random/index.ts";
+import { randomUpto } from "./random/index.ts";
 
 /* ----------------------------------------------------------------------
  * A step across the torus (upstream's `OFFSET`). The direction algebra under

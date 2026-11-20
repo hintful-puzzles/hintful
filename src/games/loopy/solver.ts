@@ -17,6 +17,7 @@
  * it as a fact, and places it as a note where a line it draws cites it.
  */
 
+import type { Grid } from "../../engine/board/grid/index.ts";
 import {
   clueList,
   type GridSpace,
@@ -29,7 +30,6 @@ import {
   tilingSpace,
 } from "../../engine/describe-runtime.ts";
 import type { FactGraph } from "../../engine/fact-graph.ts";
-import type { Grid } from "../../engine/grid/index.ts";
 import {
   CellMarks,
   compiledRung,

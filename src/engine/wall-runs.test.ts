@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Dsf } from "./board/dsf.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -7,7 +8,6 @@ import {
   descBadCharacter,
 } from "./desc-error.ts";
 import { readDesc } from "./desc-reader.ts";
-import { Dsf } from "./dsf.ts";
 import { randomNew, randomUpto } from "./random/index.ts";
 import {
   encodeRegionWalls,

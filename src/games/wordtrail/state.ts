@@ -9,6 +9,8 @@
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
+import { DOWN, RIGHT, squareEdges } from "../../engine/board/square-edges.ts";
 import {
   DESC_OUT_OF_RANGE,
   type DescParse,
@@ -17,7 +19,6 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import {
   CROSS,
   type EdgeChange,
@@ -27,7 +28,6 @@ import {
 } from "../../engine/line-drawing.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { choice, dims, num, paramsCodec } from "../../engine/params-codec.ts";
-import { DOWN, RIGHT, squareEdges } from "../../engine/square-edges.ts";
 import { WORD_LENGTHS } from "../../engine/word-list/index.ts";
 import * as wordtrail from "../../generated/games/wordtrail/wordtrail.compiled.ts";
 import { letterChar, type Trail, trailsOf } from "./trails.ts";
@@ -70,7 +70,7 @@ export interface WordtrailState {
   /** Every trail of the letters that spells a word of a listed length
    * (`trails.ts`). Shared between states. */
   trails: readonly Trail[];
-  /** An {@link EdgeCode} per edge, indexed as `engine/square-edges.ts`
+  /** An {@link EdgeCode} per edge, indexed as `engine/board/square-edges.ts`
    * numbers them. An edge beside a dark square stays open. */
   edges: Uint8Array;
 }

@@ -15,7 +15,8 @@
  * every square that contradicts the *unique solution* with an inset red box.
  */
 
-import { valueBit } from "../../engine/candidate-bits.ts";
+import { valueBit } from "../../engine/board/candidate-bits.ts";
+import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import { mkhighlightBackground } from "../../engine/color/color-mkhighlight.ts";
 import { GREEN_WASH } from "../../engine/color/colors.ts";
 import {
@@ -38,7 +39,6 @@ import {
 } from "../../engine/color/roles.ts";
 import { drawRectOutline, drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import {
   HintMarks,
   type MarkBand,

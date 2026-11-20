@@ -10,6 +10,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { gridText } from "../../engine/board/grid-text.ts";
 import {
   c2n,
   DESC_ALPHABET_SIZE,
@@ -24,7 +25,6 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

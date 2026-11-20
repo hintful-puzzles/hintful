@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { permParity } from "../../engine/board/shuffle.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
@@ -17,7 +18,6 @@ import {
   LEFT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { permParity } from "../../engine/shuffle.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { executeMove, fifteenGame } from "./index.ts";

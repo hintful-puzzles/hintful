@@ -7,6 +7,18 @@
  * drawn on a full-tile footprint and so overhang it slightly, as upstream's do.
  */
 
+import {
+  anticlockwise,
+  D,
+  DIRECTIONS,
+  dirCount,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+} from "../../engine/board/square-edges.ts";
 import { TWO } from "../../engine/color/colors.ts";
 import {
   cellSurface,
@@ -26,18 +38,6 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import {
-  anticlockwise,
-  D,
-  DIRECTIONS,
-  dirCount,
-  dirX,
-  dirY,
-  L,
-  opposite,
-  R,
-  U,
-} from "../../engine/square-edges.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";

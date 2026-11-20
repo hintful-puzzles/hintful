@@ -40,6 +40,7 @@ import {
 import { unrulyGame } from "../games/unruly/index.ts";
 import { NAMES } from "../generated/games/lightup/lightup.compiled.ts";
 import { NAMES as UNRULY_NAMES } from "../generated/games/unruly/unruly.compiled.ts";
+import { D, dirX, dirY, L, R, U } from "./board/square-edges.ts";
 import type { Reads } from "./describe-runtime.ts";
 import {
   describedSpace,
@@ -64,7 +65,6 @@ import {
   verdictOf,
 } from "./move-judge.ts";
 import { randomNew } from "./random/index.ts";
-import { D, dirX, dirY, L, R, U } from "./square-edges.ts";
 import { SYMM_ROT4 } from "./symmetric-blacks.ts";
 import { dealt } from "./testing/dealt.ts";
 

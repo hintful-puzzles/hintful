@@ -4,9 +4,9 @@
  * cells share a polarity, and each row/column holds its `+`/`−` clue counts.
  */
 
+import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import type { Game, HintStep, SolveResult, UiUpdate } from "../../engine/game.ts";
-import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { gridCursorMove, newCursor } from "../../engine/pointer.ts";

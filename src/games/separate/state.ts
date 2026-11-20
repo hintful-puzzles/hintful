@@ -16,6 +16,7 @@ import {
   searchTierSegment,
 } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/assert-never.ts";
+import { boxedGridText } from "../../engine/board/grid-text.ts";
 import {
   BORDER,
   BORDER_L,
@@ -31,7 +32,6 @@ import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
-import { boxedGridText } from "../../engine/grid-text.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,

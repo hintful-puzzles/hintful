@@ -7,9 +7,9 @@
  * random on which the solver stops short.
  */
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
 import { divvyRectangle } from "../../engine/divvy.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { shuffle } from "../../engine/shuffle.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { deduce, deduction } from "./solver.ts";

@@ -31,9 +31,7 @@ import {
   DIFF_EASY,
   dealUnreasonable,
 } from "../../engine/answer-search.ts";
-import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
-import { shuffle as shuffleArray } from "../../engine/shuffle.ts";
+import { shuffle as shuffleArray } from "../../engine/board/shuffle.ts";
 import {
   anticlockwise,
   clockwise,
@@ -43,7 +41,9 @@ import {
   R,
   rot,
   U,
-} from "../../engine/square-edges.ts";
+} from "../../engine/board/square-edges.ts";
+import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { retryLimit } from "../../engine/retry-limit.ts";
 import {
   collectBarrierCandidates,
   encodeWireDesc,

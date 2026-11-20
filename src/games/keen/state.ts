@@ -12,7 +12,8 @@
  * starts blank.
  */
 
-import { valuesOneTo } from "../../engine/candidate-bits.ts";
+import { valuesOneTo } from "../../engine/board/candidate-bits.ts";
+import { Dsf } from "../../engine/board/dsf.ts";
 import {
   type CandidateReading,
   DEFAULT_CANDIDATE_READING,
@@ -32,7 +33,6 @@ import {
   partition,
 } from "../../engine/describe-runtime.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, flag, paramsCodec, size } from "../../engine/params-codec.ts";

@@ -33,7 +33,7 @@
  *
  * ## Usage
  *
- *   node scripts/check-rename-shape.mjs --moved engine/grid/ --moved engine/color/
+ *   node scripts/check-rename-shape.mjs --moved engine/board/grid/ --moved engine/color/
  *   node scripts/check-rename-shape.mjs --moved src/games/ --kind any
  *
  * `--moved <fragment>` may be repeated; a changed file none of whose changed
