@@ -37,6 +37,15 @@
 - [ ] 3.1 For hint-to-solved, save round-trip and params round-trip, list
       the per-game tests that repeat the guard's case; remove each whose
       case the guard covers at the same strength.
+      The guards are `hint-resume.test.ts` ("a hint can solve from any
+      mid-game position": every gate preset to solved, `findMistakes` after
+      each move), `save-round-trip.test.ts` and the params codec checks in
+      `difficulty-contract.test.ts` / `custom-params.test.ts`. Each titles
+      its cases `<id>: …`, so a commit to the game still runs them: no local
+      feedback is lost by a removal. Before removing one, check
+      `scripts/feedback-probe-cases.mjs` for a case that relies on it, and
+      keep a per-game test that pins more than the guard (an answer check
+      on each step, a hand-written move the guard's input never makes).
 - [ ] 3.2 Update the skeletons' test files so a stamp no longer copies them.
-- [ ] 3.3 `docs/testing.md`: the walk, and the one population path.
+- [x] 3.3 `docs/testing.md`: the walk, and the one population path.
 - [ ] 3.4 Run `npm run test:hint-sweeps`; commit, push, archive.
