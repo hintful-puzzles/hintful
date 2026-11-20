@@ -20,11 +20,7 @@ import { mkhighlightBackground } from "../../engine/color/color-mkhighlight.ts";
 import { GREEN_WASH } from "../../engine/color/colors.ts";
 import {
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   PAPER,
@@ -33,6 +29,13 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectOutline, drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
@@ -63,6 +66,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SaladHint } from "./hint.ts";
@@ -84,45 +88,28 @@ export const PREFERRED_TILE_SIZE = 40;
 
 // --- palette ---------------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
-/** The ground of a square the win flash is on: its body, and its leading
- * edge ({@link COL_FLASH_LEAD}). */
-export const COL_FLASH = 1;
-const COL_GIVEN = 2; // the lifted surface of a square the puzzle filled
-const COL_BORDER = 3;
-export const COL_BORDERCLUE = 4;
-export const COL_PENCIL = 5;
-export const COL_I_NUM = 6; // immutable (given) colors
-const COL_I_BALL = 7;
-export const COL_I_BALLBG = 8;
-export const COL_I_HOLE = 9;
-const COL_G_NUM = 10; // the player's own guesses
-const COL_G_BALL = 11;
-const COL_G_BALLBG = 12;
-export const COL_G_HOLE = 13;
-const COL_E_BORDERCLUE = 14; // live rule errors
-const COL_E_NUM = 15;
-const COL_E_HOLE = 16;
-/** Fork addition: the Check & Save overlay outline. */
-export const COL_MISTAKE = 17;
+const COL_GIVEN = FIRST_GAME_SLOT; // the lifted surface of a square the puzzle filled
+const COL_BORDER = FIRST_GAME_SLOT + 1;
+export const COL_BORDERCLUE = FIRST_GAME_SLOT + 2;
+export const COL_PENCIL = FIRST_GAME_SLOT + 3;
+export const COL_I_NUM = FIRST_GAME_SLOT + 4; // immutable (given) colors
+const COL_I_BALL = FIRST_GAME_SLOT + 5;
+export const COL_I_BALLBG = FIRST_GAME_SLOT + 6;
+export const COL_I_HOLE = FIRST_GAME_SLOT + 7;
+const COL_G_NUM = FIRST_GAME_SLOT + 8; // the player's own guesses
+const COL_G_BALL = FIRST_GAME_SLOT + 9;
+const COL_G_BALLBG = FIRST_GAME_SLOT + 10;
+export const COL_G_HOLE = FIRST_GAME_SLOT + 11;
 /** Fork addition: the yellow body of the pencil-mode indicator glyph. */
-export const COL_PENCIL_BODY = 18;
-// Fork additions: the explained-hint legend (docs/hints-marks.md § "The engine colors the marks").
-/** The deduction's evidence — a clue's line of sight, or a whole line —
- * outlined. */
-export const COL_HINT_CELL = 19;
+export const COL_PENCIL_BODY = FIRST_GAME_SLOT + 12;
 /** Fork addition: the keyboard cursor's cell fill. Upstream used the bevel
  * lowlight, a tint of the board. */
-export const COL_CURSOR = 20;
-const COL_CELL = 21; // the surface of a square the player fills
-export const COL_FLASH_LEAD = 22;
+export const COL_HIGHLIGHT_WASH = FIRST_GAME_SLOT + 13;
+const COL_CELL = FIRST_GAME_SLOT + 14; // the surface of a square the player fills
 
 export function colors(defaultBackground: Color): Color[] {
   const background = mkhighlightBackground(defaultBackground);
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
+  const out = rolePalette(background);
   out[COL_BORDER] = surfaceGrid(background);
   out[COL_BORDERCLUE] = INK;
   out[COL_PENCIL] = pencilColor(background);
@@ -138,19 +125,10 @@ export function colors(defaultBackground: Color): Color[] {
   // The inside of the player's ball: the entry green as a fill, where a given
   // ball's inside is paper. No role covers an entry *fill*, so the named wash.
   out[COL_G_BALLBG] = GREEN_WASH;
-  out[COL_E_BORDERCLUE] = ERROR;
-  out[COL_E_NUM] = ERROR;
-  out[COL_E_HOLE] = ERROR;
-  out[COL_MISTAKE] = ERROR;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  // The evidence is an outline on the square's border. A Salad square carries a
-  // letter, a ghosted preview and up to three struck notes, so an evidence wash
-  // would have to be pale enough to read all of that through — and at that
-  // lightness it stops reading as a mark at all.
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   // A cell fill under the letter and notes: the "you are here" wash the Latin
   // family draws its cursor cell with (palette.ts, `CURSOR`).
-  out[COL_CURSOR] = highlightWash(background);
+  out[COL_HIGHLIGHT_WASH] = highlightWash(background);
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
   return out;
@@ -165,7 +143,7 @@ const highlightOf = (flags: number): CellHighlight =>
 const FD_CIRCLE = 0x08;
 const FD_CROSS = 0x10;
 /** Fork addition, on a *border clue*: this clue is the premise of the hint on
- * screen, so it lights `COL_HINT_CELL`. It lives in `ds.borderfs`, which is already
+ * screen, so it lights `COL_HINT_OUTLINE`. It lives in `ds.borderfs`, which is already
  * the clue's whole cache key, so the highlight repaints for free. */
 const FD_HINT = 0x20;
 
@@ -218,11 +196,12 @@ export interface SaladDrawState {
   order: number;
   /** `order²` display flags for this frame (upstream `ds->gridfs`). */
   gridfs: Int32Array;
-  /** `order²` last-drawn cache keys (−1 = never drawn). */
-  drawn: Int32Array;
-  /** `order*4` border-clue flags for this frame, and what was last drawn. */
+  /** Per square, its packed key, with both overlays registered. */
+  tiles: TileCache;
+  /** `order*4` border-clue flags for this frame. */
   borderfs: Int32Array;
-  borderDrawn: Int32Array;
+  /** Per border clue, the flags it was painted with. */
+  borders: TileCache;
   /** Check & Save overlay — kept in a sidecar so it is part of the cache-miss
    * test (docs/rendering.md § "The tile cache and the diff key"); it changes nothing in a cell's tile value. */
   wrong: OverlaySidecar;
@@ -243,15 +222,17 @@ export interface SaladDrawState {
 export function newDrawState(s: SaladState, tileSize: number): SaladDrawState {
   const o = s.order;
   const o2 = o * o;
+  const wrong = new OverlaySidecar(o2);
+  const hint = new OverlaySidecar(o2);
   return {
     tileSize,
     order: o,
     gridfs: new Int32Array(o2),
-    drawn: new Int32Array(o2).fill(-1),
+    tiles: new TileCache(o2, { overlays: [wrong, hint] }),
     borderfs: new Int32Array(o * 4),
-    borderDrawn: new Int32Array(o * 4).fill(-1),
-    wrong: new OverlaySidecar(o2),
-    hint: new OverlaySidecar(o2),
+    borders: new TileCache(o * 4),
+    wrong,
+    hint,
     marks: new HintMarks(),
     rowcount: new Int32Array(o2),
     colcount: new Int32Array(o2),
@@ -370,13 +351,7 @@ function drawBall(
     bg = s.gridclues[i] ? COL_I_BALLBG : COL_G_BALLBG;
   } else {
     // Letters mode draws the ball "transparent" over whatever is behind it.
-    bg = highlightFill(
-      highlight,
-      COL_CURSOR,
-      surfaceOf(s, i),
-      COL_FLASH,
-      COL_FLASH_LEAD,
-    );
+    bg = highlightFill(highlight, COL_HIGHLIGHT_WASH, surfaceOf(s, i));
   }
   const color = s.gridclues[i] ? COL_I_BALL : COL_G_BALL;
 
@@ -394,11 +369,7 @@ function drawCross(
   thick: number,
 ): void {
   const i = x + y * s.order;
-  const color = s.gridclues[i]
-    ? COL_I_HOLE
-    : flags & FD_ERROR
-      ? COL_E_HOLE
-      : COL_G_HOLE;
+  const color = s.gridclues[i] ? COL_I_HOLE : flags & FD_ERROR ? COL_ERROR : COL_G_HOLE;
   drawX(dr, cellOrigin(x, ts), cellOrigin(y, ts), ts, color, thick);
 }
 
@@ -578,7 +549,7 @@ function drawGhost(
 function drawMistakeBox(dr: GameDrawing, tx: number, ty: number, ts: number): void {
   for (const inset of [2, 3]) {
     const side = ts - 2 * inset;
-    drawRectOutline(dr, tx + inset, ty + inset, side, side, COL_MISTAKE);
+    drawRectOutline(dr, tx + inset, ty + inset, side, side, COL_ERROR);
   }
 }
 
@@ -639,8 +610,7 @@ export function redraw(
       // § "Overlay sidecars"), so nothing can change on screen without the cell
       // missing the cache.
       const key = flags[i] | (s.grid[i] << 5) | (s.pencil[i] << 9) | (tone << 19);
-      if (ds.drawn[i] === key && !ds.wrong.stale(i) && !ds.hint.stale(i)) continue;
-      ds.drawn[i] = key;
+      if (!ds.tiles.changed(i, key)) continue;
 
       const tx = cellOrigin(x, ts);
       const ty = cellOrigin(y, ts);
@@ -655,10 +625,8 @@ export function redraw(
         dr,
         { x: tx, y: ty, w: ts, h: ts },
         highlight,
-        COL_CURSOR,
+        COL_HIGHLIGHT_WASH,
         surfaceOf(s, i),
-        COL_FLASH,
-        COL_FLASH_LEAD,
       );
       ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, ts);
 
@@ -683,15 +651,13 @@ export function redraw(
           s.gridclues[i] > 0 && s.gridclues[i] <= o
             ? COL_I_NUM
             : flags[i] & FD_ERROR
-              ? COL_E_NUM
+              ? COL_ERROR
               : COL_G_NUM;
         const { origin, options } = symbolText(ts, x, y);
         dr.drawText(origin, options, color, symbolChar(s.mode, s.grid[i]));
       }
 
       if (ds.wrong.at(i)) drawMistakeBox(dr, tx, ty, ts);
-      ds.wrong.commit(i);
-      ds.hint.commit(i);
 
       dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
     }
@@ -714,7 +680,7 @@ export function redraw(
     ds.marks.paint(dr, targets, evidence, {
       band: (x, y) => markBand(ds.tileSize, x, y),
       text: (x, y) => cellText(s, ds, x, y),
-      evidenceColor: COL_HINT_CELL,
+      evidenceColor: COL_HINT_OUTLINE,
       // The entry the hint asks for, inside the ring on its square.
       inside: ([c]) => {
         const ghost =
@@ -749,14 +715,13 @@ export function redraw(
     }));
     for (const spot of spots) {
       if (!s.borderclues[spot.j]) continue;
-      if (ds.borderfs[spot.j] === ds.borderDrawn[spot.j]) continue;
-      ds.borderDrawn[spot.j] = ds.borderfs[spot.j];
+      if (!ds.borders.changed(spot.j, ds.borderfs[spot.j])) continue;
 
       const color =
         ds.borderfs[spot.j] & FD_ERROR
-          ? COL_E_BORDERCLUE
+          ? COL_ERROR
           : ds.borderfs[spot.j] & FD_HINT
-            ? COL_HINT_CELL
+            ? COL_HINT_OUTLINE
             : COL_BORDERCLUE;
       const erase = {
         x: spot.tx + spot.inset,

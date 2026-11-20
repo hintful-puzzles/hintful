@@ -10,6 +10,7 @@
  * The frozen C boards are decoded and graded in `salad-differential.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -40,7 +41,7 @@ import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { newSaladDesc } from "./generator.ts";
 import { saladGame } from "./index.ts";
-import { COL_MISTAKE, PREFERRED_TILE_SIZE } from "./render.ts";
+import { PREFERRED_TILE_SIZE } from "./render.ts";
 import { findMistakes, saladSolution, saladSolve } from "./solver.ts";
 import {
   CIRCLE,
@@ -896,7 +897,7 @@ describe("salad mistake overlay", () => {
     me.redraw(after);
     // The overlay is drawn as stroked lines, so it records as `line` ops
     // (docs/testing.md § "Render-op vocabulary" — a stroked box is not a `rect`).
-    expect(after.ops.some((op) => op.op === "line" && op.color === COL_MISTAKE)).toBe(
+    expect(after.ops.some((op) => op.op === "line" && op.color === COL_ERROR)).toBe(
       true,
     );
   });

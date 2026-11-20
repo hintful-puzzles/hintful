@@ -13,11 +13,7 @@
 import { valueBit } from "../../engine/candidate-bits.ts";
 import {
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -25,6 +21,13 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -56,6 +59,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { GroupMove } from "./state.ts";
@@ -76,45 +80,29 @@ import {
 
 // --- palette (game_colours) ------------------------------------------------
 
-const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
-const COL_USER = 2;
-const COL_HIGHLIGHT = 3;
-const COL_ERROR = 4;
-const COL_PENCIL = 5;
+export const COL_GRID = FIRST_GAME_SLOT;
+const COL_USER = FIRST_GAME_SLOT + 1;
+const COL_HIGHLIGHT_WASH = FIRST_GAME_SLOT + 2;
+const COL_PENCIL = FIRST_GAME_SLOT + 3;
 /** The stroke through the cells where an element meets itself: a mark, since a
  * shade of the surface would be a step of gray beside a given's lifted cell. */
-export const COL_DIAGONAL = 6;
-/** The Check & Save mistake outline. */
-const COL_MISTAKE = 7;
-/** Hint overlay: the premise cells outlined as evidence (associativity's three
- * known products, an identity fill's revealing cell). */
-export const COL_HINT_CELL = 8;
+export const COL_DIAGONAL = FIRST_GAME_SLOT + 4;
 /** The yellow body of the pencil-mode indicator glyph. */
-const COL_PENCIL_BODY = 9;
-const COL_CELL = 10; // the surface of a cell the player fills
-const COL_GIVEN = 11; // the lifted surface under a given element
+const COL_PENCIL_BODY = FIRST_GAME_SLOT + 5;
+const COL_CELL = FIRST_GAME_SLOT + 6; // the surface of a cell the player fills
+const COL_GIVEN = FIRST_GAME_SLOT + 7; // the lifted surface under a given element
 /** The line between two cells, and the frame. A subgroup divider is the
  * player's own mark and stays `COL_GRID`. */
-const COL_LINE = 12;
-/** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 13;
-export const COL_FLASH_LEAD = 14;
+const COL_LINE = FIRST_GAME_SLOT + 8;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = bg;
+  const out = rolePalette(bg);
   out[COL_GRID] = INK;
   out[COL_USER] = playerEntryColor(bg);
-  out[COL_HIGHLIGHT] = highlightWash(bg);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_ERROR] = ERROR;
+  out[COL_HIGHLIGHT_WASH] = highlightWash(bg);
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_DIAGONAL] = surfaceGrid(bg);
-  out[COL_MISTAKE] = ERROR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
@@ -124,7 +112,7 @@ export function colors(defaultBackground: Color): Color[] {
 
 /** Highlight payload a Group hint step carries (built in `index.ts`), the
  * `CandidateHighlights` shape the shared plan helpers consume: the premise cells
- * shaded `COL_HINT_CELL` (`area`), the acted-on cell(s) ringed (`targets`),
+ * shaded `COL_HINT_OUTLINE` (`area`), the acted-on cell(s) ringed (`targets`),
  * and the struck candidate(s) crossed through among the pencil marks (`marks`).
  * All coordinates are grid `{x = col, y = row}`. */
 export interface GroupHint {
@@ -189,17 +177,12 @@ export interface GroupDrawState {
   w: number;
   id: boolean;
   tileSize: number;
-  started: boolean;
-  /** Per-display-cell composed tile word cache (`-1` = never drawn). */
-  tiles: Int32Array;
-  /** Per-legend-slot cache. */
-  legend: Int32Array;
-  /** Per-display-cell pencil bitmap cache. */
-  pencil: Int32Array;
-  /** Per-display-cell error word cache. */
-  errors: Int32Array;
-  /** Per-display-cell mistake-bit cache. */
-  mistakes: Uint8Array;
+  /** Per display cell: its composed tile word, pencil bitmap, error word and
+   * mistake bit. The hint sidecar is keyed by grid cell, not by display
+   * cell, so it is tested beside this cache rather than registered with it. */
+  tiles: TileCache;
+  /** Per legend slot, its tile word. */
+  legend: TileCache;
   /** Grid-indexed hint-overlay sidecar: bit 0 = target cell, bit 1 = evidence,
    * and the struck candidates at `valueBit(n)` in its `struck` lane. Keyed by grid cell
    * (`y·w + x`) so the overlay follows an element through a display reorder
@@ -224,12 +207,8 @@ export function newDrawState(state: GroupState, tileSize: number): GroupDrawStat
     w,
     id: state.id,
     tileSize,
-    started: false,
-    tiles: new Int32Array(a).fill(-1),
-    legend: new Int32Array(w).fill(-1),
-    pencil: new Int32Array(a).fill(-1),
-    errors: new Int32Array(a),
-    mistakes: new Uint8Array(a),
+    tiles: new TileCache(a, { words: 4 }),
+    legend: new TileCache(w),
     hint: new OverlaySidecar(a),
     marks: new HintMarks(),
     sequence: new Uint8Array(w),
@@ -428,10 +407,8 @@ function drawTile(
     dr,
     { x: cx, y: cy, w: cw, h: ch },
     ((tile >> DF_HIGHLIGHT_SHIFT) & 7) as CellHighlight,
-    COL_HIGHLIGHT,
+    COL_HIGHLIGHT_WASH,
     surface,
-    COL_FLASH,
-    COL_FLASH_LEAD,
   );
   if (x === y)
     dr.drawLine({ x: cx, y: cy }, { x: cx + cw - 1, y: cy + ch - 1 }, COL_DIAGONAL, 1);
@@ -475,10 +452,10 @@ function drawTile(
 
   // The Check & Save mistake outline (a red inset border).
   if (mistake) {
-    dr.drawRect({ x: cx, y: cy, w: cw, h: 2 }, COL_MISTAKE);
-    dr.drawRect({ x: cx, y: cy + ch - 2, w: cw, h: 2 }, COL_MISTAKE);
-    dr.drawRect({ x: cx, y: cy, w: 2, h: ch }, COL_MISTAKE);
-    dr.drawRect({ x: cx + cw - 2, y: cy, w: 2, h: ch }, COL_MISTAKE);
+    dr.drawRect({ x: cx, y: cy, w: cw, h: 2 }, COL_ERROR);
+    dr.drawRect({ x: cx, y: cy + ch - 2, w: cw, h: 2 }, COL_ERROR);
+    dr.drawRect({ x: cx, y: cy, w: 2, h: ch }, COL_ERROR);
+    dr.drawRect({ x: cx + cw - 2, y: cy, w: 2, h: ch }, COL_ERROR);
   }
 
   dr.unclip();
@@ -502,7 +479,7 @@ export function redraw(
   const w = state.w;
   const ts = ds.tileSize;
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The rectangle the cells sit on top of: one pixel of it shows between two
     // cells and round the grid, so the frame is no heavier than a grid line.
     dr.drawRect(
@@ -510,7 +487,6 @@ export function redraw(
       COL_LINE,
     );
     ds.marks.reset(); // the backing rect just erased every gutter
-    ds.started = true;
   }
 
   markErrors(state, ds.errtmp);
@@ -534,8 +510,7 @@ export function redraw(
   for (let x = 0; x < w; x++) {
     const sx = ds.sequence[x];
     const tile = (sx + 1) | DF_LEGEND;
-    if (ds.legend[x] !== tile) {
-      ds.legend[x] = tile;
+    if (ds.legend.changed(x, tile)) {
       drawTile(dr, ds, -1, x, tile, 0, 0, false, 0, false);
       drawTile(dr, ds, x, -1, tile, 0, 0, false, 0, false);
     }
@@ -556,10 +531,10 @@ export function redraw(
   const markStyle = {
     band: (x: number, y: number) => markBand(ds.tileSize, x, y),
     text: (x: number, y: number) => cellText(ds, state, x, y),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   };
   ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_LINE, (x, y) => {
-    if (x >= 0 && x < w && y >= 0 && y < w) ds.tiles[y * w + x] = -1;
+    if (x >= 0 && x < w && y >= 0 && y < w) ds.tiles.forget(y * w + x);
   });
 
   // Cells.
@@ -610,17 +585,11 @@ export function redraw(
       const mistake = mistakeFlags[gi] !== 0;
 
       const idx = y * w + x;
+      // `changed` first, so it records the key even when the hint moved too.
       if (
-        ds.tiles[idx] !== tile ||
-        ds.pencil[idx] !== pencil ||
-        ds.errors[idx] !== error ||
-        ds.mistakes[idx] !== (mistake ? 1 : 0) ||
+        ds.tiles.changed(idx, tile, pencil, error, mistake ? 1 : 0) ||
         ds.hint.stale(gi)
       ) {
-        ds.tiles[idx] = tile;
-        ds.pencil[idx] = pencil;
-        ds.errors[idx] = error;
-        ds.mistakes[idx] = mistake ? 1 : 0;
         drawTile(
           dr,
           ds,

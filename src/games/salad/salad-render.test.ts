@@ -9,6 +9,13 @@
  * `__snapshots__/*.snap`.
  */
 import { describe, expect, it } from "vitest";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+} from "../../engine/color/roles.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import {
@@ -28,16 +35,11 @@ import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import type { SaladHint } from "./hint.ts";
 import { saladGame } from "./index.ts";
 import {
-  COL_BACKGROUND,
   COL_BORDERCLUE,
-  COL_CURSOR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_G_HOLE,
-  COL_HINT_CELL,
+  COL_HIGHLIGHT_WASH,
   COL_I_BALLBG,
   COL_I_HOLE,
-  COL_MISTAKE,
   COL_PENCIL,
   COL_PENCIL_BODY,
   newDrawState,
@@ -169,18 +171,22 @@ describe("salad render scenarios", () => {
     if (!sol) throw new Error("expected a solution");
     const o = s.order;
     const i = sol.findIndex((v, k) => v > 0 && !s.gridclues[k]);
+    const moves: SaladMove[] = [
+      { type: "set", x: i % o, y: (i / o) | 0, value: (sol[i] % NUMBERS_P.nums) + 1 },
+    ];
     const { recording, mistakeCount } = renderScenario({
       game: saladGame,
       id: NUMBERS_ID,
-      moves: [
-        { type: "set", x: i % o, y: (i / o) | 0, value: (sol[i] % NUMBERS_P.nums) + 1 },
-      ],
+      moves,
       showMistakes: true,
     });
     expect(mistakeCount).toBeGreaterThan(0);
-    expect(
-      recording.ops.some((op) => op.op === "line" && op.color === COL_MISTAKE),
-    ).toBe(true);
+    // A live error's cross is red lines too, so the count is taken against the
+    // same frame with mistakes hidden.
+    const red = (ops: typeof recording.ops): number =>
+      ops.filter((op) => op.op === "line" && op.color === COL_ERROR).length;
+    const hidden = renderScenario({ game: saladGame, id: NUMBERS_ID, moves });
+    expect(red(recording.ops)).toBeGreaterThan(red(hidden.recording.ops));
     expect(recording.ops).toMatchSnapshot();
   });
 });
@@ -253,13 +259,13 @@ describe("salad hint frames", () => {
     // The run is a **contour**: a side wherever the neighbor across it is not
     // also evidence, so a contiguous run of `n` squares comes out as `2n + 2`
     // thin sides rather than `4n` per-square rings or one solid wash.
-    const outline = markSides(recording.ops, COL_HINT_CELL);
+    const outline = markSides(recording.ops, COL_HINT_OUTLINE);
     expect(outline.length).toBeGreaterThan(4);
     for (const s of outline) expect(isThin(s)).toBe(true);
     // The premise is only visible if the clue glyph is part of the highlight:
-    // it is redrawn in COL_HINT_CELL rather than the usual clue color.
+    // it is redrawn in COL_HINT_OUTLINE rather than the usual clue color.
     expect(
-      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
+      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_OUTLINE),
     ).toBe(true);
     // A strike step rings nothing: a ring marks what a step decides, and this
     // one decides the struck notes (`point-a-cell-reference-at-its-cell`, D1).
@@ -274,9 +280,9 @@ describe("salad hint frames", () => {
     // gives when nothing beside it is evidence.
     const { recording, hint } = hintFrame("nearestSquare");
     expect(hint?.explanation).toMatch(/and the outlined square nearest it/);
-    expect(markSides(recording.ops, COL_HINT_CELL)).toHaveLength(4);
+    expect(markSides(recording.ops, COL_HINT_OUTLINE)).toHaveLength(4);
     expect(
-      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
+      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_OUTLINE),
     ).toBe(true);
   });
 
@@ -357,7 +363,8 @@ describe("salad Ui-driven frames", () => {
     const ink = paint(s, ui);
     expect(
       ink.ops.some(
-        (o) => o.op === "rect" && o.color === COL_CURSOR && o.w === 40 && o.h === 40,
+        (o) =>
+          o.op === "rect" && o.color === COL_HIGHLIGHT_WASH && o.w === 40 && o.h === 40,
       ),
     ).toBe(true);
     // No pencil-mode glyph while entering ink.
@@ -369,7 +376,8 @@ describe("salad Ui-driven frames", () => {
     // The pencil highlight is a half-tile corner triangle, not a full fill.
     expect(
       pencil.ops.some(
-        (o) => o.op === "polygon" && o.fill === COL_CURSOR && o.points.length === 3,
+        (o) =>
+          o.op === "polygon" && o.fill === COL_HIGHLIGHT_WASH && o.points.length === 3,
       ),
     ).toBe(true);
     // ...and the CapsLock-style indicator appears in the clue margin.

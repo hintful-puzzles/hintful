@@ -6,6 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { validateDesc } from "../../engine/desc-error.ts";
 import { cappedSolveFor, lowestSolvingCap } from "../../engine/difficulty.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
@@ -28,15 +29,7 @@ import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { tiers as ladderTiers } from "../../generated/games/group/group.compiled.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupGame } from "./index.ts";
-import {
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  colors,
-  coord,
-  newDrawState,
-  PREFERRED_TILE_SIZE,
-  redraw,
-} from "./render.ts";
+import { colors, coord, newDrawState, PREFERRED_TILE_SIZE, redraw } from "./render.ts";
 import { solveGroup } from "./solver.ts";
 import {
   cloneState,

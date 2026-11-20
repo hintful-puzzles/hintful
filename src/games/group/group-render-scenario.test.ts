@@ -10,6 +10,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -21,7 +22,7 @@ import {
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { groupGame } from "./index.ts";
-import { COL_DIAGONAL, COL_GRID, COL_HINT_CELL } from "./render.ts";
+import { COL_DIAGONAL, COL_GRID } from "./render.ts";
 import type { GroupMove } from "./state.ts";
 
 // A 6x6 identity-shown board (group-trace-5 fixture): the identity row/column
@@ -103,7 +104,7 @@ describe("group render scenarios", () => {
     const { step } = frame;
 
     // The forced cell is **ringed**, round, and the three known products are
-    // outlined COL_HINT_CELL as evidence.
+    // outlined COL_HINT_OUTLINE as evidence.
     //
     // The side count is the assertion, because it is what distinguishes one
     // contour from a ring per cell. The kind's premises are an adjacent pair,
@@ -112,7 +113,7 @@ describe("group render scenarios", () => {
     // dropped a premise 6.
     expectRing(frame.recording.ops);
     expect(areaOf(step)).toHaveLength(3);
-    const evidence = markSides(frame.recording.ops, COL_HINT_CELL);
+    const evidence = markSides(frame.recording.ops, COL_HINT_OUTLINE);
     expect(evidence.length).toBe(10);
     for (const s of evidence) expect(isThin(s)).toBe(true);
 

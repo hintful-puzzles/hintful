@@ -85,7 +85,7 @@
       edge-clue-latin (adjacent, unequal), galaxies, wordtrail,
       border-grid-render (palisade, separate), inertia, path, rect, slide,
       sokoban, pegs, signpost; of the multi-family games, abcd, pattern,
-      magnets, blackbox, tents, boats, tracks.
+      magnets, blackbox, tents, boats, tracks, salad, group.
       A game whose board
       values are palette indices (SameGame's and Flood's tile colors) numbers
       them from a run after its own slots (`COL_PIECE + c - 1`,
@@ -132,8 +132,10 @@
       (Magnets). Boats' collision diamond reads a square's painted key
       (`shown`) and forgets its three neighbors (`forget`); its fleet tally
       asks once a size whether the count moved, since a size has a slot a
-      boat. Next: salad, group, bridges, guess, crossing, subsets, undead.
-      Then the multi-family games, then
+      boat. Group's hint sidecar is keyed by grid cell while its tiles are
+      keyed by display position, so it cannot register with the cache: it
+      is tested after `changed`, as a string lane is. Next: bridges, guess,
+      crossing, subsets, undead. Then the multi-family games, then
       the neighbor-painting ones. Not tiles, keeping the explicit form:
       cube, loopy, untangle (palette roles only).
 - [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;
