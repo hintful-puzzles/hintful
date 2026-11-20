@@ -22,7 +22,6 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
-import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
@@ -47,7 +46,6 @@ import {
   DIFF_NORMAL,
   DIFF_TRIVIAL,
   DIFF_UNREASONABLE,
-  decodeParams,
   encodeGrid,
   encodeParams,
   type GroupParams,
@@ -55,9 +53,6 @@ import {
   newState,
   newUi,
 } from "./state.ts";
-
-/** Every line of the menu, in order. */
-const PRESETS = leafPresets(groupGame).map((l) => l.params);
 
 const P = (w: number, diff: number, id: boolean): GroupParams => ({ w, diff, id });
 
@@ -108,16 +103,6 @@ function isValidGroupTable(grid: Uint8Array, w: number): boolean {
 }
 
 describe("params codec", () => {
-  it("round-trips every preset through encode/decode", () => {
-    for (const p of PRESETS) {
-      const enc = encodeParams(p, true);
-      const dec = decodeParams(enc);
-      expect(dec.w).toBe(p.w);
-      expect(dec.diff).toBe(p.diff);
-      expect(dec.id).toBe(p.id);
-    }
-  });
-
   it("encodes identity-hidden and difficulty faithfully", () => {
     expect(encodeParams(P(8, DIFF_HARD, false), true)).toBe("8dhi");
     expect(encodeParams(P(6, DIFF_NORMAL, true), true)).toBe("6dn");

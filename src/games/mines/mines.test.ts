@@ -92,19 +92,6 @@ function coveredCell(m: { formatAsText(): string | null }): {
 // --- params ------------------------------------------------------------
 
 describe("mines params", () => {
-  it("round-trips the presets through encode/decode (full)", () => {
-    for (const s of [
-      "9x9n10",
-      "9x9n35",
-      "16x16n40",
-      "16x16n99",
-      "30x16n99",
-      "30x16n170",
-    ]) {
-      expect(encodeParams(decodeParams(s), true)).toBe(s);
-    }
-  });
-
   it("defaults mine count to area/10 without an n suffix", () => {
     expect(decodeParams("9x9").n).toBe(8);
     expect(decodeParams("10x10").n).toBe(10);

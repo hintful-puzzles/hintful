@@ -17,7 +17,6 @@ import {
   type EdgeClueState,
   newState,
   newUi,
-  status,
 } from "../../engine/edge-clue-latin/state.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
@@ -264,23 +263,6 @@ describe("unequal hintKeepTrack", () => {
         pencil: true,
       });
     }
-  });
-});
-
-// --- tier 1: resume to solved ------------------------------------------------
-
-describe("unequal hint resumes to solved", () => {
-  it("completes a fresh board one recomputed hint at a time", () => {
-    const { st: start, aux } = gen(UNEQ, "resume-unequal");
-    let state = start;
-    for (let moves = 0; moves < 600; moves++) {
-      if (status(state) === "solved") return;
-      const res = unequalGame.hint?.(state, aux);
-      expect(res?.ok).toBe(true);
-      if (!res?.ok) throw new Error(`gave up: ${res?.error}`);
-      state = unequalGame.executeMove(state, res.steps[0].move);
-    }
-    throw new Error("did not converge");
   });
 });
 

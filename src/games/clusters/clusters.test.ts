@@ -11,7 +11,6 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/desc-error.ts";
-import { Midend } from "../../engine/midend.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { AREA_TOO_LARGE, paramsError } from "../../engine/params.ts";
 import {
@@ -537,17 +536,6 @@ describe("midend integration", () => {
     // Four inset error-colored bands — the shared thick-rect frame.
     const bands = recording.ops.filter((o) => o.op === "rect" && o.color === COL_ERROR);
     expect(bands.length).toBeGreaterThanOrEqual(4);
-  });
-
-  it("save → load round-trips a played game", () => {
-    const { desc } = newClustersDesc(decodeParams("7x7"), randomNew("clusters-save"));
-    const m = new Midend(clustersGame);
-    expect(m.newGameFromId(`7x7:${desc}`)).toBeNull();
-    m.playMoves([{ kind: "paint", cells: [{ index: 0, fill: F_COLOR_1 }] }]);
-    const saved = m.saveGame();
-    const m2 = new Midend(clustersGame);
-    expect(m2.loadGame(saved)).toBeNull();
-    expect(m2.formatAsText()).toBe(m.formatAsText());
   });
 });
 

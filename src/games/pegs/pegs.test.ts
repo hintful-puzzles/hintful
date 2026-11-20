@@ -28,19 +28,6 @@ describe("Pegs params", () => {
     expect(p.type).toBe(0); // TYPE_CROSS
   });
 
-  it("round-trips params encoding", () => {
-    const cases: PegsParams[] = [
-      { w: 5, h: 7, type: 0 },
-      { w: 7, h: 7, type: 1 },
-      { w: 9, h: 9, type: 2 },
-    ];
-    for (const p of cases) {
-      const encoded = G.encodeParams(p, true);
-      const decoded = G.decodeParams(encoded);
-      expect(decoded).toEqual(p);
-    }
-  });
-
   it("decodes width-only params (square)", () => {
     const decoded = G.decodeParams("7x7");
     expect(decoded.w).toBe(7);

@@ -14,7 +14,6 @@ import {
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { Midend } from "../../engine/index.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -135,14 +134,6 @@ function findClueBlankPair(state: MapState): { clue: number; blank: number } | n
 // --- params ----------------------------------------------------------
 
 describe("map params codec", () => {
-  it("round-trips every preset", () => {
-    const menu = presetMenu(mapGame);
-    for (const entry of menu.submenu ?? []) {
-      const p = entry.params as MapParams;
-      expect(decodeParams(encodeParams(p, true))).toEqual(p);
-    }
-  });
-
   it("encodes with a full difficulty suffix", () => {
     expect(encodeParams({ w: 20, h: 15, n: 30, diff: DIFF_NORMAL }, true)).toBe(
       "20x15n30dn",
@@ -470,28 +461,6 @@ describe("map solve + findMistakes", () => {
       ops: [{ op: "color", region: blank, color: sol[blank] }],
     });
     expect(mapGame.findMistakes?.(s) ?? []).toHaveLength(0);
-  });
-});
-
-// --- Midend save round-trip ------------------------------------------
-
-describe("map save round-trip", () => {
-  it("saveGame -> loadGame -> saveGame is a fixpoint after a move", () => {
-    const p: MapParams = { w: 12, h: 10, n: 12, diff: DIFF_NORMAL };
-    const id = `${encodeParams(p, true)}#save-rt`;
-    // Same seed as the id, so `blank` is a blank region on the Midend's board.
-    const { state } = makeGame(p, "save-rt");
-    const blank = firstBlank(state);
-
-    const me = new Midend(mapGame);
-    expect(me.newGameFromId(id)).toBeNull();
-    me.playMoves([{ ops: [{ op: "color", region: blank, color: 2 }] }]);
-    const saved = me.saveGame();
-
-    const me2 = new Midend(mapGame);
-    expect(me2.loadGame(saved)).toBeNull();
-    // A faithful reconstruction re-serializes to the same bytes.
-    expect(Array.from(me2.saveGame())).toEqual(Array.from(saved));
   });
 });
 

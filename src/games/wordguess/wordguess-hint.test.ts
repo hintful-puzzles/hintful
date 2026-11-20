@@ -16,7 +16,6 @@ import { answerWords, guessWords } from "../../engine/word-list/index.ts";
 import { dictionaryWords, wordguessHint, wordguessHintKeepTrack } from "./hint.ts";
 import { wordguessGame } from "./index.ts";
 import {
-  decodeParams,
   defaultParams,
   encodeDesc,
   encodeParams,
@@ -206,8 +205,4 @@ describe("the hint frame", () => {
     expect(opsOfKind(ops, "line")).toHaveLength(0);
     expect(opsOfKind(ops, "hatch")).toHaveLength(0);
   });
-});
-
-it("decodes the presets it pins", () => {
-  for (const p of menu.boards) expect(decodeParams(encodeParams(p, true))).toEqual(p);
 });

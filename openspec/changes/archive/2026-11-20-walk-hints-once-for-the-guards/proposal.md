@@ -30,7 +30,11 @@ enrollment.
   are removed, each after checking that the guard covers that game's case at
   the same strength (`docs/test-strength.md`). A per-game test that pins
   something the guard does not is kept.
-- Tests only; no player-visible change.
+- Tests only, and one game's data: Solo's plain presets carry the `kdiff`
+  their game ID decodes to, which no board reads. No player-visible change.
+- The params guard asserts that the menu's params decode to themselves
+  (`engine-params`), and the save guard's input reaches a move in every
+  game.
 
 ## Impact
 

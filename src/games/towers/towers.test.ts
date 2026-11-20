@@ -449,20 +449,6 @@ describe("towers Solve via Midend", () => {
     const solved = (me as unknown as { state: TowersState }).state;
     expect(towersGame.status(solved)).toBe("solved");
   });
-
-  it("save round-trips a played board", () => {
-    const me = new Midend(towersGame);
-    expect(me.newGameFromId("5de#towers-save")).toBeNull();
-    const st = (me as unknown as { state: TowersState }).state;
-    const i = [...st.immutable].indexOf(0);
-    me.playMoves([
-      { type: "set", x: i % st.w, y: (i / st.w) | 0, n: 1, pencil: false },
-    ]);
-    const saved = me.saveGame();
-    const me2 = new Midend(towersGame);
-    expect(me2.loadGame(saved)).toBeNull();
-    expect((me2 as unknown as { state: TowersState }).state.grid[i]).toBe(1);
-  });
 });
 
 // --- tier 2.5: render scenarios --------------------------------------------

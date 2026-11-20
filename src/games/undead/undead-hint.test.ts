@@ -316,8 +316,8 @@ describe("undead hintKeepTrack", () => {
 });
 
 describe("undead hint resume (per tier)", () => {
-  // hint-resume.test.ts covers the first leaf preset (4x4 easy); this exercises
-  // Normal, which needs the counting rung.
+  // The gate's hint walks take Undead's 4x4 boards (`gatePresets`); this walks
+  // a 5x5 Normal, which needs the counting rung.
   it("5x5 normal: following hints one move at a time reaches solved", () => {
     for (const seed of ["a", "b", "c"]) {
       let s = gen({ w: 5, h: 5, diff: "normal" }, `resume-normal-${seed}`);

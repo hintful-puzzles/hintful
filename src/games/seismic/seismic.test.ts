@@ -150,13 +150,6 @@ const pixel = (x: number, y: number) => ({
 // --- params ----------------------------------------------------------------
 
 describe("seismic params", () => {
-  it("round-trips every preset through encode/decode", () => {
-    for (const p of PRESETS) {
-      expect(decodeParams(encodeParams(p, true))).toEqual(p);
-      expect(paramsError(seismicGame, p, true)).toBeNull();
-    }
-  });
-
   it("encodes the mode letter before the difficulty suffix", () => {
     expect(
       encodeParams({ w: 6, h: 6, diff: DIFF_EASY, mode: MODE_SEISMIC }, true),

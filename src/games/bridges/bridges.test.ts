@@ -61,12 +61,6 @@ import {
 const BRIDGES_PRESETS = leafPresets(bridgesGame).map((l) => l.params);
 
 describe("bridges params codec", () => {
-  it("round-trips every preset in full form", () => {
-    for (const p of BRIDGES_PRESETS) {
-      expect(decodeParams(encodeParams(p, true))).toEqual(p);
-    }
-  });
-
   it("encodes the full form as C does (7x7 hard)", () => {
     expect(encodeParams(BRIDGES_PRESETS[2], true)).toBe("7x7i30e10m2d2");
   });
@@ -668,19 +662,5 @@ describe("bridges render smoke (tier 2.5)", () => {
     // A square's place in the sweep is its x less its y.
     expectWinFlashTravels(run, elements, (i) => (i % p.w) - Math.floor(i / p.w));
     expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
-  });
-});
-
-describe("bridges save round-trip", () => {
-  it("saveGame -> loadGame restores an equivalent game", () => {
-    const p = BRIDGES_PRESETS[0];
-    const { desc } = newBridgesDesc(p, randomNew("bridges-save"));
-    const id = `${encodeParams(p, true)}:${desc}`;
-    const me = new Midend(bridgesGame);
-    expect(me.newGameFromId(id)).toBeNull();
-    const saved = me.saveGame();
-    const me2 = new Midend(bridgesGame);
-    expect(me2.loadGame(saved)).toBeNull();
-    expect(me2.formatAsText?.()).toBe(me.formatAsText?.());
   });
 });

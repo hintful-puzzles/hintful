@@ -18,7 +18,6 @@ import {
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
-import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -534,18 +533,6 @@ describe("subsets solve (through a real Midend)", () => {
       ok: false,
       error: PUZZLE_NOT_REASONABLE,
     });
-  });
-
-  it("saveGame -> loadGame restores an equivalent game", () => {
-    const me = new Midend(subsetsGame);
-    expect(me.newGameFromId(FIX_ID)).toBeNull();
-    const start = newState(PARAMS, FIX.desc);
-    const i = start.immutable.indexOf(0);
-    me.playMoves([{ kind: "set", type: "known", pos: i, bit: 1 }] as SubsetsMove[]);
-    const saved = me.saveGame();
-    const me2 = new Midend(subsetsGame);
-    expect(me2.loadGame(saved)).toBeNull();
-    expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 });
 

@@ -39,6 +39,7 @@ import {
   REGISTERED_GAMES,
   REGISTERED_IDS,
 } from "./testing/enrollment.ts";
+import { GESTURE_KINDS, randomGesture } from "./testing/input-probe.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;
@@ -48,30 +49,38 @@ function midendFor(game: AnyGame): Midend<unknown, unknown, unknown, unknown, un
 }
 
 /**
- * Drive a broad, *real* slice of this game's input and report how many presses
- * the game actually consumed.
+ * Drive a broad, *real* slice of this game's input.
  *
  * Deliberately not a hand-written move list: the defect this guards against is
  * a move type the game's own input can emit but its `executeMove` does not
  * handle, and a hand-written list only ever contains moves somebody remembered.
  * The pointer sweep is the touch guard's — a coarse grid misses Untangle's
  * vertices — and the key presses reach the paths pointer input cannot
- * (mark-all, cursor movement, the on-screen keypad's own buttons).
+ * (mark-all, cursor movement, the on-screen keypad's own buttons). The sweep's
+ * presses never release or move, so a game that moves only on a release or a
+ * drag (Bridges, Path, Untangle) logs nothing from them: the seeded gestures
+ * after it click, drag and walk the cursor as a player does.
  */
 function play(
   m: Midend<unknown, unknown, unknown, unknown, unknown>,
   game: AnyGame,
   params: unknown,
-): number {
-  let consumed = 0;
+  id: string,
+): void {
+  // Blind input reaches no move of a game whose every move is a whole
+  // action (a peg's jump, a block slid to a free place, a word), and a hinted
+  // move is one the save must replay as much as a typed one.
+  for (let n = 0; n < HINTS; n++) {
+    if (m.hint() !== null || m.executeHint() !== null) break;
+    m.timer(60);
+  }
+
   const size = game.computeSize(params, game.preferredTileSize ?? 32);
   const step = Math.max(6, Math.floor(Math.min(size.w, size.h) / 6));
 
   for (const button of [LEFT_BUTTON, RIGHT_BUTTON]) {
     for (let x = 2; x < size.w; x += step) {
-      for (let y = 2; y < size.h; y += step) {
-        if (m.processInput(x, y, button)) consumed++;
-      }
+      for (let y = 2; y < size.h; y += step) m.processInput(x, y, button);
     }
   }
 
@@ -86,10 +95,23 @@ function play(
   ];
   if (game.markAll) keys.push(MARK_ALL_BUTTON, MARK_ALL_BUTTON); // fill, then strike
   for (const k of game.requestKeys?.(params) ?? []) keys.push(k.button);
-  for (const button of keys) {
-    if (m.processInput(0, 0, button)) consumed++;
-  }
-  return consumed;
+  for (const button of keys) m.processInput(0, 0, button);
+
+  const rs = randomNew(`save-gestures-${id}`);
+  for (let n = 0; n < GESTURES; n++)
+    randomGesture(m, size, rs, GESTURE_KINDS[n % GESTURE_KINDS.length]);
+}
+
+/** Gestures played after the sweep, thirty of each kind. */
+const GESTURES = 90;
+
+/** Hinted moves played before the input. */
+const HINTS = 3;
+
+/** How many moves a save's log holds. */
+function loggedMoves(save: Uint8Array): number {
+  return (JSON.parse(new TextDecoder().decode(save)) as { moves: unknown[] }).moves
+    .length;
 }
 
 describe("a saved game reloads in every ported game", () => {
@@ -101,16 +123,13 @@ describe("a saved game reloads in every ported game", () => {
 
       const played = midendFor(game);
       played.newGameFromId(gameId);
-      const consumed = play(played, game, params);
-
-      // Guard the guard: a game none of whose presses landed would round-trip
-      // an untouched board and prove nothing about its move log.
-      expect(
-        consumed,
-        `${id}: no input was consumed, so the save is empty`,
-      ).toBeGreaterThan(0);
-
+      play(played, game, params, id);
       const saved = played.saveGame();
+
+      // Guard the guard: a save with no moves in its log round-trips an
+      // untouched board and proves nothing about replaying one. A press the
+      // game consumed is not a move: one held in the `Ui` logs nothing.
+      expect(loggedMoves(saved), `${id}: the save logged no moves`).toBeGreaterThan(0);
 
       // The replay itself. A move the game cannot execute surfaces here.
       const loaded = midendFor(game);
@@ -168,7 +187,7 @@ describe("a save this build cannot play is refused, not half-applied", () => {
 
       const m = midendFor(game);
       m.newGameFromId(gameId);
-      play(m, game, params);
+      play(m, game, params, id);
       const beforeBytes = m.saveGame();
 
       // A move from no build that ever existed. Every game's `executeMove`

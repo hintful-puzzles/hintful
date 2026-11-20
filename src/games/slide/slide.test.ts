@@ -20,7 +20,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -161,15 +161,6 @@ function fixtureState(
 // --- params -----------------------------------------------------------
 
 describe("slide params", () => {
-  it("round-trips every preset through encode/decode", () => {
-    const menu = presetMenu(slideGame);
-    expect(menu.submenu).toHaveLength(3);
-    for (const entry of menu.submenu ?? []) {
-      const p = entry.params as SlideParams;
-      expect(decodeParams(encodeParams(p, true))).toEqual(p);
-    }
-  });
-
   it("encodes a move limit as `m<n>` and no limit as `u`", () => {
     expect(encodeParams(P(7, 6, 25), true)).toBe("7x6m25");
     expect(encodeParams(P(8, 6, -1), true)).toBe("8x6u");

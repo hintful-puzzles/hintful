@@ -194,15 +194,12 @@ describe("adjacent mistake overlay", () => {
 // --- Solve via a real Midend ----------------------------------------------
 
 describe("adjacent Solve via Midend", () => {
-  it("solves a freshly generated board, and a save round-trips", () => {
+  it("solves a freshly generated board", () => {
     const me = new Midend(adjacentGame);
     expect(me.newGameFromId("5dk#adjacent-solve")).toBeNull();
-    const saved = me.saveGame();
     expect(me.solve()).toBeNull();
     const solved = (me as unknown as { state: EdgeClueState }).state;
     expect(adjacentGame.status(solved)).toBe("solved");
-    const me2 = new Midend(adjacentGame);
-    expect(me2.loadGame(saved)).toBeNull();
   });
 });
 

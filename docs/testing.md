@@ -19,7 +19,8 @@ runs, and what a commit may leave to the push and to CI).
    ([`src/skeleton/grid/`](../src/skeleton/grid/)). See "What a new game
    ships".
 2. In `<game>.test.ts` (`skeleton.test.ts`), on a board written into the
-   file: the params and desc codecs round-trip and refuse, each input gives
+   file: the desc codec round-trips, both codecs refuse, the params codec's
+   brief form and any string it reads leniently, each input gives
    its move, `executeMove` leaves its argument alone, the solve move played
    through `executeMove` reaches a solved board, the mistake check, a save
    that loads, and one frame through `renderScenario` with a targeted op

@@ -16,7 +16,6 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/desc-error.ts";
-import { Midend } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -171,18 +170,6 @@ describe("singles findMistakes", () => {
     const clean = cloneState(s0);
     clean.flags[blackIdx] |= F_BLACK;
     expect(singlesGame.findMistakes?.(clean)).toHaveLength(0);
-  });
-});
-
-describe("singles save round-trip", () => {
-  it("saveGame -> loadGame restores an equivalent game", () => {
-    const me = new Midend(singlesGame);
-    expect(me.newGameFromId("5x5de#singles-save")).toBeNull();
-    me.playMoves([{ sets: [{ x: 0, y: 0, value: "black" }] }]);
-    const saved = me.saveGame();
-    const me2 = new Midend(singlesGame);
-    expect(me2.loadGame(saved)).toBeNull();
-    expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 });
 

@@ -438,16 +438,6 @@ describe("keen Solve via Midend", () => {
     const solved = (me as unknown as { state: KeenState }).state;
     expect(keenGame.status(solved)).toBe("solved");
   });
-
-  it("save round-trips a played board", () => {
-    const me = new Midend(keenGame);
-    expect(me.newGameFromId(`4de:${D4}`)).toBeNull();
-    me.playMoves([{ type: "set", x: 0, y: 0, n: 1, pencil: false }]);
-    const saved = me.saveGame();
-    const me2 = new Midend(keenGame);
-    expect(me2.loadGame(saved)).toBeNull();
-    expect((me2 as unknown as { state: KeenState }).state.grid[0]).toBe(1);
-  });
 });
 
 // cloneState sanity (immutable clues shared, mutable arrays copied).

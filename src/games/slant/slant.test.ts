@@ -12,7 +12,6 @@ import {
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_LEFT,
@@ -350,16 +349,6 @@ describe("slant generator (behavioral)", () => {
 });
 
 describe("slant midend integration", () => {
-  it("save -> load round-trips a game in progress", () => {
-    const me = new Midend(slantGame);
-    expect(me.newGameFromId(`5x5:${FIXTURE.desc}`)).toBeNull();
-    me.playMoves([set(0, 0, -1), set(1, 1, 1)]);
-    const saved = me.saveGame();
-    const me2 = new Midend(slantGame);
-    expect(me2.loadGame(saved)).toBeNull();
-    expect(me2.formatAsText()).toBe(me.formatAsText());
-  });
-
   it("text format shows clues and slashes", () => {
     let s = newState(P22, "0h");
     s = executeMove(s, set(1, 1, 1));

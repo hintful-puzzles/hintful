@@ -93,13 +93,6 @@ const hexGrid = (aux: string) => Uint8Array.from(aux, (c) => Number.parseInt(c, 
  */
 
 describe("netslide params", () => {
-  it("round-trips every preset", () => {
-    const presets = leafPresets(netslideGame);
-    expect(presets).toHaveLength(9);
-    for (const { params } of presets)
-      expect(decodeParams(encodeParams(params, true))).toEqual(params);
-  });
-
   it("round-trips wrapping, a fractional barrier probability and a move target", () => {
     const p: NetslideParams = {
       w: 5,

@@ -14,7 +14,8 @@
  * 1. **Encode and decode are mutual inverses**, for every case of every game.
  *    This is a property, not a fixture — it stays true when a preset is added
  *    and it cannot be re-baselined by a careless `vitest -u`. It is asserted
- *    of every registered game with no exemption roster.
+ *    of every registered game with no exemption roster, and of the params
+ *    the menu offers it is asserted on the decoded record itself.
  * 2. **The recorded encodings do not move**, as a per-game snapshot. This is
  *    the fixture, and it is the one that makes replacing a codec safe: a
  *    derived codec that produces a different string for any reachable params is
@@ -63,6 +64,26 @@ describe("encodeParams and decodeParams are mutual inverses", () => {
         // not round-trip (a derived default, a coupled array), and the string
         // is what a shared game ID actually contains.
         expect(`${c.label} ${reencoded}`).toBe(`${c.label} ${full}`);
+      }
+    });
+  }
+});
+
+/**
+ * The params a player can choose from the menu read back from their game ID as
+ * the very record they were. The encoding comparison above passes a codec that
+ * writes a field neither way; this one fails it wherever the decoder's default
+ * is not what the menu offered. The perturbed cases are left out: they need
+ * not be valid, and a field the codec leaves alone may depend on another.
+ */
+describe("a menu's params decode from their game ID unchanged", () => {
+  const offered = (label: string): boolean =>
+    label === "default" || label.startsWith("preset:") || label.startsWith("tier:");
+  for (const [id, game, cases] of CORPUS) {
+    it(id, () => {
+      for (const c of cases.filter((c) => offered(c.label))) {
+        const full = game.encodeParams(c.params, true);
+        expect(game.decodeParams(full), `${c.label} ${full}`).toEqual(c.params);
       }
     });
   }

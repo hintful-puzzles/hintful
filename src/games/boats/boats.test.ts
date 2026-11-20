@@ -138,14 +138,6 @@ function generated(p: BoatsParams, seed: string): BoatsState {
 // --- params ----------------------------------------------------------------
 
 describe("boats params", () => {
-  it("round-trips every preset through encode/decode", () => {
-    for (let i = 0; i < PRESETS.length; i++) {
-      const p = presetParams(i);
-      const decoded = decodeParams(encodeParams(p, true));
-      expect(decoded).toEqual(p);
-    }
-  });
-
   it("omits the difficulty and strip flag from a non-full encoding", () => {
     const p = params({ diff: DIFF_HARD, strip: true });
     expect(encodeParams(p, false)).toBe("6x6f3,3,2,1");

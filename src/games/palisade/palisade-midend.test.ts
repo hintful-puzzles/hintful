@@ -95,15 +95,4 @@ describe("Palisade midend lifecycle", () => {
     // palisade.test.ts; through the midend the win-flash keeps the plan
     // displayed until the animation timer settles it.)
   });
-
-  it("round-trips through save/load", () => {
-    const h = harness();
-    expect(h.m.newGameFromId(ID)).toBeNull();
-    h.m.processInput(CLICK_X, CLICK_Y, LEFT_BUTTON);
-    const saved = h.m.saveGame();
-
-    const h2 = harness();
-    expect(h2.m.loadGame(saved)).toBeNull();
-    expect(bytesEqual(h2.m.saveGame(), saved)).toBe(true);
-  });
 });

@@ -386,7 +386,8 @@ describe("mathrax hintKeepTrack", () => {
 // --- tier 1: resume to solved ----------------------------------------------
 
 describe("mathrax hint resumes to solved", () => {
-  for (const p of [NORMAL, TRICKY]) {
+  // The gate's resume walk takes the 5x5 Normal; the 6x6 Tricky is this file's.
+  for (const p of [TRICKY]) {
     it(`completes a fresh ${encodeParams(p, true)} board one recomputed hint at a time`, () => {
       let state = gen(p, `resume-${p.o}`).st;
       for (let moves = 0; moves < 800; moves++) {

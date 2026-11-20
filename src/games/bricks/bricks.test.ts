@@ -452,22 +452,6 @@ describe("bricks completion and solve (through a real Midend)", () => {
     );
     expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
-
-  it("saveGame -> loadGame restores an equivalent game", () => {
-    const me = new Midend(bricksGame);
-    expect(me.newGameFromId(FIX_ID)).toBeNull();
-    const blank = newState(FIX_PARAMS, FIX.desc).grid.findIndex(
-      (c) => (c & COL_MASK) === F_EMPTY,
-    );
-    expect(blank).toBeGreaterThanOrEqual(0);
-    me.playMoves([
-      { kind: "paint", cells: [{ index: blank, to: "shade" }] },
-    ] as BricksMove[]);
-    const saved = me.saveGame();
-    const me2 = new Midend(bricksGame);
-    expect(me2.loadGame(saved)).toBeNull();
-    expect(me2.formatAsText()).toBe(me.formatAsText());
-  });
 });
 
 describe("bricks generator", () => {

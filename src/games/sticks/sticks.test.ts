@@ -14,7 +14,6 @@ import {
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
@@ -459,19 +458,6 @@ describe("sticks completion and solve (through a real Midend)", () => {
     expect(typeof text).toBe("string");
     // Every white cell carries a line ('-' or '|'), none left '.'.
     expect(text).not.toContain(".");
-  });
-
-  it("saveGame -> loadGame restores an equivalent game", () => {
-    const me = new Midend(sticksGame);
-    expect(me.newGameFromId(FIX_ID)).toBeNull();
-    const i = whiteCellSolved(F_VER);
-    me.playMoves([
-      { kind: "set", changes: [{ index: i, line: "ver" }] },
-    ] as SticksMove[]);
-    const saved = me.saveGame();
-    const me2 = new Midend(sticksGame);
-    expect(me2.loadGame(saved)).toBeNull();
-    expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 
   it("is solved exactly while the board is complete", () => {

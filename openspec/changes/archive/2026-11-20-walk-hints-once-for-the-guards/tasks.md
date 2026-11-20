@@ -34,7 +34,7 @@
 
 ## 3. Per-game tests that repeat a guard
 
-- [ ] 3.1 For hint-to-solved, save round-trip and params round-trip, list
+- [x] 3.1 For hint-to-solved, save round-trip and params round-trip, list
       the per-game tests that repeat the guard's case; remove each whose
       case the guard covers at the same strength.
       The guards are `hint-resume.test.ts` ("a hint can solve from any
@@ -46,6 +46,27 @@
       `scripts/feedback-probe-cases.mjs` for a case that relies on it, and
       keep a per-game test that pins more than the guard (an answer check
       on each step, a hand-written move the guard's input never makes).
-- [ ] 3.2 Update the skeletons' test files so a stamp no longer copies them.
+      Found (2026-11-20). The params guard is `params-stability.test.ts`,
+      which compared through the encoding only; it now also asserts that the
+      menu's params (default, presets, tiers) decode to the record itself.
+      Only Solo failed that: a plain board's `kdiff` is never encoded, so its
+      presets now carry the decoder's default (no encoding moved; the
+      snapshot lost only the duplicate rows). Eleven per-game round-trips
+      over menu params went; the rest pin a brief form, a lenient or legacy
+      string, or params off the menu. The save guard logged no move for nine
+      games (Bridges, Numgame, Path, Spokes, Untangle, Wordtrail: its presses
+      never release or drag; Pegs, Slide, Wordguess: blind input reaches no
+      move). It now plays three hinted moves and seeded `randomGesture`s, and
+      its self-check counts the save's moves instead of consumed presses
+      (planted: an unhandled Untangle move, missed before, now fails). Eleven
+      per-game saves replaying a move kind the guard now plays went; Adjacent
+      and Pattern lost their empty-log halves. Of the hint walks, only
+      Group's, Unequal's and Mathrax's 5x5 Normal repeated the gate's case:
+      the rest walk larger boards, check the answer each step, start from
+      the player's marks, or forbid the refusal the guard accepts. No probe
+      case names a game test.
+- [x] 3.2 Update the skeletons' test files so a stamp no longer copies them.
+      The params tests keep only the brief form and an off-menu string; the
+      hint walks (answer each step) and saves (literal text) pin more.
 - [x] 3.3 `docs/testing.md`: the walk, and the one population path.
-- [ ] 3.4 Run `npm run test:hint-sweeps`; commit, push, archive.
+- [x] 3.4 Run `npm run test:hint-sweeps`; commit, push, archive.

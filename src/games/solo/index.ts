@@ -102,7 +102,6 @@ import {
   DIFF_IMPOSSIBLE,
   DIFF_INTERSECT,
   DIFF_KINTERSECT,
-  DIFF_KMINMAX,
   DIFF_NAMES,
   DIFF_RECURSIVE,
   DIFF_SIMPLE,
@@ -138,7 +137,9 @@ const plainBoard = (c: number, r: number, diff = DIFF_BLOCK): SoloParams => ({
   r,
   symm: SYMM_ROT2,
   diff,
-  kdiff: DIFF_KMINMAX,
+  // Only Killer cages are graded on `kdiff`, and the codec does not write it,
+  // so a plain board carries what its game ID decodes to.
+  kdiff: DIFF_KINTERSECT,
   xtype: false,
   killer: false,
 });

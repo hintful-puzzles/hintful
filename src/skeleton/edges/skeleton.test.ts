@@ -64,10 +64,8 @@ const set = (edge: number, mark: 0 | 1 | 2): SkeletonMove => ({
 });
 
 describe("skeleton params", () => {
-  it("round-trip through their string, tier included only in full", () => {
+  it("leave the tier out of the brief form, which reads as the default's", () => {
     const p = { w: 6, h: 4, diff: DIFF_EASY };
-    expect(decodeParams(encodeParams(p, true))).toEqual(p);
-    // The brief form leaves the tier at the default's.
     expect(decodeParams(encodeParams(p, false))).toEqual({ ...p, diff: DIFF_NORMAL });
   });
 

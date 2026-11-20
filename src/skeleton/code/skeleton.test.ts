@@ -21,7 +21,6 @@ import { skeletonGame } from "./index.ts";
 import { answerRect, COL_IN_PLACE, COL_WRONG, centerOf, tileRect } from "./render.ts";
 import {
   ABSENT,
-  decodeParams,
   defaultParams,
   ELSEWHERE,
   encodeDesc,
@@ -72,8 +71,7 @@ describe("the score", () => {
 });
 
 describe("params and desc", () => {
-  it("round-trip params", () => {
-    expect(decodeParams(encodeParams(P, true))).toEqual(P);
+  it("write params as length, symbols and rows", () => {
     expect(encodeParams({ len: 3, nsymbols: 6, nguesses: 7 }, true)).toBe("3s6g7");
   });
 

@@ -62,12 +62,6 @@ function anyLegalRoll(state: CubeState): CubeState | null {
 }
 
 describe("cube params", () => {
-  it("round-trips encode/decode for every preset", () => {
-    for (const p of PRESETS) {
-      expect(decodeParams(encodeParams(p, true))).toEqual(p);
-    }
-  });
-
   it("encodes with the solid letter and dimensions", () => {
     expect(encodeParams({ solid: SolidType.Cube, d1: 4, d2: 4 }, true)).toBe("c4x4");
     expect(encodeParams({ solid: SolidType.Tetrahedron, d1: 1, d2: 2 }, true)).toBe(
