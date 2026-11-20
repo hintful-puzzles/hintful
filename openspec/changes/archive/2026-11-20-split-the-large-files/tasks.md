@@ -6,7 +6,7 @@
       follows the call graph's strongly connected components, since
       `module-layering.test.ts` refuses a runtime import cycle; a component
       stays one module, as `compile-expr.ts` does.)
-- [ ] 1.2 Split one file per commit, the export surface unchanged; verify by
+- [x] 1.2 Split one file per commit, the export surface unchanged; verify by
       the diff's shape (moves, not edits) as well as the suite.
   - [x] `compile.ts`, `describe-runtime.ts`: whole statements moved.
   - [x] `puzzle-screen.ts`: its styles and its hint words
@@ -34,6 +34,9 @@
 
 ## 2. Finish
 
-- [ ] 2.1 Guides cite the new files. Run the app once for the shell files
-      (done for `puzzle-screen.ts`: the styles and a hint's words render).
-      Commit, push, archive.
+- [x] 2.1 Guides cite the new files. Run the app once for the shell files
+      (done for `puzzle-screen.ts`: the styles and a hint's words render;
+      for `Puzzle`: a hint's show, explain, reference flash and apply on
+      Net; for `Midend`: Fifteen's slowed hint slide mid-flight, the timer
+      preference off and on, and a reload restoring the board and its
+      time). Commit, push, archive.
