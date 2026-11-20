@@ -82,6 +82,7 @@ import {
 } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { workingRowGames } from "./testing/enrollment.ts";
 import {
   type AnyGame,
   probeBoard as board,
@@ -130,9 +131,10 @@ const CLAIMS_UNACTIONABLE: Record<string, string> = {};
 /**
  * Games that offer a keypad although their board has no `pencil` array, each
  * with the reason. A `pencil` array is derived as needing one
- * ({@link hasPencilArray}); these are the games whose need cannot be read off
- * the board, so it is written down — and asserted exact, so a game here that
- * loses its keypad fails, and a game that gains one must say why.
+ * ({@link hasPencilArray}), and so is a working row ({@link TYPED_ROW});
+ * these are the games whose need cannot be read off the game, so it is
+ * written down — and asserted exact, so a game here that loses its keypad
+ * fails, and a game that gains one must say why.
  */
 const KEYPAD_WITHOUT_PENCIL: Record<string, string> = {
   ascent:
@@ -142,19 +144,16 @@ const KEYPAD_WITHOUT_PENCIL: Record<string, string> = {
   filling:
     "A number is placed only by typing it into a selected square; no pointer " +
     "gesture writes one, so on touch the keypad is the only way to fill a square.",
-  guess:
-    "A color is entered only by pressing its key: a tap chooses which peg the " +
-    "next color goes into, never the color. Its notes rule colors out of the " +
-    "answer row rather than living in a per-cell pencil array.",
   net:
     "Moving the square the network is lit from and jumbling the unlocked squares " +
     "are keys on the keyboard (Ctrl+arrow, J); the Source and Jumble keys are the " +
     "pointer's only way to either.",
-  wordguess:
-    "A word is typed: a tap chooses which square the next letter goes into, " +
-    "never the letter, so on touch the keypad (or the dictionary) is the only " +
-    "way to write one.",
 };
+
+/** The games whose guess is composed in a working row: a value is entered
+ * only by pressing its key, a tap choosing the slot it goes into and never
+ * the value, so on touch the keypad is the only way to write one. */
+const TYPED_ROW = new Set(workingRowGames());
 
 describe("a game does not claim a button it did not act on", () => {
   /**
@@ -388,14 +387,17 @@ describe("every on-screen key a game offers reaches that game", () => {
         params,
         game.newDesc(params, randomNew(`keypad-${id}`)).desc,
       );
-      const needs = hasPencilArray(state) || id in KEYPAD_WITHOUT_PENCIL;
+      const needs =
+        hasPencilArray(state) || TYPED_ROW.has(id) || id in KEYPAD_WITHOUT_PENCIL;
       expect(
         offersKeypad(game),
         needs
           ? `${id} offers no keypad, but ${
               id in KEYPAD_WITHOUT_PENCIL
                 ? "KEYPAD_WITHOUT_PENCIL says its entry is typed"
-                : "its notes are a pencil array, written by typing a symbol"
+                : TYPED_ROW.has(id)
+                  ? "its guess is a working row (engine/code-rows.ts), typed a value at a time"
+                  : "its notes are a pencil array, written by typing a symbol"
             } — and on touch the keypad is the only way to type.`
           : `${id} offers a keypad without a pencil array. Add it to ` +
               "KEYPAD_WITHOUT_PENCIL with the reason touch play needs one.",
@@ -406,6 +408,7 @@ describe("every on-screen key a game offers reaches that game", () => {
   it("the keypad ledger names only registered games, each with its reason", () => {
     for (const [id, why] of Object.entries(KEYPAD_WITHOUT_PENCIL)) {
       expect(REGISTERED, `${id} is ledgered but not registered`).toContain(id);
+      expect(TYPED_ROW.has(id), `${id} has a working row: remove its line`).toBe(false);
       expect(why.length, `${id}'s entry states no reason`).toBeGreaterThan(80);
     }
   });

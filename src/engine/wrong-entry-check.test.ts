@@ -65,6 +65,7 @@ import {
   type AnyGame,
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,
+  workingRowExemption,
 } from "./testing/enrollment.ts";
 import { gatePresets } from "./testing/hint-games.ts";
 import { GESTURE_KINDS, randomGesture } from "./testing/input-probe.ts";
@@ -78,11 +79,9 @@ const CHECKED = REGISTERED_GAMES.filter(
   ([, game]) => game.findMistakes && game.solve && game.hint,
 );
 
-/** The games no gesture made a wrong entry in, each with why. */
-const UNREACHED: Record<string, string> = {
-  guess:
-    "A row of pegs is a probe and never a claim, and what the player claims is a rule-out, which leaves a solved board solved.",
-};
+/** The games no gesture made a wrong entry in, each with why; a code-breaking
+ * game is excused by its working row. Empty, and meant to stay so. */
+const UNREACHED: Record<string, string> = {};
 
 interface Swept {
   /** How many gestures made a wrong entry. */
@@ -275,6 +274,12 @@ describe("Check & save names a wrong entry", () => {
         found: "games in which no gesture made a wrong entry",
         add: "find why the gestures enter nothing the answer contradicts, or add it with why no entry of the game can be wrong",
       },
+      [
+        workingRowExemption(
+          ran.map(([id]) => id),
+          "a guess is a probe and never a claim, and what the player claims is a rule-out, which leaves a solved board solved",
+        ),
+      ],
     );
   });
 

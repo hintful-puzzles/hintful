@@ -866,7 +866,10 @@ For the author of a new cross-game guard. The normative form is the
    Exemplars: `position-status.test.ts`'s `UNBREAKABLE`,
    `move-judge-games.test.ts`'s `UNJUDGED`. First ask whether the game
    already states the fact, in a member's presence or a `notApplicable`
-   reason, and read that instead. An empty ledger meant to stay empty is a real assertion. An
+   reason, and read that instead. A reason true of every game sharing a
+   mechanic is no entry: pass `expectLedger` a `KindExemption` derived from
+   the mechanic (`workingRowExemption` excuses the code-breaking games), held
+   in both directions as an entry is. An empty ledger meant to stay empty is a real assertion. An
    excuse that the game has no such section is not an entry: it is the game's
    `notApplicable` reason, read with `sectionState`
    ([`mechanics.md`](./mechanics.md) § "Contract sections, and what makes a

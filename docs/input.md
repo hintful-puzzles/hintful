@@ -905,10 +905,11 @@ Exemplars: [`solo/index.ts`](../src/games/solo/index.ts), `keen/index.ts`,
   sends `PENCIL_MODE_BUTTON`, as the app's bare `P` shortcut does, and
   `toggleNoteTakingMode` handles it for a note-taking cell game.
   `pencil-mode-key.test.ts` asserts both.
-- **A board with a `pencil` array offers a keypad, and no other game does
-  without a ledger entry.** `input-parity.test.ts` holds the biconditional
-  (`hasPencilArray`); a keypad on a game with no such array is named in
-  `KEYPAD_WITHOUT_PENCIL` with the reason touch play needs it.
+- **A board with a `pencil` array offers a keypad, and so does a game with
+  a working row (`engine/code-rows.ts`); no other game does without a ledger
+  entry.** `input-parity.test.ts` holds the biconditional (`hasPencilArray`,
+  `workingRowGames`); any other keypad is named in `KEYPAD_WITHOUT_PENCIL`
+  with the reason touch play needs it.
 - **Test `isEraseKey`, never the panel's code.** The panel's Clear sends
   `CLEAR_BUTTON` (8) and the keyboard's Backspace sends `DELETE` (127).
 - **The hook takes `params` only.** The panel reloads only on a param change,

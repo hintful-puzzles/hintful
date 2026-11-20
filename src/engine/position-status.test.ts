@@ -39,6 +39,7 @@ import {
   RIGHT_RELEASE,
 } from "./pointer.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { workingRowExemption } from "./testing/enrollment.ts";
 import {
   type AnyGame,
   probeBoard,
@@ -62,7 +63,7 @@ const RECORD_KEYS = [
 /**
  * Games with Solve whose own input, from the solved board, never reaches a
  * position that is not solved, each with the reason. The walk cannot see a
- * latch in these.
+ * latch in these, nor in a code-breaking game, which its working row excuses.
  */
 const UNBREAKABLE: Record<string, string> = {
   // A board Solve refuses, so there is no solved position to start from.
@@ -73,13 +74,11 @@ const UNBREAKABLE: Record<string, string> = {
   blackbox: "a revealed arena takes no move",
   cube: "a solid with every face painted rolls freely, and moves no paint",
   flood: "a flooded board accepts no fill",
-  guess: "a won game takes no more guesses, and a mark on the answer row is a note",
   inertia: "a collected gem stays collected, and the gems are all that solved counts",
   mosaic: "a solved board accepts only the cursor keys",
   net: "Solve locks every tile, a locked tile does not turn, and unlocking is a notes-mode tap",
   pegs: "a solved board has one peg left, and one peg has nothing to jump over",
   samegame: "a solved board is empty, and an empty board has no group to remove",
-  wordguess: "a won game takes no more guesses",
 };
 
 function games(): [string, AnyGame][] {
@@ -195,12 +194,22 @@ describe("a game's status is judged from the board alone", () => {
         });
       if (oneMoves || !breaksWithin([], 3)) unbroken.push(id);
     }
-    expectLedger(unbroken, UNBREAKABLE, {
-      table: "UNBREAKABLE",
-      file: "src/engine/position-status.test.ts",
-      found: "games whose solved board no input took off its solution",
-      add: "find the latch that keeps the board solved, or add it with the rule that lets no move break a solved board",
-    });
+    expectLedger(
+      unbroken,
+      UNBREAKABLE,
+      {
+        table: "UNBREAKABLE",
+        file: "src/engine/position-status.test.ts",
+        found: "games whose solved board no input took off its solution",
+        add: "find the latch that keeps the board solved, or add it with the rule that lets no move break a solved board",
+      },
+      [
+        workingRowExemption(
+          population.map(([id]) => id),
+          "a won game takes no more guesses, and a mark on the answer row is a note",
+        ),
+      ],
+    );
     expect(walked).toBeGreaterThanOrEqual(40);
   });
 

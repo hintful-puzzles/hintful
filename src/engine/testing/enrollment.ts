@@ -23,10 +23,12 @@
 
 import ts from "typescript";
 import "../../games/index.ts";
+import type { WorkingRow } from "../code-rows.ts";
 import type { Game } from "../game.ts";
 import { randomNew } from "../random/index.ts";
 import { getTsGame, registeredGameIds } from "../registry.ts";
 import { linesMatching, stripComments } from "./code-lines.ts";
+import type { KindExemption } from "./ledger.ts";
 import { preferredDrawState } from "./preferred-draw-state.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
@@ -192,6 +194,45 @@ export function capabilitySets(): CapabilitySet[] {
     ui: Object.keys(g.ui).sort(),
     drawState: Object.keys(g.drawState).sort(),
   }));
+}
+
+/** Each field of the working row, and what a `Ui` holds there. Keyed by the
+ * type, so a field renamed in `code-rows.ts` fails to compile here. */
+const WORKING_ROW_FIELDS: {
+  readonly [K in keyof Required<WorkingRow>]: (v: unknown) => boolean;
+} = {
+  entries: Array.isArray,
+  cursor: (v) => typeof v === "object" && v !== null,
+  pencilMode: (v) => v === undefined || typeof v === "boolean",
+  ready: (v) => typeof v === "boolean",
+};
+
+/**
+ * The code-breaking games, by the working row of `code-rows.ts` on their
+ * `Ui`: a guess composed a slot at a time, each value named by its own key,
+ * and sent whole as a probe of a hidden answer. Throws on none, so a
+ * derivation that stopped seeing the row cannot excuse nothing in silence.
+ */
+export function workingRowGames(): string[] {
+  const { ids } = enrolledIn((g) =>
+    Object.entries(WORKING_ROW_FIELDS).every(([field, holds]) => holds(g.ui[field])),
+  );
+  if (ids.length === 0) throw new Error("enrollment: no game has a working row");
+  return ids;
+}
+
+/** What a guard excuses every code-breaking game of `population` for, with
+ * the reason, rather than listing them in its ledger. */
+export function workingRowExemption(
+  population: readonly string[],
+  reason: string,
+): KindExemption {
+  const rows = workingRowGames();
+  return {
+    kind: "a working row (engine/code-rows.ts)",
+    ids: population.filter((id) => rows.includes(id)),
+    reason,
+  };
 }
 
 /** A source file a guard reads, by its path from this module. */

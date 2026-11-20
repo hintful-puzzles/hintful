@@ -7,15 +7,19 @@
  * its id, and every name a description declares reads as words.
  *
  * A game whose rules make no move wrong says so (`notApplicable.findMistakes`)
- * and judges none. Which other hinting games do not judge a move is a ledger,
- * one reason each, so a game whose builder supplies `judgeMove` cannot leave
- * it unwired.
+ * and judges none, and neither does a code-breaking game, read off its working
+ * row. Which other hinting games do not judge a move is a ledger, one reason
+ * each, so a game whose builder supplies `judgeMove` cannot leave it unwired.
  */
 import { describe, expect, it } from "vitest";
 import { verdictOf } from "./move-judge.ts";
 import { sectionState } from "./sections.ts";
 import { dealt } from "./testing/dealt.ts";
-import { type AnyGame, REGISTERED_GAME_COUNT } from "./testing/enrollment.ts";
+import {
+  type AnyGame,
+  REGISTERED_GAME_COUNT,
+  workingRowExemption,
+} from "./testing/enrollment.ts";
 import { HINT_GAMES } from "./testing/hint-games.ts";
 import { expectLedger } from "./testing/ledger.ts";
 
@@ -29,7 +33,6 @@ const NAMED = import.meta.glob<Readonly<Record<string, string>>>(
 const ID = /\b[a-z]+[A-Z]\w*\b|\w\.\w/;
 
 const OWN_SOLVER = "its hint is its own solver's, not the engine's walk";
-const HIDDEN = "its answer is hidden, so no probe is forced";
 
 /** A game whose rules make no move wrong (`notApplicable.findMistakes`) makes
  * no move a deduction forces either, so it has nothing to judge. */
@@ -40,8 +43,8 @@ const judgesNothing = (game: AnyGame): boolean =>
  * proposal, "Which games"). */
 const UNJUDGED: Readonly<Record<string, string>> = {
   ascent: OWN_SOLVER,
-  blackbox: HIDDEN,
-  guess: HIDDEN,
+  blackbox:
+    "a ray is a probe of the hidden arena, fired where the player chooses, so none is forced",
   mines: OWN_SOLVER,
   undead: OWN_SOLVER,
 };
@@ -81,6 +84,12 @@ describe("judgeMove", () => {
         found: "hinting games with a mistake check and no `judgeMove`",
         add: "wire `judgeMove`, or add it with why no move of its is forced",
       },
+      [
+        workingRowExemption(
+          judging.map(([id]) => id),
+          "a guess is a probe of the hidden answer, chosen freely, so none is forced",
+        ),
+      ],
     );
   });
 
