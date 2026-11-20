@@ -1,0 +1,4 @@
+# Tests and guides: no requirement moves.
+schema: spec-driven
+created: 2026-11-20
+skip_specs: true

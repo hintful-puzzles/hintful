@@ -1,0 +1,5 @@
+# An engine module and its adoption: the rendering requirements say what a
+# frame shows, which does not move. Add a delta if one does.
+schema: spec-driven
+created: 2026-11-20
+skip_specs: true

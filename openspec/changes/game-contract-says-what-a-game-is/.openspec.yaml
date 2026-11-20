@@ -1,0 +1,5 @@
+# The contract's shape changes; requirements that name a hook as optional
+# take a delta in the change if any do.
+schema: spec-driven
+created: 2026-11-20
+skip_specs: true

@@ -20,5 +20,12 @@
 
 ## 3. The owner's pick
 
-- [ ] 3.1 The owner picks among items 1, 6 and 7–11; each pick is scaffolded
+- [x] 3.1 The owner picks among items 1, 6 and 7–11; each pick is scaffolded
       as its own change. This change is archived once the picks are filed.
+      Owner, 2026-11-20: every item, and "old decisions are very likely no
+      longer relevant, as the codebase is in a very different state" (item
+      11 in full; item 1 not held to the May scene-graph withdrawal). Order:
+      8 `text-format-grid-helper`, 1 `engine-owns-the-redraw-loop`, 6
+      `game-contract-says-what-a-game-is`, 10 `source-scans-read-the-ast`,
+      7 `split-the-large-files`, 11 `engine-directories-by-concern`, 9
+      `state-each-guide-rule-once`.
