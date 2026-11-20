@@ -1,0 +1,1 @@
+8x10 #0: 30 steps, solved, 106887f8a5cb2fd8 [collect:14 positioning:16]

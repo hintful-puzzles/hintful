@@ -1,0 +1,2 @@
+10x10 Easy #0: 65 steps, solved, 54b71e1beb76e47d [intersection:3 overlap:32 unreachable:30]
+10x10 Unreasonable #0: 30 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 5540c60a9328e730 [overlap:15 unreachable:15]

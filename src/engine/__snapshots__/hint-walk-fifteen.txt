@@ -1,0 +1,1 @@
+3x3 #0: 48 steps, solved, d4e0b71c2bbe773c [goalCloser:8 goalHome:6 goalReposition:2 outOfWay:29 tileHome:3]

@@ -1,0 +1,6 @@
+6x7, max 25 moves #1: 24 steps, solved, e2a67d6015dad988 [keyBlock:4 keyOut:1 makesRoom:14 makesRoomForKey:5]
+6x7, max 25 moves #2: 25 steps, solved, 7cd1beb0f8a25536 [keyBlock:4 keyOut:1 makesRoom:13 makesRoomForKey:7]
+6x7, max 25 moves #3: 25 steps, solved, 041e2e2a3b3cb126 [keyBlock:4 keyOut:1 makesRoom:15 makesRoomForKey:5]
+6x7, no move limit #1: 42 steps, solved, a437f925888f01cd [keyBlock:6 keyOut:1 makesRoom:27 makesRoomForKey:8]
+6x7, no move limit #2: 41 steps, solved, 4e7597e1dceb69b7 [keyBlock:4 keyOut:1 makesRoom:30 makesRoomForKey:6]
+6x7, no move limit #3: 104 steps, solved, c99c95cd19efa6e7 [keyBlock:8 keyOut:1 makesRoom:86 makesRoomForKey:9]

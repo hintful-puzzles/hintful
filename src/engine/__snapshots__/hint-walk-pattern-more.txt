@@ -1,0 +1,6 @@
+10x10 Easy #1: 64 steps, solved, 669235b6b52eaa94 [intersection:1 overlap:30 unreachable:33]
+10x10 Easy #2: 67 steps, solved, dfb7f221fa4d8801 [intersection:1 overlap:34 unreachable:32]
+10x10 Easy #3: 55 steps, solved, 0d4bbbb82a0f1ed8 [overlap:31 unreachable:24]
+10x10 Unreasonable #1: 43 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., e1c2dc51c3cba53f [intersection:3 overlap:24 unreachable:16]
+10x10 Unreasonable #2: 54 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., e367da76801aa486 [overlap:28 unreachable:26]
+10x10 Unreasonable #3: 49 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., cb61a3550993920d [overlap:26 unreachable:23]

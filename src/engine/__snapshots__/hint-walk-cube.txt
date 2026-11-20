@@ -1,0 +1,4 @@
+Cube #0: 15 steps, solved, b9970ed7929b4df5 [collect:7 forced-drop:1 travel:7]
+Tetrahedron #0: 6 steps, solved, 9c848a74ba6668be [collect:4 travel:2]
+Octahedron #0: 29 steps, solved, 94ac31832c551e65 [collect:15 drop:2 forced-drop:5 travel:7]
+Icosahedron #0: 114 steps, solved, 3bf69e4c0b8ecc26 [collect:50 drop:2 forced-drop:28 travel:34]

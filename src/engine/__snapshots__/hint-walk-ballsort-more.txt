@@ -1,0 +1,6 @@
+4 colors, 2 empty tubes #1: 14 steps, solved, 6f18515f298cdc81 [empties:1 fills:3 frees:3 joins:4 last:1 plain:1 roomiest:1]
+4 colors, 2 empty tubes #2: 13 steps, solved, 126533a996326c03 [empties:1 fills:3 frees:6 last:1 starts:2]
+4 colors, 2 empty tubes #3: 14 steps, solved, f8424759dafd9d15 [empties:1 fills:3 frees:5 joins:2 last:1 roomiest:1 starts:1]
+5 colors, 1 empty tube #1: 14 steps, solved, 4ad957eaee230c14 [fills:4 frees:5 joins:1 last:1 roomiest:3]
+5 colors, 1 empty tube #2: 14 steps, solved, 6b91c09dcf83f571 [fills:4 frees:4 joins:2 last:1 roomiest:2 starts:1]
+5 colors, 1 empty tube #3: 15 steps, solved, 4616c4412bfc33a1 [either:3 fills:4 frees:4 joins:1 last:1 starts:2]

@@ -1,0 +1,3 @@
+9x9, 10 mines #1: 22 steps, solved, 4d107e704712466e [firstClick:1 full:9 pair:2 satisfied:10]
+9x9, 10 mines #2: 28 steps, solved, c59617085a5aea9e [firstClick:1 full:7 satisfied:20]
+9x9, 10 mines #3: 27 steps, solved, 1bebaa7121d0f51d [count:1 firstClick:1 full:10 pair:5 satisfied:10]

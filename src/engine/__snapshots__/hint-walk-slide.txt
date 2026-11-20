@@ -1,0 +1,2 @@
+6x7, max 25 moves #0: 23 steps, solved, 24b6d8943b415c36 [keyBlock:4 keyOut:1 makesRoom:13 makesRoomForKey:5]
+6x7, no move limit #0: 65 steps, solved, 2bfb94ed86716745 [keyBlock:6 keyOut:1 makesRoom:50 makesRoomForKey:8]

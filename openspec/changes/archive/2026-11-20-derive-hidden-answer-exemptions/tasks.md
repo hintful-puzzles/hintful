@@ -7,11 +7,12 @@
 - [x] 1.2 Write the derived test in each guard; keep a ledger entry only for
       a reason that is the game's own. (`workingRowExemption`, held both ways
       by `expectLedger`'s `KindExemption`)
-- [ ] 1.3 The same for each wider entry in the proposal (hidden answer
+- [x] 1.3 The same for each wider entry in the proposal (hidden answer
       elsewhere, `OWN_SOLVER`, `NARRATES_MOVES`, the beveled tiles,
       `color-dark-check`'s `SETS`, `LATIN`, `MOVED`). Settle each judgment
       call (`MOVED`, `LATIN`, the bevels) by reading the guard, and keep a
-      ledger entry only where the reason is the game's own.
+      ledger entry only where the reason is the game's own. (design.md,
+      "The wider entries")
 
 ## 2. The guards still see
 

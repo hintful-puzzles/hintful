@@ -1,0 +1,6 @@
+4x4 Easy #1: 3 steps, solved, e135d142a7a25312 [onlyWord:3]
+4x4 Easy #2: 4 steps, solved, 94d3fc1a8eab84de [onlyWord:4]
+4x4 Easy #3: 3 steps, solved, 013bf454a17e6768 [onlyWord:3]
+4x4 Normal #1: 7 steps, solved, 2d9b6d10544f9c5c [onlyLength:1 onlyWord:6]
+4x4 Normal #2: 8 steps, solved, 78930191db92cd9f [onlyLength:1 onlyWord:7]
+4x4 Normal #3: 4 steps, solved, edd7194209b61212 [onlyLength:1 onlyWord:3]

@@ -1,0 +1,1 @@
+10x12 #0: 18 steps, solved, 931382519ad23c7f [clearsWay:1 freesYou:1 onTarget:8 run:6 trap:2]

@@ -390,23 +390,34 @@ describe("a kept hint plan leaves the board alone, and its every step changes it
  * vacuity guard, asserted in "the resume walk" below. */
 let framesJudged = 0;
 
-/** The Latin-family hinting games, read from the whole registry: a share may
- * hold none of them, and the check below is what still fails a name that
- * matches no game. */
+/** Each compiled game description's ladder, by its module's path. */
+const LADDERS = import.meta.glob<readonly { readonly id: string }[]>(
+  "../generated/games/*/*.compiled.ts",
+  { eager: true, import: "ladder" },
+);
+/** The games whose ladder places the Latin library's naked single, which
+ * says "ruled out in this cell", by their directory's name. Read from the
+ * whole registry: a share may hold none of them. */
+const PLACES_SINGLE = new Set(
+  Object.entries(LADDERS)
+    .filter(([, ladder]) => ladder?.some((rung) => rung.id === "latin.single"))
+    .map(([path]) => path.split("/")[3]),
+);
 const LATIN: [string, AnyGame][] = HINT_GAMES.filter(([name]) =>
-  ["towers", "unequal", "keen", "group"].includes(name),
+  PLACES_SINGLE.has(name),
 );
 const SHARE_LATIN = LATIN.filter(([name]) => SHARE_GAMES.some(([id]) => id === name));
 
 if (FIRST_SHARE) {
   describe("the Latin-family sweep's games", () => {
-    it("are each a hinting game", () => {
-      expect(LATIN.map(([name]) => name).sort()).toEqual([
-        "group",
-        "keen",
-        "towers",
-        "unequal",
-      ]);
+    it("are every hinting game that places the Latin single", () => {
+      // A glob that matched no module, or a renamed rung, would leave the
+      // sweep walking nothing.
+      expect(Object.keys(LADDERS).length).toBeGreaterThan(40);
+      expect(LATIN.map(([name]) => name)).toContain("keen");
+      expect([...PLACES_SINGLE].filter((id) => !LATIN.some(([n]) => n === id))).toEqual(
+        [],
+      );
     });
   });
 }
@@ -432,8 +443,11 @@ if (SHARE_LATIN.length > 0)
           const at = `${name}/${title}`;
           const { desc, aux } = dealt(game, params);
           let state = game.newState(params, desc);
+          // A Latin square's side, read off its grid: each game names it in
+          // its params its own way (`w`, `order`, `o`).
           // biome-ignore lint/suspicious/noExplicitAny: structural state access.
-          const w = (params as any).w ?? (params as any).order;
+          const w = Math.sqrt((state as any).grid.length);
+          expect(Number.isInteger(w), `${at}: a grid that is not square`).toBe(true);
           for (
             let moves = 0;
             moves < 2000 && game.status(state) === "ongoing";
@@ -451,17 +465,12 @@ if (SHARE_LATIN.length > 0)
             ) {
               // Group's `set` carries a cell list; the others carry `x`/`y`.
               const { x, y } = (m.cells?.[0] ?? m) as { x: number; y: number };
+              // A note-less cell's single is the library's `regionsFull`, which
+              // names the placed values; this sentence is for notes down to one.
               // biome-ignore lint/suspicious/noExplicitAny: structural state access.
-              const { grid, pencil } = state as any;
-              // A note-less cell shows the values its row and column leave it.
-              const open = (n: number): boolean => {
-                for (let k = 0; k < w; k++)
-                  if (grid[y * w + k] === n || grid[k * w + x] === n) return false;
-                return true;
-              };
-              const pen = pencil[y * w + x] as number;
-              const ncand = Array.from({ length: w }, (_, k) => k + 1).filter((n) =>
-                pen === 0 ? open(n) : pen & (1 << n),
+              const pen = (state as any).pencil[y * w + x] as number;
+              const ncand = Array.from({ length: w }, (_, k) => k + 1).filter(
+                (n) => pen & (1 << n),
               ).length;
               expect(
                 ncand,

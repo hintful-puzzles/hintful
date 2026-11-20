@@ -1,0 +1,6 @@
+5x5, 3 colors #1: 7 steps, solved, c060c17979dcb56b [anyGroup:3 last:1 lastOfColor:1 onlyThese:2]
+5x5, 3 colors #2: 10 steps, solved, 1d8a4d49684e9263 [anyGroup:9 last:1]
+5x5, 3 colors #3: 9 steps, solved, 2551a110ef60a5b6 [anyGroup:5 last:1 none:2 onlyThese:1]
+5x5, 3 colors, Scoring system: (n-1)² #1: 9 steps, solved, 7b994b7231d0c012 [anyGroup:6 last:1 onlyThese:2]
+5x5, 3 colors, Scoring system: (n-1)² #2: 10 steps, solved, 289f3ba6b20b6d4a [anyGroup:4 last:1 lastOfColor:4 onlyThese:1]
+5x5, 3 colors, Scoring system: (n-1)² #3: 7 steps, solved, ee257d37f6b04399 [anyGroup:3 last:1 lastOfColor:3]

@@ -15,6 +15,7 @@ import {
   type AnyGame,
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,
+  workingRowExemption,
 } from "./testing/enrollment.ts";
 import { expectLedger } from "./testing/ledger.ts";
 
@@ -70,10 +71,14 @@ const LET_THROUGH: Record<string, string> = {
   slide: "6x7m25:w7md1ad1w2d5d1ad2w2a2d1aw2ad5d1efewa3efew6,4,4,23",
 };
 
-/** Games no board of which lacks a solution, each with why. */
-const ALWAYS_SOLVABLE: Record<string, string> = {
-  wordguess: "the desc is a word of the list, and guessing that word wins",
-};
+/** Games no board of which lacks a solution, each with why. A code-breaking
+ * game is one, read off its working row ({@link ALWAYS_GUESSABLE}). */
+const ALWAYS_SOLVABLE: Record<string, string> = {};
+
+const ALWAYS_GUESSABLE = workingRowExemption(
+  UNCHECKED.map(([id]) => id),
+  "the desc is the hidden answer, and guessing it wins",
+);
 
 /** What loading says of `gameId`, which the game must read as an unfinished
  * board: a refusal for its shape, or for being solved, would prove nothing. */
@@ -115,6 +120,7 @@ describe("a board with no solution, in a game with no mistake check", () => {
           "to LET_THROUGH, or add it to ALWAYS_SOLVABLE with why no board of it " +
           "lacks a solution",
       },
+      [ALWAYS_GUESSABLE],
     );
   });
 
@@ -126,7 +132,10 @@ describe("a board with no solution, in a game with no mistake check", () => {
 
   it("loads where the game has no proof", () => {
     const unproving = UNCHECKED.filter(
-      ([id, game]) => game.hasNoSolution === undefined && !(id in ALWAYS_SOLVABLE),
+      ([id, game]) =>
+        game.hasNoSolution === undefined &&
+        !(id in ALWAYS_SOLVABLE) &&
+        !ALWAYS_GUESSABLE.ids.includes(id),
     );
     expect(unproving.map(([id]) => id)).toEqual(Object.keys(LET_THROUGH).sort());
     for (const [id, game] of unproving) {

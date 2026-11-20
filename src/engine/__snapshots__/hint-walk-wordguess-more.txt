@@ -1,0 +1,6 @@
+4 letters, 6 guesses #1: 4 steps, solved, 663ea81c3bf0e078 [onlyAnswer:1 opening:1 split:2]
+4 letters, 6 guesses #2: 4 steps, solved, 97284495779ea555 [onlyAnswer:1 opening:1 split:2]
+4 letters, 6 guesses #3: 6 steps, solved, ab8d482b8372ebe3 [onlyAnswer:1 opening:1 probe:2 split:2]
+5 letters, 6 guesses, hard #1: 5 steps, solved, c99a704e0b482cf4 [onlyAnswer:1 opening:1 probe:2 split:1]
+5 letters, 6 guesses, hard #2: 3 steps, solved, cd852e917eb67479 [onlyAnswer:1 opening:1 probe:1]
+5 letters, 6 guesses, hard #3: 4 steps, solved, 2388fc7747974ec3 [onlyAnswer:1 opening:1 probe:2]

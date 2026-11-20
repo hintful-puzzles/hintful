@@ -1,0 +1,3 @@
+Standard: 3x3 #0: 26 steps, solved, 1c2fe8043b29f286 [carry:4 fill:8 home:1 run:13]
+Standard: 3x3 orientable #0: 42 steps, solved, ff817ddf3568dce7 [carry:3 fill:9 home:1 run:29]
+Rows only: 3x3 #0: 9 steps, solved, 5cb233ac0958d9b0 [carry:2 home:1 run:6]

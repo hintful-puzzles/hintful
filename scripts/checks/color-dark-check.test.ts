@@ -9,14 +9,15 @@
  *
  * It reproduces `components/view.ts`'s dark-mode pipeline exactly — including that
  * games are handed **pure white** as their background in dark mode — and reports
- * two things:
+ * the background relationship: `ΔL(color, background)` in each scheme. A color
+ * that is a subtle tint of the board in light mode should be one in dark mode
+ * too; `hand-author-dark-palette` drove violations of this from 150 to 2.
  *
- * - **set separation**: the worst pairwise OKLCH distance inside each enumerated
- *   set, in light and in dark. A set's members exist to be told apart from *each
- *   other*, which is a property no background-relative rule can protect.
- * - **the background relationship**: `ΔL(color, background)` in each scheme. A
- *   color that is a subtle tint of the board in light mode should be one in dark
- *   mode too; `hand-author-dark-palette` drove violations of this from 150 to 2.
+ * How far apart a set's members stand (the free colors, the region fills,
+ * Mines' six colored digits) is not measured here: each is a set of named colors whose dark
+ * values are authored and used as they are, so `colors.test.ts` ("a set meant
+ * to be told apart is designed as a set") measures it in both schemes, in the
+ * gate.
  *
  * Not part of the gate. Run it with:
  *
@@ -30,12 +31,7 @@ import type { Color } from "../../src/engine/types.ts";
 import { puzzleIds } from "../../src/puzzle/catalog.ts";
 import { darkModePalette } from "../../src/puzzle/dark-palette.ts";
 import { schemeOf } from "../../src/puzzle/scheme-palettes.ts";
-import {
-  colorToOKLCH,
-  isGrayChroma,
-  type OKLCH,
-  oklchToColor,
-} from "../../src/utils/color.ts";
+import { colorToOKLCH, type OKLCH, oklchToColor } from "../../src/utils/color.ts";
 import "../../src/games/index.ts";
 
 const OUT = "/tmp/color-dark-check.md";
@@ -72,59 +68,10 @@ function darkPalette(id: string, palette: Color[]): OKLCH[] {
  * is comparing a highlight with a lowlight — see the note in the report. */
 const swapped = (id: string): Set<number> => new Set(schemeOf(id).darkSwaps.flat());
 
-/** OKLCH distance, chroma/hue as a plane so a hue difference at low chroma counts
- * for little — which is how the eye treats it. */
-function distance(a: OKLCH, b: OKLCH): number {
-  const ax = isGrayChroma(a[1]) ? 0 : a[1] * Math.cos((a[2] * Math.PI) / 180);
-  const ay = isGrayChroma(a[1]) ? 0 : a[1] * Math.sin((a[2] * Math.PI) / 180);
-  const bx = isGrayChroma(b[1]) ? 0 : b[1] * Math.cos((b[2] * Math.PI) / 180);
-  const by = isGrayChroma(b[1]) ? 0 : b[1] * Math.sin((b[2] * Math.PI) / 180);
-  return Math.hypot(a[0] - b[0], ax - bx, ay - by);
-}
-
-/** The enumerated sets, as palette index ranges, from each game's own enum. */
-const SETS: Record<string, [number, number]> = {
-  flood: [2, 11],
-  guess: [6, 15],
-  samegame: [1, 9],
-  map: [2, 5],
-  mines: [4, 11],
-};
-
-function worstPair(entries: OKLCH[]): { d: number; i: number; j: number } {
-  let best = { d: Number.POSITIVE_INFINITY, i: -1, j: -1 };
-  for (let i = 0; i < entries.length; i++) {
-    for (let j = i + 1; j < entries.length; j++) {
-      const d = distance(entries[i], entries[j]);
-      if (d < best.d) best = { d, i, j };
-    }
-  }
-  return best;
-}
-
 it("measures dark mode", () => {
   const lines: string[] = ["# Dark-mode measurement\n"];
 
-  lines.push("## Enumerated-set separation (worst pair, OKLCH)\n");
-  lines.push("| game | n | light | dark | worst dark pair |");
-  lines.push("| --- | --- | --- | --- | --- |");
-  for (const [id, [lo, hi]] of Object.entries(SETS)) {
-    const game = getTsGame(id);
-    if (!game) continue;
-    const light = game
-      .colors(lightInput)
-      .slice(lo, hi + 1)
-      .map(colorToOKLCH);
-    const dark = darkPalette(id, game.colors(darkInput)).slice(lo, hi + 1);
-    const wl = worstPair(light);
-    const wd = worstPair(dark);
-    lines.push(
-      `| ${id} | ${light.length} | ${wl.d.toFixed(3)} | **${wd.d.toFixed(3)}** |` +
-        ` ${lo + wd.i} vs ${lo + wd.j} |`,
-    );
-  }
-
-  lines.push("\n## Colors that change their relationship to the board\n");
+  lines.push("## Colors that change their relationship to the board\n");
   lines.push(
     "A color within 0.15 lightness of the board in light mode should stay close",
     "to it in dark mode, and one far from it should stay far. Listed: every entry",

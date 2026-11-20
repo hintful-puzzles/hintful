@@ -1,0 +1,3 @@
+6x6 Easy #0: 19 steps, solved, c3865abbd7c8c6ff [domino:7 exactRegion:9 partner:3]
+6x6 Normal #0: 19 steps, solved, 18884375e3c349ed [domino:7 exactRegion:8 neededRegion:1 partner:3]
+6x6 Tricky #0: 22 steps, solved, 6a37bd3a42193bea [crowded:5 domino:7 exactRegion:9 partner:1]

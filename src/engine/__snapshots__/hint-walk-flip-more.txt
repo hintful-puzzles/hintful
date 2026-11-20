@@ -1,0 +1,6 @@
+Crosses: 3x3 #1: 2 steps, solved, 872d2f3490025016 [lastChance:1 lastPress:1]
+Crosses: 3x3 #2: 7 steps, solved, 1db2d0014219456d [fromTheAnswer:2 lastChance:4 lastPress:1]
+Crosses: 3x3 #3: 2 steps, solved, 8354142f91b936b1 [fromTheAnswer:1 lastPress:1]
+Random: 3x4 #1: 5 steps, solved, 05c075d30fe034fd [fromTheAnswer:1 lastChance:3 lastPress:1]
+Random: 3x4 #2: 5 steps, solved, dee3a03f7eda01b9 [fromTheAnswer:2 lastChance:2 lastPress:1]
+Random: 3x4 #3: 3 steps, solved, 513976cf233929b1 [lastChance:2 lastPress:1]

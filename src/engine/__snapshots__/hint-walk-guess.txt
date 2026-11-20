@@ -1,0 +1,3 @@
+Standard #0: 10 steps, solved, 75585f5515a1e39d [blacksAccounted:1 blacksForced:1 noBlack:2 onlyAnswer:1 opening:1 probe:3 totalAccounted:1]
+4x10, 6 colors, no duplicates #0: 8 steps, solved, 2d0447d313524133 [everyPegScored:1 noBlack:2 onlyAnswer:1 opening:1 probe:3]
+Standard, Allow blanks: on #0: 7 steps, solved, ed36d5cfff924a6d [blacksForced:1 noBlack:1 opening:1 probe:3 scoredNothing:1]

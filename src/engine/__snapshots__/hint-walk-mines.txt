@@ -1,0 +1,1 @@
+9x9, 10 mines #0: 24 steps, solved, 02adb3dc1fc7bc60 [firstClick:1 full:9 pair:4 satisfied:10]

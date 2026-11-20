@@ -1,0 +1,2 @@
+4x4 Size 4 Easy #0: 46 steps, solved, 34e9738718da4d93 [arrowKnown:4 arrowMask:8 collapse:24 hiddenSingle:4 ruleOut:6]
+4x4 Size 4 Normal #0: 52 steps, solved, 66ee46caef16222a [arrowKnown:8 arrowMask:4 collapse:19 hiddenSingle:13 ruleOut:8]

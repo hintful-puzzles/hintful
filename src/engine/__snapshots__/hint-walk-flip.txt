@@ -1,0 +1,2 @@
+Crosses: 3x3 #0: 5 steps, solved, 398b12e1958573d7 [fromTheAnswer:3 lastChance:1 lastPress:1]
+Random: 3x4 #0: 6 steps, solved, 191a1ce6fccd46d0 [fromTheAnswer:2 lastChance:3 lastPress:1]

@@ -1,0 +1,2 @@
+4x4 Easy #0: 3 steps, solved, f6233fcf76f56f8f [onlyWord:3]
+4x4 Normal #0: 5 steps, solved, 8f5683b28fd6782c [onlyLength:1 onlyWord:4]

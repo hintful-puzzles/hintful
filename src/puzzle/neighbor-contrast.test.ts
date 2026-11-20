@@ -14,7 +14,9 @@
  *
  * A region fill beside the board's margin is close by the fills' design, not
  * by a game's choice, so {@link regionFillAtMargin} exempts it in every game
- * that paints one, known by the fill's token.
+ * that paints one, known by the fill's token. So is one edge of a bevel whose
+ * other edge stands off the same neighbor ({@link bevelCarried}), known by the
+ * game's `darkSwaps`.
  */
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
@@ -28,21 +30,16 @@ import * as inertia from "../games/inertia/render.ts";
 import * as sokoban from "../games/sokoban/render.ts";
 import { puzzleIds } from "./catalog.ts";
 import {
+  colorDistance,
   MIN_DARK_DISTANCE,
   type SchemeNeighbor,
   schemeNeighbors,
   tooCloseInDark,
 } from "./neighbor-contrast.ts";
-import { schemeOf } from "./scheme-palettes.ts";
+import { schemeOf, schemePalettes } from "./scheme-palettes.ts";
 
 /** `kind:a:b` to what the pair is, per game. */
 const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
-  fifteen: {
-    "mark:2:4":
-      "a tile's lit bevel edge on its lifted face; the shadow edge carries the bevel",
-    "area:3:5": "a tile's shadow edge beside the gap",
-    "mark:3:5": "a tile's shadow edge beside the gap",
-  },
   galaxies: {
     "mark:13:3": "a white dot's ink rim, white in the dark scheme; the dot carries it",
   },
@@ -51,17 +48,6 @@ const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
   },
   pearl: {
     "area:4:15": "a white pearl on the loop; its black outline carries it",
-  },
-  sixteen: {
-    "mark:2:4":
-      "a tile's lit bevel edge on its lifted face; the shadow edge carries the bevel",
-  },
-  slide: {
-    "area:0:20": "a block's lowlight edge beside the floor; its face clears it",
-  },
-  twiddle: {
-    "mark:2:8":
-      "a tile's lit bevel edge on its lifted face; the shadow edge carries the bevel",
   },
   undead: {
     "area:0:8": "a vampire's body on the board; its ink outline carries it",
@@ -87,8 +73,36 @@ function regionFillAtMargin(id: string): (p: SchemeNeighbor) => boolean {
     fills.has(palette[p.a === margin ? p.b : p.a]);
 }
 
+/**
+ * Whether a pair is one edge of a bevel beside a color its other edge stands
+ * off: a tile's lit edge on its face, its shadow edge beside the gap. A bevel
+ * is the two indices dark mode exchanges (`darkSwaps`), drawn as opposite
+ * edges of one shape, so where one edge sinks into its neighbor the other
+ * still outlines the shape.
+ */
+function bevelCarried(id: string): (p: SchemeNeighbor) => boolean {
+  const swaps = schemeOf(id).darkSwaps;
+  const { dark } = schemePalettes(id);
+  const otherEdge = (i: number): number | null => {
+    for (const [x, y] of swaps) {
+      if (i === x) return y;
+      if (i === y) return x;
+    }
+    return null;
+  };
+  const clears = (edge: number, beside: number): boolean => {
+    const other = otherEdge(edge);
+    return (
+      other !== null && colorDistance(dark[other], dark[beside]) >= MIN_DARK_DISTANCE
+    );
+  };
+  return (p) => p.kind !== "text" && (clears(p.a, p.b) || clears(p.b, p.a));
+}
+
 /** The games a region fill was exempted in, as the sweep finds them. */
 const exemptedIn = new Set<string>();
+/** The games a bevel edge was exempted in. */
+const bevelIn = new Set<string>();
 
 describe("neighbors stand apart in the dark scheme", () => {
   for (const id of puzzleIds) {
@@ -97,10 +111,12 @@ describe("neighbors stand apart in the dark scheme", () => {
       // A frame that painted nothing would pass everything below.
       expect(pairs.length).toBeGreaterThanOrEqual(3);
       const atMargin = regionFillAtMargin(id);
+      const carried = bevelCarried(id);
       const tooClose = pairs.filter(tooCloseInDark);
       if (tooClose.some(atMargin)) exemptedIn.add(id);
+      if (tooClose.some(carried)) bevelIn.add(id);
       const close = tooClose
-        .filter((p) => !atMargin(p))
+        .filter((p) => !atMargin(p) && !carried(p))
         .map((p) => `${p.kind}:${p.a}:${p.b}`)
         .sort();
       expectLedger(close, CLOSE_ON_PURPOSE[id] ?? {}, {
@@ -117,6 +133,16 @@ describe("neighbors stand apart in the dark scheme", () => {
   it("exempts a region fill at the margin where one is painted", () => {
     expect([...exemptedIn]).toEqual(
       expect.arrayContaining(["map", "norinori", "starbattle"].filter(inSweep)),
+    );
+  });
+
+  // Likewise a bevel's: a swap that stopped being declared would leave it
+  // exempting nothing, and the tiles' close edges would fail above instead.
+  it("exempts a bevel edge where its other edge clears", () => {
+    expect([...bevelIn]).toEqual(
+      expect.arrayContaining(
+        ["fifteen", "sixteen", "slide", "twiddle"].filter(inSweep),
+      ),
     );
   });
 

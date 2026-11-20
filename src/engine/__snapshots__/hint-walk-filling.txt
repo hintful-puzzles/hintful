@@ -1,0 +1,2 @@
+7x9 Easy #0: 25 steps, solved, 9a764e3450421f68 [mustGrow:23 onlyWay:2]
+7x9 Unreasonable #0: 7 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., d51a7c6d688e3fb7 [mustGrow:7]

@@ -1,0 +1,6 @@
+7x9 Easy #1: 22 steps, solved, f52b82d3f6ac3243 [mustGrow:22]
+7x9 Easy #2: 24 steps, solved, 80208a8fc5b53deb [mustGrow:21 onlyWay:3]
+7x9 Easy #3: 17 steps, solved, 669af0fe45ac4316 [mustGrow:14 onlyWay:3]
+7x9 Unreasonable #1: 10 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 971d5f2cbe544c40 [mustGrow:10]
+7x9 Unreasonable #2: 18 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 44083d9100f9721f [mustGrow:12 onlyWay:6]
+7x9 Unreasonable #3: 6 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., cc186708db4d2452 [mustGrow:4 onlyWay:2]

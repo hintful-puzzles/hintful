@@ -1,0 +1,3 @@
+3x3 #1: 39 steps, solved, a9bc9b67cad43c31 [goalCloser:7 goalHome:7 outOfWay:23 tileHome:2]
+3x3 #2: 46 steps, solved, 05f38a814d93d101 [goalCloser:7 goalHome:7 goalReposition:1 outOfWay:29 tileHome:2]
+3x3 #3: 38 steps, solved, 3afee5facfa02b9a [goalCloser:5 goalHome:7 outOfWay:24 tileHome:2]

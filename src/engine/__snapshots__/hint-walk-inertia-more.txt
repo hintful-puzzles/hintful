@@ -1,0 +1,3 @@
+8x10 #1: 30 steps, solved, cbdc3dc46e3032b2 [collect:14 forced:1 positioning:15]
+8x10 #2: 25 steps, solved, 03f32bc88e10fe5e [collect:15 forced:1 positioning:9]
+8x10 #3: 35 steps, solved, aae70a5451e77f98 [collect:16 forced:2 positioning:17]

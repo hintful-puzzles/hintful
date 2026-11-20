@@ -1,0 +1,3 @@
+3x3 #1: 6 steps, solved, c2af7128e90cd600 [home:2 settingUp:4]
+3x3 #2: 6 steps, solved, 554e09f7868ca765 [home:3 settingUp:3]
+3x3 #3: 5 steps, solved, 7774b4c833744f7e [home:3 settingUp:2]

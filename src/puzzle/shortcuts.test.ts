@@ -136,12 +136,18 @@ const BINDS_A_SHORTCUT_LETTER: Record<string, string> = {
     "while the keyboard cursor is visible — which is exactly when a player " +
     "means the cell and not a new game. With the cursor hidden it declines 'n' " +
     "and New game runs, so the letter is never simply lost.",
-  wordguess:
-    "types words, so every letter is a letter of the word while a game is in " +
-    "play: an N or a U typed past the end of a word would otherwise deal a new " +
-    "game or undo a guess. Undo and redo keep their Ctrl chords, and once the " +
-    "game is won or lost every letter reaches the app again.",
 };
+
+/**
+ * The bare letters a game's own keypad offers as keys. Such a letter is the
+ * game's while a game is in play, as it is on the keypad: a word game's N or
+ * U typed past the end of a word would otherwise deal a new game or undo a
+ * guess. Undo and redo keep their Ctrl chords.
+ */
+function keypadLetters(game: AnyGame, letters: readonly string[]): string[] {
+  const keys = game.requestKeys?.(game.defaultParams()) ?? [];
+  return letters.filter((l) => keys.some((k) => k.label.toLowerCase() === l));
+}
 
 describe("a bare shortcut letter reaches the app in every game", () => {
   /**
@@ -191,13 +197,22 @@ describe("a bare shortcut letter reaches the app in every game", () => {
           for (let n = 0; n < steps; n++) m.processInput(0, 0, CURSOR_RIGHT);
           if (m.processInput(0, 0, letter.charCodeAt(0))) claimed.push(letter);
         }
-      if (claimed.length) found[id] = claimed;
+      const typed = keypadLetters(
+        game,
+        bare.map(([l]) => l),
+      );
+      expect(
+        typed.filter((l) => !claimed.includes(l)),
+        `${id}'s keypad types these letters, but its keyboard lets them through to the app`,
+      ).toEqual([]);
+      const own = claimed.filter((l) => !typed.includes(l));
+      if (own.length) found[id] = own;
       swept++;
 
       expect(
-        claimed.length > 0,
-        claimed.length
-          ? `${id} consumes ${claimed.join(", ")}, so ${claimed
+        own.length > 0,
+        own.length
+          ? `${id} consumes ${own.join(", ")}, so ${own
               .map((l) => bare.find(([b]) => b === l)?.[1])
               .join(", ")} cannot be reached from the keyboard in this game. If ` +
               "the game really does bind the letter, add it to " +

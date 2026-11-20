@@ -743,6 +743,10 @@ re-runs every gate test as well, with the widened seed budgets on top. The
 deferred cases are
 `git grep -n -e 'itSlow(' -e describeSlow -e 'slow: true' -- src`.
 
+A snapshot a slow case keeps (`hint-walk-<game>-more.txt`) is run by no
+hook and no CI job, so it is written again in the change that writes its
+per-commit twin: `PUZZLES_SLOW_TESTS=1 npx vitest run <file> --update=all`.
+
 ### Narrowing a game's own sweep
 
 **CI runs a game's own files shallow.** What only adds confidence about one

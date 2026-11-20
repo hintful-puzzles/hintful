@@ -1,0 +1,4 @@
+5x5, 3 balls #0: 36 steps, solved, 705fde4bfe288333 [done:1 fire:10 ray:25]
+6x8, 3-6 balls #0: 62 steps, solved, e560d40684f97d0e [done:1 fire:22 layout:6 ray:33]
+8x8, 5 balls #0: 84 steps, solved, 6cee5e2dcad144cf [done:1 fire:19 ray:64]
+8x10, 4-10 balls #0: 109 steps, solved, 6223ad48f67e6854 [done:1 fire:28 ray:80]

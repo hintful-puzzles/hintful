@@ -1,0 +1,3 @@
+10x12 #1: 7 steps, solved, 25e5dc7bf0168b87 [onTarget:3 run:2 trap:2]
+10x12 #2: 22 steps, solved, c1b99f74caddb804 [clearsWay:2 onTarget:10 only:1 plain:1 run:4 trap:4]
+10x12 #3: 12 steps, solved, 9acb951200080efa [clearsWay:2 freesYou:1 onTarget:2 only:1 trap:6]
