@@ -10,8 +10,8 @@ import {
   loadDescription,
   withVariations,
 } from "../../src/describe/description.ts";
+import { RetryLimitExceeded } from "../../src/engine/contract/retry-limit.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
-import { RetryLimitExceeded } from "../../src/engine/retry-limit.ts";
 import { say } from "../progress.ts";
 import type { Binding } from "./bindings.ts";
 import { describedLibrary, type Instance, instantiate } from "./description.ts";

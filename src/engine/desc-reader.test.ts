@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { isDigit } from "./decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -9,7 +8,8 @@ import {
   descValue,
   descVerdict,
   puzzleDescError,
-} from "./desc-error.ts";
+} from "./contract/desc-error.ts";
+import { isDigit } from "./decimal.ts";
 import { type DescReader, readDesc } from "./desc-reader.ts";
 
 /** A small grammar of the shape most games have: `n` numbers in `[1, 9]`

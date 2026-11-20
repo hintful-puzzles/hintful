@@ -19,10 +19,10 @@ import {
   DESC_OUT_OF_RANGE,
   type DescParse,
   descValue,
-} from "../desc-error.ts";
+} from "../contract/desc-error.ts";
+import { difficultyItem } from "../contract/difficulty.ts";
+import type { GameDrawing, ParamConfigItem } from "../contract/game.ts";
 import { readDesc } from "../desc-reader.ts";
-import { difficultyItem } from "../difficulty.ts";
-import type { GameDrawing, ParamConfigItem } from "../game.ts";
 import type { Ladder } from "../ladder-runtime.ts";
 import type { LatinSolver } from "../latin.ts";
 import { numberItem, squareSize } from "../params.ts";

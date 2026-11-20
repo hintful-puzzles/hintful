@@ -19,8 +19,8 @@
  * waiting for (`DealAhead.stopWaiting`).
  */
 
-import { DEAL_DEADLINE_MS } from "../engine/retry-limit.ts";
-import type { DealtBoard, EncodedParams, PuzzleId } from "../engine/types.ts";
+import { DEAL_DEADLINE_MS } from "../engine/contract/retry-limit.ts";
+import type { DealtBoard, EncodedParams, PuzzleId } from "../engine/contract/types.ts";
 import type { KeptBoards } from "../store/kept-boards.ts";
 import { spawnPuzzleWorker, unlessWorkerFailsToStart } from "./spawn-worker.ts";
 import type { TimedDeal } from "./worker.ts";

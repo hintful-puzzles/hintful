@@ -9,8 +9,12 @@
 
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
-import { DESC_NOT_UNIQUE, loadVerdict, validateDesc } from "../../engine/desc-error.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+import {
+  DESC_NOT_UNIQUE,
+  loadVerdict,
+  validateDesc,
+} from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import {

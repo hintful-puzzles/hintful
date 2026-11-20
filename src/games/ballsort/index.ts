@@ -9,7 +9,8 @@
  * [`solver.ts`](./solver.ts), the board [`state.ts`](./state.ts).
  */
 
-import type { SolveResult } from "../../engine/game.ts";
+import type { SolveResult } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import {
@@ -33,7 +34,6 @@ import {
   pressTarget,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
   BALLSORT_RUNGS,

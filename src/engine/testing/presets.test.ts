@@ -13,8 +13,8 @@
  * value — is pinned here, where the menu can be written to order.
  */
 import { describe, expect, it } from "vitest";
-import type { ParamConfigItem } from "../game.ts";
-import { RetryLimitExceeded } from "../retry-limit.ts";
+import type { ParamConfigItem } from "../contract/game.ts";
+import { RetryLimitExceeded } from "../contract/retry-limit.ts";
 import { axisSlice, dealtBoards, presetAxes, unofferedValues } from "./presets.ts";
 
 interface P {

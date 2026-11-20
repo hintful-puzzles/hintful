@@ -19,10 +19,10 @@ import {
   DESC_TOO_LONG,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
-import type { HintStep } from "../../engine/game.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";

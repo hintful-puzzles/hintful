@@ -14,9 +14,9 @@
  * which the overlap counts and so later deductions follow.
  */
 
+import type { Point, Rect } from "../../engine/contract/types.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
-import type { Point, Rect } from "../../engine/types.ts";
 import { clueDimensions } from "./state.ts";
 
 export interface NumberData {

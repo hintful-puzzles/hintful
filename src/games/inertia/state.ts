@@ -12,10 +12,10 @@ import {
   descNeedsOne,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { ParamConfigItem } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
-import type { ParamConfigItem } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import * as inertia from "../../generated/games/inertia/inertia.compiled.ts";

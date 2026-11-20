@@ -31,8 +31,8 @@
  * board, the game pins one with the moves that make it wrong ({@link WRONG}).
  */
 import { describe, expect, it } from "vitest";
-import { hasHint } from "../engine/game.ts";
-import type { MarkRole } from "../engine/hint-words.ts";
+import { hasHint } from "../engine/contract/game.ts";
+import type { MarkRole } from "../engine/contract/hint-words.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {
   REGISTERED_GAME_COUNT,

@@ -4,8 +4,21 @@ import { darkValue, token } from "./color/color-token.ts";
 import { ColorWord } from "./color/color-word.ts";
 import { HINT_RING, HINT_STRIPES } from "./color/palette.ts";
 import { AUTO_SOLVED, AUTO_SOLVER_USED, COMPLETED } from "./completion-status.ts";
-import { DESC_MALFORMED } from "./desc-error.ts";
-import { dealGaveUp, difficultyItem } from "./difficulty.ts";
+import { DESC_MALFORMED } from "./contract/desc-error.ts";
+import { dealGaveUp, difficultyItem } from "./contract/difficulty.ts";
+import type { Game, HintStep } from "./contract/game.ts";
+import { DRAFT_HINT, narratedStep, UI_UPDATE } from "./contract/game.ts";
+import {
+  ALREADY_SOLVED,
+  DEDUCTION_EXHAUSTED,
+  FIX_MISTAKES_FIRST,
+  GAME_OVER,
+  NO_MOVE_WORTH_MAKING,
+} from "./contract/hint-refusal.ts";
+import { CELL, mark, phrase, stepMarks, unshaped } from "./contract/hint-words.ts";
+import { RetryLimitExceeded } from "./contract/retry-limit.ts";
+import { SOLUTION_UNKNOWN } from "./contract/solve-failure.ts";
+import type { ChangeNotification, Color, Point } from "./contract/types.ts";
 import { easeOut } from "./easing.ts";
 import {
   type FakeDrawState,
@@ -13,17 +26,7 @@ import {
   type FakeState,
   fakeGame,
 } from "./fake-game.ts";
-import type { Game, HintStep } from "./game.ts";
-import { DRAFT_HINT, narratedStep, UI_UPDATE } from "./game.ts";
 import { click, drag, key } from "./hint-gesture.ts";
-import {
-  ALREADY_SOLVED,
-  DEDUCTION_EXHAUSTED,
-  FIX_MISTAKES_FIRST,
-  GAME_OVER,
-  NO_MOVE_WORTH_MAKING,
-} from "./hint-refusal.ts";
-import { CELL, mark, phrase, stepMarks, unshaped } from "./hint-words.ts";
 import { Midend } from "./midend.ts";
 import { SHOW_TIMER_PREF } from "./midend-prefs.ts";
 import { endParams } from "./params.ts";
@@ -45,14 +48,11 @@ import {
   RIGHT_RELEASE,
   stripModifiers,
 } from "./pointer.ts";
-import { RetryLimitExceeded } from "./retry-limit.ts";
 import { decodeSave, encodeSave } from "./save.ts";
-import { SOLUTION_UNKNOWN } from "./solve-failure.ts";
 import { interpretTargetVerbs, squareGrid, type TargetVerbs } from "./target-verb.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
-import type { ChangeNotification, Color, Point } from "./types.ts";
 import { WIN_FLASH_S, WIN_NONE } from "./win-wave.ts";
 
 function recordingDrawing() {

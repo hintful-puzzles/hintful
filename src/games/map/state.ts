@@ -12,10 +12,10 @@
  */
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
+import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { PresetBoards } from "../../engine/contract/game.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
-import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";

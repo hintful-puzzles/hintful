@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_ERROR } from "../../engine/color/roles.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import {

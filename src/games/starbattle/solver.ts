@@ -14,9 +14,9 @@
  * in cannot change it.
  */
 
+import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import { describedSpace, partition } from "../../engine/describe-runtime.ts";
-import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import {
   CellMarks,
   describedLadder,

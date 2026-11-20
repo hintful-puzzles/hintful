@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { darkValue } from "../engine/color/color-token.ts";
 import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
-import { NARRATION_LIMIT } from "../engine/hint-words.ts";
+import { NARRATION_LIMIT } from "../engine/contract/hint-words.ts";
 import { LONGEST_HINT } from "../screens/longest-hint.ts";
 import {
   edged,

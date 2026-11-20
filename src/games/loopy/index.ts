@@ -30,10 +30,10 @@
  * beside it.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import type { Grid, GridDot, GridEdge } from "../../engine/board/grid/index.ts";
 import { gridNearestEdge } from "../../engine/board/grid/index.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type GamePref,
@@ -41,7 +41,8 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   click,
   drag,
@@ -74,7 +75,6 @@ import {
   type TargetVerbs,
   verbClicks,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   farDot,
   type LoopyCursor,
@@ -858,7 +858,7 @@ function clearMistakes(
   return ops.length > 0 ? [{ kind: "set", ops }, ...notes] : notes;
 }
 
-/** Loopy's difficulty contract (`engine/difficulty.ts`). `solveGame` is used
+/** Loopy's difficulty contract (`engine/contract/difficulty.ts`). `solveGame` is used
  * directly rather than `gameHasUniqueSoln`, which throws on a contradiction
  * because the generator only ever asks it about boards derived from a real
  * loop: a probe has no such guarantee, and a contradiction is a verdict here. */

@@ -51,7 +51,8 @@ import {
   squareCenter,
   squareEdges,
 } from "./board/square-edges.ts";
-import { UI_UPDATE, type UiUpdate } from "./game.ts";
+import { UI_UPDATE, type UiUpdate } from "./contract/game.ts";
+import type { Point } from "./contract/types.ts";
 import { click, drag as dragGesture, type PointerAction } from "./hint-gesture.ts";
 import {
   CURSOR_SELECT,
@@ -81,7 +82,6 @@ import {
   sweepTo,
   type TargetVerbs,
 } from "./target-verb.ts";
-import type { Point } from "./types.ts";
 
 // --- what an edge holds -----------------------------------------------------
 

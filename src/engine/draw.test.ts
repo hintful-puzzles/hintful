@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { Color } from "./contract/types.ts";
 import {
   type BevelBounds,
   drawRaisedTile,
@@ -9,7 +10,6 @@ import {
   strokeScaledPolygon,
 } from "./draw.ts";
 import { opsOfKind, RecordingDrawing } from "./testing/recording-drawing.ts";
-import type { Color } from "./types.ts";
 
 /**
  * These helpers take colors as bare palette indices and no game is involved, so

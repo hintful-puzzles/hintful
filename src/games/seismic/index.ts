@@ -13,10 +13,18 @@
  * entries — and notes — that contradict the unique solution.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import { candidateHint } from "../../engine/candidate-hint.ts";
 import { candidateJudge } from "../../engine/candidate-judge.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import {
+  type Game,
+  type SolveResult,
+  UI_UPDATE,
+  type UiUpdate,
+} from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   clearEntries,
   entryMistakes,
@@ -24,13 +32,6 @@ import {
   revealEntry,
   setMoves,
 } from "../../engine/entry-mistakes.ts";
-import {
-  type Game,
-  type SolveResult,
-  UI_UPDATE,
-  type UiUpdate,
-} from "../../engine/game.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import {
   noOpEntryResult,
@@ -53,7 +54,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { Point } from "../../engine/types.ts";
 import { NAMES } from "../../generated/games/seismic/seismic.compiled.ts";
 import { maxGeneratedRegionSize, newSeismicDesc } from "./generator.ts";
 import {
@@ -270,7 +270,7 @@ function findMistakes(state: SeismicState): readonly SeismicMistake[] {
 
 // --- the game --------------------------------------------------------------
 
-/** Seismic's difficulty contract (`engine/difficulty.ts`). A board `newState`
+/** Seismic's difficulty contract (`engine/contract/difficulty.ts`). A board `newState`
  * deals holds only its givens, and — as `solveFromGivens` records — a grid the
  * solver completes was forced the whole way, so there is no separate ambiguity
  * verdict to consult. */

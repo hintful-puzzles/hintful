@@ -9,7 +9,6 @@
  * contradict the unique solution.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
   applyNoteMove,
@@ -31,8 +30,24 @@ import {
   techniqueRung,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import {
+  type Game,
+  type HintStep,
+  type PresetBoards,
+  type SolveResult,
+  UI_UPDATE,
+  type UiUpdate,
+} from "../../engine/contract/game.ts";
+import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
+import { SQUARE_GRID } from "../../engine/contract/sections.ts";
+import {
+  MULTIPLE_SOLUTIONS,
+  NO_SOLUTION,
+} from "../../engine/contract/solve-failure.ts";
+import type { KeyLabel, Point } from "../../engine/contract/types.ts";
 import { digitValue } from "../../engine/decimal.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   clearEntries,
   entryMistakes,
@@ -41,20 +56,11 @@ import {
   setMoves,
 } from "../../engine/entry-mistakes.ts";
 import {
-  type Game,
-  type HintStep,
-  type PresetBoards,
-  type SolveResult,
-  UI_UPDATE,
-  type UiUpdate,
-} from "../../engine/game.ts";
-import {
   type LatinVocab,
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import { latinVerdict } from "../../engine/latin.ts";
@@ -85,10 +91,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { SQUARE_GRID } from "../../engine/sections.ts";
-import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { statedParts } from "../../engine/stated.ts";
-import type { KeyLabel, Point } from "../../engine/types.ts";
 import * as keen from "../../generated/games/keen/keen.compiled.ts";
 import { newKeenDesc } from "./generator.ts";
 import {
@@ -451,7 +454,7 @@ function buildSteps(
   return steps;
 }
 
-/** Keen's difficulty contract (`engine/difficulty.ts`). `solveKeen` follows the
+/** Keen's difficulty contract (`engine/contract/difficulty.ts`). `solveKeen` follows the
  * shared latin-family return convention — the difficulty reached, or one of
  * `latin.ts`'s sentinels — so `latinVerdict` reads it. Keen has no givens: the
  * solution comes from the cage clues alone. */

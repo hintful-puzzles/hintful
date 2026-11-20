@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DESC_MALFORMED } from "../../desc-error.ts";
+import { DESC_MALFORMED } from "../../contract/desc-error.ts";
 import { randomNew } from "../../random/index.ts";
 import { gridNewDesc, gridValidateDesc } from "./grid-desc.ts";
 import { PERIODIC_GRID_TYPES } from "./grid-tilings.ts";

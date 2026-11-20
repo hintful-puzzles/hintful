@@ -44,6 +44,7 @@
 
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { PuzzleButton } from "../engine/contract/types.ts";
 import * as decimal from "../engine/decimal.ts";
 import * as descAlphabet from "../engine/desc-alphabet.ts";
 import { puzzleKeyMap } from "../engine/key-map.ts";
@@ -59,7 +60,6 @@ import {
   usesOf,
   where,
 } from "../engine/testing/syntax.ts";
-import { PuzzleButton } from "../engine/types.ts";
 
 /**
  * Game sources, read as syntax trees.

@@ -1,4 +1,4 @@
-import type { PuzzleData } from "../../engine/catalog.ts";
+import type { PuzzleData } from "../../engine/contract/catalog.ts";
 
 export const entry: PuzzleData = {
   name: "ABCD",

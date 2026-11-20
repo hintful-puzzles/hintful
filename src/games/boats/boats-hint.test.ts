@@ -15,8 +15,9 @@
 
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { CELL, NARRATION_LIMIT } from "../../engine/hint-words.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
+import { CELL, NARRATION_LIMIT } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Clauses, statedSentence } from "../../engine/stated.ts";
 import {
@@ -34,7 +35,6 @@ import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import type { Point } from "../../engine/types.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { STATED } from "../../generated/games/boats/boats.compiled.ts";
 import { newBoatsDesc } from "./generator.ts";

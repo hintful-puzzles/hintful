@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { ColorWord } from "./color/color-word.ts";
-import { CELL, type MarkKind, markKeys, stepMarks } from "./hint-words.ts";
+import { CELL, type MarkKind, markKeys, stepMarks } from "./contract/hint-words.ts";
+import type { Point } from "./contract/types.ts";
 import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
 import { type StatedContext, statedParts, statedSentence } from "./stated.ts";
 import { parseClause } from "./stated-clauses.ts";
 import { type StepClause, stepVoice } from "./step-voice.ts";
-import type { Point } from "./types.ts";
 
 const W = 4;
 const at = (c: number): Point => ({ x: c % W, y: (c / W) | 0 });

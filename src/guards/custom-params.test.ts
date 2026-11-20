@@ -4,10 +4,10 @@ import {
   type Game,
   type ParamConfigItem,
   type PresetMenu,
-} from "../engine/game.ts";
+} from "../engine/contract/game.ts";
+import { SOLUTION_UNKNOWN } from "../engine/contract/solve-failure.ts";
 import { Midend } from "../engine/midend.ts";
 import { presetMenu } from "../engine/param-label.ts";
-import { SOLUTION_UNKNOWN } from "../engine/solve-failure.ts";
 import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,

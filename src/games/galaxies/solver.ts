@@ -18,6 +18,7 @@ import {
   type Deduced,
   searchAnswers,
 } from "../../engine/answer-search.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -37,7 +38,6 @@ import {
   TIERS,
   uncluedRung,
 } from "../../engine/ladder-runtime.ts";
-import type { Point } from "../../engine/types.ts";
 import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import {
   addAssoc,

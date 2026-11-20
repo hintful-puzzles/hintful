@@ -63,7 +63,7 @@ afterEach(() => {
 // that a remembered board survives a reload, and a mocked store would assert
 // only that this file's own fake was called — the shape of guard this repo keeps
 // catching (a check aimed at a neighbor of the thing it claims to check).
-import type { CheckVerdict } from "../engine/types.ts";
+import type { CheckVerdict } from "../engine/contract/types.ts";
 import { type CommandPuzzle, commandList } from "../puzzle/command-list.ts";
 import type { DealOutcome } from "../puzzle/puzzle.ts";
 import { CHECK_OUT_OF_REACH, justSaved } from "../puzzle/quick-save-actions.ts";

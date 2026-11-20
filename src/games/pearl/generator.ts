@@ -11,6 +11,7 @@
 import { type Grid, gridNewSquare } from "../../engine/board/grid/index.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { D, dirX, dirY, L, R, U } from "../../engine/board/square-edges.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import {
   FACE_BLACK,
   FACE_WHITE,
@@ -18,7 +19,6 @@ import {
   type LoopgenBias,
 } from "../../engine/loopgen.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { pearlSolve } from "./solver.ts";
 import {
   bLD,

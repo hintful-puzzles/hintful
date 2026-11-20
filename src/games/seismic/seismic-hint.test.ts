@@ -10,7 +10,7 @@
 import { describe, expect, it } from "vitest";
 import { type CandidateReading, nakedSingles } from "../../engine/candidate-hint.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import type { HintStep } from "../../engine/game.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
 import type { CellMarks, Firing } from "../../engine/ladder-runtime.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

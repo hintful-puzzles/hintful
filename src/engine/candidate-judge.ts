@@ -18,7 +18,7 @@ import {
   type NotesRung,
   planPrefs,
 } from "./candidate-hint.ts";
-import type { HintStep, MoveVerdict } from "./game.ts";
+import type { HintStep, MoveVerdict } from "./contract/game.ts";
 import type { CellMarks } from "./ladder-runtime.ts";
 import { judgeByWalk, movedFacts, verdictOf } from "./move-judge.ts";
 

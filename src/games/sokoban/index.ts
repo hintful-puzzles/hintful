@@ -8,9 +8,10 @@
  * `hint.ts`). Moves animate (`motion.ts`), where upstream's were instant.
  */
 
-import { rejectMove } from "../../engine/assert-never.ts";
 import { fromCoord } from "../../engine/board/geometry.ts";
-import type { Game, SolveResult } from "../../engine/game.ts";
+import { rejectMove } from "../../engine/contract/assert-never.ts";
+import type { Game, SolveResult } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/index.ts";
@@ -26,7 +27,6 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { solveBySearch } from "../../engine/search-outcome.ts";
-import type { Point } from "../../engine/types.ts";
 import { newSokobanDesc } from "./generator.ts";
 import {
   hasNoSolution,

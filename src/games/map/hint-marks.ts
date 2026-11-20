@@ -4,7 +4,7 @@
  * `map.description.yaml` declares name it.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 
 /** A region of the map, as a mark. */
 export interface RegionMark {

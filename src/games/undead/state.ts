@@ -4,11 +4,11 @@ import {
   type DescParse,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { difficultyItem } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace, traceSight } from "../../engine/describe-runtime.ts";
-import { difficultyItem } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

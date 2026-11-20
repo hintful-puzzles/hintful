@@ -12,10 +12,11 @@
 
 import { fromCoord } from "../../engine/board/geometry.ts";
 import { D, dirX, dirY, L, R, U } from "../../engine/board/square-edges.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -50,7 +51,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
   TRACKS_RUNGS,
@@ -591,7 +591,7 @@ function clearMistakes(state: TracksState): TracksMove[] {
   return ops.length > 0 ? [{ ops }] : [];
 }
 
-/** Tracks' difficulty contract (`engine/difficulty.ts`); `stateToBoard` on the
+/** Tracks' difficulty contract (`engine/contract/difficulty.ts`); `stateToBoard` on the
  * initial state gives the clue-only board. */
 const difficulty: DifficultyContract<TracksParams> = {
   solveAtCap: (p, desc, cap) => {

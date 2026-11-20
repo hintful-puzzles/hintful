@@ -29,21 +29,21 @@ import {
   R,
   U,
 } from "../../engine/board/square-edges.ts";
-import { c2nUpper, n2cUpper, UPPER_ALPHABET_SIZE } from "../../engine/desc-alphabet.ts";
 import {
   DESC_TOO_LONG,
   type DescParse,
   descBadCharacter,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
+import { c2nUpper, n2cUpper, UPPER_ALPHABET_SIZE } from "../../engine/desc-alphabet.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 
 // --- difficulty (upstream's Easy, Tricky, Hard; named by the description) ---

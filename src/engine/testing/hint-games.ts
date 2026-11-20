@@ -12,7 +12,7 @@
  *
  * Dev/test-only; never imported by production code.
  */
-import { hasHint } from "../game.ts";
+import { hasHint } from "../contract/game.ts";
 import { type AnyGame, gamesUsing, REGISTERED_GAMES } from "./enrollment.ts";
 import { dealtBoards } from "./presets.ts";
 import { SLOW_TESTS_ENABLED } from "./slow.ts";
@@ -55,7 +55,7 @@ export const SEARCH_PLANNING_GAMES: readonly string[] = gamesUsing(
 export const SEARCH_REACH_GAMES: readonly string[] = (() => {
   const ids = HINT_GAMES.map(([id]) => id);
   const named = gamesUsing(ids, {
-    module: "src/engine/hint-refusal.ts",
+    module: "src/engine/contract/hint-refusal.ts",
     name: "SEARCH_OUT_OF_REACH",
   });
   const handed = gamesUsing(

@@ -1,4 +1,4 @@
-import type { HintMarkLegend } from "../../engine/game.ts";
+import type { HintMarkLegend } from "../../engine/contract/game.ts";
 
 /** What each mark means here, as the help's list of marks gives it. */
 export const HINT_MARKS: HintMarkLegend = {

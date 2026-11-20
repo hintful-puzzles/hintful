@@ -14,8 +14,8 @@
  * than a discovery.
  */
 import { describe, expect, it } from "vitest";
+import type { Color } from "../contract/types.ts";
 import { colorToOKLCH, isGrayChroma, type OKLCH } from "../testing/oklch.ts";
-import type { Color } from "../types.ts";
 import { darkValue } from "./color-token.ts";
 import type { ColorWord } from "./color-word.ts";
 import * as colors from "./colors.ts";

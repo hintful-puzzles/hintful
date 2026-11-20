@@ -13,8 +13,8 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+} from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";

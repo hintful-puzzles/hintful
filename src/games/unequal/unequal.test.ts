@@ -13,8 +13,8 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
-import { cappedSolveFor, lowestSolvingCap } from "../../engine/difficulty.ts";
+} from "../../engine/contract/desc-error.ts";
+import { cappedSolveFor, lowestSolvingCap } from "../../engine/contract/difficulty.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import {
   computeSize,

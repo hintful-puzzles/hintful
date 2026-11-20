@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { GameDrawing, HintStep } from "../game.ts";
-import { CELL, mark, phrase, stepMarks } from "../hint-words.ts";
-import type { Point } from "../types.ts";
+import type { GameDrawing, HintStep } from "../contract/game.ts";
+import { CELL, mark, phrase, stepMarks } from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
 import type { AnyGame } from "./enrollment.ts";
 import { bindingDefects } from "./hint-binding.ts";
 

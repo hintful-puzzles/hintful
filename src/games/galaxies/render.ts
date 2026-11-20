@@ -19,9 +19,10 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Color } from "../../engine/contract/types.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
   drawRectOutline,
   type GameDrawing,
@@ -30,7 +31,6 @@ import {
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
-import type { Color } from "../../engine/types.ts";
 import {
   type Flash,
   sweepStep,

@@ -5,8 +5,8 @@
  * following a leg by the game's own press cycle keeps the plan.
  */
 import { describe, expect, it } from "vitest";
-import type { HintStep } from "../../engine/game.ts";
-import { type Narration, stepMarks } from "../../engine/hint-words.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
+import { type Narration, stepMarks } from "../../engine/contract/hint-words.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";

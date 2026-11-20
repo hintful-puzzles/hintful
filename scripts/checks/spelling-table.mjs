@@ -379,7 +379,7 @@ export const QUOTATIONS = {
     "openspec/specs/repo-layout/spec.md",
     "docs/rendering.md",
     "src/engine/color/color-mkhighlight.ts",
-    "src/engine/game.ts",
+    "src/engine/contract/game.ts",
     "src/games/loopy/render.ts",
     "src/games/netslide/render.ts",
     "src/puzzle/board-background.test.ts",

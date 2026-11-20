@@ -4,10 +4,10 @@
  * module's clauses, as the engine renders it.
  */
 import { describe, expect, it } from "vitest";
+import { CELL, type MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
-import { CELL, type MarkKind } from "../../engine/hint-words.ts";
 import { type Clauses, statedSentence } from "../../engine/stated.ts";
-import type { Point } from "../../engine/types.ts";
 import { STATED } from "../../generated/games/path/path.compiled.ts";
 
 type Element = Point | number;

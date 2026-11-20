@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { type Narration, stepMarks } from "../../engine/hint-words.ts";
+import { type Narration, stepMarks } from "../../engine/contract/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";

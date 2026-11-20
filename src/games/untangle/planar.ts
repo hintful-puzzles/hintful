@@ -23,7 +23,7 @@
  * the maps the same way.
  */
 
-import { retryLimit } from "../../engine/retry-limit.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import type { Edge } from "./state.ts";
 
 /** Every walk below closes on a consistent rotation system; a bug that

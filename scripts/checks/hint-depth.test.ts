@@ -29,7 +29,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { expect, it } from "vitest";
-import { difficultyChoiceItem, tierOf } from "../../src/engine/difficulty.ts";
+import { difficultyChoiceItem, tierOf } from "../../src/engine/contract/difficulty.ts";
 import { paramsError } from "../../src/engine/params.ts";
 import { dealt } from "../../src/engine/testing/dealt.ts";
 import { HINT_GAMES } from "../../src/engine/testing/hint-games.ts";

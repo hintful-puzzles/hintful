@@ -13,8 +13,8 @@
 
 import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { searchAnswers, solverFinishes, solveState } from "./solver.ts";
 
 import {
@@ -34,7 +34,7 @@ import {
 } from "./state.ts";
 
 /** Draws allowed when picking two distinct cells. The 1x1 grid, the only board
- * with no distinct pair, returns before this runs (see engine/retry-limit.ts). */
+ * with no distinct pair, returns before this runs (see engine/contract/retry-limit.ts). */
 const MAX_DISTINCT_PICKS = 1_000_000;
 
 /** Fill `ai`/`ad` with all non-numbered cells reachable from cell `i`

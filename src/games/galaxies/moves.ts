@@ -4,7 +4,7 @@
  * `moves.ts`"). The preview must show exactly the association a release
  * commits, so both go through one legality predicate.
  */
-import type { Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   addAssoc,
   adjacencies,

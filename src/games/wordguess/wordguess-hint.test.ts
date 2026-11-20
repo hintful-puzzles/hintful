@@ -5,7 +5,7 @@
  * inside the rows on every preset, measured over every answer.
  */
 import { describe, expect, it } from "vitest";
-import { GAME_OVER } from "../../engine/hint-refusal.ts";
+import { GAME_OVER } from "../../engine/contract/hint-refusal.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";

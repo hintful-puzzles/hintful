@@ -8,8 +8,8 @@
  * the line's number.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 
 /** A link, from square `sq` toward direction `d`. */
 export type HintLink = { readonly sq: number; readonly d: number };

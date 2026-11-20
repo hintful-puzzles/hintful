@@ -7,8 +7,8 @@
  * is ringed when the step places it and outlined when the step cites it.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import type { SlantMark } from "./hint.ts";
 
 /** A clue, on the grid point it sits on. */

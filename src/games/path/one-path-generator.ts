@@ -25,10 +25,13 @@ import {
   type SquareEdges,
   squareEdges,
 } from "../../engine/board/square-edges.ts";
-import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
+import {
+  type CappedSolve,
+  solvableAtExactlyTier,
+} from "../../engine/contract/difficulty.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { OPEN } from "../../engine/line-drawing.ts";
 import { type RandomState, randomBits, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { type PathSolve, searchAnswer, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,

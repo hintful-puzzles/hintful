@@ -6,10 +6,11 @@
  * than its packed `value*4 + orient`.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import { fromCoord } from "../../engine/board/geometry.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
+import type { Color, Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import {
@@ -25,7 +26,6 @@ import {
   squareGrid,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { Color, Point } from "../../engine/types.ts";
 import { hint, hintKeepTrack, TWIDDLE_RUNGS, type TwiddleRung } from "./hint.ts";
 import {
   animLength,

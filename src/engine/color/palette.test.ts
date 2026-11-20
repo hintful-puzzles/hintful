@@ -14,12 +14,12 @@
  * than what it is.
  */
 import { describe, expect, it } from "vitest";
+import type { Color } from "../contract/types.ts";
 import { getTsGame } from "../registry.ts";
 import { colorToOKLCH, isGrayChroma, type OKLCH } from "../testing/oklch.ts";
-import type { Color } from "../types.ts";
 import "../../games/index.ts";
+import type { MarkRole } from "../contract/hint-words.ts";
 import { HATCH_OPACITY } from "../hatch.ts";
-import type { MarkRole } from "../hint-words.ts";
 import { mkhighlight } from "./color-mkhighlight.ts";
 import { darkValue } from "./color-token.ts";
 import * as colors from "./colors.ts";

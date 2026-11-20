@@ -20,6 +20,7 @@ import {
   type Deduced,
   searchAnswers,
 } from "../../engine/answer-search.ts";
+import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -27,7 +28,6 @@ import {
   type GridSpace,
 } from "../../engine/describe-runtime.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
-import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import {
   CellMarks,
   describedLadder,

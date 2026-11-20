@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { Game } from "../engine/game.ts";
+import type { Game } from "../engine/contract/game.ts";
 import { assertRegistrable } from "../engine/registry.ts";
 
 type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;

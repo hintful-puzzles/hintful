@@ -5,7 +5,7 @@
  * `cross()` before a player sees it.
  */
 
-import type { Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import type { RationalPoint } from "./state.ts";
 
 /** Denominator for a computed position: pixel-level at the preferred tile

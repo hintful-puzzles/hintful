@@ -12,7 +12,7 @@
  * canvas, the recorder and the SVG view cannot disagree about it.
  */
 
-import type { DrawTextOptions, Point, Rect } from "./types.ts";
+import type { DrawTextOptions, Point, Rect } from "./contract/types.ts";
 
 /** How round a ring must be, as its corner radius over half its short side: a
  * radius of a third of the short side. Below it the mark reads as a box, and

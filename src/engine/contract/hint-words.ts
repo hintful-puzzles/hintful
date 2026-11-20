@@ -18,8 +18,8 @@
  * good.
  */
 
-import { ColorWord, type Scheme } from "./color/color-word.ts";
-import type { RivalsLost } from "./rival-judging.ts";
+import { ColorWord, type Scheme } from "../color/color-word.ts";
+import type { RivalsLost } from "../rival-judging.ts";
 import type { HintSpan, Point } from "./types.ts";
 import {
   adjectiveDefect,

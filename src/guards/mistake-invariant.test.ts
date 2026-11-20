@@ -48,8 +48,8 @@
  * board, from its seeded run or a pinned wrong board.
  */
 import { describe, expect, it } from "vitest";
+import { NOT_STARTED } from "../engine/contract/solve-failure.ts";
 import { Midend } from "../engine/midend.ts";
-import { NOT_STARTED } from "../engine/solve-failure.ts";
 import { beginDealt } from "../engine/testing/dealt.ts";
 import {
   capabilitySets,

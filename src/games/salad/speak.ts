@@ -13,10 +13,14 @@
  * returns its sentences in it.
  */
 
+import {
+  CELL,
+  type Narration,
+  type Sentence,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { cleanObviousText, type LatinVocab } from "../../engine/hint-text.ts";
-import { CELL, type Narration, type Sentence } from "../../engine/hint-words.ts";
 import { lineUnit } from "../../engine/step-voice.ts";
-import type { Point } from "../../engine/types.ts";
 import { voice, WORDS } from "../../generated/games/salad/salad.compiled.ts";
 import { CLUE } from "./kinds.ts";
 import { GAMEMODE_LETTERS, symbolChar } from "./state.ts";

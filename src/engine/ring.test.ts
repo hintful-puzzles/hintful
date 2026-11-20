@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import type { Rect } from "./contract/types.ts";
 import { glyphFont } from "./draw.ts";
 import { RING_MIN_ROUNDNESS, type RingClear, ringShape, textBox } from "./ring.ts";
-import type { Rect } from "./types.ts";
 
 const S = 48;
 const cell = (x: number, y: number): Rect => ({ x: x * S, y: y * S, w: S, h: S });

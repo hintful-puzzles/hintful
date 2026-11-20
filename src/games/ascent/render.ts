@@ -28,14 +28,19 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
+import type {
+  Color,
+  DrawTextOptions,
+  Point,
+  Rect,
+} from "../../engine/contract/types.ts";
 import { drawRectCorners, glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
 import { drawPathArrow, drawPathStart } from "../../engine/path-arrow.ts";
 import { ringContentBox, textBox } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
-import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
 import type { AscentHighlights } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-marks.ts";

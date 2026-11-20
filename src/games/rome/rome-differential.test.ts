@@ -21,7 +21,7 @@
  * harness that captured it are gone (see `engine/testing/differential.ts`).
  */
 import { expect } from "vitest";
-import { descValue, validateDesc } from "../../engine/desc-error.ts";
+import { descValue, validateDesc } from "../../engine/contract/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/rome-c-reference.json" with { type: "json" };
 import { newRomeDesc } from "./generator.ts";

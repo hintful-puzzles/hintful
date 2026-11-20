@@ -25,6 +25,7 @@
  */
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { parsed, resolveSpecifier, usesOf, where } from "../testing/syntax.ts";
 import {
   ALREADY_SOLVED,
   CONTRADICTION_UNLOCALIZED,
@@ -38,15 +39,14 @@ import {
   SEARCH_OUT_OF_REACH,
 } from "./hint-refusal.ts";
 import { NO_SOLUTION_FROM_HERE, SOLUTION_UNKNOWN } from "./solve-failure.ts";
-import { parsed, resolveSpecifier, usesOf, where } from "./testing/syntax.ts";
 
 const sources = {
-  ...import.meta.glob<string>("../games/**/*.ts", {
+  ...import.meta.glob<string>("../../games/**/*.ts", {
     query: "?raw",
     import: "default",
     eager: true,
   }),
-  ...import.meta.glob<string>("./**/*.ts", {
+  ...import.meta.glob<string>("../**/*.ts", {
     query: "?raw",
     import: "default",
     eager: true,
@@ -90,8 +90,8 @@ function ownerOf(path: string): string {
   return /^src\/games\/([^/]+)\//.exec(path)?.[1] ?? "engine";
 }
 
-const REFUSAL = "src/engine/hint-refusal.ts";
-const PHRASE = { module: "src/engine/hint-words.ts", name: "phrase" };
+const REFUSAL = "src/engine/contract/hint-refusal.ts";
+const PHRASE = { module: "src/engine/contract/hint-words.ts", name: "phrase" };
 
 function templateText(t: ts.TemplateLiteral): string {
   if (ts.isNoSubstitutionTemplateLiteral(t)) return t.text;
@@ -115,7 +115,7 @@ function sentenceOf(via: string, arg?: ts.Expression): string | null {
 const calls: Call[] = [];
 let filesScanned = 0;
 for (const [key, text] of Object.entries(sources)) {
-  const path = resolveSpecifier("src/engine/x.ts", key);
+  const path = resolveSpecifier("src/engine/contract/x.ts", key);
   if (path.endsWith(".test.ts") || path === REFUSAL) continue;
   filesScanned++;
   const sf = parsed(path, text);

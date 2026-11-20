@@ -36,8 +36,8 @@
  * mode, as Spokes' pure-white `COL_DONE` once did.
  */
 
-import type { MarkRole } from "../hint-words.ts";
-import type { Color } from "../types.ts";
+import type { MarkRole } from "../contract/hint-words.ts";
+import type { Color } from "../contract/types.ts";
 import { divide, mix, scale, token } from "./color-token.ts";
 import {
   BLUE,

@@ -9,11 +9,11 @@
  * made: the ladder reads nothing else.
  */
 
+import type { Point } from "../../engine/contract/types.ts";
 import {
   describedFiringHint,
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   RULES_OUT,
   type SaysById,

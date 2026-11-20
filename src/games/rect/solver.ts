@@ -23,7 +23,8 @@ import {
   searchAnswers as searchBoard,
   solvedPositions,
 } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { Rect } from "../../engine/contract/types.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueAt,
@@ -45,7 +46,6 @@ import {
   runLadder,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import type { Rect } from "../../engine/types.ts";
 import * as rect from "../../generated/games/rect/rect.compiled.ts";
 import type { RectEdge } from "./hint-marks.ts";
 import { clueDimensions, HIDDEN, type RectClues } from "./state.ts";

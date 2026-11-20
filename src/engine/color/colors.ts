@@ -66,8 +66,8 @@
  * in **both** schemes.
  */
 
-import type { MarkRole } from "../hint-words.ts";
-import type { Color } from "../types.ts";
+import type { MarkRole } from "../contract/hint-words.ts";
+import type { Color } from "../contract/types.ts";
 import { darkValue, token } from "./color-token.ts";
 import { ColorWord } from "./color-word.ts";
 

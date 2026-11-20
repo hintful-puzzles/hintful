@@ -10,7 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import type { HintStep } from "../../engine/game.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import {
   expectRing,

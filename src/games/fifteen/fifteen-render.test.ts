@@ -5,7 +5,7 @@
 // moving tile at an interpolated coordinate.
 import { describe, expect, it } from "vitest";
 import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

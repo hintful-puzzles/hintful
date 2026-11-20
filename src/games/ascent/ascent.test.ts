@@ -6,8 +6,8 @@
  * generator, the described ladder, the codec and the answer check together.
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";

@@ -13,6 +13,7 @@
  * linked, as upstream's was.
  */
 
+import type { GameStatus } from "../../engine/contract/types.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -37,7 +38,6 @@ import {
   type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import {
   BLANK,

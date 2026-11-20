@@ -17,7 +17,7 @@ import {
   COL_FLASH_LEAD,
   COL_HINT_OUTLINE,
 } from "../../engine/color/roles.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";

@@ -17,9 +17,10 @@ import {
   descBadCharacter,
   descValue,
   validateDesc,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import { Midend } from "../../engine/midend.ts";
 import { presetMenu } from "../../engine/param-label.ts";
@@ -41,7 +42,6 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { newRomeDesc } from "./generator.ts";
 import { romeGame } from "./index.ts";
 import { BORDER, origin, PREFERRED_TILE_SIZE } from "./render.ts";

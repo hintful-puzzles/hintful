@@ -27,6 +27,8 @@
  */
 
 import { HINT_RING, HINT_STRIPES } from "../color/palette.ts";
+import type { GameDrawing, RingOptions } from "../contract/game.ts";
+import type { Color, DrawTextOptions, Point, Rect } from "../contract/types.ts";
 import {
   checkPolygon,
   hasFill,
@@ -34,9 +36,7 @@ import {
   paintsNothing,
   paletteInk,
 } from "../drawing-rules.ts";
-import type { GameDrawing, RingOptions } from "../game.ts";
 import { type RingClear, ringShape } from "../ring.ts";
-import type { Color, DrawTextOptions, Point, Rect } from "../types.ts";
 
 /** The `fillRgb` of a polygon or circle drawn with no fill. */
 export const NO_FILL = "none";

@@ -6,8 +6,8 @@
  * number's own square and the eight around it, clipped at the edge.
  */
 
-import { CELL, type MarkKind } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import { CELL, type MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 
 /** A number and the block of squares it counts, named by the number's square. */
 export const BLOCK: MarkKind<Point> = { name: "block", key: CELL.key };

@@ -83,7 +83,7 @@ forgets it, a changed game leaves it behind, and nothing notices. Refuse it.
   guard derives a population because nothing declared it, a consumed contract
   supersedes the derivation. Sections are built only where two channels must
   agree: a hint's words and its marks, params and their labels and help, input
-  and its controls text. What exists today is `src/engine/sections.ts` and
+  and its controls text. What exists today is `src/engine/contract/sections.ts` and
   [`mechanics.md`](./mechanics.md) § "Contract sections, and what makes a
   draft".
 - **Until a section lands, a game joins a shared mechanic by having it.** A

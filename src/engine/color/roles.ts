@@ -8,7 +8,7 @@
  * slot of its own for it, under its own name, and says why.
  */
 
-import type { Color } from "../types.ts";
+import type { Color } from "../contract/types.ts";
 import { CURSOR, ERROR, FLASH, FLASH_LEAD, HINT_OUTLINE } from "./palette.ts";
 
 /** The board: the host's background, which the midend lays on a fresh frame. */

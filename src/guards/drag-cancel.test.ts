@@ -16,6 +16,7 @@
 
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
+import type { Point } from "../engine/contract/types.ts";
 import { Midend } from "../engine/midend.ts";
 import {
   GridDrag,
@@ -31,7 +32,6 @@ import {
   probePoints,
 } from "../engine/testing/input-probe.ts";
 import { itOverWholeSweep } from "../engine/testing/slow.ts";
-import type { Point } from "../engine/types.ts";
 
 /** Every `GridDrag` on a `Ui`, one level deep — the same reach the engine has. */
 function dragsOf(ui: unknown): GridDrag[] {

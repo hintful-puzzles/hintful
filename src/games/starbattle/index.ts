@@ -10,12 +10,13 @@ import { registerGame } from "../../engine/registry.ts";
  * [`state.ts`](./state.ts).
  */
 
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import type { Game, SolveResult } from "../../engine/contract/game.ts";
+import { SQUARE_GRID } from "../../engine/contract/sections.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import type { Game, SolveResult } from "../../engine/game.ts";
 import { newCursor } from "../../engine/pointer.ts";
-import { SQUARE_GRID } from "../../engine/sections.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
@@ -24,7 +25,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { newStarbattleDesc } from "./generator.ts";
 import {
   type StarbattleHint,

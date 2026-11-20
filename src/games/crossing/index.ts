@@ -11,7 +11,6 @@
  */
 
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import {
   type CandidateMoveAdapter,
   candidateHint,
@@ -19,11 +18,7 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
-import {
-  clearEntries,
-  type EntryMoves,
-  revealEntry,
-} from "../../engine/entry-mistakes.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   type Game,
   type HintResult,
@@ -33,10 +28,16 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import { CELL } from "../../engine/contract/hint-words.ts";
+import type { KeyLabel, Point } from "../../engine/contract/types.ts";
+import {
+  clearEntries,
+  type EntryMoves,
+  revealEntry,
+} from "../../engine/entry-mistakes.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
-import { CELL } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import {
@@ -64,7 +65,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newCrossingDesc } from "./generator.ts";
 import { narrateCrossing } from "./hint.ts";
 import { numbers, placementChanges, takeNumber } from "./numbers.ts";

@@ -4,7 +4,8 @@
  * shared edge-clue Latin square's (`engine/edge-clue-latin/state.ts`).
  */
 
-import { noSuchTier } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { PresetBoards } from "../../engine/contract/game.ts";
 import {
   type ClueKind,
   DIFF_RECURSIVE,
@@ -18,7 +19,6 @@ import {
   F_ADJ_RIGHT,
   F_ADJ_UP,
 } from "../../engine/edge-clue-latin/state.ts";
-import type { PresetBoards } from "../../engine/game.ts";
 import * as unequal from "../../generated/games/unequal/unequal.compiled.ts";
 import { drawSigns } from "./render.ts";
 import { signAnswer, signLadder } from "./solver.ts";

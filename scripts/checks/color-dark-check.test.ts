@@ -26,8 +26,8 @@
 import { writeFileSync } from "node:fs";
 import { it } from "vitest";
 import { darkValue } from "../../src/engine/color/color-token.ts";
+import type { Color } from "../../src/engine/contract/types.ts";
 import { getTsGame } from "../../src/engine/registry.ts";
-import type { Color } from "../../src/engine/types.ts";
 import { puzzleIds } from "../../src/puzzle/catalog.ts";
 import { darkModePalette } from "../../src/puzzle/dark-palette.ts";
 import { schemeOf } from "../../src/puzzle/scheme-palettes.ts";

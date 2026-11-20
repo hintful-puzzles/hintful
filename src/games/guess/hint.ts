@@ -21,10 +21,14 @@ import {
   type RuleOut,
   ruleOutProgress,
 } from "../../engine/code-rows.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
+import { GAME_OVER, SEARCH_OUT_OF_REACH } from "../../engine/contract/hint-refusal.ts";
+import type { MarkKind, Relation, Sentence } from "../../engine/contract/hint-words.ts";
 import { describedSpace, type GridSpace } from "../../engine/describe-runtime.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { GAME_OVER, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
-import type { MarkKind, Relation, Sentence } from "../../engine/hint-words.ts";
 import {
   CellMarks,
   compiledRung,

@@ -8,9 +8,9 @@
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";
-import { DESC_TOO_LONG, type DescParse } from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG, type DescParse } from "../../engine/contract/desc-error.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { Point } from "../../engine/types.ts";
 
 // --- flag bits -----------------------------------------------------
 

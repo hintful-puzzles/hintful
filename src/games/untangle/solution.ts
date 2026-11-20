@@ -10,7 +10,7 @@
  * would hand the player a "solution" the board does not accept.
  */
 
-import type { Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   EDGE_GAP,
   pointSpacing,

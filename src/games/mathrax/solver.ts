@@ -18,6 +18,7 @@
  * parity of 0 and 1.
  */
 
+import type { Point } from "../../engine/contract/types.ts";
 import { latinSpace } from "../../engine/describe-runtime.ts";
 import type { Ladder } from "../../engine/ladder-runtime.ts";
 import {
@@ -31,7 +32,6 @@ import {
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import type { Clauses } from "../../engine/stated.ts";
-import type { Point } from "../../engine/types.ts";
 import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 import { DIFF_RECURSIVE, dealtOf } from "./state.ts";
 

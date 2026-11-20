@@ -8,11 +8,11 @@ import {
   runCandidatePlan,
   runLatinCandidatePlan,
 } from "./candidate-plan.ts";
-import type { HintStep } from "./game.ts";
+import type { HintStep } from "./contract/game.ts";
+import { CELL, mark, Narration, phrase, unshaped } from "./contract/hint-words.ts";
+import type { Point } from "./contract/types.ts";
 import { type Conclusions, narrateLatinReason } from "./hint-text.ts";
-import { CELL, mark, Narration, phrase, unshaped } from "./hint-words.ts";
 import { type RowColRegion, rowColRegions, type SingleReason } from "./latin-hint.ts";
-import type { Point } from "./types.ts";
 
 type Reason = { kind: string; near?: Point } | DupReason;
 type Move = { type: string; [k: string]: unknown };

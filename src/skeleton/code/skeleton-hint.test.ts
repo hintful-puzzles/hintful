@@ -7,7 +7,7 @@
  * (docs/testing.md § "Pinning a hint's positions").
  */
 import { describe, expect, it } from "vitest";
-import { stepMarks } from "../../engine/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { AnyGame } from "../../engine/testing/enrollment.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

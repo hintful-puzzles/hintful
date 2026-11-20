@@ -16,6 +16,7 @@
  * cells in reading order; its clue is of the kind its sign names.
  */
 
+import type { Point } from "../../engine/contract/types.ts";
 import { latinSpace } from "../../engine/describe-runtime.ts";
 import type { Ladder } from "../../engine/ladder-runtime.ts";
 import {
@@ -28,7 +29,6 @@ import {
 } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import type { Clauses } from "../../engine/stated.ts";
-import type { Point } from "../../engine/types.ts";
 import * as keen from "../../generated/games/keen/keen.compiled.ts";
 import {
   type Cages,

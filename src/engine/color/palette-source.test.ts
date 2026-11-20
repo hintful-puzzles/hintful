@@ -124,7 +124,7 @@ interface Finding {
  * as the type checker reads them.
  *
  * A literal is an array literal TypeScript reads as a `Color`
- * (`engine/types.ts`'s alias), wherever it stands. A color reaches a board
+ * (`engine/contract/types.ts`'s alias), wherever it stands. A color reaches a board
  * only through `colors`, typed `Color[]`, so a literal that gets there is
  * typed a `Color`, by where it is written or by a declaration or assertion on
  * the way; a triple of numbers that is a tally or a menu's sizes is not,
@@ -139,7 +139,7 @@ function colorFindings(): Map<string, { literals: Finding[]; channels: Finding[]
   const files = Object.keys(sourceModules)
     .filter((p) => !p.endsWith(".test.ts"))
     .map(path);
-  const typesFile = path("../types.ts");
+  const typesFile = path("../contract/types.ts");
   const root = path("../../../");
   const config = ts.readConfigFile(`${root}tsconfig.json`, (p) => ts.sys.readFile(p));
   const { options } = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
@@ -149,7 +149,7 @@ function colorFindings(): Map<string, { literals: Finding[]; channels: Finding[]
   const module = typesSource && checker.getSymbolAtLocation(typesSource);
   const color =
     module && checker.getExportsOfModule(module).find((s) => s.name === "Color");
-  if (!color) throw new Error("engine/types.ts exports no Color");
+  if (!color) throw new Error("engine/contract/types.ts exports no Color");
   const isColor = (t: ts.Type): boolean =>
     t.aliasSymbol === color || (t.isUnion() && t.types.some(isColor));
   const out = new Map<string, { literals: Finding[]; channels: Finding[] }>();

@@ -17,10 +17,10 @@
  * The budget itself stays the game's, counted in positions and never in time.
  */
 
-import type { SolveResult } from "./game.ts";
-import { PUZZLE_NOT_REASONABLE, SEARCH_OUT_OF_REACH } from "./hint-refusal.ts";
+import type { SolveResult } from "./contract/game.ts";
+import { PUZZLE_NOT_REASONABLE, SEARCH_OUT_OF_REACH } from "./contract/hint-refusal.ts";
+import { NO_SOLUTION, NO_SOLUTION_FROM_HERE } from "./contract/solve-failure.ts";
 import type { Verdict } from "./rival-judging.ts";
-import { NO_SOLUTION, NO_SOLUTION_FROM_HERE } from "./solve-failure.ts";
 
 /** A search that found no line: a proof there is none, or a budget spent. */
 export type Unfinished = { readonly kind: "lost" } | { readonly kind: "out-of-reach" };

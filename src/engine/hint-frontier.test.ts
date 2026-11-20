@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "./candidate-hint.ts";
+import type { Point } from "./contract/types.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import { dealt } from "./testing/dealt.ts";
 import { enrolledIn, gamesImporting, gamesUsing } from "./testing/enrollment.ts";
@@ -11,7 +12,6 @@ import { HINT_GAMES } from "./testing/hint-games.ts";
 import { expectLedger } from "./testing/ledger.ts";
 import { planContinuity } from "./testing/plan-continuity.ts";
 import { boardWidth, leafPresets } from "./testing/presets.ts";
-import type { Point } from "./types.ts";
 
 type Step = { highlights: { targets: Point[] } };
 

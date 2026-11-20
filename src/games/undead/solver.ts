@@ -18,6 +18,9 @@
  * mirror), so a game mask is the description's shifted down one.
  */
 
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import { NO_SOLUTION, type SolveFailure } from "../../engine/contract/solve-failure.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -25,7 +28,6 @@ import {
   type GridSpace,
   STRIKE,
 } from "../../engine/describe-runtime.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   CellMarks,
   describedLadder,
@@ -36,8 +38,6 @@ import {
   TIERS,
   techniqueFirings,
 } from "../../engine/ladder-runtime.ts";
-import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import * as undead from "../../generated/games/undead/undead.compiled.ts";
 import {
   CELL_MIRROR_L,

@@ -17,11 +17,12 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
+import { trackTargets } from "../../engine/contract/hint-track.ts";
+import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { trackTargets } from "../../engine/hint-track.ts";
-import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
@@ -53,7 +54,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import { voice } from "../../generated/games/pattern/pattern.compiled.ts";
 import { newPatternDesc } from "./generator.ts";
 import { CLUE, cellAt, LINE } from "./hint-marks.ts";

@@ -8,14 +8,14 @@ import {
   phrase,
   type StepMarks,
   stepMarks,
-} from "./hint-words.ts";
+} from "./contract/hint-words.ts";
+import type { Point } from "./contract/types.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
   OVERLAY_FLAG,
   OverlaySidecar,
 } from "./overlay-sidecar.ts";
-import type { Point } from "./types.ts";
 
 /** The marks of a step whose words outline `area`, ring `targets` and strike
  * the notes `marks`. */

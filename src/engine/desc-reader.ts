@@ -25,7 +25,7 @@
  * so a game sees only the {@link DescParse} it returns.
  * Calling a reading method outside {@link readDesc} is a bug and throws.
  */
-import { isDigit, parseLeadingInt } from "./decimal.ts";
+
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -33,7 +33,8 @@ import {
   type DescError,
   type DescParse,
   descBadCharacter,
-} from "./desc-error.ts";
+} from "./contract/desc-error.ts";
+import { isDigit, parseLeadingInt } from "./decimal.ts";
 
 /** What {@link DescReader.fail} throws and {@link readDesc} catches. */
 class DescFailure {

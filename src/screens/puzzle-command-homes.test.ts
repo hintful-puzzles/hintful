@@ -29,8 +29,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // saved game: `Back to last save` renders either way, disabled when there is
 // none, and a disabled control still has the `data-command` this file reads.
 
+import { NOT_STARTED } from "../engine/contract/solve-failure.ts";
 import { createTsEngine } from "../engine/registry.ts";
-import { NOT_STARTED } from "../engine/solve-failure.ts";
 import "../games/index.ts";
 import {
   barCapacity,

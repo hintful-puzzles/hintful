@@ -29,8 +29,8 @@ import {
   tierNames,
   tierOf,
   withTier,
-} from "../engine/difficulty.ts";
-import type { Game } from "../engine/game.ts";
+} from "../engine/contract/difficulty.ts";
+import type { Game } from "../engine/contract/game.ts";
 import { Midend } from "../engine/midend.ts";
 import { presetMenu } from "../engine/param-label.ts";
 import { paramsError } from "../engine/params.ts";
@@ -352,7 +352,7 @@ for (const { id, game, contract, tiers } of tiered) {
 
     it("deals boards that need the tier the preset claims", () => {
       // THE PROPERTY `engine-difficulty` NAMES: "A difficulty tier binds the
-      // board it generates", whose one expression is `engine/difficulty.ts`'s
+      // board it generates", whose one expression is `engine/contract/difficulty.ts`'s
       // `solvableAtExactlyTier`. This compares the tier a board was *generated*
       // at with the tier it *needs*; the monotonicity test above computes that
       // number and uses it only as a floor.

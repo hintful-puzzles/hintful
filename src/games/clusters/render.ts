@@ -27,15 +27,15 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Color, Size } from "../../engine/contract/types.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
-import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { ClustersMistake } from "./index.ts";
 import { findErrors } from "./solver.ts";

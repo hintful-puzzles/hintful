@@ -11,7 +11,7 @@
  *
  * Dev/test-only; never imported by production code.
  */
-import { markKeys } from "../hint-words.ts";
+import { markKeys } from "../contract/hint-words.ts";
 import { dealt } from "./dealt.ts";
 import type { AnyGame } from "./hint-games.ts";
 

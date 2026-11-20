@@ -10,7 +10,8 @@
  */
 
 import { solveFromAnswer } from "../../engine/answer-search.ts";
-import type { Game, SolveResult } from "../../engine/game.ts";
+import type { Game, SolveResult } from "../../engine/contract/game.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import {
   type EdgeMistake,
   edgeMistakes,
@@ -19,7 +20,6 @@ import {
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import { newPathDesc } from "./generator.ts";
 import { type PathHighlights, pathHint, pathJudgeMove, pathKeepTrack } from "./hint.ts";
 import { pathLines } from "./moves.ts";

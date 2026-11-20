@@ -3,8 +3,8 @@
  * step moves its point to, and crossings of two lines.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import type { RationalPoint } from "./state.ts";
 
 /** A point of the graph, by index. */

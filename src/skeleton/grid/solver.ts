@@ -13,9 +13,9 @@
  * ladder finishes has exactly one answer.
  */
 
+import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
-import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import {
   CellMarks,
   describedLadder,

@@ -4,7 +4,11 @@
  * (© 2015 Lennard Sprong). The five grid modes share one square grid and differ
  * only in their movement table, so nothing here knows any other geometry.
  */
-import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
+import {
+  DESC_TOO_LONG,
+  type DescParse,
+  descValue,
+} from "../../engine/contract/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import * as ascent from "../../generated/games/ascent/ascent.compiled.ts";
 

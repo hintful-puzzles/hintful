@@ -23,7 +23,7 @@
  */
 
 import { type CandidateReading, DEFAULT_CANDIDATE_READING } from "./candidate-hint.ts";
-import type { GamePref } from "./game.ts";
+import type { GamePref } from "./contract/game.ts";
 
 /**
  * Upstream's `auto-pencil`: placing a value clears it from the pencil marks it

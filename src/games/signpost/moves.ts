@@ -5,7 +5,7 @@
  * import `index` (which would be a cycle).
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   checkCompletion,
   cloneState,

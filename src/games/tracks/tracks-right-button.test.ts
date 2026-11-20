@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { UI_UPDATE } from "../../engine/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE } from "../../engine/pointer.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { tracksGame } from "./index.ts";

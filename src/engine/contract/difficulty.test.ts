@@ -7,6 +7,7 @@
  * caps solve, which is impossible to arrange with a real generator.
  */
 import { describe, expect, it } from "vitest";
+import { type FakeParams, fakeGame } from "../fake-game.ts";
 import {
   type CappedSolve,
   cappedSolveFor,
@@ -21,7 +22,6 @@ import {
   tierOf,
   withTier,
 } from "./difficulty.ts";
-import { type FakeParams, fakeGame } from "./fake-game.ts";
 
 /** A solver that solves at exactly the listed caps, recording every call. */
 function solverOver(solvingCaps: readonly number[]): CappedSolve & { calls: number[] } {

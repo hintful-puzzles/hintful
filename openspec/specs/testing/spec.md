@@ -206,7 +206,7 @@ a guess about contention.
 A timeout SHALL NOT be relied on to catch a runaway loop: the suite is
 synchronous, so a runaway blocks the event loop and the timeout cannot fire.
 Non-termination SHALL be bounded where it can be caught, by
-`engine/retry-limit.ts` for generator retries and by `engine/step-budget.ts`
+`engine/contract/retry-limit.ts` for generator retries and by `engine/step-budget.ts`
 for solver and hint fixpoints.
 
 #### Scenario: A fixpoint stops making progress

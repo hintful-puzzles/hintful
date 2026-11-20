@@ -8,7 +8,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { it } from "vitest";
-import type { PresetMenu } from "../../src/engine/game.ts";
+import type { PresetMenu } from "../../src/engine/contract/game.ts";
 import { presetMenu } from "../../src/engine/param-label.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { adjacentGame } from "../../src/games/adjacent/index.ts";

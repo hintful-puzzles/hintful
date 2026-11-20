@@ -10,7 +10,7 @@
  * points at. The squares a step decides are ringed (`ring`).
  */
 
-import type { Sentence } from "../../engine/hint-words.ts";
+import type { Sentence } from "../../engine/contract/hint-words.ts";
 import { voice } from "../../generated/games/magnets/magnets.compiled.ts";
 import { CLUE, LINE, type LineEl, SQUARE } from "./kinds.ts";
 import { NEGATIVE, POSITIVE } from "./state.ts";

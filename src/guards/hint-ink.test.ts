@@ -14,13 +14,13 @@
 import { describe, expect, it } from "vitest";
 import { resolvePalette } from "../engine/color/color-mkhighlight.ts";
 import { HINT_INK } from "../engine/color/palette.ts";
-import type { MarkRole } from "../engine/hint-words.ts";
+import type { MarkRole } from "../engine/contract/hint-words.ts";
+import type { Color } from "../engine/contract/types.ts";
 import type { Midend } from "../engine/index.ts";
 import { HINT_GAMES } from "../engine/testing/hint-games.ts";
 import { walkHints } from "../engine/testing/hint-walk.ts";
 import { type DrawOp, RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
-import type { Color } from "../engine/types.ts";
 
 /** The palette indices an op paints with. */
 function colorsOf(op: DrawOp): number[] {

@@ -8,9 +8,12 @@
  * unique solution.
  */
 
-import { assertNever } from "../assert-never.ts";
 import { adaptiveMarkAllMove, applyNoteMove } from "../candidate-hint.ts";
-import type { DifficultyContract } from "../difficulty.ts";
+import { assertNever } from "../contract/assert-never.ts";
+import type { DifficultyContract } from "../contract/difficulty.ts";
+import { type SolveResult, UI_UPDATE, type UiUpdate } from "../contract/game.ts";
+import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../contract/solve-failure.ts";
+import type { KeyLabel, Point } from "../contract/types.ts";
 import {
   clearEntries,
   entryMistakes,
@@ -18,7 +21,6 @@ import {
   revealEntry,
   setMoves,
 } from "../entry-mistakes.ts";
-import { type SolveResult, UI_UPDATE, type UiUpdate } from "../game.ts";
 import { clearKey } from "../key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../latin.ts";
 import { rowColRegions } from "../latin-hint.ts";
@@ -42,9 +44,7 @@ import {
   RIGHT_BUTTON,
   stripModifiers,
 } from "../pointer.ts";
-import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../solve-failure.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../target-verb.ts";
-import type { KeyLabel, Point } from "../types.ts";
 import { coord, type EdgeClueDrawState, fromCoord } from "./render.ts";
 import { solveEdgeClues } from "./solver.ts";
 import {
@@ -390,7 +390,7 @@ export function edgeClueKeys(order: number): KeyLabel[] {
   return keys;
 }
 
-/** The difficulty contract (`engine/difficulty.ts`) of a game of `kind`.
+/** The difficulty contract (`engine/contract/difficulty.ts`) of a game of `kind`.
  * `solveEdgeClues` follows the shared latin-family return convention — the
  * difficulty reached, or one of `latin.ts`'s sentinels — so `latinVerdict`
  * reads it. Seeded from the immutable givens; the clue flags come from the

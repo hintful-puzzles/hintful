@@ -11,8 +11,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { CURSOR_DOWN, LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";

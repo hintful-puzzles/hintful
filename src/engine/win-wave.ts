@@ -15,7 +15,7 @@
  */
 
 import { COL_FLASH, COL_FLASH_LEAD } from "./color/roles.ts";
-import type { Point } from "./types.ts";
+import type { Point } from "./contract/types.ts";
 
 /** What `Game.redraw` is told about a flash. */
 export interface Flash {

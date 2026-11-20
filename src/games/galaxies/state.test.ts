@@ -5,7 +5,7 @@ import {
   descBadCharacter,
   descValue,
   descVerdict,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
 import {
   blankGame,
   checkComplete,

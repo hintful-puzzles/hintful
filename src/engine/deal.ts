@@ -6,16 +6,16 @@
  * {@link generate}.
  */
 
-import type { Game } from "./game.ts";
-import { paramsError } from "./params.ts";
-import { type RandomState, randomNew } from "./random/index.ts";
+import type { Game } from "./contract/game.ts";
 import {
   DEAL_DEADLINE_MS,
   RetryLimitExceeded,
   retryLimit,
   underDealDeadline,
-} from "./retry-limit.ts";
-import type { DealtBoard, EncodedParams } from "./types.ts";
+} from "./contract/retry-limit.ts";
+import type { DealtBoard, EncodedParams } from "./contract/types.ts";
+import { paramsError } from "./params.ts";
+import { type RandomState, randomNew } from "./random/index.ts";
 
 /** A random 128-bit seed string for a fresh game (upstream seeds from system
  * entropy; `random.ts` makes the id reproducible from it). */

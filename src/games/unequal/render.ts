@@ -6,6 +6,7 @@
  */
 
 import { COL_BACKGROUND } from "../../engine/color/roles.ts";
+import type { GameDrawing } from "../../engine/contract/game.ts";
 import { COL_TEXT, clueColor, gap } from "../../engine/edge-clue-latin/render.ts";
 import {
   F_ADJ_DOWN,
@@ -21,7 +22,6 @@ import {
   F_SPENT_RIGHT,
   F_SPENT_UP,
 } from "../../engine/edge-clue-latin/state.ts";
-import type { GameDrawing } from "../../engine/game.ts";
 
 /** A greater-than chevron (upstream `draw_gt`), a 6-point polygon. */
 function drawGt(

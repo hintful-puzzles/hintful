@@ -5,13 +5,13 @@
  */
 
 import type { DescriptionJson } from "../../src/describe/description.ts";
+import type { Game } from "../../src/engine/contract/game.ts";
 import { solveEdgeClues } from "../../src/engine/edge-clue-latin/solver.ts";
 import {
   ADJTHAN,
   type EdgeClueParams,
   type EdgeClueState,
 } from "../../src/engine/edge-clue-latin/state.ts";
-import type { Game } from "../../src/engine/game.ts";
 import { adjacentGame } from "../../src/games/adjacent/index.ts";
 import { keenGame } from "../../src/games/keen/index.ts";
 import {

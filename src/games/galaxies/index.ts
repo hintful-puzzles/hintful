@@ -3,17 +3,18 @@
  * symmetric about the one dot it contains.
  */
 
-import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { fromCoord } from "../../engine/board/geometry.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
-import { descValue } from "../../engine/desc-error.ts";
+import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
+import { descValue } from "../../engine/contract/desc-error.ts";
 import {
   type DifficultyContract,
   difficultyItem,
   noSuchTier,
-} from "../../engine/difficulty.ts";
+} from "../../engine/contract/difficulty.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import type { Point, Size } from "../../engine/contract/types.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   type Game,
   type HintStep,
@@ -54,7 +55,6 @@ import {
   type TargetVerbs,
   verbClicks,
 } from "../../engine/target-verb.ts";
-import type { Point, Size } from "../../engine/types.ts";
 import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import { newGameDesc } from "./generator.ts";
 import {
@@ -1103,7 +1103,7 @@ function statusbarText(s: GalaxiesState, _ui: GalaxiesUi): string {
 
 // --- the Game object -----------------------------------------------
 
-/** Galaxies' difficulty contract (`engine/difficulty.ts`). `GalaxiesDiff` is
+/** Galaxies' difficulty contract (`engine/contract/difficulty.ts`). `GalaxiesDiff` is
  * two tiers and three verdicts in one type, which is why the cross-game guard
  * reads the `paramConfig` choices rather than counting its members. The board
  * is cleared to its starting position first, so the player's own edges and

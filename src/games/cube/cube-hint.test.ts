@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

@@ -1,5 +1,5 @@
-import type { HintMarkLegend } from "../../engine/game.ts";
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { HintMarkLegend } from "../../engine/contract/game.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 import type { Op } from "./solver.ts";
 
 /** A number on the board, by its place. */

@@ -3,7 +3,7 @@
  * fires, at all three caps. The harness and the argument for it are
  * `engine/testing/ladder-census.ts`; this file is the declaration.
  */
-import { descValue } from "../../engine/desc-error.ts";
+import { descValue } from "../../engine/contract/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newRomeDesc } from "./generator.ts";

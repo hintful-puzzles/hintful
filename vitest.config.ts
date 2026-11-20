@@ -243,7 +243,7 @@ export default defineConfig({
     // real hang guard: these tests are synchronous, so a runaway loop blocks the
     // event loop and this `setTimeout` cannot fire (the same mechanism that
     // orphans workers — see scripts/reap-orphaned-workers.sh). Actual runaway
-    // protection lives where it can work: `engine/retry-limit.ts` bounds every
+    // protection lives where it can work: `engine/contract/retry-limit.ts` bounds every
     // generator retry, and `stepBudget` bounds the solver/hint loops. What the
     // ceiling *can* do is reject a good commit for being unlucky about when it
     // ran, which is the only thing it has actually done so far.

@@ -2,8 +2,8 @@
  * What Sokoban's hint marks are drawn on, and what each mark means.
  */
 
-import type { HintMarkLegend } from "../../engine/game.ts";
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { HintMarkLegend } from "../../engine/contract/game.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 import type { Push } from "./solver.ts";
 
 /** A barrel, by its grid index. */

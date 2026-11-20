@@ -23,9 +23,9 @@
  * Dev/test-only; never imported by production code.
  */
 import { describe, expect, it } from "vitest";
-import type { Game, HintStep } from "../game.ts";
+import type { Game, HintStep } from "../contract/game.ts";
+import { RetryLimitExceeded } from "../contract/retry-limit.ts";
 import { randomNew } from "../random/index.ts";
-import { RetryLimitExceeded } from "../retry-limit.ts";
 import { dealsPromptly } from "./dealt.ts";
 import { type HintScanReport, SCAN_REPORT_MARK } from "./hint-scan-report.ts";
 

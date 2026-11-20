@@ -19,14 +19,14 @@ import {
   gridNew,
   gridValidateDesc,
 } from "../../engine/board/grid/index.ts";
-import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
 import {
   DESC_TOO_LONG,
   type DescParse,
   descBadCharacter,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { encodeRunLength } from "../../engine/run-length.ts";
 import { gridTypeOf, type LoopyParams } from "./params.ts";

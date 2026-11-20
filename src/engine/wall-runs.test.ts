@@ -6,7 +6,7 @@ import {
   DESC_TOO_SHORT,
   type DescParse,
   descBadCharacter,
-} from "./desc-error.ts";
+} from "./contract/desc-error.ts";
 import { readDesc } from "./desc-reader.ts";
 import { randomNew, randomUpto } from "./random/index.ts";
 import {

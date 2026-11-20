@@ -12,10 +12,14 @@
  */
 
 import { solveFromAnswer } from "../../engine/answer-search.ts";
-import { assertNever, rejectMove } from "../../engine/assert-never.ts";
+import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
+import {
+  type DifficultyContract,
+  difficultyItem,
+} from "../../engine/contract/difficulty.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { describedFiringHint } from "../../engine/described-firing-hint.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import {
   dimensionParamConfig,
   numberItem,
@@ -37,7 +41,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   RULES_OUT,
   SAYS_EACH,

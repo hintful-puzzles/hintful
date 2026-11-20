@@ -42,8 +42,8 @@ import {
   rot,
   U,
 } from "../../engine/board/square-edges.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import {
   collectBarrierCandidates,
   encodeWireDesc,
@@ -229,7 +229,7 @@ function shuffle(tiles: Uint8Array, w: number, h: number, rs: RandomState): void
     // rather than reducing". Short of a give-up the count never rises, so if it
     // settles above zero the `>` test re-rotates until chance breaks the tie,
     // and for ever on a grid where every rotation yields the same count: a hang,
-    // for a synchronous and uninterruptible worker (see engine/retry-limit.ts).
+    // for a synchronous and uninterruptible worker (see engine/contract/retry-limit.ts).
     // So a round that fails to reduce the count also spends one of
     // MAX_STALLED_ROUNDS, and running out takes upstream's own escape, a full
     // reshuffle. That bounds this loop at `wh * MAX_STALLED_ROUNDS` rounds, and

@@ -10,9 +10,9 @@
  * Dev/test-only; never imported by production code.
  */
 
-import type { Game } from "../game.ts";
+import type { Game } from "../contract/game.ts";
+import type { ChangeNotification } from "../contract/types.ts";
 import { Midend } from "../midend.ts";
-import type { ChangeNotification } from "../types.ts";
 
 /** The notification whose `type` is `T`. */
 export type Notification<T extends ChangeNotification["type"]> = Extract<

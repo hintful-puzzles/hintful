@@ -28,10 +28,10 @@ import {
   dealUnreasonable,
 } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import type { Point, Rect } from "../../engine/contract/types.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
-import type { Point, Rect } from "../../engine/types.ts";
 import { firstTwoAnswers, ladderFinishes, searchAnswers } from "./solver.ts";
 import {
   DIFF_UNREASONABLE,

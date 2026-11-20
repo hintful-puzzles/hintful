@@ -23,7 +23,7 @@
  * `grid-build.ts` and `generator.ts`) and are covered by `loopy.test.ts`.
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/loopy-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";

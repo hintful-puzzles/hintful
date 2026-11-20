@@ -11,6 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
+import type { Point } from "../engine/contract/types.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "../engine/pointer.ts";
 import {
   REGISTERED_GAME_COUNT,
@@ -22,7 +23,6 @@ import {
   probePoints,
 } from "../engine/testing/input-probe.ts";
 import { inSweep, itOverWholeSweep } from "../engine/testing/slow.ts";
-import type { Point } from "../engine/types.ts";
 
 /**
  * Games in which the probe canceled no press that had moved, each with why.

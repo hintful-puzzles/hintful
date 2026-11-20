@@ -21,7 +21,8 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -50,7 +51,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSticksDesc } from "./generator.ts";
 import { type SticksHint, sticksHint } from "./hint.ts";
 import {

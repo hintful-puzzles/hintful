@@ -23,9 +23,9 @@
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { latinGenerate } from "../../engine/latin.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { saladSolve } from "./solver.ts";
 import {
   borderScans,

@@ -4,8 +4,8 @@
  * them and the steps `blackbox.description.yaml` declares name them.
  */
 
-import type { HintMarkLegend } from "../../engine/game.ts";
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { HintMarkLegend } from "../../engine/contract/game.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 
 /** A square of the firing range around the box, by its laser number. */
 export const LASER: MarkKind<number> = { name: "laser", key: String };

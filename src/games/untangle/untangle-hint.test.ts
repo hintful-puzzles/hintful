@@ -8,9 +8,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { HintStep } from "../../engine/game.ts";
-import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
+import { NO_MOVE_WORTH_MAKING } from "../../engine/contract/hint-refusal.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { itDeep, SLOW_TESTS_ENABLED } from "../../engine/testing/slow.ts";

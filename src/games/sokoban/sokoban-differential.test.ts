@@ -13,7 +13,7 @@
  * `engine/testing/differential.ts`.
  */
 import { expect } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/sokoban-c-reference.json" with { type: "json" };
 import { sokobanLevel } from "./generator.ts";

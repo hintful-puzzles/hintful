@@ -12,6 +12,19 @@
  * player makes along an edge (a bridge a drag at a time) are not the facts.
  */
 
+import type { HintResult, HintStep, MoveVerdict } from "./contract/game.ts";
+import {
+  CONTRADICTION_UNLOCALIZED,
+  DEDUCTION_EXHAUSTED,
+} from "./contract/hint-refusal.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Narration,
+  type Noun,
+  type Sentence,
+} from "./contract/hint-words.ts";
+import type { Point } from "./contract/types.ts";
 import {
   DEFAULT_PLAN,
   type SuppliedHooks,
@@ -19,15 +32,6 @@ import {
   spokenOf,
   techniqueOf,
 } from "./described-hint.ts";
-import type { HintResult, HintStep, MoveVerdict } from "./game.ts";
-import { CONTRADICTION_UNLOCALIZED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
-import {
-  CELL,
-  type MarkKind,
-  type Narration,
-  type Noun,
-  type Sentence,
-} from "./hint-words.ts";
 import {
   type CellMarks,
   type LadderEntry,
@@ -43,7 +47,6 @@ import {
   statedSentence,
 } from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
-import type { Point } from "./types.ts";
 
 /** What a firing says, as the compiled module types it: its terms and the
  * elements it marks by role, and the arm that held where it has arms. */

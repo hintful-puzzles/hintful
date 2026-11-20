@@ -33,10 +33,10 @@ import type {
   Mark,
   NoteEncoding,
 } from "../../engine/candidate-hint.ts";
-import { DESC_TOO_LONG } from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG } from "../../engine/contract/desc-error.ts";
+import { difficultyItem } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import type { DescReader } from "../../engine/desc-reader.ts";
-import { difficultyItem } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";

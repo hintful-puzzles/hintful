@@ -20,12 +20,12 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import {
   type Flash,
   sweepStep,

@@ -6,8 +6,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_ERROR, COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { type HintStep, UI_UPDATE } from "../../engine/game.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { type HintStep, UI_UPDATE } from "../../engine/contract/game.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import {
   BACKSPACE,
   CURSOR_DOWN,

@@ -6,7 +6,6 @@
  */
 
 import { gridText } from "../../engine/board/grid-text.ts";
-import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -14,10 +13,11 @@ import {
   descBadCharacter,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";

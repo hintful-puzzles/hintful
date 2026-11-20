@@ -9,15 +9,16 @@ import {
   type DifficultyContract,
   difficultyItem,
   noSuchTier,
-} from "../../engine/difficulty.ts";
+} from "../../engine/contract/difficulty.ts";
 import type {
   Game,
   GamePref,
   ParamConfigItem,
   PresetBoards,
   SolveResult,
-} from "../../engine/game.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { clearKey, numberKeys } from "../../engine/key-labels.ts";
 import { modifierItem } from "../../engine/modifier.ts";
@@ -32,7 +33,6 @@ import {
 import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
-import type { Point } from "../../engine/types.ts";
 import { newAscentDesc } from "./generator.ts";
 import {
   ASCENT_RUNGS,
@@ -483,7 +483,7 @@ const paramConfig: ParamConfigItem<AscentParams>[] = [
   difficultyItem(ASCENT_DIFFNAMES, "diff"),
 ];
 
-/** Ascent's difficulty contract (`engine/difficulty.ts`). The generator's
+/** Ascent's difficulty contract (`engine/contract/difficulty.ts`). The generator's
  * tier gate asks the same of the ladder: whether it fills the board. */
 const difficulty: DifficultyContract<AscentParams> = {
   solveAtCap: (p, desc, cap) => {

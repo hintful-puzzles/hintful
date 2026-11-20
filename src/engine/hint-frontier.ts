@@ -29,7 +29,7 @@
  * because this module takes whatever it is handed.
  */
 
-import type { Point } from "./types.ts";
+import type { Point } from "./contract/types.ts";
 
 /** A firing the plan could take now: the elements its premise reads, and how
  * to take it (emit its steps and apply them to the working board). `reads` is

@@ -5,7 +5,10 @@
 // Drives the notification handler directly against a Puzzle built without a
 // worker, the way `puzzle-hint-stepper.test.ts` does.
 import { describe, expect, it } from "vitest";
-import type { ChangeNotification, PuzzleStaticAttributes } from "../engine/types.ts";
+import type {
+  ChangeNotification,
+  PuzzleStaticAttributes,
+} from "../engine/contract/types.ts";
 import { Puzzle } from "./puzzle.ts";
 import type { RemoteWorkerPuzzle } from "./worker.ts";
 

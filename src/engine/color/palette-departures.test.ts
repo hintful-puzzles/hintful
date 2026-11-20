@@ -25,10 +25,10 @@
  */
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import type { Color } from "../contract/types.ts";
 import { gameSourceFiles, gameSyntax, REGISTERED_IDS } from "../testing/enrollment.ts";
 import { colorToOKLCH } from "../testing/oklch.ts";
 import { importedNames, nodesOf, parsed, where } from "../testing/syntax.ts";
-import type { Color } from "../types.ts";
 import * as colors from "./colors.ts";
 import * as palette from "./palette.ts";
 

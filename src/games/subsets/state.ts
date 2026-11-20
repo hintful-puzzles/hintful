@@ -18,16 +18,16 @@
  * about whole sets that no letter mark can say (`add-subsets-notation`).
  */
 
-import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
   type DescParse,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { PresetBoards } from "../../engine/contract/game.ts";
+import { parseLeadingInt } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";

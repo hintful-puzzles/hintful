@@ -16,11 +16,11 @@
  * it, because it cannot turn.
  */
 
-import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
+import { ALREADY_SOLVED } from "../../engine/contract/hint-refusal.ts";
 import {
   NO_SOLUTION_FROM_HERE,
   type SolveFailure,
-} from "../../engine/solve-failure.ts";
+} from "../../engine/contract/solve-failure.ts";
 import {
   BLANK,
   type Board,

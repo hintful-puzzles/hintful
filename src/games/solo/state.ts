@@ -21,13 +21,14 @@
 
 import { Dsf } from "../../engine/board/dsf.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
-import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
   type DescParse,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import { parseLeadingInt } from "../../engine/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import {
   clueList,
@@ -35,7 +36,6 @@ import {
   type GridSpace,
   partition,
 } from "../../engine/describe-runtime.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";

@@ -10,14 +10,15 @@
  * neither rewind nor re-count a death.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import { coord, fromCoord } from "../../engine/board/geometry.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   type Game,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -30,7 +31,6 @@ import {
   numpadDirection,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { newInertiaDesc } from "./generator.ts";
 import {
   hasNoSolution,

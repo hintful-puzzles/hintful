@@ -7,8 +7,8 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
-import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
+} from "../../engine/contract/desc-error.ts";
+import { ALREADY_SOLVED } from "../../engine/contract/hint-refusal.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import {

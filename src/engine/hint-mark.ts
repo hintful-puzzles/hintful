@@ -39,9 +39,9 @@
  * repainting for its own reasons can paint over a side.
  */
 
-import type { GameDrawing } from "./game.ts";
+import type { GameDrawing } from "./contract/game.ts";
+import type { Rect } from "./contract/types.ts";
 import { type RingClear, ringContentBox } from "./ring.ts";
-import type { Rect } from "./types.ts";
 
 const MARK_TOP = 1;
 const MARK_LEFT = 2;

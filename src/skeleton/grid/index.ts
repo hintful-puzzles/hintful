@@ -7,12 +7,13 @@
  * [`state.ts`](./state.ts).
  */
 
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import type { Game, SolveResult } from "../../engine/contract/game.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import type { Game, SolveResult } from "../../engine/game.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
@@ -20,7 +21,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSkeletonDesc } from "./generator.ts";
 import { type SkeletonHint, skeletonHint } from "./hint.ts";
 import {

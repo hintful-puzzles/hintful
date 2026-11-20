@@ -10,8 +10,9 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+} from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
@@ -26,7 +27,6 @@ import {
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
-import type { Point } from "../../engine/types.ts";
 import { twiddleGame } from "./index.ts";
 import {
   decodeParams,

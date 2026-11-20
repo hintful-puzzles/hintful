@@ -11,7 +11,8 @@
 import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { CELL } from "../../engine/hint-words.ts";
+import { CELL } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { statedParts } from "../../engine/stated.ts";
 import {
@@ -24,7 +25,6 @@ import {
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
 import { itDeep } from "../../engine/testing/slow.ts";
-import type { Point } from "../../engine/types.ts";
 import { STATED } from "../../generated/games/mathrax/mathrax.compiled.ts";
 import { newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";

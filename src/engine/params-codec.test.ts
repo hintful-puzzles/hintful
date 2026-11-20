@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ParamConfigItem } from "./game.ts";
+import type { ParamConfigItem } from "./contract/game.ts";
 import { dimensionParamConfig, UnreadableParams } from "./params.ts";
 import {
   choice,

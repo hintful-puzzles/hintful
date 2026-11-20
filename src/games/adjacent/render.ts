@@ -6,6 +6,7 @@
  */
 
 import { COL_BACKGROUND, COL_ERROR } from "../../engine/color/roles.ts";
+import type { GameDrawing } from "../../engine/contract/game.ts";
 import {
   COL_GRID,
   clueColor,
@@ -20,7 +21,6 @@ import {
   F_SPENT_DOWN,
   F_SPENT_RIGHT,
 } from "../../engine/edge-clue-latin/state.ts";
-import type { GameDrawing } from "../../engine/game.ts";
 
 /** Draw the bars a cell owns: only RIGHT and DOWN, so each gap is drawn once.
  * A pure error (numbers one apart where no bar says so) draws a red outline

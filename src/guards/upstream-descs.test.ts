@@ -19,8 +19,8 @@
  * contradictory.
  */
 import { expect, it } from "vitest";
-import { DESC_NO_SINGLE_ANSWER, loadVerdict } from "../engine/desc-error.ts";
-import { difficultyTiers, withTier } from "../engine/difficulty.ts";
+import { DESC_NO_SINGLE_ANSWER, loadVerdict } from "../engine/contract/desc-error.ts";
+import { difficultyTiers, withTier } from "../engine/contract/difficulty.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 
 interface Fields {

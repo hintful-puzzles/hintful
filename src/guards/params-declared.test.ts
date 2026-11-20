@@ -8,8 +8,8 @@ import {
   difficultyChoiceItem,
   difficultyTiers,
   withTier,
-} from "../engine/difficulty.ts";
-import type { Game, PresetMenu } from "../engine/game.ts";
+} from "../engine/contract/difficulty.ts";
+import type { Game, PresetMenu } from "../engine/contract/game.ts";
 import {
   describeParams,
   presetMenu,

@@ -13,9 +13,9 @@ import {
   PUZZLE_NOT_REASONABLE,
   WAY_FORWARD,
   type WayForward,
-} from "../engine/hint-refusal.ts";
-import { NOT_STARTED } from "../engine/solve-failure.ts";
-import type { HintSpan, PuzzleStaticAttributes } from "../engine/types.ts";
+} from "../engine/contract/hint-refusal.ts";
+import { NOT_STARTED } from "../engine/contract/solve-failure.ts";
+import type { HintSpan, PuzzleStaticAttributes } from "../engine/contract/types.ts";
 import { HINT_PENDING_MESSAGE, HINT_PENDING_MS, Puzzle } from "./puzzle.ts";
 import type { RemoteWorkerPuzzle } from "./worker.ts";
 

@@ -54,13 +54,13 @@
  * around the one played early make up for it.
  */
 import { describe, expect, it } from "vitest";
-import { permitsSearch } from "../engine/difficulty.ts";
-import { hasHint } from "../engine/game.ts";
+import { permitsSearch } from "../engine/contract/difficulty.ts";
+import { hasHint } from "../engine/contract/game.ts";
+import { CONTRADICTION_UNLOCALIZED } from "../engine/contract/hint-refusal.ts";
+import { NOT_STARTED } from "../engine/contract/solve-failure.ts";
 import { hintFinishes } from "../engine/hint-finishes.ts";
-import { CONTRADICTION_UNLOCALIZED } from "../engine/hint-refusal.ts";
 import { Midend } from "../engine/midend.ts";
 import { randomNew, randomUpto } from "../engine/random/index.ts";
-import { NOT_STARTED } from "../engine/solve-failure.ts";
 import { hintGesture } from "../engine/target-verb.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {

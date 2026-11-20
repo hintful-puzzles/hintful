@@ -1,4 +1,4 @@
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 
 /** The arrow on the ball, by the direction it points. */
 export const ARROW: MarkKind<number> = { name: "arrow", key: String };

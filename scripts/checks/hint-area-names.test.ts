@@ -27,8 +27,8 @@
  */
 import { writeFileSync } from "node:fs";
 import { expect, it } from "vitest";
-import type { HintStep } from "../../src/engine/game.ts";
-import type { MarkRef, Sentence } from "../../src/engine/hint-words.ts";
+import type { HintStep } from "../../src/engine/contract/game.ts";
+import type { MarkRef, Sentence } from "../../src/engine/contract/hint-words.ts";
 import { dealt } from "../../src/engine/testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "../../src/engine/testing/hint-games.ts";
 import {

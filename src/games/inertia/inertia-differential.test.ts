@@ -21,7 +21,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/inertia-c-reference.json" with { type: "json" };
 import { newInertiaDesc } from "./generator.ts";

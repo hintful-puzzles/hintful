@@ -9,6 +9,7 @@
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { FLASH, FLASH_LEAD } from "../engine/color/palette.ts";
+import type { Color } from "../engine/contract/types.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "../engine/pointer.ts";
 import {
   REGISTERED_GAME_COUNT,
@@ -18,7 +19,6 @@ import { type AnyGame, probeBoard } from "../engine/testing/input-probe.ts";
 import { RecordingDrawing, rgbLabel } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 import { winFlashAt } from "../engine/testing/win-flash.ts";
-import type { Color } from "../engine/types.ts";
 import {
   type Flash,
   NO_FLASH,

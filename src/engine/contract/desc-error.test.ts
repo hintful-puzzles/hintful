@@ -23,6 +23,7 @@
  */
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { parsed, resolveSpecifier, usesOf, where } from "../testing/syntax.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_MALFORMED,
@@ -38,15 +39,14 @@ import {
   validateDesc,
 } from "./desc-error.ts";
 import { difficultyItem, tierNames } from "./difficulty.ts";
-import { parsed, resolveSpecifier, usesOf, where } from "./testing/syntax.ts";
 
 const sources = {
-  ...import.meta.glob<string>("../games/**/*.ts", {
+  ...import.meta.glob<string>("../../games/**/*.ts", {
     query: "?raw",
     import: "default",
     eager: true,
   }),
-  ...import.meta.glob<string>("./**/*.ts", {
+  ...import.meta.glob<string>("../**/*.ts", {
     query: "?raw",
     import: "default",
     eager: true,
@@ -74,12 +74,15 @@ function ownerOf(path: string): string {
   return /^src\/games\/([^/]+)\//.exec(path)?.[1] ?? "engine";
 }
 
-const DESC_ERROR = { module: "src/engine/desc-error.ts", name: "puzzleDescError" };
+const DESC_ERROR = {
+  module: "src/engine/contract/desc-error.ts",
+  name: "puzzleDescError",
+};
 
 const calls: Call[] = [];
 let filesScanned = 0;
 for (const [key, text] of Object.entries(sources)) {
-  const path = resolveSpecifier("src/engine/x.ts", key);
+  const path = resolveSpecifier("src/engine/contract/x.ts", key);
   if (path.endsWith(".test.ts") || path === DESC_ERROR.module) continue;
   filesScanned++;
   // Bound through the import, so a renamed import is read and a local

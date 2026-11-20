@@ -15,7 +15,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { type HintStep, type HintTrackVerdict, UI_UPDATE } from "./game.ts";
+import { type HintStep, type HintTrackVerdict, UI_UPDATE } from "./contract/game.ts";
+import type { Point } from "./contract/types.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -48,7 +49,6 @@ import {
   probeBoard,
   targetPoints,
 } from "./testing/input-probe.ts";
-import type { Point } from "./types.ts";
 
 /** Presses a cycle route is followed for: longer than any verb's cycle, so a
  * result the cycle passes through is met before the presses run out. */

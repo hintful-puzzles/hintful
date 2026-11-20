@@ -8,9 +8,9 @@
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";
-import { drawRejected } from "../../engine/deal-census.ts";
+import { drawRejected } from "../../engine/contract/deal-census.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { Reach } from "./solver.ts";
 import {
   type BallsortParams,

@@ -21,20 +21,24 @@ import {
   R,
   U,
 } from "../../engine/board/square-edges.ts";
-import { PLACE } from "../../engine/describe-runtime.ts";
 import type {
   HintResult,
   HintStep,
   HintTrackVerdict,
   MoveVerdict,
   UiUpdate,
-} from "../../engine/game.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
+} from "../../engine/contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Sentence,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import { PLACE } from "../../engine/describe-runtime.ts";
 import { type CellMarks, ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
 import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import type { TargetVerbs } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import * as net from "../../generated/games/net/net.compiled.ts";
 import { Facts, type Rung, record, type Side, type Step, survey } from "./explain.ts";
 import { SIDE, type SideMark } from "./hint-marks.ts";

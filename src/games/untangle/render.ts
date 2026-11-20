@@ -23,11 +23,16 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
+import type {
+  Color,
+  DrawTextOptions,
+  Point,
+  Rect,
+} from "../../engine/contract/types.ts";
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
 import { textBox } from "../../engine/ring.ts";
-import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import {
   type Flash,
   sweepRanks,

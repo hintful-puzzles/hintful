@@ -12,9 +12,10 @@
  * square, reject empty rows/columns, derive the edge numbers, and accept only
  * when the puzzle is solvable at the target difficulty but not one below.
  */
+
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { matching } from "../../engine/latin.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { tentsSolve } from "./solver.ts";
 import {
   BLANK,

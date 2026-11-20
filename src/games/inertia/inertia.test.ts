@@ -11,12 +11,12 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
-import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
+} from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { ALREADY_SOLVED } from "../../engine/contract/hint-refusal.ts";
+import { NO_SOLUTION_FROM_HERE } from "../../engine/contract/solve-failure.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
-import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";

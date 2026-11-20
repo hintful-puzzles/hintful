@@ -19,7 +19,7 @@
  * it is gone — see `engine/testing/differential.ts`.
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import cReference from "./__fixtures__/salad-c-reference.json" with { type: "json" };
 import { saladGame } from "./index.ts";
 import { saladSolve } from "./solver.ts";

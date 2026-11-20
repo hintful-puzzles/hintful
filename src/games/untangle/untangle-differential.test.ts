@@ -18,7 +18,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { descValue } from "../../engine/desc-error.ts";
+import { descValue } from "../../engine/contract/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectDescMatches } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/untangle-c-reference.json" with { type: "json" };

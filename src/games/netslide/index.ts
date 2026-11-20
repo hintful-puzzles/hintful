@@ -11,9 +11,11 @@
  * finished grid from the tiles (`reconstruct.ts`).
  */
 
-import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { fromCoord } from "../../engine/board/geometry.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
+import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
+import { SOLUTION_UNKNOWN } from "../../engine/contract/solve-failure.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
   atof,
@@ -24,13 +26,11 @@ import {
 } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { wrappingRulesetItem } from "../../engine/ruleset.ts";
-import { SOLUTION_UNKNOWN } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
   arrowFor,

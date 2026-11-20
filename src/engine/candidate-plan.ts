@@ -37,9 +37,19 @@ import {
   regionDuplicateMarks,
   regionReach,
 } from "./candidate-hint.ts";
+import type { HintStep } from "./contract/game.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  NOTE,
+  phrase,
+  type Sentence,
+  so,
+} from "./contract/hint-words.ts";
+import type { Point } from "./contract/types.ts";
 import { describedSpace, PLACE, STRIKE } from "./describe-runtime.ts";
 import { FactGraph } from "./fact-graph.ts";
-import type { HintStep } from "./game.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import {
   type Conclusions,
@@ -49,15 +59,6 @@ import {
   type Premise,
   populateText,
 } from "./hint-text.ts";
-import {
-  CELL,
-  mark,
-  type Narration,
-  NOTE,
-  phrase,
-  type Sentence,
-  so,
-} from "./hint-words.ts";
 import {
   admits,
   type Caps,
@@ -78,7 +79,6 @@ import {
 } from "./latin-hint.ts";
 import type { Judging, TracedFiring } from "./move-judge.ts";
 import { stepBudget } from "./step-budget.ts";
-import type { Point } from "./types.ts";
 
 /** Why a placement's row/column cull strikes what it strikes: the value just
  * placed at `(px, py)`. Every candidate game's reason union carries it. */

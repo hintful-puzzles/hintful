@@ -28,12 +28,17 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
+import type {
+  Color,
+  DrawTextOptions,
+  Point,
+  Rect,
+} from "../../engine/contract/types.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
 import { type RingClear, textBox } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
-import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { PIECE, SPAN } from "./hint-marks.ts";

@@ -10,7 +10,6 @@
  * were no longer standing on.
  */
 
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -18,7 +17,9 @@ import {
   type DescParse,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { AREA_TOO_LARGE, unreadParams } from "../../engine/params.ts";
@@ -29,7 +30,6 @@ import {
   randomStateDecode,
   randomStateEncode,
 } from "../../engine/random/index.ts";
-import type { Point } from "../../engine/types.ts";
 
 // --- grid value encoding (upstream `signed char *grid`) ----------------
 // 0..8 : open, that many neighboring mines

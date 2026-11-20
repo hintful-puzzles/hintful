@@ -8,8 +8,8 @@
  * contract.
  */
 
-import type { WayForward } from "../engine/hint-refusal.ts";
-import type { MarkRole } from "../engine/hint-words.ts";
+import type { WayForward } from "../engine/contract/hint-refusal.ts";
+import type { MarkRole } from "../engine/contract/hint-words.ts";
 import type {
   ChangeNotification,
   CheckVerdict,
@@ -26,7 +26,7 @@ import type {
   PuzzleStaticAttributes,
   ReferenceModel,
   Size,
-} from "../engine/types.ts";
+} from "../engine/contract/types.ts";
 import type { ReferenceMarks } from "./mark-flash.ts";
 
 /** Each reference's marks on a canvas of `width` by `height` pixels, and the

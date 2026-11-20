@@ -3,9 +3,8 @@
  * hint's verdict, without showing a hint.
  */
 import { describe, expect, it, vi } from "vitest";
-import { DESC_NO_SOLUTION } from "./desc-error.ts";
-import { type FakeMove, type FakeState, fakeGame } from "./fake-game.ts";
-import { DRAFT_HINT, type HintResult } from "./game.ts";
+import { DESC_NO_SOLUTION } from "./contract/desc-error.ts";
+import { DRAFT_HINT, type HintResult } from "./contract/game.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
@@ -13,8 +12,9 @@ import {
   type MarkedDeadEnd,
   markedDeadEnd,
   SEARCH_OUT_OF_REACH,
-} from "./hint-refusal.ts";
-import { CELL, mark, phrase, unshaped } from "./hint-words.ts";
+} from "./contract/hint-refusal.ts";
+import { CELL, mark, phrase, unshaped } from "./contract/hint-words.ts";
+import { type FakeMove, type FakeState, fakeGame } from "./fake-game.ts";
 import { Midend } from "./midend.ts";
 import { decodeSave } from "./save.ts";
 import { observeMidend } from "./testing/drive-midend.ts";

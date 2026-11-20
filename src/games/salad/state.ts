@@ -21,18 +21,18 @@
 
 import { gridText } from "../../engine/board/grid-text.ts";
 import type { NoteEncoding } from "../../engine/candidate-hint.ts";
-import { digitValue } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   type DescParse,
   descBadCharacter,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import { digitValue } from "../../engine/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
-import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, letters, num, paramsCodec, size } from "../../engine/params-codec.ts";

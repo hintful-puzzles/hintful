@@ -1,5 +1,5 @@
-import { loadDesc, loadVerdict, readBoard } from "./desc-error.ts";
-import type { Game } from "./game.ts";
+import { loadDesc, loadVerdict, readBoard } from "./contract/desc-error.ts";
+import type { Game } from "./contract/game.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 
 /** What the midend records of a run beside its states. */

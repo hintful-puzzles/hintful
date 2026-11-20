@@ -21,9 +21,21 @@
  * cycle (docs/hints-search.md § "Recompute-stable plans").
  */
 
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
-import { mark, phrase, type Relation, type Sentence } from "../../engine/hint-words.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
+import {
+  type MarkedDeadEnd,
+  markedDeadEnd,
+} from "../../engine/contract/hint-refusal.ts";
+import {
+  mark,
+  phrase,
+  type Relation,
+  type Sentence,
+} from "../../engine/contract/hint-words.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
 import { searchRefusal } from "../../engine/search-outcome.ts";
 import { voice } from "../../generated/games/pegs/pegs.compiled.ts";

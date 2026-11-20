@@ -6,15 +6,15 @@
  * the player has not already drawn); the words are the description's.
  */
 
-import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import type {
   HintResult,
   HintStep,
   HintTrackVerdict,
   MoveVerdict,
-} from "../../engine/game.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
-import type { Point } from "../../engine/types.ts";
+} from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import {
   SAYS_KINDS,
   STATED,

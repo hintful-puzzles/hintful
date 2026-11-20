@@ -30,7 +30,7 @@
  * Dev/test-only; never imported by production code.
  */
 
-import { difficultyChoiceItem } from "../difficulty.ts";
+import { difficultyChoiceItem } from "../contract/difficulty.ts";
 import { presetMenu, type TitledPresetMenu } from "../param-label.ts";
 import type { AnyGame } from "./enrollment.ts";
 

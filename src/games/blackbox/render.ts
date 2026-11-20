@@ -25,18 +25,24 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import type {
+  Color,
+  DrawTextOptions,
+  Point,
+  Rect,
+  Size,
+} from "../../engine/contract/types.ts";
 import {
   drawRectCorners,
   drawRectOutline,
   drawThickRectOutline,
   glyphFont,
 } from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, drawRuledOutCross, TWO_SHAPES } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
-import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { BUTTON, LASER } from "./hint-marks.ts";
 import {

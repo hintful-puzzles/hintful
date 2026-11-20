@@ -21,7 +21,6 @@ import {
   searchTierSegment,
 } from "../../engine/answer-search.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
-import { digitValue, isDigit } from "../../engine/decimal.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
@@ -30,13 +29,14 @@ import {
   type DescParse,
   descBadCharacter,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import { digitValue, isDigit } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
-import type { Point } from "../../engine/types.ts";
 import * as crossing from "../../generated/games/crossing/crossing.compiled.ts";
 
 // --- params ----------------------------------------------------------------

@@ -33,13 +33,18 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import type {
+  Color,
+  DrawTextOptions,
+  Point,
+  Rect,
+} from "../../engine/contract/types.ts";
 import { drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { textBox } from "../../engine/ring.ts";
-import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
 import type { SignpostHint } from "./hint.ts";
 import { ARROW } from "./hint-marks.ts";

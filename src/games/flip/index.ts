@@ -4,8 +4,11 @@
  * ported idiomatically rather than line for line.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
-import { type DescParse, descValue } from "../../engine/desc-error.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
@@ -20,15 +23,12 @@ import { AREA_TOO_LARGE, transposeDimensions } from "../../engine/params.ts";
 import { dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { RULESET_KW, rulesetItem } from "../../engine/ruleset.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import type * as flip from "../../generated/games/flip/flip.compiled.ts";
 import { genCrossesMatrix, genRandomMatrix } from "./generator.ts";
 import { FLIP_RUNGS, type FlipRung, hint, hintKeepTrack } from "./hint.ts";

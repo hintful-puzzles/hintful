@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_ERROR, COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import {

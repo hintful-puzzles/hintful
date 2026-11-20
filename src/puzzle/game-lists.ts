@@ -13,7 +13,7 @@
  * may import it.
  */
 
-import type { PuzzleData } from "../engine/catalog.ts";
+import type { PuzzleData } from "../engine/contract/catalog.ts";
 
 type Catalog = Readonly<Record<string, PuzzleData>>;
 

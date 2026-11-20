@@ -22,10 +22,8 @@ import {
   regionDuplicateMarks,
   regionReach,
 } from "./candidate-hint.ts";
-import type { HintStep } from "./game.ts";
-import { click, markAllPress, key as press } from "./hint-gesture.ts";
-import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
-import { cleanObviousText, joinNums, populateText } from "./hint-text.ts";
+import type { HintStep } from "./contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "./contract/hint-refusal.ts";
 import {
   CELL,
   mark,
@@ -35,7 +33,9 @@ import {
   type Sentence,
   so,
   unshaped,
-} from "./hint-words.ts";
+} from "./contract/hint-words.ts";
+import { click, markAllPress, key as press } from "./hint-gesture.ts";
+import { cleanObviousText, joinNums, populateText } from "./hint-text.ts";
 import { rowColRegions } from "./latin-hint.ts";
 import { PENCIL_MODE_BUTTON } from "./pointer.ts";
 

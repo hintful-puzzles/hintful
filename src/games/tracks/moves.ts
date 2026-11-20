@@ -4,8 +4,9 @@
  * (which reflects an in-progress drag) can import them without a cycle
  * (docs/rendering.md § "The tile cache and the diff key").
  */
-import { assertNever, rejectMove } from "../../engine/assert-never.ts";
+
 import { dirX, dirY } from "../../engine/board/square-edges.ts";
+import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
 import {
   type Board,
   checkCompletion,

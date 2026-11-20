@@ -9,8 +9,8 @@ import {
   DESC_TOO_LONG,
   puzzleDescError,
   validateDesc,
-} from "../../engine/desc-error.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+} from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import {

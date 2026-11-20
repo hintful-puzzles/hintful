@@ -9,13 +9,13 @@
 
 import { describe, expect, it } from "vitest";
 import { mapGame } from "../games/map/index.ts";
+import { DRAFT_HINT, type Game } from "./contract/game.ts";
+import { SOLUTION_UNKNOWN } from "./contract/solve-failure.ts";
+import type { ConfigValues } from "./contract/types.ts";
 import { fakeGame } from "./fake-game.ts";
-import { DRAFT_HINT, type Game } from "./game.ts";
 import { Midend } from "./midend.ts";
 import { SHOW_TIMER_PREF } from "./midend-prefs.ts";
-import { SOLUTION_UNKNOWN } from "./solve-failure.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
-import type { ConfigValues } from "./types.ts";
 
 /** The game's own preferences: every game also carries the engine's timer
  * preference, which `midend.test.ts` covers. */

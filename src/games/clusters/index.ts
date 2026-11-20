@@ -13,13 +13,14 @@
  */
 
 import { type Answer, solveFromAnswer } from "../../engine/answer-search.ts";
-import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   gridCursorMove,
@@ -45,7 +46,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
 import { type ClustersHint, clustersHint } from "./hint.ts";
 import {
@@ -329,7 +329,7 @@ function hintTargets(state: ClustersState, move: ClustersMove): Point[] {
   return move.cells.map(({ index }) => ({ x: index % w, y: (index / w) | 0 }));
 }
 
-/** Clusters' difficulty contract (`engine/difficulty.ts`). Below Unreasonable
+/** Clusters' difficulty contract (`engine/contract/difficulty.ts`). Below Unreasonable
  * the tiers are the compiled ladder's (Easy refutes one color of one square,
  * Normal adds the two-tile counts); Unreasonable is the search's one answer. */
 const difficulty = TIERS.contract<ClustersParams, ClustersState>({

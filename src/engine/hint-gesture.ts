@@ -15,8 +15,8 @@
  * only a key the game's keypad offers, or the app's mark-all control.
  */
 
+import type { Point } from "./contract/types.ts";
 import { MARK_ALL_BUTTON } from "./pointer.ts";
-import type { Point } from "./types.ts";
 
 /** A pointer button, by the verb slot it applies. */
 export type GestureButton = "primary" | "secondary";

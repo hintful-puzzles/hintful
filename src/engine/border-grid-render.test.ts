@@ -36,7 +36,7 @@ import {
   mistakeEdgeBits,
   tileWidth,
 } from "./border-grid-render.ts";
-import { mark, phrase, stepMarks } from "./hint-words.ts";
+import { mark, phrase, stepMarks } from "./contract/hint-words.ts";
 import { newCursor } from "./pointer.ts";
 import {
   enrolledIn,

@@ -10,11 +10,10 @@
  * forward slash `/`, `-1` for a backslash `\`, `0` for blank.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import { Dsf } from "../../engine/board/dsf.ts";
 import { findLoops } from "../../engine/board/findloop.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
-import { digitValue } from "../../engine/decimal.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -22,15 +21,16 @@ import {
   type DescParse,
   descBadCharacter,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { difficultyItem } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { digitValue } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";
 
 // --- difficulty (upstream's DIFFLIST: Easy, Hard; named by the description) ---

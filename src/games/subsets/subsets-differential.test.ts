@@ -17,7 +17,7 @@
  * too. These fixtures bind on the live default path, not behind a flag.
  */
 import { expect } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/subsets-c-reference.json" with { type: "json" };
 import { newSubsetsDesc } from "./generator.ts";

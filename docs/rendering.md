@@ -407,7 +407,7 @@ so the live gesture is unharmed.
   Ask "can a state change make what I am holding false?", not "is this a
   drag?". It is safe when what is remembered is fixed geometry, or when the
   fire derives it again (`changedState`'s doc in
-  [`engine/game.ts`](../src/engine/game.ts)).
+  [`engine/contract/game.ts`](../src/engine/contract/game.ts)).
 
 Exemplars: [`slide/index.ts`](../src/games/slide/index.ts) and
 [`pegs/index.ts`](../src/games/pegs/index.ts) (`changedState`), with the

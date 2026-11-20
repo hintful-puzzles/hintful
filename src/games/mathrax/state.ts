@@ -17,14 +17,14 @@
  */
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
-import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescParse,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { type ClueList, clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";

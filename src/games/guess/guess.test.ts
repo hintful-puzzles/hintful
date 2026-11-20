@@ -5,7 +5,7 @@
  * answer-row notation and the hint are `guess-hint.test.ts`'s.
  */
 import { describe, expect, it } from "vitest";
-import { UI_UPDATE } from "../../engine/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import {
   CURSOR_SELECT,

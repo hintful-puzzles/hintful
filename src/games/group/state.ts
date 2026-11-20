@@ -22,17 +22,21 @@
 
 import { gridText } from "../../engine/board/grid-text.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
+import {
+  DESC_TOO_LONG,
+  type DescParse,
+  descValue,
+} from "../../engine/contract/desc-error.ts";
+import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { PresetBoards } from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { latinSpace } from "../../engine/describe-runtime.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
-import type { PresetBoards } from "../../engine/game.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import * as group from "../../generated/games/group/group.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------

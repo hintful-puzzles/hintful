@@ -37,6 +37,7 @@
 
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
+import type { Point } from "../engine/contract/types.ts";
 import {
   LEFT_BUTTON,
   LEFT_RELEASE,
@@ -45,7 +46,6 @@ import {
 } from "../engine/pointer.ts";
 import { type AnyGame, builtGames, enrolledIn } from "../engine/testing/enrollment.ts";
 import { fingerprint, probeBoard, probePoints } from "../engine/testing/input-probe.ts";
-import type { Point } from "../engine/types.ts";
 
 /** The fields that make a game a member — the same derivation
  * `note-taking-cell.test.ts` makes, for the same reason. */

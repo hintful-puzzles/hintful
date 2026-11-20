@@ -16,6 +16,7 @@
 import { describe, expect, it } from "vitest";
 import { pointAtEdge, squareEdges } from "../../engine/board/square-edges.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { Midend } from "../../engine/index.ts";
 import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -36,7 +37,6 @@ import {
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import type { Point } from "../../engine/types.ts";
 import { type Flash, WIN_NONE } from "../../engine/win-wave.ts";
 import { countAnswers } from "./count-answers.ts";
 import { pathGame } from "./index.ts";

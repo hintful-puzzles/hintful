@@ -17,8 +17,9 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+} from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { RetryLimitExceeded } from "../../engine/contract/retry-limit.ts";
 import { Midend } from "../../engine/midend.ts";
 import { paramsError, UnreadableParams } from "../../engine/params.ts";
 import {
@@ -36,7 +37,6 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
-import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,

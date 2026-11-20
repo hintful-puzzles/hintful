@@ -7,13 +7,13 @@
  * (`add-numgame-ts-port` design D5).
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
-import { type DescParse, descValue } from "../../engine/desc-error.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
+import { difficultyItem, tierNames } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
-import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { numberItem } from "../../engine/params.ts";
 import { choice, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

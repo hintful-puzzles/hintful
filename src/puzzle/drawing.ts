@@ -1,13 +1,19 @@
+import type { GameDrawing, RingOptions } from "../engine/contract/game.ts";
+import type {
+  DrawTextOptions,
+  FontInfo,
+  Point,
+  Rect,
+  Size,
+} from "../engine/contract/types.ts";
 import {
   checkPolygon,
   hasFill,
   paintsNothing,
   paletteInk,
 } from "../engine/drawing-rules.ts";
-import type { GameDrawing, RingOptions } from "../engine/game.ts";
 import { HATCH_OPACITY, hatchBands } from "../engine/hatch.ts";
 import { type RingClear, ringShape } from "../engine/ring.ts";
-import type { DrawTextOptions, FontInfo, Point, Rect, Size } from "../engine/types.ts";
 
 const defaultFontInfo: FontInfo = {
   fontFamily: "sans-serif",

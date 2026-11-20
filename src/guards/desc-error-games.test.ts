@@ -6,7 +6,7 @@
  * worker rather than a sentence.
  */
 import { describe, expect, it } from "vitest";
-import { loadVerdict, validateDesc } from "../engine/desc-error.ts";
+import { loadVerdict, validateDesc } from "../engine/contract/desc-error.ts";
 import { Midend } from "../engine/midend.ts";
 import { randomNew } from "../engine/random/index.ts";
 import { dealt } from "../engine/testing/dealt.ts";

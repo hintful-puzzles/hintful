@@ -9,7 +9,6 @@
  * Check & Save, and the config/pref forms.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
   applyNoteMove,
@@ -30,15 +29,11 @@ import {
   strikesOf,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
-import { PLACE } from "../../engine/describe-runtime.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
-  clearEntries,
-  type EntryMoves,
-  entryMistakes,
-  gridCell,
-  revealEntry,
-} from "../../engine/entry-mistakes.ts";
+  type DifficultyContract,
+  difficultyItem,
+} from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type HintResult,
@@ -47,7 +42,22 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
+import { SQUARE_GRID } from "../../engine/contract/sections.ts";
+import {
+  MULTIPLE_SOLUTIONS,
+  NO_SOLUTION,
+} from "../../engine/contract/solve-failure.ts";
+import type { KeyLabel, Point, Size } from "../../engine/contract/types.ts";
+import { PLACE } from "../../engine/describe-runtime.ts";
+import {
+  clearEntries,
+  type EntryMoves,
+  entryMistakes,
+  gridCell,
+  revealEntry,
+} from "../../engine/entry-mistakes.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   type LatinVocab,
@@ -55,7 +65,6 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import {
@@ -93,10 +102,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { SQUARE_GRID } from "../../engine/sections.ts";
-import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { statedParts, statedSentence } from "../../engine/stated.ts";
-import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import * as group from "../../generated/games/group/group.compiled.ts";
 import { newGameDesc } from "./generator.ts";
 import {
@@ -797,7 +803,7 @@ function refreshHintStep(
   );
 }
 
-/** Group's difficulty contract (`engine/difficulty.ts`). `solveGroup` follows
+/** Group's difficulty contract (`engine/contract/difficulty.ts`). `solveGroup` follows
  * the shared latin-family return convention — the difficulty reached, or one of
  * `latin.ts`'s sentinels — so `latinVerdict` reads it. */
 const difficulty: DifficultyContract<GroupParams> = {

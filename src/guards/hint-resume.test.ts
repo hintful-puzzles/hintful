@@ -22,9 +22,12 @@
  * correct hint must never give up before solved.
  */
 import { describe, expect, it } from "vitest";
-import { permitsSearch } from "../engine/difficulty.ts";
-import type { HintStep } from "../engine/game.ts";
-import { DEDUCTION_EXHAUSTED, SEARCH_OUT_OF_REACH } from "../engine/hint-refusal.ts";
+import { permitsSearch } from "../engine/contract/difficulty.ts";
+import type { HintStep } from "../engine/contract/game.ts";
+import {
+  DEDUCTION_EXHAUSTED,
+  SEARCH_OUT_OF_REACH,
+} from "../engine/contract/hint-refusal.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {
   type AnyGame,

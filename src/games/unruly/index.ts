@@ -8,10 +8,11 @@
  * right-click cycles the other way; number keys place directly.
  */
 
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import type { Game, UiUpdate } from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { type CellHint, describedHint } from "../../engine/described-hint.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, UiUpdate } from "../../engine/game.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { PAIR_NAMES } from "../../engine/piece.ts";
 import { digitOf, newCursor, stripModifiers } from "../../engine/pointer.ts";
@@ -23,7 +24,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   type SaysById,
   STATED,
@@ -166,7 +166,7 @@ function clearMistakes(
   return mistakes.map(({ x, y }) => ({ type: "place", x, y, value: EMPTY }));
 }
 
-/** Unruly's difficulty contract (`engine/difficulty.ts`). `solveGame` returns
+/** Unruly's difficulty contract (`engine/contract/difficulty.ts`). `solveGame` returns
  * the highest rung that fired, not a verdict, so solvability is read the way
  * the generator reads it, through the shared `solvableAt`. */
 const difficulty: DifficultyContract<UnrulyParams> = {

@@ -7,9 +7,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { FREE_NAMES } from "../../engine/color/colors.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
+import { NO_SOLUTION_FROM_HERE } from "../../engine/contract/solve-failure.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { hasNoSolution, hint, landingSlots, movingBalls } from "./hint.ts";
 import { ballsortGame } from "./index.ts";

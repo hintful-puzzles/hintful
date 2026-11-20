@@ -32,12 +32,15 @@
  *   began it.
  */
 
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import {
+  DEDUCTION_EXHAUSTED,
+  type HintRefusal,
+} from "../../engine/contract/hint-refusal.ts";
+import { type Sentence, StepMarks } from "../../engine/contract/hint-words.ts";
+import { NARRATION_LIMIT } from "../../engine/contract/wording-rules.ts";
 import { type FrontierCandidate, HintFrontier } from "../../engine/hint-frontier.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import { DEDUCTION_EXHAUSTED, type HintRefusal } from "../../engine/hint-refusal.ts";
-import { type Sentence, StepMarks } from "../../engine/hint-words.ts";
-import { NARRATION_LIMIT } from "../../engine/wording-rules.ts";
 import * as ascent from "../../generated/games/ascent/ascent.compiled.ts";
 import { linesAt, linesCost, pointersAt, type RuledOut } from "./hint-edges.ts";
 import { PATH, SQUARE } from "./hint-marks.ts";

@@ -15,9 +15,9 @@
  * Dev/test-only; never imported by production code.
  */
 
-import type { Game, HintStep } from "../game.ts";
+import type { Game, HintStep } from "../contract/game.ts";
+import type { Color, Point, Size } from "../contract/types.ts";
 import { Midend } from "../midend.ts";
-import type { Color, Point, Size } from "../types.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";
 
 /** A neutral light-gray default background, standing in for the

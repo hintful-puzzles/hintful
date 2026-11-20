@@ -10,8 +10,8 @@
 import { describe, expect, it } from "vitest";
 import { EDGE } from "../../engine/border-grid-hint.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import type { HintStep } from "../../engine/game.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";

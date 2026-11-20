@@ -8,9 +8,15 @@
  * dictionary; the board and the score are [`state.ts`](./state.ts).
  */
 
-import { rejectMove } from "../../engine/assert-never.ts";
 import { enterValue, restCursor, rubOut } from "../../engine/code-rows.ts";
-import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { rejectMove } from "../../engine/contract/assert-never.ts";
+import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
+import type {
+  KeyLabel,
+  KeyStatus,
+  Point,
+  ReferenceModel,
+} from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { clearKey, letterKeyboard } from "../../engine/key-labels.ts";
@@ -25,7 +31,6 @@ import {
   newCursor,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { KeyLabel, KeyStatus, Point, ReferenceModel } from "../../engine/types.ts";
 import { answerWords } from "../../engine/word-list/index.ts";
 import {
   dictionaryWords,

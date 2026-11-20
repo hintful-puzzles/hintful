@@ -11,8 +11,8 @@
 
 import { dealUnreasonable } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { deducedBricks, deductionFinishes, searchAnswers } from "./solver.ts";
 import {
   applyBounds,
@@ -155,7 +155,7 @@ export function newBricksDesc(p: BricksParams, rs: RandomState): { desc: string 
   // `paramsError` refuses this combination, so reaching it means a caller
   // bypassed it. Fail immediately rather than let the gate reject every
   // candidate until the retry bound: a synchronous generator that cannot
-  // succeed owns its thread outright (see `engine/retry-limit.ts`).
+  // succeed owns its thread outright (see `engine/contract/retry-limit.ts`).
   if (p.diff > MAX_GENERABLE_DIFF) {
     throw new Error(
       `bricks: no board requires difficulty ${p.diff}; the generable maximum is ${MAX_GENERABLE_DIFF}`,

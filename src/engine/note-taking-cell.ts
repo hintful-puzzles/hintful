@@ -37,8 +37,9 @@
  */
 
 import { COL_FLASH, COL_FLASH_LEAD } from "./color/roles.ts";
+import { type GameDrawing, UI_UPDATE, type UiUpdate } from "./contract/game.ts";
+import type { DrawTextOptions, Point, Rect } from "./contract/types.ts";
 import { glyphFont } from "./draw.ts";
-import { type GameDrawing, UI_UPDATE, type UiUpdate } from "./game.ts";
 import { click, key, type PointerAction } from "./hint-gesture.ts";
 import {
   CURSOR_SELECT,
@@ -50,7 +51,6 @@ import {
   RIGHT_RELEASE,
 } from "./pointer.ts";
 import { textBox } from "./ring.ts";
-import type { DrawTextOptions, Point, Rect } from "./types.ts";
 import { WIN_LEAD, WIN_NONE, type WinTone } from "./win-wave.ts";
 
 /**

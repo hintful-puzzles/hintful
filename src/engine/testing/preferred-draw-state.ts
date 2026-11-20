@@ -8,7 +8,7 @@
  * size calls `game.newDrawState(state, tileSize)` itself.
  */
 
-import type { Game } from "../game.ts";
+import type { Game } from "../contract/game.ts";
 
 export function preferredDrawState<Params, State, Move, Ui, DrawState>(
   game: Game<Params, State, Move, Ui, DrawState>,

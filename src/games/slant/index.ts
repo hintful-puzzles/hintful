@@ -25,11 +25,13 @@ import {
   RIGHT,
   squareEdges,
 } from "../../engine/board/square-edges.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -46,7 +48,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   beginSweep,
   dragMarkVerbs,
@@ -57,7 +58,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
   SLANT_RUNGS,

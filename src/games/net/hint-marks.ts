@@ -3,7 +3,7 @@
  * note step places and a step's fit cites.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 import type { SideNote } from "./state.ts";
 
 /** A side, named as a note move names it (from the tile left of it, `R`, or

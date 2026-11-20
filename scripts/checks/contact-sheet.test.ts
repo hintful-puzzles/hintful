@@ -22,6 +22,7 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { it } from "vitest";
+import type { Color } from "../../src/engine/contract/types.ts";
 import { hasFill } from "../../src/engine/drawing-rules.ts";
 import {
   type DrawOp,
@@ -29,7 +30,6 @@ import {
   rgbLabel,
 } from "../../src/engine/testing/recording-drawing.ts";
 import { toSvg } from "../../src/engine/testing/svg-drawing.ts";
-import type { Color } from "../../src/engine/types.ts";
 import { puzzleIds } from "../../src/puzzle/catalog.ts";
 import {
   sampleFrames,

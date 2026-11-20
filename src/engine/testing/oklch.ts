@@ -24,7 +24,7 @@ import {
   OKLCH as OKLCHspace,
   sRGB as sRGBspace,
 } from "colorjs.io/fn";
-import type { Color } from "../types.ts";
+import type { Color } from "../contract/types.ts";
 
 ColorSpace.register(OKLCHspace);
 ColorSpace.register(sRGBspace);

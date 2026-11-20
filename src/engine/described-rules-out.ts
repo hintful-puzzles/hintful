@@ -13,12 +13,13 @@
  * brings nothing, since a firing on a broken board proves nothing a player
  * could read off.
  */
+
+import type { RulesOut } from "./contract/game.ts";
+import type { Point } from "./contract/types.ts";
 import { PLACE } from "./describe-runtime.ts";
 import { premiseOf } from "./described-hint.ts";
-import type { RulesOut } from "./game.ts";
 import type { CellMarks, LadderEntry } from "./ladder-runtime.ts";
 import { stepBudget } from "./step-budget.ts";
-import type { Point } from "./types.ts";
 
 /** The compiled module's `RULES_OUT`. */
 export interface DescribedRulesOut {

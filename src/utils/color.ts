@@ -6,7 +6,7 @@ import {
   parse,
   sRGB as sRGBspace,
 } from "colorjs.io/fn";
-import type { Color } from "../engine/types.ts";
+import type { Color } from "../engine/contract/types.ts";
 import { clamp } from "./math.ts";
 
 // Register color spaces for parse() function.

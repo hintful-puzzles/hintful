@@ -32,11 +32,12 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../color/roles.ts";
+import type { GameDrawing, HintStep } from "../contract/game.ts";
+import { stepMarks } from "../contract/hint-words.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../contract/types.ts";
 import { drawStrike, glyphFont } from "../draw.ts";
-import type { GameDrawing, HintStep } from "../game.ts";
 import { hatchPeriod } from "../hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell, ringTextBox } from "../hint-mark.ts";
-import { stepMarks } from "../hint-words.ts";
 import {
   type CellHighlight,
   cellHighlight,
@@ -53,7 +54,6 @@ import {
 } from "../pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../ring.ts";
 import { TileCache } from "../tile-cache.ts";
-import type { Color, DrawTextOptions, Point, Rect, Size } from "../types.ts";
 import { type Flash, sweepStep } from "../win-wave.ts";
 import {
   displayChar,

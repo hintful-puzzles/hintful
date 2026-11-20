@@ -4,8 +4,8 @@
  * (`range.description.yaml`), spoken by `hint.ts`.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 
 /** A clue's number, an element apart from its square, whose outline is the line
  * of sight's: a number lies inside the squares it sees. */

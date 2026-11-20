@@ -17,7 +17,7 @@
  * contract (every generated board needs exactly its tier).
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import cReference from "./__fixtures__/magnets-c-reference.json" with { type: "json" };
 import { magnetsGame } from "./index.ts";
 import { solveMagnets } from "./solver.ts";

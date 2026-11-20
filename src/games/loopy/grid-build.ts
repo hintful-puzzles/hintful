@@ -36,8 +36,8 @@ import {
   gridNew,
   gridNewDesc,
 } from "../../engine/board/grid/index.ts";
+import { RetryLimitExceeded } from "../../engine/contract/retry-limit.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { RetryLimitExceeded } from "../../engine/retry-limit.ts";
 
 /** A freshly described grid: the description that produced it (`null` for the
  * tilings that take none) alongside the built grid. */

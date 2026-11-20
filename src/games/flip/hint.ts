@@ -9,13 +9,17 @@
  * fewest presses the board takes. The last press is said as what it is.
  */
 
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
 import {
   NO_MOVE_WORTH_MAKING,
   PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
-import { CELL } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+} from "../../engine/contract/hint-refusal.ts";
+import { CELL } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { voice } from "../../generated/games/flip/flip.compiled.ts";
 import { shortestAnswer } from "./solver.ts";
 import { type FlipMove, type FlipState, rulesOf } from "./state.ts";

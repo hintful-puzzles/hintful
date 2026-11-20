@@ -14,9 +14,9 @@
  */
 
 import { searchTiers } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import { DOWN, RIGHT, squareEdges } from "../../engine/board/square-edges.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
@@ -24,10 +24,10 @@ import {
   DESC_UNPAIRED,
   type DescParse,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import {
   CROSS,
   type EdgeChange,

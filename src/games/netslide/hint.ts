@@ -23,15 +23,19 @@
  */
 
 import { D, dirCount, L, R, U } from "../../engine/board/square-edges.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
+import { SEARCH_OUT_OF_REACH } from "../../engine/contract/hint-refusal.ts";
+import { SOLUTION_UNKNOWN } from "../../engine/contract/solve-failure.ts";
 import {
   planSlides,
   type SlideMove,
   slidePieces,
   toroidalDist,
 } from "../../engine/slide-planner.ts";
-import { SOLUTION_UNKNOWN } from "../../engine/solve-failure.ts";
 import { voice } from "../../generated/games/netslide/netslide.compiled.ts";
 import { TILE } from "./kinds.ts";
 import { reconstructSolution } from "./reconstruct.ts";

@@ -1,5 +1,5 @@
-import type { HintMarkLegend } from "../../engine/game.ts";
-import { type MarkKind, whole } from "../../engine/hint-words.ts";
+import type { HintMarkLegend } from "../../engine/contract/game.ts";
+import { type MarkKind, whole } from "../../engine/contract/hint-words.ts";
 
 /** A ball, by the grid index of its slot. */
 export const BALL: MarkKind<number> = { name: "ball", key: String };

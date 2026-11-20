@@ -18,8 +18,8 @@
  * All are sized by the tile, so they read alike at every board size.
  */
 
-import type { GameDrawing } from "./game.ts";
-import type { Point } from "./types.ts";
+import type { GameDrawing } from "./contract/game.ts";
+import type { Point } from "./contract/types.ts";
 
 /**
  * A filled arrowhead with its tip at `tip`, pointing along the unit vector

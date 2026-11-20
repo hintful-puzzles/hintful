@@ -6,7 +6,7 @@
  * compiled module's clauses, as the engine renders it.
  */
 import { describe, expect, it } from "vitest";
-import { CELL } from "../../engine/hint-words.ts";
+import { CELL } from "../../engine/contract/hint-words.ts";
 import { statedSentence } from "../../engine/stated.ts";
 import { STATED } from "../../generated/games/dominosa/dominosa.compiled.ts";
 import { SPOT } from "./kinds.ts";

@@ -5,7 +5,7 @@ import type {
   EncodedParams,
   GameStatus,
   PuzzleId,
-} from "../engine/types.ts";
+} from "../engine/contract/types.ts";
 import type { ControlsSide, ShapeLayout } from "../puzzle/layout.ts";
 
 // Settings shared by all puzzles

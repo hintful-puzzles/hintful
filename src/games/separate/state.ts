@@ -15,7 +15,6 @@ import {
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
 import {
   BORDER,
@@ -28,10 +27,12 @@ import {
   initBorders,
   outOfBounds,
 } from "../../engine/border-grid.ts";
-import { type DescParse, descValue } from "../../engine/desc-error.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
+import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,
@@ -39,7 +40,6 @@ import {
 } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import * as separate from "../../generated/games/separate/separate.compiled.ts";
 import { isSolved } from "./solver.ts";
 

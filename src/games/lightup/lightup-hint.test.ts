@@ -8,12 +8,12 @@
  * Unreasonable-tier refusal at the guess point.
  */
 import { describe, expect, it } from "vitest";
-import type { HintStep } from "../../engine/game.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
-import type { Point } from "../../engine/types.ts";
 import { type LightupHint, lightupGame } from "./index.ts";
 import { answerOf, holdsBulb } from "./solver.ts";
 import {

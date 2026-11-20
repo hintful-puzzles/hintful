@@ -3,7 +3,7 @@
 // indices are resolved to stable rgb() labels. Its agreement with the
 // canvas drawing is `src/puzzle/drawing.test.ts`.
 import { describe, expect, it } from "vitest";
-import type { Color } from "../types.ts";
+import type { Color } from "../contract/types.ts";
 import { NO_FILL, paintsWith, RecordingDrawing } from "./recording-drawing.ts";
 
 // index 0 black, 1 white, 2 a clear blue (0.13, 0.5, 0.85).

@@ -15,7 +15,7 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_SHORT,
   descBadCharacter,
-} from "../../../desc-error.ts";
+} from "../../../contract/desc-error.ts";
 import { randomNew } from "../../../random/index.ts";
 import { metatileCharToType } from "./hat.ts";
 import { gridNewHats, hatsNewDesc, hatsValidateDesc } from "./hat-grid.ts";

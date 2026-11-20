@@ -16,7 +16,11 @@
 
 import { bestBy } from "../../engine/best-by.ts";
 import { FREE_NAMES } from "../../engine/color/colors.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
 import { searchRefusal } from "../../engine/search-outcome.ts";
 import { voice } from "../../generated/games/ballsort/ballsort.compiled.ts";

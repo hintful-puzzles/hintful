@@ -260,7 +260,7 @@ game's own solver cannot solve:
   a cap like any other. A board no cap solves is refused with
   `DESC_NO_SINGLE_ANSWER` where the game has that tier and with
   `DESC_NOT_DEDUCIBLE` where it does not
-  ([`engine/desc-error.ts`](../src/engine/desc-error.ts)).
+  ([`engine/contract/desc-error.ts`](../src/engine/contract/desc-error.ts)).
 - **An untiered game answers `Game.finishesByDeduction(state)`**, and
   `registerGame` throws for one that leaves it out. Where nothing is deduced
   (a sliding puzzle, a search, a guessing game) the answer is
@@ -747,7 +747,7 @@ at a size that has no board of one.
 ### The difficulty contract
 
 **A game with tiers declares `Game.difficulty`, a `DifficultyContract`
-([`engine/difficulty.ts`](../src/engine/difficulty.ts)): a `solveAtCap` that
+([`engine/contract/difficulty.ts`](../src/engine/contract/difficulty.ts)): a `solveAtCap` that
 runs its solver from a fresh state with the ladder capped, and answers
 `"solved"`, `"unsolved"` or `"impossible"`.** Declaring it enrolls the game
 in the cross-game guards (`difficulty-contract.test.ts`); an untiered game
@@ -777,7 +777,7 @@ omits it. Exemplar: `difficulty` in
 
 **Accept a board for tier `t` only if it solves at `t` and does not solve at
 `t − 1`, through `solvableAtExactlyTier`
-([`engine/difficulty.ts`](../src/engine/difficulty.ts)).** It asks the cheap
+([`engine/contract/difficulty.ts`](../src/engine/contract/difficulty.ts)).** It asks the cheap
 question (`t − 1`) first, and its doc says why it takes a closure and not a
 `Game`; `cappedSolveFor` makes the closure from a contract. Exemplar:
 [`skeleton/grid/generator.ts`](../src/skeleton/grid/generator.ts).
@@ -815,7 +815,7 @@ default a game writes nothing for a size that lacks a tier**
 generator that finds no board is ended by the deal's deadline (§ "Every retry
 loop is bounded"), and the midend keeps the board in play and returns
 `dealGaveUp`'s sentence
-([`engine/difficulty.ts`](../src/engine/difficulty.ts)), which says the tier
+([`engine/contract/difficulty.ts`](../src/engine/contract/difficulty.ts)), which says the tier
 may be rare or absent. Never catch the run-out in the game to deal something
 else.
 
@@ -984,7 +984,7 @@ solver.
 ### Every retry loop is bounded
 
 **A "generate until it works" loop calls a `retryLimit` guard
-([`engine/retry-limit.ts`](../src/engine/retry-limit.ts)) once per pass,
+([`engine/contract/retry-limit.ts`](../src/engine/contract/retry-limit.ts)) once per pass,
 given a label and no number.** Exhaustion throws `RetryLimitExceeded` and
 returns no fallback. The header says why every such loop needs a bound and
 why there are two: a deadline when the app deals (`generate` in
@@ -1274,7 +1274,7 @@ it prints each cell's time, its deals' tries at the outermost retry loop,
 its boards by the easiest tier that finishes each, the draws thrown away by
 stage, and how each mend ended with the fewest squares it left open. A stage
 is named where the draw is thrown away, with `drawRejected`
-([`deal-census.ts`](../src/engine/deal-census.ts)). The game must be
+([`deal-census.ts`](../src/engine/contract/deal-census.ts)). The game must be
 registered. Do not write a throwaway test, a debug export or a log file:
 name the stage and run the census.
 
@@ -1285,7 +1285,7 @@ app runs every deal beside the board in play, shows how long the wait has
 run, and lets the player stop it
 ([`deal-ahead.ts`](../src/puzzle/deal-ahead.ts), `Puzzle.stopDeal`); the
 page ends a deal at the deadline (`DEAL_DEADLINE_MS`,
-[`retry-limit.ts`](../src/engine/retry-limit.ts)), even one whose single
+[`retry-limit.ts`](../src/engine/contract/retry-limit.ts)), even one whose single
 search runs past it, and says no board was found. So a large or rare size is
 a wait the player chose and can leave. What a wait does not fix:
 
@@ -1451,7 +1451,7 @@ engine enforces it at load.** On a board with two answers Check & Save would
 call a mark that fits the other a mistake. `loadDesc` asks the game's own
 `solve` about every board it loads and refuses one the solver proves has
 several answers (`DESC_NOT_UNIQUE`) or none (`DESC_CONTRADICTORY`)
-([`engine/desc-error.ts`](../src/engine/desc-error.ts)).
+([`engine/contract/desc-error.ts`](../src/engine/contract/desc-error.ts)).
 
 - **The game joins by having a `solve` that says `MULTIPLE_SOLUTIONS` or
   `NO_SOLUTION` when it has proved it.** A solver that merely gave up says

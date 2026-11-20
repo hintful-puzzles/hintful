@@ -5,7 +5,7 @@
  * by `hint.ts`.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 
 /** A spoke, by its canonical end (`dir < 4`), so both ends compare equal. */
 export interface Spoke {

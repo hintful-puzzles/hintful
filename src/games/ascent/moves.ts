@@ -8,7 +8,7 @@
  * runs.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   type AscentMove,
   type AscentState,

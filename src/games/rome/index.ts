@@ -14,7 +14,6 @@
  * live checks cannot give — see {@link findMistakes}.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAll,
   anyEmptyLacksNotes,
@@ -24,8 +23,17 @@ import {
   regionReach,
 } from "../../engine/candidate-hint.ts";
 import { candidateJudge } from "../../engine/candidate-judge.ts";
-import { descValue } from "../../engine/desc-error.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import { descValue } from "../../engine/contract/desc-error.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import {
+  type Game,
+  type SolveResult,
+  UI_UPDATE,
+  type UiUpdate,
+} from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import type { GameStatus, KeyLabel, Point } from "../../engine/contract/types.ts";
 import {
   clearEntries,
   type EntryMistakeKind,
@@ -34,19 +42,12 @@ import {
   revealEntry,
 } from "../../engine/entry-mistakes.ts";
 import {
-  type Game,
-  type SolveResult,
-  UI_UPDATE,
-  type UiUpdate,
-} from "../../engine/game.ts";
-import {
   drag,
   type GestureButton,
   key,
   markAllPress,
   type PointerAction,
 } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   dragEnteredNoteTakingCell,
@@ -79,7 +80,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { NAMES } from "../../generated/games/rome/rome.compiled.ts";
 import { newRomeDesc } from "./generator.ts";
 import {
@@ -687,7 +687,7 @@ function clearMistakes(state: RomeState, mistakes: readonly RomeMistake[]): Rome
 
 // --- the game ---------------------------------------------------------------
 
-/** Rome's difficulty contract (`engine/difficulty.ts`), judged from
+/** Rome's difficulty contract (`engine/contract/difficulty.ts`), judged from
  * {@link boardFromClues} so the verdict is about the puzzle alone. */
 const difficulty: DifficultyContract<RomeParams> = {
   solveAtCap: (p, desc, cap) => {

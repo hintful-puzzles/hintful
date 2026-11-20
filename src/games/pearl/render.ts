@@ -43,6 +43,9 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Color, Size } from "../../engine/contract/types.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
 import {
   drawEdgeHints,
@@ -52,13 +55,10 @@ import {
   edgeHintWords,
   hintedSides,
 } from "../../engine/edge-hint.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
 import { dragPreview } from "../../engine/line-drawing.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
-import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, loopSteps, WIN_LEAD, walkLoop } from "../../engine/win-wave.ts";
 import { edgeOf, type PearlHint } from "./hint.ts";
 import { SQUARE } from "./kinds.ts";

@@ -32,12 +32,12 @@ import {
   so,
   unshaped,
   whole,
-} from "./hint-words.ts";
+} from "./contract/hint-words.ts";
+import type { Point } from "./contract/types.ts";
 import type { LatinWingReason } from "./latin.ts";
 import { type GenericLatinReason, hiddenSingleLine } from "./latin-hint.ts";
 import { statedParts } from "./stated.ts";
 import { lineUnit } from "./step-voice.ts";
-import type { Point } from "./types.ts";
 
 // --- lists and articles ------------------------------------------------------
 

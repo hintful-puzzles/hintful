@@ -20,11 +20,11 @@
  *   - `ds.<overlay>.packed[i]` handed to the cell painter.
  */
 
-import type { GameDrawing } from "./game.ts";
+import type { GameDrawing } from "./contract/game.ts";
+import { CELL, NOTE, type Note, type StepMarks } from "./contract/hint-words.ts";
+import type { Rect } from "./contract/types.ts";
 import { hatchPeriod } from "./hatch.ts";
 import { outlineSides } from "./hint-mark.ts";
-import { CELL, NOTE, type Note, type StepMarks } from "./hint-words.ts";
-import type { Rect } from "./types.ts";
 
 /** Bit 0: the cell the deduction acts on (`COL_HINT`). */
 export const HINT_TARGET = 1;

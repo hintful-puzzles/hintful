@@ -10,7 +10,11 @@
  * the same: the list of what is still let through, kept by a test.
  */
 import { describe, expect, it } from "vitest";
-import { DESC_NO_SOLUTION, loadVerdict, validateDesc } from "../engine/desc-error.ts";
+import {
+  DESC_NO_SOLUTION,
+  loadVerdict,
+  validateDesc,
+} from "../engine/contract/desc-error.ts";
 import {
   type AnyGame,
   REGISTERED_GAME_COUNT,

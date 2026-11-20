@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_CURSOR, COL_ERROR, COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { type Narration, stepMarks } from "../../engine/hint-words.ts";
+import { type Narration, stepMarks } from "../../engine/contract/hint-words.ts";
 import { CURSOR_RIGHT, CURSOR_SELECT2 } from "../../engine/pointer.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";

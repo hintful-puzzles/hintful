@@ -11,6 +11,7 @@
  * game has no search tier.
  */
 
+import type { GameStatus } from "../../engine/contract/types.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -28,7 +29,6 @@ import {
   runLadder,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import * as magnets from "../../generated/games/magnets/magnets.compiled.ts";
 import {
   COLUMN,

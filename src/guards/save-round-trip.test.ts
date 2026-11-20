@@ -17,7 +17,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { Game } from "../engine/game.ts";
+import type { Game } from "../engine/contract/game.ts";
 import { Midend } from "../engine/midend.ts";
 import {
   CURSOR_DOWN,

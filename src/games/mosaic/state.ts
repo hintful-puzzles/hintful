@@ -9,23 +9,23 @@ import {
   searchTierSegment,
   searchTiers,
 } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
-import { digitValue } from "../../engine/decimal.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescParse,
   descBadCharacter,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import { digitValue } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
-import type { Point } from "../../engine/types.ts";
 import * as mosaic from "../../generated/games/mosaic/mosaic.compiled.ts";
 
 // --- cell-state flags (upstream `enum cell_state`) ----------------------

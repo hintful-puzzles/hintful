@@ -9,7 +9,6 @@
  * & Save additionally flags cells that contradict the unique solution.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
   applyNoteMove,
@@ -30,8 +29,24 @@ import {
   strikesOf,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import {
+  type Game,
+  type HintStep,
+  type PresetBoards,
+  type SolveResult,
+  UI_UPDATE,
+  type UiUpdate,
+} from "../../engine/contract/game.ts";
+import type { Sentence } from "../../engine/contract/hint-words.ts";
+import { SQUARE_GRID } from "../../engine/contract/sections.ts";
+import {
+  MULTIPLE_SOLUTIONS,
+  NO_SOLUTION,
+} from "../../engine/contract/solve-failure.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { latinSpace, PLACE } from "../../engine/describe-runtime.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   clearEntries,
   entryMistakes,
@@ -40,19 +55,10 @@ import {
   setMoves,
 } from "../../engine/entry-mistakes.ts";
 import {
-  type Game,
-  type HintStep,
-  type PresetBoards,
-  type SolveResult,
-  UI_UPDATE,
-  type UiUpdate,
-} from "../../engine/game.ts";
-import {
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import { latinVerdict, setCells } from "../../engine/latin.ts";
@@ -87,10 +93,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { SQUARE_GRID } from "../../engine/sections.ts";
-import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import type * as towers from "../../generated/games/towers/towers.compiled.ts";
 import { NAMES, WORDS } from "../../generated/games/towers/towers.compiled.ts";
 import { newTowersDesc } from "./generator.ts";
@@ -646,7 +649,7 @@ function buildSteps(
   return steps;
 }
 
-/** Towers' difficulty contract (`engine/difficulty.ts`). `solveTowers` follows
+/** Towers' difficulty contract (`engine/contract/difficulty.ts`). `solveTowers` follows
  * the shared latin-family return convention — the difficulty reached, or one of
  * `latin.ts`'s sentinels — so `latinVerdict` reads it. The solver is seeded from
  * the immutable givens, never the player's grid. */

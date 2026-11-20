@@ -15,12 +15,16 @@ import {
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
-import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
-import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
+import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
+import {
+  DESC_TOO_LONG,
+  type DescParse,
+  descValue,
+} from "../../engine/contract/desc-error.ts";
+import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { SHADED_NAME } from "../../engine/piece.ts";

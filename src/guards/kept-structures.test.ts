@@ -6,8 +6,8 @@
  * which a game's own code could break by writing the grid in place.
  */
 import { expect, it } from "vitest";
+import { difficultyTiers } from "../engine/contract/difficulty.ts";
 import { setKeptCheck } from "../engine/describe-runtime.ts";
-import { difficultyTiers } from "../engine/difficulty.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {
   type AnyGame,

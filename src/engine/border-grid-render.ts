@@ -44,16 +44,16 @@ import {
   COL_FLASH_LEAD,
   COL_HINT_OUTLINE,
 } from "./color/roles.ts";
+import type { GameDrawing } from "./contract/game.ts";
+import { CELL, type StepMarks } from "./contract/hint-words.ts";
+import type { Rect, Size } from "./contract/types.ts";
 import { glyphFont } from "./draw.ts";
 import { drawEdgeHints, type EdgeHint, edgeHintWords } from "./edge-hint.ts";
-import type { GameDrawing } from "./game.ts";
 import { hatchPeriod } from "./hatch.ts";
 import { drawMarkSides, MARK_ALL } from "./hint-mark.ts";
-import { CELL, type StepMarks } from "./hint-words.ts";
 import type { GridCursor } from "./pointer.ts";
 import { textBox } from "./ring.ts";
 import { TileCache } from "./tile-cache.ts";
-import type { Rect, Size } from "./types.ts";
 import { WIN_BODY, WIN_LEAD, type WinTone } from "./win-wave.ts";
 
 // --- geometry ---------------------------------------------------------------

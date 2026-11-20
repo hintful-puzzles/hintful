@@ -7,8 +7,8 @@
  * rule-out step decides is ringed, and the sets a step counts are outlined.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 
 /** One letter's position in a cell: letter `bit` of the cell at (x, y). */
 export type Slot = Point & { readonly bit: number };

@@ -33,7 +33,8 @@ import {
   sentence,
   unshaped,
   whole,
-} from "./hint-words.ts";
+} from "./contract/hint-words.ts";
+import type { Point } from "./contract/types.ts";
 import { PAIR_NAMES, type PairIndex, SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
 import {
   DEFAULT_FORMS,
@@ -43,7 +44,6 @@ import {
   ringNames,
   STATED_WORDS,
 } from "./stated-clauses.ts";
-import type { Point } from "./types.ts";
 
 /** A step's parts as a description states them. */
 export interface Clauses {

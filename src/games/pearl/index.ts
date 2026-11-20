@@ -21,11 +21,11 @@ import {
   squareEdges,
   U,
 } from "../../engine/board/square-edges.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import type { Game, GamePref, SolveResult } from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { c2nUpper } from "../../engine/desc-alphabet.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { type EdgeChange, LINE, lineDrawing } from "../../engine/line-drawing.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";

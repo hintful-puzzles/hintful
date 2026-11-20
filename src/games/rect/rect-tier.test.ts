@@ -10,8 +10,12 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
-import { DESC_CONTRADICTORY, DESC_NOT_UNIQUE } from "../../engine/desc-error.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import {
+  DESC_CONTRADICTORY,
+  DESC_NOT_UNIQUE,
+} from "../../engine/contract/desc-error.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
+import type { Rect } from "../../engine/contract/types.ts";
 import { Midend } from "../../engine/index.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -21,7 +25,6 @@ import {
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
 import { deepBudget, itSlow } from "../../engine/testing/slow.ts";
-import type { Rect } from "../../engine/types.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
 import { answerOf, ladderFinishes, searchAnswers } from "./solver.ts";

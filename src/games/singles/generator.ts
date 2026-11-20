@@ -6,9 +6,9 @@
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { latinGenerateRect } from "../../engine/latin.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { layCovered, solveSpecific } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -100,7 +100,7 @@ function newGameIsGood(diffLevel: number, state: SinglesState): boolean {
 /** Upstream has no cap here: the ladder run after each covering keeps a
  * square's last way out clear before it can be boxed in, so laying never
  * makes the board impossible. The guard below only fires if that breaks (see
- * engine/retry-limit.ts). */
+ * engine/contract/retry-limit.ts). */
 export function newSinglesDesc(p: SinglesParams, rs: RandomState): { desc: string } {
   const { w, h } = p;
   const o = Math.max(w, h);

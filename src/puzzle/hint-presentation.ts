@@ -3,9 +3,13 @@ import type { Remote } from "comlink";
 import { darkValue } from "../engine/color/color-token.ts";
 import type { Scheme } from "../engine/color/color-word.ts";
 import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
-import type { MarkRole } from "../engine/hint-words.ts";
+import type { MarkRole } from "../engine/contract/hint-words.ts";
+import type {
+  Color,
+  HintSpan,
+  NotifyStatusBarChange,
+} from "../engine/contract/types.ts";
 import { MARK_EDGE_PX } from "../engine/ring.ts";
-import type { Color, HintSpan, NotifyStatusBarChange } from "../engine/types.ts";
 import { sleep } from "../utils/timing.ts";
 import type { BoardSurface, HintReferenceMarks } from "./engine-surface.ts";
 import { repainted } from "./mark-flash.ts";

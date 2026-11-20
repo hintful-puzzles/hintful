@@ -18,13 +18,13 @@ import {
   revealBorderEdge,
 } from "../../engine/border-grid.ts";
 import { BORDER_RING_LEGEND, borderStepEdge } from "../../engine/border-grid-hint.ts";
-import type { Game, UiUpdate } from "../../engine/game.ts";
+import type { Game, UiUpdate } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { interpretTargetVerbs } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
   PALISADE_RUNGS,

@@ -29,15 +29,15 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { MarkedDeadEnd } from "../../engine/contract/hint-refusal.ts";
+import { MOVE, stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import { drawMoveArrow, drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
-import { MOVE, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
-import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./kinds.ts";
 import {

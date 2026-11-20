@@ -17,8 +17,7 @@
  */
 
 import { transfer } from "comlink";
-import type { WayForward } from "../engine/hint-refusal.ts";
-import type { EngineCore } from "../engine/midend.ts";
+import type { WayForward } from "../engine/contract/hint-refusal.ts";
 import type {
   ChangeNotification,
   CheckVerdict,
@@ -35,7 +34,8 @@ import type {
   PuzzleStaticAttributes,
   ReferenceModel,
   Size,
-} from "../engine/types.ts";
+} from "../engine/contract/types.ts";
+import type { EngineCore } from "../engine/midend.ts";
 import { Drawing } from "./drawing.ts";
 import type { HintReferenceMarks, PuzzleEngineSurface } from "./engine-surface.ts";
 import {

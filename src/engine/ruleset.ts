@@ -8,7 +8,7 @@
  * A field that only changes the board's shape or look is not a ruleset.
  */
 
-import type { ParamConfigItem } from "./game.ts";
+import type { ParamConfigItem } from "./contract/game.ts";
 import type { OnlyOf } from "./only.ts";
 
 /** One puzzle a game plays. */

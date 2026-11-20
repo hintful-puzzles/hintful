@@ -25,6 +25,15 @@ import {
   techniqueRung,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
+import type {
+  Game,
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
+import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
+import { SQUARE_GRID } from "../../engine/contract/sections.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { edgeClueVocab } from "../../engine/edge-clue-latin/hint-text.ts";
 import {
@@ -64,18 +73,11 @@ import {
   status,
   textFormat,
 } from "../../engine/edge-clue-latin/state.ts";
-import type {
-  Game,
-  HintResult,
-  HintStep,
-  HintTrackVerdict,
-} from "../../engine/game.ts";
 import {
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import type { Said } from "../../engine/ladder-runtime.ts";
 import type { LatinSolver } from "../../engine/latin.ts";
 import {
@@ -90,9 +92,7 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { SQUARE_GRID } from "../../engine/sections.ts";
 import { statedParts } from "../../engine/stated.ts";
-import type { Point } from "../../engine/types.ts";
 import * as adjacent from "../../generated/games/adjacent/adjacent.compiled.ts";
 import type { HintReason } from "./solver.ts";
 import {

@@ -4,7 +4,7 @@
  * by `hint.ts`.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 
 /** A spot: two neighboring squares, by index, which a domino could cover. A
  * step decides one, and rings its two squares as one domino, with a line drawn

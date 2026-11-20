@@ -8,9 +8,9 @@
 import { describe, expect, it } from "vitest";
 import { edgeBetween, squareEdges } from "../../engine/board/square-edges.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
-import type { HintStep } from "../../engine/game.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { CROSS, LINE } from "../../engine/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

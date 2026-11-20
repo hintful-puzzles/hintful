@@ -685,7 +685,7 @@ so a game cannot advertise a capability it has no method behind.
 ### Requirement: A game's contract sections are implemented, not applicable, or absent, and an absent one makes it a draft
 
 The engine SHALL name the sections whose absence makes a game a draft
-(`src/engine/sections.ts`): `hint`, `findMistakes` and `transposeParams`.
+(`src/engine/contract/sections.ts`): `hint`, `findMistakes` and `transposeParams`.
 Each SHALL be implemented, not applicable (with the reason in
 `Game.notApplicable`), or absent; an unwritten hint is the engine's
 `DRAFT_HINT`. A game with any absent section SHALL be a draft, computed from

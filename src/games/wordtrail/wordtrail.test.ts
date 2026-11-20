@@ -23,6 +23,7 @@ import {
   squareEdges,
 } from "../../engine/board/square-edges.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { Midend } from "../../engine/index.ts";
 import { CROSS, type EdgeChange, LINE, OPEN } from "../../engine/line-drawing.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -42,7 +43,6 @@ import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectDragRepeatsThePress } from "../../engine/testing/sweep-probe.ts";
-import type { Point } from "../../engine/types.ts";
 import { crossDrag, wordtrailGame } from "./index.ts";
 import {
   COL_DARK,

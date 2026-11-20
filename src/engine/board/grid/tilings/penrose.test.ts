@@ -15,7 +15,7 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_SHORT,
   descBadCharacter,
-} from "../../../desc-error.ts";
+} from "../../../contract/desc-error.ts";
 import { randomNew } from "../../../random/index.ts";
 import { GridTrimmedAwayError } from "../grid-trim.ts";
 import { PENROSE_LETTERS, transition, transitionIn } from "./penrose.ts";

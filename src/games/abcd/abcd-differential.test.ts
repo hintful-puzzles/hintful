@@ -13,7 +13,7 @@
  */
 
 import { DIFF_EASY } from "../../engine/answer-search.ts";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/abcd-c-reference.json" with { type: "json" };
 import { newAbcdDesc } from "./generator.ts";

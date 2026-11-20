@@ -24,10 +24,11 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Color, Rect, Size } from "../../engine/contract/types.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiecePart, drawRuledOutCross, joinToward } from "../../engine/piece.ts";
 import { regionFills } from "../../engine/region-fill.ts";
@@ -39,7 +40,6 @@ import {
 } from "../../engine/region-walls.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
-import type { Color, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { NorinoriMistake } from "./index.ts";
 import {

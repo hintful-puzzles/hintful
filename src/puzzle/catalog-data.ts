@@ -1,6 +1,6 @@
 /**
  * How the games' catalog entries become the catalog. Each game's entry is its
- * own `src/games/<id>/catalog.ts`, of the shape `src/engine/catalog.ts`
+ * own `src/games/<id>/catalog.ts`, of the shape `src/engine/contract/catalog.ts`
  * declares. Two readers find them, because the Vite config cannot use
  * `import.meta.glob`: the app's (`catalog.ts`) and the config's
  * (`vite-plugins/catalog.ts`). Both assemble through `catalogFrom`, and this
@@ -8,7 +8,7 @@
  * loads nothing of the engine.
  */
 
-import type { PuzzleData } from "../engine/catalog.ts";
+import type { PuzzleData } from "../engine/contract/catalog.ts";
 
 /** A game's catalog module: `src/games/<id>/catalog.ts`. */
 export interface CatalogModule {

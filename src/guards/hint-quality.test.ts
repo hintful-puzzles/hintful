@@ -40,8 +40,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { FOUR_FILLS, FREE, TWO, wordOf } from "../engine/color/colors.ts";
-import type { HintStep } from "../engine/game.ts";
-import { NARRATION_LIMIT, Sentence } from "../engine/hint-words.ts";
+import type { HintStep } from "../engine/contract/game.ts";
+import { NARRATION_LIMIT, Sentence } from "../engine/contract/hint-words.ts";
+import type { Color } from "../engine/contract/types.ts";
 import { paramsError } from "../engine/params.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import { bindingDefects } from "../engine/testing/hint-binding.ts";
@@ -57,7 +58,6 @@ import { referenceDefects } from "../engine/testing/hint-reference.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 import { itOverWholeSweep, SLOW_TESTS_ENABLED } from "../engine/testing/slow.ts";
 import { FIRST_SHARE, ofThisShare } from "../engine/testing/sweep-share.ts";
-import type { Color } from "../engine/types.ts";
 
 /**
  * Which of a params set's shared boards (`dealt`) a walk takes: the first.

@@ -9,9 +9,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
+import { CELL, NOTE, stepMarks } from "../../engine/contract/hint-words.ts";
 import { strikeReach } from "../../engine/draw.ts";
-import type { HintStep } from "../../engine/game.ts";
-import { CELL, NOTE, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import {

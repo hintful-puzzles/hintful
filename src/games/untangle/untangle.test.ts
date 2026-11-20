@@ -13,7 +13,8 @@ import {
   DESC_TOO_SHORT,
   descValue,
   validateDesc,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -26,7 +27,6 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { decodeSave } from "../../engine/save.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { untangleGame } from "./index.ts";
 import {

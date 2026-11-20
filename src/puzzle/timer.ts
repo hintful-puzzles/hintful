@@ -1,4 +1,4 @@
-import type { TimerReadout } from "../engine/types.ts";
+import type { TimerReadout } from "../engine/contract/types.ts";
 
 /** `M:SS`, or `H:MM:SS` from an hour — the one spelling of a solve time, so
  * the chrome and the completion message cannot disagree. */

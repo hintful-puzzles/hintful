@@ -1,10 +1,11 @@
-import { assertNever, rejectMove } from "../../engine/assert-never.ts";
+import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
 import {
   type Game,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -15,7 +16,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   hasNoSolution,
   hint,

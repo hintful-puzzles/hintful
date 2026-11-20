@@ -28,9 +28,9 @@
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
+import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { fillRow, placeWater, solveBoats } from "./solver.ts";
 import {
   type BoatsBoard,

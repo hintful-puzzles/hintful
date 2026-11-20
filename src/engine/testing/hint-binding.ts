@@ -21,9 +21,9 @@
  * Dev/test-only; the hint-quality walk runs it on every step it visits.
  */
 
-import type { HintStep } from "../game.ts";
-import type { MarkedDeadEnd } from "../hint-refusal.ts";
-import type { Narration } from "../hint-words.ts";
+import type { HintStep } from "../contract/game.ts";
+import type { MarkedDeadEnd } from "../contract/hint-refusal.ts";
+import type { Narration } from "../contract/hint-words.ts";
 import { NO_FLASH } from "../win-wave.ts";
 import type { AnyGame } from "./enrollment.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";

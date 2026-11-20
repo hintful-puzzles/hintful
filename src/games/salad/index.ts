@@ -13,25 +13,27 @@
  * flags every marking that contradicts the unique solution.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAll,
   obviousCandidateMarks,
   regionReach,
 } from "../../engine/candidate-hint.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import {
-  clearEntries,
-  type EntryMoves,
-  revealEntry,
-} from "../../engine/entry-mistakes.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+} from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import { SQUARE_GRID } from "../../engine/contract/sections.ts";
+import type { GameStatus, KeyLabel, Point } from "../../engine/contract/types.ts";
+import {
+  clearEntries,
+  type EntryMoves,
+  revealEntry,
+} from "../../engine/entry-mistakes.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   noOpEntryResult,
@@ -52,8 +54,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { SQUARE_GRID } from "../../engine/sections.ts";
-import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newSaladDesc } from "./generator.ts";
 import {
   hint,
@@ -348,7 +348,7 @@ const saladEntryMoves: EntryMoves<SaladMove> = {
   place: (x, y, n) => ({ type: "set", x, y, value: n }),
 };
 
-/** Salad's difficulty contract (`engine/difficulty.ts`). `saladSolve` answers a
+/** Salad's difficulty contract (`engine/contract/difficulty.ts`). `saladSolve` answers a
  * plain boolean — "did this come out a complete, valid board?" — and
  * `scratchBoard` seeds it with the clues only. */
 const difficulty: DifficultyContract<SaladParams> = {

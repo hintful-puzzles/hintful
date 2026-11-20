@@ -4,8 +4,12 @@
  * reads the runs and numbers the sentence names off the puzzle.
  */
 
-import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Sentence,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import * as crossing from "../../generated/games/crossing/crossing.compiled.ts";
 import { LISTED } from "./hint-marks.ts";
 import type { CrossingFiring } from "./solver.ts";

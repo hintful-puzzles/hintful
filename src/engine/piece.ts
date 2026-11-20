@@ -8,8 +8,8 @@
  * color-blind player, and a shape is still there in a grayscale screenshot.
  */
 
-import type { GameDrawing } from "./game.ts";
-import type { Point, Rect } from "./types.ts";
+import type { GameDrawing } from "./contract/game.ts";
+import type { Point, Rect } from "./contract/types.ts";
 
 export type PieceShape = "square" | "disc";
 

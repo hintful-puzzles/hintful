@@ -21,13 +21,13 @@ import {
   squareEdges,
   U,
 } from "../../engine/board/square-edges.ts";
+import { keepTrackBy } from "../../engine/contract/hint-track.ts";
 import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
 import type { SuppliedHooks } from "../../engine/described-hint.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
-import { keepTrackBy } from "../../engine/hint-track.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
 import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 import { STATED } from "../../generated/games/pearl/pearl.compiled.ts";

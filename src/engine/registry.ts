@@ -4,8 +4,8 @@
  * all and holds the registry to the catalog.
  */
 
-import { offersSearch } from "./difficulty.ts";
-import type { Game } from "./game.ts";
+import { offersSearch } from "./contract/difficulty.ts";
+import type { Game } from "./contract/game.ts";
 import { type EngineCore, Midend } from "./midend.ts";
 
 const factories = new Map<string, () => EngineCore>();

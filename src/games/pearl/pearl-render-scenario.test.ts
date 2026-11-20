@@ -14,8 +14,8 @@ import {
   COL_FLASH_LEAD,
   COL_HINT_OUTLINE,
 } from "../../engine/color/roles.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";

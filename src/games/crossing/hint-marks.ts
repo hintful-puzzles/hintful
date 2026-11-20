@@ -4,7 +4,7 @@
  * paints it and the steps `crossing.description.yaml` declares name it.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 
 /** A number in the clue list, by its index there. */
 export const LISTED: MarkKind<number> = { name: "listed number", key: String };

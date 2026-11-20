@@ -8,8 +8,8 @@
  * literal `"Clear"`, which the `puzzle-keys` icon map renders as the clear icon.
  */
 
+import type { KeyLabel } from "./contract/types.ts";
 import { PENCIL_MODE_BUTTON } from "./pointer.ts";
-import type { KeyLabel } from "./types.ts";
 
 /** ASCII backspace — upstream's clear-key button code (`'\b'`). */
 export const CLEAR_BUTTON = 8;

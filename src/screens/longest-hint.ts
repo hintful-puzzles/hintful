@@ -1,5 +1,5 @@
-import { NARRATION_LIMIT } from "../engine/hint-words.ts";
-import type { HintSpan } from "../engine/types.ts";
+import { NARRATION_LIMIT } from "../engine/contract/hint-words.ts";
+import type { HintSpan } from "../engine/contract/types.ts";
 
 /** Words of a hint's usual make: plain words, references, and a number or a
  * color among them, longer together than any hint may be. */

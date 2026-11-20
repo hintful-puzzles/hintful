@@ -20,7 +20,6 @@
 import { Dsf } from "../../engine/board/dsf.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
-import { digitValue, isDigit } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -28,10 +27,11 @@ import {
   type DescParse,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { difficultyItem } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import { digitValue, isDigit } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

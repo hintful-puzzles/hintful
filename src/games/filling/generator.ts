@@ -12,8 +12,8 @@
 import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/board/dsf.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { searchAnswers, solveFilling } from "./solver.ts";
 import {
   DX,

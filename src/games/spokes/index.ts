@@ -18,9 +18,9 @@
  */
 
 import { solveFromAnswer } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import { fromCoord } from "../../engine/board/geometry.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type HintStep,
@@ -28,7 +28,8 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   LEFT_BUTTON,
@@ -50,7 +51,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { type SpokesHint, spokesHint, spokesJudgeMove } from "./hint.ts";
 import {
@@ -422,7 +422,7 @@ function sameEdge(
 
 // --- the game ---------------------------------------------------------------
 
-/** Spokes' difficulty contract (`engine/difficulty.ts`): the ladder from the
+/** Spokes' difficulty contract (`engine/contract/difficulty.ts`): the ladder from the
  * clues alone below Unreasonable, and the search at it. */
 const difficulty: DifficultyContract<SpokesParams> = {
   solveAtCap: (p, desc, cap) => spokesSolve(newState(p, desc), cap),

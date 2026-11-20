@@ -8,9 +8,9 @@
 
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { D, dirX, dirY, L, R, U } from "../../engine/board/square-edges.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { copyAndStrip, tracksSolve } from "./solver.ts";
 import {
   type Board,

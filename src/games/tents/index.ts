@@ -17,11 +17,13 @@
  */
 
 import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { matching } from "../../engine/latin.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -42,7 +44,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   buttonVerb,
   interpretTargetVerbs,
@@ -54,7 +55,6 @@ import {
   type VerbKey,
   verbClicks,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
 import { tentsHint, tentsJudgeMove, tentsKeepTrack } from "./hint.ts";
 import {
@@ -473,7 +473,7 @@ function badLinks(state: TentsState, soln: Int8Array): number[] {
   return bad;
 }
 
-/** Tents' difficulty contract (`engine/difficulty.ts`). */
+/** Tents' difficulty contract (`engine/contract/difficulty.ts`). */
 const difficulty: DifficultyContract<TentsParams> = {
   solveAtCap: (p, desc, cap) => {
     const { ret } = solveFromClues(newState(p, desc), cap);

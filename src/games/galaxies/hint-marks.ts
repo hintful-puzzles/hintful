@@ -10,8 +10,8 @@
  * it names is striped. Coordinates are the state's half-grid ones.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import type { GalaxiesHint } from "./hint.ts";
 
 const pointKey = (p: Point): string => `${p.x},${p.y}`;

@@ -10,9 +10,10 @@
  */
 
 import { DIFF_EASY, solveFromAnswer } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import type { Point, Rect } from "../../engine/contract/types.ts";
 import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   atof,
@@ -40,7 +41,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { Point, Rect } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
   type RectHint,

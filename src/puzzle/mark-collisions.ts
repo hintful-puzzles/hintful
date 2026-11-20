@@ -19,7 +19,7 @@
  * Dev/test-only; never imported by production code.
  */
 
-import { hasHint } from "../engine/game.ts";
+import { hasHint } from "../engine/contract/game.ts";
 import { Midend } from "../engine/midend.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { dealt } from "../engine/testing/dealt.ts";

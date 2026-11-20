@@ -16,8 +16,8 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
-import type { HintStep } from "../../engine/game.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError, UnreadableParams } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";

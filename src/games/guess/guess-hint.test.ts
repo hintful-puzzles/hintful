@@ -11,8 +11,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
-import { GAME_OVER } from "../../engine/hint-refusal.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { GAME_OVER } from "../../engine/contract/hint-refusal.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import {
   CURSOR_SELECT,

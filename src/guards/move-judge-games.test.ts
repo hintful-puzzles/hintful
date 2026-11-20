@@ -12,8 +12,8 @@
  * each, so a game whose builder supplies `judgeMove` cannot leave it unwired.
  */
 import { describe, expect, it } from "vitest";
+import { sectionState } from "../engine/contract/sections.ts";
 import { verdictOf } from "../engine/move-judge.ts";
-import { sectionState } from "../engine/sections.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {
   type AnyGame,

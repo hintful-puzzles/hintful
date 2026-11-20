@@ -1,4 +1,4 @@
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 
 /** A tile, by its number, wherever it sits; its mark includes the arrow that
  * slides it. */

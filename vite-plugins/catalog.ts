@@ -19,7 +19,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Plugin } from "vite";
-import type { PuzzleData } from "../src/engine/catalog.ts";
+import type { PuzzleData } from "../src/engine/contract/catalog.ts";
 import { type CatalogModule, catalogFrom } from "../src/puzzle/catalog-data.ts";
 
 const GAMES = path.resolve(import.meta.dirname, "../src/games");

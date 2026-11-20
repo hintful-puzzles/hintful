@@ -49,7 +49,7 @@ import {
   DESC_TOO_SHORT,
   type DescError,
   descBadCharacter,
-} from "../../../desc-error.ts";
+} from "../../../contract/desc-error.ts";
 import { type RandomState, randomNew, randomUpto } from "../../../random/index.ts";
 
 // ---------------------------------------------------------------------------

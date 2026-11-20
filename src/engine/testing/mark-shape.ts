@@ -12,8 +12,8 @@
  * Dev/test-only; never imported by production code.
  */
 import { expect } from "vitest";
+import type { DrawTextOptions } from "../contract/types.ts";
 import { RING_MIN_ROUNDNESS, ringSide, textBox } from "../ring.ts";
-import type { DrawTextOptions } from "../types.ts";
 import { type DrawOp, opsOfKind, paintsWith } from "./recording-drawing.ts";
 
 interface RectOp {

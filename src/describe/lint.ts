@@ -6,13 +6,21 @@
  * § "What the compiler checks of a wording"). Every finding is reported, not
  * the first, so a writer hears all of them in one run.
  *
- * The rules are the render's own (`engine/wording-rules.ts`, and the judge of a
+ * The rules are the render's own (`engine/contract/wording-rules.ts`, and the judge of a
  * reference's words in `engine/testing/hint-reference.ts`), asked of every form
  * a clause can take. What only a board decides stays the render's and the hint
  * walk's: which elements a reference marks, and so whether two references in
  * one role tell their marks apart.
  */
 
+import {
+  adjectiveDefect,
+  IS_OUT,
+  KEEPS_IS_OUT_FAMILY,
+  NARRATION_LIMIT,
+  RETIRED_PHRASE,
+  unboundDefect,
+} from "../engine/contract/wording-rules.ts";
 import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "../engine/piece.ts";
 import {
   DEFAULT_FORMS,
@@ -22,14 +30,6 @@ import {
 } from "../engine/stated-clauses.ts";
 import { judge } from "../engine/testing/hint-reference.ts";
 import { WORD_LENGTHS } from "../engine/word-list/index.ts";
-import {
-  adjectiveDefect,
-  IS_OUT,
-  KEEPS_IS_OUT_FAMILY,
-  NARRATION_LIMIT,
-  RETIRED_PHRASE,
-  unboundDefect,
-} from "../engine/wording-rules.ts";
 import {
   type DescriptionFile,
   isFormal,

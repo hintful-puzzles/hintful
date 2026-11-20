@@ -226,7 +226,7 @@ of them.
 ### A sentence has parts
 
 Build a step's words as a `Sentence`
-([`engine/hint-words.ts`](../src/engine/hint-words.ts)) with `sentence(said)`,
+([`engine/contract/hint-words.ts`](../src/engine/contract/hint-words.ts)) with `sentence(said)`,
 its shorthand `so(...)`, or `unshaped(...)`. The game hands over the parts
 (`Said`'s doc names them) and the engine writes the joins. Five rules hold:
 
@@ -264,7 +264,7 @@ the result, so a look that opens on a reference needs no `.capitalized()`.
 ### Bind the words to the marks
 
 Build every word that points at the board from a reference to the mark it
-points at ([`engine/hint-words.ts`](../src/engine/hint-words.ts)), and paint
+points at ([`engine/contract/hint-words.ts`](../src/engine/contract/hint-words.ts)), and paint
 every hint mark from those references. The roles mean the same in every game:
 
 | role | adjective | marks |
@@ -526,7 +526,7 @@ Some facts a step rests on are on the board: a clue's value, a wall, a note
 the player wrote. Others are claims about every placement of some element,
 which the player has to work out: "the striped squares the 6 always covers",
 "the outlined square only it reaches". **Say such a fact in the words, and
-wrap the reference it is about in `derived`** (`engine/hint-words.ts`). Use
+wrap the reference it is about in `derived`** (`engine/contract/hint-words.ts`). Use
 `"each"` where every unit the reference names is a fact of its own. A
 `follows` part is that fact's consequence and is not declared.
 
@@ -849,14 +849,14 @@ time (Spokes).
 ## The hooks a hinted game implements
 
 Implement these on `Game`, whose doc on each hook in
-[`engine/game.ts`](../src/engine/game.ts) says what it is handed and returns.
+[`engine/contract/game.ts`](../src/engine/contract/game.ts) says what it is handed and returns.
 The contract and the `Midend` lifecycle are the
 [`engine-hints`](../openspec/specs/engine-hints/spec.md) spec, and the
 implementation is [`src/engine/midend.ts`](../src/engine/midend.ts). Exemplar:
 `src/skeleton/grid/index.ts` and `hint.ts`.
 
 A game's hint is one object, `Game.hint` (`GameHint` in
-[`game.ts`](../src/engine/game.ts)); a builder returns the part it can make
+[`game.ts`](../src/engine/contract/game.ts)); a builder returns the part it can make
 under the same names, and the game spreads it and adds the rest.
 
 - **`hint.plan(state, aux?, ui?)`** returns `{ ok: true, steps }` or
@@ -1151,7 +1151,7 @@ hint's positions" says how to tell the cases apart.
 ## Refusal wording comes from one module
 
 Return a refusal as a `HintRefusal` from
-[`src/engine/hint-refusal.ts`](../src/engine/hint-refusal.ts), never a string
+[`src/engine/contract/hint-refusal.ts`](../src/engine/contract/hint-refusal.ts), never a string
 of your own; the type lists every kind. The wording is shared because
 `help/features.md` teaches "there is a mistake" and "deduction has run out"
 as a pair that call for opposite responses.

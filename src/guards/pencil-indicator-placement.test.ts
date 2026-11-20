@@ -20,6 +20,7 @@
 
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
+import type { Size } from "../engine/contract/types.ts";
 import { takesNotes } from "../engine/key-labels.ts";
 import {
   type PencilIndicatorBox,
@@ -31,7 +32,6 @@ import type { DrawOp } from "../engine/testing/recording-drawing.ts";
 import { RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 import { inSweep } from "../engine/testing/slow.ts";
-import type { Size } from "../engine/types.ts";
 import { NO_FLASH } from "../engine/win-wave.ts";
 
 const noteTaking = enrolledIn((g) => takesNotes(g.state, g.ui));

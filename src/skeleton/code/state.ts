@@ -18,14 +18,14 @@ import {
   DESC_REPEATED,
   type DescParse,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { numberItem } from "../../engine/params.ts";
 import { num, paramsCodec, size } from "../../engine/params-codec.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- score ------------------------------------------------------------------
 

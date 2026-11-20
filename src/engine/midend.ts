@@ -16,8 +16,7 @@ import { paletteSchemeOf, resolvePalette } from "./color/color-mkhighlight.ts";
 import { darkValue } from "./color/color-token.ts";
 import { HINT_INK } from "./color/palette.ts";
 import { completionStatus } from "./completion-status.ts";
-import { freshSeed, generate } from "./deal.ts";
-import { DESC_MALFORMED, loadDesc } from "./desc-error.ts";
+import { DESC_MALFORMED, loadDesc } from "./contract/desc-error.ts";
 import {
   cappedSolveFor,
   dealGaveUp,
@@ -27,7 +26,7 @@ import {
   tierNameOf,
   tierOf,
   withTier,
-} from "./difficulty.ts";
+} from "./contract/difficulty.ts";
 import {
   type ActiveHint,
   type Game,
@@ -37,7 +36,7 @@ import {
   hasHint,
   UI_UPDATE,
   type UiUpdate,
-} from "./game.ts";
+} from "./contract/game.ts";
 import {
   ALREADY_SOLVED,
   DEDUCTION_EXHAUSTED,
@@ -49,8 +48,29 @@ import {
   NO_MOVE_WORTH_MAKING,
   SEARCH_OUT_OF_REACH,
   type WayForward,
-} from "./hint-refusal.ts";
-import { type MarkRole, markKeys } from "./hint-words.ts";
+} from "./contract/hint-refusal.ts";
+import { type MarkRole, markKeys } from "./contract/hint-words.ts";
+import { NO_SOLUTION_FROM_HERE } from "./contract/solve-failure.ts";
+import type {
+  ChangeNotification,
+  CheckVerdict,
+  Color,
+  ConfigDescription,
+  ConfigValues,
+  CustomParamsEncoding,
+  DealtBoard,
+  EncodedParams,
+  GameStatus,
+  KeyLabel,
+  OtherRun,
+  Point,
+  PresetMenuEntry,
+  PuzzleStaticAttributes,
+  ReferenceModel,
+  Size,
+  TimerReadout,
+} from "./contract/types.ts";
+import { freshSeed, generate } from "./deal.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
 import { MoveAnimation } from "./midend-animation.ts";
 import { ChosenParams, largestTile } from "./midend-params.ts";
@@ -76,27 +96,7 @@ import {
 import { type RandomState, randomNew } from "./random/index.ts";
 import { RULES_OUT_PREF } from "./rules-out.ts";
 import { sameShown, sameValue } from "./same-value.ts";
-import { NO_SOLUTION_FROM_HERE } from "./solve-failure.ts";
 import { endSweep, hintGesture, sweepContinues, sweepPending } from "./target-verb.ts";
-import type {
-  ChangeNotification,
-  CheckVerdict,
-  Color,
-  ConfigDescription,
-  ConfigValues,
-  CustomParamsEncoding,
-  DealtBoard,
-  EncodedParams,
-  GameStatus,
-  KeyLabel,
-  OtherRun,
-  Point,
-  PresetMenuEntry,
-  PuzzleStaticAttributes,
-  ReferenceModel,
-  Size,
-  TimerReadout,
-} from "./types.ts";
 import { copyUi, restoreUi } from "./ui-snapshot.ts";
 
 /** What the status line says while a step shows only where to look: the same

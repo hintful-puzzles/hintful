@@ -14,6 +14,14 @@
  */
 
 import {
+  CELL,
+  type MarkKind,
+  type Narration,
+  type Sentence,
+  whole,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import {
   candidateConclusions,
   cleanObviousText,
   joinOr,
@@ -22,15 +30,7 @@ import {
   placedRulesOut,
   populateText,
 } from "../../engine/hint-text.ts";
-import {
-  CELL,
-  type MarkKind,
-  type Narration,
-  type Sentence,
-  whole,
-} from "../../engine/hint-words.ts";
 import type { Unit } from "../../engine/step-voice.ts";
-import type { Point } from "../../engine/types.ts";
 import { voice, WORDS } from "../../generated/games/solo/solo.compiled.ts";
 import type { CageOrigin, SoloRegion } from "./hint-reasons.ts";
 import { digitChar } from "./render.ts";

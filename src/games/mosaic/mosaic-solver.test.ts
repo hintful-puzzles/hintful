@@ -3,7 +3,7 @@
 // solve-command bitmap, and findMistakes.
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { filledBy, spokenOf } from "../../engine/described-hint.ts";
 import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
 import { randomNew } from "../../engine/random/index.ts";

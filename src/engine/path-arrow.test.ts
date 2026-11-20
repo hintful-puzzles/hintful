@@ -6,6 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import type { Color } from "./contract/types.ts";
 import {
   drawPathArrow,
   drawPathStart,
@@ -13,7 +14,6 @@ import {
   pathHeadWidth,
 } from "./path-arrow.ts";
 import { opsOfKind, RecordingDrawing } from "./testing/recording-drawing.ts";
-import type { Color } from "./types.ts";
 
 const BLACK: Color = [0, 0, 0];
 const WHITE: Color = [1, 1, 1];

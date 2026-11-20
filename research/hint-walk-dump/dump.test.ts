@@ -15,7 +15,7 @@
  */
 import { closeSync, openSync, writeFileSync, writeSync } from "node:fs";
 import { it } from "vitest";
-import { markKeys } from "../../src/engine/hint-words.ts";
+import { markKeys } from "../../src/engine/contract/hint-words.ts";
 import { dealt } from "../../src/engine/testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "../../src/engine/testing/hint-games.ts";
 import { say } from "../progress.ts";

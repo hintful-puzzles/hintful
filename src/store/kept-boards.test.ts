@@ -1,7 +1,7 @@
 // The kept-board store against fake-indexeddb (`test-setup/indexeddb.ts`).
 import Dexie from "dexie";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { DealtBoard } from "../engine/types.ts";
+import type { DealtBoard } from "../engine/contract/types.ts";
 import { KeptBoards } from "./kept-boards.ts";
 
 const board = (params: string, desc: string): DealtBoard => ({

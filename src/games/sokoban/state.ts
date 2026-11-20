@@ -10,19 +10,19 @@
  * Sokoban's reason to exist.
  */
 
-import { isDigit } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
   type DescParse,
   descNeedsOne,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
+import { isDigit } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import * as sokoban from "../../generated/games/sokoban/sokoban.compiled.ts";
 
 // --- the cell alphabet (char codes) -----------------------------------

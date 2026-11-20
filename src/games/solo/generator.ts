@@ -28,9 +28,9 @@
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { divvyRectangle } from "../../engine/divvy.ts";
 import { type RandomState, randomBits, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { type Difficulty, runSolver } from "./solver.ts";
 import {
   type BlockStructure,

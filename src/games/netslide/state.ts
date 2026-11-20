@@ -8,8 +8,8 @@
  * and therefore powered by, the source.
  */
 
+import { descValue } from "../../engine/contract/desc-error.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import { descValue } from "../../engine/desc-error.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import {
   AREA_TOO_LARGE,

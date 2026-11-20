@@ -4,8 +4,8 @@
  * that calls `presetGrid` and for one that writes its list out.
  */
 import { describe, expect, it } from "vitest";
-import { difficultyChoiceItem, withTier } from "../engine/difficulty.ts";
-import type { Game, ParamConfigItem } from "../engine/game.ts";
+import { difficultyChoiceItem, withTier } from "../engine/contract/difficulty.ts";
+import type { Game, ParamConfigItem } from "../engine/contract/game.ts";
 import { presetMenu, type TitledPresetMenu } from "../engine/param-label.ts";
 import { paramsError } from "../engine/params.ts";
 import { MENU_LINES, MENU_SECTION_LINES } from "../engine/preset-grid.ts";

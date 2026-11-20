@@ -15,7 +15,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import cReference from "./__fixtures__/mathrax-c-reference.json" with { type: "json" };
 import { mathraxGame } from "./index.ts";
 import { mathraxSolve } from "./solver.ts";

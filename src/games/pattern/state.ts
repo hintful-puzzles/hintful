@@ -16,18 +16,18 @@ import {
   searchTierItem,
   searchTierSegment,
 } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
-import { isDigit } from "../../engine/decimal.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   DESC_TOO_LONG,
   type DescParse,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import { isDigit } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";

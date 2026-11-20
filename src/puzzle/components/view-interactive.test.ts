@@ -11,7 +11,7 @@
 //    lives entirely in this component, so a tier-1 engine test cannot see it.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import "./view-interactive.ts";
-import { PuzzleButton } from "../../engine/types.ts";
+import { PuzzleButton } from "../../engine/contract/types.ts";
 import type { PuzzleViewInteractive } from "./view-interactive.ts";
 
 function makeView(): PuzzleViewInteractive {

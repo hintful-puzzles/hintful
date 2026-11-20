@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";

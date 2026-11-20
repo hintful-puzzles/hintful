@@ -15,7 +15,7 @@ import {
   type Noun,
   type Relation,
   type Sentence,
-} from "./hint-words.ts";
+} from "./contract/hint-words.ts";
 import {
   type ClausePart,
   type Clauses,

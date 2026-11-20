@@ -19,8 +19,12 @@
  * line meets them, each checked on the board the roll is made from (`narrate`).
  */
 
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
+import type { Sentence } from "../../engine/contract/hint-words.ts";
 import { searchRefusal } from "../../engine/search-outcome.ts";
 import { voice } from "../../generated/games/cube/cube.compiled.ts";
 import { SQUARE } from "./kinds.ts";

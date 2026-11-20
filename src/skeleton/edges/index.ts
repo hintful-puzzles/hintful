@@ -7,8 +7,10 @@
  * [`solver.ts`](./solver.ts), and the board in [`state.ts`](./state.ts).
  */
 
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, SolveResult } from "../../engine/game.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import type { Game, SolveResult } from "../../engine/contract/game.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import {
   type EdgeMistake,
   edgeMistakes,
@@ -16,8 +18,6 @@ import {
 } from "../../engine/line-drawing.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import { newSkeletonDesc } from "./generator.ts";
 import {
   type SkeletonHighlights,

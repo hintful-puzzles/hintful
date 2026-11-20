@@ -10,6 +10,11 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  IS_OUT,
+  KEEPS_IS_OUT_FAMILY,
+  RETIRED_PHRASE as RETIRED,
+} from "../engine/contract/wording-rules.ts";
+import {
   engineCodeLinesMatching,
   SCANNED_ENGINE_FILES,
 } from "../engine/testing/engine-source.ts";
@@ -18,11 +23,6 @@ import {
   SCANNED_SOURCE_FILES,
 } from "../engine/testing/enrollment.ts";
 import { HINT_GAMES } from "../engine/testing/hint-games.ts";
-import {
-  IS_OUT,
-  KEEPS_IS_OUT_FAMILY,
-  RETIRED_PHRASE as RETIRED,
-} from "../engine/wording-rules.ts";
 import { loadDescriptionFile } from "./load.ts";
 
 /** Loopy's preference label, which names a setting and not a hint step; a
@@ -74,7 +74,7 @@ describe("no hint says a retired phrase", () => {
     const hits = [
       ...engineCodeLinesMatching(RETIRED),
       ...engineCodeLinesMatching(IS_OUT),
-    ].filter((h) => h.id !== "engine/wording-rules.ts");
+    ].filter((h) => h.id !== "engine/contract/wording-rules.ts");
     expect(hits.map((h) => `${h.id}: ${h.line}`)).toEqual([]);
   });
 });

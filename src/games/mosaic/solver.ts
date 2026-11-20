@@ -19,6 +19,8 @@ import {
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
@@ -32,9 +34,7 @@ import {
   TIERS as SCALE,
 } from "../../engine/ladder-runtime.ts";
 import { type RandomState, randomBits } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import * as mosaic from "../../generated/games/mosaic/mosaic.compiled.ts";
 import {
   countAround,

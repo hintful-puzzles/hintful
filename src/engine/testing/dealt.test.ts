@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { abcdGame } from "../../games/abcd/index.ts";
+import { RetryLimitExceeded } from "../contract/retry-limit.ts";
 import type { RandomState } from "../random/index.ts";
 import { randomUpto } from "../random/index.ts";
-import { RetryLimitExceeded } from "../retry-limit.ts";
 import {
   beginDealt,
   type DealStore,

@@ -23,7 +23,12 @@
  * inside one leaves that name off: "7x7 Easy" under "Seismic".
  */
 
-import type { ParamConfigItem, ParamLabel, PresetBoards, PresetMenu } from "./game.ts";
+import type {
+  ParamConfigItem,
+  ParamLabel,
+  PresetBoards,
+  PresetMenu,
+} from "./contract/game.ts";
 import { presetGrid } from "./preset-grid.ts";
 import { rulesetField } from "./ruleset.ts";
 

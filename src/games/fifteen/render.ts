@@ -13,23 +13,23 @@ import {
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { cellSurface, givenSurface, INK } from "../../engine/color/palette.ts";
 import { FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
-import {
-  drawRaisedTile,
-  drawRecessedBorder,
-  glyphFont,
-  raisedBevelWidth,
-} from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
-import { textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
   DrawTextOptions,
   PaletteScheme,
   Point,
   Size,
-} from "../../engine/types.ts";
+} from "../../engine/contract/types.ts";
+import {
+  drawRaisedTile,
+  drawRecessedBorder,
+  glyphFont,
+  raisedBevelWidth,
+} from "../../engine/draw.ts";
+import { textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import {
   type Flash,
   sweepStep,

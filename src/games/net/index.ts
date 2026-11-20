@@ -14,7 +14,6 @@ import {
   searchTierContract,
   solveFromAnswer,
 } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import { fromCoord } from "../../engine/board/geometry.ts";
 import {
   anticlockwise,
@@ -28,8 +27,10 @@ import {
   R,
   U,
 } from "../../engine/board/square-edges.ts";
-import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
-import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { Game, GamePref, SolveResult } from "../../engine/contract/game.ts";
+import { UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   atof,
@@ -69,7 +70,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { offset } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
 import {

@@ -2,7 +2,7 @@
 // answer through the first deal, which runs on another thread. These drive
 // `Puzzle` against a stub worker that records every method asked of it.
 import { describe, expect, it } from "vitest";
-import type { PuzzleStaticAttributes } from "../engine/types.ts";
+import type { PuzzleStaticAttributes } from "../engine/contract/types.ts";
 import { awaitsFirstBoard } from "./board-commands.ts";
 import { Puzzle } from "./puzzle.ts";
 

@@ -16,6 +16,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_BACKGROUND, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
+import type { Color } from "../../engine/contract/types.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
@@ -29,7 +30,6 @@ import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import type { Color } from "../../engine/types.ts";
 import { type Flash, NO_FLASH, sweepStep, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import { slideGame } from "./index.ts";
 import {

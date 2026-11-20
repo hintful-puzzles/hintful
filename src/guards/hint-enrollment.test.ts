@@ -21,8 +21,8 @@
  * are the only thing standing between an empty derivation and a clean commit.
  */
 import { describe, expect, it } from "vitest";
-import { difficultyTiers, tierOf } from "../engine/difficulty.ts";
-import { hasHint } from "../engine/game.ts";
+import { difficultyTiers, tierOf } from "../engine/contract/difficulty.ts";
+import { hasHint } from "../engine/contract/game.ts";
 import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,
@@ -205,7 +205,7 @@ const BUILDS_ITS_OWN_BOARDS: Record<string, string> = {
     "writes a field `tierOf` and the codec read back, which is arithmetic on a " +
     "params record that any valid record exercises. Everything here that is " +
     "about boards already reads every leaf preset.",
-  "src/engine/difficulty.test.ts":
+  "src/engine/contract/difficulty.test.ts":
     "Exercises `withTier` against a hand-written difficulty item rather than a " +
     "game, the way `hint-games.test.ts` exercises the slicing rule against a " +
     "hand-written menu: there is no presets menu in it to read.",
@@ -227,7 +227,7 @@ describe("a cross-game sweep takes its boards from the slice", () => {
   // A call through the import, renamed or through a namespace alike.
   const OWN_BOARDS = [
     { module: "src/engine/testing/presets.ts", name: "firstLeaf" },
-    { module: "src/engine/difficulty.ts", name: "withTier" },
+    { module: "src/engine/contract/difficulty.ts", name: "withTier" },
   ];
 
   it("scanned the suite, and only the ledgered files build their own", () => {

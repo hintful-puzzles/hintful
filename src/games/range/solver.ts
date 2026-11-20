@@ -32,6 +32,7 @@ import {
 } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/board/dsf.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import {
   clueList,
   describedSpace,
@@ -47,7 +48,6 @@ import {
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import * as range from "../../generated/games/range/range.compiled.ts";
 import {
   BLACK,

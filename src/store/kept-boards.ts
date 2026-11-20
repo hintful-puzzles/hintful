@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { DealtBoard, EncodedParams, PuzzleId } from "../engine/types.ts";
+import type { DealtBoard, EncodedParams, PuzzleId } from "../engine/contract/types.ts";
 
 interface KeptBoardRecord extends DealtBoard {
   /** Counts up, so the lowest of a type's rows is the board kept longest. */

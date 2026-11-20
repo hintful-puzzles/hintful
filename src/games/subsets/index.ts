@@ -20,9 +20,12 @@
  * Custom dialog offering the tier alone.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import { fromCoord } from "../../engine/board/geometry.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import {
+  type DifficultyContract,
+  difficultyItem,
+} from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type HintResult,
@@ -32,14 +35,21 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
+} from "../../engine/contract/game.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
-} from "../../engine/hint-refusal.ts";
-import { CELL, type MarkKind, type Sentence, so } from "../../engine/hint-words.ts";
+} from "../../engine/contract/hint-refusal.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Sentence,
+  so,
+} from "../../engine/contract/hint-words.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import { judgeWalked } from "../../engine/move-judge.ts";
 import {
   CURSOR_SELECT,
@@ -51,7 +61,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { statedParts } from "../../engine/stated.ts";
 import {
   ERASE_KEYS,
@@ -61,7 +70,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";

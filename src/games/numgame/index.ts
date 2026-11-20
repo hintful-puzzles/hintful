@@ -8,8 +8,9 @@
  * [`solver.ts`](./solver.ts).
  */
 
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, HintStep, SolveResult } from "../../engine/game.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import type { Game, HintStep, SolveResult } from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import { registerGame, UI_UPDATE, type UiUpdate } from "../../engine/index.ts";
 import {
@@ -24,7 +25,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { newNumgameDesc } from "./generator.ts";
 import {
   hasNoSolution,

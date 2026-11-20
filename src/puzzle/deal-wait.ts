@@ -1,5 +1,5 @@
 import { signal } from "@lit-labs/signals";
-import { DEAL_DEADLINE_MS } from "../engine/retry-limit.ts";
+import { DEAL_DEADLINE_MS } from "../engine/contract/retry-limit.ts";
 import { SLOW_DEAL_MS } from "./deal-ahead.ts";
 
 /**

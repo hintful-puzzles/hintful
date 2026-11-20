@@ -14,7 +14,7 @@
  * bind" (every generated board needs exactly its tier).
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { bricksGame } from "./index.ts";
 import { type BricksParams, encodeDesc, newState } from "./state.ts";

@@ -6,12 +6,16 @@
 
 import { describe, expect, it } from "vitest";
 import { COL_ERROR } from "../../engine/color/roles.ts";
-import { DESC_NOT_UNIQUE, loadVerdict, validateDesc } from "../../engine/desc-error.ts";
+import {
+  DESC_NOT_UNIQUE,
+  loadVerdict,
+  validateDesc,
+} from "../../engine/contract/desc-error.ts";
+import { MULTIPLE_SOLUTIONS } from "../../engine/contract/solve-failure.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { MULTIPLE_SOLUTIONS } from "../../engine/solve-failure.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import type { Point } from "../../engine/types.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { answerCount } from "./answer.ts";
 import { blackboxGame as game } from "./index.ts";

@@ -4,9 +4,12 @@
 // Worker itself is absent, and nothing here draws.
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
+import type {
+  ChangeNotification,
+  PuzzleStaticAttributes,
+} from "../engine/contract/types.ts";
 import type { EngineCore } from "../engine/midend.ts";
 import { createTsEngine } from "../engine/registry.ts";
-import type { ChangeNotification, PuzzleStaticAttributes } from "../engine/types.ts";
 import { Puzzle } from "./puzzle.ts";
 import type { RemoteWorkerPuzzle } from "./worker.ts";
 import { TsWorkerPuzzle } from "./worker-adapter.ts";

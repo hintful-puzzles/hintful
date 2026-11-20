@@ -29,8 +29,9 @@ import type {
   ParamConfigItem,
   SolveResult,
   UiUpdate,
-} from "../../engine/game.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { numberItem, parseConfigInt } from "../../engine/params.ts";
@@ -48,7 +49,6 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { solveBySearch } from "../../engine/search-outcome.ts";
-import type { Point } from "../../engine/types.ts";
 import { newSlideDesc } from "./generator.ts";
 import { hint, hintKeepTrack, SLIDE_RUNGS } from "./hint.ts";
 import { computeReachable, executeMove, nearestReachable, status } from "./moves.ts";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ParamConfigItem } from "./game.ts";
+import type { ParamConfigItem } from "./contract/game.ts";
 import { modifierItem, modifiersMarkdown, modifiersOf } from "./modifier.ts";
 import { parametersMarkdown } from "./param-help.ts";
 import { describeParams } from "./param-label.ts";

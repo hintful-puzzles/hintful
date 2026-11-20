@@ -29,9 +29,9 @@ import {
   playerEntryColor,
   REGION_DONE,
 } from "../engine/color/palette.ts";
+import type { Color, PuzzleId } from "../engine/contract/types.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { REGISTERED_IDS } from "../engine/testing/enrollment.ts";
-import type { Color, PuzzleId } from "../engine/types.ts";
 import * as slide from "../games/slide/render.ts";
 import {
   colorToOKLCH,

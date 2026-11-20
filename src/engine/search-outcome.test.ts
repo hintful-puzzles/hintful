@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { PUZZLE_NOT_REASONABLE, SEARCH_OUT_OF_REACH } from "./hint-refusal.ts";
+import { PUZZLE_NOT_REASONABLE, SEARCH_OUT_OF_REACH } from "./contract/hint-refusal.ts";
+import { NO_SOLUTION, NO_SOLUTION_FROM_HERE } from "./contract/solve-failure.ts";
 import {
   type SearchOutcome,
   searchRefusal,
   searchVerdict,
   solveBySearch,
 } from "./search-outcome.ts";
-import { NO_SOLUTION, NO_SOLUTION_FROM_HERE } from "./solve-failure.ts";
 
 const found = (...line: string[]): SearchOutcome<string> => ({ kind: "found", line });
 const lost: SearchOutcome<string> = { kind: "lost" };

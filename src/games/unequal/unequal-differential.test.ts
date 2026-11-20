@@ -21,7 +21,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { solveEdgeClues } from "../../engine/edge-clue-latin/solver.ts";
 import {

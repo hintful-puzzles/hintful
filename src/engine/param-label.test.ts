@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { difficultyItem, tierNames } from "./difficulty.ts";
-import type { ParamConfigItem } from "./game.ts";
+import { difficultyItem, tierNames } from "./contract/difficulty.ts";
+import type { ParamConfigItem } from "./contract/game.ts";
 import { expandChoices, parametersMarkdown } from "./param-help.ts";
 import { describeParams, presetMenu } from "./param-label.ts";
 import { dimensionParamConfig, numberItem } from "./params.ts";

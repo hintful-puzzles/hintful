@@ -10,7 +10,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -24,7 +25,6 @@ import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import type { Point } from "../../engine/types.ts";
 import { STATED } from "../../generated/games/sticks/sticks.compiled.ts";
 import { newSticksDesc } from "./generator.ts";
 import { sticksGame } from "./index.ts";

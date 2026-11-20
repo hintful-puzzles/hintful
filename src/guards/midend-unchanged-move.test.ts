@@ -7,13 +7,14 @@
 
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
+import { UI_UPDATE } from "../engine/contract/game.ts";
+import type { Point } from "../engine/contract/types.ts";
 import {
   type FakeDrawState,
   type FakeMove,
   type FakeState,
   fakeGame,
 } from "../engine/fake-game.ts";
-import { UI_UPDATE } from "../engine/game.ts";
 import { click, drag } from "../engine/hint-gesture.ts";
 import { Midend } from "../engine/midend.ts";
 import {
@@ -33,7 +34,6 @@ import {
   type TargetVerbs,
 } from "../engine/target-verb.ts";
 import { driveMidend } from "../engine/testing/drive-midend.ts";
-import type { Point } from "../engine/types.ts";
 
 /** The fake's moves, and one that builds a new state holding the same count. */
 type Move = FakeMove | "same";

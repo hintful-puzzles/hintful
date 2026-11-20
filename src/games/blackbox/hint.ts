@@ -26,20 +26,21 @@
  *    no laser reaches.
  */
 
-import { clueList, traceBeam } from "../../engine/describe-runtime.ts";
 import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
   narratedStep,
-} from "../../engine/game.ts";
-import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+} from "../../engine/contract/game.ts";
+import { SEARCH_OUT_OF_REACH } from "../../engine/contract/hint-refusal.ts";
 import {
   CELL,
   type MarkKind,
   type Relation,
   type Sentence,
-} from "../../engine/hint-words.ts";
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import { clueList, traceBeam } from "../../engine/describe-runtime.ts";
 import {
   CellMarks,
   compiledRung,
@@ -50,7 +51,6 @@ import {
 } from "../../engine/ladder-runtime.ts";
 import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import type { Point } from "../../engine/types.ts";
 import * as blackbox from "../../generated/games/blackbox/blackbox.compiled.ts";
 import { BUTTON, LASER } from "./hint-marks.ts";
 import {

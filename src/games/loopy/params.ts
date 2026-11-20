@@ -10,8 +10,8 @@
  */
 
 import { type GridType, gridValidateParams } from "../../engine/board/grid/index.ts";
-import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import * as loopy from "../../generated/games/loopy/loopy.compiled.ts";

@@ -22,8 +22,15 @@
  */
 
 import { FREE_NAMES } from "../../engine/color/colors.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
+import {
+  type MarkedDeadEnd,
+  markedDeadEnd,
+} from "../../engine/contract/hint-refusal.ts";
 import {
   CELL,
   mark,
@@ -31,10 +38,10 @@ import {
   type Relation,
   type Sentence,
   whole,
-} from "../../engine/hint-words.ts";
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
 import { searchRefusal } from "../../engine/search-outcome.ts";
-import type { Point } from "../../engine/types.ts";
 import { voice } from "../../generated/games/samegame/samegame.compiled.ts";
 import {
   findClearing,

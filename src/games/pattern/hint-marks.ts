@@ -8,8 +8,8 @@
  * then rows `w..w+h-1`.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 
 /** A row or column, clue strip included. */
 export const LINE: MarkKind<number> = { name: "line", key: String };

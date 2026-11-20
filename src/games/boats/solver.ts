@@ -14,13 +14,15 @@
  * ladder fills is uniquely solved, at every tier.
  */
 
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import { NO_SOLUTION, type SolveFailure } from "../../engine/contract/solve-failure.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
   rangeMask,
 } from "../../engine/describe-runtime.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   CellMarks,
   describedLadder,
@@ -29,8 +31,6 @@ import {
   runLadder,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
-import type { Point } from "../../engine/types.ts";
 import * as boats from "../../generated/games/boats/boats.compiled.ts";
 import {
   type BoatsBoard,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { HintMarkLegend } from "../game.ts";
-import { CELL, mark, type Narration, phrase, whole } from "../hint-words.ts";
+import type { HintMarkLegend } from "../contract/game.ts";
+import { CELL, mark, type Narration, phrase, whole } from "../contract/hint-words.ts";
 import { referenceDefects } from "./hint-reference.ts";
 
 const a = { x: 0, y: 0 };

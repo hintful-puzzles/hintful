@@ -399,7 +399,7 @@ function verify(): void {
   // The registry and the app's catalog both load the games' directories by
   // glob, and a walk that took a glob of modules as "everything" ran each.
   expect(
-    game.narrow.includes("src/engine/sections.test.ts") &&
+    game.narrow.includes("src/engine/contract/sections.test.ts") &&
       !game.narrow.includes("src/components/puzzle-switcher.test.ts"),
     "a Pearl-only push selects the registry's readers and not the catalog's",
   );
@@ -465,7 +465,7 @@ function verify(): void {
   // The commit's plan: the same files, and no game's boards but its own.
   // `enrollment.ts` reads `game.ts` as text, and the narration sweep imports
   // it: a reader of the text that also walks boards keeps them for the push.
-  const contract = commit(["src/engine/game.ts"]);
+  const contract = commit(["src/engine/contract/game.ts"]);
   expect(
     contract.narrow.includes("src/guards/hint-quality.test.ts") &&
       contract.narrow.includes("src/guards/hint-em-dash.test.ts") &&
@@ -473,7 +473,9 @@ function verify(): void {
     "a commit to game.ts runs hint-quality and the em-dash scan with no game's cases",
   );
   expect(
-    owed(["src/engine/game.ts"]).includes("whole src/guards/hint-quality.test.ts"),
+    owed(["src/engine/contract/game.ts"]).includes(
+      "whole src/guards/hint-quality.test.ts",
+    ),
     "the push that carries a game.ts commit runs hint-quality whole",
   );
   const ownMidend = commit(["src/engine/midend.ts"]);

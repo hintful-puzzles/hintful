@@ -7,14 +7,14 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
-import type { Point } from "../../engine/types.ts";
 import { STATED } from "../../generated/games/starbattle/starbattle.compiled.ts";
 import { starbattleGame } from "./index.ts";
 import { answerOf } from "./solver.ts";

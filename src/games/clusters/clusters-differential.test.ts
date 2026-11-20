@@ -14,7 +14,7 @@
  * it is gone — see `engine/testing/differential.ts`.
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import cReference from "./__fixtures__/clusters-c-reference.json" with { type: "json" };
 import { clustersGame } from "./index.ts";
 import { answerSearch } from "./solver.ts";

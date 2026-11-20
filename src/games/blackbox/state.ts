@@ -9,7 +9,6 @@
  * `beam` reads.
  */
 
-import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
@@ -18,19 +17,20 @@ import {
   DESC_TOO_SHORT,
   type DescParse,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { PresetBoards } from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { parseLeadingInt } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import {
   describedSpace,
   type GridSpace,
   traceBeam,
 } from "../../engine/describe-runtime.ts";
-import type { PresetBoards } from "../../engine/game.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { units } from "../../generated/games/blackbox/blackbox.compiled.ts";
 
 // --- flag constants (upstream BALL_* / LASER_*) -----------------------

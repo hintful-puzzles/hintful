@@ -19,17 +19,17 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { PresetMenu } from "../engine/game.ts";
+import type { PresetMenu } from "../engine/contract/game.ts";
+import { SQUARE_GRID, sectionState } from "../engine/contract/sections.ts";
+import type { Size } from "../engine/contract/types.ts";
 import { presetMenu } from "../engine/param-label.ts";
 import { paramsError } from "../engine/params.ts";
-import { SQUARE_GRID, sectionState } from "../engine/sections.ts";
 import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,
 } from "../engine/testing/enrollment.ts";
 import { expectLedger } from "../engine/testing/ledger.ts";
 import type { AnyGame, AnyParams } from "../engine/testing/params-corpus.ts";
-import type { Size } from "../engine/types.ts";
 
 /** Within this of square a board gains nothing from being turned. */
 const SQUARE_TOLERANCE = 1.02;

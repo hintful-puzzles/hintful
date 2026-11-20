@@ -10,7 +10,6 @@
 
 import { Dsf } from "../../engine/board/dsf.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
-import { digitValue } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -19,7 +18,8 @@ import {
   descBadCharacter,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { digitValue } from "../../engine/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { encodeRunLength } from "../../engine/run-length.ts";

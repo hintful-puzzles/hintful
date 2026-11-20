@@ -55,8 +55,15 @@ import {
   strikesOf,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import {
+  CELL,
+  type Narration,
+  type Sentence,
+  whole,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { describedSpace, rangeMask, step } from "../../engine/describe-runtime.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import {
   candidateConclusions,
   cleanObviousText,
@@ -64,7 +71,6 @@ import {
   type Premise,
   populateText,
 } from "../../engine/hint-text.ts";
-import { CELL, type Narration, type Sentence, whole } from "../../engine/hint-words.ts";
 import {
   CellMarks,
   type Firing as LadderFiring,
@@ -72,7 +78,6 @@ import {
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
-import type { Point } from "../../engine/types.ts";
 import * as rome from "../../generated/games/rome/rome.compiled.ts";
 import { dealtOf, romeLadder } from "./solver.ts";
 import {

@@ -14,7 +14,7 @@
  * `engine/testing/differential.ts`.
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/slant-c-reference.json" with { type: "json" };

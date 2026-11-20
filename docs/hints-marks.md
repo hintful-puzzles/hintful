@@ -762,7 +762,7 @@ is one journey").
   when it makes the last one, and otherwise `"onTrack"` with the step shrunk
   in place, its move and its words both, so a later play does not repeat
   what is done. A cell outside the step or a wrong value is `"off"`.
-  `trackTargets` in [`engine/hint-track.ts`](../src/engine/hint-track.ts)
+  `trackTargets` in [`engine/contract/hint-track.ts`](../src/engine/contract/hint-track.ts)
   gives the verdict and the targets left; the game rebuilds the shrunk move
   from them.
 - **Take the changes from a board diff**, `executeMove` on the state before

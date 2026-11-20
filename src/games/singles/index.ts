@@ -10,21 +10,22 @@
  * contradict the unique solution.
  */
 
-import { assertNever, rejectMove } from "../../engine/assert-never.ts";
-import {
-  describedFiringHint,
-  type FiringHint,
-} from "../../engine/described-firing-hint.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type PresetBoards,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+} from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import {
+  describedFiringHint,
+  type FiringHint,
+} from "../../engine/described-firing-hint.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import { isMouseDown, newCursor, stripModifiers } from "../../engine/pointer.ts";
@@ -36,7 +37,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   SAYS_KINDS,
   type SaysById,
@@ -278,7 +278,7 @@ const described = describedFiringHint<
   say: {},
 });
 
-/** Singles' difficulty contract (`engine/difficulty.ts`). `solveSpecific`
+/** Singles' difficulty contract (`engine/contract/difficulty.ts`). `solveSpecific`
  * returns > 0 when it solves; `newState` builds the board from the desc
  * alone, so no player mark reaches the verdict. */
 const difficulty: DifficultyContract<SinglesParams> = {

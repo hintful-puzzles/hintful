@@ -2056,7 +2056,7 @@ a step's: every element named is drawn and nothing else is.
 
 ### Requirement: A hint step's words SHALL be built from their parts
 
-A hint step's words SHALL be a `Sentence` (`src/engine/hint-words.ts`), which
+A hint step's words SHALL be a `Sentence` (`src/engine/contract/hint-words.ts`), which
 only the engine's `sentence` (and its shorthand `so`) and `unshaped` make, so a
 game hands over a step's words as parts and not as one string: what to look at,
 an optional consequence that follows from it, the move, an optional subgoal,
@@ -2958,7 +2958,7 @@ description's: a technique's `says` or a declared step's words, spoken through
 the compiled module's `voice`. Sentences several games share SHALL live in the
 engine's text modules. A declared step that strikes notes and states no move
 SHALL close on them in the engine's strike words. Refusal messages are outside
-this requirement (`src/engine/hint-refusal.ts`).
+this requirement (`src/engine/contract/hint-refusal.ts`).
 
 #### Scenario: Rewording a sentence
 

@@ -9,7 +9,7 @@
  * whose answer, ((100 + 6) × 3 × 75 − 50) ÷ 25, takes all five operations.
  */
 import { describe, expect, it } from "vitest";
-import { UI_UPDATE } from "../../engine/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,

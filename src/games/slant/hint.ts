@@ -10,18 +10,22 @@
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";
-import { PLACE } from "../../engine/describe-runtime.ts";
-import { placeNotes } from "../../engine/fact-graph.ts";
 import type {
   HintResult,
   HintStep,
   HintTrackVerdict,
   MoveVerdict,
-} from "../../engine/game.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
+} from "../../engine/contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Sentence,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import { PLACE } from "../../engine/describe-runtime.ts";
+import { placeNotes } from "../../engine/fact-graph.ts";
 import { judgeWalked } from "../../engine/move-judge.ts";
-import type { Point } from "../../engine/types.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";
 import { ALIKE, CLUE } from "./hint-marks.ts";
 import {

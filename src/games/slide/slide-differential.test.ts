@@ -20,7 +20,7 @@
  * `add-slide-ts-port` stage-2 commit.
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/slide-c-reference.json" with { type: "json" };
 import { newSlideDesc } from "./generator.ts";

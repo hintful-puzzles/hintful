@@ -6,14 +6,18 @@
  * which is all a move writes.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import { Dsf } from "../../engine/board/dsf.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
-import { DESC_MALFORMED, type DescParse, descValue } from "../../engine/desc-error.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import {
+  DESC_MALFORMED,
+  type DescParse,
+  descValue,
+} from "../../engine/contract/desc-error.ts";
+import { difficultyItem } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem } from "../../engine/difficulty.ts";
 import { regionNumbers } from "../../engine/divide.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, num, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

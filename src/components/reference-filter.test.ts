@@ -3,7 +3,7 @@
  * asks.
  */
 import { describe, expect, it } from "vitest";
-import type { ReferenceItem, ReferenceModel } from "../engine/types.ts";
+import type { ReferenceItem, ReferenceModel } from "../engine/contract/types.ts";
 import { type FilterButton, narrowReference } from "./reference-filter.ts";
 
 const word = (w: string, status: ReferenceItem["status"]): ReferenceItem => ({

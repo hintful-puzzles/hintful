@@ -1,9 +1,9 @@
 import { css, html } from "lit";
 import { customElement, eventOptions, property } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
+import { type Point, PuzzleButton } from "../../engine/contract/types.ts";
 import { puzzleKeyMap } from "../../engine/key-map.ts";
 import { digitOf } from "../../engine/pointer.ts";
-import { type Point, PuzzleButton } from "../../engine/types.ts";
 import { audioClick } from "../../utils/audio.ts";
 import {
   DOMMouseButton,

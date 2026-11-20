@@ -32,7 +32,8 @@
 
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
-import { UI_UPDATE } from "./game.ts";
+import { UI_UPDATE } from "./contract/game.ts";
+import type { Rect } from "./contract/types.ts";
 import {
   type CellEntry,
   type CellHighlight,
@@ -58,7 +59,6 @@ import {
   SCANNED_SOURCE_FILES,
 } from "./testing/enrollment.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
-import type { Rect } from "./types.ts";
 import { WIN_BODY, WIN_LEAD, WIN_NONE } from "./win-wave.ts";
 
 const OPEN: CellEntry = { canEnter: true, canMark: true };

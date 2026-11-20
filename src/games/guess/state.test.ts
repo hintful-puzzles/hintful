@@ -11,7 +11,7 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
 import { bin2hex, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";

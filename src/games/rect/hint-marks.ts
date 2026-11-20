@@ -7,8 +7,8 @@
  * mark needs no footprint beyond the squares themselves.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
-import type { Rect } from "../../engine/types.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Rect } from "../../engine/contract/types.ts";
 
 /** An edge between two squares: `h` is the top of `(x, y)`, `v` its left. */
 export interface RectEdge {

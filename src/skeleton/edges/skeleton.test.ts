@@ -18,6 +18,7 @@
 import { describe, expect, it } from "vitest";
 import { pointAtEdge, squareEdges } from "../../engine/board/square-edges.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { Midend } from "../../engine/index.ts";
 import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
 import {
@@ -36,7 +37,6 @@ import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectDragRepeatsThePress } from "../../engine/testing/sweep-probe.ts";
-import type { Point } from "../../engine/types.ts";
 import { crossDrag, skeletonGame } from "./index.ts";
 import { COL_WALL, centerOf, layout, newDrawState } from "./render.ts";
 import { answerOf } from "./solver.ts";

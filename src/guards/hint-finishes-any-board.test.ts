@@ -16,8 +16,8 @@
  * and applying it reveals a piece of the answer.
  */
 import { describe, expect, it } from "vitest";
-import { permitsSearch } from "../engine/difficulty.ts";
-import { ALREADY_SOLVED } from "../engine/hint-refusal.ts";
+import { permitsSearch } from "../engine/contract/difficulty.ts";
+import { ALREADY_SOLVED } from "../engine/contract/hint-refusal.ts";
 import { Midend } from "../engine/midend.ts";
 import { randomNew } from "../engine/random/index.ts";
 import { HINT_GAMES } from "../engine/testing/hint-games.ts";

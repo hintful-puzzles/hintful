@@ -1,5 +1,5 @@
-import type { HintMarkLegend } from "../../engine/game.ts";
-import { type MarkKind, whole } from "../../engine/hint-words.ts";
+import type { HintMarkLegend } from "../../engine/contract/game.ts";
+import { type MarkKind, whole } from "../../engine/contract/hint-words.ts";
 
 /** A peg, by its grid index. */
 export const PEG: MarkKind<number> = { name: "peg", key: String };

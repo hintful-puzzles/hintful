@@ -9,7 +9,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import cReference from "./__fixtures__/flip-c-reference.json" with { type: "json" };
 import { type FlipParams, flipGame } from "./index.ts";

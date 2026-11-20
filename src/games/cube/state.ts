@@ -1,8 +1,8 @@
 /** Cube parameters, state, and the game-description codec. */
 
-import { type DescParse, descValue } from "../../engine/desc-error.ts";
+import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
+import type { PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { PresetBoards } from "../../engine/game.ts";
 import {
   endParams,
   parseDimensions,

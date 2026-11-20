@@ -31,12 +31,12 @@ import {
   difficultyTiers,
   SEARCH_TIER,
   type TierField,
-} from "./difficulty.ts";
-import type { ParamConfigItem, SolveResult } from "./game.ts";
-import { PUZZLE_NOT_REASONABLE } from "./hint-refusal.ts";
+} from "./contract/difficulty.ts";
+import type { ParamConfigItem, SolveResult } from "./contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "./contract/hint-refusal.ts";
+import { retryLimit } from "./contract/retry-limit.ts";
+import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "./contract/solve-failure.ts";
 import { choice, type ParamsSegment } from "./params-codec.ts";
-import { retryLimit } from "./retry-limit.ts";
-import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "./solve-failure.ts";
 
 /** A game's side of {@link SearchTiers.contract}. */
 interface SearchTierGame<Params, State> {

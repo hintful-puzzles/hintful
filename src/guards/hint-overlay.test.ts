@@ -17,7 +17,7 @@
  * hinting game at once, without any per-game color knowledge.
  */
 import { describe, expect, it } from "vitest";
-import { permitsSearch } from "../engine/difficulty.ts";
+import { permitsSearch } from "../engine/contract/difficulty.ts";
 import { declaresNoMarks, HINT_GAMES } from "../engine/testing/hint-games.ts";
 import { walkBoards } from "../engine/testing/hint-walk.ts";
 import { RecordingDrawing } from "../engine/testing/recording-drawing.ts";

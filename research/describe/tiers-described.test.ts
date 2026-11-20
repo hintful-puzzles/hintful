@@ -8,7 +8,7 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { it } from "vitest";
-import { difficultyTiers, withTier } from "../../src/engine/difficulty.ts";
+import { difficultyTiers, withTier } from "../../src/engine/contract/difficulty.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { clustersGame } from "../../src/games/clusters/index.ts";
 import { mosaicGame } from "../../src/games/mosaic/index.ts";

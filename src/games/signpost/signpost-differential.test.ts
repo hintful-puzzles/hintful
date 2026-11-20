@@ -11,7 +11,7 @@
  */
 import { expect } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
-import { descValue } from "../../engine/desc-error.ts";
+import { descValue } from "../../engine/contract/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/signpost-c-reference.json" with { type: "json" };
 import { newSignpostDesc } from "./generator.ts";

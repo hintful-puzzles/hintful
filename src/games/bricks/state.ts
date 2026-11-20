@@ -17,11 +17,15 @@
  * and cursor flags upstream ORs into the same word never reach state here.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
-import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import {
+  DESC_TOO_LONG,
+  type DescParse,
+  descValue,
+} from "../../engine/contract/desc-error.ts";
+import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

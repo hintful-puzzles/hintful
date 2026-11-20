@@ -11,7 +11,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { UI_UPDATE } from "../engine/game.ts";
+import { UI_UPDATE } from "../engine/contract/game.ts";
+import type { Point } from "../engine/contract/types.ts";
 import {
   LEFT_BUTTON,
   LEFT_DRAG,
@@ -32,7 +33,6 @@ import {
 } from "../engine/target-verb.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 import { expectDragRepeatsThePress } from "../engine/testing/sweep-probe.ts";
-import type { Point } from "../engine/types.ts";
 
 describe("the sweep, in the model", () => {
   // A row of six squares: `.` empty, `x` filled, `o` dotted, `#` a clue no

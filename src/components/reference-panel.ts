@@ -18,7 +18,7 @@ import { consume } from "@lit/context";
 import { SignalWatcher } from "@lit-labs/signals";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import type { ReferenceItem, ReferenceModel } from "../engine/types.ts";
+import type { ReferenceItem, ReferenceModel } from "../engine/contract/types.ts";
 import { puzzleContext } from "../puzzle/contexts.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
 import {

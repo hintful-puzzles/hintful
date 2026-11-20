@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Color } from "../types.ts";
+import type { Color } from "../contract/types.ts";
 import {
   mkhighlight,
   mkhighlightBackground,

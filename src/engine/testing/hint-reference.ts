@@ -33,9 +33,13 @@
  * Dev/test-only; the hint-quality walk runs it on every step it visits.
  */
 
-import type { HintMarkLegend } from "../game.ts";
-import type { MarkRef, Narration } from "../hint-words.ts";
-import { type MarkRole, ROLE_ADJECTIVES, ROLE_WORDS } from "../wording-rules.ts";
+import type { HintMarkLegend } from "../contract/game.ts";
+import type { MarkRef, Narration } from "../contract/hint-words.ts";
+import {
+  type MarkRole,
+  ROLE_ADJECTIVES,
+  ROLE_WORDS,
+} from "../contract/wording-rules.ts";
 
 const roleAdjective = (role: MarkRole): string => ROLE_WORDS[role];
 

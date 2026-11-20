@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ColorWord } from "./color/color-word.ts";
+import { ColorWord } from "../color/color-word.ts";
+import { judgeRivals } from "../rival-judging.ts";
 import {
   CELL,
   listOf,
@@ -18,7 +19,6 @@ import {
   unshaped,
   whole,
 } from "./hint-words.ts";
-import { judgeRivals } from "./rival-judging.ts";
 
 const keysOf = (refs: readonly MarkRef[]): string[] => [...markKeys(refs)].sort();
 

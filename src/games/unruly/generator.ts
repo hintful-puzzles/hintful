@@ -7,8 +7,8 @@
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { type Cell, DIFF_TRIVIAL, EMPTY, ONE, ZERO } from "./constants.ts";
 import { type GridView, isComplete, solveCopy, solveGame } from "./solver.ts";
 import { encodeGrid, type UnrulyParams } from "./state.ts";

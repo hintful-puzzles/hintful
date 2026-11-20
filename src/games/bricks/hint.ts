@@ -6,13 +6,13 @@
  * a brick with nothing to rest on, a number given too many or left too few.
  */
 
+import type { HintResult } from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   describedFiringHint,
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
-import type { HintResult } from "../../engine/game.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   SAYS_EACH,
   type SaysById,

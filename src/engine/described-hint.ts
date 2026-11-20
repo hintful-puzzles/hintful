@@ -10,10 +10,17 @@
  *
  * Cell games only: a fact is a placement of a value on a cell.
  */
+
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+  MoveVerdict,
+} from "./contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "./contract/hint-refusal.ts";
+import { CELL, type Sentence } from "./contract/hint-words.ts";
+import type { Point } from "./contract/types.ts";
 import { PLACE } from "./describe-runtime.ts";
-import type { HintResult, HintStep, HintTrackVerdict, MoveVerdict } from "./game.ts";
-import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
-import { CELL, type Sentence } from "./hint-words.ts";
 import {
   type CellMarks,
   type LadderEntry,
@@ -26,7 +33,6 @@ import { type Judging, judgeWalked } from "./move-judge.ts";
 import type { PairIndex } from "./piece.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
-import type { Point } from "./types.ts";
 
 /** What a step's highlights hold: the cell it fills and the value it fills it
  * with, which keep-track compares a move against. The marks are the words'. */

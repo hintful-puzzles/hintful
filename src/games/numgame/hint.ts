@@ -12,9 +12,16 @@
  * target and no shorter line can exist (§ "Recompute-stable plans").
  */
 
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
-import { phrase } from "../../engine/hint-words.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
+import {
+  type MarkedDeadEnd,
+  markedDeadEnd,
+} from "../../engine/contract/hint-refusal.ts";
+import { phrase } from "../../engine/contract/hint-words.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
 import { voice } from "../../generated/games/numgame/numgame.compiled.ts";
 import { SIGN, TILE } from "./kinds.ts";

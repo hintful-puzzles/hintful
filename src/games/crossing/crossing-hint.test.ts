@@ -16,8 +16,8 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import type { HintStep } from "../../engine/game.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";

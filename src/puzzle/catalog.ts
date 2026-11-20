@@ -1,7 +1,7 @@
-import { type PuzzleFamily, puzzleFamilies } from "../engine/catalog.ts";
+import { type PuzzleFamily, puzzleFamilies } from "../engine/contract/catalog.ts";
 import { type CatalogModule, catalogFrom } from "./catalog-data.ts";
 
-export type { PuzzleData, PuzzleFamily } from "../engine/catalog.ts";
+export type { PuzzleData, PuzzleFamily } from "../engine/contract/catalog.ts";
 export { puzzleFamilies };
 
 /** Every game's catalog entry, by id, in id order. */

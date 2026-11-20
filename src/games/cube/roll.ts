@@ -4,7 +4,7 @@
  * solver reads the same table ({@link dealtOf}).
  */
 
-import { rejectMove } from "../../engine/assert-never.ts";
+import { rejectMove } from "../../engine/contract/assert-never.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import * as cube from "../../generated/games/cube/cube.compiled.ts";
 import { Direction, type GridSquare } from "./grid.ts";

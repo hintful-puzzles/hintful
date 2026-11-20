@@ -5,9 +5,9 @@
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
-import type { Point } from "../../engine/types.ts";
 import { clearForSolve, type GalaxiesDiff, solverState } from "./solver.ts";
 import {
   addAssoc,

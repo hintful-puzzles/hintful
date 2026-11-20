@@ -13,13 +13,13 @@
  * bridge, or the cross, that the move would make.
  */
 
+import type { HintStep } from "../../engine/contract/game.ts";
+import type { MarkKind, Sentence } from "../../engine/contract/hint-words.ts";
 import {
   describedEdgeHint,
   type EdgeSpoken,
   type Fired,
 } from "../../engine/described-edge-hint.ts";
-import type { HintStep } from "../../engine/game.ts";
-import type { MarkKind, Sentence } from "../../engine/hint-words.ts";
 import { SAYS_KINDS, voice } from "../../generated/games/bridges/bridges.compiled.ts";
 import { PIECE, type Piece, SPAN } from "./hint-marks.ts";
 import {

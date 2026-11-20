@@ -1,8 +1,8 @@
 /** Shared `GameDrawing` primitives. */
-import type { GameDrawing } from "./game.ts";
+import type { GameDrawing } from "./contract/game.ts";
+import type { DrawTextOptions, Point, Rect } from "./contract/types.ts";
 import { drawArrowHead } from "./path-arrow.ts";
 import { MARK_EDGE_PX } from "./ring.ts";
-import type { DrawTextOptions, Point, Rect } from "./types.ts";
 
 /**
  * The text options for a glyph centered in a tile — the digit in a Sudoku

@@ -538,7 +538,7 @@ which boards exist, and a hygiene fix diverges the fixture. Where the quirk's
 safety rests on an unproven invariant, port it faithfully and wrap the loop
 in a generous cap that throws when exceeded, so an accidental divergence
 fails loudly and does not hang. The shared form is
-[`retry-limit.ts`](../src/engine/retry-limit.ts), and every
+[`retry-limit.ts`](../src/engine/contract/retry-limit.ts), and every
 generate-until-success loop takes it, quirk or not.
 
 ## When a fixture goes red
@@ -582,7 +582,7 @@ load".
 - **Bound non-termination in the code, not with a timeout.** These tests are
   synchronous, so a runaway loop blocks the event loop and no timer fires.
   Use [`step-budget.ts`](../src/engine/step-budget.ts) for solver and hint
-  fixpoints and [`retry-limit.ts`](../src/engine/retry-limit.ts) for
+  fixpoints and [`retry-limit.ts`](../src/engine/contract/retry-limit.ts) for
   retries.
 - **Do not judge a generator's cost from a vitest run.** The module runner
   and suite contention have shown about a 7× gap against a plain `node`
@@ -813,7 +813,7 @@ reads; no list is edited. What each asks of the game's author:
   any position, the overlay reaches the render cache, narration form, and the
   rest. Recipe: [`hints.md`](./hints.md).
 - **Difficulty tiers**: declaring `Game.difficulty`
-  ([`difficulty.ts`](../src/engine/difficulty.ts)) enrolls the game in
+  ([`difficulty.ts`](../src/engine/contract/difficulty.ts)) enrolls the game in
   [`difficulty-contract.test.ts`](../src/guards/difficulty-contract.test.ts):
   caps are monotonic, every tier generates or refuses with a reason, the tier
   list matches the difficulty `paramConfig` choices, and tiers survive the

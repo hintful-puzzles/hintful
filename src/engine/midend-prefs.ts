@@ -1,7 +1,7 @@
-import type { Game } from "./game.ts";
+import type { Game } from "./contract/game.ts";
+import type { ConfigDescription, ConfigValues } from "./contract/types.ts";
 import { asChecked } from "./midend-params.ts";
 import { RULES_OUT_PREF } from "./rules-out.ts";
-import type { ConfigDescription, ConfigValues } from "./types.ts";
 
 /** The preference key of the solve timer, which the engine offers in every
  * game beside the game's own `prefs`. */

@@ -30,9 +30,12 @@ import { loadDescriptionFile } from "../describe/load.ts";
 import { descriptionPath } from "../describe/paths.ts";
 import { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "../engine/candidate-hint.ts";
 import { TWO, wordOf } from "../engine/color/colors.ts";
-import { difficultyChoiceItem, difficultyTiers } from "../engine/difficulty.ts";
-import { hasHint } from "../engine/game.ts";
-import { HINT_MARKS_PLACEHOLDER } from "../engine/hint-words.ts";
+import {
+  difficultyChoiceItem,
+  difficultyTiers,
+} from "../engine/contract/difficulty.ts";
+import { hasHint } from "../engine/contract/game.ts";
+import { HINT_MARKS_PLACEHOLDER } from "../engine/contract/hint-words.ts";
 import {
   MODIFIERS_PLACEHOLDER,
   modifiersMarkdown,

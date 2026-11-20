@@ -11,7 +11,6 @@
 
 import { searchTiers } from "../../engine/answer-search.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
-import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -19,10 +18,12 @@ import {
   type DescParse,
   descBadCharacter,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { PresetBoards } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
-import type { PresetBoards } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, endParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
@@ -32,7 +33,6 @@ import {
   SYMM_ROT2,
   SYMM_ROT4,
 } from "../../engine/symmetric-blacks.ts";
-import type { Point } from "../../engine/types.ts";
 import * as lightup from "../../generated/games/lightup/lightup.compiled.ts";
 
 // --- cell flags (upstream values) -------------------------------------------

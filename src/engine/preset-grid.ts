@@ -11,8 +11,8 @@
  * `preset-menu-shape.test.ts` holds every game's menu to this shape.
  */
 
-import { difficultyChoiceItem, withTier } from "./difficulty.ts";
-import type { ParamConfigItem, PresetBoards, PresetMenu } from "./game.ts";
+import { difficultyChoiceItem, withTier } from "./contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards, PresetMenu } from "./contract/game.ts";
 
 /** The most lines one section of a menu holds. */
 export const MENU_SECTION_LINES = 12;

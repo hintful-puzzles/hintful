@@ -28,10 +28,18 @@
  *
  * Dev/test-only; never imported by production code.
  */
-import { type DealCensus, newDealCensus, takeCensusInto } from "../deal-census.ts";
+import {
+  type DealCensus,
+  newDealCensus,
+  takeCensusInto,
+} from "../contract/deal-census.ts";
+import {
+  MAX_REGENERATE,
+  RetryLimitExceeded,
+  underDealTries,
+} from "../contract/retry-limit.ts";
 import { type RandomState, randomNew } from "../random/index.ts";
 import { getTsGame } from "../registry.ts";
-import { MAX_REGENERATE, RetryLimitExceeded, underDealTries } from "../retry-limit.ts";
 
 /** A dealt board, as `newDesc` returns it. */
 type Board = { desc: string; aux?: string };

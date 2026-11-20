@@ -8,12 +8,16 @@
  * hint names is one the dictionary shows as fitting.
  */
 
-import { type ReferenceAid, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import {
+  type ReferenceAid,
+  UI_UPDATE,
+  type UiUpdate,
+} from "../../engine/contract/game.ts";
 import type {
   ReferenceItem,
   ReferenceModel,
   ReferenceSection,
-} from "../../engine/types.ts";
+} from "../../engine/contract/types.ts";
 import { commonWords } from "../../engine/word-list/index.ts";
 import { wordsDrawn } from "./render.ts";
 import { fittingTrails } from "./solver.ts";

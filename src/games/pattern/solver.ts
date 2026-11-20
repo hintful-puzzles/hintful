@@ -25,6 +25,7 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import {
   describedSpace,
   type GridSpace,
@@ -45,7 +46,6 @@ import {
 } from "../../engine/ladder-runtime.ts";
 import type { Judging } from "../../engine/move-judge.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import * as pattern from "../../generated/games/pattern/pattern.compiled.ts";
 import {
   GRID_EMPTY,

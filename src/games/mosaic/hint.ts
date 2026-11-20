@@ -7,11 +7,11 @@
  * either.
  */
 
+import type { Point } from "../../engine/contract/types.ts";
 import {
   describedFiringHint,
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
-import type { Point } from "../../engine/types.ts";
 import { type SaysById, STATED } from "../../generated/games/mosaic/mosaic.compiled.ts";
 import { BLOCK } from "./kinds.ts";
 import { hintWalk, type MosaicRung } from "./solver.ts";

@@ -9,14 +9,14 @@
  * livelock guard, the never-assigned `prevret`) keeps its give-up points.
  */
 
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   type RandomState,
   randomBits,
   randomCopy,
   randomUpto,
 } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   ladderSolve,
   type OpenCb,

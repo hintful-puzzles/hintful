@@ -9,12 +9,17 @@
  * voice reads as the description's number.
  *
  * Every word that points at the board is a reference to the mark it points at
- * (`engine/hint-words.ts`): the cells the step decides are ringed, and so is
+ * (`engine/contract/hint-words.ts`): the cells the step decides are ringed, and so is
  * each pencil mark it crosses out; the sightline it reasons from is outlined.
  */
 
-import { CELL, type Note, type Sentence, unshaped } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import {
+  CELL,
+  type Note,
+  type Sentence,
+  unshaped,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { voice } from "../../generated/games/undead/undead.compiled.ts";
 import { MON_GHOST, MON_VAMPIRE, MONSTERS } from "./state.ts";
 

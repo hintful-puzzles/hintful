@@ -8,7 +8,7 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
-import { loadVerdict } from "../../engine/desc-error.ts";
+import { loadVerdict } from "../../engine/contract/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

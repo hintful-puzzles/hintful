@@ -17,7 +17,7 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";

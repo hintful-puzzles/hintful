@@ -19,6 +19,7 @@
  */
 
 import { type SquareEdges, squareEdges } from "../../engine/board/square-edges.ts";
+import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -26,7 +27,6 @@ import {
   type GridSpace,
   rangeMask,
 } from "../../engine/describe-runtime.ts";
-import type { DifficultyVerdict } from "../../engine/difficulty.ts";
 import {
   CellMarks,
   describedLadder,

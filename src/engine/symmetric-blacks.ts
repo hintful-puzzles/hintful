@@ -14,8 +14,9 @@
  * The caller clears its board first (C's `set_blacks` memsets; the TS
  * callers own their board representation, so clearing stays with them).
  */
+
+import { retryLimit } from "./contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
-import { retryLimit } from "./retry-limit.ts";
 
 // The shared symmetry enum (identical values in lightup.c and sticks.c).
 export const SYMM_NONE = 0;

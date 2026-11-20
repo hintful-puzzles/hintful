@@ -9,15 +9,19 @@
  * wing, the singles) are the engine's, spoken in {@link TOWERS_VOCAB}.
  *
  * Every word that points at the board is a reference to the mark it points at
- * (`engine/hint-words.ts`): a clue is outlined in its slot beside the grid, the
+ * (`engine/contract/hint-words.ts`): a clue is outlined in its slot beside the grid, the
  * line it sees along is striped through both clue slots, and the cell a
  * placement decides is ringed ("this cell").
  */
 
+import {
+  CELL,
+  type Narration,
+  type Sentence,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import type { LatinVocab } from "../../engine/hint-text.ts";
-import { CELL, type Narration, type Sentence } from "../../engine/hint-words.ts";
 import { lineUnit } from "../../engine/step-voice.ts";
-import type { Point } from "../../engine/types.ts";
 import { voice, WORDS } from "../../generated/games/towers/towers.compiled.ts";
 
 /** A clue and the line it sees along, as the sentence names them: the clue's

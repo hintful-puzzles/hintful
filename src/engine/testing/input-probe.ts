@@ -10,7 +10,8 @@
  * (docs/doctrine.md § "One source of truth").
  */
 
-import { type Game, hasHint } from "../game.ts";
+import { type Game, hasHint } from "../contract/game.ts";
+import type { Color, ConfigValues, Point, Size } from "../contract/types.ts";
 import { Midend } from "../midend.ts";
 import {
   CURSOR_DOWN,
@@ -35,7 +36,6 @@ import {
 } from "../pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../random/index.ts";
 import { hintGesture, sweepOpen } from "../target-verb.ts";
-import type { Color, ConfigValues, Point, Size } from "../types.ts";
 import { copyUi, restoreUi } from "../ui-snapshot.ts";
 import { NO_FLASH } from "../win-wave.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";

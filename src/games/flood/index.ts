@@ -1,14 +1,16 @@
-import { assertNever } from "../../engine/assert-never.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import type {
   Game,
   HintResult,
   HintStep,
   HintTrackVerdict,
   UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import { GAME_OVER, NO_MOVE_WORTH_MAKING } from "../../engine/contract/hint-refusal.ts";
+import { CELL } from "../../engine/contract/hint-words.ts";
+import { NO_SOLUTION_FROM_HERE } from "../../engine/contract/solve-failure.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { GAME_OVER, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
-import { CELL } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
   numberItem,
@@ -16,14 +18,12 @@ import {
 } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import { voice } from "../../generated/games/flood/flood.compiled.ts";
 import {
   COLOR_NAMES,

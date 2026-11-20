@@ -34,10 +34,14 @@
  * request can look for a journey.
  */
 
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
-import type { MarkKind, Sentence } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
+import { NO_MOVE_WORTH_MAKING } from "../../engine/contract/hint-refusal.ts";
+import type { MarkKind, Sentence } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import * as untangle from "../../generated/games/untangle/untangle.compiled.ts";
 import { ENDGAME_CROSSINGS, type Endgame, planEndgame } from "./endgame.ts";
 import {

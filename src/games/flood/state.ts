@@ -1,18 +1,18 @@
 import { gridText } from "../../engine/board/grid-text.ts";
-import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   type DescParse,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { PresetBoards } from "../../engine/contract/game.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
+import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
-import type { PresetBoards } from "../../engine/game.ts";
 import { parseDimensions, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import * as flood from "../../generated/games/flood/flood.compiled.ts";
 import { choosemove, completed, fill, SolverScratch } from "./solver.ts";
 

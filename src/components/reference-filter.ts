@@ -8,7 +8,7 @@ import type {
   ReferenceItem,
   ReferenceModel,
   ReferenceSection,
-} from "../engine/types.ts";
+} from "../engine/contract/types.ts";
 
 /** One button of the group row or the filter row. */
 export interface FilterButton {

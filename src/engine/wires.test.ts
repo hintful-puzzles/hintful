@@ -20,7 +20,7 @@ import {
   descBadCharacter,
   descValue,
   descVerdict,
-} from "./desc-error.ts";
+} from "./contract/desc-error.ts";
 import { randomNew } from "./random/index.ts";
 import {
   addBorderBarriers,

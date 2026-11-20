@@ -13,9 +13,12 @@
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";
-import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
+import {
+  type CappedSolve,
+  solvableAtExactlyTier,
+} from "../../engine/contract/difficulty.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { subsetsSolveGame } from "./solver.ts";
 import {
   ADJTHAN,

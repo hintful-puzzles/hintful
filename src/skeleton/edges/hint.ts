@@ -12,13 +12,13 @@
  * (the description's `breaks`, said by `{broke}`).
  */
 
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { describedEdgeHint } from "../../engine/described-edge-hint.ts";
 import type { SuppliedHooks } from "../../engine/described-hint.ts";
 import { EDGE, type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import type { MarkKind } from "../../engine/hint-words.ts";
 import { LINE } from "../../engine/line-drawing.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   STATED,
   type SuppliedById,

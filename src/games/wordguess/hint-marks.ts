@@ -4,7 +4,7 @@
  * paints it and the steps `wordguess.description.yaml` declares name it.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 
 /** A square of the working row, by position, where a guess's letter goes. */
 export const SQUARE: MarkKind<number> = { name: "square", key: (p) => `${p}` };

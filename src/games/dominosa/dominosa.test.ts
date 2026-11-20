@@ -12,8 +12,9 @@ import {
   loadVerdict,
   puzzleDescError,
   validateDesc,
-} from "../../engine/desc-error.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+} from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import type { ReferenceModel } from "../../engine/contract/types.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
@@ -23,7 +24,6 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import type { ReferenceModel } from "../../engine/types.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newDominosaDesc } from "./generator.ts";
 import { dominosaGame } from "./index.ts";

@@ -23,10 +23,17 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { type StepMarks, stepMarks } from "../../engine/contract/hint-words.ts";
+import type {
+  Color,
+  DrawTextOptions,
+  Point,
+  Rect,
+  Size,
+} from "../../engine/contract/types.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { type StepMarks, stepMarks } from "../../engine/hint-words.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
@@ -35,7 +42,6 @@ import {
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
-import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import {
   type Flash,
   NO_FLASH,

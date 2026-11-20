@@ -5,13 +5,19 @@
  */
 
 import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, HintStep, SolveResult, UiUpdate } from "../../engine/game.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
+import type {
+  Game,
+  HintStep,
+  SolveResult,
+  UiUpdate,
+} from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { gridCursorMove, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   dragMarkVerbs,
   interpretTargetVerbs,
@@ -19,7 +25,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import {
   MAGNETS_RUNGS,

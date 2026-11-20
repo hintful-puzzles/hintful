@@ -32,9 +32,9 @@ import {
   DESC_TOO_SHORT,
   type DescError,
   descBadCharacter,
-} from "../../../desc-error.ts";
+} from "../../../contract/desc-error.ts";
+import { MAX_REGENERATE, retryLimit } from "../../../contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../../random/index.ts";
-import { MAX_REGENERATE, retryLimit } from "../../../retry-limit.ts";
 import {
   children,
   hatsInMetatile,

@@ -12,19 +12,19 @@
  * `add-tents-hint`'s design).
  */
 
-import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
-import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
-import type { HintStep } from "../../engine/game.ts";
-import { keepTrackBy } from "../../engine/hint-track.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
+import { keepTrackBy } from "../../engine/contract/hint-track.ts";
 import {
   CELL,
   type MarkKind,
   type Sentence,
   so,
   whole,
-} from "../../engine/hint-words.ts";
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
+import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
 import { statedParts } from "../../engine/stated.ts";
-import type { Point } from "../../engine/types.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import { type HintLink, LINK, lineSquares, NUMBER, pointOf } from "./hint-marks.ts";
 import {
@@ -546,7 +546,7 @@ function changesBetween(before: TentsState, after: TentsState): Map<number, numb
 /**
  * Classify a player move against the displayed step: by what it did to the
  * board, so a click, a drag and a key press that make the same change are the
- * same (`engine/hint-track.ts`). A step that decides several squares shrinks
+ * same (`engine/contract/hint-track.ts`). A step that decides several squares shrinks
  * in place to what is left.
  */
 export const tentsKeepTrack = keepTrackBy<

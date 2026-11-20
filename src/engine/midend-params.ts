@@ -1,14 +1,14 @@
-import { fieldLabel, type Game } from "./game.ts";
-import { configNarrowing, onlyError } from "./only.ts";
-import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
-import { paramsError, UnreadableParams } from "./params.ts";
+import { fieldLabel, type Game } from "./contract/game.ts";
 import type {
   ConfigDescription,
   ConfigValues,
   CustomParamsEncoding,
   PresetMenuEntry,
   Size,
-} from "./types.ts";
+} from "./contract/types.ts";
+import { configNarrowing, onlyError } from "./only.ts";
+import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
+import { paramsError, UnreadableParams } from "./params.ts";
 
 /** A checkbox's value as a config form submits it. */
 export const asChecked = (v: unknown): boolean => v === true || v === "true" || v === 1;

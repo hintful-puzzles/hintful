@@ -11,7 +11,8 @@
  */
 
 import { expect } from "vitest";
-import { UI_UPDATE } from "../game.ts";
+import { UI_UPDATE } from "../contract/game.ts";
+import type { Point } from "../contract/types.ts";
 import {
   LEFT_BUTTON,
   LEFT_DRAG,
@@ -21,7 +22,6 @@ import {
   RIGHT_RELEASE,
 } from "../pointer.ts";
 import type { TargetVerbs } from "../target-verb.ts";
-import type { Point } from "../types.ts";
 import { type AnyGame, probeBoard } from "./input-probe.ts";
 
 type AnyVerbs = TargetVerbs<unknown, unknown, unknown, unknown, unknown>;

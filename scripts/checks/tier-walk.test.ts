@@ -49,8 +49,8 @@ import {
   difficultyChoiceItem,
   lowestSolvingCap,
   withTier,
-} from "../../src/engine/difficulty.ts";
-import type { Game, ParamConfigItem } from "../../src/engine/game.ts";
+} from "../../src/engine/contract/difficulty.ts";
+import type { Game, ParamConfigItem } from "../../src/engine/contract/game.ts";
 import { paramsError } from "../../src/engine/params.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { REGISTERED_GAMES } from "../../src/engine/testing/enrollment.ts";

@@ -7,10 +7,12 @@
  * click made is described by another.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import { fromCoord } from "../../engine/board/geometry.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import { NOT_STARTED } from "../../engine/contract/solve-failure.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   type Game,
@@ -31,14 +33,12 @@ import {
   randomStateEncode,
   randomUpto,
 } from "../../engine/random/index.ts";
-import { NOT_STARTED } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   pressTarget,
   squareGrid,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { firstOpen } from "./generator.ts";
 import {
   MINES_RUNGS,

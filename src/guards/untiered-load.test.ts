@@ -12,11 +12,15 @@
  */
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { DESC_NOT_DEDUCIBLE, loadVerdict, validateDesc } from "../engine/desc-error.ts";
+import {
+  DESC_NOT_DEDUCIBLE,
+  loadVerdict,
+  validateDesc,
+} from "../engine/contract/desc-error.ts";
+import { DRAFT_HINT } from "../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../engine/contract/hint-refusal.ts";
 import { fakeGame } from "../engine/fake-game.ts";
-import { DRAFT_HINT } from "../engine/game.ts";
 import { hintFinishes, nothingToDeduce } from "../engine/hint-finishes.ts";
-import { PUZZLE_NOT_REASONABLE } from "../engine/hint-refusal.ts";
 import { _unregisterGame, registerGame } from "../engine/registry.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {
@@ -42,7 +46,10 @@ const RELAYS: Record<string, string> = {
   "src/engine/described-firing-hint.ts": "describedFiringHint",
   "src/engine/described-hint.ts": "describedHint",
 };
-const REFUSAL = { module: "src/engine/hint-refusal.ts", name: "DEDUCTION_EXHAUSTED" };
+const REFUSAL = {
+  module: "src/engine/contract/hint-refusal.ts",
+  name: "DEDUCTION_EXHAUSTED",
+};
 /** A glob key from this file, as a path from the root. */
 const fromHere = (key: string): string => resolveSpecifier("src/guards/x.ts", key);
 

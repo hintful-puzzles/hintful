@@ -5,6 +5,7 @@
  * (`engine/edge-clue-latin/state.ts`).
  */
 
+import type { PresetBoards } from "../../engine/contract/game.ts";
 import {
   type ClueKind,
   DIFF_SET,
@@ -15,7 +16,6 @@ import {
   F_ADJ_DOWN,
   F_ADJ_RIGHT,
 } from "../../engine/edge-clue-latin/state.ts";
-import type { PresetBoards } from "../../engine/game.ts";
 import { unusedLetter } from "../../engine/params-codec.ts";
 import * as adjacent from "../../generated/games/adjacent/adjacent.compiled.ts";
 import { drawBars } from "./render.ts";

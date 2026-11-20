@@ -5,10 +5,10 @@
 
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { DESC_NOT_DEDUCIBLE, loadVerdict } from "../../engine/desc-error.ts";
-import type { HintStep } from "../../engine/game.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { DESC_NOT_DEDUCIBLE, loadVerdict } from "../../engine/contract/desc-error.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { decodeSave, encodeSave } from "../../engine/save.ts";

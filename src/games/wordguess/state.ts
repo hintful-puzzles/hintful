@@ -12,15 +12,15 @@ import {
   type DescParse,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { numberItem } from "../../engine/params.ts";
 import { flag, num, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import { drawAnswer, isGuess, WORD_LENGTHS } from "../../engine/word-list/index.ts";
 
 // --- letters ----------------------------------------------------------------

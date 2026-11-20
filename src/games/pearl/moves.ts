@@ -8,7 +8,7 @@
  * reads the same rules without an import cycle (docs/rendering.md
  * § "A simulated-release preview lives in `moves.ts`").
  */
-import { assertNever, rejectMove } from "../../engine/assert-never.ts";
+
 import { Dsf } from "../../engine/board/dsf.ts";
 import {
   D,
@@ -20,8 +20,9 @@ import {
   sideOf,
   squareEdges,
 } from "../../engine/board/square-edges.ts";
+import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import { CROSS, LINE, type LineRules, OPEN } from "../../engine/line-drawing.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import { isSolved, pearlSolve } from "./solver.ts";
 import {
   BLANK,

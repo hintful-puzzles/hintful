@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { descValue } from "../../engine/desc-error.ts";
+import { descValue } from "../../engine/contract/desc-error.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { newUntangleDesc } from "./generator.ts";
 import { planarLayout } from "./planar.ts";

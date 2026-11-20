@@ -1,6 +1,6 @@
 /**
  * `virtual:draft-puzzles`: each draft game's id, mapped to the player-facing
- * names of the contract sections it lacks (`src/engine/sections.ts`). The home
+ * names of the contract sections it lacks (`src/engine/contract/sections.ts`). The home
  * screen labels those games from it.
  *
  * Computed from the registered games when the module is first loaded, because

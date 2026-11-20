@@ -14,13 +14,23 @@
  * (`markAll`).
  */
 
-import { assertNever, rejectMove } from "../../engine/assert-never.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
+import {
+  type DifficultyContract,
+  difficultyItem,
+} from "../../engine/contract/difficulty.ts";
+import type {
+  Game,
+  HintResult,
+  SolveResult,
+  UiUpdate,
+} from "../../engine/contract/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
+import type { GameStatus, KeyLabel, Point } from "../../engine/contract/types.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
-import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
 import { markAllPress, type PointerAction } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { colorKeys, digitKeyCode } from "../../engine/key-labels.ts";
 import {
   dragEnteredNoteTakingCell,
@@ -58,8 +68,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
-import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newMapDesc } from "./generator.ts";
 import {
   hintKeepTrack,
@@ -478,7 +486,7 @@ function hint(
 
 // --- register --------------------------------------------------------
 
-/** Map's difficulty contract (`engine/difficulty.ts`). The coloring `mapSolver`
+/** Map's difficulty contract (`engine/contract/difficulty.ts`). The coloring `mapSolver`
  * works from is `clueColoring`, the givens alone, so the player's own colors
  * never enter the verdict. */
 const difficulty: DifficultyContract<MapParams> = {

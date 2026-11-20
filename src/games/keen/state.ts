@@ -18,13 +18,15 @@ import {
   type CandidateReading,
   DEFAULT_CANDIDATE_READING,
 } from "../../engine/candidate-hint.ts";
-import { isDigit } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
   type DescParse,
   descValue,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem } from "../../engine/contract/game.ts";
+import { isDigit } from "../../engine/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import {
   type ClueList,
@@ -32,8 +34,6 @@ import {
   latinSpace,
   partition,
 } from "../../engine/describe-runtime.ts";
-import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
-import type { ParamConfigItem } from "../../engine/game.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, flag, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";

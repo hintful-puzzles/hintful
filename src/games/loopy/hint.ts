@@ -20,19 +20,19 @@
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";
-import { type FactGraph, placeNotes } from "../../engine/fact-graph.ts";
 import type {
   HintResult,
   HintStep,
   HintTrackVerdict,
   MoveVerdict,
-} from "../../engine/game.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
+} from "../../engine/contract/game.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
-} from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
+} from "../../engine/contract/hint-refusal.ts";
+import type { Sentence } from "../../engine/contract/hint-words.ts";
+import { type FactGraph, placeNotes } from "../../engine/fact-graph.ts";
+import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import { type Clauses, statedSentence } from "../../engine/stated.ts";
 import { stepBudget } from "../../engine/step-budget.ts";

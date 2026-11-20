@@ -5,14 +5,14 @@
 import { releaseProxy } from "comlink";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import "../games/index.ts";
-import { dealBoard } from "../engine/deal.ts";
-import type { EngineCore } from "../engine/midend.ts";
-import { createTsEngine, getTsGame } from "../engine/registry.ts";
 import type {
   ChangeNotification,
   DealtBoard,
   PuzzleStaticAttributes,
-} from "../engine/types.ts";
+} from "../engine/contract/types.ts";
+import { dealBoard } from "../engine/deal.ts";
+import type { EngineCore } from "../engine/midend.ts";
+import { createTsEngine, getTsGame } from "../engine/registry.ts";
 import { KeptBoards } from "../store/kept-boards.ts";
 import {
   DealAhead,

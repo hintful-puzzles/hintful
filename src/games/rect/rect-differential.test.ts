@@ -26,7 +26,7 @@
 
 import { expect } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import reference from "./__fixtures__/rect-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";

@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
-import { DESC_NOT_UNIQUE, loadVerdict, validateDesc } from "../../engine/desc-error.ts";
+import {
+  DESC_NOT_UNIQUE,
+  loadVerdict,
+  validateDesc,
+} from "../../engine/contract/desc-error.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, newCursor, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import type { Point } from "../../engine/types.ts";
 import { type RangeMistake, rangeGame } from "./index.ts";
 import {
   BLACK,

@@ -7,13 +7,17 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import "../games/index.ts";
+import {
+  MAX_REGENERATE,
+  RetryLimitExceeded,
+  retryLimit,
+} from "./contract/retry-limit.ts";
+import type { DealtBoard, Size } from "./contract/types.ts";
 import { dealBoard, generate } from "./deal.ts";
 import { fakeGame } from "./fake-game.ts";
 import { randomNew, randomUpto } from "./random/index.ts";
 import { getTsGame } from "./registry.ts";
-import { MAX_REGENERATE, RetryLimitExceeded, retryLimit } from "./retry-limit.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
-import type { DealtBoard, Size } from "./types.ts";
 
 const UPRIGHT_PHONE: Size = { w: 390, h: 640 };
 const DESKTOP: Size = { w: 1200, h: 700 };

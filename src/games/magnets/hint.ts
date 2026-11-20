@@ -11,10 +11,10 @@
  * it re-derives it from the board, in the board's own terms.
  */
 
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import type { Sentence } from "../../engine/contract/hint-words.ts";
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import {
   type CellMarks,
   type Ladder,

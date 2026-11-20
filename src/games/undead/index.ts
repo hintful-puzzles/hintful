@@ -12,9 +12,8 @@
  * cells that contradict the unique solution.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { entryMistakes } from "../../engine/entry-mistakes.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type HintResult,
@@ -23,10 +22,18 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
+import { CELL, NOTE, type Sentence } from "../../engine/contract/hint-words.ts";
+import type {
+  Color,
+  GameStatus,
+  KeyLabel,
+  Point,
+  Size,
+} from "../../engine/contract/types.ts";
+import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import { markAllPress, type PointerAction } from "../../engine/hint-gesture.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { CELL, NOTE, type Sentence } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   noOpEntryResult,
@@ -58,7 +65,6 @@ import type { RandomState } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
-import type { Color, GameStatus, KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newUndeadDesc } from "./generator.ts";
 import {
   border,
@@ -878,7 +884,7 @@ function hintGesture(
   throw new Error(`undead: no hint gesture for ${move.type}`);
 }
 
-/** Undead's difficulty contract (`engine/difficulty.ts`).
+/** Undead's difficulty contract (`engine/contract/difficulty.ts`).
  *
  * **Its cap is a technique rung, not a difficulty number**: this fork grades by
  * a deductive ladder (arc-consistency → exact counting → depth-1 forcing), so

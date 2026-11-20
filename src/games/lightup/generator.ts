@@ -10,10 +10,10 @@
 
 import { dealUnreasonable } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { placeSymmetricBlacks } from "../../engine/symmetric-blacks.ts";
-import type { Point } from "../../engine/types.ts";
 import { deductionFinishes, searchAnswers } from "./solver.ts";
 import {
   cloneState,

@@ -17,13 +17,13 @@ import {
   paletteSchemeOf,
   resolvePalette,
 } from "../engine/color/color-mkhighlight.ts";
+import type { Color } from "../engine/contract/types.ts";
 import {
   type AnyGame,
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,
   REGISTERED_IDS,
 } from "../engine/testing/enrollment.ts";
-import type { Color } from "../engine/types.ts";
 import { oklchToColor } from "../utils/color.ts";
 import { puzzleIds } from "./catalog.ts";
 

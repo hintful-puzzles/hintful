@@ -7,7 +7,6 @@
  */
 
 export { fromCoord } from "./board/geometry.ts";
-export { drawRectOutline } from "./draw.ts";
 export type {
   Game,
   GameDrawing,
@@ -16,8 +15,9 @@ export type {
   ParamConfigItem,
   SolveResult,
   UiUpdate,
-} from "./game.ts";
-export { UI_UPDATE } from "./game.ts";
+} from "./contract/game.ts";
+export { UI_UPDATE } from "./contract/game.ts";
+export { drawRectOutline } from "./draw.ts";
 export { Midend } from "./midend.ts";
 export { dimensionParamConfig } from "./params.ts";
 export { createTsEngine, registerGame } from "./registry.ts";

@@ -31,7 +31,7 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
-const RETRY_LIMIT = "engine/retry-limit.ts";
+const RETRY_LIMIT = "engine/contract/retry-limit.ts";
 const RANDOM = "engine/random/index.ts";
 
 function sources(): Record<string, string> {
@@ -526,7 +526,7 @@ describe("the scan, on loops written to be found", () => {
   const game = (body: string) => ({
     ...engine,
     "games/x/deal.ts": [
-      importing("retryLimit as limit", "../../engine/retry-limit.ts"),
+      importing("retryLimit as limit", "../../engine/contract/retry-limit.ts"),
       importing(
         "type RandomState, randomNew, randomUpto",
         "../../engine/random/index.ts",
@@ -642,7 +642,7 @@ describe("the scan, on loops written to be found", () => {
     const answered = (thrown: string) =>
       scan(
         game(
-          `${importing("RetryLimitExceeded as Spent", "../../engine/retry-limit.ts")}\nfunction a(rng: RandomState) { for (let i = 0; i < 9; i++) { if (randomUpto(rng, 2)) return; } throw new ${thrown}("a"); }`,
+          `${importing("RetryLimitExceeded as Spent", "../../engine/contract/retry-limit.ts")}\nfunction a(rng: RandomState) { for (let i = 0; i < 9; i++) { if (randomUpto(rng, 2)) return; } throw new ${thrown}("a"); }`,
         ),
       ).giveUps.map((g) => g.answered);
     expect(answered("Error")).toEqual([false]);

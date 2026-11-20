@@ -5,8 +5,9 @@ import {
   COL_FLASH,
   COL_FLASH_LEAD,
 } from "../../engine/color/roles.ts";
-import { descBadCharacter, validateDesc } from "../../engine/desc-error.ts";
-import { difficultyTiers } from "../../engine/difficulty.ts";
+import { descBadCharacter, validateDesc } from "../../engine/contract/desc-error.ts";
+import { difficultyTiers } from "../../engine/contract/difficulty.ts";
+import { PuzzleButton } from "../../engine/contract/types.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
@@ -31,7 +32,6 @@ import {
 } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { PuzzleButton } from "../../engine/types.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { newGameDesc } from "./generator.ts";
 import {

@@ -11,13 +11,13 @@
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   DESC_CONTRADICTORY,
   type DescError,
   type DescParse,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import {
   clueList,

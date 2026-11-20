@@ -11,14 +11,18 @@
  * the two itself after every move, and the walk's marks do as the board does.
  */
 
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Sentence,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
-import type { Point } from "../../engine/types.ts";
 import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import { ARROW } from "./hint-marks.ts";
 import {

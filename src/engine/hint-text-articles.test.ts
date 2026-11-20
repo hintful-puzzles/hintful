@@ -12,8 +12,8 @@ import type { CrossingPuzzle } from "../games/crossing/state.ts";
 import { SPOT } from "../games/dominosa/kinds.ts";
 import { STATED as DOMINOSA } from "../generated/games/dominosa/dominosa.compiled.ts";
 import { STATED as KEEN } from "../generated/games/keen/keen.compiled.ts";
+import { CELL } from "./contract/hint-words.ts";
 import { indefinite } from "./hint-text.ts";
-import { CELL } from "./hint-words.ts";
 import { statedParts, statedSentence } from "./stated.ts";
 
 describe("a number after an article gets the article it is pronounced with", () => {

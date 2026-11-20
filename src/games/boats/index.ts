@@ -27,16 +27,20 @@
  * [`render.ts`](./render.ts).
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
-import { describedFiringHint } from "../../engine/described-firing-hint.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import {
+  type DifficultyContract,
+  difficultyItem,
+} from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type HintStep,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { describedFiringHint } from "../../engine/described-firing-hint.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   dimensionParamConfig,
@@ -70,7 +74,6 @@ import {
   type TargetVerbs,
   verbClicks,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import {
   SAYS_KINDS,
   type SaysById,
@@ -533,7 +536,7 @@ function fleetConfigString(p: BoatsParams): string {
   return same ? "" : encodeFleet(p.fleetData, p.fleet);
 }
 
-/** Boats' difficulty contract (`engine/difficulty.ts`). */
+/** Boats' difficulty contract (`engine/contract/difficulty.ts`). */
 const difficulty: DifficultyContract<BoatsParams> = {
   solveAtCap: (p, desc, cap) => {
     const result = solveBoats(boardOf(newState(p, desc)), cap);

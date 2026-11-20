@@ -4,7 +4,7 @@
  * ring.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 
 /** A square of the board, by index. */
 export const SQUARE: MarkKind<number> = { name: "square", key: String };

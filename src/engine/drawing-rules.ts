@@ -3,7 +3,7 @@
  * alike: a call the app's canvas would refuse fails the test that makes it,
  * and a call the canvas draws nothing for leaves nothing in the record.
  */
-import type { Point, Rect } from "./types.ts";
+import type { Point, Rect } from "./contract/types.ts";
 
 /** Which argument a palette index was passed as, for the error that names it. */
 export type InkRole = "fillColor" | "strokeColor";

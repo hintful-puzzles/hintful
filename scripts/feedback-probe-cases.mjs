@@ -916,7 +916,7 @@ export const MODULES = [
   {
     // The list joiner every strike's words and the stated clauses' `{struck}`
     // go through; the hint suites pin its sentences.
-    module: "src/engine/hint-words.ts",
+    module: "src/engine/contract/hint-words.ts",
     cases: [
       {
         within: "joinNums",

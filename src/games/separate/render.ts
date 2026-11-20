@@ -38,10 +38,10 @@ import {
   REGION_DONE,
 } from "../../engine/color/palette.ts";
 import { COL_ERROR, FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Color, Size } from "../../engine/contract/types.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
-import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type {
   SeparateMistake,

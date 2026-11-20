@@ -190,7 +190,15 @@ function specifierEdits(file, text) {
     else if (ts.isCallExpression(node)) {
       const callee = node.expression.getText(sf);
       const arg = node.arguments[0];
-      if (node.expression.kind === ts.SyntaxKind.ImportKeyword && arg) {
+      if (callee === "resolveSpecifier" && arg && moves) {
+        // An anchor: a file in this file's directory that a glob key is
+        // resolved from. It follows the file.
+        literal(arg, (s) =>
+          posix.dirname(s) === posix.dirname(file)
+            ? posix.join(posix.dirname(newFile), posix.basename(s))
+            : null,
+        );
+      } else if (node.expression.kind === ts.SyntaxKind.ImportKeyword && arg) {
         if (ts.isStringLiteralLike(arg)) literal(arg, (s) => repoint(file, newFile, s));
         else if (moves) unseen.push(`${file}: import(${arg.getText(sf)})`);
       } else if (callee === "import.meta.glob" && arg) {
@@ -222,7 +230,7 @@ function specifierEdits(file, text) {
 }
 
 /** Root paths in text: every moved file, and every moved directory as a
- * prefix. Longest first, so `engine/hint-words.test.ts` wins over its stem. */
+ * prefix. Longest first, so `engine/contract/hint-words.test.ts` wins over its stem. */
 const textMoves = new Map();
 for (const [from, to] of [...fileMap, ...virtual]) {
   textMoves.set(from, to);

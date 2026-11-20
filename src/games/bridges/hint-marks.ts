@@ -6,7 +6,7 @@
  * `bridges.description.yaml` declares name them.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 import type { BridgesSpan } from "./solver.ts";
 
 const spanKey = (s: BridgesSpan): string => {

@@ -13,8 +13,8 @@
 
 import { Dsf } from "./board/dsf.ts";
 import { shuffle } from "./board/shuffle.ts";
+import { RetryLimitExceeded } from "./contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
-import { RetryLimitExceeded } from "./retry-limit.ts";
 
 /**
  * `addremcommon`: walk the eight 8-adjacent neighbors of `(x, y)` in cyclic

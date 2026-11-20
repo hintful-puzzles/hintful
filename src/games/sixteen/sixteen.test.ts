@@ -8,7 +8,7 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
 import { raisedBevelWidth } from "../../engine/draw.ts";
 import type { HintStep } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";

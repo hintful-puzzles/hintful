@@ -12,13 +12,14 @@
  */
 
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
-import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME } from "../../engine/piece.ts";
 import {
@@ -36,7 +37,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { type RangeHint, rangeHint } from "./hint.ts";
 import {
   border,

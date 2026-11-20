@@ -11,9 +11,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { DRAFT_HINT, type Game } from "./game.ts";
+import { DRAFT_HINT, type Game } from "./contract/game.ts";
+import { SOLUTION_UNKNOWN } from "./contract/solve-failure.ts";
 import { decodeSave, encodeSave } from "./save.ts";
-import { SOLUTION_UNKNOWN } from "./solve-failure.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 
 interface MinesishParams {

@@ -92,7 +92,7 @@ const sources = [
 /** The optional members of interface `name` in `game.ts`, read off its
  * declaration. */
 function optionalMembers(name: "Game" | "GameHint"): string[] {
-  const [, text] = sources.find(([p]) => p === "src/engine/game.ts") ?? [];
+  const [, text] = sources.find(([p]) => p === "src/engine/contract/game.ts") ?? [];
   if (text === undefined) throw new Error("contract-surface: game.ts not found");
   const src = ts.createSourceFile("game.ts", text, ts.ScriptTarget.ESNext, true);
   for (const st of src.statements) {
@@ -115,7 +115,7 @@ const implementsMember = (game: (typeof REGISTERED_GAMES)[number][1], member: st
 
 /** The fields of `PuzzleStaticAttributes`, read off its declaration. */
 function staticAttributeFields(): string[] {
-  const [, text] = sources.find(([p]) => p === "src/engine/types.ts") ?? [];
+  const [, text] = sources.find(([p]) => p === "src/engine/contract/types.ts") ?? [];
   if (text === undefined) throw new Error("contract-surface: types.ts not found");
   const src = ts.createSourceFile("types.ts", text, ts.ScriptTarget.ESNext, true);
   for (const st of src.statements) {
@@ -207,7 +207,8 @@ function propertyReads(): {
   let appScanned = 0;
 
   for (const [path, text] of sources) {
-    if (path.startsWith("src/games/") || path === "src/engine/game.ts") continue;
+    if (path.startsWith("src/games/") || path === "src/engine/contract/game.ts")
+      continue;
     scanned++;
     const isTest = /\.test\.ts$/.test(path);
     const isApp = !isTest && path.startsWith("src/") && !path.startsWith("src/engine/");

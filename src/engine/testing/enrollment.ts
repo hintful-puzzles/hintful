@@ -24,7 +24,7 @@
 import ts from "typescript";
 import "../../games/index.ts";
 import type { WorkingRow } from "../code-rows.ts";
-import { type Game, hasHint } from "../game.ts";
+import { type Game, hasHint } from "../contract/game.ts";
 import { randomNew } from "../random/index.ts";
 import { getTsGame, registeredGameIds } from "../registry.ts";
 import { linesMatching, stripComments } from "./code-lines.ts";
@@ -147,13 +147,14 @@ export function enrolledIn(isMember: (g: BuiltGame) => boolean): Enrollment {
  * capability added to `Game` is invisible to both.
  */
 export const OPTIONAL_GAME_MEMBERS: readonly string[] = (() => {
-  const modules = import.meta.glob<string>("../game.ts", {
+  const modules = import.meta.glob<string>("../contract/game.ts", {
     query: "?raw",
     import: "default",
     eager: true,
   });
   const text = Object.values(modules)[0];
-  if (text === undefined) throw new Error("enrollment: engine/game.ts not found");
+  if (text === undefined)
+    throw new Error("enrollment: engine/contract/game.ts not found");
   const src = ts.createSourceFile("game.ts", text, ts.ScriptTarget.ESNext, true);
   const optionalOf = (name: string): string[] => {
     for (const st of src.statements) {
@@ -165,7 +166,7 @@ export const OPTIONAL_GAME_MEMBERS: readonly string[] = (() => {
         throw new Error(`enrollment: \`${name}\` has no optional members`);
       return names;
     }
-    throw new Error(`enrollment: no \`${name}\` interface in engine/game.ts`);
+    throw new Error(`enrollment: no \`${name}\` interface in engine/contract/game.ts`);
   };
   // `hint` itself is required, and absent as a draft's `DRAFT_HINT`: a game
   // may lack a written hint as it may lack any optional member.

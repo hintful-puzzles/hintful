@@ -41,11 +41,19 @@
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import type { ColorWord } from "../../engine/color/color-word.ts";
 import { FOUR_NAMES } from "../../engine/color/colors.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
+import {
+  Narration,
+  type Sentence,
+  unshaped,
+} from "../../engine/contract/hint-words.ts";
 import { popcount } from "../../engine/describe-runtime.ts";
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { Narration, type Sentence, unshaped } from "../../engine/hint-words.ts";
 import type {
   CellMarks,
   Firing,

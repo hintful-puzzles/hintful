@@ -6,13 +6,13 @@
  * line, or a cross saying no line goes there. A move only writes edges.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import { DOWN, RIGHT, squareEdges } from "../../engine/board/square-edges.ts";
-import { type DescParse, descValue } from "../../engine/desc-error.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
+import { difficultyItem } from "../../engine/contract/difficulty.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { difficultyItem } from "../../engine/difficulty.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import {
   CROSS,
   type EdgeChange,

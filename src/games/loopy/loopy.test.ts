@@ -15,7 +15,7 @@ import {
   descBadCharacter,
   descValue,
   validateDesc,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { presetMenu, type TitledPresetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";

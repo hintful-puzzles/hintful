@@ -8,7 +8,7 @@
  * `COL_BACKGROUND === COL_WHITEBG`, and a closed white region disappears into
  * the page. {@link resolvePalette} applies it once, for every game.
  */
-import type { Color, PaletteScheme } from "../types.ts";
+import type { Color, PaletteScheme } from "../contract/types.ts";
 import { darkValue, token } from "./color-token.ts";
 import { HINT_RING, HINT_STRIPES } from "./palette.ts";
 

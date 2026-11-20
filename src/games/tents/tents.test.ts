@@ -10,8 +10,9 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+} from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
@@ -30,7 +31,6 @@ import {
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
-import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
 import { tentsGame } from "./index.ts";
 

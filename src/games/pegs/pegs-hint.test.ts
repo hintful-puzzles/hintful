@@ -8,13 +8,13 @@
 
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { DESC_NO_SOLUTION } from "../../engine/desc-error.ts";
-import type { HintStep } from "../../engine/game.ts";
-import { isDeadEnd } from "../../engine/hint-refusal.ts";
-import { MOVE, stepMarks } from "../../engine/hint-words.ts";
+import { DESC_NO_SOLUTION } from "../../engine/contract/desc-error.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
+import { isDeadEnd } from "../../engine/contract/hint-refusal.ts";
+import { MOVE, stepMarks } from "../../engine/contract/hint-words.ts";
+import { NO_SOLUTION_FROM_HERE } from "../../engine/contract/solve-failure.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import {
   bindingDefects,
   deadEndBindingDefects,

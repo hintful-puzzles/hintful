@@ -11,7 +11,8 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { AREA_TOO_LARGE, paramsError } from "../../engine/params.ts";
 import {
@@ -30,7 +31,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import type { Point } from "../../engine/types.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newClustersDesc } from "./generator.ts";
 import { clustersGame } from "./index.ts";

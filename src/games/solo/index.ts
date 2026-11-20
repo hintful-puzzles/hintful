@@ -8,7 +8,6 @@
  * additionally flags cells that contradict the unique solution.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
   applyNoteMove,
@@ -26,14 +25,11 @@ import {
   runCandidatePlan,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
-  clearEntries,
-  entryMistakes,
-  gridCell,
-  revealEntry,
-  setMoves,
-} from "../../engine/entry-mistakes.ts";
+  type DifficultyContract,
+  difficultyItem,
+} from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type HintResult,
@@ -43,13 +39,26 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import type { Sentence } from "../../engine/contract/hint-words.ts";
+import { SQUARE_GRID } from "../../engine/contract/sections.ts";
+import {
+  MULTIPLE_SOLUTIONS,
+  NO_SOLUTION,
+} from "../../engine/contract/solve-failure.ts";
+import type { KeyLabel, Point, Size } from "../../engine/contract/types.ts";
+import {
+  clearEntries,
+  entryMistakes,
+  gridCell,
+  revealEntry,
+  setMoves,
+} from "../../engine/entry-mistakes.ts";
 import {
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import type { SingleWhy } from "../../engine/latin-hint.ts";
 import { modifierItem } from "../../engine/modifier.ts";
@@ -76,9 +85,6 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
-import { SQUARE_GRID } from "../../engine/sections.ts";
-import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
-import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { NAMES } from "../../generated/games/solo/solo.compiled.ts";
 import { newSoloDesc } from "./generator.ts";
 import { type RegionCells, regionName, SOLO_VOCAB, say } from "./hint.ts";
@@ -655,7 +661,7 @@ function refreshHintStep(
   return refreshCandidateHintStep(step, state.grid, state.pencil, state.cr);
 }
 
-/** Solo's difficulty contract (`engine/difficulty.ts`). `solveSolo` reports the
+/** Solo's difficulty contract (`engine/contract/difficulty.ts`). `solveSolo` reports the
  * difficulty reached or `DIFF_IMPOSSIBLE` / `DIFF_AMBIGUOUS`. Its `DIFF_*`
  * family has eight members and only six are tiers — `DIFF_AMBIGUOUS` and
  * `DIFF_IMPOSSIBLE` are verdicts — which is the clearest case in the collection

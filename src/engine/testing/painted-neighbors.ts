@@ -25,7 +25,7 @@
  * Dev/test-only; never imported by production code.
  */
 
-import type { Size } from "../types.ts";
+import type { Size } from "../contract/types.ts";
 import type { DrawOp } from "./recording-drawing.ts";
 
 export type NeighborKind = "area" | "mark" | "text";

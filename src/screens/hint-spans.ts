@@ -1,5 +1,5 @@
 import { html, nothing } from "lit";
-import type { HintSpan } from "../engine/types.ts";
+import type { HintSpan } from "../engine/contract/types.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
 
 /**

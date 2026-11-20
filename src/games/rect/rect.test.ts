@@ -6,7 +6,11 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
-import { DESC_NOT_UNIQUE, loadVerdict, validateDesc } from "../../engine/desc-error.ts";
+import {
+  DESC_NOT_UNIQUE,
+  loadVerdict,
+  validateDesc,
+} from "../../engine/contract/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";

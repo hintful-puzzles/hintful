@@ -1,8 +1,10 @@
 import { gridText } from "../../engine/board/grid-text.ts";
-import { type DescParse, descValue } from "../../engine/desc-error.ts";
+import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,
@@ -11,8 +13,6 @@ import {
 import { dims, num, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
-import type { GameStatus } from "../../engine/types.ts";
 import * as samegame from "../../generated/games/samegame/samegame.compiled.ts";
 
 // --- types ------------------------------------------------------------

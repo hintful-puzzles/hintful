@@ -17,10 +17,14 @@
  */
 
 import { gridText } from "../../engine/board/grid-text.ts";
+import {
+  DESC_TOO_LONG,
+  type DescParse,
+  descValue,
+} from "../../engine/contract/desc-error.ts";
+import type { PresetBoards } from "../../engine/contract/game.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { PresetBoards } from "../../engine/game.ts";
 import { endParams, paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { newCursor, newDrag } from "../../engine/pointer.ts";

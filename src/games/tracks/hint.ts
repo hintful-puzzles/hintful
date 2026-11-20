@@ -13,13 +13,13 @@
  */
 
 import { D, dirX, dirY, L, opposite, R, U } from "../../engine/board/square-edges.ts";
+import { keepTrackBy } from "../../engine/contract/hint-track.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 import { PLACE, STRIKE_EDGE } from "../../engine/describe-runtime.ts";
 import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
-import { keepTrackBy } from "../../engine/hint-track.ts";
-import type { MarkKind } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 import {
@@ -424,7 +424,7 @@ function flagChanges(before: Board, after: Board): Map<string, boolean> {
 
 /**
  * Classify a player move against the displayed step, by what it did to the
- * board (`engine/hint-track.ts`), so a drag and a click that set the same
+ * board (`engine/contract/hint-track.ts`), so a drag and a click that set the same
  * flags are the same move.
  *
  * A firing that forces several squares is one step whose move carries all of

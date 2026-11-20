@@ -33,7 +33,7 @@
  * A named cell's line also has its deals' tries at their outermost retry loop
  * and its boards by the easiest tier that finishes each, and under it the
  * draws thrown away by stage and how each mend ended, with the fewest squares
- * it left open (`src/engine/deal-census.ts`). That is the census of a
+ * it left open (`src/engine/contract/deal-census.ts`). That is the census of a
  * generator still being written: register the game, and name its params, or
  * `DEAL_WALK_CELLS=presets` for its menu.
  *
@@ -56,7 +56,7 @@ import {
 } from "node:fs";
 import { freemem, loadavg, tmpdir } from "node:os";
 import path from "node:path";
-import { MENDED } from "../src/engine/deal-census.ts";
+import { MENDED } from "../src/engine/contract/deal-census.ts";
 import {
   type DealWalkCell,
   type DealWalkState,

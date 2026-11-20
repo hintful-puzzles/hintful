@@ -11,7 +11,7 @@
  * Nothing in this module decides a color. Every value comes from a token.
  */
 
-import type { Color } from "../types.ts";
+import type { Color } from "../contract/types.ts";
 
 /**
  * A color token: a value, plus optionally the value it takes under another

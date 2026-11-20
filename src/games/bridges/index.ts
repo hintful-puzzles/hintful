@@ -7,7 +7,7 @@
  */
 
 import { fromCoord } from "../../engine/board/geometry.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type GamePref,
@@ -16,14 +16,15 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import {
   click,
   drag,
   type GestureButton,
   type PointerAction,
 } from "../../engine/hint-gesture.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -50,7 +51,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBridgesDesc } from "./generator.ts";
 import {
   BRIDGES_RUNGS,
@@ -533,7 +533,7 @@ function clearMistakes(
   return [{ ops }];
 }
 
-/** Bridges' difficulty contract (`engine/difficulty.ts`). `solveFromScratch`
+/** Bridges' difficulty contract (`engine/contract/difficulty.ts`). `solveFromScratch`
  * clears the board first and returns 1 for fully solved, 0 otherwise, with no
  * contradiction signal to report. */
 const difficulty: DifficultyContract<BridgesParams> = {

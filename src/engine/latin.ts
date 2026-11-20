@@ -37,9 +37,9 @@
 
 import * as compiled from "../generated/engine/latin.compiled.ts";
 import { shuffle } from "./board/shuffle.ts";
+import type { DifficultyVerdict } from "./contract/difficulty.ts";
 import type { CompiledTechniques } from "./deduction-fixpoint.ts";
 import { latinSpace, valuesOf } from "./describe-runtime.ts";
-import type { DifficultyVerdict } from "./difficulty.ts";
 import {
   CellMarks,
   type CompiledLadder,

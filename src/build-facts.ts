@@ -9,8 +9,12 @@
 import "./games/index.ts";
 
 export { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "./engine/candidate-hint.ts";
-export { hasHint } from "./engine/game.ts";
-export { HINT_MARKS_PLACEHOLDER, legendMarkdown } from "./engine/hint-words.ts";
+export { hasHint } from "./engine/contract/game.ts";
+export {
+  HINT_MARKS_PLACEHOLDER,
+  legendMarkdown,
+} from "./engine/contract/hint-words.ts";
+export { draftSections, notApplicableMarkdown } from "./engine/contract/sections.ts";
 export {
   MODIFIERS_PLACEHOLDER,
   modifiersMarkdown,
@@ -34,7 +38,6 @@ export {
   rulesetField,
   rulesetsMarkdown,
 } from "./engine/ruleset.ts";
-export { draftSections, notApplicableMarkdown } from "./engine/sections.ts";
 export {
   CONTROLS_PLACEHOLDER,
   controlsMarkdown,

@@ -15,7 +15,7 @@ import {
   DESC_TOO_SHORT,
   type DescError,
   descBadCharacter,
-} from "../../../desc-error.ts";
+} from "../../../contract/desc-error.ts";
 import type { RandomState } from "../../../random/index.ts";
 import { type Grid, makeConsistent } from "../grid-core.ts";
 import {

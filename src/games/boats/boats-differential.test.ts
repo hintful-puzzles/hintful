@@ -16,7 +16,7 @@
  * dealt board to its tier and to every cap above it.
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { paramsError } from "../../engine/params.ts";
 import cReference from "./__fixtures__/boats-c-reference.json" with { type: "json" };
 import { boatsGame } from "./index.ts";

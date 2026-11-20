@@ -8,7 +8,6 @@
  * the score are [`state.ts`](./state.ts).
  */
 
-import { rejectMove } from "../../engine/assert-never.ts";
 import {
   enterValue,
   isRuledOut,
@@ -18,7 +17,9 @@ import {
   selectedSlot,
   withRuleOuts,
 } from "../../engine/code-rows.ts";
-import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { rejectMove } from "../../engine/contract/assert-never.ts";
+import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
+import type { KeyLabel, Point, ReferenceModel } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
@@ -34,7 +35,6 @@ import {
   newCursor,
   PENCIL_MODE_BUTTON,
 } from "../../engine/pointer.ts";
-import type { KeyLabel, Point, ReferenceModel } from "../../engine/types.ts";
 import {
   codesFitting,
   SKELETON_RUNGS,

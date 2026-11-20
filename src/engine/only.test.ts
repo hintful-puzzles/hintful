@@ -11,8 +11,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { offeredOf, offeredValues } from "./config-narrowing.ts";
-import { difficultyItem, tierNames } from "./difficulty.ts";
-import type { Game, ParamConfigItem } from "./game.ts";
+import { difficultyItem, tierNames } from "./contract/difficulty.ts";
+import type { Game, ParamConfigItem } from "./contract/game.ts";
+import type { ConfigDescription, ConfigItem, ConfigValues } from "./contract/types.ts";
 import { Midend } from "./midend.ts";
 import { modifierItem } from "./modifier.ts";
 import { configNarrowing, onlyError, onlySentences } from "./only.ts";
@@ -21,7 +22,6 @@ import { paramsError } from "./params.ts";
 import { type Ruleset, rulesetItem } from "./ruleset.ts";
 import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { leafPresets } from "./testing/presets.ts";
-import type { ConfigDescription, ConfigItem, ConfigValues } from "./types.ts";
 
 interface P {
   mode: number;

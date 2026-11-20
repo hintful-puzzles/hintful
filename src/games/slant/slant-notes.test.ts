@@ -6,8 +6,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_ERROR } from "../../engine/color/roles.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
-import { mark as markWords } from "../../engine/hint-words.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { mark as markWords } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -22,7 +23,6 @@ import { randomNew } from "../../engine/random/index.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
-import type { Point } from "../../engine/types.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";

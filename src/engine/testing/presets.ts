@@ -7,7 +7,7 @@
  *
  * Dev/test-only; never imported by production code.
  */
-import type { ParamConfigItem, PresetBoards, PresetMenu } from "../game.ts";
+import type { ParamConfigItem, PresetBoards, PresetMenu } from "../contract/game.ts";
 import { presetMenu, type TitledPresetMenu } from "../param-label.ts";
 import { paramsError } from "../params.ts";
 import { type Dealing, dealsPromptly } from "./dealt.ts";

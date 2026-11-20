@@ -10,11 +10,19 @@
  */
 
 import { solveFromAnswer } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import {
+  type DifficultyContract,
+  difficultyItem,
+} from "../../engine/contract/difficulty.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import type {
+  Point,
+  ReferenceItem,
+  ReferenceModel,
+} from "../../engine/contract/types.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
   digitOf,
@@ -32,7 +40,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { Point, ReferenceItem, ReferenceModel } from "../../engine/types.ts";
 import { newDominosaDesc } from "./generator.ts";
 import {
   DOMINOSA_RUNGS,
@@ -549,7 +556,7 @@ function selectReference(
   return UI_UPDATE;
 }
 
-/** Dominosa's difficulty contract (`engine/difficulty.ts`). A `solveNumbers`
+/** Dominosa's difficulty contract (`engine/contract/difficulty.ts`). A `solveNumbers`
  * result of 2 (ambiguous, or too hard for the cap) is `"unsolved"`: at this
  * cap the board is not deducible, which is the question being asked. */
 const difficulty: DifficultyContract<DominosaParams> = {

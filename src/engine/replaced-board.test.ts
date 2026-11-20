@@ -7,9 +7,9 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { RetryLimitExceeded } from "./contract/retry-limit.ts";
 import { fakeGame } from "./fake-game.ts";
 import { LEFT_BUTTON } from "./pointer.ts";
-import { RetryLimitExceeded } from "./retry-limit.ts";
 import { encodeSave } from "./save.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 

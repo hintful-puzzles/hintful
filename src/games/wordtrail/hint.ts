@@ -9,10 +9,10 @@
  * the trails that spell a word: the ladder reads nothing else.
  */
 
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { describedEdgeHint } from "../../engine/described-edge-hint.ts";
 import { EDGE, trackEdgeStep } from "../../engine/edge-hint.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   STATED,
   type SuppliedById,

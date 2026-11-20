@@ -12,19 +12,19 @@ import {
   ruleOutMistakes,
   type WorkingRow,
 } from "../../engine/code-rows.ts";
-import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
   type DescParse,
   descValue,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
+import type { PresetBoards } from "../../engine/contract/game.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
+import { parseLeadingInt } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import type { PresetBoards } from "../../engine/game.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { unreadParams } from "../../engine/params.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- feedback codes (upstream FEEDBACK_*) -----------------------------
 

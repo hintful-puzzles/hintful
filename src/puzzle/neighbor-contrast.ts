@@ -13,7 +13,8 @@
  * Dev/test-only; never imported by production code.
  */
 
-import { hasHint } from "../engine/game.ts";
+import { hasHint } from "../engine/contract/game.ts";
+import type { Color, Size } from "../engine/contract/types.ts";
 import { Midend } from "../engine/midend.ts";
 import { getTsGame } from "../engine/registry.ts";
 import {
@@ -21,7 +22,6 @@ import {
   paintedNeighbors,
 } from "../engine/testing/painted-neighbors.ts";
 import { type DrawOp, RecordingDrawing } from "../engine/testing/recording-drawing.ts";
-import type { Color, Size } from "../engine/types.ts";
 import { colorToOKLCH, isGrayChroma } from "../utils/color.ts";
 import { schemeOf, schemePalettes } from "./scheme-palettes.ts";
 

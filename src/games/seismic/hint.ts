@@ -33,8 +33,16 @@ import {
   runCandidatePlan,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import {
+  CELL,
+  type Narration,
+  type Note,
+  type Sentence,
+  whole,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { describedSpace, rangeMask } from "../../engine/describe-runtime.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   candidateConclusions,
@@ -43,18 +51,10 @@ import {
   placedRulesOut,
   populateText,
 } from "../../engine/hint-text.ts";
-import {
-  CELL,
-  type Narration,
-  type Note,
-  type Sentence,
-  whole,
-} from "../../engine/hint-words.ts";
 import { digitKeyCode } from "../../engine/key-labels.ts";
 import { CellMarks, type Said, TIERS } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
-import type { Point } from "../../engine/types.ts";
 import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
 import { dealtOf, seismicLadder } from "./solver.ts";
 import {

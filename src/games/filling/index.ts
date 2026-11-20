@@ -11,13 +11,6 @@
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import { coord, fromCoord } from "../../engine/board/geometry.ts";
 import {
-  clearEntries,
-  type EntryMoves,
-  entryMistakes,
-  gridCell,
-  revealEntry,
-} from "../../engine/entry-mistakes.ts";
-import {
   type Game,
   type HintResult,
   type HintStep,
@@ -26,12 +19,20 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
+import { changedCells, trackTargets } from "../../engine/contract/hint-track.ts";
+import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
+import type { KeyLabel, Point, Size } from "../../engine/contract/types.ts";
+import {
+  clearEntries,
+  type EntryMoves,
+  entryMistakes,
+  gridCell,
+  revealEntry,
+} from "../../engine/entry-mistakes.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { drag, key, type PointerAction } from "../../engine/hint-gesture.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { changedCells, trackTargets } from "../../engine/hint-track.ts";
-import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -50,7 +51,6 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { statedSentence } from "../../engine/stated.ts";
-import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { STATED } from "../../generated/games/filling/filling.compiled.ts";
 import { newFillingDesc } from "./generator.ts";
 import {
@@ -327,7 +327,7 @@ function hintGesture(
 }
 
 /** Classify a player move by what it did to the board
- * (`engine/hint-track.ts`); a multi-square step shrinks in place so a later
+ * (`engine/contract/hint-track.ts`); a multi-square step shrinks in place so a later
  * auto-hint fills only the rest. */
 function hintKeepTrack(
   m: FillingMove,

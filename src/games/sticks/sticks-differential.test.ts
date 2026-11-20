@@ -12,7 +12,7 @@
  */
 import { expect } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/sticks-c-reference.json" with { type: "json" };
 import { newSticksDesc } from "./generator.ts";

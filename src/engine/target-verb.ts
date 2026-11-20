@@ -33,7 +33,8 @@ import {
   type HintTrackVerdict,
   UI_UPDATE,
   type UiUpdate,
-} from "./game.ts";
+} from "./contract/game.ts";
+import type { Point, Size } from "./contract/types.ts";
 import { click, key, type PointerAction } from "./hint-gesture.ts";
 import {
   BACKSPACE,
@@ -53,7 +54,6 @@ import {
   RIGHT_RELEASE,
   stripModifiers,
 } from "./pointer.ts";
-import type { Point, Size } from "./types.ts";
 
 /** A key, beyond Enter or Space, that applies a verb at the cursor: the codes
  * that reach it (a letter's two cases, say) and the name the Controls paragraph

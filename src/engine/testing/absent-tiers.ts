@@ -31,11 +31,11 @@ import {
   difficultyTiers,
   lowestSolvingCap,
   tierOf,
-} from "../difficulty.ts";
-import type { ParamConfigItem } from "../game.ts";
+} from "../contract/difficulty.ts";
+import type { ParamConfigItem } from "../contract/game.ts";
+import { RetryLimitExceeded, underDealTries } from "../contract/retry-limit.ts";
 import { paramsError } from "../params.ts";
 import { type RandomState, randomNew } from "../random/index.ts";
-import { RetryLimitExceeded, underDealTries } from "../retry-limit.ts";
 import { dealRare } from "./dealt.ts";
 import { deepBudget, itSlow } from "./slow.ts";
 

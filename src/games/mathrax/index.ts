@@ -13,7 +13,6 @@
  * contradict the unique solution.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
   applyNoteMove,
@@ -33,14 +32,11 @@ import {
   techniqueRung,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
-  clearEntries,
-  entryMistakes,
-  gridCell,
-  revealEntry,
-  setMoves,
-} from "../../engine/entry-mistakes.ts";
+  type DifficultyContract,
+  difficultyItem,
+} from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type HintResult,
@@ -51,15 +47,24 @@ import {
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
-import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+} from "../../engine/contract/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
+import { SQUARE_GRID } from "../../engine/contract/sections.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import {
+  clearEntries,
+  entryMistakes,
+  gridCell,
+  revealEntry,
+  setMoves,
+} from "../../engine/entry-mistakes.ts";
 import {
   type LatinVocab,
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import { CELL, type Sentence } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import type { Said } from "../../engine/ladder-runtime.ts";
 import type { LatinSolver } from "../../engine/latin.ts";
@@ -86,9 +91,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { SQUARE_GRID } from "../../engine/sections.ts";
 import { statedParts } from "../../engine/stated.ts";
-import type { Point } from "../../engine/types.ts";
 import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 import { newMathraxDesc } from "./generator.ts";
 import {
@@ -564,7 +567,7 @@ function clueWords(p: MathraxParams): string | null {
   return on.length <= off.length ? `only ${on.join("/")}` : `no ${off.join("/")}`;
 }
 
-/** Mathrax's difficulty contract (`engine/difficulty.ts`). `mathraxSolve` has
+/** Mathrax's difficulty contract (`engine/contract/difficulty.ts`). `mathraxSolve` has
  * its own four-way return (`SOLVE_IMPOSSIBLE` / `SOLVE_STUCK` / `SOLVE_UNIQUE` /
  * `SOLVE_AMBIGUOUS`) rather than the latin-family sentinels its solver is built
  * on, so it is read here and not by `latinVerdict`. The solve starts from the

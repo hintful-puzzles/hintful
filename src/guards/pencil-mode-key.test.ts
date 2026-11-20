@@ -39,7 +39,7 @@
 
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
-import { UI_UPDATE } from "../engine/game.ts";
+import { UI_UPDATE } from "../engine/contract/game.ts";
 import { Midend } from "../engine/index.ts";
 import { pencilModeKey, takesNotes } from "../engine/key-labels.ts";
 import { PENCIL_MODE_BUTTON } from "../engine/pointer.ts";

@@ -7,9 +7,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { EDGE, type ForcedBorderEdge } from "../../engine/border-grid-hint.ts";
-import { CELL } from "../../engine/hint-words.ts";
+import { CELL } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { type Clauses, statedParts, statedSentence } from "../../engine/stated.ts";
-import type { Point } from "../../engine/types.ts";
 import { STATED } from "../../generated/games/separate/separate.compiled.ts";
 
 const at = (c: number): Point => ({ x: c % 4, y: (c / 4) | 0 });

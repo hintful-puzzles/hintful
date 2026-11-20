@@ -13,6 +13,7 @@
  */
 
 import { shuffle } from "../board/shuffle.ts";
+import { retryLimit } from "../contract/retry-limit.ts";
 import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
@@ -20,7 +21,6 @@ import {
   latinGenerate,
 } from "../latin.ts";
 import type { RandomState } from "../random/index.ts";
-import { retryLimit } from "../retry-limit.ts";
 import { solveEdgeClues } from "./solver.ts";
 import {
   ADJTHAN,

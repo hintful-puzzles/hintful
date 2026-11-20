@@ -66,14 +66,15 @@ import {
   type HintTrackVerdict,
   type MoveVerdict,
   narratedStep,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import type { Narration, Sentence } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Narration, Sentence } from "../../engine/hint-words.ts";
 import type { Said } from "../../engine/ladder-runtime.ts";
 import { type LatinSolver, setCells } from "../../engine/latin.ts";
 import { hiddenSingleLine, type SingleReasonUnder } from "../../engine/latin-hint.ts";
@@ -84,7 +85,6 @@ import {
   latinStrikeRungs,
 } from "../../engine/latin-notes.ts";
 import { noteEntryGesture } from "../../engine/note-taking-cell.ts";
-import type { Point } from "../../engine/types.ts";
 import type * as salad from "../../generated/games/salad/salad.compiled.ts";
 import { NAMES } from "../../generated/games/salad/salad.compiled.ts";
 import { CLUE } from "./kinds.ts";

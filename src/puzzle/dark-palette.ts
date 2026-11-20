@@ -4,7 +4,7 @@
  * there is no second copy to keep in step.
  */
 
-import type { Color, PaletteScheme } from "../engine/types.ts";
+import type { Color, PaletteScheme } from "../engine/contract/types.ts";
 import { colorToOKLCH, darkModeColor, type OKLCH } from "../utils/color.ts";
 
 /**

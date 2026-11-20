@@ -8,13 +8,15 @@
  * [`solver.ts`](./solver.ts), and the board in [`state.ts`](./state.ts).
  */
 
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import {
   type Game,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import {
   type EdgeMistake,
   edgeMistakes,
@@ -23,8 +25,6 @@ import {
 import { transposeDimensions } from "../../engine/params.ts";
 import { isMouseDown, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
 import { dictionary } from "./dictionary.ts";
 import { newWordtrailDesc } from "./generator.ts";
 import {

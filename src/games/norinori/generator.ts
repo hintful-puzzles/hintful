@@ -10,8 +10,12 @@
 
 import { solvedPositions } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
-import { drawRejected } from "../../engine/deal-census.ts";
-import { type CappedSolve, solvableAtExactlyTier } from "../../engine/difficulty.ts";
+import { drawRejected } from "../../engine/contract/deal-census.ts";
+import {
+  type CappedSolve,
+  solvableAtExactlyTier,
+} from "../../engine/contract/difficulty.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import {
   growFromSeeds,
   mergeToCount,
@@ -20,7 +24,6 @@ import {
 } from "../../engine/divide.ts";
 import { type MendJudge, mendDivision } from "../../engine/mend-division.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import { areasOf, type NorinoriBoard, solveNorinori } from "./solver.ts";
 import {
   BLANK,

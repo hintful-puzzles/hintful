@@ -21,7 +21,7 @@ import {
   DESC_REPEATED,
   type DescParse,
   puzzleDescError,
-} from "../../engine/desc-error.ts";
+} from "../../engine/contract/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { WinTone } from "../../engine/win-wave.ts";

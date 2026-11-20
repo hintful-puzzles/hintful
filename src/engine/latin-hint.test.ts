@@ -1,8 +1,8 @@
 /** Shared Latin-family hint helpers: a hidden single's line, and the
  * row/column games' shared narration. */
 import { describe, expect, it } from "vitest";
+import { markKeys, type Narration } from "./contract/hint-words.ts";
 import { candidateConclusions, latinPremise, narrateLatinReason } from "./hint-text.ts";
-import { markKeys, type Narration } from "./hint-words.ts";
 import { hiddenSingleLine } from "./latin-hint.ts";
 
 describe("hiddenSingleLine", () => {

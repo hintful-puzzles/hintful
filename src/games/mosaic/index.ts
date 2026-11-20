@@ -7,7 +7,8 @@
  */
 
 import { solveFromAnswer } from "../../engine/answer-search.ts";
-import type { Game, UiUpdate } from "../../engine/game.ts";
+import type { Game, UiUpdate } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import { cursorDelta, newCursor, stripModifiers } from "../../engine/pointer.ts";
@@ -18,7 +19,6 @@ import {
   squareGrid,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
 import { type MosaicHint, mosaicHint } from "./hint.ts";
 import {
   colors,

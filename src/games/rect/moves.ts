@@ -5,10 +5,10 @@
  * (docs/rendering.md § "The tile cache and the diff key").
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
-import { descValue } from "../../engine/desc-error.ts";
-import type { GameStatus, Rect } from "../../engine/types.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import { descValue } from "../../engine/contract/desc-error.ts";
+import type { GameStatus, Rect } from "../../engine/contract/types.ts";
 import { linesAnswer } from "./solver.ts";
 import {
   clueAllows,

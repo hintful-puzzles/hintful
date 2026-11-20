@@ -4,9 +4,9 @@
  * them without `render` importing `index`.
  */
 
-import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { Dsf } from "../../engine/board/dsf.ts";
 import { findLoops } from "../../engine/board/findloop.ts";
+import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
 import type { BridgesSpan } from "./solver.ts";
 import {
   type BridgesMove,

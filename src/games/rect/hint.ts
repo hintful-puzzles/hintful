@@ -9,13 +9,17 @@
  * placement is out", and every later step rereads the lines.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Sentence,
+} from "../../engine/contract/hint-words.ts";
+import type { Point, Rect } from "../../engine/contract/types.ts";
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { CELL, type MarkKind, type Sentence } from "../../engine/hint-words.ts";
 import type { CellMarks, Ladder, Taken } from "../../engine/ladder-runtime.ts";
-import type { Point, Rect } from "../../engine/types.ts";
 import * as rect from "../../generated/games/rect/rect.compiled.ts";
 import { LINE, RECTANGLE, type RectEdge } from "./hint-marks.ts";
 import { executeMove, isSolved, readClaims } from "./moves.ts";

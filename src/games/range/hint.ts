@@ -7,11 +7,11 @@
  * the run to it, or the clear squares cut in two.
  */
 
+import type { Point } from "../../engine/contract/types.ts";
 import {
   describedFiringHint,
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
-import type { Point } from "../../engine/types.ts";
 import { type SaysById, STATED } from "../../generated/games/range/range.compiled.ts";
 import { CLUE } from "./kinds.ts";
 import { hintWalk, type RangeRung } from "./solver.ts";

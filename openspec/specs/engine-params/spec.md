@@ -1031,7 +1031,7 @@ call of the escape by its shape, in the games and the engine alike.
 ### Requirement: A game reads its description once
 
 Every game SHALL read its description with one parser returning a `DescParse`
-(`engine/desc-error.ts`), and `newState` SHALL build from that parse's value
+(`engine/contract/desc-error.ts`), and `newState` SHALL build from that parse's value
 through `descValue`. A check that needs the parsed board (a count, a region, a
 rule of the puzzle's own) SHALL run inside that parse. A parser SHALL accept
 what the game's own encoder writes, and SHALL refuse what the grammar has no

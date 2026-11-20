@@ -8,10 +8,10 @@
  * what is compared is `Drawing`'s own handling of its arguments.
  */
 import { describe, expect, it } from "vitest";
-import type { GameDrawing } from "../engine/game.ts";
+import type { GameDrawing } from "../engine/contract/game.ts";
+import type { Color } from "../engine/contract/types.ts";
 import { NOTHING_TO_CLEAR } from "../engine/ring.ts";
 import { RecordingDrawing } from "../engine/testing/recording-drawing.ts";
-import type { Color } from "../engine/types.ts";
 import { Drawing } from "./drawing.ts";
 
 const PAINTS = new Set(["fill", "stroke", "fillRect", "fillText"]);

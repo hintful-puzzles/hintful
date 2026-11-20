@@ -30,7 +30,7 @@ import {
   R,
   U,
 } from "./board/square-edges.ts";
-import type { DescParse } from "./desc-error.ts";
+import type { DescParse } from "./contract/desc-error.ts";
 import { readDesc } from "./desc-reader.ts";
 import type { RandomState } from "./random/index.ts";
 import { randomUpto } from "./random/index.ts";

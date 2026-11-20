@@ -7,7 +7,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { currentColorScheme } from "../../color-scheme.ts";
 import type { Scheme } from "../../engine/color/color-word.ts";
-import type { FontInfo, Size } from "../../engine/types.ts";
+import type { FontInfo, Size } from "../../engine/contract/types.ts";
 import {
   colorToOKLCH,
   cssColorToOKLCH,

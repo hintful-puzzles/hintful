@@ -1696,7 +1696,7 @@ one too. Read a wording's findings here before a hint walk: each walk takes
 tens of seconds and hears only the forms its boards reach.
 
 - **Every form of a wording is held to the render's rules**, read from the
-  render's own lists (`engine/wording-rules.ts`) and reference judge
+  render's own lists (`engine/contract/wording-rules.ts`) and reference judge
   (`testing/hint-reference.ts`): each `if`, count, `has`, `or` and `fit`
   form, so a fault in a form no board has spoken is found. A reference the
   game's hint legend may teach ("the marked corner") is left to the walk,

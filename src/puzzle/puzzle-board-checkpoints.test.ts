@@ -2,7 +2,10 @@
 // drive `Puzzle` with the state notifications the engine sends as a run is
 // left and brought back (`NotifyGameStateChange.board`), against a stub worker.
 import { describe, expect, it } from "vitest";
-import type { NotifyGameStateChange, PuzzleStaticAttributes } from "../engine/types.ts";
+import type {
+  NotifyGameStateChange,
+  PuzzleStaticAttributes,
+} from "../engine/contract/types.ts";
 import { BROUGHT_BACK, Puzzle } from "./puzzle.ts";
 
 const ATTRS: PuzzleStaticAttributes = {

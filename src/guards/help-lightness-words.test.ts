@@ -23,9 +23,9 @@ import { gameDescriptions, helpProse } from "../describe/help-pages.ts";
 import { mkhighlightBackground } from "../engine/color/color-mkhighlight.ts";
 import { darkValue } from "../engine/color/color-token.ts";
 import { FLASH, FLASH_LEAD, SHADED } from "../engine/color/palette.ts";
+import type { Color } from "../engine/contract/types.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { colorToOKLCH } from "../engine/testing/oklch.ts";
-import type { Color } from "../engine/types.ts";
 import { puzzleIds } from "../puzzle/catalog.ts";
 
 type Kind = "dark" | "light";

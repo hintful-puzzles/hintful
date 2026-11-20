@@ -12,7 +12,7 @@
  * recorded it is gone (see `engine/testing/differential.ts`).
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
 import reference from "./__fixtures__/dominosa-c-reference.json" with { type: "json" };
 import { dominosaGame } from "./index.ts";
 import { solveNumbers } from "./solver.ts";

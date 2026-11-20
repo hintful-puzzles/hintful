@@ -5,7 +5,7 @@ import { SignalWatcher } from "@lit-labs/signals";
 import { css, html, LitElement, nothing, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
-import type { PresetMenuEntry } from "../../engine/types.ts";
+import type { PresetMenuEntry } from "../../engine/contract/types.ts";
 import { cssWATweaks } from "../../utils/css.ts";
 import { closest } from "../../utils/dom.ts";
 import { puzzleContext } from "../contexts.ts";

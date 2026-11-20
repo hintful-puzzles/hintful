@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GamePref } from "./game.ts";
+import type { GamePref } from "./contract/game.ts";
 import {
   autoPencilPref,
   offersStickyPencil,

@@ -10,9 +10,16 @@
  */
 
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/assert-never.ts";
 import { adaptiveMarkAll, candidateHint } from "../../engine/candidate-hint.ts";
 import { candidateJudge } from "../../engine/candidate-judge.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import {
+  type Game,
+  type SolveResult,
+  UI_UPDATE,
+  type UiUpdate,
+} from "../../engine/contract/game.ts";
+import type { KeyLabel, Point } from "../../engine/contract/types.ts";
 import {
   clearEntries,
   type EntryMistakeKind,
@@ -21,12 +28,6 @@ import {
   gridCell,
   revealEntry,
 } from "../../engine/entry-mistakes.ts";
-import {
-  type Game,
-  type SolveResult,
-  UI_UPDATE,
-  type UiUpdate,
-} from "../../engine/game.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
@@ -49,7 +50,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { KeyLabel, Point } from "../../engine/types.ts";
 import { NAMES } from "../../generated/games/abcd/abcd.compiled.ts";
 import { newAbcdDesc } from "./generator.ts";
 import {

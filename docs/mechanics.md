@@ -3,7 +3,7 @@
 How a game states its mechanism: params, presets and the Custom dialog,
 descriptions, state, moves, status, the capability hooks, and the player
 affordances (pencil marks, the reference aid). The contract is
-[`src/engine/game.ts`](../src/engine/game.ts), whose doc comments say what
+[`src/engine/contract/game.ts`](../src/engine/contract/game.ts), whose doc comments say what
 each member is for. The requirements are in the
 [`ts-engine`](../openspec/specs/ts-engine/spec.md) spec and the `engine-*`
 specs beside it, above all
@@ -100,7 +100,7 @@ the section that says more.
 ## The Game contract at a glance
 
 A game is one object implementing `Game<Params, State, Move, Ui, DrawState,
-Mistake, …>` ([`game.ts`](../src/engine/game.ts)), and it depends on that
+Mistake, …>` ([`game.ts`](../src/engine/contract/game.ts)), and it depends on that
 interface only, never on the `Midend`. The file layout is
 [`new-game.md`](./new-game.md) § "File anatomy".
 
@@ -471,7 +471,7 @@ difficulty), [`solo/index.ts`](../src/games/solo/index.ts) (a fold).
 ## Difficulty is a declared contract
 
 A tiered game declares its difficulty item in `paramConfig` and
-`Game.difficulty` ([`engine/difficulty.ts`](../src/engine/difficulty.ts)),
+`Game.difficulty` ([`engine/contract/difficulty.ts`](../src/engine/contract/difficulty.ts)),
 which holds only the capped solve, `solveAtCap` (`engine-difficulty`, "A
 tiered game declares a difficulty contract on its Game"). Declaring both
 enrolls the game in `difficulty-contract.test.ts`, above all in
@@ -532,7 +532,7 @@ into shared ids as the params codec is.
   ("Read a desc once").
 - **Fail the parse; never throw an error of your own.** A malformed ID is a
   player's typo. The reason is a `DescError`, made only from the kinds in
-  [`desc-error.ts`](../src/engine/desc-error.ts) or its `puzzleDescError`
+  [`desc-error.ts`](../src/engine/contract/desc-error.ts) or its `puzzleDescError`
   for a rule of the puzzle's own
   ([`engine-catalog.md`](./engine-catalog.md) § "`desc-error.ts` — why a
   game ID will not load").
@@ -544,7 +544,7 @@ into shared ids as the params codec is.
 
 Write one parser, `parseDesc(p, desc): DescParse<T>`, and build `newState`
 from `descValue(parseDesc(p, desc))`
-([`engine/desc-error.ts`](../src/engine/desc-error.ts)). A failed parse makes
+([`engine/contract/desc-error.ts`](../src/engine/contract/desc-error.ts)). A failed parse makes
 `descValue` throw a `DescRejection`, which the engine's `loadDesc` turns
 into the verdict the Enter Game ID dialog shows; the same call builds
 state 0. Exemplars: the skeleton's
@@ -693,7 +693,7 @@ file, or the game supplies a `moveCodec` to write and read it. Exemplar:
 ## A move you do not recognize is refused, never guessed
 
 End `executeMove`'s dispatch with
-[`assertNever`](../src/engine/assert-never.ts), as
+[`assertNever`](../src/engine/contract/assert-never.ts), as
 `assertNever(move, "abcd: executeMove")` in the last `default` or `else`. A
 save is untrusted: `SaveEnvelope.moves` is `unknown[]` and is cast to
 `Move` on replay, never parsed, so a move another build wrote arrives
@@ -709,7 +709,7 @@ skeleton's `executeMove`, an `if / else if / else` chain.
   shapes (`op.kind: "light" | "impossible"`), assert on the field and put
   the op in the context string: `assertNever(op.kind, …)`.
 - **Where the move is one shape with no discriminant** (`{ ops: Op[] }`,
-  `{ dir }`), call [`rejectMove`](../src/engine/assert-never.ts) on the
+  `{ dir }`), call [`rejectMove`](../src/engine/contract/assert-never.ts) on the
   fields the dispatch reads. Never write `assertNever(move as never, …)`,
   which silences the error the helper exists to raise.
 - **Put the guard before any bounds check.** A missing coordinate makes
@@ -741,7 +741,7 @@ Exemplar: `status` in the skeleton's
 - **`changedState` reacting to "became solved" asks `status` of the old
   state and the new.**
 - **The words a player reads are the engine's.** A refused Solve returns a
-  `SolveFailure` ([`solve-failure.ts`](../src/engine/solve-failure.ts)). The
+  `SolveFailure` ([`solve-failure.ts`](../src/engine/contract/solve-failure.ts)). The
   midend prefixes the completion words to whatever `statusbarText` returns
   ([`completion-status.ts`](../src/engine/completion-status.ts)), so
   `statusbarText` returns only the game's own phrase. The engine catalog's
@@ -784,7 +784,7 @@ read [`hints.md`](./hints.md), and for `reference` "The reference aid".
 
 ### Contract sections, and what makes a draft
 
-Three members are sections ([`sections.ts`](../src/engine/sections.ts)):
+Three members are sections ([`sections.ts`](../src/engine/contract/sections.ts)):
 `hint`, `findMistakes` and `transposeParams`. Each is implemented, not
 applicable, or absent, and **an absent one makes the game a draft**:
 still playable, labeled "Draft" on the home screen, never hidden

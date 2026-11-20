@@ -1473,7 +1473,7 @@ The repository SHALL hold a third skeleton, `src/skeleton/code/`, a small game w
 
 A game SHALL be registered and cataloged by files in its own directory
 alone: its `index.ts` registers the game, and its `catalog.ts` exports its
-catalog entry, whose shape `src/engine/catalog.ts` declares. No shared file
+catalog entry, whose shape `src/engine/contract/catalog.ts` declares. No shared file
 SHALL list the games. Loading the games SHALL fail when a directory under
 `src/games/` registers no game under its own name or has no `catalog.ts`, or
 when a `catalog.ts` sits in a directory with no `index.ts`.

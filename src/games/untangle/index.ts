@@ -19,8 +19,10 @@
  *    show-crossed-edges (default ON), vertex-style.
  */
 
-import { rejectMove } from "../../engine/assert-never.ts";
-import { descValue } from "../../engine/desc-error.ts";
+import { rejectMove } from "../../engine/contract/assert-never.ts";
+import { descValue } from "../../engine/contract/desc-error.ts";
+import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
+import type { Point, Size } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import {
@@ -45,8 +47,6 @@ import {
   MOD_SHFT,
   stripModifiers,
 } from "../../engine/pointer.ts";
-import { NO_SOLUTION } from "../../engine/solve-failure.ts";
-import type { Point, Size } from "../../engine/types.ts";
 import { WIN_NONE, type WinTone } from "../../engine/win-wave.ts";
 import { newUntangleDesc } from "./generator.ts";
 import {

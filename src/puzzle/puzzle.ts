@@ -1,9 +1,9 @@
 import { computed, type Signal, signal } from "@lit-labs/signals";
 import * as Sentry from "@sentry/browser";
 import { proxy, type Remote, releaseProxy, transfer } from "comlink";
-import { assertNever } from "../engine/assert-never.ts";
 import type { Scheme } from "../engine/color/color-word.ts";
-import { ALREADY_SOLVED, WAY_FORWARD } from "../engine/hint-refusal.ts";
+import { assertNever } from "../engine/contract/assert-never.ts";
+import { ALREADY_SOLVED, WAY_FORWARD } from "../engine/contract/hint-refusal.ts";
 import type {
   ChangeNotification,
   CheckVerdict,
@@ -25,7 +25,7 @@ import type {
   ReferenceModel,
   Size,
   TimerReadout,
-} from "../engine/types.ts";
+} from "../engine/contract/types.ts";
 import { keptBoards } from "../store/kept-boards.ts";
 import { nextAnimationFrame } from "../utils/timing.ts";
 import { puzzleDataMap } from "./catalog.ts";

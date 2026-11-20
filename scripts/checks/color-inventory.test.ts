@@ -25,8 +25,8 @@ import { mkhighlight } from "../../src/engine/color/color-mkhighlight.ts";
 import * as colors from "../../src/engine/color/colors.ts";
 import * as roles from "../../src/engine/color/palette.ts";
 import * as gameTokens from "../../src/engine/color/palette-games.ts";
+import type { Color } from "../../src/engine/contract/types.ts";
 import { getTsGame } from "../../src/engine/registry.ts";
-import type { Color } from "../../src/engine/types.ts";
 import { puzzleIds } from "../../src/puzzle/catalog.ts";
 import "../../src/games/index.ts";
 

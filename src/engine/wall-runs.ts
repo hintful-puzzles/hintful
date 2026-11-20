@@ -20,8 +20,8 @@
  */
 
 import type { Dsf } from "./board/dsf.ts";
+import { DESC_TOO_LONG } from "./contract/desc-error.ts";
 import { isDigit } from "./decimal.ts";
-import { DESC_TOO_LONG } from "./desc-error.ts";
 import type { DescReader } from "./desc-reader.ts";
 
 const BEFORE_A = "a".charCodeAt(0) - 1;

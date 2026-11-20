@@ -11,12 +11,12 @@
  * board.
  */
 
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   describedFiringHint,
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   RULES_OUT,
   type SaysById,
@@ -73,7 +73,7 @@ export const starbattleJudgeMove = described.hint.judgeMove;
 /**
  * Judge a move against the step on show by what it did to the board, so a
  * click, a drag and a key that make the same change are the same
- * (`engine/hint-track.ts`). A step that decides several squares shrinks to
+ * (`engine/contract/hint-track.ts`). A step that decides several squares shrinks to
  * the ones left.
  */
 export function starbattleKeepTrack(

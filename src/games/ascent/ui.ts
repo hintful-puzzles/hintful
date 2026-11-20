@@ -11,8 +11,9 @@
  */
 
 import { fromCoord } from "../../engine/board/geometry.ts";
+import { UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -35,7 +36,6 @@ import {
   RIGHT_RELEASE,
   shearedHexStep,
 } from "../../engine/pointer.ts";
-import type { Point } from "../../engine/types.ts";
 import type { AscentDrawState } from "./render.ts";
 import { isSolved } from "./solver.ts";
 import {

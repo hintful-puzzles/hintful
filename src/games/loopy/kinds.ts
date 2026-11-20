@@ -1,7 +1,7 @@
 /**
  * What a Loopy hint's words point at, by the kind of thing it is: each word that
  * names a mark on the board is a reference to the mark it points at
- * (`engine/hint-words.ts`), drawn by `render.ts` and read by the hint's tests.
+ * (`engine/contract/hint-words.ts`), drawn by `render.ts` and read by the hint's tests.
  *
  * The words themselves are the description's (`loopy.description.yaml`: a
  * technique's `says`, and `steps` for what the plan says), spoken by `hint.ts`.
@@ -13,7 +13,7 @@
  * player's own note redrawn in the evidence color.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 import type { LoopyPair } from "./state.ts";
 
 /** An edge, a clue's face, a dot or a corner (a dline), each by its grid index. */

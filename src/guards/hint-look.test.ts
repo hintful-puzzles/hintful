@@ -12,7 +12,7 @@
  * explaining puts the whole step back.
  */
 import { describe, expect, it } from "vitest";
-import type { MarkRef } from "../engine/hint-words.ts";
+import type { MarkRef } from "../engine/contract/hint-words.ts";
 import { LOOK_HERE } from "../engine/midend.ts";
 import { HINT_GAMES } from "../engine/testing/hint-games.ts";
 import { type WalkBoard, walkHints } from "../engine/testing/hint-walk.ts";

@@ -5,7 +5,7 @@
  * (`pearl.description.yaml`), spoken by `hint.ts`.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 
 /** A square, by its index. */
 export const SQUARE: MarkKind<number> = { name: "square", key: String };

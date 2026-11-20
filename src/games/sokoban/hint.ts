@@ -44,15 +44,22 @@
  * "following the hint").
  */
 
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { type MarkedDeadEnd, markedDeadEnd } from "../../engine/hint-refusal.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
+import {
+  type MarkedDeadEnd,
+  markedDeadEnd,
+} from "../../engine/contract/hint-refusal.ts";
 import {
   type MarkKind,
   mark,
   phrase,
   type Relation,
   type Sentence,
-} from "../../engine/hint-words.ts";
+} from "../../engine/contract/hint-words.ts";
 import { judgeRivals, type Verdict } from "../../engine/rival-judging.ts";
 import {
   searchRefusal,

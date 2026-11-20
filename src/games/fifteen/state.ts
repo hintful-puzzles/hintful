@@ -1,12 +1,16 @@
 import { gridText } from "../../engine/board/grid-text.ts";
-import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-error.ts";
+import {
+  DESC_REPEATED,
+  type DescParse,
+  descValue,
+} from "../../engine/contract/desc-error.ts";
+import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
-import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { retryLimit } from "../../engine/retry-limit.ts";
 import * as fifteen from "../../generated/games/fifteen/fifteen.compiled.ts";
 
 // --- types -----------------------------------------------------------

@@ -21,7 +21,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { type Narration, stepMarks } from "../../engine/hint-words.ts";
+import { type Narration, stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";

@@ -35,8 +35,16 @@ import {
   runCandidatePlan,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Narration,
+  type Note,
+  type Sentence,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { rangeMask } from "../../engine/describe-runtime.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   candidateConclusions,
@@ -47,13 +55,6 @@ import {
   populateText,
 } from "../../engine/hint-text.ts";
 import {
-  CELL,
-  type MarkKind,
-  type Narration,
-  type Note,
-  type Sentence,
-} from "../../engine/hint-words.ts";
-import {
   CellMarks,
   type Firing as LadderFiring,
   type Said,
@@ -61,7 +62,6 @@ import {
 } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
-import type { Point } from "../../engine/types.ts";
 import {
   type SaysById,
   voice,

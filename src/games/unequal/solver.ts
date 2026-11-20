@@ -4,9 +4,9 @@
  * runs it on the `LatinSolver`, and the hint runs it on the player's notes.
  */
 
+import type { Narration } from "../../engine/contract/hint-words.ts";
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { ADJTHAN, type ClueKind } from "../../engine/edge-clue-latin/state.ts";
-import type { Narration } from "../../engine/hint-words.ts";
 import { type LatinReason, latinLadder } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
 import * as unequal from "../../generated/games/unequal/unequal.compiled.ts";

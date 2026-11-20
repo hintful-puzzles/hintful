@@ -9,7 +9,6 @@
  * rule-out marks live in the state, and the hint (`hint.ts`) places them.
  */
 
-import { assertNever } from "../../engine/assert-never.ts";
 import {
   enterValue,
   isRuledOut,
@@ -19,8 +18,10 @@ import {
   selectedSlot,
   withRuleOuts,
 } from "../../engine/code-rows.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
+import type { KeyLabel, Point } from "../../engine/contract/types.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { colorKeysZeroIsTen } from "../../engine/key-labels.ts";
@@ -39,7 +40,6 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { KeyLabel, Point } from "../../engine/types.ts";
 import {
   GUESS_RUNGS,
   type GuessHighlights,

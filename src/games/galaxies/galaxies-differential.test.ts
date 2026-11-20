@@ -23,7 +23,7 @@
  * `puzzles/auxiliary/galaxies-trace.c` prior to its deletion commit.
  */
 import { describe, expect, it } from "vitest";
-import { descValue, descVerdict } from "../../engine/desc-error.ts";
+import { descValue, descVerdict } from "../../engine/contract/desc-error.ts";
 import cReference from "./__fixtures__/galaxies-c-reference.json" with { type: "json" };
 import { GalaxiesDiff } from "./index.ts";
 import { clearForSolve, solverState } from "./solver.ts";

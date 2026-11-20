@@ -612,7 +612,7 @@ Any other error a generator throws SHALL propagate.
 ### Requirement: Every generate-until-success loop is bounded by the shared retry limit
 
 Every generate-until-success retry loop in a game generator SHALL be finitely
-bounded, and the bound SHALL come from the shared `engine/retry-limit.ts`
+bounded, and the bound SHALL come from the shared `engine/contract/retry-limit.ts`
 helper rather than a hand-rolled counter, so every loop reports failure the
 same way: `RetryLimitExceeded`, naming the loop and the tries it made. A loop
 whose only termination argument is probabilistic counts as unbounded. Fixpoint
@@ -673,7 +673,7 @@ The open-loop scan SHALL key on the loop's shape and on references, not on a
 file name or a list of games: an RNG is a declaration typed `RandomState` or
 initialized from a function declared to return one, a draw is followed through
 local functions and relative imports, and a guard is a variable initialized
-from the `retryLimit` that `engine/retry-limit.ts` exports.
+from the `retryLimit` that `engine/contract/retry-limit.ts` exports.
 
 #### Scenario: A deal lives in a file not named for generation
 

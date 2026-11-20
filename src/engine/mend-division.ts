@@ -12,7 +12,7 @@
  * it still, so that the answer fits the regions before and after.
  */
 
-import { countMend, MENDED } from "./deal-census.ts";
+import { countMend, MENDED } from "./contract/deal-census.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { adjacentCells } from "./redivide.ts";
 

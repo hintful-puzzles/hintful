@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { D, L, R, U } from "../../engine/board/square-edges.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,

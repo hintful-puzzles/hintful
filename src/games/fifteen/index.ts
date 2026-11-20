@@ -1,15 +1,16 @@
-import { assertNever } from "../../engine/assert-never.ts";
+import { assertNever } from "../../engine/contract/assert-never.ts";
 import type {
   Game,
   HintResult,
   HintStep,
   HintTrackVerdict,
   UiUpdate,
-} from "../../engine/game.ts";
+} from "../../engine/contract/game.ts";
+import { NO_MOVE_WORTH_MAKING } from "../../engine/contract/hint-refusal.ts";
+import type { Sentence } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click } from "../../engine/hint-gesture.ts";
-import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
-import type { Sentence } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -22,7 +23,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { Point } from "../../engine/types.ts";
 import { voice } from "../../generated/games/fifteen/fifteen.compiled.ts";
 import { TILE } from "./kinds.ts";
 import {

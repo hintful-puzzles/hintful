@@ -10,7 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectContour, expectRing } from "../../engine/testing/mark-shape.ts";

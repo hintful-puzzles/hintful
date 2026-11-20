@@ -7,9 +7,9 @@
 
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
+import type { Size } from "../engine/contract/types.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { driveMidend } from "../engine/testing/drive-midend.ts";
-import type { Size } from "../engine/types.ts";
 
 const UPRIGHT_PHONE: Size = { w: 390, h: 640 };
 const DESKTOP: Size = { w: 1200, h: 700 };

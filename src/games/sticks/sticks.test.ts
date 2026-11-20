@@ -13,8 +13,9 @@ import {
   DESC_TOO_SHORT,
   descBadCharacter,
   validateDesc,
-} from "../../engine/desc-error.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
+} from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
@@ -38,7 +39,6 @@ import {
   winFlashAt,
   winFlashRun,
 } from "../../engine/testing/win-flash.ts";
-import type { Point } from "../../engine/types.ts";
 import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/sticks-c-reference.json" with { type: "json" };
 import { newSticksDesc } from "./generator.ts";

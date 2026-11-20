@@ -1,6 +1,6 @@
 /**
  * What a Magnets hint's words point at: a square, a clue digit, and a row or
- * column (`MarkKind` in `engine/hint-words.ts`). The words themselves are the
+ * column (`MarkKind` in `engine/contract/hint-words.ts`). The words themselves are the
  * description's (`magnets.description.yaml`'s `steps`), spoken by `speak.ts`.
  * The squares a step decides are ringed; the squares and clue digits it reasons
  * from are outlined, the digits whatever color the game paints them; the line it
@@ -11,7 +11,7 @@
  * § "Name elements by what the player can see").
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
 
 /** A row or column, as the solver names it. */
 export interface LineEl {

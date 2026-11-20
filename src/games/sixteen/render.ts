@@ -19,16 +19,8 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import {
-  drawRecessedBorder as drawBevel,
-  drawRaisedTile,
-  glyphFont,
-  raisedBevelWidth,
-} from "../../engine/draw.ts";
-import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { stepMarks } from "../../engine/hint-words.ts";
-import { textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -36,7 +28,15 @@ import type {
   Point,
   Rect,
   Size,
-} from "../../engine/types.ts";
+} from "../../engine/contract/types.ts";
+import {
+  drawRecessedBorder as drawBevel,
+  drawRaisedTile,
+  glyphFont,
+  raisedBevelWidth,
+} from "../../engine/draw.ts";
+import { textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { SQUARE, TILE } from "./kinds.ts";
 import type { SixteenMove, SixteenParams, SixteenState, SixteenUi } from "./state.ts";

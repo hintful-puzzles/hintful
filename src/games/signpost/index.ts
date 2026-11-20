@@ -15,8 +15,9 @@ import {
 } from "../../engine/answer-search.ts";
 import { MAX_CANDIDATE_VALUE } from "../../engine/board/candidate-bits.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
-import { descValue } from "../../engine/desc-error.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
+import { descValue } from "../../engine/contract/desc-error.ts";
+import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { Color, GameStatus, Point, Size } from "../../engine/contract/types.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import {
@@ -44,7 +45,6 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
-import type { Color, GameStatus, Point, Size } from "../../engine/types.ts";
 import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import { newSignpostDesc } from "./generator.ts";
 import {

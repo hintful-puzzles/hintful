@@ -10,15 +10,15 @@ import { describe, expect, it } from "vitest";
 import { darkValue } from "../engine/color/color-token.ts";
 import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
 import { COL_BACKGROUND } from "../engine/color/roles.ts";
+import type { Narration } from "../engine/contract/hint-words.ts";
+import type { Color } from "../engine/contract/types.ts";
 import { HATCH_OPACITY } from "../engine/hatch.ts";
-import type { Narration } from "../engine/hint-words.ts";
 import { Midend } from "../engine/index.ts";
 import { beginDealt } from "../engine/testing/dealt.ts";
 import { gamesCallingMethod, REGISTERED_IDS } from "../engine/testing/enrollment.ts";
 import { gatePresets, HINT_GAMES } from "../engine/testing/hint-games.ts";
 import { opsOfKind, RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
-import type { Color } from "../engine/types.ts";
 import * as magnets from "../games/magnets/render.ts";
 import { schemeOf, schemePalettes } from "./scheme-palettes.ts";
 

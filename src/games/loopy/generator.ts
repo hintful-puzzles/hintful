@@ -10,14 +10,14 @@
 
 import { APERIODIC_GRID_TYPES, type GridType } from "../../engine/board/grid/index.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
-import { descVerdict } from "../../engine/desc-error.ts";
-import { FACE_BLACK, FACE_GRAY, generateLoop } from "../../engine/loopgen.ts";
-import type { RandomState } from "../../engine/random/index.ts";
+import { descVerdict } from "../../engine/contract/desc-error.ts";
 import {
   MAX_REGENERATE,
   RetryLimitExceeded,
   retryLimit,
-} from "../../engine/retry-limit.ts";
+} from "../../engine/contract/retry-limit.ts";
+import { FACE_BLACK, FACE_GRAY, generateLoop } from "../../engine/loopgen.ts";
+import type { RandomState } from "../../engine/random/index.ts";
 import { buildLoopyGrid } from "./grid-build.ts";
 import { gridTypeOf, type LoopyParams } from "./params.ts";
 import { gameHasUniqueSoln } from "./solver.ts";

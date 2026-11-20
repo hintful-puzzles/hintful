@@ -10,7 +10,7 @@
  * deterministic without running the (slow) generator.
  */
 import { describe, expect, it } from "vitest";
-import type { HintStep } from "../../engine/game.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   describeAbsentTiers,

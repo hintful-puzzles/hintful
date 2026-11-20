@@ -9,8 +9,8 @@
  * ringed squares would leave "this square" pointing at neither.
  */
 
-import type { MarkKind } from "../../engine/hint-words.ts";
-import type { Point } from "../../engine/types.ts";
+import type { MarkKind } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 
 /** The arrow in a square: the end a link leaves by. */
 export const ARROW: MarkKind<Point> = {

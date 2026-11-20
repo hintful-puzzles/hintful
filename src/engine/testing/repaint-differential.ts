@@ -32,8 +32,8 @@
  * Dev/test-only; never imported by production code.
  */
 
-import { hasHint } from "../game.ts";
-import { StepMarks } from "../hint-words.ts";
+import { hasHint } from "../contract/game.ts";
+import { StepMarks } from "../contract/hint-words.ts";
 import { Midend } from "../midend.ts";
 import {
   CURSOR_DOWN,

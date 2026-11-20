@@ -25,11 +25,23 @@
  */
 
 import { apartByPosition } from "../../engine/apart-by-position.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { DEDUCTION_EXHAUSTED, puzzleDeadEnd } from "../../engine/hint-refusal.ts";
-import { CELL, Narration, type Sentence, so } from "../../engine/hint-words.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
+import {
+  DEDUCTION_EXHAUSTED,
+  puzzleDeadEnd,
+} from "../../engine/contract/hint-refusal.ts";
+import {
+  CELL,
+  Narration,
+  type Sentence,
+  so,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import type { Said, StepClause } from "../../engine/step-voice.ts";
-import type { Point } from "../../engine/types.ts";
 import * as mines from "../../generated/games/mines/mines.compiled.ts";
 import { firstOpen } from "./generator.ts";
 import {

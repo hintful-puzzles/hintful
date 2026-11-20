@@ -25,7 +25,7 @@
  *   named color serves.
  */
 
-import type { Color } from "../types.ts";
+import type { Color } from "../contract/types.ts";
 import { darkValue, divide, mix, scale, token } from "./color-token.ts";
 import { BLUE_BOLD, GRAY_WASH, PURPLE_WASH, REGION_FILLS } from "./colors.ts";
 import { INK } from "./palette.ts";

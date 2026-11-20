@@ -25,16 +25,25 @@
  * plays the whole route, and the midend records that the solver was used.
  */
 
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import type {
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+} from "../../engine/contract/game.ts";
 import {
   type MarkedDeadEnd,
   markedDeadEnd,
   NO_MOVE_WORTH_MAKING,
   puzzleDeadEnd,
-} from "../../engine/hint-refusal.ts";
-import { mark, phrase, type Relation, type Sentence } from "../../engine/hint-words.ts";
+} from "../../engine/contract/hint-refusal.ts";
+import {
+  mark,
+  phrase,
+  type Relation,
+  type Sentence,
+} from "../../engine/contract/hint-words.ts";
+import { NO_SOLUTION_FROM_HERE } from "../../engine/contract/solve-failure.ts";
 import { judgeRivals } from "../../engine/rival-judging.ts";
-import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { voice } from "../../generated/games/inertia/inertia.compiled.ts";
 import { ARROW, GEM } from "./kinds.ts";
 import { solveRoute, unreachableGems } from "./solver.ts";

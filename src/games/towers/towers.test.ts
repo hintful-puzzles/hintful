@@ -8,9 +8,9 @@
  * and a mistake overlay, each with targeted op assertions plus a snapshot.
  */
 import { describe, expect, it } from "vitest";
-import { validateDesc } from "../../engine/desc-error.ts";
+import { validateDesc } from "../../engine/contract/desc-error.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
 import { latinSpace } from "../../engine/describe-runtime.ts";
-import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";

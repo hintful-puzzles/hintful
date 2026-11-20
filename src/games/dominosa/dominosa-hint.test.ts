@@ -2,7 +2,7 @@
  * Tier-1 + tier-2.5 tests for the dominosa explained hint.
  */
 import { describe, expect, it } from "vitest";
-import { stepMarks } from "../../engine/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectPieceRing, ringsOf } from "../../engine/testing/mark-shape.ts";

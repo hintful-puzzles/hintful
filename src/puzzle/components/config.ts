@@ -11,7 +11,7 @@ import type {
   ConfigDescription,
   ConfigItem,
   ConfigValues,
-} from "../../engine/types.ts";
+} from "../../engine/contract/types.ts";
 import { cssWATweaks } from "../../utils/css.ts";
 import { equalSet } from "../../utils/equal.ts";
 import { puzzleContext } from "../contexts.ts";

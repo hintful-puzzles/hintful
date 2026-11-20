@@ -28,9 +28,9 @@ import {
   DY,
   FLIP,
 } from "./border-grid.ts";
+import type { HintStep, HintTrackVerdict } from "./contract/game.ts";
+import type { MarkKind } from "./contract/hint-words.ts";
 import type { GridSpace } from "./describe-runtime.ts";
-import type { HintStep, HintTrackVerdict } from "./game.ts";
-import type { MarkKind } from "./hint-words.ts";
 
 /** An edge, named on the square `(x, y)`'s `dir` side. */
 export interface BorderEdge {

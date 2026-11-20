@@ -10,15 +10,21 @@
  */
 
 import { valueBit, valuesOneTo } from "./board/candidate-bits.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
+import type { HintResult, HintStep, HintTrackVerdict } from "./contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "./contract/hint-refusal.ts";
+import {
+  CELL,
+  Narration,
+  NOTE,
+  type Sentence,
+  unshaped,
+} from "./contract/hint-words.ts";
+import type { Point } from "./contract/types.ts";
 import { markAllPress, type PointerAction } from "./hint-gesture.ts";
-import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
-import { CELL, Narration, NOTE, type Sentence, unshaped } from "./hint-words.ts";
 import type { CellMarks } from "./ladder-runtime.ts";
 import type { CellRegion } from "./latin-hint.ts";
 import type { Judging } from "./move-judge.ts";
 import { type NoteTakingUi, noteEntryGesture } from "./note-taking-cell.ts";
-import type { Point } from "./types.ts";
 
 /** A board cell. */
 export type Cell = Point;
