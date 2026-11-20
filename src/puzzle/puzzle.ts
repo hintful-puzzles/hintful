@@ -49,7 +49,7 @@ import type { RemoteWorkerPuzzle } from "./worker.ts";
 /**
  * Uniform dwell per auto-hint step (ms). Every game's auto-play paces at
  * this rate. The engine stretches each animated hint move to the *same*
- * duration (`HINT_ANIM_S` in `midend.ts` — keep the two equal), so an
+ * duration (`HINT_ANIM_S` in `midend-animation.ts` — keep the two equal), so an
  * animated step is continuous motion with no frozen gap before the next;
  * a non-animated game has no animation to stretch and is paced purely by
  * this dwell. One place tunes the feel of auto-hint across the collection.

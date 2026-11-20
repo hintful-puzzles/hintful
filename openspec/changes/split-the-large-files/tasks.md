@@ -13,21 +13,24 @@
         (`hint-spans.ts`) moved out. Its dialog launchers stay: the
         saved-game flows read and write the screen's private saved-game
         state, and moving ~160 lines out would mean exposing that state.
-  - [ ] `puzzle.ts` and `midend.ts` are each one class (`Puzzle`, 1,377
-        lines; `Midend`, 2,623 lines and ~60 private fields), so no
-        statement moves whole. Their split is collaborator classes, each
-        owning its fields, which the class holds and delegates to, its
-        public surface unchanged. `Puzzle`: checkpoints (`_checkpoints`,
-        `checkpointsLeft`, `boardSerial`, follow and purge), the pending
-        deal (`_dealPending`, `dealsAsked`, `dealStoppable`, `_dealWaited`,
-        `dealLastMs`), hint presentation (flash, marks, explanation).
-        `Midend`: params and preferences (custom params, prefs, palette,
-        size), then save and load; the hint section reads most of the core
-        state, so weigh it last. `scripts/stryker.config.mjs` names
-        `midend.ts` as a mutation target, and `feedback-probe-cases.mjs`
-        anchors in it.
-- [ ] 1.3 Run `feedback-probe.mjs --verify` after each move of engine code.
-      (Done after the two moves so far.)
+  - [x] `puzzle.ts` and `midend.ts` are each one class, so no statement
+        moves whole; their split is collaborator classes, each owning its
+        fields, the public surface unchanged. `Puzzle` (1,517 → 1,305
+        lines): `Checkpoints`, `DealWait`, `HintPresentation`. `Midend`
+        (2,998 → 2,611): `ChosenParams`, `Preferences`, `MoveAnimation`,
+        and the save written and read as functions (`midend-save.ts`, with
+        `Restart` and the run record), since a save owns no field.
+        Declined, 2026-11-20: the hint section (~650 lines) and the
+        timer. Every hint method reads and writes the history, position,
+        `Ui`, overlays and transitions (`commitMove`, `afterTransition`,
+        `emitStatusBar`), so a collaborator would need a back-reference to
+        the whole midend: a file split with no ownership behind it. The
+        timer's elapsed time is a third of the run record a restart swaps,
+        and its tick is one line beside the animation's. The palette's
+        two methods are already one-line delegations. The probe's new
+        modules name `testedVia: midend.ts`, since the midend's tests are
+        theirs; the six moved cases are all caught.
+- [x] 1.3 Run `feedback-probe.mjs --verify` after each move of engine code.
 
 ## 2. Finish
 

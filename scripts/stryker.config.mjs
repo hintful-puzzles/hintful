@@ -61,6 +61,10 @@ export default {
   // that generation is fixture-pinned, which §2 of the findings sampled directly.
   mutate: [
     "src/engine/midend.ts",
+    "src/engine/midend-params.ts",
+    "src/engine/midend-prefs.ts",
+    "src/engine/midend-save.ts",
+    "src/engine/midend-animation.ts",
     "src/engine/save.ts",
     "src/engine/latin.ts",
     "src/engine/deduction-fixpoint.ts",

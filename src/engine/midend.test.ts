@@ -24,7 +24,8 @@ import {
   NO_MOVE_WORTH_MAKING,
 } from "./hint-refusal.ts";
 import { CELL, mark, phrase, stepMarks, unshaped } from "./hint-words.ts";
-import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
+import { Midend } from "./midend.ts";
+import { SHOW_TIMER_PREF } from "./midend-prefs.ts";
 import { endParams } from "./params.ts";
 import {
   CURSOR_DOWN,

@@ -17,7 +17,7 @@ import { darkValue } from "./color/color-token.ts";
 import { HINT_INK } from "./color/palette.ts";
 import { completionStatus } from "./completion-status.ts";
 import { freshSeed, generate } from "./deal.ts";
-import { DESC_MALFORMED, loadDesc, loadVerdict, readBoard } from "./desc-error.ts";
+import { DESC_MALFORMED, loadDesc } from "./desc-error.ts";
 import {
   cappedSolveFor,
   dealGaveUp,
@@ -28,10 +28,8 @@ import {
   tierOf,
   withTier,
 } from "./difficulty.ts";
-import { easeOut } from "./easing.ts";
 import {
   type ActiveHint,
-  fieldLabel,
   type Game,
   type GameDrawing,
   type HintResult,
@@ -54,8 +52,10 @@ import {
 } from "./hint-refusal.ts";
 import { type MarkRole, markKeys } from "./hint-words.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
-import { configNarrowing, onlyError } from "./only.ts";
-import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
+import { MoveAnimation } from "./midend-animation.ts";
+import { ChosenParams, largestTile } from "./midend-params.ts";
+import { Preferences } from "./midend-prefs.ts";
+import { Restart, type RunRecord, readSave, writeSave } from "./midend-save.ts";
 import { paramsError, UnreadableParams } from "./params.ts";
 import {
   cancelDrags,
@@ -76,7 +76,6 @@ import {
 import { type RandomState, randomNew } from "./random/index.ts";
 import { RULES_OUT_PREF } from "./rules-out.ts";
 import { sameShown, sameValue } from "./same-value.ts";
-import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import { NO_SOLUTION_FROM_HERE } from "./solve-failure.ts";
 import { endSweep, hintGesture, sweepContinues, sweepPending } from "./target-verb.ts";
 import type {
@@ -99,54 +98,10 @@ import type {
   TimerReadout,
 } from "./types.ts";
 import { copyUi, restoreUi } from "./ui-snapshot.ts";
-import { NO_FLASH, ownFlash, WinWave } from "./win-wave.ts";
-
-/** Wall-clock duration (seconds) of a hint-executed move's slow-motion
- * animation, whatever the game's own move-animation time. Keep it equal to
- * `puzzle.ts`'s `AUTO_HINT_STEP_MS`, the auto-hint loop's per-step dwell, so
- * auto-hint flows as continuous motion with no frozen gap between steps. A game
- * with no move animation (`animLength` 0) stays instant; the dwell paces it. */
-const HINT_ANIM_S = 1.0;
 
 /** What the status line says while a step shows only where to look: the same
  * in every game, so it gives nothing of the step away. */
 export const LOOK_HERE = "Look here.";
-
-/** The preference key of the solve timer, which the engine offers in every
- * game beside the game's own `prefs`. */
-export const SHOW_TIMER_PREF = "show-timer";
-
-/** A checkbox's value as a config form submits it. */
-const asChecked = (v: unknown): boolean => v === true || v === "true" || v === 1;
-
-/**
- * A restart, as an entry of the move log: the step from the board as it was
- * played to the board as it started. Undo crosses it back to the played board,
- * as upstream's does (midend.c `movetype = RESTART`).
- *
- * `far` is the record of the play on the far side of the restart from the
- * cursor: its solver record, its time and its help. Each is a field of the
- * midend and not part of any state, and a restart is where they begin again,
- * so each restart keeps what the cursor left behind and the two are exchanged
- * whenever the cursor crosses.
- *
- * A restart also begins a run, play from a fresh board, which the player sees
- * as a board of its own: its moves are counted from it, and it is numbered as
- * a board is (`serial`), so what the app keeps per board follows the run.
- */
-class Restart {
-  constructor(
-    public far: RunRecord,
-    readonly serial: number,
-  ) {}
-}
-
-/** What the midend records of a run beside its states. */
-interface RunRecord {
-  cheated: boolean;
-  elapsed: number;
-  helped: boolean;
-}
 
 /** How many boards Undo can reach back across, and Redo forward. Each is kept
  * as a save of itself, so the bound is on memory; a board's own log, restarts
@@ -176,9 +131,6 @@ function asPrimary(button: number): number {
   return button;
 }
 
-/** What a pointer press found, kept so a cancel can put it back. The history
- * fields are the arrays themselves: a move replaces them and never writes
- * into them, so they still hold what the press saw. */
 /** The marks a player's move brings under `Game.rulesOut`, and the board
  * they leave. */
 interface Brought<State, Move> {
@@ -186,6 +138,9 @@ interface Brought<State, Move> {
   state: State;
 }
 
+/** What a pointer press found, kept so a cancel can put it back. The history
+ * fields are the arrays themselves: a move replaces them and never writes
+ * into them, so they still hold what the press saw. */
 interface OpenPress<State, Move, Ui> {
   ui: Ui;
   history: State[];
@@ -374,11 +329,11 @@ export interface EngineCore {
 }
 
 export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
-  /** The params the next New game deals at: what `setParams` and the custom
-   * dialog change, and what `getParams` reports. Upstream `me->params`. */
-  private params: Params;
+  /** The params the next New game deals at. */
+  private readonly chosen: ChosenParams<Params>;
+  private readonly prefs: Preferences<Ui>;
   /** The params of the board on screen, fixed when that board starts. Kept
-   * apart from `params` because choosing a type is a request for the *next*
+   * apart from the chosen params because choosing a type is a request for the *next*
    * board: were it the one field, a save, a restart or an id emitted before
    * the new board arrives would pair the old desc with the new difficulty, and
    * the board would reopen at a tier it was never dealt at. Upstream
@@ -467,12 +422,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.timerElapsed = record.elapsed;
     this.helped = record.helped;
   }
-  /** Last-applied user preference values, keyed by pref `kw`. Retained
-   * across new games / loads because the midend recreates `ui` (via
-   * `newUi`) on every `startFrom`, which would otherwise reset prefs to
-   * their `newUi` defaults; `applyPrefs()` re-applies these onto each
-   * fresh ui. Never serialized (the app persists prefs per-puzzle). */
-  private prefValues: ConfigValues = {};
   /** The stored hint plan; `steps[index]` is the step on display.
    * Invariant: when non-null, `index < steps.length` (advancing past
    * the last step clears the plan instead). */
@@ -509,13 +458,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** What applying the hint does after the refusal on display. */
   private wayForward: WayForward | null = null;
   private timerElapsed = 0;
-  /** The `show-timer` preference. Every game has it, and it starts on: the
-   * readout is small enough that a player who does not want it can switch it
-   * off, where one who does would not know to look. */
-  private showTimer = true;
-  /** The {@link RULES_OUT_PREF} preference, off until the player asks for it:
-   * marks they did not make are a surprise to one who has not. */
-  private bringRuledOut = false;
   /** The frontend has paused the timer (the page is hidden). */
   private timerPaused = false;
   /** `game.status` of each state the midend has asked about, so a game whose
@@ -539,31 +481,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private notifyRedraw?: NotifyRedraw;
   private timerWanted = false;
 
-  // Animation/flash state, mirroring midend.c. While a move is
-  // animating, `animPrev` is the state being animated *from*; the game
-  // is drawn with (animPrev, state, animTime, the flash). Outside
-  // animation all are zero/null and the game draws its final state.
-  private animPrev: State | null = null;
-  private animTime = 0;
-  private animLength = 0;
-  // Hint-executed moves play the game's own move animation in slow
-  // motion so the user can follow what the hint did: the duration is
-  // stretched to `HINT_ANIM_S` and the game is shown proportionally
-  // scaled time (`animScale`), so it needs no awareness of the stretch.
-  private animScale = 1;
-  private pendingHintAnim = false;
-  // A flash of the game's own (`flashLength`): a death, a loss, a reveal.
-  private flashTime = 0;
-  private flashLength = 0;
-  // The win's highlight, while it travels. Never alongside a flash of the
-  // game's own.
-  private wave: WinWave | null = null;
-  private reducedMotion = false;
-  private animDir = 1;
+  private readonly animation = new MoveAnimation<State>();
 
   constructor(private readonly game: Game<Params, State, Move, Ui, DrawState>) {
-    this.params = game.defaultParams();
-    this.boardParams = this.params;
+    this.chosen = new ChosenParams(game);
+    this.prefs = new Preferences(game);
+    this.boardParams = this.chosen.params;
     this.currentTileSize = this.preferredTileSize;
   }
 
@@ -594,10 +517,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   newGame(fitTo?: Size, kept: DealtBoard | null = null): string | null {
     const params = this.paramsToDeal(fitTo);
     if (kept !== null && kept.params === this.game.encodeParams(params, true)) {
-      this.begin(params, kept.desc, kept.aux, this.params);
+      this.begin(params, kept.desc, kept.aux, this.chosen.params);
       return null;
     }
-    return this.deal(params, randomNew(freshSeed()), this.params);
+    return this.deal(params, randomNew(freshSeed()), this.chosen.params);
   }
 
   dealParams(fitTo?: Size): EncodedParams {
@@ -613,12 +536,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** So the menu does not name a type the player is not looking at. */
   returnToBoardType(): void {
     if (this.history.length === 0) return;
-    this.params = this.boardParams;
+    this.chosen.params = this.boardParams;
     this.emitParamsChange();
   }
 
   private paramsToDeal(fitTo?: Size): Params {
-    return fitTo ? this.paramsToFit(fitTo) : this.params;
+    return fitTo ? this.chosen.toFit(fitTo) : this.chosen.params;
   }
 
   /**
@@ -646,7 +569,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     aux: string | null,
     chosen: Params,
   ): void {
-    this.params = chosen;
+    this.chosen.params = chosen;
     this.startFrom(
       params,
       desc,
@@ -656,30 +579,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     );
   }
 
-  /** The chosen params, or the same board turned on its side when that draws
-   * at a larger tile in `area`. Decided at deal time only: `this.params` keeps
-   * the orientation the player chose, so the next deal on a screen held the
-   * other way round turns back. A tie keeps the chosen orientation, which is
-   * what leaves a square board alone. A size the game would refuse to deal is
-   * never turned to: a bound may hold on one of width and height alone. */
-  private paramsToFit(area: Size): Params {
-    const turned = this.game.transposeParams?.(this.params) ?? null;
-    if (turned === null || paramsError(this.game, turned, true) !== null)
-      return this.params;
-    return this.largestTile(turned, area) > this.largestTile(this.params, area)
-      ? turned
-      : this.params;
-  }
-
   turnParams(params: string): string | null {
-    let decoded: Params;
-    try {
-      decoded = this.game.decodeParams(params);
-    } catch {
-      return null;
-    }
-    const turned = this.game.transposeParams?.(decoded) ?? null;
-    return turned === null ? null : this.game.encodeParams(turned, true);
+    return this.chosen.turn(params);
   }
 
   newGameFromId(id: string): string | null {
@@ -709,19 +610,26 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const loaded = loadDesc(this.game, params, rest);
     if (!loaded.ok) return loaded.error;
     const left = this.boardLeft();
-    this.params = this.withBoardTier(paramsStr, params, rest);
-    this.startFrom(this.params, rest, this.stateZero(params, rest, loaded.value), left);
+    this.chosen.params = this.withBoardTier(paramsStr, params, rest);
+    this.startFrom(
+      this.chosen.params,
+      rest,
+      this.stateZero(params, rest, loaded.value),
+      left,
+    );
     return null;
   }
 
   /**
-   * State 0 for `desc` under `this.params`, given the board `loaded` built under
+   * State 0 for `desc` under `this.chosen.params`, given the board `loaded` built under
    * `judged` while deciding the desc loads. The tier check returns the same
    * params object when it keeps them, and then that board is state 0; a changed
    * tier rebuilds, since a state may carry its tier.
    */
   private stateZero(judged: Params, desc: string, loaded: State): State {
-    return this.params === judged ? loaded : this.game.newState(this.params, desc);
+    return this.chosen.params === judged
+      ? loaded
+      : this.game.newState(this.chosen.params, desc);
   }
 
   /**
@@ -1267,7 +1175,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * {@link RULES_OUT_PREF} preference (`Game.rulesOut`), made on `next`. */
   private broughtBy(prev: State, next: State): Brought<State, Move> | null {
     const rulesOut = this.game.rulesOut;
-    if (!this.bringRuledOut || !rulesOut) return null;
+    if (!this.prefs.bringRuledOut || !rulesOut) return null;
     const move = rulesOut.bring(prev, next);
     return move === null ? null : { move, state: this.game.executeMove(next, move) };
   }
@@ -1278,7 +1186,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * leave (docs/hints-marks.md § "A move with side effects ends the plan"). */
   private untilBrought(steps: HintStep<Move>[]): HintStep<Move>[] {
     const rulesOut = this.game.rulesOut;
-    if (!this.bringRuledOut || !rulesOut) return steps;
+    if (!this.prefs.bringRuledOut || !rulesOut) return steps;
     let board = this.state;
     for (const [i, step] of steps.entries()) {
       const next = this.game.executeMove(board, step.move);
@@ -2009,7 +1917,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         completed = true;
         this.advanceHintOnAnimationEnd = true;
         this.hideHintAfterStep = hideAfter;
-        this.pendingHintAnim = true;
+        this.animation.armHint();
       }
       this.commitMove(next, made, false, this.broughtBy(this.state, next));
       repaint = false;
@@ -2054,17 +1962,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     }
   }
 
-  /** `animTime` through the shared curve: the same span, with its progress
-   * front-loaded. Outside a move's animation it is `animTime` itself. */
-  private easedAnimTime(): number {
-    if (this.animLength <= 0 || this.animTime >= this.animLength) return this.animTime;
-    return easeOut(this.animTime / this.animLength) * this.animLength;
-  }
-
   currentAnimationMs(): number {
-    // `animLength` is already the scaled duration (base × animScale), in
-    // seconds; the auto-hint loop wants milliseconds.
-    return this.animLength * 1000;
+    return this.animation.ms;
   }
 
   private afterTransition(): void {
@@ -2097,61 +1996,31 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * `flashLength`; absent ⇒ 0 ⇒ no animation (the transition just paints its
    * final state). A win's flash is the engine's, the same in every game. */
   private setupAnimation(prev: State, next: State, dir: number): void {
-    this.animDir = dir;
-    const a = this.game.animLength?.(prev, next, dir, this.ui) ?? 0;
-    const f = this.game.flashLength?.(prev, next, dir, this.ui) ?? 0;
-    this.wave =
-      f === 0 && this.becameSolved(prev, next, dir)
-        ? new WinWave(this.reducedMotion)
-        : null;
-    // A hint move stretches the game's base animation to the uniform
-    // `HINT_ANIM_S`; `animScale` (= stretched / base) is what `redraw`
-    // divides `animTime` by so the game, which only knows its own base
-    // anim length, still spans the full stretched duration. A
-    // non-animated game (a = 0) can't be stretched — leave it instant.
-    if (this.pendingHintAnim && a > 0) {
-      this.animLength = HINT_ANIM_S;
-      this.animScale = HINT_ANIM_S / a;
-    } else {
-      this.animLength = a;
-      this.animScale = 1;
-    }
-    this.pendingHintAnim = false;
-    this.animTime = 0;
-    this.flashLength = f;
-    this.flashTime = 0;
-    // Keep the from-state only while a move is actually animating; a
-    // flash-only transition draws the final state with a flash overlay.
-    this.animPrev = a > 0 ? prev : null;
+    this.animation.begin(
+      prev,
+      dir,
+      this.game.animLength?.(prev, next, dir, this.ui) ?? 0,
+      this.game.flashLength?.(prev, next, dir, this.ui) ?? 0,
+      () => this.becameSolved(prev, next, dir),
+    );
   }
 
   private clearAnimation(): void {
-    this.animPrev = null;
-    this.animTime = 0;
-    this.animLength = 0;
-    this.animScale = 1;
-    this.flashTime = 0;
-    this.flashLength = 0;
-    this.wave = null;
-    this.animDir = 1;
+    this.animation.clear();
   }
 
   /** Whether the last move's own animation is over (or it had none), which a
    * flash after it does not change. */
   private get moveAtRest(): boolean {
-    return this.animTime >= this.animLength;
+    return this.animation.atRest;
   }
 
   private get animating(): boolean {
-    return (
-      this.animTime < this.animLength ||
-      this.flashTime < this.flashLength ||
-      this.wave !== null
-    );
+    return this.animation.running;
   }
 
   setReducedMotion(reduced: boolean): void {
-    this.reducedMotion = reduced;
+    this.animation.reducedMotion = reduced;
   }
 
   private requestRedraw(): void {
@@ -2242,187 +2111,57 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   getParams(): string {
-    return this.game.encodeParams(this.params, true);
+    return this.chosen.encoded();
   }
 
   setParams(params: string): string | null {
-    let decoded: Params;
-    try {
-      decoded = this.game.decodeParams(params);
-    } catch (e) {
-      return e instanceof UnreadableParams
-        ? e.message
-        : `These parameters can't be read (${(e as Error).message}).`;
-    }
-    const err = paramsError(this.game, decoded, true);
-    if (err) return err;
-    this.params = decoded;
-    this.emitParamsChange();
-    return null;
+    const err = this.chosen.set(params);
+    if (err === null) this.emitParamsChange();
+    return err;
   }
 
   describeParams(params: string): string {
-    return describeParams(this.game, this.game.decodeParams(params));
+    return this.chosen.describe(params);
   }
 
   getPresets(): PresetMenuEntry[] {
-    const walk = (menu: TitledPresetMenu<Params>): PresetMenuEntry => {
-      if (menu.submenu) {
-        return { title: menu.title, params: "", submenu: menu.submenu.map(walk) };
-      }
-      return {
-        title: menu.title,
-        label: menu.label ?? menu.title,
-        params: menu.params ? this.game.encodeParams(menu.params, true) : "",
-      };
-    };
-    const root = walk(presetMenu(this.game));
-    return root.submenu ?? [root];
+    return this.chosen.presets();
   }
-
-  // --- custom params ----------------------------------------------
 
   getCustomParamsConfig(): ConfigDescription {
-    const items: ConfigDescription["items"] = {};
-    for (const item of this.game.paramConfig) {
-      items[item.kw] =
-        item.type === "boolean"
-          ? { type: "boolean", name: item.name }
-          : item.type === "choices"
-            ? { type: "choices", name: item.name, choicenames: item.choices }
-            : { type: "string", name: fieldLabel(item) };
-    }
-    const narrowing = configNarrowing(this.game.paramConfig);
-    return narrowing.length > 0 ? { items, narrowing } : { items };
+    return this.chosen.customConfig();
   }
 
-  /** Current custom-params values read off the live params: a string for
-   * a text field, a boolean for a checkbox, the selected zero-based index
-   * for a choices item. */
   getCustomParams(): ConfigValues {
-    const values: ConfigValues = {};
-    const shown = this.chosenParamsAsDealt();
-    for (const item of this.game.paramConfig) {
-      values[item.kw] = item.get(shown);
-    }
-    return values;
-  }
-
-  /** The chosen params, turned the way the board on screen was dealt, so the
-   * dialog shows the size the player is looking at. Derived by comparing
-   * encodings rather than remembered, so no path that deals or loads a board
-   * can leave it stale. */
-  private chosenParamsAsDealt(): Params {
-    const turned = this.game.transposeParams?.(this.params) ?? null;
-    if (turned === null) return this.params;
-    const board = this.game.encodeParams(this.boardParams, true);
-    const dealtTurned =
-      this.game.encodeParams(turned, true) === board &&
-      this.game.encodeParams(this.params, true) !== board;
-    return dealtTurned ? turned : this.params;
-  }
-
-  /** Map submitted form `values` onto a *copy* of the current params
-   * (never the live params, so a rejected edit leaves the running game
-   * untouched), coercing each to its item's type exactly like
-   * `applyPrefs`. Only keys the form actually submitted are applied;
-   * the rest keep their current value. */
-  private paramsFromCustomValues(values: ConfigValues): Params {
-    const draft = structuredClone(this.params);
-    for (const item of this.game.paramConfig) {
-      const v = values[item.kw];
-      if (v === undefined) continue;
-      if (item.type === "boolean") {
-        item.set(draft, asChecked(v));
-      } else if (item.type === "choices") {
-        const n = Number(v);
-        if (!Number.isNaN(n)) item.set(draft, n);
-      } else {
-        item.set(draft, String(v));
-      }
-    }
-    return draft;
-  }
-
-  /**
-   * Why the form's `values` cannot be played, or `null`: the `draft` they
-   * make, and before it the values as submitted against what the deciding
-   * fields leave (`only.ts`). A game may hold two fields in one of its params (Ascent's
-   * ruleset and grid type), where a pair it has no value for never reaches the
-   * draft, so the draft alone would pass it.
-   */
-  private customValuesError(values: ConfigValues, draft: Params): string | null {
-    const submitted = onlyError(this.game.paramConfig, (item) => {
-      const v = values[item.kw] ?? item.get(this.params);
-      return item.type === "boolean" ? asChecked(v) : v;
-    });
-    return submitted ?? paramsError(this.game, draft, true);
+    return this.chosen.customValues(this.boardParams);
   }
 
   setCustomParams(values: ConfigValues): string | null {
     if (this.game.paramConfig.length === 0) return null;
-    const draft = this.paramsFromCustomValues(values);
-    const err = this.customValuesError(values, draft);
-    if (err) return err;
-    this.params = draft;
-    this.emitParamsChange();
-    return null;
+    const err = this.chosen.setCustom(values);
+    if (err === null) this.emitParamsChange();
+    return err;
   }
 
   encodeCustomParams(values: ConfigValues): CustomParamsEncoding {
-    if (this.game.paramConfig.length === 0) {
-      return { ok: true, params: this.game.encodeParams(this.params, true) };
-    }
-    const draft = this.paramsFromCustomValues(values);
-    const error = this.customValuesError(values, draft);
-    if (error) return { ok: false, error };
-    return { ok: true, params: this.game.encodeParams(draft, true) };
+    return this.chosen.encodeCustom(values);
   }
 
   // --- preferences -------------------------------------------------
 
   getPreferencesConfig(): ConfigDescription {
-    const items: ConfigDescription["items"] = {};
-    for (const p of this.game.prefs ?? []) {
-      items[p.kw] =
-        p.type === "boolean"
-          ? { type: "boolean", name: p.name }
-          : { type: "choices", name: p.name, choicenames: p.choices };
-    }
-    const rulesOut = this.game.rulesOut;
-    if (rulesOut) items[RULES_OUT_PREF] = { type: "boolean", name: rulesOut.name };
-    items[SHOW_TIMER_PREF] = { type: "boolean", name: "Show timer" };
-    return { items };
+    return this.prefs.config();
   }
 
-  /** Current preference values read off the live ui: a boolean for a
-   * boolean item, the selected zero-based index for a choices item. */
   getPreferences(): ConfigValues {
-    const values: ConfigValues = {};
-    if (this.history.length === 0) return values;
-    for (const p of this.game.prefs ?? []) {
-      values[p.kw] = p.get(this.ui);
-    }
-    if (this.game.rulesOut) values[RULES_OUT_PREF] = this.bringRuledOut;
-    values[SHOW_TIMER_PREF] = this.showTimer;
-    return values;
+    return this.history.length === 0 ? {} : this.prefs.read(this.ui);
   }
 
   setPreferences(values: ConfigValues): void {
-    // Merge into the retained set (the form may submit only the changed
-    // keys), then apply onto the live ui and repaint — a preference like
-    // "highlight crossed edges" or "vertex style" changes what `redraw`
-    // paints.
-    this.prefValues = { ...this.prefValues, ...values };
-    // The engine's own preferences live on the midend rather than a game's
-    // `Ui`, so they are read here and never reach `applyPrefs`.
-    const showTimer = values[SHOW_TIMER_PREF];
-    if (showTimer !== undefined) {
-      this.showTimer = asChecked(showTimer);
-      this.syncTimer();
-    }
-    const bring = values[RULES_OUT_PREF];
-    if (bring !== undefined) this.bringRuledOut = asChecked(bring);
+    // Merge into the retained set, then apply onto the live ui and repaint —
+    // a preference like "highlight crossed edges" or "vertex style" changes
+    // what `redraw` paints.
+    if (this.prefs.merge(values)) this.syncTimer();
     if (this.history.length > 0) {
       this.applyPrefs();
       // A hint plan is built from the board *and* the preferences (how a hint
@@ -2443,23 +2182,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     }
   }
 
-  /** Write the retained preference values onto the current ui, coercing
-   * each to its item's type (the app form supplies a boolean for a
-   * checkbox and a numeric index for a choice, but DB-loaded JSON or a
-   * legacy value may arrive loosely typed). Applies only keys present in
-   * `prefValues`, leaving the `newUi` default for the rest. */
+  /** Write the retained preference values onto the current ui. */
   private applyPrefs(): void {
     this.press = null;
-    for (const p of this.game.prefs ?? []) {
-      const v = this.prefValues[p.kw];
-      if (v === undefined) continue;
-      if (p.type === "boolean") {
-        p.set(this.ui, asChecked(v));
-      } else {
-        const n = Number(v);
-        if (!Number.isNaN(n)) p.set(this.ui, n);
-      }
-    }
+    this.prefs.applyTo(this.ui);
   }
 
   /** The game's palette against `defaultBackground` — the host's color, which
@@ -2501,31 +2227,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return this.game.computeSize(this.boardParams, this.preferredTileSize);
   }
 
-  /** The largest integer tile size at which a board with `params` fits
-   * `maxSize`: upstream midend_size's binary search, in its `user_size` form,
-   * where the tile may exceed the game's preferred size to fill the slot. */
-  private largestTile(params: Params, maxSize: Size): number {
-    const fits = (ts: number): boolean => {
-      const s = this.game.computeSize(params, ts);
-      return s.w <= maxSize.w && s.h <= maxSize.h;
-    };
-    let hi = 1;
-    do {
-      hi *= 2;
-    } while (fits(hi));
-    let lo = 1;
-    while (lo < hi - 1) {
-      const mid = (lo + hi) >> 1;
-      if (fits(mid)) lo = mid;
-      else hi = mid;
-    }
-    return lo;
-  }
-
   size(maxSize: Size): Size {
     const base = this.game.computeSize(this.boardParams, this.preferredTileSize);
     if (base.w <= 0 || base.h <= 0) return base;
-    const tile = this.largestTile(this.boardParams, maxSize);
+    const tile = largestTile(this.game, this.boardParams, maxSize);
     if (tile !== this.currentTileSize) {
       this.currentTileSize = tile;
       // `drawState` is null only before the first board exists.
@@ -2549,41 +2254,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   // --- save / load -------------------------------------------------
 
   saveGame(): Uint8Array<ArrayBuffer> {
-    const serMove = this.game.moveCodec?.serialize ?? ((m: Move) => m as unknown);
-    const restarts = this.moveLog.flatMap((entry, at) =>
-      entry instanceof Restart
-        ? [
-            {
-              at,
-              cheated: entry.far.cheated,
-              elapsed: entry.far.elapsed,
-              hinted: entry.far.helped,
-            },
-          ]
-        : [],
-    );
-    const joined = this.joined.flatMap((joins, at) => (joins ? [at] : []));
-    // `desc` is the board in play, as its id names it. Where that is not the
-    // desc state 0 was built from, the move log needs the latter beside it.
-    const desc = this.desc;
-    const envelope: SaveEnvelope = {
-      v: 3,
-      puzzleId: this.game.id,
-      params: this.game.encodeParams(this.boardParams, true),
-      desc,
-      ...(desc === this.startDesc ? {} : { privDesc: this.startDesc }),
-      moves: this.moveLog.map((entry) =>
-        entry instanceof Restart ? null : serMove(entry),
-      ),
-      ...(restarts.length > 0 ? { restarts } : {}),
-      ...(joined.length > 0 ? { joined } : {}),
+    return writeSave(this.game, {
+      params: this.boardParams,
+      desc: this.desc,
+      startDesc: this.startDesc,
+      moveLog: this.moveLog,
+      joined: this.joined,
       pos: this.pos,
-      timerElapsed: this.timerElapsed,
-      ...(this.helped ? { hinted: true } : {}),
-      cheated: this.cheated,
-      ...(this.game.uiCodec ? { ui: this.game.uiCodec.encode(this.ui) } : {}),
-    };
-    return encodeSave(envelope);
+      record: this.runRecord,
+      ui: this.ui,
+    });
   }
 
   loadGame(data: Uint8Array): string | null {
@@ -2599,63 +2279,21 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     kept: { before: readonly BoardLeft[]; after: readonly BoardLeft[] } | null,
     serials: readonly number[],
   ): string | null {
-    let env: SaveEnvelope;
-    try {
-      env = decodeSave(data);
-    } catch (e) {
-      return `Could not read save: ${(e as Error).message}`;
-    }
-    if (env.puzzleId !== this.game.id) {
-      return `Save is for "${env.puzzleId}", not "${this.game.id}"`;
-    }
-    let params: Params;
-    try {
-      params = this.game.decodeParams(env.params);
-    } catch (e) {
-      return `Invalid saved parameters: ${(e as Error).message}`;
-    }
-    // State 0 is rebuilt from the private desc when the save carries one: the
-    // desc the board started from, where the public one names a board the
-    // move log is about to arrive at (Mines' bakes in the first click, which
-    // the log replays). Both must still read: a parser made stricter since
-    // the save was written refuses it here rather than throwing, and a
-    // restart rebuilds from the public one. The public desc is the board in
-    // play, so it alone is asked whether its board can be finished.
-    const stateDesc = env.privDesc ?? env.desc;
-    const refused =
-      env.privDesc === undefined ? null : loadVerdict(this.game, params, env.desc);
-    if (refused !== null) return `Could not restore this saved game: ${refused}`;
-    const loaded =
-      env.privDesc === undefined
-        ? loadDesc(this.game, params, stateDesc)
-        : readBoard(this.game, params, stateDesc);
-    if (!loaded.ok) return `Could not restore this saved game: ${loaded.error}`;
+    const opened = readSave(this.game, data);
+    if (!opened.ok) return opened.error;
+    const { env, params, stateDesc, loaded, restarts, deMove } = opened.save;
     const left = this.boardLeft();
     // A save pins the tier its board was labeled at, which a build that
     // mislabeled the board got wrong; `withBoardTier` checks it.
-    this.params = this.withBoardTier(env.params, params, env.desc);
-    const deMove = this.game.moveCodec?.deserialize ?? ((raw: unknown) => raw as Move);
-    // A restart written before a restart reset the clock carries no time of
-    // its own: the time and the help ran on through it, so the far side's are
-    // the save's.
-    const restarts = new Map(
-      env.restarts?.map((r): [number, RunRecord] => [
-        r.at,
-        {
-          cheated: r.cheated,
-          elapsed: r.elapsed ?? env.timerElapsed,
-          helped: r.hinted ?? env.hinted === true,
-        },
-      ]),
-    );
+    this.chosen.params = this.withBoardTier(env.params, params, env.desc);
     const prior = this.before;
     const serial = serials[0] ?? this.boards + 1;
     this.replaying = true;
     try {
       this.startFrom(
-        this.params,
+        this.chosen.params,
         stateDesc,
-        this.stateZero(params, stateDesc, loaded.value),
+        this.stateZero(params, stateDesc, loaded),
         left,
         undefined,
         serial,
@@ -2678,9 +2316,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // that leaves a half-replayed history strands the player on a board
       // that throws on every repaint, which is the bug this replaced.
       this.startFrom(
-        this.params,
+        this.chosen.params,
         stateDesc,
-        this.game.newState(this.params, stateDesc),
+        this.game.newState(this.chosen.params, stateDesc),
         left,
         undefined,
         serial,
@@ -2728,7 +2366,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    */
   private timerRunning(): boolean {
     return (
-      this.showTimer &&
+      this.prefs.showTimer &&
       !this.timerPaused &&
       // From the first move of the run, as from a new board's.
       this.run.last > this.run.first &&
@@ -2756,7 +2394,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   private emitTimer(): void {
     if (this.replaying) return;
-    const timer: TimerReadout | null = this.showTimer
+    const timer: TimerReadout | null = this.prefs.showTimer
       ? {
           seconds: Math.floor(this.timerElapsed),
           assisted: this.helped || this.cheated,
@@ -2774,25 +2412,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       this.emitTimer();
     }
     if (this.animating) {
-      this.animTime += tplus;
-      this.flashTime += tplus;
-      // As midend.c does, end the flash once it has caught up with
-      // `flashLength`, or at once when none was armed: otherwise `flashTime`
-      // grows on every animated move, and a game's redraw (`flashTime ? … :
-      // -1`) flashes during ordinary animations.
-      if (this.flashTime >= this.flashLength || this.flashLength === 0) {
-        this.flashTime = 0;
-        this.flashLength = 0;
-      }
-      if (this.wave !== null) {
-        this.wave.seek(Math.max(0, this.animTime - this.animLength));
-        if (this.wave.done) this.wave = null;
-      }
-      if (this.animLength > 0 && this.animTime >= this.animLength) {
-        // Move animation finished; flash (if any) continues without
-        // the from-state, exactly as midend.c drops oldstate.
-        this.animPrev = null;
-      }
+      this.animation.advance(tplus);
       // The move has landed, whatever flash is still to play.
       if (this.moveAtRest) this.settleHint();
       if (this.animating) {
@@ -2822,28 +2442,21 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       dr.drawRect({ x: 0, y: 0, w, h }, 0);
       dr.drawUpdate({ x: 0, y: 0, w, h });
     }
-    // The win's highlight is not shown its board until the move that won has
-    // come to rest: it would cross a tile that is still sliding.
-    const wave = this.moveAtRest ? this.wave : null;
+    const frame = this.animation.frame();
     this.game.redraw(
       dr,
       this.drawState,
-      this.animPrev,
+      frame.prev,
       this.state,
-      this.animDir,
+      frame.dir,
       this.ui,
-      // Report time at the game's own scale: a slow-motion (hint) move
-      // has a stretched `animLength`, and dividing by the same factor
-      // keeps the game's `animTime / its-anim-length` progress correct.
-      // The time is eased, so every game's move starts fast and settles
-      // while the game interpolates linearly (`easing.ts`).
-      this.easedAnimTime() / this.animScale,
-      wave ?? (this.flashTime > 0 ? ownFlash(this.flashTime) : NO_FLASH),
+      frame.time,
+      frame.flash,
       this.drawnHintStep ?? undefined,
       this.activeMistakes ?? undefined,
       this.activeDeadEnd ?? undefined,
     );
-    wave?.endFrame();
+    frame.wave?.endFrame();
     dr.endDraw();
   }
 
@@ -2879,7 +2492,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private emitParamsChange(): void {
     this.emit({
       type: "params-change",
-      params: this.game.encodeParams(this.params, true),
+      params: this.chosen.encoded(),
     });
   }
 

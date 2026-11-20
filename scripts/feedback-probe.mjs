@@ -229,7 +229,9 @@ export function ownTests(modulePath, files = engineFiles()) {
 const label = (modulePath) => modulePath.replace(`${ENGINE}/`, "");
 
 function testsFor(mod, files) {
-  const tests = mod.tests ?? ownTests(mod.module, files);
+  // `testedVia`: a module reached only through another, whose own tests are
+  // the other's.
+  const tests = ownTests(mod.testedVia ?? mod.module, files);
   if (!tests.length) {
     throw new Error(
       `${mod.module}: no engine test file imports it — that is itself the finding,\n` +

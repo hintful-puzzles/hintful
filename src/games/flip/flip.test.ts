@@ -7,7 +7,7 @@ import {
   validateDesc,
 } from "../../engine/desc-error.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
-import { SHOW_TIMER_PREF } from "../../engine/midend.ts";
+import { SHOW_TIMER_PREF } from "../../engine/midend-prefs.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";

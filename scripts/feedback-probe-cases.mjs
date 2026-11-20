@@ -196,13 +196,6 @@ export const MODULES = [
           "      params = this.game.decodeParams(paramsStr);\n    } catch {\n      return undefined;",
       },
       {
-        within: "Midend.setParams",
-        why: "an undecodable params string from the Custom dialog is accepted silently",
-        find: "      decoded = this.game.decodeParams(params);\n    } catch (e) {\n      return e instanceof UnreadableParams\n        ? e.message\n        : `These parameters can't be read (${(e as Error).message}).`;",
-        replace:
-          "      decoded = this.game.decodeParams(params);\n    } catch {\n      return undefined;",
-      },
-      {
         within: "Midend.newGameFromId",
         why: "a game ID whose params fail validation is accepted",
         find: "    const pErr = paramsError(this.game, params, generating);\n    if (pErr) return pErr;",
@@ -217,24 +210,6 @@ export const MODULES = [
         why: "a generation-only param bound also rejects a game ID that carries its desc",
         find: '    const generating = id[sep] === "#";',
         replace: "    const generating = true;",
-      },
-      {
-        within: "Midend.load",
-        why: "a corrupt save is loaded instead of refused",
-        find: "      return `Could not read save: ${(e as Error).message}`;",
-        replace: "      return undefined;",
-      },
-      {
-        within: "Midend.load",
-        why: "a save whose params no longer decode is loaded anyway",
-        find: "      return `Invalid saved parameters: ${(e as Error).message}`;",
-        replace: "      return undefined;",
-      },
-      {
-        within: "Midend.load",
-        why: "a save from a different puzzle is loaded into this game",
-        find: '      return `Save is for "${env.puzzleId}", not "${this.game.id}"`;',
-        replace: "      return undefined;",
       },
       {
         within: "Midend.computeHintPlan",
@@ -286,18 +261,6 @@ export const MODULES = [
         replace: "    this.pos = env.pos;",
       },
       {
-        within: "Midend.saveGame",
-        why: "the save omits the timer, so a loaded game restarts its clock",
-        find: "      timerElapsed: this.timerElapsed,",
-        replace: "      timerElapsed: 0,",
-      },
-      {
-        within: "Midend.saveGame",
-        why: "a solved-with-help game forgets it was solved with help",
-        find: "      cheated: this.cheated,",
-        replace: "      cheated: false,",
-      },
-      {
         within: "Midend.syncTimer",
         why: "the tick runs during animation but not for the solve timer",
         find: "    const want = this.timerRunning() || this.animating;",
@@ -326,6 +289,59 @@ export const MODULES = [
         why: "a deleted midend keeps its callbacks and goes on emitting to a torn-down adapter",
         find: "    this.notify = undefined;\n    this.notifyTimer = undefined;",
         replace: "    void this.notify;",
+      },
+    ],
+  },
+
+  {
+    // The midend's collaborators are reached through `Midend`, so the
+    // midend's own tests are theirs.
+    module: "src/engine/midend-params.ts",
+    testedVia: "src/engine/midend.ts",
+    cases: [
+      {
+        within: "ChosenParams.set",
+        why: "an undecodable params string from the Custom dialog is accepted silently",
+        find: "      decoded = this.game.decodeParams(params);\n    } catch (e) {\n      return e instanceof UnreadableParams\n        ? e.message\n        : `These parameters can't be read (${(e as Error).message}).`;",
+        replace:
+          "      decoded = this.game.decodeParams(params);\n    } catch {\n      return undefined;",
+      },
+    ],
+  },
+
+  {
+    module: "src/engine/midend-save.ts",
+    testedVia: "src/engine/midend.ts",
+    cases: [
+      {
+        within: "readSave",
+        why: "a corrupt save is loaded instead of refused",
+        find: "    return { ok: false, error: `Could not read save: ${(e as Error).message}` };",
+        replace: "    return { ok: false, error: undefined };",
+      },
+      {
+        within: "readSave",
+        why: "a save whose params no longer decode is loaded anyway",
+        find: "    return { ok: false, error: `Invalid saved parameters: ${(e as Error).message}` };",
+        replace: "    return { ok: false, error: undefined };",
+      },
+      {
+        within: "readSave",
+        why: "a save from a different puzzle is loaded into this game",
+        find: '    return { ok: false, error: `Save is for "${env.puzzleId}", not "${game.id}"` };',
+        replace: "    return { ok: false, error: undefined };",
+      },
+      {
+        within: "writeSave",
+        why: "the save omits the timer, so a loaded game restarts its clock",
+        find: "    timerElapsed: record.elapsed,",
+        replace: "    timerElapsed: 0,",
+      },
+      {
+        within: "writeSave",
+        why: "a solved-with-help game forgets it was solved with help",
+        find: "    cheated: record.cheated,",
+        replace: "    cheated: false,",
       },
     ],
   },

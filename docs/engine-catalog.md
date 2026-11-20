@@ -1842,7 +1842,10 @@ imports:
 What no game imports:
 
 - `midend.ts`: undo, redo, the timer, the hint and mistake lifecycles. A
-  game depends on the `Game` interface, never on the midend.
+  game depends on the `Game` interface, never on the midend. Its
+  collaborators, each owning its own fields, are `midend-params.ts` (the
+  params the next New game deals at), `midend-prefs.ts`, `midend-save.ts`
+  (the run record and the save written and read) and `midend-animation.ts`.
 - `save.ts`: the versioned save envelope.
 - `index.ts`: the app's barrel.
 - `fake-game.ts`: the midend test suite's minimal game.
