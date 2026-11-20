@@ -12,13 +12,14 @@
  *     A A A C      . . . #
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { Midend } from "../../engine/index.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { norinoriGame } from "./index.ts";
-import { COL_ERROR, COL_SHADED, COL_WRONG } from "./render.ts";
+import { COL_SHADED, COL_WRONG } from "./render.ts";
 import {
   BLANK,
   CROSSED,

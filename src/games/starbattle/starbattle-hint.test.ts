@@ -6,6 +6,7 @@
  * (docs/testing.md § "Pinning a hint's positions").
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { statedSentence } from "../../engine/stated.ts";
@@ -16,7 +17,6 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { STATED } from "../../generated/games/starbattle/starbattle.compiled.ts";
 import { starbattleGame } from "./index.ts";
-import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
   BLANK,
@@ -248,7 +248,7 @@ describe("starbattle hint frame", () => {
     expect(stripes.length / state.size).toBeGreaterThan(1);
     expect(stepMarks(step).of("outline", CELL).length).toBeGreaterThan(0);
     expect(ringsOf(recording.ops).length).toBeGreaterThan(0);
-    expect(recording.ops.some((op) => paintsWith(op, COL_HINT_EVIDENCE))).toBe(true);
+    expect(recording.ops.some((op) => paintsWith(op, COL_HINT_OUTLINE))).toBe(true);
   });
 });
 

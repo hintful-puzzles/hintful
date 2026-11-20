@@ -362,12 +362,11 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "h",
       "hint",
       "marks",
-      "started",
       "tileSize",
+      "tiles",
       "w",
     ],
     "id": "clusters",
@@ -1278,12 +1277,11 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "hint",
       "marks",
-      "started",
       "surfaces",
       "tileSize",
+      "tiles",
       "walls",
     ],
     "id": "norinori",
@@ -2135,12 +2133,11 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "hint",
       "marks",
-      "started",
       "surfaces",
       "tileSize",
+      "tiles",
       "walls",
     ],
     "id": "starbattle",

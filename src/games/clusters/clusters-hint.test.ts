@@ -17,6 +17,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { resolvePalette } from "../../engine/color/color-mkhighlight.ts";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
@@ -33,7 +34,7 @@ import type { Point } from "../../engine/types.ts";
 import { STATED } from "../../generated/games/clusters/clusters.compiled.ts";
 import type { ClustersHint } from "./hint.ts";
 import { clustersGame } from "./index.ts";
-import { border, COL_0, COL_1, COL_HINT_CELL, PREFERRED_TILE_SIZE } from "./render.ts";
+import { border, COL_0, COL_1, PREFERRED_TILE_SIZE } from "./render.ts";
 import { COMPLETE, clustersStatus, findErrors } from "./solver.ts";
 import {
   type ClustersFill,
@@ -454,7 +455,7 @@ describe("hint rendering (tier 2.5)", () => {
     const key = (i: number) => palette[i].join(",");
     // The ring's ink is the engine's, the first slot past the game's own.
     const ringInk = palette.length - 2;
-    const roles = [ringInk, COL_HINT_CELL];
+    const roles = [ringInk, COL_HINT_OUTLINE];
     for (const role of roles) {
       for (const tile of [COL_0, COL_1]) {
         expect(
@@ -496,7 +497,7 @@ describe("hint rendering (tier 2.5)", () => {
         ops.filter(
           (o) =>
             o.op === "rect" &&
-            o.color === COL_HINT_CELL &&
+            o.color === COL_HINT_OUTLINE &&
             Math.min(o.w, o.h) === rt &&
             Math.max(o.w, o.h) === side &&
             (o.x === px || o.x === px + side - rt) &&

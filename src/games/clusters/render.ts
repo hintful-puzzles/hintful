@@ -15,16 +15,18 @@
 
 import { BLACK, TWO, WHITE } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
-  ERROR,
   ERROR_WASH,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
@@ -32,6 +34,7 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { ClustersMistake } from "./index.ts";
@@ -52,36 +55,27 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_GRID = 1;
-export const COL_0 = 2; // an `F_COLOR_0` piece
-export const COL_1 = 3; // an `F_COLOR_1` piece
-const COL_0_DOT = 4; // the dot on a given `F_COLOR_0` piece
-const COL_1_DOT = 5; // the dot on a given `F_COLOR_1` piece
-export const COL_ERROR = 6;
-const COL_CURSOR = 7;
 // Hint marks: the forced cell is ringed by the engine; the tile the refuted
-// coloring would break, and the two tiles a count reads, get a thin
-// COL_HINT_CELL frame, an outline because a tile's own color *is* part of the
-// premise.
-/** The outlines. */
-export const COL_HINT_CELL = 8;
+// coloring would break, and the two tiles a count reads, are outlined in
+// `COL_HINT_OUTLINE` rather than washed, because a tile's own color *is* part
+// of the premise.
+const COL_GRID = FIRST_GAME_SLOT;
+export const COL_0 = FIRST_GAME_SLOT + 1; // an `F_COLOR_0` piece
+export const COL_1 = FIRST_GAME_SLOT + 2; // an `F_COLOR_1` piece
+const COL_0_DOT = FIRST_GAME_SLOT + 3; // the dot on a given `F_COLOR_0` piece
+const COL_1_DOT = FIRST_GAME_SLOT + 4; // the dot on a given `F_COLOR_1` piece
 /** The surface of a cell. */
-const COL_CELL = 9;
+const COL_CELL = FIRST_GAME_SLOT + 5;
 /** The surface under a given. */
-const COL_GIVEN = 10;
+const COL_GIVEN = FIRST_GAME_SLOT + 6;
 /** The surface under a tile Check & Save found wrong. */
-export const COL_WRONG = 11;
-/** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 12;
-export const COL_FLASH_LEAD = 13;
+export const COL_WRONG = FIRST_GAME_SLOT + 7;
 
-export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
-  out[COL_GRID] = surfaceGrid(defaultBackground);
-  out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_GIVEN] = givenSurface(defaultBackground);
+export function colors(bg: Color): Color[] {
+  const out = rolePalette(bg);
+  out[COL_GRID] = surfaceGrid(bg);
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_GIVEN] = givenSurface(bg);
   out[COL_0] = TWO[pairIndex(F_COLOR_0)];
   out[COL_1] = TWO[pairIndex(F_COLOR_1)];
   // Pinned and not ink or paper: each dot is read against a piece whose own
@@ -89,14 +83,7 @@ export function colors(defaultBackground: Color): Color[] {
   // taking the dark dot.
   out[COL_0_DOT] = BLACK;
   out[COL_1_DOT] = WHITE;
-  out[COL_ERROR] = ERROR;
   out[COL_WRONG] = ERROR_WASH;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_CURSOR] = CURSOR;
-  // The tiles reasoned from are outlined rather than washed, so they take the
-  // mark form of the evidence role.
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -120,14 +107,14 @@ const K_LIT = 11; // bits 11-12: the win flash's tone on this cell
 // Hint-overlay bits, packed per cell into the OverlaySidecar, which is part of
 // the diff key (docs/rendering.md § "Overlay sidecars").
 const HB_TARGET = 1; // the forced cell — ringed
-const HB_DANGER = 1 << 1; // a tile the step reasons from — a thin COL_HINT_CELL ring
+const HB_DANGER = 1 << 1; // a tile the step reasons from — a thin COL_HINT_OUTLINE ring
 
 export interface ClustersDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
-  cache: Int32Array;
+  /** What each tile shows, and the hint's marks on it. */
+  tiles: TileCache;
   hint: OverlaySidecar;
   /** The hint target's ring, drawn after the tile loop. See
    * {@link markBand}. */
@@ -138,13 +125,13 @@ export function newDrawState(
   state: ClustersState,
   tileSize: number,
 ): ClustersDrawState {
+  const hint = new OverlaySidecar(state.w * state.h);
   return {
-    started: false,
     tileSize,
     w: state.w,
     h: state.h,
-    cache: new Int32Array(state.w * state.h).fill(-1),
-    hint: new OverlaySidecar(state.w * state.h),
+    tiles: new TileCache(state.w * state.h, { overlays: [hint] }),
+    hint,
     marks: new HintMarks(),
   };
 }
@@ -203,13 +190,7 @@ function drawTile(
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
   dr.drawRect(
     surface,
-    wrong
-      ? COL_WRONG
-      : tone
-        ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-        : tile & F_SINGLE
-          ? COL_GIVEN
-          : COL_CELL,
+    wrong ? COL_WRONG : tone ? winSlot(tone) : tile & F_SINGLE ? COL_GIVEN : COL_CELL,
   );
   if (tile & COLMASK) piece(tile, 1);
 
@@ -246,7 +227,7 @@ function drawTile(
   const rt = Math.max(2, Math.floor(ts / 12));
   if (hintBits & HB_DANGER) {
     const side = ts - 3;
-    drawThickRectOutline(dr, px + 1, py + 1, side, side, rt, COL_HINT_CELL);
+    drawThickRectOutline(dr, px + 1, py + 1, side, side, rt, COL_HINT_OUTLINE);
   }
 
   dr.drawUpdate({ x: px, y: py, w: ts, h: ts });
@@ -270,11 +251,10 @@ export function redraw(
   const { w, h, grid } = state;
   const b = border(ts);
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The frame closes the grid on its top and left and is no heavier than
     // it; the per-tile COL_GRID rects draw the interior lines.
     dr.drawRect({ x: b - 1, y: b - 1, w: w * ts + 1, h: h * ts + 1 }, COL_GRID);
-    ds.started = true;
   }
 
   // Live rule violations, recomputed from the committed grid every frame
@@ -299,10 +279,10 @@ export function redraw(
     band: (x: number, y: number) => markBand(ds, x, y),
     // A forced cell shows a piece or a dot, never text.
     text: () => NOTHING_TO_CLEAR,
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   };
   ds.marks.eraseBeforeTiles(dr, targets, [], markStyle, COL_GRID, (x, y) => {
-    if (x >= 0 && x < w && y >= 0 && y < h) ds.cache[y * w + x] = -1;
+    if (x >= 0 && x < w && y >= 0 && y < h) ds.tiles.forget(y * w + x);
   });
 
   for (let y = 0; y < h; y++) {
@@ -327,11 +307,8 @@ export function redraw(
         (cursor ? F_CUR : 0) |
         (wrong ? F_WRONG : 0) |
         (tone << K_LIT);
-      if (ds.cache[i] !== packed || ds.hint.stale(i)) {
+      if (ds.tiles.changed(i, packed))
         drawTile(dr, ts, x, y, tile, error, wrong, tone, cursor, ds.hint.packed[i]);
-        ds.cache[i] = packed;
-        ds.hint.commit(i);
-      }
     }
   }
 

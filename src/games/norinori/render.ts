@@ -10,17 +10,20 @@
 
 import { REGION_FILLS } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
-  ERROR,
   ERROR_WASH,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   INK,
   RULED_OUT,
   SHADED as SHADED_COLOR,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
@@ -35,6 +38,7 @@ import {
   wallHalf,
 } from "../../engine/region-walls.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { NorinoriMistake } from "./index.ts";
@@ -53,44 +57,30 @@ export const PREFERRED_TILE_SIZE = 40;
 
 // --- palette ----------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_GRID = 1;
+// A shaded square that breaks a rule (one beside two others, or one of too
+// many in its region) is `COL_ERROR`.
+const COL_GRID = FIRST_GAME_SLOT;
 /** The border of a region, and of the board. */
-const COL_WALL = 2;
-export const COL_SHADED = 3;
-const COL_RULED_OUT = 4;
-/** A shaded square that breaks a rule: one beside two others, or one of too
- * many in its region. */
-export const COL_ERROR = 5;
+const COL_WALL = FIRST_GAME_SLOT + 1;
+export const COL_SHADED = FIRST_GAME_SLOT + 2;
+const COL_RULED_OUT = FIRST_GAME_SLOT + 3;
 /** The surface under a square Check & Save found wrong. */
-export const COL_WRONG = 6;
-const COL_CURSOR = 7;
-/** The outline on the squares a hint step reasons from. The ring on the
- * squares it decides is the engine's (`GameDrawing.drawRing`). */
-export const COL_HINT_EVIDENCE = 8;
-const COL_FLASH = 9;
-const COL_FLASH_LEAD = 10;
+export const COL_WRONG = FIRST_GAME_SLOT + 4;
 /** The first of the surfaces a region's squares take, one a fill. */
-const COL_REGION = 11;
+const COL_REGION = FIRST_GAME_SLOT + 5;
 /** The region palette's first four, as Star Battle's. */
 const FILLS = REGION_FILLS.slice(0, 4);
 
-export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
-  out[COL_GRID] = surfaceGrid(defaultBackground);
-  FILLS.forEach((fill, k) => {
-    out[COL_REGION + k] = fill;
-  });
+export function colors(bg: Color): Color[] {
+  const out = rolePalette(bg);
+  out[COL_GRID] = surfaceGrid(bg);
   out[COL_WALL] = INK;
   out[COL_SHADED] = SHADED_COLOR;
   out[COL_RULED_OUT] = RULED_OUT;
-  out[COL_ERROR] = ERROR;
   out[COL_WRONG] = ERROR_WASH;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
+  FILLS.forEach((fill, k) => {
+    out[COL_REGION + k] = fill;
+  });
   return out;
 }
 
@@ -120,18 +110,16 @@ const K_TONE = 5;
 const K_JOIN = 7;
 
 export interface NorinoriDrawState {
-  started: boolean;
   tileSize: number;
   /** Each square's walls, which a board never changes. */
   walls: Uint8Array;
   /** Each square's surface, which is its region's fill. */
   surfaces: Uint8Array;
-  /** What each square shows on the canvas, as its tile key; -1 before the
-   * first frame. */
-  cache: Int32Array;
-  /** The hint step's marks by square, part of the diff key: a mark is
-   * painted over the square's surface and only the square's own repaint
-   * takes it off. */
+  /** What each square shows on the canvas, as its tile key, and the hint's
+   * marks on it. */
+  tiles: TileCache;
+  /** The hint step's marks by square: a mark is painted over the square's
+   * surface and only the square's own repaint takes it off. */
   hint: OverlaySidecar;
   /** The ring and the outline, drawn after the tiles. */
   marks: HintMarks;
@@ -143,13 +131,13 @@ export function newDrawState(
 ): NorinoriDrawState {
   const squares = state.w * state.h;
   const fills = regionFills(state.regions, state.w, FILLS.length);
+  const hint = new OverlaySidecar(squares);
   return {
-    started: false,
     tileSize,
     walls: regionWalls(state.w, state.h, state.regions),
     surfaces: Uint8Array.from(state.regions, (r) => COL_REGION + fills[r]),
-    cache: new Int32Array(squares).fill(-1),
-    hint: new OverlaySidecar(squares),
+    tiles: new TileCache(squares, { overlays: [hint] }),
+    hint,
     marks: new HintMarks(),
   };
 }
@@ -189,11 +177,7 @@ function drawTile(
 ): void {
   const ts = ds.tileSize;
   const box = boxAt(ts, x, y);
-  const surface = t.wrong
-    ? COL_WRONG
-    : t.tone
-      ? winSlot(t.tone, COL_FLASH, COL_FLASH_LEAD)
-      : ds.surfaces[i];
+  const surface = t.wrong ? COL_WRONG : t.tone ? winSlot(t.tone) : ds.surfaces[i];
   // Clipped, so a domino's half, which reaches its partner's edge, does not
   // paint over the partner's own half of the divider.
   dr.clip(box);
@@ -291,11 +275,10 @@ export function redraw(
   const { w, h, grid } = state;
   const b = border(ts);
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The frame: every square draws its top and left line, so this is the
     // bottom and right of the last row and column.
     dr.drawRect({ x: b, y: b, w: w * ts + 1, h: h * ts + 1 }, COL_WALL);
-    ds.started = true;
   }
 
   const errors = shadedInError(state);
@@ -326,10 +309,7 @@ export function redraw(
         (tile.cursor ? F_CURSOR : 0) |
         (tile.tone << K_TONE) |
         (tile.join << K_JOIN);
-      if (ds.cache[i] === key && !ds.hint.stale(i)) continue;
-      drawTile(dr, ds, i, x, y, tile);
-      ds.cache[i] = key;
-      ds.hint.commit(i);
+      if (ds.tiles.changed(i, key)) drawTile(dr, ds, i, x, y, tile);
     }
   }
 
@@ -339,6 +319,6 @@ export function redraw(
     band: (x, y) => markBand(ds, w, x, y),
     // A square shows no text: a shaded piece and a cross are shapes.
     text: () => NOTHING_TO_CLEAR,
-    evidenceColor: COL_HINT_EVIDENCE,
+    evidenceColor: COL_HINT_OUTLINE,
   });
 }

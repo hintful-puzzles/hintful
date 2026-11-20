@@ -5,6 +5,7 @@
  * render frame. clusters-differential.test.ts decodes the frozen C boards.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -33,13 +34,7 @@ import type { Point } from "../../engine/types.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newClustersDesc } from "./generator.ts";
 import { clustersGame } from "./index.ts";
-import {
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_WRONG,
-  PREFERRED_TILE_SIZE,
-} from "./render.ts";
+import { COL_WRONG, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   COMPLETE,
   clustersStatus,

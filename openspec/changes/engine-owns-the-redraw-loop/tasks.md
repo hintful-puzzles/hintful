@@ -65,7 +65,28 @@
 - [ ] 2.1 Move the games in batches by shape; each runs in the app before it
       counts. Record in this file which are moved and which keep the
       explicit form, and why.
-- [ ] 2.2 The skeletons' `render.ts` write the engine's form.
+
+      Per game: `colors()` from `rolePalette`, own slots from
+      `FIRST_GAME_SLOT` (a region-fill run stays last), the role slots
+      dropped from `winSlot`/`highlightFill`/`drawCellBackground`, tests
+      import the roles from `color/roles.ts`; the draw state's
+      `started`/cache become a `TileCache` with the sidecars registered. A
+      slot named for a role but holding another color (Seismic's
+      `COL_CURSOR` is a wash) keeps a slot of its own, renamed for what it is.
+      Check: typecheck, the game's tests, `src/engine/color`, warm-repaint,
+      hint-overlay, first-frame-coverage, win-flash, hint-ink; no render
+      snapshot moves. `src/capability-surface.test.ts` records each draw
+      state's fields, so it moves with every game: update it with
+      `--update` and check the diff is only `cache`/`started` → `tiles`. In the app: a move, a hint, auto-solve to the win flash.
+
+      Moved: towers, clusters, norinori, starbattle.
+      Next, skeleton-shaped: seismic, keen, samegame, sticks, lightup,
+      singles, range, flood, mines, wordguess, solo, mathrax, rome,
+      edge-clue-latin (adjacent, unequal). Then the multi-family games, then
+      the neighbor-painting ones. Not tiles, keeping the explicit form:
+      cube, loopy, untangle (palette roles only).
+- [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;
+      code and edges to go.
 
 ## 3. Finish
 
