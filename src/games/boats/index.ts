@@ -41,12 +41,7 @@ import {
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { describedFiringHint } from "../../engine/described-firing-hint.ts";
-import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
-import {
-  dimensionParamConfig,
-  parseConfigInt,
-  transposeDimensions,
-} from "../../engine/params.ts";
+import { drag, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   endDrag,
   gridCursorMove,
@@ -61,8 +56,7 @@ import {
   RIGHT_BUTTON,
   startDrag,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+} from "../../engine/input/pointer.ts";
 import {
   buttonVerb,
   ERASE_KEYS,
@@ -73,7 +67,13 @@ import {
   type TargetVerb,
   type TargetVerbs,
   verbClicks,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import {
+  dimensionParamConfig,
+  parseConfigInt,
+  transposeDimensions,
+} from "../../engine/params.ts";
+import { registerGame } from "../../engine/registry.ts";
 import {
   SAYS_KINDS,
   type SaysById,

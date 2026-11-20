@@ -20,8 +20,8 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
-} from "../pointer.ts";
-import type { TargetVerbs } from "../target-verb.ts";
+} from "../input/pointer.ts";
+import type { TargetVerbs } from "../input/target-verb.ts";
 import { type AnyGame, probeBoard } from "./input-probe.ts";
 
 type AnyVerbs = TargetVerbs<unknown, unknown, unknown, unknown, unknown>;

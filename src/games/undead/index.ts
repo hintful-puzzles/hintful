@@ -33,20 +33,8 @@ import type {
   Size,
 } from "../../engine/contract/types.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
-import { markAllPress, type PointerAction } from "../../engine/hint-gesture.ts";
-import { clearKey } from "../../engine/key-labels.ts";
-import {
-  noOpEntryResult,
-  noteEntryGesture,
-  pressNoteTakingCell,
-  releaseHighlightAfterEntry,
-  toggleNoteTakingMode,
-} from "../../engine/note-taking-cell.ts";
-import { transposeDimensions } from "../../engine/params.ts";
-import {
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
+import { markAllPress, type PointerAction } from "../../engine/input/hint-gesture.ts";
+import { clearKey } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -60,11 +48,23 @@ import {
   isMouseDrag,
   LEFT_BUTTON,
   stripModifiers,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/input/target-verb.ts";
+import {
+  noOpEntryResult,
+  noteEntryGesture,
+  pressNoteTakingCell,
+  releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
+} from "../../engine/note-taking-cell.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import {
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/pencil-prefs.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
 import { newUndeadDesc } from "./generator.ts";
 import {
   border,

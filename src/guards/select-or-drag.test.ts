@@ -43,7 +43,7 @@ import {
   LEFT_RELEASE,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
-} from "../engine/pointer.ts";
+} from "../engine/input/pointer.ts";
 import { type AnyGame, builtGames, enrolledIn } from "../engine/testing/enrollment.ts";
 import { fingerprint, probeBoard, probePoints } from "../engine/testing/input-probe.ts";
 

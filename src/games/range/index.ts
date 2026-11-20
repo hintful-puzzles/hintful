@@ -20,23 +20,23 @@ import {
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
-import { transposeDimensions } from "../../engine/params.ts";
-import { SHADED_NAME } from "../../engine/piece.ts";
 import {
   cursorDelta,
   MOD_SHFT,
   newCursor,
   showCursor,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+} from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   rulingOut,
   squareGrid,
   type TargetVerbs,
   verbGesture,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import { SHADED_NAME } from "../../engine/piece.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { type RangeHint, rangeHint } from "./hint.ts";
 import {
   border,

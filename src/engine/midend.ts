@@ -71,12 +71,7 @@ import type {
   TimerReadout,
 } from "./contract/types.ts";
 import { freshSeed, generate } from "./deal.ts";
-import { pencilModeKey, takesNotes } from "./key-labels.ts";
-import { MoveAnimation } from "./midend-animation.ts";
-import { ChosenParams, largestTile } from "./midend-params.ts";
-import { Preferences } from "./midend-prefs.ts";
-import { Restart, type RunRecord, readSave, writeSave } from "./midend-save.ts";
-import { paramsError, UnreadableParams } from "./params.ts";
+import { pencilModeKey, takesNotes } from "./input/key-labels.ts";
 import {
   cancelDrags,
   isMarkAllLetter,
@@ -92,11 +87,21 @@ import {
   RIGHT_RELEASE,
   stripModifiers,
   withoutShift,
-} from "./pointer.ts";
+} from "./input/pointer.ts";
+import {
+  endSweep,
+  hintGesture,
+  sweepContinues,
+  sweepPending,
+} from "./input/target-verb.ts";
+import { MoveAnimation } from "./midend-animation.ts";
+import { ChosenParams, largestTile } from "./midend-params.ts";
+import { Preferences } from "./midend-prefs.ts";
+import { Restart, type RunRecord, readSave, writeSave } from "./midend-save.ts";
+import { paramsError, UnreadableParams } from "./params.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
 import { RULES_OUT_PREF } from "./rules-out.ts";
 import { sameShown, sameValue } from "./same-value.ts";
-import { endSweep, hintGesture, sweepContinues, sweepPending } from "./target-verb.ts";
 import { copyUi, restoreUi } from "./ui-snapshot.ts";
 
 /** What the status line says while a step shows only where to look: the same

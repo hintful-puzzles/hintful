@@ -23,7 +23,6 @@ import {
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import { UNSHADED_NAME } from "../../engine/piece.ts";
 import {
   cursorDelta,
   isMouseDown,
@@ -37,8 +36,7 @@ import {
   numpadDirection,
   RIGHT_BUTTON,
   shearedHexStep,
-} from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+} from "../../engine/input/pointer.ts";
 import {
   buttonVerb,
   digitKey,
@@ -49,7 +47,9 @@ import {
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { UNSHADED_NAME } from "../../engine/piece.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { newBricksDesc } from "./generator.ts";
 import {
   type BricksHint,

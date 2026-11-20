@@ -10,7 +10,7 @@ import {
   LEFT_RELEASE,
   MOD_CTRL,
   MOD_SHFT,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { sixteenGame } from "./index.ts";
 import type { SixteenMove } from "./state.ts";

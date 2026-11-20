@@ -10,8 +10,6 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -22,7 +20,9 @@ import {
   newCursor,
   RIGHT_BUTTON,
   RIGHT_DRAG,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import { mosaicGame } from "./index.ts";
 import { status } from "./solver.ts";

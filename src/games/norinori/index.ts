@@ -14,9 +14,7 @@ import type { Game, SolveResult } from "../../engine/contract/game.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import { transposeDimensions } from "../../engine/params.ts";
-import { newCursor } from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
@@ -24,7 +22,9 @@ import {
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { newNorinoriDesc } from "./generator.ts";
 import { type NorinoriHint, norinoriHint, norinoriRulesOut } from "./hint.ts";
 import {

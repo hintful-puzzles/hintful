@@ -14,8 +14,8 @@
 import { describe, expect, it } from "vitest";
 import { ALREADY_SOLVED } from "./contract/hint-refusal.ts";
 import { fakeGame } from "./fake-game.ts";
+import { LEFT_BUTTON } from "./input/pointer.ts";
 import { Midend } from "./midend.ts";
-import { LEFT_BUTTON } from "./pointer.ts";
 import { RULES_OUT_PREF } from "./rules-out.ts";
 import { beginDealt } from "./testing/dealt.ts";
 import { driveMidend } from "./testing/drive-midend.ts";

@@ -28,9 +28,9 @@ import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { isDigit } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import * as pattern from "../../generated/games/pattern/pattern.compiled.ts";
 
 // --- cell values (upstream #defines) -------------------------------------

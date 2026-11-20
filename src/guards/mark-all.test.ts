@@ -16,7 +16,7 @@
  * every note-taking game uses.
  */
 import { describe, expect, it } from "vitest";
-import { CURSOR_RIGHT, MARK_ALL_BUTTON } from "../engine/pointer.ts";
+import { CURSOR_RIGHT, MARK_ALL_BUTTON } from "../engine/input/pointer.ts";
 import { randomNew } from "../engine/random/index.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import { driveMidend } from "../engine/testing/drive-midend.ts";

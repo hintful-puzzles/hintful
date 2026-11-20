@@ -20,7 +20,7 @@ import {
   unshaped,
 } from "./contract/hint-words.ts";
 import type { Point } from "./contract/types.ts";
-import { markAllPress, type PointerAction } from "./hint-gesture.ts";
+import { markAllPress, type PointerAction } from "./input/hint-gesture.ts";
 import type { CellMarks } from "./ladder-runtime.ts";
 import type { CellRegion } from "./latin-hint.ts";
 import type { Judging } from "./move-judge.ts";

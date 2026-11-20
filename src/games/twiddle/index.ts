@@ -12,20 +12,20 @@ import { assertNever } from "../../engine/contract/assert-never.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import type { Color, Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
+import { MOD_MASK, MOD_NUM_KEYPAD, newCursor } from "../../engine/input/pointer.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+} from "../../engine/input/target-verb.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import {
   dimensionParamConfig,
   numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
-import { MOD_MASK, MOD_NUM_KEYPAD, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { rulesetItem } from "../../engine/ruleset.ts";
-import {
-  interpretTargetVerbs,
-  squareGrid,
-  type TargetVerbs,
-} from "../../engine/target-verb.ts";
 import { hint, hintKeepTrack, TWIDDLE_RUNGS, type TwiddleRung } from "./hint.ts";
 import {
   animLength,

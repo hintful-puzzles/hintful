@@ -47,20 +47,8 @@ import {
   key,
   markAllPress,
   type PointerAction,
-} from "../../engine/hint-gesture.ts";
-import { clearKey } from "../../engine/key-labels.ts";
-import {
-  dragEnteredNoteTakingCell,
-  noOpEntryResult,
-  releaseHighlightAfterEntry,
-  tapNoteTakingCell,
-} from "../../engine/note-taking-cell.ts";
-import { transposeDimensions } from "../../engine/params.ts";
-import {
-  candidateReadingPref,
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
+} from "../../engine/input/hint-gesture.ts";
+import { clearKey } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -78,7 +66,19 @@ import {
   RIGHT_BUTTON,
   showCursor,
   stripModifiers,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import {
+  dragEnteredNoteTakingCell,
+  noOpEntryResult,
+  releaseHighlightAfterEntry,
+  tapNoteTakingCell,
+} from "../../engine/note-taking-cell.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import {
+  candidateReadingPref,
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NAMES } from "../../generated/games/rome/rome.compiled.ts";
 import { newRomeDesc } from "./generator.ts";

@@ -4,13 +4,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
-import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
+import { CLEAR_BUTTON } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
   LEFT_BUTTON,
   LEFT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { answerWords, isAnswer } from "../../engine/word-list/index.ts";

@@ -16,7 +16,7 @@ import { SQUARE_GRID } from "../../engine/contract/sections.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import { newCursor } from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
@@ -24,7 +24,7 @@ import {
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
 import { newStarbattleDesc } from "./generator.ts";
 import {
   type StarbattleHint,

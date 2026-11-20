@@ -18,7 +18,7 @@ import {
   LEFT_RELEASE,
   RIGHT_BUTTON,
   RIGHT_DRAG,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";

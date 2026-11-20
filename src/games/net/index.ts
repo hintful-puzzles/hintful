@@ -31,13 +31,7 @@ import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { Game, GamePref, SolveResult } from "../../engine/contract/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
-import {
-  atof,
-  dimensionParamConfig,
-  formatG,
-  transposeDimensions,
-} from "../../engine/params.ts";
+import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -56,10 +50,7 @@ import {
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
-import { registerGame } from "../../engine/registry.ts";
-import { wrappingRulesetItem } from "../../engine/ruleset.ts";
+} from "../../engine/input/pointer.ts";
 import {
   beginSweep,
   interpretTargetVerbs,
@@ -69,7 +60,16 @@ import {
   type TargetGeometry,
   type TargetVerbs,
   verbGesture,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import {
+  atof,
+  dimensionParamConfig,
+  formatG,
+  transposeDimensions,
+} from "../../engine/params.ts";
+import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
+import { registerGame } from "../../engine/registry.ts";
+import { wrappingRulesetItem } from "../../engine/ruleset.ts";
 import { offset } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
 import {

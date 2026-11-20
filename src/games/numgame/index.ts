@@ -11,20 +11,20 @@
 import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import type { Game, HintStep, SolveResult } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import { registerGame, UI_UPDATE, type UiUpdate } from "../../engine/index.ts";
+import { click, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   cursorDelta,
   isCancelKey,
   newCursor,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import { solveBySearch } from "../../engine/search-outcome.ts";
+} from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   type TargetVerb,
   type TargetVerbs,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { solveBySearch } from "../../engine/search-outcome.ts";
 import { newNumgameDesc } from "./generator.ts";
 import {
   hasNoSolution,

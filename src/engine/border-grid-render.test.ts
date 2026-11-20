@@ -37,7 +37,7 @@ import {
   tileWidth,
 } from "./border-grid-render.ts";
 import { mark, phrase, stepMarks } from "./contract/hint-words.ts";
-import { newCursor } from "./pointer.ts";
+import { newCursor } from "./input/pointer.ts";
 import {
   enrolledIn,
   gamesNotUsing,

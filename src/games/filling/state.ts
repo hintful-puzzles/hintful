@@ -35,9 +35,9 @@ import {
   describedSpace,
   type GridSpace,
 } from "../../engine/describe-runtime.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import * as filling from "../../generated/games/filling/filling.compiled.ts";
 

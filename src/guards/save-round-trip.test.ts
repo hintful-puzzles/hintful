@@ -18,7 +18,6 @@
 
 import { describe, expect, it } from "vitest";
 import type { Game } from "../engine/contract/game.ts";
-import { Midend } from "../engine/midend.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -29,7 +28,8 @@ import {
   LEFT_RELEASE,
   MARK_ALL_BUTTON,
   RIGHT_BUTTON,
-} from "../engine/pointer.ts";
+} from "../engine/input/pointer.ts";
+import { Midend } from "../engine/midend.ts";
 import { randomNew } from "../engine/random/index.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { encodeSave } from "../engine/save.ts";

@@ -17,9 +17,9 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import { DELETE, LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/input/pointer.ts";
 import { presetMenu, type TitledPresetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
-import { DELETE, LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

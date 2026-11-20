@@ -18,10 +18,10 @@ import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts"
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import * as bridges from "../../generated/games/bridges/bridges.compiled.ts";
 

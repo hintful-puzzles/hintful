@@ -24,7 +24,6 @@ import {
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_LEFT,
   CURSOR_RIGHT,
@@ -39,8 +38,7 @@ import {
   newCursor,
   RIGHT_BUTTON,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+} from "../../engine/input/pointer.ts";
 import {
   buttonVerb,
   digitKey,
@@ -50,7 +48,9 @@ import {
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { newSticksDesc } from "./generator.ts";
 import { type SticksHint, sticksHint } from "./hint.ts";
 import {

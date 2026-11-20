@@ -19,7 +19,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -27,7 +26,8 @@ import {
   CURSOR_SELECT2,
   LEFT_BUTTON,
   RIGHT_BUTTON,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";

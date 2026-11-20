@@ -34,7 +34,6 @@
 
 import { hasHint } from "../contract/game.ts";
 import { StepMarks } from "../contract/hint-words.ts";
-import { Midend } from "../midend.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -47,7 +46,8 @@ import {
   LEFT_RELEASE,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
-} from "../pointer.ts";
+} from "../input/pointer.ts";
+import { Midend } from "../midend.ts";
 import { randomNew, randomUpto } from "../random/index.ts";
 import type { AnyGame } from "./input-probe.ts";
 import { type DrawOp, RecordingDrawing } from "./recording-drawing.ts";

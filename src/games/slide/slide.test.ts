@@ -22,8 +22,6 @@ import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { Midend } from "../../engine/index.ts";
-import { describeParams } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -33,7 +31,9 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";

@@ -33,8 +33,7 @@ import type {
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { drag } from "../../engine/hint-gesture.ts";
-import { numberItem, parseConfigInt } from "../../engine/params.ts";
+import { drag } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -46,7 +45,8 @@ import {
   LEFT_RELEASE,
   moveCursor,
   stripModifiers,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { numberItem, parseConfigInt } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { solveBySearch } from "../../engine/search-outcome.ts";
 import { newSlideDesc } from "./generator.ts";

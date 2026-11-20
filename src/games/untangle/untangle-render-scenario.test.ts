@@ -19,7 +19,7 @@ import {
 } from "../../engine/color/roles.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
-import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/pointer.ts";
+import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import {

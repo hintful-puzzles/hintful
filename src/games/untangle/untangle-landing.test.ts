@@ -10,8 +10,8 @@
  * and one whose pixels share no factor with the layout's 1/64 grid.
  */
 import { describe, expect, it } from "vitest";
+import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/input/pointer.ts";
 import { Midend } from "../../engine/midend.ts";
-import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { untangleGame } from "./index.ts";

@@ -6,15 +6,15 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
   CURSOR_UP,
   LEFT_BUTTON,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { newDesc } from "./generator.ts";
 import { Direction, enumGridSquares, gridArea } from "./grid.ts";

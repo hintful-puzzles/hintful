@@ -37,6 +37,11 @@ import {
 import { hasHint } from "../engine/contract/game.ts";
 import { HINT_MARKS_PLACEHOLDER } from "../engine/contract/hint-words.ts";
 import {
+  CONTROLS_PLACEHOLDER,
+  DONE_CLUES_PLACEHOLDER,
+} from "../engine/input/target-verb.ts";
+import { TOUCH_PLACEHOLDER } from "../engine/input/touch-help.ts";
+import {
   MODIFIERS_PLACEHOLDER,
   modifiersMarkdown,
   modifiersOf,
@@ -54,7 +59,6 @@ import {
   rulesetField,
   rulesetsMarkdown,
 } from "../engine/ruleset.ts";
-import { CONTROLS_PLACEHOLDER, DONE_CLUES_PLACEHOLDER } from "../engine/target-verb.ts";
 import {
   OPTIONAL_GAME_MEMBERS,
   REGISTERED_GAMES,
@@ -62,7 +66,6 @@ import {
 import { HINT_GAMES } from "../engine/testing/hint-games.ts";
 import { itOverWholeSweep } from "../engine/testing/slow.ts";
 import { nodesOf, parsed } from "../engine/testing/syntax.ts";
-import { TOUCH_PLACEHOLDER } from "../engine/touch-help.ts";
 import { WING_PLACEHOLDER } from "../engine/wing.ts";
 import { puzzleDataMap, puzzleIds } from "../puzzle/catalog.ts";
 import { type CommandPuzzle, commandList } from "../puzzle/command-list.ts";

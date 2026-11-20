@@ -43,7 +43,6 @@ import {
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { describedSpace, rangeMask } from "../../engine/describe-runtime.ts";
-import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   candidateConclusions,
   cleanObviousText,
@@ -51,7 +50,8 @@ import {
   placedRulesOut,
   populateText,
 } from "../../engine/hint-text.ts";
-import { digitKeyCode } from "../../engine/key-labels.ts";
+import type { PointerAction } from "../../engine/input/hint-gesture.ts";
+import { digitKeyCode } from "../../engine/input/key-labels.ts";
 import { CellMarks, type Said, TIERS } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";

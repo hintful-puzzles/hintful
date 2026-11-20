@@ -12,7 +12,6 @@
 
 import { type Game, hasHint } from "../contract/game.ts";
 import type { Color, ConfigValues, Point, Size } from "../contract/types.ts";
-import { Midend } from "../midend.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -33,9 +32,10 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
-} from "../pointer.ts";
+} from "../input/pointer.ts";
+import { hintGesture, sweepOpen } from "../input/target-verb.ts";
+import { Midend } from "../midend.ts";
 import { type RandomState, randomNew, randomUpto } from "../random/index.ts";
-import { hintGesture, sweepOpen } from "../target-verb.ts";
 import { copyUi, restoreUi } from "../ui-snapshot.ts";
 import { NO_FLASH } from "../win-wave.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";

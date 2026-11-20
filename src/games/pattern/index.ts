@@ -23,9 +23,6 @@ import { trackTargets } from "../../engine/contract/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
-import { transposeDimensions } from "../../engine/params.ts";
-import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import {
   endDrag,
   isCursorMove,
@@ -43,8 +40,7 @@ import {
   RIGHT_RELEASE,
   startDrag,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+} from "../../engine/input/pointer.ts";
 import {
   buttonVerb,
   interpretTargetVerbs,
@@ -53,7 +49,11 @@ import {
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { voice } from "../../generated/games/pattern/pattern.compiled.ts";
 import { newPatternDesc } from "./generator.ts";
 import { CLUE, cellAt, LINE } from "./hint-marks.ts";

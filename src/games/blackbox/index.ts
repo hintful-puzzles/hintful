@@ -13,19 +13,19 @@ import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.
 import { MULTIPLE_SOLUTIONS } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import {
-  dimensionParamConfig,
-  parseConfigInt,
-  transposeDimensions,
-} from "../../engine/params.ts";
-import { gridCursorMove, LEFT_RELEASE, newCursor } from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { gridCursorMove, LEFT_RELEASE, newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   rulingOut,
   type TargetGeometry,
   type TargetVerbs,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import {
+  dimensionParamConfig,
+  parseConfigInt,
+  transposeDimensions,
+} from "../../engine/params.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { answerCount, newDesc } from "./answer.ts";
 import { BLACKBOX_RUNGS, type BlackboxRung, hint, hintKeepTrack } from "./hint.ts";
 import { HINT_MARKS } from "./hint-marks.ts";

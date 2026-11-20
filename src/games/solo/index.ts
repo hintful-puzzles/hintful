@@ -59,7 +59,15 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
+import { digitKeyCode, digitKeys } from "../../engine/input/key-labels.ts";
+import {
+  CURSOR_SELECT2,
+  digitOf,
+  isCursorMove,
+  isEraseKey,
+  moveCursor,
+  stripModifiers,
+} from "../../engine/input/pointer.ts";
 import type { SingleWhy } from "../../engine/latin-hint.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import {
@@ -75,14 +83,6 @@ import {
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
-import {
-  CURSOR_SELECT2,
-  digitOf,
-  isCursorMove,
-  isEraseKey,
-  moveCursor,
-  stripModifiers,
-} from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { NAMES } from "../../generated/games/solo/solo.compiled.ts";

@@ -14,10 +14,10 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.t
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import {
   type Cell,
   DIFF_CHARS,

@@ -19,16 +19,16 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
-import { clearKey } from "../../engine/key-labels.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
+import { clearKey } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
   DELETE,
   LEFT_BUTTON,
   RIGHT_BUTTON,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

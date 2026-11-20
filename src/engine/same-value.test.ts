@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GridDrag, newDrag } from "./pointer.ts";
+import { GridDrag, newDrag } from "./input/pointer.ts";
 import { sameShown, sameValue } from "./same-value.ts";
 import { copyUi } from "./ui-snapshot.ts";
 

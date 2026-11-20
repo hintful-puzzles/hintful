@@ -25,8 +25,6 @@ import {
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { Midend } from "../../engine/index.ts";
-import { CROSS, type EdgeChange, LINE, OPEN } from "../../engine/line-drawing.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -37,7 +35,9 @@ import {
   MOD_SHFT,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { CROSS, type EdgeChange, LINE, OPEN } from "../../engine/line-drawing.ts";
+import { paramsError } from "../../engine/params.ts";
 import type { AnyGame } from "../../engine/testing/input-probe.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";

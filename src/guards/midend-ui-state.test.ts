@@ -21,8 +21,8 @@
 
 import { describe, expect, it } from "vitest";
 import type { Game } from "../engine/contract/game.ts";
+import { CURSOR_RIGHT } from "../engine/input/pointer.ts";
 import { Midend } from "../engine/midend.ts";
-import { CURSOR_RIGHT } from "../engine/pointer.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { observeMidend } from "../engine/testing/drive-midend.ts";
 import { REGISTERED_GAMES, REGISTERED_IDS } from "../engine/testing/enrollment.ts";

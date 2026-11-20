@@ -29,14 +29,14 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
   LEFT_BUTTON,
   RIGHT_BUTTON,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { slidePieces } from "../../engine/slide-planner.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";

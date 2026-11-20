@@ -10,17 +10,6 @@ import { edgeBetween, squareEdges } from "./board/square-edges.ts";
 import { UI_UPDATE } from "./contract/game.ts";
 import type { Point } from "./contract/types.ts";
 import {
-  CROSS,
-  type EdgeChange,
-  type EdgeMark,
-  edgeMistakes,
-  LINE,
-  type LineDrawingUi,
-  type LineRules,
-  lineDrawing,
-  OPEN,
-} from "./line-drawing.ts";
-import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
@@ -31,7 +20,18 @@ import {
   MOD_CTRL,
   MOD_SHFT,
   newCursor,
-} from "./pointer.ts";
+} from "./input/pointer.ts";
+import {
+  CROSS,
+  type EdgeChange,
+  type EdgeMark,
+  edgeMistakes,
+  LINE,
+  type LineDrawingUi,
+  type LineRules,
+  lineDrawing,
+  OPEN,
+} from "./line-drawing.ts";
 
 interface Board {
   w: number;

@@ -2,7 +2,7 @@
 // game through a roll, undo, and redo, asserting the state/statusbar
 // notifications and that a redraw paints the board.
 import { beforeEach, describe, expect, it } from "vitest";
-import { CURSOR_RIGHT } from "../../engine/pointer.ts";
+import { CURSOR_RIGHT } from "../../engine/input/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";

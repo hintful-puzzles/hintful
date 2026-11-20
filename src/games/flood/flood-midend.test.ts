@@ -2,7 +2,11 @@
 // a winning fill, a losing fill (exhausting the limit → "lost"), undo /
 // redo, a forced redraw, and a hint.
 import { describe, expect, it } from "vitest";
-import { CURSOR_LEFT, CURSOR_RIGHT, CURSOR_SELECT } from "../../engine/pointer.ts";
+import {
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  CURSOR_SELECT,
+} from "../../engine/input/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

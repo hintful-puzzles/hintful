@@ -31,8 +31,7 @@ import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
-import { transposeDimensions } from "../../engine/params.ts";
+import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -46,8 +45,7 @@ import {
   RIGHT_BUTTON,
   showCursor,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+} from "../../engine/input/pointer.ts";
 import {
   beginSweep,
   dragMarkVerbs,
@@ -57,7 +55,9 @@ import {
   sweepTo,
   type TargetVerbs,
   verbGesture,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { newDesc } from "./generator.ts";
 import {
   SLANT_RUNGS,

@@ -16,7 +16,7 @@ import {
   CURSOR_UP,
   LEFT_BUTTON,
   newCursor,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";

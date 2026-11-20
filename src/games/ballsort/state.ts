@@ -18,9 +18,9 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.t
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
+import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
 import { numberItem } from "../../engine/params.ts";
 import { num, paramsCodec, size } from "../../engine/params-codec.ts";
-import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import * as ballsort from "../../generated/games/ballsort/ballsort.compiled.ts";
 
 // --- types ------------------------------------------------------------------

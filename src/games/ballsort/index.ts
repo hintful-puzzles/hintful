@@ -12,13 +12,13 @@
 import type { SolveResult } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { drag } from "../../engine/hint-gesture.ts";
 import {
   type Game,
   registerGame,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
+import { drag } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -27,13 +27,13 @@ import {
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
-} from "../../engine/pointer.ts";
-import { solveBySearch } from "../../engine/search-outcome.ts";
+} from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   pressTarget,
   type TargetVerbs,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { solveBySearch } from "../../engine/search-outcome.ts";
 import { newDesc } from "./generator.ts";
 import {
   BALLSORT_RUNGS,

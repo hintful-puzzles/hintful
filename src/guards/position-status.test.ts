@@ -36,7 +36,7 @@ import {
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
-} from "../engine/pointer.ts";
+} from "../engine/input/pointer.ts";
 import { REGISTERED_GAMES, workingRowExemption } from "../engine/testing/enrollment.ts";
 import {
   probeBoard,

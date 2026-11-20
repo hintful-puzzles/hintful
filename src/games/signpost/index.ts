@@ -19,7 +19,6 @@ import { descValue } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { Color, GameStatus, Point, Size } from "../../engine/contract/types.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import { drag } from "../../engine/hint-gesture.ts";
 import {
   fromCoord as fromCoordE,
   type Game,
@@ -29,8 +28,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
-import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
+import { drag } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -43,7 +41,9 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import { newSignpostDesc } from "./generator.ts";

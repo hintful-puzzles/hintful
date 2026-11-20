@@ -46,7 +46,7 @@ import {
   CURSOR_LEFT,
   CURSOR_RIGHT,
   CURSOR_UP,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 
 export interface LoopyCursor {
   /** Index into `grid.dots` of the dot the cursor sits on. */

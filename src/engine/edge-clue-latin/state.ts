@@ -23,11 +23,11 @@ import {
 import { difficultyItem } from "../contract/difficulty.ts";
 import type { GameDrawing, ParamConfigItem } from "../contract/game.ts";
 import { readDesc } from "../desc-reader.ts";
+import { digitOf, type GridCursor, isEraseKey, newCursor } from "../input/pointer.ts";
 import type { Ladder } from "../ladder-runtime.ts";
 import type { LatinSolver } from "../latin.ts";
 import { numberItem, squareSize } from "../params.ts";
 import { choice, type ParamsSegment, paramsCodec, size } from "../params-codec.ts";
-import { digitOf, type GridCursor, isEraseKey, newCursor } from "../pointer.ts";
 
 // --- the clue kind -----------------------------------------------------------
 

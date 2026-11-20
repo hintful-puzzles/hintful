@@ -19,7 +19,7 @@
  * - `button == ' '` — Space arrives as `CURSOR_SELECT2`;
  * - `button === 8` for Backspace — the key map sends **127**.
  *
- * ## 2. No game may privately restate what `engine/pointer.ts` already owns
+ * ## 2. No game may privately restate what `engine/input/pointer.ts` already owns
  *
  * §1's defect starts as a local copy of a frontend fact — `const BACKSPACE = 8`
  * beside the code that uses it. The copies are how the collection drifts.
@@ -47,9 +47,9 @@ import { describe, expect, it } from "vitest";
 import { PuzzleButton } from "../engine/contract/types.ts";
 import * as decimal from "../engine/decimal.ts";
 import * as descAlphabet from "../engine/desc-alphabet.ts";
-import { puzzleKeyMap } from "../engine/key-map.ts";
-import * as pointer from "../engine/pointer.ts";
-import { BACKSPACE, DELETE, ESCAPE } from "../engine/pointer.ts";
+import { puzzleKeyMap } from "../engine/input/key-map.ts";
+import * as pointer from "../engine/input/pointer.ts";
+import { BACKSPACE, DELETE, ESCAPE } from "../engine/input/pointer.ts";
 import * as runLength from "../engine/run-length.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 import {
@@ -157,7 +157,7 @@ function gameIdOf(path: string): string {
 
 /**
  * Every code the key map can deliver, read off the map itself
- * (`engine/key-map.ts`, which the view reads).
+ * (`engine/input/key-map.ts`, which the view reads).
  *
  * Printable characters (32..126) are excluded from the analysis entirely: the
  * view falls through to "any single character → its char code", so every one
@@ -341,7 +341,7 @@ describe("no game tests a button this frontend cannot send", () => {
     // char-code fallback rejects for being longer than one character), and a
     // laptop may have no numpad at all. So a keypad binding must never be the
     // *only* route to an input — which is what Inertia's diagonals were.
-    const POINTER = "src/engine/pointer.ts";
+    const POINTER = "src/engine/input/pointer.ts";
     const cursorKeys = Object.keys(pointer).filter((n) => n.startsWith("CURSOR_"));
     let binders = 0;
     for (const sf of sources) {
@@ -376,7 +376,7 @@ describe("no game tests a button this frontend cannot send", () => {
       expect(
         cursorCompared ||
           called(POINTER, "digitOf") ||
-          called("src/engine/target-verb.ts", "interpretTargetVerbs"),
+          called("src/engine/input/target-verb.ts", "interpretTargetVerbs"),
         `${sf.fileName} binds MOD_NUM_KEYPAD with no bare-key route`,
       ).toBe(true);
       binders++;

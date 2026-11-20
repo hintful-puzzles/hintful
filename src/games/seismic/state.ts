@@ -32,10 +32,10 @@ import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { digitValue, isDigit } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
-import { newCursor } from "../../engine/pointer.ts";
 import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import {
   encodeRegionWalls,

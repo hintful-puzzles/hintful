@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fakeGame } from "./fake-game.ts";
+import { LEFT_BUTTON } from "./input/pointer.ts";
 import { Midend } from "./midend.ts";
-import { LEFT_BUTTON } from "./pointer.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 

@@ -7,15 +7,15 @@ import {
 } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { newCursor } from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
-import { solveBySearch } from "../../engine/search-outcome.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
   verbGesture,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { registerGame } from "../../engine/registry.ts";
+import { solveBySearch } from "../../engine/search-outcome.ts";
 import {
   hasNoSolution,
   hint,

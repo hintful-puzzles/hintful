@@ -7,7 +7,7 @@ import { currentColorScheme } from "../color-scheme.ts";
 import { showAlert } from "../dialogs/alert-dialog.ts";
 import { showToast } from "../dialogs/toast.ts";
 import { assertNever } from "../engine/contract/assert-never.ts";
-import { MARK_ALL_BUTTON, PENCIL_MODE_BUTTON } from "../engine/pointer.ts";
+import { MARK_ALL_BUTTON, PENCIL_MODE_BUTTON } from "../engine/input/pointer.ts";
 import { type PuzzleData, puzzleDataMap } from "../puzzle/catalog.ts";
 import { MIN_BAR_LENGTH } from "../puzzle/command-list.ts";
 import type { PuzzleBarFitEvent, SwapButtonsEvent } from "../puzzle/components/bar.ts";

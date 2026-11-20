@@ -9,7 +9,6 @@ import { descBadCharacter, validateDesc } from "../../engine/contract/desc-error
 import { difficultyTiers } from "../../engine/contract/difficulty.ts";
 import { PuzzleButton } from "../../engine/contract/types.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   LEFT_BUTTON,
@@ -18,7 +17,8 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

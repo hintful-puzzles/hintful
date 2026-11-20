@@ -11,19 +11,19 @@ import { CELL } from "../../engine/contract/hint-words.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import {
-  dimensionParamConfig,
-  numberItem,
-  transposeDimensions,
-} from "../../engine/params.ts";
-import { newCursor } from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
   verbGesture,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import {
+  dimensionParamConfig,
+  numberItem,
+  transposeDimensions,
+} from "../../engine/params.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { voice } from "../../generated/games/flood/flood.compiled.ts";
 import {
   COLOR_NAMES,

@@ -16,7 +16,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -26,7 +25,8 @@ import {
   MOD_SHFT,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { SYMM_NONE, SYMM_ROT2 } from "../../engine/symmetric-blacks.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";

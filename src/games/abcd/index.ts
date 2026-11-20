@@ -29,7 +29,15 @@ import {
   revealEntry,
 } from "../../engine/entry-mistakes.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
-import { clearKey } from "../../engine/key-labels.ts";
+import { clearKey } from "../../engine/input/key-labels.ts";
+import {
+  CURSOR_SELECT2,
+  digitOf,
+  gridCursorMove,
+  isCursorMove,
+  isEraseKey,
+  stripModifiers,
+} from "../../engine/input/pointer.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
@@ -41,14 +49,6 @@ import {
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
-import {
-  CURSOR_SELECT2,
-  digitOf,
-  gridCursorMove,
-  isCursorMove,
-  isEraseKey,
-  stripModifiers,
-} from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NAMES } from "../../generated/games/abcd/abcd.compiled.ts";
 import { newAbcdDesc } from "./generator.ts";

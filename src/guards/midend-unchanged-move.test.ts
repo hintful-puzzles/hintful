@@ -15,8 +15,7 @@ import {
   type FakeState,
   fakeGame,
 } from "../engine/fake-game.ts";
-import { click, drag } from "../engine/hint-gesture.ts";
-import { Midend } from "../engine/midend.ts";
+import { click, drag } from "../engine/input/hint-gesture.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -26,13 +25,14 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
   newCursor,
-} from "../engine/pointer.ts";
-import { getTsGame } from "../engine/registry.ts";
+} from "../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
-} from "../engine/target-verb.ts";
+} from "../engine/input/target-verb.ts";
+import { Midend } from "../engine/midend.ts";
+import { getTsGame } from "../engine/registry.ts";
 import { driveMidend } from "../engine/testing/drive-midend.ts";
 
 /** The fake's moves, and one that builds a new state holding the same count. */

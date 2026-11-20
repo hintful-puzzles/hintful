@@ -49,7 +49,7 @@ import {
   type GestureButton,
   key,
   type PointerAction,
-} from "../../engine/hint-gesture.ts";
+} from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -65,8 +65,7 @@ import {
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+} from "../../engine/input/pointer.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
@@ -74,7 +73,8 @@ import {
   type TargetGeometry,
   type TargetVerbs,
   verbClicks,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { registerGame } from "../../engine/registry.ts";
 import {
   farDot,
   type LoopyCursor,

@@ -35,7 +35,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
   shearedHexStep,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import type { AscentDrawState } from "./render.ts";
 import { isSolved } from "./solver.ts";
 import {

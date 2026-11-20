@@ -19,7 +19,7 @@ import {
   LEFT_RELEASE,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
-} from "../engine/pointer.ts";
+} from "../engine/input/pointer.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 import { probeBoard, probePoints } from "../engine/testing/input-probe.ts";
 

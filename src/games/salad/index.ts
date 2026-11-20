@@ -34,7 +34,15 @@ import {
   type EntryMoves,
   revealEntry,
 } from "../../engine/entry-mistakes.ts";
-import { clearKey } from "../../engine/key-labels.ts";
+import { clearKey } from "../../engine/input/key-labels.ts";
+import {
+  CURSOR_SELECT2,
+  digitOf,
+  gridCursorMove,
+  isCursorMove,
+  isEraseKey,
+  stripModifiers,
+} from "../../engine/input/pointer.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -45,14 +53,6 @@ import {
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
-import {
-  CURSOR_SELECT2,
-  digitOf,
-  gridCursorMove,
-  isCursorMove,
-  isEraseKey,
-  stripModifiers,
-} from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newSaladDesc } from "./generator.ts";
 import {

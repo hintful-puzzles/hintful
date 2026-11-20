@@ -15,7 +15,7 @@ import {
 } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
-import { CURSOR_SELECT, CURSOR_UP } from "../../engine/pointer.ts";
+import { CURSOR_SELECT, CURSOR_UP } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import {

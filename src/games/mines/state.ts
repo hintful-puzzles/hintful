@@ -21,9 +21,9 @@ import {
 import type { Point } from "../../engine/contract/types.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { AREA_TOO_LARGE, unreadParams } from "../../engine/params.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import {
   type RandomState,
   randomNew,

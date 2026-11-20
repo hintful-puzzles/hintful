@@ -24,8 +24,8 @@ import type { PresetBoards } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { AREA_TOO_LARGE, endParams } from "../../engine/params.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import {
   SYMM_NONE,

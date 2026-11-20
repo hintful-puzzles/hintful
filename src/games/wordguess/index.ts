@@ -18,8 +18,8 @@ import type {
   ReferenceModel,
 } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
-import { clearKey, letterKeyboard } from "../../engine/key-labels.ts";
+import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
+import { clearKey, letterKeyboard } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT,
   isCursorMove,
@@ -29,7 +29,7 @@ import {
   LEFT_BUTTON,
   moveCursor,
   newCursor,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { answerWords } from "../../engine/word-list/index.ts";
 import {

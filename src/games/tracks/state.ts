@@ -41,9 +41,9 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.t
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { c2nUpper, n2cUpper, UPPER_ALPHABET_SIZE } from "../../engine/desc-alphabet.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 
 // --- difficulty (upstream's Easy, Tricky, Hard; named by the description) ---

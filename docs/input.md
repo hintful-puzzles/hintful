@@ -17,7 +17,7 @@ The skeleton's [`index.ts`](../src/skeleton/grid/index.ts) does each of these
 already; a copy changes the verbs and keeps the shape.
 
 1. Import every button code, predicate and cursor helper from
-   [`engine/pointer.ts`](../src/engine/pointer.ts), and declare none
+   [`engine/input/pointer.ts`](../src/engine/input/pointer.ts), and declare none
    (§ "Button codes and a key held with Shift").
 2. Hold the keyboard cursor as `ui.cursor`, built by `newCursor()` in `newUi`
    (§ "Keyboard cursors").
@@ -95,7 +95,7 @@ values, keys of its own, pixel coordinates in its state.
 ## Button codes and a key held with Shift
 
 **Take every button code, class predicate and modifier mask from
-[`engine/pointer.ts`](../src/engine/pointer.ts), and never restate one**: no
+[`engine/input/pointer.ts`](../src/engine/input/pointer.ts), and never restate one**: no
 local `const MOD_MASK`, no renamed copy, no magic number where a named button
 exists. [`emittable-keys.test.ts`](../src/guards/emittable-keys.test.ts)
 derives the export list from the module and fails on a game-local
@@ -103,7 +103,7 @@ declaration that shadows one.
 
 A press reaches a game from `puzzle/components/view-interactive.ts`, through
 the worker, as `Midend.processInput` calling `interpretMove`. A key arrives as
-a bare character code from the engine's `puzzleKeyMap` (`engine/key-map.ts`),
+a bare character code from the engine's `puzzleKeyMap` (`engine/input/key-map.ts`),
 which the view reads.
 
 **Shift on a key is yours to read, and you need not strip it.** A key held
@@ -138,7 +138,7 @@ each by being registered. The section named says what the game owes.
 | [`drag-cancel.test.ts`](../src/guards/drag-cancel.test.ts) | a gesture ends when the board changes under it (§ "A board change under a gesture is the engine's") |
 | [`input-answers.test.ts`](../src/guards/input-answers.test.ts) | what each answer of `interpretMove` leaves behind ([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE") |
 | [`modifier-arrow.test.ts`](../src/guards/modifier-arrow.test.ts) | Shift or Ctrl with an arrow and with its opposite never change the board alike |
-| [`hint-gesture.test.ts`](../src/engine/hint-gesture.test.ts) | every hint step is played through `interpretMove` by the gesture `hintGesture` gives ([`hints.md`](./hints.md) § "Every step is a gesture") |
+| [`hint-gesture.test.ts`](../src/engine/input/hint-gesture.test.ts) | every hint step is played through `interpretMove` by the gesture `hintGesture` gives ([`hints.md`](./hints.md) § "Every step is a gesture") |
 
 **Take a modified arrow's direction from the key (`cursorDelta`), never from
 where the clamped cursor ended up**, which is right everywhere but the far
@@ -195,12 +195,12 @@ on-screen panel is a second emitter, so the set is computed for each game:
 ### An erase or cancel key
 
 **Never write the codes.** Test `isEraseKey(button)` (8 or 127) and
-`isCancelKey(button)` (27, 8 or 127), from `engine/pointer.ts`; a game with
+`isCancelKey(button)` (27, 8 or 127), from `engine/input/pointer.ts`; a game with
 both meanings tests them in separate branches. The keyboard sends 127 for
 Backspace, Delete and Clear, never upstream's `'\b'` (8).
 
 - **A clear that is a verb takes `keys: ERASE_KEYS`**
-  ([`engine/target-verb.ts`](../src/engine/target-verb.ts)) and tests no
+  ([`engine/input/target-verb.ts`](../src/engine/input/target-verb.ts)) and tests no
   button: a `keyOnly` verb whose route is `cycle`. Exemplar: the skeleton's
   `index.ts`.
 - **An arm of the game's own calls `isEraseKey` where it decides what the
@@ -357,7 +357,7 @@ and "Only the Menu scrolls".
 **If the game is "aim at a target, and each button does something there",
 declare it and write no press handling.** Set `Game.targetVerbs` and end
 `interpretMove` with `interpretTargetVerbs(targetVerbs, …)`
-([`engine/target-verb.ts`](../src/engine/target-verb.ts)). The declaration is
+([`engine/input/target-verb.ts`](../src/engine/input/target-verb.ts)). The declaration is
 a geometry and a verb for each button; a verb is a `does` phrase for the help
 and an `apply(state, target, ui)` that returns the game's own `Move`, `null`,
 or `UI_UPDATE` for a verb that only changes what is shown. Exemplars: the
@@ -405,7 +405,7 @@ What a game decides:
   seeded from entropy) runs the walk out of budget. State that is neither
   the player's position nor read by replay belongs outside the `Ui`.
 
-[`target-verb.test.ts`](../src/engine/target-verb.test.ts) plays every
+[`target-verb.test.ts`](../src/engine/input/target-verb.test.ts) plays every
 declaring game: at every cursor position on a target, Enter leaves the board a
 left-click leaves at that target's `pointAt`, Space that of its button, each
 verb key that of its button. An arm that handles Enter differently from the
@@ -541,7 +541,7 @@ Exemplars: `clueDrag` in [`towers/index.ts`](../src/games/towers/index.ts);
 ## Keyboard cursors
 
 **Hold the keyboard cursor as `ui.cursor`, a `GridCursor` from
-`engine/pointer.ts` built by `newCursor`, and give nothing about it a second
+`engine/input/pointer.ts` built by `newCursor`, and give nothing about it a second
 name.** [`cursor-vocabulary.test.ts`](../src/guards/cursor-vocabulary.test.ts)
 finds a cursor by its shape, read off `newCursor()`, and fails on one held
 anywhere else. The cursor helpers' docs say what each returns. For a
@@ -903,7 +903,7 @@ Exemplars: [`solo/index.ts`](../src/games/solo/index.ts), `keen/index.ts`,
 [`undead/index.ts`](../src/games/undead/index.ts) (keys with word labels).
 
 - **Build digits with `digitKeys(n)`** from
-  [`engine/key-labels.ts`](../src/engine/key-labels.ts), sizing `n` from the
+  [`engine/input/key-labels.ts`](../src/engine/input/key-labels.ts), sizing `n` from the
   params. The label `"Clear"` is what the panel turns into the clear icon, so
   do not reword it.
 - **Do not list the Marks key.** `Midend.requestKeys` appends `pencilModeKey`

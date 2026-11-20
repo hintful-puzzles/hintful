@@ -20,8 +20,7 @@ import {
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { drag } from "../../engine/hint-gesture.ts";
-import { transposeDimensions } from "../../engine/params.ts";
+import { drag } from "../../engine/input/hint-gesture.ts";
 import {
   cursorDelta,
   LEFT_BUTTON,
@@ -29,7 +28,8 @@ import {
   LEFT_RELEASE,
   MOD_NUM_KEYPAD,
   numpadDirection,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newInertiaDesc } from "./generator.ts";
 import {

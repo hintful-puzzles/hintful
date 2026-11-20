@@ -19,16 +19,16 @@ import {
   type SolveResult,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { AREA_TOO_LARGE, transposeDimensions } from "../../engine/params.ts";
-import { dims, letters, paramsCodec } from "../../engine/params-codec.ts";
-import { newCursor } from "../../engine/pointer.ts";
-import { randomUpto } from "../../engine/random/index.ts";
-import { RULESET_KW, rulesetItem } from "../../engine/ruleset.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { AREA_TOO_LARGE, transposeDimensions } from "../../engine/params.ts";
+import { dims, letters, paramsCodec } from "../../engine/params-codec.ts";
+import { randomUpto } from "../../engine/random/index.ts";
+import { RULESET_KW, rulesetItem } from "../../engine/ruleset.ts";
 import type * as flip from "../../generated/games/flip/flip.compiled.ts";
 import { genCrossesMatrix, genRandomMatrix } from "./generator.ts";
 import { FLIP_RUNGS, type FlipRung, hint, hintKeepTrack } from "./hint.ts";

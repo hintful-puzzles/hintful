@@ -40,9 +40,9 @@ import {
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import { endParams, parseDimensions } from "../../engine/params.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
-import { newCursor } from "../../engine/pointer.ts";
 
 // --- the board alphabet -----------------------------------------------
 

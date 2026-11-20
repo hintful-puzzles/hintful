@@ -10,7 +10,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { FLASH, FLASH_LEAD } from "../engine/color/palette.ts";
 import type { Color } from "../engine/contract/types.ts";
-import { LEFT_BUTTON, LEFT_RELEASE } from "../engine/pointer.ts";
+import { LEFT_BUTTON, LEFT_RELEASE } from "../engine/input/pointer.ts";
 import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,

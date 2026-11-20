@@ -36,9 +36,9 @@ import {
   type GridSpace,
   partition,
 } from "../../engine/describe-runtime.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
-import { newCursor } from "../../engine/pointer.ts";
 import * as solo from "../../generated/games/solo/solo.compiled.ts";
 
 // --- difficulty (standard axis) --------------------------------------------

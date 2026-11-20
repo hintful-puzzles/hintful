@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
-import { newCursor } from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";

@@ -14,13 +14,7 @@ import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import type { Point, Rect } from "../../engine/contract/types.ts";
-import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
-import {
-  atof,
-  dimensionParamConfig,
-  formatG,
-  transposeDimensions,
-} from "../../engine/params.ts";
+import { click, drag, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -39,7 +33,13 @@ import {
   RIGHT_RELEASE,
   startDrag,
   stripModifiers,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import {
+  atof,
+  dimensionParamConfig,
+  formatG,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newDesc } from "./generator.ts";
 import {

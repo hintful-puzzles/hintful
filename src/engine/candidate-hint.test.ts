@@ -34,10 +34,10 @@ import {
   so,
   unshaped,
 } from "./contract/hint-words.ts";
-import { click, markAllPress, key as press } from "./hint-gesture.ts";
 import { cleanObviousText, joinNums, populateText } from "./hint-text.ts";
+import { click, markAllPress, key as press } from "./input/hint-gesture.ts";
+import { PENCIL_MODE_BUTTON } from "./input/pointer.ts";
 import { rowColRegions } from "./latin-hint.ts";
-import { PENCIL_MODE_BUTTON } from "./pointer.ts";
 
 /** Build a working board from a `grid` (0 = empty) and a matching `pencil`
  * candidate-bitmask array. */

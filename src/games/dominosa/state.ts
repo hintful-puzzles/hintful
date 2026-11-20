@@ -28,8 +28,8 @@ import {
   describedSpace,
   type GridSpace,
 } from "../../engine/describe-runtime.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import * as dominosa from "../../generated/games/dominosa/dominosa.compiled.ts";
 
 // --- combinatorial helpers (upstream TRI / DCOUNT / DINDEX macros) ----------

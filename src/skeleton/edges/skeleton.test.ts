@@ -20,7 +20,6 @@ import { pointAtEdge, squareEdges } from "../../engine/board/square-edges.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { Midend } from "../../engine/index.ts";
-import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -31,7 +30,8 @@ import {
   MOD_SHFT,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
 import type { AnyGame } from "../../engine/testing/input-probe.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";

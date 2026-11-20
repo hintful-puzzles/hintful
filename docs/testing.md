@@ -1105,7 +1105,7 @@ Where the question is a type, as "a value that is a `Color`" is, build a
 and the guard says so: a member of the `Game` contract (`validateParams`), or
 a parameter's local names, stated as the scan's bound. Before parsing a
 fact out of a file, ask whether the test can import it: a value in a module
-of its own is read by importing it (`engine/key-map.ts`, which the view
+of its own is read by importing it (`engine/input/key-map.ts`, which the view
 reads, as `emittable-keys.test.ts` does). A regex stays right only where the
 text is the subject: a sentence a player reads, help markdown, YAML, markup,
 a shell script, or a byte the file must not hold. Plant the defect a

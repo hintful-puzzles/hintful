@@ -21,24 +21,24 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
 import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
   newCursor,
-} from "../../engine/pointer.ts";
-import {
-  type RandomState,
-  randomStateEncode,
-  randomUpto,
-} from "../../engine/random/index.ts";
+} from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   pressTarget,
   squareGrid,
   type TargetVerbs,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
+import {
+  type RandomState,
+  randomStateEncode,
+  randomUpto,
+} from "../../engine/random/index.ts";
 import { firstOpen } from "./generator.ts";
 import {
   MINES_RUNGS,

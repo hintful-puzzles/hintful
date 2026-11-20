@@ -111,7 +111,7 @@ game a keyboard" and "Giving a geometric game a keyboard" — that exist precise
 because it is not derivable.
 
 **And the part that *is* derivable is already derived**: `moveCursor`,
-`gridCursorMove` and `cursorDelta` in `engine/pointer.ts` give every game the
+`gridCursorMove` and `cursorDelta` in `engine/input/pointer.ts` give every game the
 reveal-and-move-in-one-press cursor, and `cursor-vocabulary.test.ts` enforces it
 structurally.
 

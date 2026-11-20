@@ -26,15 +26,15 @@
  * of its declared pointer verb.
  */
 
-import { fromCoord } from "./board/geometry.ts";
+import { fromCoord } from "../board/geometry.ts";
 import {
   type Game,
   type HintStep,
   type HintTrackVerdict,
   UI_UPDATE,
   type UiUpdate,
-} from "./contract/game.ts";
-import type { Point, Size } from "./contract/types.ts";
+} from "../contract/game.ts";
+import type { Point, Size } from "../contract/types.ts";
 import { click, key, type PointerAction } from "./hint-gesture.ts";
 import {
   BACKSPACE,

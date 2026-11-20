@@ -3,7 +3,7 @@
 // UI_UPDATE), a removal that scores and compacts, undo, and a win that
 // reports "solved".
 import { describe, expect, it } from "vitest";
-import { LEFT_BUTTON } from "../../engine/pointer.ts";
+import { LEFT_BUTTON } from "../../engine/input/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { samegameGame } from "./index.ts";
 

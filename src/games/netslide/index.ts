@@ -18,6 +18,11 @@ import { SOLUTION_UNKNOWN } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
+  interpretTargetVerbs,
+  type TargetVerbs,
+  verbGesture,
+} from "../../engine/input/target-verb.ts";
+import {
   atof,
   dimensionParamConfig,
   formatG,
@@ -26,11 +31,6 @@ import {
 } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { wrappingRulesetItem } from "../../engine/ruleset.ts";
-import {
-  interpretTargetVerbs,
-  type TargetVerbs,
-  verbGesture,
-} from "../../engine/target-verb.ts";
 import { newDesc } from "./generator.ts";
 import {
   arrowFor,

@@ -21,10 +21,10 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
+import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/input/pointer.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
-import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";

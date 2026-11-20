@@ -22,9 +22,9 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.t
 import type { Point } from "../../engine/contract/types.ts";
 import { digitValue } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import * as mosaic from "../../generated/games/mosaic/mosaic.compiled.ts";
 

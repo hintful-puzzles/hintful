@@ -45,7 +45,6 @@ import {
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { rangeMask } from "../../engine/describe-runtime.ts";
-import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   candidateConclusions,
   cleanObviousText,
@@ -54,6 +53,7 @@ import {
   placedRulesOut,
   populateText,
 } from "../../engine/hint-text.ts";
+import type { PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   CellMarks,
   type Firing as LadderFiring,

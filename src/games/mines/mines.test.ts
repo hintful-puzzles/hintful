@@ -18,8 +18,8 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { Midend } from "../../engine/index.ts";
+import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/input/pointer.ts";
 import { paramsError } from "../../engine/params.ts";
-import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave, encodeSave } from "../../engine/save.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";

@@ -12,19 +12,19 @@ import { descValue } from "../../engine/contract/desc-error.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import {
-  AREA_TOO_LARGE,
-  endParams,
-  formatG,
-  parseLeadingFloat,
-} from "../../engine/params.ts";
-import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
   CURSOR_UP,
   type GridCursor,
   newCursor,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import {
+  AREA_TOO_LARGE,
+  endParams,
+  formatG,
+  parseLeadingFloat,
+} from "../../engine/params.ts";
 import {
   addBorderBarriers,
   computeActive as computeActiveWires,

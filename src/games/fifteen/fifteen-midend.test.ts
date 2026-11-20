@@ -2,7 +2,7 @@
 // game through a slide, undo, redo, and a hint, asserting the
 // statusbar notifications and that a redraw paints the board.
 import { beforeEach, describe, expect, it } from "vitest";
-import { CURSOR_LEFT } from "../../engine/pointer.ts";
+import { CURSOR_LEFT } from "../../engine/input/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

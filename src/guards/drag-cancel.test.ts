@@ -17,14 +17,14 @@
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import type { Point } from "../engine/contract/types.ts";
-import { Midend } from "../engine/midend.ts";
 import {
   GridDrag,
   LEFT_BUTTON,
   LEFT_RELEASE,
   PENCIL_MODE_BUTTON,
   startDrag,
-} from "../engine/pointer.ts";
+} from "../engine/input/pointer.ts";
+import { Midend } from "../engine/midend.ts";
 import { builtGames, REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 import {
   changedUnder,

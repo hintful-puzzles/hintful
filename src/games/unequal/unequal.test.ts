@@ -31,9 +31,9 @@ import {
   newUi,
 } from "../../engine/edge-clue-latin/state.ts";
 import { Midend } from "../../engine/index.ts";
+import { LEFT_BUTTON } from "../../engine/input/pointer.ts";
 import { DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
 import { paramsError } from "../../engine/params.ts";
-import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";

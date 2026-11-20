@@ -8,7 +8,7 @@ import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
   CURSOR_SELECT2,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";

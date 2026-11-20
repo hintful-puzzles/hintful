@@ -13,8 +13,6 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { presetMenu } from "../../engine/param-label.ts";
-import { AREA_TOO_LARGE, paramsError } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   LEFT_BUTTON,
@@ -22,7 +20,9 @@ import {
   newCursor,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { presetMenu } from "../../engine/param-label.ts";
+import { AREA_TOO_LARGE, paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

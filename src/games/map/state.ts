@@ -16,9 +16,9 @@ import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import { AREA_TOO_LARGE, endParams, paramsLetter } from "../../engine/params.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
-import { newCursor } from "../../engine/pointer.ts";
 import * as map from "../../generated/games/map/map.compiled.ts";
 import type { MapData } from "./map-data.ts";
 

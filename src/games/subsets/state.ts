@@ -28,8 +28,8 @@ import {
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 
 // --- difficulty --------------------------------------------------------------

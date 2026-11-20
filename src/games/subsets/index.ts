@@ -49,8 +49,7 @@ import {
 } from "../../engine/contract/hint-words.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
-import { judgeWalked } from "../../engine/move-judge.ts";
+import { click, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -59,9 +58,7 @@ import {
   LEFT_BUTTON,
   newCursor,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
-import { statedParts } from "../../engine/stated.ts";
+} from "../../engine/input/pointer.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
@@ -69,7 +66,10 @@ import {
   type TargetGeometry,
   type TargetVerbs,
   verbGesture,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { judgeWalked } from "../../engine/move-judge.ts";
+import { registerGame } from "../../engine/registry.ts";
+import { statedParts } from "../../engine/stated.ts";
 import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";

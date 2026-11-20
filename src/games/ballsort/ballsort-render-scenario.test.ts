@@ -3,7 +3,7 @@
  * pour settles on.
  */
 import { describe, expect, it } from "vitest";
-import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/pointer.ts";
+import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/input/pointer.ts";
 import {
   type DrawOp,
   RecordingDrawing,

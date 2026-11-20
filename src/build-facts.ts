@@ -16,6 +16,13 @@ export {
 } from "./engine/contract/hint-words.ts";
 export { draftSections, notApplicableMarkdown } from "./engine/contract/sections.ts";
 export {
+  CONTROLS_PLACEHOLDER,
+  controlsMarkdown,
+  DONE_CLUES_PLACEHOLDER,
+  doneCluesMarkdown,
+} from "./engine/input/target-verb.ts";
+export { TOUCH_PLACEHOLDER, touchHelp } from "./engine/input/touch-help.ts";
+export {
   MODIFIERS_PLACEHOLDER,
   modifiersMarkdown,
   modifiersOf,
@@ -38,11 +45,4 @@ export {
   rulesetField,
   rulesetsMarkdown,
 } from "./engine/ruleset.ts";
-export {
-  CONTROLS_PLACEHOLDER,
-  controlsMarkdown,
-  DONE_CLUES_PLACEHOLDER,
-  doneCluesMarkdown,
-} from "./engine/target-verb.ts";
-export { TOUCH_PLACEHOLDER, touchHelp } from "./engine/touch-help.ts";
 export { WING_PLACEHOLDER, wingHelp } from "./engine/wing.ts";

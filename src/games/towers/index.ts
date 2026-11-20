@@ -59,7 +59,24 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
+import { digitKeyCode, digitKeys } from "../../engine/input/key-labels.ts";
+import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  CURSOR_SELECT2,
+  CURSOR_UP,
+  digitOf,
+  isCursorMove,
+  isEraseKey,
+  isMouseDrag,
+  LEFT_BUTTON,
+  MOD_CTRL,
+  MOD_SHFT,
+  moveCursor,
+  stripModifiers,
+} from "../../engine/input/pointer.ts";
+import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/input/target-verb.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import { latinVerdict, setCells } from "../../engine/latin.ts";
 import { hiddenSingleLine, rowColRegions } from "../../engine/latin-hint.ts";
@@ -76,24 +93,7 @@ import {
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
-import {
-  CURSOR_DOWN,
-  CURSOR_LEFT,
-  CURSOR_RIGHT,
-  CURSOR_SELECT2,
-  CURSOR_UP,
-  digitOf,
-  isCursorMove,
-  isEraseKey,
-  isMouseDrag,
-  LEFT_BUTTON,
-  MOD_CTRL,
-  MOD_SHFT,
-  moveCursor,
-  stripModifiers,
-} from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/target-verb.ts";
 import type * as towers from "../../generated/games/towers/towers.compiled.ts";
 import { NAMES, WORDS } from "../../generated/games/towers/towers.compiled.ts";
 import { newTowersDesc } from "./generator.ts";

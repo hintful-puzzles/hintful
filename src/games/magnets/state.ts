@@ -25,9 +25,9 @@ import {
   n2c as descChar,
 } from "../../engine/desc-alphabet.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import * as magnets from "../../generated/games/magnets/magnets.compiled.ts";
 
 // --- cell values (upstream: EMPTY == NEUTRAL) -----------------------------

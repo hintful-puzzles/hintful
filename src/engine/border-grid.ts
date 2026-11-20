@@ -40,8 +40,12 @@ import {
   squareEdges,
   UP,
 } from "./board/square-edges.ts";
-import { cursorDelta, type GridCursor } from "./pointer.ts";
-import { rulingOut, type TargetGeometry, type TargetVerbs } from "./target-verb.ts";
+import { cursorDelta, type GridCursor } from "./input/pointer.ts";
+import {
+  rulingOut,
+  type TargetGeometry,
+  type TargetVerbs,
+} from "./input/target-verb.ts";
 
 // --- the edge bit vocabulary -----------------------------------------------
 // A cell stores its four borders in the low nibble and their "definitely not a

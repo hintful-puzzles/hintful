@@ -11,14 +11,14 @@ import { descValue } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import {
   AREA_TOO_LARGE,
   formatG,
   parseLeadingFloat,
   unreadParams,
 } from "../../engine/params.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
-import { newCursor } from "../../engine/pointer.ts";
 import {
   addBorderBarriers,
   computeActive as computeActiveWires,

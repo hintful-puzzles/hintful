@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
-import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
+import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/input/pointer.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { tracksGame } from "./index.ts";
 import { centeredCoord, metrics, PREFERRED_TILE_SIZE } from "./render.ts";

@@ -5,7 +5,7 @@
 // (COL_INK).
 import { describe, expect, it } from "vitest";
 import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
-import { newCursor } from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";

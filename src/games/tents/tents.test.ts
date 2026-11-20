@@ -13,7 +13,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   cancelDrags,
@@ -23,7 +22,8 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import {

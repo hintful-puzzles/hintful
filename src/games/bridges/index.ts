@@ -24,8 +24,7 @@ import {
   drag,
   type GestureButton,
   type PointerAction,
-} from "../../engine/hint-gesture.ts";
-import { transposeDimensions } from "../../engine/params.ts";
+} from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -49,7 +48,8 @@ import {
   RIGHT_RELEASE,
   startDrag,
   stripModifiers,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newBridgesDesc } from "./generator.ts";
 import {

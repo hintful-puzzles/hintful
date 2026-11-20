@@ -61,7 +61,15 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
+import { digitKeyCode, digitKeys } from "../../engine/input/key-labels.ts";
+import {
+  CURSOR_SELECT2,
+  digitOf,
+  isCursorMove,
+  isEraseKey,
+  moveCursor,
+  stripModifiers,
+} from "../../engine/input/pointer.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { rowColRegions } from "../../engine/latin-hint.ts";
@@ -82,14 +90,6 @@ import {
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
-import {
-  CURSOR_SELECT2,
-  digitOf,
-  isCursorMove,
-  isEraseKey,
-  moveCursor,
-  stripModifiers,
-} from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { statedParts } from "../../engine/stated.ts";
 import * as keen from "../../generated/games/keen/keen.compiled.ts";

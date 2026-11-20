@@ -16,10 +16,10 @@ import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import { PAIR_NAMES, type PairIndex } from "../../engine/piece.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import * as clusters from "../../generated/games/clusters/clusters.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------

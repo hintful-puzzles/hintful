@@ -17,7 +17,6 @@ import { describe, expect, it } from "vitest";
 import type { Grid, GridFace } from "../../engine/board/grid/index.ts";
 import { COL_CURSOR } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
-import { Midend } from "../../engine/midend.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -30,7 +29,8 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

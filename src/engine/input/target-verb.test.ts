@@ -15,8 +15,19 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { type HintStep, type HintTrackVerdict, UI_UPDATE } from "./contract/game.ts";
-import type { Point } from "./contract/types.ts";
+import { type HintStep, type HintTrackVerdict, UI_UPDATE } from "../contract/game.ts";
+import type { Point } from "../contract/types.ts";
+import { randomNew } from "../random/index.ts";
+import { REGISTERED_GAMES } from "../testing/enrollment.ts";
+import {
+  type AnyGame,
+  type BoardsReached,
+  boardsReached,
+  CURSOR_CAP,
+  type ProbeBoard,
+  probeBoard,
+  targetPoints,
+} from "../testing/input-probe.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -27,7 +38,6 @@ import {
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
 } from "./pointer.ts";
-import { randomNew } from "./random/index.ts";
 import {
   controlsMarkdown,
   interpretTargetVerbs,
@@ -39,16 +49,6 @@ import {
   type TargetVerbUi,
   verbClicks,
 } from "./target-verb.ts";
-import { REGISTERED_GAMES } from "./testing/enrollment.ts";
-import {
-  type AnyGame,
-  type BoardsReached,
-  boardsReached,
-  CURSOR_CAP,
-  type ProbeBoard,
-  probeBoard,
-  targetPoints,
-} from "./testing/input-probe.ts";
 
 /** Presses a cycle route is followed for: longer than any verb's cycle, so a
  * result the cycle passes through is met before the presses run out. */

@@ -16,14 +16,13 @@ import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { SolveResult } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { drag } from "../../engine/hint-gesture.ts";
 import {
   type Game,
   registerGame,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { drag } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -31,7 +30,8 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import { solveBySearch } from "../../engine/search-outcome.ts";
 import type * as pegs from "../../generated/games/pegs/pegs.compiled.ts";
 import { newDesc } from "./generator.ts";

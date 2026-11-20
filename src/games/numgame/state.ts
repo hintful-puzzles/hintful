@@ -14,9 +14,9 @@ import { difficultyItem, tierNames } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { numberItem } from "../../engine/params.ts";
 import { choice, num, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import * as numgame from "../../generated/games/numgame/numgame.compiled.ts";
 import { OPS, type Op, type Step } from "./solver.ts";
 

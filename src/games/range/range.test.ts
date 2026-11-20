@@ -6,9 +6,9 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { LEFT_BUTTON, newCursor, RIGHT_BUTTON } from "../../engine/input/pointer.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
-import { LEFT_BUTTON, newCursor, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type RangeMistake, rangeGame } from "./index.ts";
 import {

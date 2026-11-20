@@ -9,8 +9,6 @@ import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { Midend } from "../../engine/index.ts";
-import { describeParams } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   LEFT_BUTTON,
@@ -18,7 +16,9 @@ import {
   LEFT_RELEASE,
   MOD_NUM_KEYPAD,
   RIGHT_BUTTON,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

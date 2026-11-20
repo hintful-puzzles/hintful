@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GridDrag, newDrag, startDrag } from "./pointer.ts";
+import { GridDrag, newDrag, startDrag } from "./input/pointer.ts";
 import { copyUi, restoreUi } from "./ui-snapshot.ts";
 
 describe("a Ui copied and put back", () => {

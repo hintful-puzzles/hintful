@@ -17,7 +17,6 @@ import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts"
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -36,8 +35,7 @@ import {
   showCursor,
   startDrag,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+} from "../../engine/input/pointer.ts";
 import {
   beginSweep,
   buttonVerb,
@@ -50,7 +48,9 @@ import {
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { newDesc } from "./generator.ts";
 import {
   TRACKS_RUNGS,

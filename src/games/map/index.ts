@@ -30,8 +30,24 @@ import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/contract/types.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
-import { markAllPress, type PointerAction } from "../../engine/hint-gesture.ts";
-import { colorKeys, digitKeyCode } from "../../engine/key-labels.ts";
+import { markAllPress, type PointerAction } from "../../engine/input/hint-gesture.ts";
+import { colorKeys, digitKeyCode } from "../../engine/input/key-labels.ts";
+import {
+  CURSOR_SELECT,
+  CURSOR_SELECT2,
+  digitOf,
+  isCursorMove,
+  isEraseKey,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  moveCursor,
+  PENCIL_MODE_BUTTON,
+  RIGHT_BUTTON,
+  RIGHT_DRAG,
+  RIGHT_RELEASE,
+  stripModifiers,
+} from "../../engine/input/pointer.ts";
 import {
   dragEnteredNoteTakingCell,
   type NoteEntry,
@@ -51,22 +67,6 @@ import {
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
-import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  digitOf,
-  isCursorMove,
-  isEraseKey,
-  LEFT_BUTTON,
-  LEFT_DRAG,
-  LEFT_RELEASE,
-  moveCursor,
-  PENCIL_MODE_BUTTON,
-  RIGHT_BUTTON,
-  RIGHT_DRAG,
-  RIGHT_RELEASE,
-  stripModifiers,
-} from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newMapDesc } from "./generator.ts";
 import {

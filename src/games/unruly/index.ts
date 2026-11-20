@@ -13,17 +13,17 @@ import type { Game, UiUpdate } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { type CellHint, describedHint } from "../../engine/described-hint.ts";
-import { transposeDimensions } from "../../engine/params.ts";
-import { PAIR_NAMES } from "../../engine/piece.ts";
-import { digitOf, newCursor, stripModifiers } from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { digitOf, newCursor, stripModifiers } from "../../engine/input/pointer.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
   verbGesture,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import { PAIR_NAMES } from "../../engine/piece.ts";
+import { registerGame } from "../../engine/registry.ts";
 import {
   type SaysById,
   STATED,

@@ -16,7 +16,7 @@ import {
   COL_FLASH_LEAD,
   COL_HINT_OUTLINE,
 } from "../../engine/color/roles.ts";
-import { newCursor } from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import {
   expectRing,

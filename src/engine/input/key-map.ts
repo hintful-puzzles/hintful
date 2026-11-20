@@ -7,7 +7,7 @@
  * between them: a game may test only a code something sends, and this is what
  * the keyboard sends (`emittable-keys.test.ts`).
  */
-import { PuzzleButton } from "./contract/types.ts";
+import { PuzzleButton } from "../contract/types.ts";
 
 export const puzzleKeyMap: Readonly<Record<string, PuzzleButton | number>> = {
   ArrowDown: PuzzleButton.CURSOR_DOWN,

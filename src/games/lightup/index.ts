@@ -20,19 +20,7 @@ import {
 import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { describedFiringHint } from "../../engine/described-firing-hint.ts";
-import {
-  dimensionParamConfig,
-  numberItem,
-  transposeDimensions,
-} from "../../engine/params.ts";
-import { newCursor } from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
-import {
-  SYMM_NONE,
-  SYMM_ROT2,
-  SYMM_ROT4,
-  SYMMETRY_CHOICES,
-} from "../../engine/symmetric-blacks.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   letterKey,
@@ -40,7 +28,19 @@ import {
   squareGrid,
   type TargetVerbs,
   verbGesture,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import {
+  dimensionParamConfig,
+  numberItem,
+  transposeDimensions,
+} from "../../engine/params.ts";
+import { registerGame } from "../../engine/registry.ts";
+import {
+  SYMM_NONE,
+  SYMM_ROT2,
+  SYMM_ROT4,
+  SYMMETRY_CHOICES,
+} from "../../engine/symmetric-blacks.ts";
 import {
   RULES_OUT,
   SAYS_EACH,

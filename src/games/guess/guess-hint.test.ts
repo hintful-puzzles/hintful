@@ -13,14 +13,14 @@ import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { GAME_OVER } from "../../engine/contract/hint-refusal.ts";
-import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
+import { CLEAR_BUTTON } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT,
   LEFT_RELEASE,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";

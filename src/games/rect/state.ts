@@ -22,13 +22,13 @@ import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { Rect } from "../../engine/contract/types.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
 import {
   AREA_TOO_LARGE,
   endParams,
   formatG,
   parseLeadingFloat,
 } from "../../engine/params.ts";
-import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import type { TileCache } from "../../engine/tile-cache.ts";
 import * as rect from "../../generated/games/rect/rect.compiled.ts";

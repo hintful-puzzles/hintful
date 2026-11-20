@@ -5,10 +5,10 @@
  * build can import it; the registry must be filled before a page is asked for.
  */
 
+import { TOUCH_PLACEHOLDER } from "../engine/input/touch-help.ts";
 import { PARAMETERS_PLACEHOLDER } from "../engine/param-help.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { rulesetField } from "../engine/ruleset.ts";
-import { TOUCH_PLACEHOLDER } from "../engine/touch-help.ts";
 import { puzzleDataMap } from "../puzzle/catalog.ts";
 import type { HelpJson } from "./description.ts";
 import { gameHelpPage } from "./help-page.ts";

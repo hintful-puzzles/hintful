@@ -26,17 +26,17 @@ import {
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import { transposeDimensions } from "../../engine/params.ts";
-import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
-import { isMouseDown, newCursor, stripModifiers } from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { isMouseDown, newCursor, stripModifiers } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   rulingOut,
   squareGrid,
   type TargetVerbs,
   verbGesture,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
+import { registerGame } from "../../engine/registry.ts";
 import {
   SAYS_KINDS,
   type SaysById,

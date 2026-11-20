@@ -30,7 +30,7 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import type { Game } from "../engine/contract/game.ts";
-import { CURSOR_RIGHT, newCursor } from "../engine/pointer.ts";
+import { CURSOR_RIGHT, newCursor } from "../engine/input/pointer.ts";
 import { randomNew } from "../engine/random/index.ts";
 import {
   REGISTERED_GAME_COUNT,

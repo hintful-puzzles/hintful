@@ -53,7 +53,11 @@ import {
 } from "./board/square-edges.ts";
 import { UI_UPDATE, type UiUpdate } from "./contract/game.ts";
 import type { Point } from "./contract/types.ts";
-import { click, drag as dragGesture, type PointerAction } from "./hint-gesture.ts";
+import {
+  click,
+  drag as dragGesture,
+  type PointerAction,
+} from "./input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -73,7 +77,7 @@ import {
   RIGHT_RELEASE,
   showCursor,
   stripModifiers,
-} from "./pointer.ts";
+} from "./input/pointer.ts";
 import {
   beginSweep,
   dragMarkVerbs,
@@ -81,7 +85,7 @@ import {
   sweepOpen,
   sweepTo,
   type TargetVerbs,
-} from "./target-verb.ts";
+} from "./input/target-verb.ts";
 
 // --- what an edge holds -----------------------------------------------------
 

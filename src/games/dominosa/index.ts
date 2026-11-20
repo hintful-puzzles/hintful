@@ -23,7 +23,6 @@ import type {
   ReferenceItem,
   ReferenceModel,
 } from "../../engine/contract/types.ts";
-import { numberItem } from "../../engine/params.ts";
 import {
   digitOf,
   gridCursorMove,
@@ -31,15 +30,16 @@ import {
   newCursor,
   RIGHT_BUTTON,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+} from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   rulingOut,
   type TargetGeometry,
   type TargetVerbs,
   verbGesture,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { numberItem } from "../../engine/params.ts";
+import { registerGame } from "../../engine/registry.ts";
 import { newDominosaDesc } from "./generator.ts";
 import {
   DOMINOSA_RUNGS,

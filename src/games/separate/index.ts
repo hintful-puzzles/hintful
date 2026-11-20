@@ -27,10 +27,10 @@ import {
 import type { Game, UiUpdate } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
+import { interpretTargetVerbs } from "../../engine/input/target-verb.ts";
 import { transposeDimensions } from "../../engine/params.ts";
-import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { interpretTargetVerbs } from "../../engine/target-verb.ts";
 import { newSeparateDesc } from "./generator.ts";
 import {
   SEPARATE_RUNGS,

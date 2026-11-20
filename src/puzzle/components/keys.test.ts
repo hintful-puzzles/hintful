@@ -13,7 +13,7 @@
 import { signal } from "@lit-labs/signals";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { KeyLabel, KeyStatus } from "../../engine/contract/types.ts";
-import { pencilModeKey } from "../../engine/key-labels.ts";
+import { pencilModeKey } from "../../engine/input/key-labels.ts";
 import { cssColorToOKLCH, oklchToCSSColor } from "../../utils/color.ts";
 import { PuzzleContext } from "./context.ts";
 import "./keys.ts";

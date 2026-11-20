@@ -16,7 +16,7 @@ import {
   LEFT_BUTTON,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";

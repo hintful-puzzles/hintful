@@ -13,9 +13,8 @@ import { rejectMove } from "../../engine/contract/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { drag } from "../../engine/hint-gesture.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/index.ts";
-import { transposeDimensions } from "../../engine/params.ts";
+import { drag } from "../../engine/input/hint-gesture.ts";
 import {
   cursorDelta,
   LEFT_BUTTON,
@@ -24,7 +23,8 @@ import {
   MOD_NUM_KEYPAD,
   numpadDirection,
   stripModifiers,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { solveBySearch } from "../../engine/search-outcome.ts";
 import { newSokobanDesc } from "./generator.ts";

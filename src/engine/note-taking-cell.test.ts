@@ -34,6 +34,7 @@ import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import { UI_UPDATE } from "./contract/game.ts";
 import type { Rect } from "./contract/types.ts";
+import { LEFT_BUTTON, LEFT_RELEASE, newCursor, RIGHT_BUTTON } from "./input/pointer.ts";
 import {
   type CellEntry,
   type CellHighlight,
@@ -51,7 +52,6 @@ import {
   releaseHighlightAfterEntry,
   winHighlight,
 } from "./note-taking-cell.ts";
-import { LEFT_BUTTON, LEFT_RELEASE, newCursor, RIGHT_BUTTON } from "./pointer.ts";
 import {
   builtGames,
   enrolledIn,

@@ -5,13 +5,13 @@ import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,
   numberItem,
 } from "../../engine/params.ts";
 import { dims, num, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import * as samegame from "../../generated/games/samegame/samegame.compiled.ts";
 

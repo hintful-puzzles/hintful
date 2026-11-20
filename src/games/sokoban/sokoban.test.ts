@@ -20,14 +20,14 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";

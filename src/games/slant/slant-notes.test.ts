@@ -18,7 +18,7 @@ import {
   newCursor,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

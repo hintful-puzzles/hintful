@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { TOUCH_PLACEHOLDER } from "../engine/input/touch-help.ts";
 import { PARAMETERS_PLACEHOLDER } from "../engine/param-help.ts";
-import { TOUCH_PLACEHOLDER } from "../engine/touch-help.ts";
 import type { HelpJson } from "./description.ts";
 import { renderHelpPage } from "./help-page.ts";
 

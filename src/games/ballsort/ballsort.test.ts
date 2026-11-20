@@ -10,7 +10,7 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { ballsortGame } from "./index.ts";
 import { newDrawState, tubeCenter } from "./render.ts";

@@ -17,13 +17,13 @@ import {
 } from "../../engine/contract/game.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { isMouseDown, newCursor } from "../../engine/input/pointer.ts";
 import {
   type EdgeMistake,
   edgeMistakes,
   lineDrawing,
 } from "../../engine/line-drawing.ts";
 import { transposeDimensions } from "../../engine/params.ts";
-import { isMouseDown, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { dictionary } from "./dictionary.ts";
 import { newWordtrailDesc } from "./generator.ts";

@@ -12,7 +12,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { Midend } from "../../engine/index.ts";
-import { paramsError } from "../../engine/params.ts";
 import {
   LEFT_BUTTON,
   LEFT_DRAG,
@@ -20,7 +19,8 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { paramsError } from "../../engine/params.ts";
 import { type RandomState, randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

@@ -21,10 +21,7 @@ import {
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
-import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
-import { Midend } from "../../engine/midend.ts";
-import { presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
+import { CLEAR_BUTTON } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -39,7 +36,10 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend.ts";
+import { presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { newRomeDesc } from "./generator.ts";

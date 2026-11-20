@@ -2,7 +2,7 @@
 // new game, a mouse edge toggle, undo/redo, the Solve command, a
 // save/load round-trip, and the mistake count on a fresh board.
 import { describe, expect, it } from "vitest";
-import { LEFT_BUTTON } from "../../engine/pointer.ts";
+import { LEFT_BUTTON } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

@@ -32,7 +32,15 @@ import {
   revealEntry,
   setMoves,
 } from "../../engine/entry-mistakes.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeys } from "../../engine/input/key-labels.ts";
+import {
+  CURSOR_SELECT2,
+  digitOf,
+  gridCursorMove,
+  isCursorMove,
+  isEraseKey,
+  stripModifiers,
+} from "../../engine/input/pointer.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -45,14 +53,6 @@ import {
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
-import {
-  CURSOR_SELECT2,
-  digitOf,
-  gridCursorMove,
-  isCursorMove,
-  isEraseKey,
-  stripModifiers,
-} from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NAMES } from "../../generated/games/seismic/seismic.compiled.ts";
 import { maxGeneratedRegionSize, newSeismicDesc } from "./generator.ts";

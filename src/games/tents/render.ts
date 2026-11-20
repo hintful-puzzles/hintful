@@ -50,7 +50,7 @@ import {
   type MarkCell,
   MarkOutlines,
 } from "../../engine/hint-mark.ts";
-import { LEFT_BUTTON } from "../../engine/pointer.ts";
+import { LEFT_BUTTON } from "../../engine/input/pointer.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";

@@ -14,7 +14,7 @@ import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
-import { CURSOR_DOWN, LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
+import { CURSOR_DOWN, LEFT_BUTTON, newCursor } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";

@@ -51,7 +51,7 @@ import { glyphFont } from "./draw.ts";
 import { drawEdgeHints, type EdgeHint, edgeHintWords } from "./edge-hint.ts";
 import { hatchPeriod } from "./hatch.ts";
 import { drawMarkSides, MARK_ALL } from "./hint-mark.ts";
-import type { GridCursor } from "./pointer.ts";
+import type { GridCursor } from "./input/pointer.ts";
 import { textBox } from "./ring.ts";
 import { TileCache } from "./tile-cache.ts";
 import { WIN_BODY, WIN_LEAD, type WinTone } from "./win-wave.ts";

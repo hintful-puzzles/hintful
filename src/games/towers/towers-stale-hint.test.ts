@@ -15,14 +15,14 @@
  * (re-)display that the displayed strike names only live candidates.
  */
 import { describe, expect, it } from "vitest";
-import { Midend } from "../../engine/midend.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
   CURSOR_SELECT,
   CURSOR_UP,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { deepBudget } from "../../engine/testing/slow.ts";
 import { newTowersDesc } from "./generator.ts";

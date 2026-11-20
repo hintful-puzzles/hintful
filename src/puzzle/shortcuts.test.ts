@@ -18,7 +18,7 @@
  *   table lists first wins, in a file where order is otherwise meaningless.
  */
 import { describe, expect, it } from "vitest";
-import { CURSOR_RIGHT } from "../engine/pointer.ts";
+import { CURSOR_RIGHT } from "../engine/input/pointer.ts";
 import { REGISTERED_GAMES, REGISTERED_IDS } from "../engine/testing/enrollment.ts";
 import { type AnyGame, probeBoard } from "../engine/testing/input-probe.ts";
 import { inSweep } from "../engine/testing/slow.ts";

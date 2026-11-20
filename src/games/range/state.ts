@@ -25,10 +25,10 @@ import {
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { SHADED_NAME } from "../../engine/piece.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import * as range from "../../generated/games/range/range.compiled.ts";
 
 // --- cells -----------------------------------------------------------------

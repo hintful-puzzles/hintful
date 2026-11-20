@@ -12,8 +12,7 @@ import type { Sentence } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
-import { transposeDimensions } from "../../engine/params.ts";
+import { click, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -30,7 +29,8 @@ import {
   newCursor,
   RIGHT_BUTTON,
   showCursor,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   planSlides,

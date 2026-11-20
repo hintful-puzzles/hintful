@@ -21,7 +21,7 @@
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import type { Size } from "../engine/contract/types.ts";
-import { takesNotes } from "../engine/key-labels.ts";
+import { takesNotes } from "../engine/input/key-labels.ts";
 import {
   type PencilIndicatorBox,
   pencilIndicatorBox,

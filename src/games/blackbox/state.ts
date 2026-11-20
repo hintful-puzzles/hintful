@@ -27,9 +27,9 @@ import {
   type GridSpace,
   traceBeam,
 } from "../../engine/describe-runtime.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { unreadParams } from "../../engine/params.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { units } from "../../generated/games/blackbox/blackbox.compiled.ts";
 

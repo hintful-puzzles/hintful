@@ -29,8 +29,8 @@ import {
   LEFT_BUTTON,
   newCursor,
   RIGHT_BUTTON,
-} from "./pointer.ts";
-import { interpretTargetVerbs } from "./target-verb.ts";
+} from "./input/pointer.ts";
+import { interpretTargetVerbs } from "./input/target-verb.ts";
 
 const TS = 32;
 const grid = (w: number, h: number, borders?: Uint8Array): BorderGridState => ({

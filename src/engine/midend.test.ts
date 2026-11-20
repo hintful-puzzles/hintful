@@ -26,10 +26,7 @@ import {
   type FakeState,
   fakeGame,
 } from "./fake-game.ts";
-import { click, drag, key } from "./hint-gesture.ts";
-import { Midend } from "./midend.ts";
-import { SHOW_TIMER_PREF } from "./midend-prefs.ts";
-import { endParams } from "./params.ts";
+import { click, drag, key } from "./input/hint-gesture.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -47,9 +44,16 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
   stripModifiers,
-} from "./pointer.ts";
+} from "./input/pointer.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+} from "./input/target-verb.ts";
+import { Midend } from "./midend.ts";
+import { SHOW_TIMER_PREF } from "./midend-prefs.ts";
+import { endParams } from "./params.ts";
 import { decodeSave, encodeSave } from "./save.ts";
-import { interpretTargetVerbs, squareGrid, type TargetVerbs } from "./target-verb.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";

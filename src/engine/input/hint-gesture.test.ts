@@ -10,8 +10,8 @@
  * firing.
  */
 import { describe, expect, it } from "vitest";
-import { HINT_GAMES } from "./testing/hint-games.ts";
-import { walkHints } from "./testing/hint-walk.ts";
+import { HINT_GAMES } from "../testing/hint-games.ts";
+import { walkHints } from "../testing/hint-walk.ts";
 
 /** Far above any plan a gate preset's board needs, so only a loop trips it. */
 const MAX_STEPS = 2000;

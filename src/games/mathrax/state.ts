@@ -27,8 +27,8 @@ import {
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { type ClueList, clueList, latinSpace } from "../../engine/describe-runtime.ts";
+import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
 import { endParams, paramsLetter } from "../../engine/params.ts";
-import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------

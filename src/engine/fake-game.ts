@@ -16,8 +16,8 @@
 import { DESC_MALFORMED, descValue } from "./contract/desc-error.ts";
 import type { Game } from "./contract/game.ts";
 import { DEDUCTION_EXHAUSTED } from "./contract/hint-refusal.ts";
-import { click } from "./hint-gesture.ts";
-import { LEFT_BUTTON, RIGHT_BUTTON } from "./pointer.ts";
+import { click } from "./input/hint-gesture.ts";
+import { LEFT_BUTTON, RIGHT_BUTTON } from "./input/pointer.ts";
 import { randomUpto } from "./random/index.ts";
 
 export interface FakeParams {

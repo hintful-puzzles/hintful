@@ -15,7 +15,7 @@ import { SignalWatcher } from "@lit-labs/signals";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import type { KeyLabel } from "../../engine/contract/types.ts";
-import { PENCIL_MODE_BUTTON } from "../../engine/pointer.ts";
+import { PENCIL_MODE_BUTTON } from "../../engine/input/pointer.ts";
 import { settings } from "../../store/settings.ts";
 import { cssStackedButton, cssWATweaks } from "../../utils/css.ts";
 import { awaitsFirstBoard } from "../board-commands.ts";

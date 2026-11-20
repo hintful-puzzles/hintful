@@ -30,18 +30,18 @@ import type {
 } from "../../engine/contract/types.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  CURSOR_UP,
+} from "../../engine/input/pointer.ts";
+import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
   pencilIndicatorCanvas,
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import {
-  CURSOR_DOWN,
-  CURSOR_LEFT,
-  CURSOR_RIGHT,
-  CURSOR_UP,
-} from "../../engine/pointer.ts";
 import { type RingClear, textBox } from "../../engine/ring.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import { type Flash, sweepRanks, WIN_LEAD } from "../../engine/win-wave.ts";

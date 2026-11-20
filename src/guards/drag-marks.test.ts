@@ -12,7 +12,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { PENCIL_MODE_BUTTON } from "../engine/pointer.ts";
+import { PENCIL_MODE_BUTTON } from "../engine/input/pointer.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 import type { AnyGame } from "../engine/testing/input-probe.ts";

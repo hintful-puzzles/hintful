@@ -4,7 +4,7 @@ import { css, html, LitElement, nothing } from "lit";
 import { customElement, eventOptions, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import type { KeyLabel, KeyStatus } from "../../engine/contract/types.ts";
-import { PENCIL_MODE_BUTTON } from "../../engine/pointer.ts";
+import { PENCIL_MODE_BUTTON } from "../../engine/input/pointer.ts";
 import { cssColorToOKLCH } from "../../utils/color.ts";
 import { cssStackedButton, cssWATweaks } from "../../utils/css.ts";
 import { puzzleContext } from "../contexts.ts";

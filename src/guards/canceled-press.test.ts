@@ -12,7 +12,7 @@
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import type { Point } from "../engine/contract/types.ts";
-import { LEFT_BUTTON, LEFT_RELEASE } from "../engine/pointer.ts";
+import { LEFT_BUTTON, LEFT_RELEASE } from "../engine/input/pointer.ts";
 import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,

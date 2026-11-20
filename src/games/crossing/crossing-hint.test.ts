@@ -19,7 +19,7 @@ import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
-import { LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
+import { LEFT_BUTTON, newCursor } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";

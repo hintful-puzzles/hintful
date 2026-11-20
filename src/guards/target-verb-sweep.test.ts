@@ -20,7 +20,7 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
-} from "../engine/pointer.ts";
+} from "../engine/input/pointer.ts";
 import {
   controlsMarkdown,
   interpretTargetVerbs,
@@ -30,7 +30,7 @@ import {
   sweepPending,
   type TargetVerbs,
   type TargetVerbUi,
-} from "../engine/target-verb.ts";
+} from "../engine/input/target-verb.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 import { expectDragRepeatsThePress } from "../engine/testing/sweep-probe.ts";
 

@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
-import { newCursor } from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { type Cell, EMPTY as E, ONE as O, ZERO as Z } from "./constants.ts";

@@ -5,7 +5,7 @@
 // (and settles them at animation end), and the win flash across the tiles.
 import { describe, expect, it } from "vitest";
 import { COL_CURSOR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
-import { newCursor } from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import {

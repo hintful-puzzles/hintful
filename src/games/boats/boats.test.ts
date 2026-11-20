@@ -20,8 +20,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { RetryLimitExceeded } from "../../engine/contract/retry-limit.ts";
-import { Midend } from "../../engine/midend.ts";
-import { paramsError, UnreadableParams } from "../../engine/params.ts";
 import {
   BACKSPACE,
   CURSOR_DOWN,
@@ -35,7 +33,9 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend.ts";
+import { paramsError, UnreadableParams } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

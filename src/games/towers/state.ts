@@ -14,10 +14,10 @@ import type { Point } from "../../engine/contract/types.ts";
 import { isDigit } from "../../engine/decimal.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, paramsCodec, size } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
-import { newCursor } from "../../engine/pointer.ts";
 import * as towers from "../../generated/games/towers/towers.compiled.ts";
 
 /**

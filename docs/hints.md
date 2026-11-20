@@ -941,9 +941,9 @@ On the candidate walk the game writes no stamp
 
 Make every step's move one the pointer makes: a tap, a long press, a drag or
 an on-screen key. The midend never applies a step's move. `executeHint` asks
-`hintGesture` ([`target-verb.ts`](../src/engine/target-verb.ts)) for the
+`hintGesture` ([`target-verb.ts`](../src/engine/input/target-verb.ts)) for the
 gesture, the game's `hint.gesture` or clicks on its `hint.targets`
-([`hint-gesture.ts`](../src/engine/hint-gesture.ts) has the actions), sends it through
+([`hint-gesture.ts`](../src/engine/input/hint-gesture.ts) has the actions), sends it through
 `interpretMove`, and hands each move it makes to `hint.keepTrack`. A move off
 the step, a key no on-screen control sends, or a gesture that ends before the
 step completes throws, and `hint-gesture.test.ts` walks every plan.

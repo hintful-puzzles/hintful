@@ -3,7 +3,7 @@
  * built on them. The codes match `PuzzleButton` in `./types.ts`.
  */
 
-import type { Point } from "./contract/types.ts";
+import type { Point } from "../contract/types.ts";
 
 // --- button codes (matching PuzzleButton values) -------------------
 

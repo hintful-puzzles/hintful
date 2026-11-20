@@ -14,7 +14,6 @@ import {
 } from "../../engine/contract/difficulty.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { Point, Size } from "../../engine/contract/types.ts";
-import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   type Game,
   type HintStep,
@@ -25,9 +24,8 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
-import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
+import { drag, type PointerAction } from "../../engine/input/hint-gesture.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -41,8 +39,7 @@ import {
   newCursor,
   RIGHT_BUTTON,
   stripModifiers,
-} from "../../engine/pointer.ts";
-import type { RandomState } from "../../engine/random/index.ts";
+} from "../../engine/input/pointer.ts";
 import {
   beginSweep,
   buttonVerb,
@@ -54,7 +51,10 @@ import {
   type TargetGeometry,
   type TargetVerbs,
   verbClicks,
-} from "../../engine/target-verb.ts";
+} from "../../engine/input/target-verb.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
+import type { RandomState } from "../../engine/random/index.ts";
 import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import { newGameDesc } from "./generator.ts";
 import {

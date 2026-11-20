@@ -23,10 +23,8 @@ import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.
 import type { KeyLabel, Point } from "../../engine/contract/types.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
-import { colorKeysZeroIsTen } from "../../engine/key-labels.ts";
-import { modifierItem } from "../../engine/modifier.ts";
-import { numberItem } from "../../engine/params.ts";
+import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
+import { colorKeysZeroIsTen } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -38,7 +36,9 @@ import {
   newCursor,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
+import { modifierItem } from "../../engine/modifier.ts";
+import { numberItem } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   GUESS_RUNGS,
@@ -151,7 +151,7 @@ function clearMarks(state: GuessState, pos: number): GuessMove | null {
 
 /**
  * ASCII carriage return — the Submit key's own code. This frontend maps a
- * physical Enter to `CURSOR_SELECT` (`engine/key-map.ts`),
+ * physical Enter to `CURSOR_SELECT` (`engine/input/key-map.ts`),
  * so 13 arrives from the panel and from nowhere else, and the two spellings of
  * "send this row" stay distinguishable: Enter submits from the cursor's submit
  * position, this key submits from wherever the player is.

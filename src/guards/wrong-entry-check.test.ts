@@ -59,9 +59,9 @@ import { hasHint } from "../engine/contract/game.ts";
 import { CONTRADICTION_UNLOCALIZED } from "../engine/contract/hint-refusal.ts";
 import { NOT_STARTED } from "../engine/contract/solve-failure.ts";
 import { hintFinishes } from "../engine/hint-finishes.ts";
+import { hintGesture } from "../engine/input/target-verb.ts";
 import { Midend } from "../engine/midend.ts";
 import { randomNew, randomUpto } from "../engine/random/index.ts";
-import { hintGesture } from "../engine/target-verb.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {
   type AnyGame,

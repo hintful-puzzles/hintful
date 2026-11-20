@@ -117,7 +117,7 @@ this list to a page you write or change; items marked *checked* are in
 
 Touch needs no item. The renderer writes `{{touch}}` as the first paragraph
 of every Controls section, and the build says a tap, a long press and the
-on-screen keys from what the game declares (`src/engine/touch-help.ts`). So
+on-screen keys from what the game declares (`src/engine/input/touch-help.ts`). So
 write a page's own Controls for a mouse and keyboard.
 
 ## A generated section reads the game when it renders

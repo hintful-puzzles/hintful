@@ -6,14 +6,14 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
-import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
+import { CLEAR_BUTTON } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT,
   LEFT_BUTTON,
   LEFT_RELEASE,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
-} from "../../engine/pointer.ts";
+} from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave } from "../../engine/save.ts";
 import { type AnyGame, probeBoard } from "../../engine/testing/input-probe.ts";

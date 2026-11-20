@@ -33,13 +33,13 @@ import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,
   numberItem,
 } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
 import * as separate from "../../generated/games/separate/separate.compiled.ts";
 import { isSolved } from "./solver.ts";
 

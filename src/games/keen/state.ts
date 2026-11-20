@@ -34,10 +34,10 @@ import {
   latinSpace,
   partition,
 } from "../../engine/describe-runtime.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, flag, paramsCodec, size } from "../../engine/params-codec.ts";
-import type { GridCursor } from "../../engine/pointer.ts";
-import { newCursor } from "../../engine/pointer.ts";
 import * as keen from "../../generated/games/keen/keen.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------

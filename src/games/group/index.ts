@@ -58,14 +58,30 @@ import {
   gridCell,
   revealEntry,
 } from "../../engine/entry-mistakes.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   type LatinVocab,
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import { clearKey } from "../../engine/key-labels.ts";
+import { click, type PointerAction } from "../../engine/input/hint-gesture.ts";
+import { clearKey } from "../../engine/input/key-labels.ts";
+import {
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  CURSOR_SELECT2,
+  CURSOR_UP,
+  gridCursorMove,
+  isCursorMove,
+  isEraseKey,
+  isMouseDown,
+  isMouseDrag,
+  isMouseRelease,
+  LEFT_BUTTON,
+  LEFT_RELEASE,
+  MOD_SHFT,
+  stripModifiers,
+} from "../../engine/input/pointer.ts";
 import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import {
   DIFF_AMBIGUOUS,
@@ -85,22 +101,6 @@ import {
   candidateReadingPref,
   pencilKeepHighlightPref,
 } from "../../engine/pencil-prefs.ts";
-import {
-  CURSOR_LEFT,
-  CURSOR_RIGHT,
-  CURSOR_SELECT2,
-  CURSOR_UP,
-  gridCursorMove,
-  isCursorMove,
-  isEraseKey,
-  isMouseDown,
-  isMouseDrag,
-  isMouseRelease,
-  LEFT_BUTTON,
-  LEFT_RELEASE,
-  MOD_SHFT,
-  stripModifiers,
-} from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { statedParts, statedSentence } from "../../engine/stated.ts";
 import * as group from "../../generated/games/group/group.compiled.ts";

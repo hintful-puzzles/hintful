@@ -16,13 +16,13 @@
  * {@link DRAFT_HINT}.
  */
 
-import type { PointerAction } from "../hint-gesture.ts";
+import type { PointerAction } from "../input/hint-gesture.ts";
+import type { TargetVerbs } from "../input/target-verb.ts";
 import type { Modifier } from "../modifier.ts";
 import type { OnlyOf } from "../only.ts";
 import type { RandomState } from "../random/index.ts";
 import type { RingClear } from "../ring.ts";
 import type { Ruleset } from "../ruleset.ts";
-import type { TargetVerbs } from "../target-verb.ts";
 import type { Flash } from "../win-wave.ts";
 import type { DifficultyContract } from "./difficulty.ts";
 import type { HintRefusal, MarkedDeadEnd } from "./hint-refusal.ts";

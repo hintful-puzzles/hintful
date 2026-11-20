@@ -2,7 +2,7 @@
 // generated id through the Solve command, an honest move-by-move solve,
 // and the mistake overlay.
 import { describe, expect, it } from "vitest";
-import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
+import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import type { RangeHint } from "./hint.ts";

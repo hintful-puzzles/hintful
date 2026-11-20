@@ -61,7 +61,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { CLEAR_BUTTON, hasPencilArray } from "../engine/key-labels.ts";
+import { CLEAR_BUTTON, hasPencilArray } from "../engine/input/key-labels.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -78,7 +78,7 @@ import {
   LEFT_BUTTON,
   LEFT_RELEASE,
   MOD_MASK,
-} from "../engine/pointer.ts";
+} from "../engine/input/pointer.ts";
 import { randomNew } from "../engine/random/index.ts";
 import {
   REGISTERED_GAME_COUNT,

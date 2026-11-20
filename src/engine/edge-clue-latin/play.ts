@@ -21,15 +21,7 @@ import {
   revealEntry,
   setMoves,
 } from "../entry-mistakes.ts";
-import { clearKey } from "../key-labels.ts";
-import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../latin.ts";
-import { rowColRegions } from "../latin-hint.ts";
-import {
-  noOpEntryResult,
-  pressNoteTakingCell,
-  releaseHighlightAfterEntry,
-  toggleNoteTakingMode,
-} from "../note-taking-cell.ts";
+import { clearKey } from "../input/key-labels.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -43,8 +35,16 @@ import {
   moveCursor,
   RIGHT_BUTTON,
   stripModifiers,
-} from "../pointer.ts";
-import { beginSweep, dragMarkVerbs, sweepTo } from "../target-verb.ts";
+} from "../input/pointer.ts";
+import { beginSweep, dragMarkVerbs, sweepTo } from "../input/target-verb.ts";
+import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../latin.ts";
+import { rowColRegions } from "../latin-hint.ts";
+import {
+  noOpEntryResult,
+  pressNoteTakingCell,
+  releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
+} from "../note-taking-cell.ts";
 import { coord, type EdgeClueDrawState, fromCoord } from "./render.ts";
 import { solveEdgeClues } from "./solver.ts";
 import {
