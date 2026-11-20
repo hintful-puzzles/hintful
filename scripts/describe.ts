@@ -22,7 +22,7 @@ import {
 } from "node:fs";
 import { dirname } from "node:path";
 import { globSync } from "tinyglobby";
-import { WARN_GROWTH } from "../src/describe/compile.ts";
+import { WARN_GROWTH } from "../src/describe/compile-growth.ts";
 import { lintDescription } from "../src/describe/lint.ts";
 import { loadDescriptionFile } from "../src/describe/load.ts";
 import { unchecked } from "../src/describe/soundness.ts";

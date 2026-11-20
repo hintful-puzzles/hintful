@@ -69,7 +69,7 @@ const SORT_NAMES: Readonly<Record<string, Sort>> = {
 };
 
 /** The geometry a tiling's functions read: by function and the argument's
- * sort, the step and the sort it reaches (`tilingCall` in `compile.ts`). */
+ * sort, the step and the sort it reaches (`tilingCall` in `compile-geometry.ts`). */
 const GEOMETRY: Readonly<Record<string, Partial<Record<Sort, [Step, Sort]>>>> = {
   edges: {
     face: ["faceEdges", "edge"],

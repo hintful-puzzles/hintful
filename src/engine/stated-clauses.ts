@@ -1,6 +1,6 @@
 /**
  * The grammar of a stated clause, shared by the compiler that checks a
- * description's clauses (`describe/compile.ts`) and the renderer that speaks
+ * description's clauses (`describe/compile-stated.ts`) and the renderer that speaks
  * them (`stated.ts`). It imports nothing: the describe script runs it under
  * Node's type stripping.
  *

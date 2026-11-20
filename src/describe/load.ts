@@ -63,7 +63,7 @@ interface Saying {
  * technique's clauses replaced by the words of the breaks its formula reads,
  * each said where it is the one that held: `{if brokeStuck: …}`. The terms
  * those words read are added to the technique's, each read at the firing's
- * witness (`compile.ts`), which the technique then says.
+ * witness (`witnessOf` in `compile-expr.ts`), which the technique then says.
  */
 function withBreaks(data: DescriptionFile, path: string): DescriptionFile {
   if (!("techniques" in data) || !("breaks" in data)) return data;

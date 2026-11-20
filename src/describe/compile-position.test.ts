@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { CompileError } from "./compile.ts";
 import { compilePlanning } from "./compile-position.ts";
+import { CompileError } from "./compile-sorts.ts";
 import type { MoveJson, PlanningJson } from "./description.ts";
 
 /** A one-layer game on any grid, its one move `move`. */

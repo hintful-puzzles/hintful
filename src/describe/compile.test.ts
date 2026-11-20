@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { CompileError, compileGame, compileLibrary, maskHas } from "./compile.ts";
+import { compileGame, compileLibrary } from "./compile.ts";
+import { CompileError, maskHas } from "./compile-sorts.ts";
 import { isFormal, isLibrary, parseTechnique } from "./description.ts";
 import { lintDescription } from "./lint.ts";
 import { loadDescriptionFile } from "./load.ts";

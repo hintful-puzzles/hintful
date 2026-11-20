@@ -6,26 +6,25 @@
  * position and the dead-end claims, all closed over a board in `rules`,
  * which returns the engine's `PositionRules`.
  *
- * Terms are compiled by `compile.ts`'s expression compiler with the position
+ * Terms are compiled by the expression compiler (`compile-expr.ts`) with the position
  * as what a formula reads: a layer named as a function of a cell is that
  * layer's value there (`p.value[c]`). A move's assignments read `p` and write
  * a copy of it, so they are simultaneous.
  */
 
+import { HEADER } from "./compile.ts";
+import { bindingLoops, compileExpr } from "./compile-expr.ts";
 import {
-  bindingLoops,
   CompileError,
-  compileExpr,
   type Env,
   expect,
-  HEADER,
   type LayerSort,
   Out,
   type Sort,
   show,
-  stepsBlock,
   type Val,
-} from "./compile.ts";
+} from "./compile-sorts.ts";
+import { stepsBlock } from "./compile-stated.ts";
 import {
   type AssignJson,
   type LayerJson,

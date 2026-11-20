@@ -6,7 +6,7 @@
  *
  * A clause is whole, with slots, and never assembled from fragments by English
  * grammar, so the words are data and a second language would be a second set
- * of clauses. `describe/compile.ts` checks every slot against the technique's
+ * of clauses. `describe/compile-stated.ts` checks every slot against the technique's
  * terms when the description is compiled, so a clause cannot name what its
  * technique does not state.
  */

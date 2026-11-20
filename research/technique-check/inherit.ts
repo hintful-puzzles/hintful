@@ -14,7 +14,8 @@
  * `clash`).
  */
 
-import { CompileError, compileGame } from "../../src/describe/compile.ts";
+import { compileGame } from "../../src/describe/compile.ts";
+import { CompileError } from "../../src/describe/compile-sorts.ts";
 import {
   type Definition,
   type DescriptionFile,

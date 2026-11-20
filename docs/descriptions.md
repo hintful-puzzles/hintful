@@ -235,8 +235,8 @@ Towers' line says `distinct(f(x) over x in L)`.
 `max(B of t)`, `the(B)`, `distinct(t over B)`, `set(t over B)`. Without
 `of`, a term is the last binder.
 
-**Names and functions** are the ones [`compile.ts`](../src/describe/compile.ts)
-knows, over the space in
+**Names and functions** are the ones
+[`compile-geometry.ts`](../src/describe/compile-geometry.ts) knows, over the space in
 [`describe-runtime.ts`](../src/engine/describe-runtime.ts), whose `GridSpace`
 says what each set holds and in which order. The compiler refuses a name or
 function it does not have, naming it; the interpreter reads more
@@ -537,7 +537,7 @@ can be false of both. The compiled code prevents this, never the statement.
 Before a binding's premise, it reads again what its binders read of the
 marks: that its element is still in its set, that a `=` still names what
 its term reads, that a `where` still holds (`rereads` in
-[`compile.ts`](../src/describe/compile.ts)). A read is made again only where
+[`compile-technique.ts`](../src/describe/compile-technique.ts)). A read is made again only where
 a loop opened since lets another binding's facts come between, and only
 where it reads the marks. A binding whose read fails is passed over with
 every binding that read fails for. The run goes on with the next element
@@ -550,7 +550,7 @@ The reads are made again only where a fact has been made since. The marks
 count the facts that change each kind of mark (`Marks.made`, its kinds
 `MADE`), and the count is taken where the binding first reads that kind.
 What a line reads is taken from the members of the marks `b` it names
-(`READS` in `compile.ts`). Any other mention of `b`, as when a function of
+(`READS` in `compile-technique.ts`). Any other mention of `b`, as when a function of
 the runtime is given the marks, reads every kind. A new member of the marks
 is added there, or it is read as every kind, which is safe and costs only
 reads made again.
@@ -642,7 +642,7 @@ than a profile and the commit before (2026-11-08,
 **The compiler states how each technique grows with the board**, above its
 function in the compiled module: the loops round its dearest read over the
 board (`n`) or a line (`n^0.5`), and the walks it makes of either
-(`techniqueGrowth` in `compile.ts`). A read a kept structure answers is a
+(`techniqueGrowth` in `compile-growth.ts`). A read a kept structure answers is a
 lookup. `npm run describe` lists every technique from `n^2.5`, and the
 compiler refuses one past `n^3`; the module's comparison in the gate holds
 the rest, so a statement that grows steeper shows in its diff. A steep
@@ -764,7 +764,7 @@ author writing for speed uses these:
   moved by a point's change as a placement touches it. The compiler does it
   for an aggregate over `linked(k)` whose term reads the marks only through
   `value` and `known` of the squares round its point, and no name of the
-  technique (`linkedAggregate` in `compile.ts`); any other term walks the
+  technique (`linkedAggregate` in `compile-expr.ts`); any other term walks the
   group at each read, which made Slant's `deadEnd` quadratic in the board.
   Slant's 30×30 solves took half the time, on the same boards, once it was
   kept (2026-11-07, `make-descriptions-zero-cost`). A structure the runtime
@@ -825,14 +825,14 @@ author writing for speed uses these:
   conclusion is made once**: `bulbs(c)` stated three times in Light Up's
   `square` counts once. The compiler shares one only where the code that
   made it has surely run since the last fact, so a read after a `place`, or
-  inside a loop, makes it again (`Shared` in `compile.ts`). Light Up's deals
+  inside a loop, makes it again (`Shared` in `compile-sorts.ts`). Light Up's deals
   took 0.96 of the time, Magnets' solves 0.89 (2026-11-07). A technique's
   binders share theirs the same way, since no fact is made among them:
   Bridges' `cap(c, y)` reads `has(c, y)` three times in one `where`.
 - **A definition that reads the candidates, of one or two elements, whose
   loops nest two deep through the definitions it reads, is kept by the rung
   that reads it** until a firing changes the marks, as the rung keeps the
-  candidates themselves (`rungKept` in `compile.ts`). It compiles once as a
+  candidates themselves (`rungKept` in `compile-expr.ts`). It compiles once as a
   function of the module, which the rung passes its candidates to. Bridges'
   `need(c)`, `room(c, y)` and the reads under them are asked for an island
   and each of its lines by every line near it; kept, Bridges' module fell
