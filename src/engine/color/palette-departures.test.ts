@@ -6,13 +6,15 @@
  * stated reason tells them apart. This guard
  * reads every game's palette source and, for each slot whose *name* says what it
  * means — a cursor, a held or dragged item, a hint mark, a mistake — requires
- * either the shared role or a reason on the assignment line or the line above
- * it.
+ * either the shared role or a reason: a comment on the assignment, or on the
+ * line above it.
  *
  * Keyed on the slot's index name because that is the only shape a palette
  * assignment has: `out[COL_CURSOR] = X` carries its meaning in `COL_CURSOR` and
  * nowhere else. A game that names a cursor slot something without "CURSOR" in it
- * is not seen here: that is a naming question, not a color one.
+ * is not seen here: that is a naming question, not a color one. The value is
+ * read by what it refers to: `RED` is the export its identifier was imported
+ * as, whatever it is called here.
  *
  * Three meanings the palette has a role for are left out, because no slot name
  * says them. `COL_DONE` is a retired clue in Towers and the rim of the solved
@@ -21,9 +23,11 @@
  * `COL_BLACK` in one game and `COL_MINE` in the next. A check keyed on those
  * names would ask a reason of an assignment that departs from nothing.
  */
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { gameSourceFiles, REGISTERED_IDS } from "../testing/enrollment.ts";
+import { gameSourceFiles, gameSyntax, REGISTERED_IDS } from "../testing/enrollment.ts";
 import { colorToOKLCH } from "../testing/oklch.ts";
+import { importedNames, nodesOf, parsed, where } from "../testing/syntax.ts";
 import type { Color } from "../types.ts";
 import * as colors from "./colors.ts";
 import * as palette from "./palette.ts";
@@ -41,74 +45,97 @@ const ROLES: Record<string, { slot: RegExp; roles: readonly string[] }> = {
   mistake: { slot: /ERR|MISTAKE|WRONG/, roles: ["ERROR", "ERROR_TEXT", "ERROR_WASH"] },
 };
 
+const PALETTE = "src/engine/color/palette.ts";
+const COLORS = "src/engine/color/colors.ts";
+
 interface Assignment {
   game: string;
-  file: string;
+  /** `path:line`. */
+  at: string;
   slot: string;
+  /** The export the value refers to, or its source when it is no import. */
   value: string;
-  line: number;
   explained: boolean;
 }
 
-/** `out[COL_X] = value;` / `ret[COL_X] = value;` — a palette assignment. */
-const ASSIGNMENT =
-  /^\s*(?:out|ret|colors|palette)\[(COL_[A-Z0-9_]+)\]\s*=\s*(.+?);\s*(\/\/.*)?$/;
+/** Whether a comment stands on `node`'s line or the line above it, or inside
+ * it: a leading comment starts on a line of its own, and a trailing one
+ * follows on the same line. */
+function commented(node: ts.Node): boolean {
+  const text = node.getSourceFile().text;
+  if ((ts.getLeadingCommentRanges(text, node.pos) ?? []).length > 0) return true;
+  if ((ts.getTrailingCommentRanges(text, node.end) ?? []).length > 0) return true;
+  const scanner = ts.createScanner(
+    ts.ScriptTarget.ESNext,
+    false,
+    ts.LanguageVariant.Standard,
+    text,
+    undefined,
+    node.getStart(),
+    node.end - node.getStart(),
+  );
+  for (let k = scanner.scan(); k !== ts.SyntaxKind.EndOfFileToken; k = scanner.scan())
+    if (
+      k === ts.SyntaxKind.SingleLineCommentTrivia ||
+      k === ts.SyntaxKind.MultiLineCommentTrivia
+    )
+      return true;
+  return false;
+}
 
-/** `value, // COL_X ...` — the positional form (Bridges, Fifteen and
- * others), where the slot is named in the trailing comment. That comment is the *label*, not a reason: only text beyond the
- * label counts as one. */
-const POSITIONAL = /^\s*([^/]+?),\s*\/\/\s*(?:\d+\s+)?(COL_[A-Z0-9_]+)(.*)$/;
+/** The export `expr` refers to through a named import, or its source. */
+function exportedAs(expr: ts.Expression): string {
+  if (!ts.isIdentifier(expr)) return expr.getText();
+  for (const st of expr.getSourceFile().statements) {
+    const b = ts.isImportDeclaration(st) ? st.importClause?.namedBindings : undefined;
+    if (b === undefined || !ts.isNamedImports(b)) continue;
+    const el = b.elements.find((e) => e.name.text === expr.text);
+    if (el) return (el.propertyName ?? el.name).text;
+  }
+  return expr.text;
+}
 
-/** The role slots `rolePalette` fills, which no game assigns: where a slot
- * holding its role is found once every game takes the role from there. */
-const ROLE_SOURCES: [string, { path: string; text: string }[]][] = [
-  [
-    "roles",
-    Object.entries(
-      import.meta.glob<string>("./roles.ts", {
-        query: "?raw",
-        import: "default",
-        eager: true,
-      }),
-    ).map(([path, text]) => ({ path, text })),
-  ],
-];
-
-function assignments(
-  sources: Iterable<
-    [string, readonly { path: string; text: string }[]]
-  > = gameSourceFiles,
-): Assignment[] {
+/** Every `x[COL_…] = value` in `trees`, under `game`. */
+function assignmentsIn(game: string, trees: readonly ts.SourceFile[]): Assignment[] {
   const found: Assignment[] = [];
-  for (const [game, files] of sources)
-    for (const { path: file, text: source } of files) {
-      const lines = source.split("\n");
-      lines.forEach((text, i) => {
-        const previous = lines[i - 1] ?? "";
-        const previousIsComment =
-          /^\s*\/\//.test(previous) || /\*\/\s*$/.test(previous);
-        const m = ASSIGNMENT.exec(text);
-        if (m) {
-          const [, slot, value, trailing] = m;
-          const explained =
-            trailing !== undefined || previousIsComment || /\/\*/.test(text);
-          found.push({ game, file, slot, value, line: i + 1, explained });
-          return;
-        }
-        const p = POSITIONAL.exec(text);
-        if (p) {
-          const [, value, slot, rest] = p;
-          const explained =
-            /\S/.test(rest.replace(/^\s*(\(.*?\))?\s*$/, "")) || previousIsComment;
-          found.push({ game, file, slot, value: value.trim(), line: i + 1, explained });
-        }
+  for (const sf of trees)
+    for (const n of nodesOf(sf)) {
+      if (
+        !ts.isBinaryExpression(n) ||
+        n.operatorToken.kind !== ts.SyntaxKind.EqualsToken ||
+        !ts.isElementAccessExpression(n.left) ||
+        !ts.isIdentifier(n.left.argumentExpression) ||
+        !n.left.argumentExpression.text.startsWith("COL_")
+      )
+        continue;
+      const statement = ts.isExpressionStatement(n.parent) ? n.parent : n;
+      found.push({
+        game,
+        at: where(n).replace(/^src\/games\//, ""),
+        slot: n.left.argumentExpression.text,
+        value: exportedAs(n.right),
+        explained: commented(statement),
       });
     }
   return found;
 }
 
+/** The role slots `rolePalette` fills, which no game assigns: where a slot
+ * holding its role is found once every game takes the role from there. */
+const roleSlots: Assignment[] = Object.entries(
+  import.meta.glob<string>("./roles.ts", {
+    query: "?raw",
+    import: "default",
+    eager: true,
+  }),
+).flatMap(([, text]) =>
+  assignmentsIn("roles", [parsed("src/engine/color/roles.ts", text)]),
+);
+
 describe("a departure from a shared role is stated at the assignment", () => {
-  const all = assignments();
+  const all = [...gameSourceFiles.keys()].flatMap((id) =>
+    assignmentsIn(id, gameSyntax(id)),
+  );
   const byRole = Object.entries(ROLES).map(([meaning, { slot, roles }]) => ({
     meaning,
     roles,
@@ -117,23 +144,15 @@ describe("a departure from a shared role is stated at the assignment", () => {
 
   it("finds the game sources and the meaningful slots at all", () => {
     // An unmatched glob yields `{}` and every assertion below passes over
-    // nothing. Every registered game contributes at least one assignment,
-    // including the ones that build their palette positionally, which the
-    // first shape alone could not see.
+    // nothing. Every registered game contributes at least one assignment.
     const games = new Set(all.map((a) => a.game));
     expect([...games].sort()).toEqual(REGISTERED_IDS);
     // Each meaning is found under its slot name, and found holding its role,
     // in a game or in the role slots: a name that matched nothing, or a value
     // the comparison below could not recognize, would leave that meaning
     // unchecked or every game in breach.
-    const roleSlots = assignments(ROLE_SOURCES);
     expect(roleSlots.length).toBeGreaterThan(0);
-    for (const { meaning, roles, slot } of Object.entries(ROLES).map(
-      ([meaning, r]) => ({
-        meaning,
-        ...r,
-      }),
-    ))
+    for (const [meaning, { roles, slot }] of Object.entries(ROLES))
       expect(
         [...all, ...roleSlots].some(
           (a) => slot.test(a.slot) && roles.includes(a.value),
@@ -171,34 +190,27 @@ describe("a departure from a shared role is stated at the assignment", () => {
       .map(([name]) => name)
       .filter((name) => name !== "FLASH");
     expect(overPair).toContain("REGION_DONE");
-    const takesPair = new RegExp(
-      `\\b(${["TWO", "TWO_WASH", ...overPair].join("|")})\\b`,
-    );
+    const pairNames = new Set(["TWO", "TWO_WASH", ...overPair]);
+    const takesPair = (id: string): boolean =>
+      gameSyntax(id).some((sf) =>
+        [...importedNames(sf, COLORS), ...importedNames(sf, PALETTE)].some((n) =>
+          pairNames.has(n),
+        ),
+      );
+    expect(REGISTERED_IDS.filter(takesPair).length).toBeGreaterThan(0);
 
     const marks = Object.values(ROLES).map(({ slot }) => slot);
     const swallowed = all
       .filter((a) => marks.some((slot) => slot.test(a.slot)))
       .filter((a) => pairHued.includes(a.value))
-      .filter((a) =>
-        (gameSourceFiles.get(a.game) ?? []).some(({ text }) =>
-          takesPair.test(text.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g, "")),
-        ),
-      );
-    expect(
-      swallowed.map(
-        (a) => `${a.file.replace("../../games/", "")}:${a.line} ${a.slot} = ${a.value}`,
-      ),
-    ).toEqual([]);
+      .filter((a) => takesPair(a.game));
+    expect(swallowed.map((a) => `${a.at} ${a.slot} = ${a.value}`)).toEqual([]);
   });
 
   it.each(byRole)("$meaning: the role, or a reason", ({ roles, slots }) => {
     const unexplained = slots.filter(
       (a) => !roles.some((r) => a.value === r) && !a.explained,
     );
-    expect(
-      unexplained.map(
-        (a) => `${a.file.replace("../../games/", "")}:${a.line} ${a.slot} = ${a.value}`,
-      ),
-    ).toEqual([]);
+    expect(unexplained.map((a) => `${a.at} ${a.slot} = ${a.value}`)).toEqual([]);
   });
 });

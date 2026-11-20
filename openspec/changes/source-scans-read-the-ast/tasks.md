@@ -29,21 +29,15 @@
       against the regex reads it replaces. `testing/syntax.ts`. Parsing the
       580 game and engine files took 377 ms against 1657 ms for the comment
       stripping the text scans ran (2026-11-20).
-- 2.2 progress: groups (a) and (b) done. Next, (c) then (d). Notes for them:
+- 2.2 progress: groups (a), (b) and (c) done. Next, (d). Notes for it:
       - `syntax.ts` holds `parsed`, `nodesOf`, `usesOf`, `importsOf`,
-        `importedModules`, `callsTo`, `where`, `shown`; `enrollment.ts`
-        holds `gamesUsing`/`gamesNotUsing`/`gamesImporting`/
-        `gamesCallingMethod`/`gameSyntax`. `gameSourceFiles` paths are now
-        repo-relative (`src/games/…`): `palette-departures`' failure
-        messages still strip `../../games/`.
-      - `palette-source` already builds a `ts.Program` for its literal
-        rule; its background-channel rule can key on the `Color` type the
-        same way rather than on the names `bg`/`background`.
-      - `palette-departures`' positional form labels a slot by its trailing
-        comment: read it through `ts.getTrailingCommentRanges` on the
-        array element, since the comment is the label.
-      - `cursor-vocabulary`'s check that `pointer.ts` exports the vocabulary
-        is answered by importing the names (the typecheck holds it).
+        `importedModules`, `importedNames`, `callsTo`, `where`, `shown`;
+        `enrollment.ts` holds `gamesUsing`/`gamesNotUsing`/`gamesImporting`/
+        `gamesCallingMethod`/`gameSyntax`.
+      - (c) found: `palette-departures`' positional form had no instance
+        left, so it went rather than converting; `palette-source`'s channel
+        rule now keys on the `Color` type, any name; `cursor-vocabulary`'s
+        `pointer.ts` export check guarded only its own prose and went.
       - `emittable-keys`: `puzzleKeyMap` is a public static on
         `PuzzleViewInteractive`, readable at run time; the fact modules'
         exports are their namespaces' keys.

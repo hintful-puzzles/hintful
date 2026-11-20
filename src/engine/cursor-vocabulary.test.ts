@@ -16,8 +16,9 @@
  *    cursor hidden under a differently-named field is caught **structurally**,
  *    by its shape, with no name matching at all.
  *
- * The third check is a source pattern over the retired spellings, and that one
- * is a list; it is here because it names the failure in the terms a session
+ * The third check reads the syntax tree for a member declared under a retired
+ * spelling, and that one is a list; it is here because it names the failure in
+ * the terms a session
  * would reintroduce it in (`hshow`, `cshow`, `curVisible`, …). The structural
  * check above is the one that holds when somebody invents a new spelling.
  *
@@ -26,12 +27,14 @@
  * from that module's export list.
  */
 
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import type { Game } from "./game.ts";
 import { CURSOR_RIGHT, newCursor } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
 import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
+import { nodesOf, parsed, resolveSpecifier, shown, where } from "./testing/syntax.ts";
 
 type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;
 
@@ -147,37 +150,23 @@ describe("one keyboard-cursor vocabulary", () => {
     // Vacuity: an unmatched glob yields `{}` and every assertion below passes.
     expect(Object.keys(sources).length).toBeGreaterThan(300);
 
+    // A member declared under a retired name: a field of a type, a class or
+    // an object literal, whatever its type and however it is modified.
+    const retired = new Set(RETIRED);
     const offenders: string[] = [];
-    for (const [path, src] of Object.entries(sources)) {
-      for (const [i, line] of src.split("\n").entries()) {
-        const decl = new RegExp(
-          `^\\s*(?:readonly\\s+)?(${RETIRED.join("|")})\\??\\s*:\\s*boolean`,
-        ).exec(line);
-        if (decl) offenders.push(`${path}:${i + 1}  ${line.trim()}`);
-      }
+    for (const [key, src] of Object.entries(sources)) {
+      const sf = parsed(resolveSpecifier("src/engine/x.ts", key), src);
+      for (const n of nodesOf(sf))
+        if (
+          (ts.isPropertySignature(n) ||
+            ts.isPropertyDeclaration(n) ||
+            ts.isPropertyAssignment(n) ||
+            ts.isShorthandPropertyAssignment(n)) &&
+          (ts.isIdentifier(n.name) || ts.isStringLiteral(n.name)) &&
+          retired.has(n.name.text)
+        )
+          offenders.push(`${where(n)}  ${shown(n)}`);
     }
     expect(offenders).toEqual([]);
   });
-});
-
-/** `pointer.ts`'s own source, so this file cannot end up describing a contract
- * that has been renamed out from under it. */
-const POINTER_SRC: string = Object.values(
-  import.meta.glob<string>("./pointer.ts", {
-    query: "?raw",
-    import: "default",
-    eager: true,
-  }),
-)[0];
-
-it("pointer.ts still exports the cursor vocabulary this guard derives from", () => {
-  for (const name of [
-    "GridCursor",
-    "newCursor",
-    "moveCursor",
-    "showCursor",
-    "hideCursor",
-  ]) {
-    expect(POINTER_SRC).toMatch(new RegExp(`export (?:interface|function) ${name}\\b`));
-  }
 });

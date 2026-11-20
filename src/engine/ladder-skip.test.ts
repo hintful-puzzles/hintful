@@ -6,6 +6,7 @@
  * board's description holds every verdict its generator's ladder gave, so a
  * binding skipped that would have fired changes a board.
  */
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import { CellMarks } from "./ladder-runtime.ts";
@@ -13,6 +14,7 @@ import { getTsGame } from "./registry.ts";
 import { dealt, dealtAgain } from "./testing/dealt.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
 import { FIRST_SHARE, ofThisShare } from "./testing/sweep-share.ts";
+import { parsed, resolveSpecifier, usesOf } from "./testing/syntax.ts";
 
 const modules = import.meta.glob<string>("../generated/games/*/*.compiled.ts", {
   eager: true,
@@ -20,9 +22,22 @@ const modules = import.meta.glob<string>("../generated/games/*/*.compiled.ts", {
   import: "default",
 });
 
-/** The games whose compiled module emits a footprint, by what it compiled. */
+/** The games whose compiled module emits a footprint, by what it compiled: a
+ * value it declares of the runtime's `Footprint` type. */
 const SKIPPING = Object.entries(modules)
-  .filter(([, text]) => /: Footprint = /.test(text))
+  .filter(([key, text]) =>
+    usesOf(parsed(resolveSpecifier("src/engine/x.ts", key), text), {
+      module: "src/engine/describe-runtime.ts",
+      name: "Footprint",
+    }).some(({ node }) => {
+      const ref = node.parent;
+      return (
+        ts.isTypeReferenceNode(ref) &&
+        ts.isVariableDeclaration(ref.parent) &&
+        ref.parent.type === ref
+      );
+    }),
+  )
   .map(([path]) => path.split("/").at(-2) ?? "")
   .sort();
 

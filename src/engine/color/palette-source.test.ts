@@ -16,9 +16,10 @@
  * 1. **no color literal** — `[0.2, 1, 0.2]` in a game is a value nobody can
  *    restyle, and `[(2 * a[0] + b[0]) / 3, …]` is the same decision computed;
  *    an array literal is one where TypeScript reads it as a `Color`;
- * 2. **no channel-indexing the background** — `bg[0] * 0.9` is the same decision
+ * 2. **no reading a color's channel** — `bg[0] * 0.9` is the same decision
  *    written as arithmetic, and the commonest way a ported game spells a
- *    derived color;
+ *    derived color; a channel read is an index into a value TypeScript reads
+ *    as a `Color`;
  * 3. **no importing the color combinators** — `mix`/`scale`/`divide`
  *    are how the *table* builds one color out of others; a game reaching for
  *    them is a game deciding a color.
@@ -26,9 +27,12 @@
  * A fourth rule holds the table to the games: a token in `palette-games.ts`
  * is imported only by the game its prefix names, and by some game.
  *
- * What it deliberately does not attempt: a game could still compute a color from
- * variables the rules do not name. That is a review matter; the rules above
- * cover every spelling the collection has used. A game is
+ * Every rule reads the syntax tree, and the first two the type checker: a
+ * color is found by its type and an import by its module, never by a
+ * spelling (`docs/method.md` § "A scan that keys on a name").
+ *
+ * What it deliberately does not attempt: a game could still compute a color
+ * from values it destructures out of one. That is a review matter. A game is
  * free to call a **named derivation** from the table (`slantGrid(background)`) or
  * the shared bevel trio (`mkhighlightSpecific(GRID_DARK)`) — those are the
  * intended shape, not an exception to it.
@@ -36,39 +40,64 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { gameSourceFiles } from "../testing/enrollment.ts";
+import {
+  type ExportRef,
+  importedModules,
+  importedNames,
+  parsed,
+  resolveSpecifier,
+  usesOf,
+} from "../testing/syntax.ts";
 import * as colors from "./colors.ts";
 import * as roles from "./palette.ts";
 import * as gameTokens from "./palette-games.ts";
 
-/** The meanings layer, as text — a named color counts as used when a meaning
- * is defined over it, not only when a game imports it directly. */
-const paletteSource: string = Object.values(
-  import.meta.glob<string>("./palette.ts", {
-    query: "?raw",
-    import: "default",
-    eager: true,
-  }),
-)[0];
+/** A glob key from this directory, as the repo-relative path every tree a
+ * guard parses is named by. */
+const fromHere = (key: string): string =>
+  resolveSpecifier("src/engine/color/x.ts", key);
 
-/** The per-game half of the table, as text — needed to see that a set's members
- * are used by the aggregate the games import. */
-const tableSource: string = Object.values(
-  import.meta.glob<string>("./palette-games.ts", {
-    query: "?raw",
-    import: "default",
-    eager: true,
-  }),
-)[0];
+const PALETTE = "src/engine/color/palette.ts";
+const TABLE = "src/engine/color/palette-games.ts";
+const COLORS = "src/engine/color/colors.ts";
+const ROLES = "src/engine/color/roles.ts";
+const COMBINATORS = "src/engine/color/color-token.ts";
+
+/** The table's modules, and the app, which paints a hint's reference colors
+ * itself over any game's board. */
+const tableModules = import.meta.glob<string>(
+  [
+    "./palette.ts",
+    "./palette-games.ts",
+    "./colors.ts",
+    "./roles.ts",
+    "../../puzzle/puzzle.ts",
+  ],
+  { query: "?raw", import: "default", eager: true },
+);
+
+/** The module at `path`, parsed; throws when the glob missed it. */
+function tree(path: string): ts.SourceFile {
+  const hit = Object.entries(tableModules).find(([key]) => fromHere(key) === path);
+  if (!hit) throw new Error(`no module at ${path}: moved?`);
+  return parsed(path, hit[1]);
+}
+
+/** The meanings layer: a named color counts as used when a meaning is defined
+ * over it, not only when a game imports it directly. */
+const paletteTree = tree(PALETTE);
+/** The per-game half of the table: needed to see that a set's members are
+ * used by the aggregate the games import. */
+const tableTree = tree(TABLE);
+const colorsTree = tree(COLORS);
+const rolesTree = tree(ROLES);
+const appTree = tree("src/puzzle/puzzle.ts");
 
 /** Raw text of every non-test source file under `src/games/`.
  *
- * Via Vite's `import.meta.glob` rather than `node:fs`, following
- * `asset-integrity.test.ts`: it keeps the test inside the browser-shaped type
- * world and preserves the project's `"types": []` posture.
- *
  * A glob is **not** an import specifier, so a bulk rewriter that repoints
  * imports after a file move leaves it behind — and an unmatched glob yields
- * `{}` rather than an error, so all three assertions below would pass over
+ * `{}` rather than an error, so every assertion below would pass over
  * nothing. That is why `finds the game sources at all` exists. */
 const sourceModules = import.meta.glob<string>("../../games/**/*.ts", {
   query: "?raw",
@@ -76,16 +105,34 @@ const sourceModules = import.meta.glob<string>("../../games/**/*.ts", {
   eager: true,
 });
 
+/** Every non-test game source, keyed `<game>/<file>`, with its tree. */
+const sources: { rel: string; tree: ts.SourceFile }[] = Object.entries(sourceModules)
+  .filter(([key]) => !key.endsWith(".test.ts"))
+  .map(([key, text]) => {
+    const path = fromHere(key);
+    return { rel: path.slice("src/games/".length), tree: parsed(path, text) };
+  })
+  .sort((a, b) => a.rel.localeCompare(b.rel));
+
+interface Finding {
+  line: number;
+  text: string;
+}
+
 /**
- * The array literals each game source writes as a `Color`, by line: those
- * TypeScript reads as one (`engine/types.ts`'s alias), wherever it stands. A
- * color reaches a board only through `colors`, typed `Color[]`, so a literal
- * that gets there is typed a `Color`, by where it is written or by a
- * declaration or assertion on the way; a triple of numbers that is a tally or
- * a menu's sizes is not, whatever its shape. The rule is keyed on the type's
- * symbol, not its name.
+ * Each game source's color literals and channel reads, by `<game>/<file>`,
+ * as the type checker reads them.
+ *
+ * A literal is an array literal TypeScript reads as a `Color`
+ * (`engine/types.ts`'s alias), wherever it stands. A color reaches a board
+ * only through `colors`, typed `Color[]`, so a literal that gets there is
+ * typed a `Color`, by where it is written or by a declaration or assertion on
+ * the way; a triple of numbers that is a tally or a menu's sizes is not,
+ * whatever its shape. A channel read is an index into a value of that type,
+ * whatever the value is called. Both are keyed on the type's symbol, not its
+ * name.
  */
-function colorLiterals(): Map<string, { line: number; text: string }[]> {
+function colorFindings(): Map<string, { literals: Finding[]; channels: Finding[] }> {
   // `src` is typed without Node, so a path is the URL's own.
   const path = (p: string): string =>
     decodeURIComponent(new URL(p, import.meta.url).pathname);
@@ -105,20 +152,26 @@ function colorLiterals(): Map<string, { line: number; text: string }[]> {
   if (!color) throw new Error("engine/types.ts exports no Color");
   const isColor = (t: ts.Type): boolean =>
     t.aliasSymbol === color || (t.isUnion() && t.types.some(isColor));
-  const out = new Map<string, { line: number; text: string }[]>();
+  const out = new Map<string, { literals: Finding[]; channels: Finding[] }>();
   for (const file of files) {
     const source = program.getSourceFile(file);
     if (!source) throw new Error(`${file} is not in the program`);
-    const rel = /(?:^|\/)games\/(.+)$/.exec(file)?.[1] ?? file;
-    const found: { line: number; text: string }[] = [];
+    const rel = /(?:^|\/)src\/games\/(.+)$/.exec(file)?.[1] ?? file;
+    const found = { literals: [] as Finding[], channels: [] as Finding[] };
+    const at = (n: ts.Node): Finding => {
+      const line = source.getLineAndCharacterOfPosition(n.getStart()).line + 1;
+      return { line, text: (source.text.split("\n")[line - 1] ?? "").trim() };
+    };
     const visit = (n: ts.Node): void => {
       if (ts.isArrayLiteralExpression(n)) {
         const t = checker.getContextualType(n);
-        if (t && isColor(t)) {
-          const line = source.getLineAndCharacterOfPosition(n.getStart()).line + 1;
-          found.push({ line, text: source.text.split("\n")[line - 1].trim() });
-        }
+        if (t && isColor(t)) found.literals.push(at(n));
       }
+      if (
+        ts.isElementAccessExpression(n) &&
+        isColor(checker.getTypeAtLocation(n.expression))
+      )
+        found.channels.push(at(n));
       ts.forEachChild(n, visit);
     };
     visit(source);
@@ -127,81 +180,38 @@ function colorLiterals(): Map<string, { line: number; text: string }[]> {
   return out;
 }
 
-/**
- * Every non-test game source, keyed `<game>/<file>`.
- *
- * The key is cut at `games/` rather than by stripping a fixed `"../games/"`
- * prefix, because the prefix depends on how deep *this file* sits, and a move
- * changes that. A fixed strip that no longer matches does not fail — it leaves `../abcd/render.ts`, so `rel` still
- * reads plausibly and `rel.split("/")[0]` silently becomes `".."`. Path
- * arithmetic keyed to depth is the one thing an import sweep cannot see, so
- * this one states its assumption and throws when it does not hold.
- */
-function gameSources(): { rel: string; src: string }[] {
-  return Object.entries(sourceModules)
-    .filter(([path]) => !path.endsWith(".test.ts"))
-    .map(([path, src]) => {
-      const rel = /(?:^|\/)games\/(.+)$/.exec(path)?.[1];
-      if (!rel) throw new Error(`glob key is not under games/: ${path}`);
-      return { rel, src };
-    })
-    .sort((a, b) => a.rel.localeCompare(b.rel));
-}
-
-/** Blank out comments and string literals, so prose about `[1, 0, 0]` does not
- * read as code that writes it. Replaced with spaces rather than removed, so any
- * offset still points at the right place. */
-function code(src: string): string {
-  return src.replace(
-    /\/\*[\s\S]*?\*\/|\/\/[^\n]*|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`/g,
-    (m) => m.replace(/[^\n]/g, " "),
-  );
-}
-
-const BACKGROUND_CHANNEL =
-  /\b(?:default[Bb]ackground|background|bg)\s*\[\s*\d|\bbg\[i\]/;
-/** Matched against **raw** source, not the comment-stripped copy: an import
- * path is a string literal, so {@link code} blanks it out. (Found by mutating a
- * game to import `scale` and watching this rule not fire.) Anchored to a line
- * that actually starts an import, so prose naming the module is still fine. */
-const COMBINATOR_IMPORT = /^import[^;]*from\s+"[^"]*color-token\.ts"/m;
-
 describe("a game contains no color value", () => {
-  const sources = gameSources();
-  const literals = colorLiterals();
+  const findings = colorFindings();
 
   it("finds the game sources at all", () => {
     // A broken glob would make every rule below vacuously pass.
     expect(sources.length).toBeGreaterThan(100);
-    expect([...literals.keys()].sort()).toEqual(sources.map((s) => s.rel).sort());
+    expect([...findings.keys()].sort()).toEqual(sources.map((s) => s.rel).sort());
   });
 
-  for (const { rel, src } of sources) {
-    const stripped = code(src);
+  for (const { rel, tree } of sources) {
+    const found = findings.get(rel);
 
     it(`${rel} writes no color literal`, () => {
       expect(
-        (literals.get(rel) ?? []).map((f) => `${rel}:${f.line}  ${f.text}`),
+        (found?.literals ?? []).map((f) => `${rel}:${f.line}  ${f.text}`),
         "a color belongs in the token table (palette.ts / palette-games.ts) " +
           "under a name that says what it means; add it there and reference it",
       ).toEqual([]);
     });
 
-    it(`${rel} derives no color from the background`, () => {
-      const line = stripped
-        .split("\n")
-        .findIndex((l) => BACKGROUND_CHANNEL.test(l) && !l.includes("..."));
+    it(`${rel} reads no color's channel`, () => {
       expect(
-        line < 0 ? null : `${rel}:${line + 1}  ${src.split("\n")[line].trim()}`,
-        "a color defined relative to the board is still a color decision: " +
+        (found?.channels ?? []).map((f) => `${rel}:${f.line}  ${f.text}`),
+        "a color defined relative to another is still a color decision: " +
           "give it a name in palette-games.ts as a function of the background, " +
           "and call that",
-      ).toBeNull();
+      ).toEqual([]);
     });
 
     it(`${rel} does not combine colors itself`, () => {
       expect(
-        COMBINATOR_IMPORT.test(src) ? rel : null,
+        importedModules(tree).includes(COMBINATORS) ? rel : null,
         "mix/scale/divide build one color out of others, which is the " +
           "token table's job — put the combination there under a name",
       ).toBeNull();
@@ -209,8 +219,15 @@ describe("a game contains no color value", () => {
   }
 });
 
+/** Whether `tree`, the module that declares `ref`, refers to it anywhere but
+ * its own declaration: a set it is gathered into, or a meaning built on it. */
+const referencedInOwnModule = (tree: ts.SourceFile, ref: ExportRef): boolean =>
+  usesOf(tree, ref).some(
+    ({ node }) => !(ts.isVariableDeclaration(node.parent) && node.parent.name === node),
+  );
+
 /**
- * Ownership, checked at the import line.
+ * Ownership, checked at the import.
  *
  * A per-game token names the game it belongs to, and that name is only worth
  * anything if it is true. Checking it here rather than by inspecting resolved
@@ -226,25 +243,12 @@ describe("a per-game token belongs to the game it names", () => {
    * avoids the trap that `NETSLIDE_*` also starts with `net`. */
   const owner = (name: string): string =>
     name === name.toUpperCase()
-      ? name.split("_")[0].toLowerCase()
+      ? (name.split("_")[0] as string).toLowerCase()
       : (/^[a-z]+/.exec(name)?.[0] ?? name);
 
-  /** The names a game source imports from the per-game half of the table. */
-  const imported = (src: string): string[] => {
-    const m = /import\s*\{([^}]*)\}\s*from\s*"[^"]*palette-games\.ts"/.exec(src);
-    return m
-      ? m[1]
-          .split(",")
-          .map((n) => n.trim())
-          .filter(Boolean)
-      : [];
-  };
-
-  const sources = gameSources();
-
-  for (const { rel, src } of sources) {
+  for (const { rel, tree } of sources) {
     const game = rel.split("/")[0];
-    const wrong = imported(src).filter((n) => owner(n) !== game);
+    const wrong = importedNames(tree, TABLE).filter((n) => owner(n) !== game);
     it(`${rel} imports only its own tokens`, () => {
       // A copied import line is the realistic way this breaks: `SPOKES_CURSOR`
       // pasted into Sticks looks right, works, and quietly ties two games'
@@ -260,14 +264,12 @@ describe("a per-game token belongs to the game it names", () => {
     // "Used" includes used *by the table itself*: a set's members are declared
     // individually so each can carry a name, a meaning and its own scheme value,
     // and are then gathered into the ordered array the game actually imports
-    // (`FLOOD_TILE_3` → `FLOOD_TILES`). Only a name nothing mentions is dead.
-    const byGames = new Set(sources.flatMap(({ src }) => imported(src)));
-    const table = code(tableSource);
-    const declared = Object.keys(gameTokens);
-    const dead = declared.filter(
-      (n) =>
-        !byGames.has(n) &&
-        (table.match(new RegExp(`\\b${n}\\b`, "g")) ?? []).length < 2,
+    // (`FLOOD_TILE_3` → `FLOOD_TILES`). Only a name nothing refers to is dead.
+    const byGames = new Set(sources.flatMap(({ tree }) => importedNames(tree, TABLE)));
+    const dead = Object.keys(gameTokens).filter(
+      (name) =>
+        !byGames.has(name) &&
+        !referencedInOwnModule(tableTree, { module: TABLE, name }),
     );
     expect(dead).toEqual([]);
   });
@@ -282,53 +284,20 @@ describe("a per-game token belongs to the game it names", () => {
  * small in order to avoid.
  *
  * "Used" spans all four ways a color reaches a board: a game imports it, a
- * meaning in `palette.ts` is defined over it, one of the sets in `colors.ts`
- * itself gathers it up (`PURPLE` is in `TWO`, which is what Unruly imports), or
- * the app paints it over the board (a hint's reference colors).
+ * meaning in `palette.ts` or `palette-games.ts` is defined over it, one of the
+ * sets in `colors.ts` itself gathers it up (`PURPLE` is in `TWO`, which is
+ * what Unruly imports), or the app paints it over the board (a hint's
+ * reference colors).
  */
 it("declares no named color nothing can show", () => {
-  const imported = (src: string): string[] => {
-    const m = /import\s*\{([^}]*)\}\s*from\s*"[^"]*colors\.ts"/.exec(src);
-    return m
-      ? m[1]
-          .split(",")
-          .map((n) => n.trim())
-          .filter(Boolean)
-      : [];
-  };
-  const byGames = new Set(gameSources().flatMap(({ src }) => imported(src)));
-  // The meanings layer and the board-relative layer both build on named colors
-  // (`ERROR` is `RED`; Signpost's region ramp is built from `REGION_FILLS`), and
-  // a color reaching a board through either of them is used.
-  // The app paints a hint's reference colors itself, over any game's board.
-  const byApp = Object.values(
-    import.meta.glob<string>("../../puzzle/puzzle.ts", {
-      query: "?raw",
-      import: "default",
-      eager: true,
-    }),
-  );
-  expect(byApp).toHaveLength(1);
-  const byMeanings = new Set([
-    ...imported(paletteSource),
-    ...imported(tableSource),
-    ...byApp.flatMap(imported),
-  ]);
-  const table = code(
-    Object.values(
-      import.meta.glob<string>("./colors.ts", {
-        query: "?raw",
-        import: "default",
-        eager: true,
-      }),
-    )[0],
+  const used = new Set(
+    [...sources.map((s) => s.tree), paletteTree, tableTree, appTree].flatMap((t) =>
+      importedNames(t, COLORS),
+    ),
   );
   const dead = Object.keys(colors).filter(
-    (n) =>
-      !byGames.has(n) &&
-      !byMeanings.has(n) &&
-      // Mentioned once is its own declaration; twice means a set gathers it.
-      (table.match(new RegExp(`\\b${n}\\b`, "g")) ?? []).length < 2,
+    (name) =>
+      !used.has(name) && !referencedInOwnModule(colorsTree, { module: COLORS, name }),
   );
   expect(dead).toEqual([]);
 });
@@ -341,8 +310,10 @@ it("declares no named color nothing can show", () => {
  * only through the engine.
  */
 it("no game holds the ring's ink", () => {
-  const holding = gameSources()
-    .filter(({ src }) => /\bHINT_RING\b/.test(code(src)))
+  const holding = sources
+    .filter(
+      ({ tree }) => usesOf(tree, { module: PALETTE, name: "HINT_RING" }).length > 0,
+    )
     .map(({ rel }) => rel);
   expect(holding).toEqual([]);
 });
@@ -362,25 +333,15 @@ it("no game holds the ring's ink", () => {
  * fills, read off that file's own import from `palette.ts`.
  */
 it("declares no shared role fewer than two games take", () => {
-  const fromPalette = (text: string): string[] =>
-    [...text.matchAll(/^import\s*\{([^}]*)\}\s*from\s*"[^"]*\/palette\.ts"/gm)].flatMap(
-      (m) => m[1].split(",").map((n) => n.trim()),
-    );
-  const rolesSource = Object.values(
-    import.meta.glob<string>("./roles.ts", {
-      query: "?raw",
-      import: "default",
-      eager: true,
-    }),
-  );
-  expect(rolesSource).toHaveLength(1);
-  const filledByRoles = fromPalette(rolesSource[0]);
+  const filledByRoles = importedNames(rolesTree, PALETTE);
   expect(filledByRoles).toContain("CURSOR");
   const takenBy = new Map<string, Set<string>>();
   for (const [id, files] of gameSourceFiles)
-    for (const { text } of files) {
-      const names = fromPalette(text);
-      if (/\brolePalette\b/.test(text)) names.push(...filledByRoles);
+    for (const { path, text } of files) {
+      const tree = parsed(path, text);
+      const names = importedNames(tree, PALETTE);
+      if (usesOf(tree, { module: ROLES, name: "rolePalette" }).length > 0)
+        names.push(...filledByRoles);
       for (const name of names)
         takenBy.set(name, (takenBy.get(name) ?? new Set()).add(id));
     }

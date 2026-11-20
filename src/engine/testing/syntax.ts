@@ -145,6 +145,21 @@ export function importedModules(sf: ts.SourceFile, values = false): string[] {
     .map((e) => e.module);
 }
 
+/** The names `sf` imports by name from `module` (a repo-relative path), each
+ * by the name the module exports it under, however it is bound here. */
+export function importedNames(sf: ts.SourceFile, module: string): string[] {
+  const out: string[] = [];
+  for (const st of sf.statements) {
+    if (!ts.isImportDeclaration(st) || !ts.isStringLiteral(st.moduleSpecifier))
+      continue;
+    if (resolveSpecifier(sf.fileName, st.moduleSpecifier.text) !== module) continue;
+    const bindings = st.importClause?.namedBindings;
+    if (bindings !== undefined && ts.isNamedImports(bindings))
+      for (const el of bindings.elements) out.push((el.propertyName ?? el.name).text);
+  }
+  return out;
+}
+
 /** One export of one module, by repo-relative path: what a guard asks after,
  * rather than a spelling of its name. */
 export interface ExportRef {

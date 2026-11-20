@@ -5,9 +5,9 @@
  * come to differ in the border, which is the one place the spellings can
  * differ and a place a player presses.
  *
- * ON THE INSTRUMENT. This keys on the conversion's shape in source: a
- * `Math.floor` or `Math.trunc` (or a `| 0`) whose argument ends in a division
- * by the tile size. **The tile size is recognized by the names it goes by**
+ * ON THE INSTRUMENT. This keys on the conversion's shape in the syntax tree:
+ * a `Math.floor` or `Math.trunc` (or a `| 0`) whose argument's last operation
+ * is a division by the tile size. **The tile size is recognized by the names it goes by**
  * ({@link TILE_SIZE}), which is the bound of what this sees: a draw state's
  * `tileSize` is the engine contract's own word, and `ts` and `tile` are the
  * locals the collection reads it into. A conversion dividing by a tile size
@@ -19,8 +19,10 @@
  * {@link OWN_CONVERSIONS} is a ledger held exact: a conversion with no entry
  * fails, and so does an entry whose line is gone.
  */
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { REGISTERED_IDS } from "./testing/enrollment.ts";
+import { nodesOf, parsed, resolveSpecifier } from "./testing/syntax.ts";
 
 /** Every game's sources, and the engine's own, where a helper several games
  * share can hold the same second copy. `geometry.ts` is the conversion. */
@@ -29,14 +31,54 @@ const sourceModules = import.meta.glob<string>(
   { query: "?raw", import: "default", eager: true },
 );
 
-/** The names a tile size goes by, after any `ds.` or `m.` it is read off. */
-const TILE_SIZE = String.raw`(?:[\w.]+\.)?(?:ts|tile|tileSize)`;
-/** An argument whose last operation is a division by the tile size. */
-const ENDS_IN_TILE_DIVISION = new RegExp(String.raw`\/\s*${TILE_SIZE}\s*$`);
-const FLOORED_BY_OR = new RegExp(
-  String.raw`\(([^()]*\/\s*${TILE_SIZE})\s*\)\s*\|\s*0`,
-  "g",
-);
+/** The names a tile size goes by, as a local or as the member of a `ds.` or
+ * `m.` it is read off. */
+const TILE_SIZE = new Set(["ts", "tile", "tileSize"]);
+
+/** `e` without the parentheses around it. */
+function bare(e: ts.Expression): ts.Expression {
+  return ts.isParenthesizedExpression(e) ? bare(e.expression) : e;
+}
+
+/** Whether `e`'s last operation is a division by the tile size. */
+function endsInTileDivision(e: ts.Expression): boolean {
+  const b = bare(e);
+  if (!ts.isBinaryExpression(b) || b.operatorToken.kind !== ts.SyntaxKind.SlashToken)
+    return false;
+  const r = bare(b.right);
+  const name = ts.isIdentifier(r)
+    ? r.text
+    : ts.isPropertyAccessExpression(r)
+      ? r.name.text
+      : null;
+  return name !== null && TILE_SIZE.has(name);
+}
+
+/** Each floored division by the tile size in `sf`: `Math.floor(… / ts)`,
+ * `Math.trunc(… / ts)`, or `(… / ts) | 0`. */
+function flooredDivisions(sf: ts.SourceFile): ts.Node[] {
+  return [...nodesOf(sf)].filter((n) => {
+    if (ts.isCallExpression(n)) {
+      const callee = n.expression;
+      const [arg] = n.arguments;
+      return (
+        ts.isPropertyAccessExpression(callee) &&
+        ts.isIdentifier(callee.expression) &&
+        callee.expression.text === "Math" &&
+        (callee.name.text === "floor" || callee.name.text === "trunc") &&
+        arg !== undefined &&
+        endsInTileDivision(arg)
+      );
+    }
+    return (
+      ts.isBinaryExpression(n) &&
+      n.operatorToken.kind === ts.SyntaxKind.BarToken &&
+      ts.isNumericLiteral(n.right) &&
+      n.right.text === "0" &&
+      endsInTileDivision(n.left)
+    );
+  });
+}
 
 /**
  * A game's own conversion, by the text of its line. `FOLDS` is the one
@@ -82,26 +124,12 @@ const OWN_CONVERSIONS: Record<string, Record<string, typeof FOLDS | typeof SCALE
   },
 };
 
-/** Blank out comments, keeping every offset, so prose about a division is not
- * read as one. */
-function code(src: string): string {
-  return src.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (m) => m.replace(/[^\n]/g, " "));
-}
-
-/** The argument of the call whose opening parenthesis is at `open`. */
-function argumentAt(src: string, open: number): string {
-  let depth = 0;
-  for (let i = open; i < src.length; i++) {
-    if (src[i] === "(") depth++;
-    if (src[i] === ")" && --depth === 0) return src.slice(open + 1, i);
-  }
-  return "";
-}
-
 interface Conversion {
-  /** `<game>/<file>` for a game's source, `./<file>` for the engine's. */
+  /** `<game>/<file>` for a game's source, `src/engine/<file>` for the
+   * engine's. */
   file: string;
   line: number;
+  /** The line the conversion starts on, trimmed: the ledger's key. */
   text: string;
   /** The lines of the file, for reading the comment over the conversion. */
   lines: readonly string[];
@@ -109,20 +137,16 @@ interface Conversion {
 
 function conversions(): Conversion[] {
   const found: Conversion[] = [];
-  for (const [path, raw] of Object.entries(sourceModules)) {
-    if (path.endsWith(".test.ts")) continue;
-    const file = path.replace("../games/", "");
-    const src = code(raw);
+  for (const [key, raw] of Object.entries(sourceModules)) {
+    if (key.endsWith(".test.ts")) continue;
+    const path = resolveSpecifier("src/engine/x.ts", key);
+    const file = path.replace(/^src\/games\//, "");
+    const sf = parsed(path, raw);
     const lines = raw.split("\n");
-    const at = (offset: number): Conversion => {
-      const line = src.slice(0, offset).split("\n").length;
-      return { file, line, text: lines[line - 1].trim(), lines };
-    };
-    for (const call of src.matchAll(/Math\.(?:floor|trunc)\(/g)) {
-      const open = call.index + call[0].length - 1;
-      if (ENDS_IN_TILE_DIVISION.test(argumentAt(src, open))) found.push(at(call.index));
+    for (const n of flooredDivisions(sf)) {
+      const line = sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
+      found.push({ file, line, text: (lines[line - 1] ?? "").trim(), lines });
     }
-    for (const or of src.matchAll(FLOORED_BY_OR)) found.push(at(or.index));
   }
   return found;
 }
@@ -133,12 +157,23 @@ describe("a game does not re-derive the pixel-to-cell conversion", () => {
   it("read the games, and sees each shape it looks for", () => {
     const games = new Set(Object.keys(sourceModules).map((path) => path.split("/")[2]));
     for (const id of REGISTERED_IDS) expect(games).toContain(id);
-    // The shapes, on lines written here: an unmatched pattern finds nothing
+    // The shapes, on lines written here: an unmatched shape finds nothing
     // and every game passes.
-    expect(ENDS_IN_TILE_DIVISION.test("(p.x - b) / ds.tileSize")).toBe(true);
-    expect(ENDS_IN_TILE_DIVISION.test("(px - m.border) / m.tile")).toBe(true);
-    expect(ENDS_IN_TILE_DIVISION.test("tileSize / 2")).toBe(false);
-    expect("(py / ts) | 0".match(FLOORED_BY_OR)).toHaveLength(1);
+    const planted = parsed(
+      "src/games/plant/coord.ts",
+      [
+        "Math.floor((p.x - b) / ds.tileSize);",
+        "Math.trunc(\n  (px - m.border) / // across lines\n  m.tile,\n);",
+        "Math.floor(tileSize / 2);",
+        "// Math.floor(x / ts)",
+        "(py / ts) | 0;",
+      ].join("\n"),
+    );
+    expect(flooredDivisions(planted).map((n) => n.getText())).toEqual([
+      "Math.floor((p.x - b) / ds.tileSize)",
+      "Math.trunc(\n  (px - m.border) / // across lines\n  m.tile,\n)",
+      "(py / ts) | 0",
+    ]);
     // And in the games: the ledger's own lines are found, checked below.
     expect(all.length).toBeGreaterThan(0);
   });

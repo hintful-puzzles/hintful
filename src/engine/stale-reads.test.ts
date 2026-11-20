@@ -25,6 +25,7 @@ import { getTsGame } from "./registry.ts";
 import { dealt, dealtAgain } from "./testing/dealt.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
 import { seedBudget } from "./testing/slow.ts";
+import { parsed, resolveSpecifier, usesOf } from "./testing/syntax.ts";
 
 const modules = import.meta.glob<string>("../generated/games/*/*.compiled.ts", {
   eager: true,
@@ -32,9 +33,16 @@ const modules = import.meta.glob<string>("../generated/games/*/*.compiled.ts", {
   import: "default",
 });
 
-/** The games whose compiled module guards a binding, by what it compiled. */
+/** The games whose compiled module guards a binding, by what it compiled: a
+ * read of the runtime's switch. */
 const GUARDED = Object.entries(modules)
-  .filter(([, text]) => text.includes("staleChecking) {"))
+  .filter(
+    ([key, text]) =>
+      usesOf(parsed(resolveSpecifier("src/engine/x.ts", key), text), {
+        module: "src/engine/describe-runtime.ts",
+        name: "staleChecking",
+      }).length > 0,
+  )
   .map(([path]) => path.split("/").at(-2) ?? "")
   .sort();
 

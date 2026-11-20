@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { gamesUsing } from "./enrollment.ts";
-import { importedModules, parsed, resolveSpecifier, usesOf } from "./syntax.ts";
+import {
+  importedModules,
+  importedNames,
+  parsed,
+  resolveSpecifier,
+  usesOf,
+} from "./syntax.ts";
 
 const REF = { module: "src/engine/border-grid.ts", name: "borderGridVerbs" };
 
@@ -58,6 +64,15 @@ describe("a module's imports", () => {
         'import { type C, d } from "./c.ts";\nimport "./e.ts";\nexport type { F } from "./f.ts";',
     );
     expect(importedModules(sf).length).toBe(5);
+    expect(
+      importedNames(
+        parsed(
+          "src/games/plant/names.ts",
+          'import { a as x, b } from "./c.ts";\nimport * as ns from "./c.ts";\nimport { d } from "./e.ts";',
+        ),
+        "src/games/plant/c.ts",
+      ),
+    ).toEqual(["a", "b"]);
     expect(importedModules(sf, true)).toEqual([
       "src/games/plant/c.ts",
       "src/games/plant/e.ts",
