@@ -777,7 +777,9 @@ channels, because neither is sufficient alone: the static import graph, via
 The walk SHALL follow imports and SHALL read the `import.meta.glob` calls of
 every module it visits, not only of the test file. A guard that reads source
 through a helper reads what the helper's glob matches, and a scan of the test
-file alone cannot see it.
+file alone cannot see it. A glob that imports modules SHALL be followed into
+every file its base can match, as an import of each, where each is a script
+or JSON; otherwise it SHALL reach everything.
 
 #### Scenario: A guard reads source through a helper
 
@@ -786,6 +788,14 @@ file alone cannot see it.
 - **THEN** the guard is selected
 - **BECAUSE** the helper's glob is read by every file that imports the helper,
   and a selector that read only the test file's own globs would skip it
+
+#### Scenario: A test loads the games through the registry's glob
+
+- **WHEN** a game's module is staged, and a test imports `src/games/index.ts`,
+  which loads the games through a glob
+- **THEN** the test is selected
+- **AND** a test that imports only the app's catalog, whose glob matches the
+  games' `catalog.ts` alone, is not selected for it
 
 ### Requirement: A glob is matched by its literal base directory
 
@@ -1380,8 +1390,8 @@ A game's own test files SHALL keep, in CI, a shallow form that holds each of the
 ### Requirement: Only the compiled descriptions are generated into the source tree
 
 Nothing the build reads SHALL be generated except the modules compiled from
-descriptions: the game catalog is committed TypeScript source
-(`src/puzzle/catalog-data.ts`), the per-puzzle icons are a committed snapshot,
+descriptions: the game catalog is committed TypeScript source (each game's
+`src/games/<id>/catalog.ts`), the per-puzzle icons are a committed snapshot,
 and the help pages are committed markdown and descriptions. A module compiled
 from a description SHALL be generated into `src/generated/`, which git
 ignores, and SHALL NOT be committed.

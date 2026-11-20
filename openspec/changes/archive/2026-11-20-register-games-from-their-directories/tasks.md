@@ -31,4 +31,4 @@
 - [x] 3.2 Run the app: home screen order, search by family, a puzzle page,
       help links. (Also: an edit to a game's `catalog.ts` restarts the dev
       server and its page shows the new words.)
-- [ ] 3.3 Commit, push, archive.
+- [x] 3.3 Commit, push, archive.

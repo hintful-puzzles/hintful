@@ -12,8 +12,8 @@ pair from the running app; and the dev-only capture mode that procedure uses.
 The repository SHALL hold two committed PNG files for every cataloged puzzle
 in `src/assets/icons/`: `<puzzleId>-64d8.png`, which is 64×64, and
 `<puzzleId>-128d8.png`, which is 128×128. For every `puzzleId` in the catalog
-(`src/puzzle/catalog-data.ts`) both files SHALL be present and tracked in git:
-the directory is a committed snapshot, not a generated one.
+(each game's `src/games/<puzzleId>/catalog.ts`) both files SHALL be present
+and tracked in git: the directory is a committed snapshot, not a generated one.
 
 #### Scenario: A cataloged puzzle lacks an icon
 
