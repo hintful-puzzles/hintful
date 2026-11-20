@@ -1,0 +1,5 @@
+# Internal refactor with no player-visible change. Drop skip_specs and add a
+# delta if a requirement naming a hand-written hook has to move.
+schema: spec-driven
+created: 2026-11-20
+skip_specs: true

@@ -1,0 +1,5 @@
+# No delta: a review delivers a list for the owner to pick from; each
+# refactoring picked becomes its own change, with its own spec delta.
+schema: spec-driven
+created: 2026-11-20
+skip_specs: true

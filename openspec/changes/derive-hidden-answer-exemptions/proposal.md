@@ -20,6 +20,28 @@ game is ("Declare what the engine consumes; refuse a second copy"). The
 vision is dozens of new games, with code-breaking and word games a family the
 owner asked for.
 
+Widened on 2026-11-20 by `architectural-review` item 4. Its census of
+game-keyed collections in cross-game tests found 54 collections holding 378
+entries, 94 of them with a reason true of a whole kind of game. The same
+shape appears beyond the four ledgers above:
+
+- Hidden answer, missed above: `ALWAYS_SOLVABLE` (`no-solution-load.test.ts`),
+  Mines alone in `untiered-load.test.ts`, `BINDS_A_SHORTCUT_LETTER.wordguess`
+  (`src/puzzle/shortcuts.test.ts`), `KEYPAD_WITHOUT_PENCIL.filling`, and
+  `SETS.guess` in `scripts/checks/color-dark-check.test.ts`.
+- `UNJUDGED`'s `OWN_SOLVER` entries (Ascent, Mines, Undead): the game's hint
+  is not built by the engine's walk.
+- Nothing to deduce: `NARRATES_MOVES` (`hint-quality.test.ts`) holds 7
+  games, all of which declare `finishesByDeduction = nothingToDeduce`.
+- Beveled tiles: Fifteen, Sixteen and Twiddle in `CLOSE_ON_PURPOSE`
+  (`src/puzzle/neighbor-contrast.test.ts`).
+- Copies of a game's own declaration: `color-dark-check`'s `SETS` copies
+  each game's palette ranges from its enum, and `hint-resume.test.ts` writes
+  `LATIN` twice.
+- A migration roster: `MOVED` in `hint-walk-fingerprint.test.ts` lists 40
+  games "moved onto the engine's steps so far". Derive it from how each game
+  builds its hint, or retire it if the migration is done.
+
 ## What Changes
 
 - Each guard reads the kind from what the game is, not from a list: a
@@ -33,5 +55,5 @@ owner asked for.
 
 ## Impact
 
-The four guard files; `docs/testing.md` § "What a game owes the cross-game
+The guard files named above; `docs/testing.md` § "What a game owes the cross-game
 guards" where it names the ledgers. No player-visible change.

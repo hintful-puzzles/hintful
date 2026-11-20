@@ -63,8 +63,7 @@ component's templates, the Playwright checks).
 | `config.ts` | `<puzzle-custom-params-*>`, `<puzzle-preferences-*>` | extensible dialogs for custom game types and preferences |
 | `end-notification.ts` | `<puzzle-end-notification>` | the completion notification |
 
-Historical note: until `retire-c-engine` this layer had two implementations
-behind `PuzzleEngineSurface` — the TypeScript one above, and a `WorkerPuzzle`
-that loaded an Emscripten-built wasm module per puzzle and drove a C++
-`Frontend` through Embind. Every game is native TypeScript now, so the worker
-constructs the TS engine unconditionally and there is no wasm in the app.
+**Why the engine runs in a worker.** A generator can search for seconds or
+minutes on a large or hard type. Off the main thread, the board in play stays
+playable while the next one is dealt (`deal-ahead.ts`), and the player can
+stop a deal that is taking too long. Keep the worker for that reason.

@@ -150,7 +150,5 @@ run, so a new question about upstream behavior is answered behaviorally.
 
 ## Open questions
 
-- Whether the Web Worker still earns its place. It existed to keep heavy WASM
-  off the main thread, and there is no WASM.
 - Whether any one game warrants a stricter, corpus-like differential. It
   would be a per-game option, never a default.

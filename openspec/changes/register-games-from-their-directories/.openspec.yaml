@@ -1,0 +1,5 @@
+# Unknown at scaffolding whether a requirement names the two lists. Drop
+# skip_specs and add a delta if one does (task 1.1 reads the specs too).
+schema: spec-driven
+created: 2026-11-20
+skip_specs: true
