@@ -16,7 +16,7 @@
       of item 4.
 - [x] 2.3 Scaffold `walk-hints-once-for-the-guards` (item 5).
 - [x] 2.4 Scaffold `finish-helper-adoptions` (item 2).
-- [ ] 2.5 Each is implemented in its own session, in that order.
+- [x] 2.5 Each is implemented in its own session, in that order.
 
 ## 3. The owner's pick
 
