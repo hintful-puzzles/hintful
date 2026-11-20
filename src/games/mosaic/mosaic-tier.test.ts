@@ -403,7 +403,7 @@ describe("the hint on an Unreasonable Mosaic board", () => {
       mark: right === STATE_MARKED ? STATE_MARK_MASK - STATE_MARKED : STATE_MARKED,
     });
     expect(mosaicGame.findMistakes?.(tried)).toEqual([
-      { x: open % 5, y: Math.floor(open / 5) },
+      { x: open % 5, y: Math.floor(open / 5), kind: "cell" },
     ]);
 
     // Trying squares rightly, one at a time, the hint finishes the board.

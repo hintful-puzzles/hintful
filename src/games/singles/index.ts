@@ -16,6 +16,7 @@ import {
   type FiringHint,
 } from "../../engine/described-firing-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type PresetBoards,
@@ -212,14 +213,14 @@ function solve(orig: SinglesState, curr: SinglesState): SolveResult<SinglesMove>
 function findMistakes(state: SinglesState): readonly SinglesMistake[] {
   const solved = makeState(state.w, state.h, state.nums);
   if (solveSpecific(solved, DIFF_ANY) <= 0) return [];
-  const out: SinglesMistake[] = [];
-  for (let i = 0; i < state.n; i++) {
-    const pv = state.flags[i] & (F_BLACK | F_CIRCLE);
-    if (!pv) continue; // undecided cells are never mistakes
-    const sv = solved.flags[i] & (F_BLACK | F_CIRCLE);
-    if (pv !== sv) out.push({ x: i % state.w, y: (i / state.w) | 0 });
-  }
-  return out;
+  // A square's mark is its shading or its circle; the other flags are not
+  // the player's answer.
+  const mark = (flags: ArrayLike<number>) =>
+    Array.from(flags, (f) => f & (F_BLACK | F_CIRCLE));
+  return entryMistakes(
+    { answer: mark(solved.flags), entry: mark(state.flags) },
+    gridCell(state.w),
+  );
 }
 
 /** Each wrong square emptied, in one move. */

@@ -205,7 +205,7 @@ describe("pattern findMistakes", () => {
       w: 1,
       h: 1,
     });
-    expect(findMistakes(dirty)).toEqual([{ x: 0, y: 0 }]);
+    expect(findMistakes(dirty)).toEqual([{ x: 0, y: 0, kind: "cell" }]);
   });
 });
 

@@ -12,6 +12,8 @@ import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.
 import {
   clearEntries,
   type EntryMoves,
+  entryMistakes,
+  gridCell,
   revealEntry,
 } from "../../engine/entry-mistakes.ts";
 import {
@@ -219,17 +221,13 @@ const difficulty = searchTierContract<FillingParams, FillingState>({
  * answer, which the search over the immutable clues found (the Check & Save
  * divergence). Nothing is flagged where it did not prove there is one. */
 function findMistakes(state: FillingState): readonly Point[] {
-  const { w, h, board, clues } = state;
+  const { w, board, clues } = state;
   const answer = answerOf(state);
   if (answer.kind !== "one") return [];
-  const solution = answer.solution;
-  const out: Point[] = [];
-  for (let i = 0; i < w * h; i++) {
-    if (clues[i] === 0 && board[i] !== 0 && board[i] !== solution[i]) {
-      out.push({ x: i % w, y: (i / w) | 0 });
-    }
-  }
-  return out;
+  return entryMistakes(
+    { answer: answer.solution, entry: board, fixed: (i) => clues[i] !== 0 },
+    gridCell(w),
+  );
 }
 
 const entryMoves = (w: number): EntryMoves<FillingMove> => ({

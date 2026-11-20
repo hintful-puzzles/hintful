@@ -9,6 +9,7 @@
  * `Game`'s `executeMove` stays pure.
  */
 import { describedSpace } from "../../engine/describe-runtime.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
   CellMarks,
   describedLadder,
@@ -230,13 +231,15 @@ export function findMistakes(state: UnrulyState): UnrulyMistake[] {
   const solved = solveCopy(state, clues, Number.MAX_SAFE_INTEGER);
   if (!isComplete(solved)) return [];
 
-  const mistakes: UnrulyMistake[] = [];
-  for (let i = 0; i < grid.length; i++) {
-    if (!immutable[i] && grid[i] !== EMPTY && grid[i] !== solved.grid[i]) {
-      mistakes.push({ x: i % w2, y: Math.floor(i / w2) });
-    }
-  }
-  return mistakes;
+  return entryMistakes(
+    {
+      answer: solved.grid,
+      entry: grid,
+      empty: EMPTY,
+      fixed: (i) => immutable[i] !== 0,
+    },
+    gridCell(w2),
+  );
 }
 
 /** Run the full solver from a copy of `view`'s grid and return the solved

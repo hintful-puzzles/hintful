@@ -311,7 +311,10 @@ describe("sticks hint — lifecycle", () => {
       kind: "set",
       changes: [{ index: wrong.index, line: wrong.to === "hor" ? "ver" : "hor" }],
     });
-    expect(sticksGame.findMistakes?.(bad)).toContainEqual({ index: wrong.index });
+    expect(sticksGame.findMistakes?.(bad)).toContainEqual({
+      index: wrong.index,
+      kind: "cell",
+    });
   });
 
   it("counts a solved board as finished, so the midend refuses it", () => {

@@ -354,7 +354,7 @@ describe("the hint on an Unreasonable Filling board", () => {
       value: (right % 5) + 1,
     });
     expect(fillingGame.findMistakes?.(tried)).toEqual([
-      { x: open % 5, y: Math.floor(open / 5) },
+      { x: open % 5, y: Math.floor(open / 5), kind: "cell" },
     ]);
 
     // Trying numbers rightly, one empty square at a time, the hint finishes it.

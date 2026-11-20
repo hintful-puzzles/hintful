@@ -298,7 +298,7 @@ describe("the hint on an Unreasonable Pattern board", () => {
     const wrong = right === GRID_FULL ? GRID_EMPTY : GRID_FULL;
     // A square tried wrongly is what the mistake check is there to catch.
     const tried = executeMove(state, { type: "fill", value: wrong, ...at });
-    expect(findMistakes(tried)).toEqual([{ x: at.x, y: at.y }]);
+    expect(findMistakes(tried)).toEqual([{ x: at.x, y: at.y, kind: "cell" }]);
 
     const move = { type: "fill", value: right, ...at } as const;
     state = executeMove(state, move);

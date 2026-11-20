@@ -249,7 +249,11 @@ describe("filling findMistakes", () => {
     const wrongValue = solution[target] === 1 ? 2 : 1;
     const dirty = executeMove(st, { type: "set", cells: [target], value: wrongValue });
     const mistakes = fillingGame.findMistakes?.(dirty) ?? [];
-    expect(mistakes).toContainEqual({ x: target % p.w, y: (target / p.w) | 0 });
+    expect(mistakes).toContainEqual({
+      x: target % p.w,
+      y: (target / p.w) | 0,
+      kind: "cell",
+    });
 
     // Correcting the cell clears the mistake.
     const fixed = executeMove(dirty, {

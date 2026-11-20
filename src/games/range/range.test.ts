@@ -204,7 +204,7 @@ describe("solve + findMistakes", () => {
     const c = blackCell % st.w;
     const wrong = rangeGame.executeMove(st, { sets: [{ r, c, value: "white" }] });
     const mistakes = rangeGame.findMistakes?.(wrong) as RangeMistake[];
-    expect(mistakes).toContainEqual({ r, c });
+    expect(mistakes).toContainEqual({ r, c, kind: "cell" });
   });
 });
 

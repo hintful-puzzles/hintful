@@ -19,6 +19,7 @@ import {
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
 import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
   CellMarks,
   describedLadder,
@@ -494,14 +495,13 @@ export function encodeSolution(solCells: Uint8Array): string {
 export function findMistakes(state: MosaicState): MosaicMistake[] {
   const answer = answerOf(state);
   if (answer.kind !== "one") return [];
-  const solCells = answer.solution;
   const { width, cells } = state;
-  const mistakes: MosaicMistake[] = [];
-  for (let pos = 0; pos < cells.length; pos++) {
-    const mark = cells[pos] & STATE_MARK_MASK;
-    if (mark !== STATE_UNMARKED && mark !== solCells[pos]) {
-      mistakes.push({ x: pos % width, y: Math.floor(pos / width) });
-    }
-  }
-  return mistakes;
+  return entryMistakes(
+    {
+      answer: answer.solution,
+      entry: Array.from(cells, (c) => c & STATE_MARK_MASK),
+      empty: STATE_UNMARKED,
+    },
+    gridCell(width),
+  );
 }

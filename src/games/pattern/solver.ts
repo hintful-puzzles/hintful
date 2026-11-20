@@ -31,6 +31,7 @@ import {
   listClues,
   rangeMask,
 } from "../../engine/describe-runtime.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
   CellMarks,
   compiledRung,
@@ -559,14 +560,8 @@ const gridValOf = (v: number): GridVal => (v === SHADED ? GRID_FULL : GRID_EMPTY
 export function findMistakes(state: PatternState): readonly PatternMistake[] {
   const solution = solveState(state);
   if (!solution) return [];
-  const { w, h } = state.common;
-  const { grid } = state;
-  const out: PatternMistake[] = [];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (grid[i] !== GRID_UNKNOWN && grid[i] !== solution[i]) out.push({ x, y });
-    }
-  }
-  return out;
+  return entryMistakes(
+    { answer: solution, entry: state.grid, empty: GRID_UNKNOWN },
+    gridCell(state.common.w),
+  );
 }

@@ -32,11 +32,36 @@
 
 ## 2. Mistakes and solve
 
-- [ ] 2.1 Migrate answer-comparing `findMistakes`, `clearMistakes` and
+- [x] 2.1 Migrate answer-comparing `findMistakes`, `clearMistakes` and
       `revealOne` onto `entryMistakes`, `clearEntries` and `revealEntry`.
       A game whose mistakes are not answer comparisons keeps its own.
-- [ ] 2.2 Migrate `solve` onto `solveFromAnswer` where it only replays the
-      answer; default the one-line `solveAtCap`.
+      2026-11-20, sorted the 47 games without `entryMistakes`: 16 have no
+      `findMistakes` (no hidden answer), Guess has its own shared
+      `ruleOutMistakes`, and 12 mark edges, links or pairs
+      (`solver-and-generator.md` § "Edge games flag set edges only"). Seven
+      compared one entry per cell with the answer in a loop of their own and
+      now use `entryMistakes`: Unruly, Filling, Pattern, Mosaic, Range,
+      Singles and Sticks, the last three on the mark bits of their flag
+      words. Their mistakes gain `kind: "cell"`, which none of them reads.
+      Kept: Light Up, Black Box and Boats, where a "nothing here" mark is
+      right wherever the answer holds no piece, so the entry equals the
+      answer only after re-encoding; Signpost and Light Up, whose mistake
+      `kind` already names which mark is wrong; Ascent, whose blank is any
+      negative; and the mixed loops of Net, Salad (already on
+      `entryMistake`), Slant and Tents. Their `clearMistakes` and
+      `revealOne` batch the board or fill shaded squares first, which is not
+      `clearEntries`' shape.
+- [x] 2.2 Migrate `solve` onto `solveFromAnswer` where it only replays the
+      answer; default the one-line `solveAtCap`. Nothing to migrate: every
+      game on the search's tiers already answers `solve` through
+      `solveFromAnswer` (Guess only matched the census by a draw-state field
+      named `answerCache`). The other `solve`s decode the generator's
+      `aux`, run a deduction solver or use `solveBySearch`, and have no
+      search verdict to hand it. The one-line
+      `solveAtCap: (p, desc, cap) => solveX(newState(p, desc), cap)` is in
+      three games (Norinori, Spokes, Wordtrail), not 29: the rest map their
+      solver's own return codes. A default would be a second field beside
+      `solveAtCap` to save one line in three games, so it is declined.
 
 ## 3. Tests and input
 

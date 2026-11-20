@@ -206,7 +206,7 @@ describe("solve command + findMistakes", () => {
     );
     expect(findMistakes(state)).toEqual([]);
     state = executeMove(state, { type: "toggle", x: 1, y: 0, double: true }); // blank
-    expect(findMistakes(state)).toEqual([{ x: 1, y: 0 }]);
+    expect(findMistakes(state)).toEqual([{ x: 1, y: 0, kind: "cell" }]);
     state = executeMove(state, { type: "toggle", x: 1, y: 0, double: true }); // → black
     expect(findMistakes(state)).toEqual([]);
   });

@@ -12,6 +12,7 @@
  */
 
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
+import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type SolveResult,
@@ -174,17 +175,12 @@ function solve(orig: RangeState, _curr: RangeState): SolveResult<RangeMove> {
 function findMistakes(state: RangeState): readonly RangeMistake[] {
   const answer = answerOf(state);
   if (answer.kind !== "one") return [];
-  const solution = answer.solution;
-  const out: RangeMistake[] = [];
-  for (let r = 0; r < state.h; r++) {
-    for (let c = 0; c < state.w; c++) {
-      const cell = idx(r, c, state.w);
-      const v = state.grid[cell];
-      // Only a decided mark can be a mistake; clues and undecided cells never are.
-      if ((v === BLACK || v === WHITE) && solution[cell] !== v) out.push({ r, c });
-    }
-  }
-  return out;
+  const { w, grid } = state;
+  // A clue is a positive number, and a clue square is never a mistake.
+  return entryMistakes(
+    { answer: answer.solution, entry: grid, empty: EMPTY, fixed: (i) => grid[i] > 0 },
+    (i) => ({ r: (i / w) | 0, c: i % w }),
+  );
 }
 
 /** Each wrong square made undecided again, in one move. */

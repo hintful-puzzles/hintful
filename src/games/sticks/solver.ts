@@ -30,6 +30,7 @@ import {
   type GridSpace,
 } from "../../engine/describe-runtime.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   CellMarks,
   describedLadder,
@@ -225,17 +226,21 @@ export function hintWalk(state: SticksState): {
  * the search did not prove there is exactly one.
  */
 export function findMistakes(state: SticksState): SticksMistake[] {
-  const { w, h } = state;
   const answer = answerOf(state);
   if (answer.kind !== "one") return [];
-  const solved = answer.solution;
-  const mistakes: SticksMistake[] = [];
-  for (let i = 0; i < w * h; i++) {
-    const placed = state.grid[i] & (F_HOR | F_VER);
-    if (!placed || state.grid[i] & F_BLOCK) continue;
-    if (placed !== (solved[i] & (F_HOR | F_VER))) mistakes.push({ index: i });
-  }
-  return mistakes;
+  const { grid } = state;
+  // A square's mark is its stick's direction; the other flags are not the
+  // player's answer.
+  const stick = (flags: ArrayLike<number>) =>
+    Array.from(flags, (f) => f & (F_HOR | F_VER));
+  return entryMistakes(
+    {
+      answer: stick(answer.solution),
+      entry: stick(grid),
+      fixed: (i) => (grid[i] & F_BLOCK) !== 0,
+    },
+    (index) => ({ index }),
+  );
 }
 
 // --- the live error overlay --------------------------------------------------

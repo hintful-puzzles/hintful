@@ -311,7 +311,7 @@ describe("sticks findMistakes", () => {
     const i = whiteCellSolved(F_VER);
     const state = newState(FIX_PARAMS, FIX.desc);
     state.grid[i] = F_HOR; // contradicts the solution's vertical
-    expect(findMistakes(state)).toEqual([{ index: i }]);
+    expect(findMistakes(state)).toEqual([{ index: i, kind: "cell" }]);
     state.grid[i] = F_VER; // matches the solution
     expect(findMistakes(state)).toEqual([]);
   });
