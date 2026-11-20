@@ -13,14 +13,13 @@
  */
 
 import { FREE, FREE_TEXT } from "../../engine/color/colors.ts";
+import { cellSurface, GRID_DARK, HELD } from "../../engine/color/palette.ts";
 import {
-  CURSOR,
-  cellSurface,
-  FLASH,
-  FLASH_LEAD,
-  GRID_DARK,
-  HELD,
-} from "../../engine/color/palette.ts";
+  COL_BACKGROUND,
+  COL_CURSOR,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
@@ -55,31 +54,23 @@ export const POUR_SECONDS = 0.2;
 
 // --- palette ----------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
 /** The tube's glass, round its inside. */
-const COL_WALL = 1;
+const COL_WALL = FIRST_GAME_SLOT;
 /** The inside of a tube. */
-const COL_INSIDE = 2;
-const COL_CURSOR = 3;
+const COL_INSIDE = FIRST_GAME_SLOT + 1;
 /** The ring round each ball of the run picked up to pour. */
-export const COL_HELD = 4;
-const COL_FLASH = 5;
-const COL_FLASH_LEAD = 6;
+export const COL_HELD = FIRST_GAME_SLOT + 2;
 /** A ball of color `v` is `COL_BALL + v - 1`, its symbol `COL_SYMBOL + v - 1`. */
-export const COL_BALL = 7;
+export const COL_BALL = FIRST_GAME_SLOT + 3;
 export const COL_SYMBOL = COL_BALL + MAX_COLORS;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   // The glass is a line round the tube, strong enough to read as one on the
   // plain board.
   out[COL_WALL] = GRID_DARK;
   out[COL_INSIDE] = cellSurface(defaultBackground);
-  out[COL_CURSOR] = CURSOR;
   out[COL_HELD] = HELD;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   for (let i = 0; i < MAX_COLORS; i++) {
     out[COL_BALL + i] = FREE[i];
     out[COL_SYMBOL + i] = FREE_TEXT[i];
@@ -374,8 +365,7 @@ function drawTube(
     );
   };
   glass(wall, COL_WALL);
-  const ground =
-    l.tone === WIN_NONE ? COL_INSIDE : winSlot(l.tone, COL_FLASH, COL_FLASH_LEAD);
+  const ground = l.tone === WIN_NONE ? COL_INSIDE : winSlot(l.tone);
   glass(0, ground);
   // The mouth is open: the glass's top edge is not drawn.
   dr.drawRect(

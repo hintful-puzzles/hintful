@@ -10,6 +10,7 @@
  * check the hint's soundness rests on.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
@@ -47,7 +48,7 @@ import {
   LOOPY_GRIDS,
   type LoopyParams,
 } from "./params.ts";
-import { COL_HINT_CELL, COL_MISTAKE, PREFERRED_TILE_SIZE } from "./render.ts";
+import { COL_MISTAKE, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   type CornerWhy,
   type LoopyReason,
@@ -1249,14 +1250,14 @@ describe("Loopy hint frames", () => {
       ops.filter((o) => o.op === "text" && o.color === color && /^[=≠]$/.test(o.text));
     expectRing(ops);
     expect(signs(ringsOf(ops)[0].color)).toHaveLength(1);
-    expect(signs(COL_HINT_CELL)).toHaveLength(marksOf(step).pairs.length);
+    expect(signs(COL_HINT_OUTLINE)).toHaveLength(marksOf(step).pairs.length);
     expect(ops).toMatchSnapshot();
   });
 
   it("outlines the clue a step counts inside its face", () => {
     const { result } = frame("oneFace");
     const ops = result.recording.ops;
-    const outline = ops.filter((o) => o.op === "line" && o.color === COL_HINT_CELL);
+    const outline = ops.filter((o) => o.op === "line" && o.color === COL_HINT_OUTLINE);
     // One stroke per side of the face, and every face has three at least; a loop
     // band shares the color.
     expect(outline.length).toBeGreaterThanOrEqual(3);
@@ -1278,7 +1279,7 @@ describe("Loopy hint frames", () => {
           (o.op === "line" && o.color === color),
       );
     expect(inColor(ink).length).toBeGreaterThan(0);
-    expect(inColor(COL_HINT_CELL).length).toBeGreaterThan(0);
+    expect(inColor(COL_HINT_OUTLINE).length).toBeGreaterThan(0);
     // A filled band for a corner needing a line, and none for one that can only
     // take one at most.
     const filled = ops.filter((o) => o.op === "polygon" && o.fill === ink);
@@ -1365,7 +1366,9 @@ describe("Loopy hint: two blocked dots settle a clue", () => {
 
     const rings = result.recording.ops.filter(
       (o) =>
-        o.op === "circle" && o.fill === COL_HINT_CELL && o.outline === COL_HINT_CELL,
+        o.op === "circle" &&
+        o.fill === COL_HINT_OUTLINE &&
+        o.outline === COL_HINT_OUTLINE,
     );
     expect(rings, "one ring per dot the sentence names").toHaveLength(2);
     // The step settles every edge of the face that was still open: exactly one

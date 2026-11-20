@@ -13,11 +13,21 @@
  * and a line is drawn in it while the first of its ends is lit.
  */
 
+import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
+import { TWO } from "../../engine/color/colors.ts";
+import { HELD, INK } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { textBox } from "../../engine/ring.ts";
-import type { DrawTextOptions, Point, Rect } from "../../engine/types.ts";
+import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import {
   type Flash,
   sweepRanks,
@@ -38,20 +48,34 @@ import {
   type UntangleUi,
 } from "./state.ts";
 
-// Palette indices (must match `untangleGame.colors`). Exported so the
-// render tests can assert on the exact color an op carries.
-export const COL_BACKGROUND = 1;
-export const COL_LINE = 2;
-export const COL_CROSSEDLINE = 3;
-export const COL_OUTLINE = 4;
-export const COL_POINT = 5;
-export const COL_DRAGPOINT = 6;
-export const COL_CURSORPOINT = 7;
-export const COL_NEIGHBOR = 8;
-export const COL_FLASH = 9;
-export const COL_FLASH_LEAD = 10;
-/** The ring round a crossing a hint step removes. */
-export const COL_HINT_CELL = 11;
+// `COL_BACKGROUND` is the dead space round the play area, darker. The win
+// flash's two colors are the highlight's body: the fill of a point, and the
+// color of a line, the win flash is on. `COL_HINT_OUTLINE` is the ring round
+// a crossing a hint step removes.
+/** The play area, which the board's scheme names (`paletteScheme`). */
+export const COL_PLAY_AREA = FIRST_GAME_SLOT;
+export const COL_LINE = FIRST_GAME_SLOT + 1;
+export const COL_CROSSEDLINE = COL_ERROR;
+export const COL_OUTLINE = FIRST_GAME_SLOT + 2;
+export const COL_POINT = FIRST_GAME_SLOT + 3;
+export const COL_DRAGPOINT = FIRST_GAME_SLOT + 4;
+/** The held vertex's own green, which it is never shown beside: picking the
+ * vertex up is told by its neighbors, which take the pair's other color. */
+export const COL_CURSORPOINT = COL_CURSOR;
+export const COL_NEIGHBOR = FIRST_GAME_SLOT + 5;
+
+export function colors(defaultBackground: Color): Color[] {
+  const { background, lowlight } = mkhighlight(defaultBackground);
+  const out = rolePalette(lowlight);
+  out[COL_PLAY_AREA] = background;
+  out[COL_LINE] = INK;
+  out[COL_OUTLINE] = INK;
+  out[COL_POINT] = TWO[1]; // a ball the player moves
+  out[COL_DRAGPOINT] = HELD; // the vertex you have picked up
+  // The vertices joined to the held one, against the rest: the pair.
+  out[COL_NEIGHBOR] = TWO[0];
+  return out;
+}
 
 /** Radius (px) of the ring round a crossing a hint step removes — just wider
  * than a point, so a ring is never mistaken for one. */
@@ -157,7 +181,7 @@ export function redrawUntangle(
 
   // Full-frame: fill the background every repaint.
   const size = s.w * ts;
-  dr.drawRect({ x: 0, y: 0, w: size, h: size }, COL_BACKGROUND);
+  dr.drawRect({ x: 0, y: 0, w: size, h: size }, COL_PLAY_AREA);
 
   // Frame the playable area so the drop zone is unambiguous (the gray
   // beyond it — e.g. layout padding — is dead space). Drags clamp a
@@ -171,8 +195,7 @@ export function redrawUntangle(
     COL_OUTLINE,
   );
 
-  const flashColor = (tone: WinTone): number | null =>
-    tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : null;
+  const flashColor = (tone: WinTone): number | null => (tone ? winSlot(tone) : null);
 
   // Edges. Show crossed edges red when the preference is on; during an
   // animation the crossings reflect the from-state, matching upstream.
@@ -209,7 +232,7 @@ export function redrawUntangle(
       if (ui.vertexNumbers) {
         // Blank the blob area, to the highlight's color under a lit point,
         // then draw the index number in `c`.
-        const ground = flashColor(ds.lit[i]) ?? COL_BACKGROUND;
+        const ground = flashColor(ds.lit[i]) ?? COL_PLAY_AREA;
         dr.drawCircle({ x: ds.x[i], y: ds.y[i] }, DRAG_THRESHOLD, ground, ground);
         const { origin, options } = numberText({ x: ds.x[i], y: ds.y[i] });
         dr.drawText(origin, options, c, String(i));
@@ -232,8 +255,8 @@ export function redrawUntangle(
   // one the player can see. Unfilled, so the crossing stays visible inside.
   for (const c of marks.of("outline", CROSSING)) {
     const center = { x: Math.trunc(c.x * ts), y: Math.trunc(c.y * ts) };
-    dr.drawCircle(center, CROSSING_RING, -1, COL_HINT_CELL);
-    dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT_CELL);
+    dr.drawCircle(center, CROSSING_RING, -1, COL_HINT_OUTLINE);
+    dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT_OUTLINE);
   }
   // The step's rings: round every ringed point, the one it moves and, on a
   // journey, those still to move after it, so the count in the narration is

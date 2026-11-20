@@ -4,6 +4,7 @@
  * slant-differential.test.ts).
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -35,13 +36,7 @@ import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/slant-c-reference.json" with { type: "json" };
 import { newDesc, slantGenerate } from "./generator.ts";
 import { slantGame } from "./index.ts";
-import {
-  border,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_GROUNDED,
-} from "./render.ts";
+import { border, COL_GROUNDED } from "./render.ts";
 import { SOLVE_UNIQUE, slantSolve } from "./solver.ts";
 import {
   computeErrors,

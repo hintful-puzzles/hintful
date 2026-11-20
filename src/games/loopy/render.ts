@@ -24,18 +24,23 @@
  */
 
 import {
-  CURSOR,
   clueDoneColor,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   INK,
   lineMaybeColor,
   lineNoColor,
   PENCIL_BODY,
   pencilColor,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import type { Grid, GridDot, GridFace, GridType } from "../../engine/grid/index.ts";
@@ -74,25 +79,22 @@ import {
 
 export const PREFERRED_TILE_SIZE = 32;
 
-// --- palette (index-for-index with the loopy.c color enum) ----------------
-export const COL_BACKGROUND = 0;
-export const COL_FOREGROUND = 1;
-export const COL_LINEUNKNOWN = 2;
-const COL_HIGHLIGHT = 3;
-export const COL_MISTAKE = 4;
-const COL_SATISFIED = 5;
-export const COL_FAINT = 6;
-/** The keyboard cursor — this fork's addition; upstream has no cursor here. */
-export const COL_CURSOR = 7;
-/** What a hint step reasons from: clues, dots, lines and the notes it cites.
- * The edges it sets and the note it places are ringed by the engine. */
-export const COL_HINT_CELL = 8;
+// --- palette ----------------------------------------------------------------
+// `COL_CURSOR` is the keyboard cursor, this fork's addition (upstream has no
+// cursor here); `COL_HINT_OUTLINE` is what a hint step reasons from (clues,
+// dots, lines and the notes it cites; the edges it sets and the note it
+// places are ringed by the engine).
+export const COL_FOREGROUND = FIRST_GAME_SLOT;
+export const COL_LINEUNKNOWN = FIRST_GAME_SLOT + 1;
+// The win flash (`COL_FLASH`, `COL_FLASH_LEAD`) is on an edge of the loop.
+/** A line in a broken rule, and a mistake Check & Save found. */
+export const COL_MISTAKE = COL_ERROR;
+const COL_SATISFIED = FIRST_GAME_SLOT + 2;
+export const COL_FAINT = FIRST_GAME_SLOT + 3;
 /** The player's corner and pair notes. */
-export const COL_PENCIL = 9;
+export const COL_PENCIL = FIRST_GAME_SLOT + 4;
 /** The notes-mode indicator's pencil body. */
-export const COL_PENCIL_BODY = 10;
-/** The leading edge of the win flash, on an edge of the loop. */
-const COL_HIGHLIGHT_LEAD = 11;
+export const COL_PENCIL_BODY = FIRST_GAME_SLOT + 5;
 
 /**
  * The subset of the game UI the renderer reads. The full `LoopyUi` lives in
@@ -206,20 +208,14 @@ function boardSize(type: GridType, w: number, h: number, tileSize: number): Size
  * concern").
  */
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_FOREGROUND] = INK;
   out[COL_LINEUNKNOWN] = lineMaybeColor(defaultBackground);
-  out[COL_HIGHLIGHT] = FLASH;
-  out[COL_HIGHLIGHT_LEAD] = FLASH_LEAD;
-  out[COL_MISTAKE] = ERROR;
   // A deliberate, player-visible aid: upstream drew a satisfied clue in the
   // same black as an open one. Graying it retires the clue the way Magnets and
   // Towers do.
   out[COL_SATISFIED] = clueDoneColor(defaultBackground);
   out[COL_FAINT] = lineNoColor(defaultBackground);
-  out[COL_CURSOR] = CURSOR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_PENCIL] = pencilColor(defaultBackground);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   return out;
@@ -255,8 +251,8 @@ const PHASES = [
   COL_FAINT,
   COL_LINEUNKNOWN,
   COL_FOREGROUND,
-  COL_HIGHLIGHT,
-  COL_HIGHLIGHT_LEAD,
+  COL_FLASH,
+  COL_FLASH_LEAD,
   COL_MISTAKE,
 ] as const;
 
@@ -294,9 +290,7 @@ function lineColor(
   if (s.lines[i] === LINE_UNKNOWN) return COL_LINEUNKNOWN;
   if (s.lines[i] === LINE_NO) return COL_FAINT;
   if (mistaken[i]) return COL_MISTAKE;
-  return tone === WIN_NONE
-    ? COL_FOREGROUND
-    : winSlot(tone, COL_HIGHLIGHT, COL_HIGHLIGHT_LEAD);
+  return tone === WIN_NONE ? COL_FOREGROUND : winSlot(tone);
 }
 
 // --- notes, hint and mistake marks -------------------------------------------
@@ -447,7 +441,7 @@ function drawFaceOutline(dr: GameDrawing, g: Grid, ts: number, f: GridFace): voi
   const [cx, cy] = toScreen(g, ts, f.ix, f.iy);
   const corners = f.dots.flatMap((d) => (d === null ? [] : [dotAt(g, ts, d)]));
   const thickness = Math.max(2, Math.round(lineThickness(ts) * 0.7));
-  strokeScaledPolygon(dr, corners, { x: cx, y: cy }, 0.8, COL_HINT_CELL, thickness);
+  strokeScaledPolygon(dr, corners, { x: cx, y: cy }, 0.8, COL_HINT_OUTLINE, thickness);
 }
 
 /** A ring round a dot the sentence names: an annulus, painted before the edges so
@@ -457,7 +451,7 @@ const dotRingRadius = (ts: number): number => clamp(5, 2 * dotRadius(ts) + 4, 10
 function drawDotRing(dr: GameDrawing, p: Point, ts: number): void {
   const outer = dotRingRadius(ts);
   const width = Math.max(2, Math.round(lineThickness(ts) * 0.8));
-  dr.drawCircle(p, outer, COL_HINT_CELL, COL_HINT_CELL);
+  dr.drawCircle(p, outer, COL_HINT_OUTLINE, COL_HINT_OUTLINE);
   dr.drawCircle(p, outer - width, COL_BACKGROUND, COL_BACKGROUND);
 }
 
@@ -870,7 +864,7 @@ function drawNotes(
     const color = wrongCorners.has(dline)
       ? COL_MISTAKE
       : citedCorners.has(dline)
-        ? COL_HINT_CELL
+        ? COL_HINT_OUTLINE
         : COL_PENCIL;
     drawCornerWedge(dr, g, ts, dline, bits, color);
   }
@@ -879,7 +873,7 @@ function drawNotes(
     const color = wrongPairs.has(key)
       ? COL_MISTAKE
       : citedPairs.has(key)
-        ? COL_HINT_CELL
+        ? COL_HINT_OUTLINE
         : COL_PENCIL;
     return drawPairConnector(dr, g, ts, p, signAt(signs, p), color);
   });
@@ -1024,7 +1018,7 @@ export function redraw(
   const thin = Math.max(2, Math.round(2 * lineThickness(ts)));
   for (const i of marks.of("outline", EDGE)) {
     const [a, b] = edgeEnds(g, ts, i);
-    dr.drawLine(a, b, COL_HINT_CELL, thin);
+    dr.drawLine(a, b, COL_HINT_OUTLINE, thin);
   }
   for (const f of marks.of("outline", FACE)) drawFaceOutline(dr, g, ts, g.faces[f]);
   for (const d of marks.of("outline", DOT))
@@ -1075,7 +1069,7 @@ export function redraw(
     const thickness =
       color === COL_FAINT
         ? faintLineThickness(ts)
-        : color === COL_HIGHLIGHT || color === COL_HIGHLIGHT_LEAD
+        : color === COL_FLASH || color === COL_FLASH_LEAD
           ? 2 * lineThickness(ts)
           : lineThickness(ts);
     for (const i of buckets.get(color) ?? []) {

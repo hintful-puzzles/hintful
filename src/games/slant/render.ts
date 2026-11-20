@@ -18,11 +18,7 @@
 
 import {
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -30,6 +26,15 @@ import {
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { slantGrounded } from "../../engine/color/palette-games.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
@@ -42,6 +47,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
@@ -59,41 +65,32 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette --------------------------------------------------------------
-const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
-const COL_INK = 2;
-export const COL_ERROR = 3;
-const COL_CURSOR = 4;
+// `COL_HINT_OUTLINE` outlines the evidence area and the cited anchors; the win
+// flash (`COL_FLASH`, `COL_FLASH_LEAD`) is on a square's ground.
+export const COL_GRID = FIRST_GAME_SLOT;
+const COL_INK = FIRST_GAME_SLOT + 1;
+/** The cursor's square: a wash, not the cursor role. */
+const COL_HIGHLIGHT_WASH = FIRST_GAME_SLOT + 2;
 /** The surface of a square, slashed or not: the slash is the content. */
-const COL_CELL = 5;
-export const COL_GROUNDED = 6;
-export const COL_HINT_CELL = 7; // evidence area and cited anchors, outlined
-export const COL_PENCIL = 8; // the player's same-slant marks
-const COL_PENCIL_BODY = 9; // the notes-mode indicator's pencil
+const COL_CELL = FIRST_GAME_SLOT + 3;
+export const COL_GROUNDED = FIRST_GAME_SLOT + 4;
+export const COL_PENCIL = FIRST_GAME_SLOT + 5; // the player's same-slant marks
+const COL_PENCIL_BODY = FIRST_GAME_SLOT + 6; // the notes-mode indicator's pencil
 /** The lifted disc under a clue. */
-const COL_GIVEN = 10;
-/** The ground of a square the win flash is on: its body, and its leading
- * edge. */
-export const COL_FLASH = 11;
-export const COL_FLASH_LEAD = 12;
+const COL_GIVEN = FIRST_GAME_SLOT + 7;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  const out = rolePalette(background);
   out[COL_GRID] = surfaceGrid(background);
   out[COL_INK] = INK;
-  out[COL_ERROR] = ERROR;
   // A tile fill under the slash: the "you are here" wash, not the green mark
   // (palette.ts, `CURSOR`), whose brackets would land on the clue discs at the
   // square's corners.
-  out[COL_CURSOR] = highlightWash(background);
+  out[COL_HIGHLIGHT_WASH] = highlightWash(background);
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GROUNDED] = slantGrounded(background);
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_PENCIL] = pencilColor(defaultBackground);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   return out;
@@ -148,7 +145,7 @@ const SIDE_B = 9;
 const PIN = 1 << 12;
 
 /** A mark's ink by its code; {@link MARK_PLACING} is ringed instead. */
-const MARK_COLORS = [-1, COL_PENCIL, COL_ERROR, COL_HINT_CELL];
+const MARK_COLORS = [-1, COL_PENCIL, COL_ERROR, COL_HINT_OUTLINE];
 
 const INDICATOR: PencilIndicatorStyle = {
   background: COL_BACKGROUND,
@@ -172,14 +169,12 @@ export function computeSize(p: SlantParams, ts: number): Size {
 
 export interface SlantDrawState extends PencilIndicatorCache {
   tileSize: number;
-  /** Last-drawn packed word per tile of the (w+2)×(h+2) ring-extended grid;
-   * −1 forces a draw. */
-  grid: Int32Array;
-  /** Scratch for the frame being built (upstream `todraw`). */
+  /** Per tile of the (w+2)×(h+2) ring-extended grid, its packed word and its
+   * side key (its same-slant marks and pin; see `MARK_PLAYER`). */
+  tiles: TileCache;
+  /** Scratch for the frame being built (upstream `todraw`), and its side
+   * keys. */
   todraw: Int32Array;
-  /** Last-drawn side key per tile (its same-slant marks and pin), and the
-   * frame's; see `MARK_PLAYER`. */
-  sideKeys: Int32Array;
   todrawSideKeys: Int32Array;
 }
 
@@ -187,9 +182,8 @@ export function newDrawState(state: SlantState, tileSize: number): SlantDrawStat
   const n = (state.w + 2) * (state.h + 2);
   return {
     tileSize,
-    grid: new Int32Array(n).fill(-1),
-    todraw: new Int32Array(n).fill(-1),
-    sideKeys: new Int32Array(n).fill(-1),
+    tiles: new TileCache(n, { words: 2 }),
+    todraw: new Int32Array(n),
     todrawSideKeys: new Int32Array(n),
     pencilModeShown: null,
   };
@@ -207,7 +201,7 @@ function drawClue(
   hint: boolean,
 ): void {
   if (v < 0) return;
-  const tcol = err ? COL_ERROR : hint ? COL_HINT_CELL : COL_INK;
+  const tcol = err ? COL_ERROR : hint ? COL_HINT_OUTLINE : COL_INK;
   dr.drawCircle(
     { x: coord(x, ts), y: coord(y, ts) },
     clueRadius(ts),
@@ -283,7 +277,7 @@ function drawTile(
       : v & LIT
         ? COL_FLASH
         : v & CURSOR
-          ? COL_CURSOR
+          ? COL_HIGHLIGHT_WASH
           : x >= 0 && x < w && y >= 0 && y < h
             ? COL_CELL
             : COL_BACKGROUND,
@@ -376,14 +370,14 @@ function drawTile(
     const sx = coord(x, ts) + inset;
     const sy = coord(y, ts) + inset;
     const span = ts - 2 * inset;
-    dr.drawRect({ x: sx, y: sy, w: span, h: 1 }, COL_HINT_CELL);
-    dr.drawRect({ x: sx, y: sy + span - 1, w: span, h: 1 }, COL_HINT_CELL);
-    dr.drawRect({ x: sx, y: sy, w: 1, h: span }, COL_HINT_CELL);
-    dr.drawRect({ x: sx + span - 1, y: sy, w: 1, h: span }, COL_HINT_CELL);
-    dr.drawRect({ x: sx + 1, y: sy + 1, w: span - 2, h: 1 }, COL_HINT_CELL);
-    dr.drawRect({ x: sx + 1, y: sy + span - 2, w: span - 2, h: 1 }, COL_HINT_CELL);
-    dr.drawRect({ x: sx + 1, y: sy + 1, w: 1, h: span - 2 }, COL_HINT_CELL);
-    dr.drawRect({ x: sx + span - 2, y: sy + 1, w: 1, h: span - 2 }, COL_HINT_CELL);
+    dr.drawRect({ x: sx, y: sy, w: span, h: 1 }, COL_HINT_OUTLINE);
+    dr.drawRect({ x: sx, y: sy + span - 1, w: span, h: 1 }, COL_HINT_OUTLINE);
+    dr.drawRect({ x: sx, y: sy, w: 1, h: span }, COL_HINT_OUTLINE);
+    dr.drawRect({ x: sx + span - 1, y: sy, w: 1, h: span }, COL_HINT_OUTLINE);
+    dr.drawRect({ x: sx + 1, y: sy + 1, w: span - 2, h: 1 }, COL_HINT_OUTLINE);
+    dr.drawRect({ x: sx + 1, y: sy + span - 2, w: span - 2, h: 1 }, COL_HINT_OUTLINE);
+    dr.drawRect({ x: sx + 1, y: sy + 1, w: 1, h: span - 2 }, COL_HINT_OUTLINE);
+    dr.drawRect({ x: sx + span - 2, y: sy + 1, w: 1, h: span - 2 }, COL_HINT_OUTLINE);
   }
 
   // The evidence region's outline, on the square's own border, over the grid
@@ -394,7 +388,7 @@ function drawTile(
   {
     const box = { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts };
     const band = { box, outer: 0, inner: Math.max(2, ts >> 4) };
-    if (v & HINT_EVID) drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);
+    if (v & HINT_EVID) drawMarkSides(dr, band, MARK_ALL, COL_HINT_OUTLINE);
     if (v & HINT_TARGET)
       dr.drawRing(
         box,
@@ -661,10 +655,8 @@ export function redraw(
   for (let y = -1; y <= h; y++) {
     for (let x = -1; x <= w; x++) {
       const i = ti(x, y);
-      if (todraw[i] !== ds.grid[i] || marks[i] !== ds.sideKeys[i]) {
+      if (ds.tiles.changed(i, todraw[i], marks[i])) {
         drawTile(dr, ts, w, h, clues, x, y, todraw[i], marks[i]);
-        ds.grid[i] = todraw[i];
-        ds.sideKeys[i] = marks[i];
         // The top-right ring tile paints over the pencil's corner.
         if (x === w && y === -1) ds.pencilModeShown = null;
       }

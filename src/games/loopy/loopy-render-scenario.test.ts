@@ -15,6 +15,7 @@
  * `exactlyOneLoop` clue rule — and the clue positions after a resize.
  */
 import { describe, expect, it } from "vitest";
+import { COL_BACKGROUND, COL_CURSOR } from "../../engine/color/roles.ts";
 import { gridFindIncenter } from "../../engine/grid/index.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -28,8 +29,6 @@ import { type LoopyMove, loopyGame } from "./index.ts";
 import { DIFF_EASY, encodeParams, type LoopyParams } from "./params.ts";
 import {
   border,
-  COL_BACKGROUND,
-  COL_CURSOR,
   COL_FAINT,
   COL_FOREGROUND,
   COL_LINEUNKNOWN,

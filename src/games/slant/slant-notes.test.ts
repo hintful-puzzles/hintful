@@ -5,6 +5,7 @@
  * not against the solver that produced them.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { mark as markWords } from "../../engine/hint-words.ts";
 import {
@@ -27,7 +28,7 @@ import { newDesc } from "./generator.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
 import { ALIKE } from "./hint-marks.ts";
 import { slantGame } from "./index.ts";
-import { border, COL_ERROR, COL_PENCIL } from "./render.ts";
+import { border, COL_PENCIL } from "./render.ts";
 import { solveFromClues } from "./solver.ts";
 import {
   ALIKE_DOWN,

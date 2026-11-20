@@ -62,7 +62,7 @@
 
 ## 2. Migrate
 
-- [ ] 2.1 Move the games in batches by shape; each runs in the app before it
+- [x] 2.1 Move the games in batches by shape; each runs in the app before it
       counts. Record in this file which are moved and which keep the
       explicit form, and why.
 
@@ -88,7 +88,9 @@
       magnets, blackbox, tents, boats, tracks, salad, group, crossing,
       subsets, bridges, guess, undead; of the neighbor-painting games,
       fifteen, sixteen, twiddle, net, netslide, bricks, spokes, ascent,
-      map.
+      map; and slant, which the census missed. Palette roles only, keeping
+      the explicit form: cube, loopy, untangle (a full repaint each frame),
+      numgame (its elements), ballsort (its pour).
       A game whose board
       values are palette indices (SameGame's and Flood's tile colors) numbers
       them from a run after its own slots (`COL_PIECE + c - 1`,
@@ -170,9 +172,18 @@
       dirty-marking caches stay its own and `forget` a cell in the tile
       cache, keyed by its fill. Map's two words are its cache and hint
       words, the ring key a string lane; its mistake outline held the
-      error color under a second slot and is `COL_ERROR`. Not tiles,
-      keeping the explicit form:
-      cube, loopy, untangle (palette roles only).
+      error color under a second slot and is `COL_ERROR`. Slant's cursor
+      was a wash and is `COL_HIGHLIGHT_WASH`. Untangle's slot 0 was the
+      dead space round its play area, which is what the midend lays, so
+      it stays the background role and the play area is its own slot,
+      which `paletteScheme` names; its `colors()` moved from `index.ts`.
+      Loopy's mistake and Untangle's crossed line and cursor point keep
+      their names as aliases of the roles. Once no game imported `CURSOR`,
+      `ERROR` or the flash from `palette.ts`, two guards read only that
+      import: `palette-source.test.ts`'s shared-role count credits each
+      role `roles.ts` imports to every game that calls `rolePalette`, and
+      `palette-departures.test.ts` finds a slot holding its role in
+      `roles.ts` as well as in the games.
 - [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;
       code and edges to go.
 

@@ -24,6 +24,7 @@
  * it is said once here rather than left to the reader to guess wrong.
  */
 import { describe, expect, it } from "vitest";
+import { COL_CURSOR } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";
 import { Midend } from "../../engine/midend.ts";
@@ -67,7 +68,6 @@ import {
 } from "./params.ts";
 import {
   border,
-  COL_CURSOR,
   computeSize,
   type LoopyDrawState,
   PREFERRED_TILE_SIZE,

@@ -20,17 +20,6 @@
  */
 
 import { rejectMove } from "../../engine/assert-never.ts";
-import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { TWO } from "../../engine/color/colors.ts";
-import {
-  CURSOR,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
-  HELD,
-  HINT_OUTLINE,
-  INK,
-} from "../../engine/color/palette.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
@@ -57,7 +46,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { NO_SOLUTION } from "../../engine/solve-failure.ts";
-import type { Color, Point, Size } from "../../engine/types.ts";
+import type { Point, Size } from "../../engine/types.ts";
 import { WIN_NONE, type WinTone } from "../../engine/win-wave.ts";
 import { newUntangleDesc } from "./generator.ts";
 import {
@@ -66,7 +55,7 @@ import {
   type UntangleRung,
   untangleKeepTrack,
 } from "./hint.ts";
-import { COL_BACKGROUND, redrawUntangle } from "./render.ts";
+import { COL_PLAY_AREA, colors, redrawUntangle } from "./render.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
 import {
   buildEdges,
@@ -483,32 +472,8 @@ export const untangleGame: Game<
 
   // --- rendering -----------------------------------------------------
   // Color 0 is the dead space around the play area.
-  paletteScheme: { board: COL_BACKGROUND },
-  colors: (defaultBackground: Color): Color[] => {
-    const { background, lowlight } = mkhighlight(defaultBackground);
-    // Index-for-index with the upstream COL_* enum (untangle.c:57) up to the
-    // flash, whose two colors (a gray and a white) are the highlight's body:
-    // the fill of a point, and the color of a line, the win flash is on.
-    return [
-      lowlight, // 0 COL_SYSBACKGROUND (dead space, darker)
-      background, // 1 COL_BACKGROUND (play area)
-      INK, // 2 COL_LINE
-      ERROR, // 3 COL_CROSSEDLINE
-      INK, // 4 COL_OUTLINE
-      TWO[1], // 5 COL_POINT — a ball the player moves
-      HELD, // 6 COL_DRAGPOINT — the vertex you have picked up
-      // 7 COL_CURSORPOINT. The held vertex's own green, which it is never
-      // shown beside: picking the vertex up is told by its neighbors, which
-      // take the pair's other color.
-      CURSOR,
-      // 8 COL_NEIGHBOR — the vertices joined to the held one, against the
-      // rest: the pair.
-      TWO[0],
-      FLASH, // 9 COL_FLASH
-      FLASH_LEAD, // 10 COL_FLASH_LEAD
-      HINT_OUTLINE, // 11 COL_HINT_CELL
-    ];
-  },
+  paletteScheme: { board: COL_PLAY_AREA },
+  colors,
   computeSize: (p: UntangleParams, tileSize: number): Size => {
     const s = coordLimit(p.n) * tileSize;
     return { w: s, h: s };

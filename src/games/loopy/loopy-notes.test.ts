@@ -14,6 +14,7 @@
  *    below the board and never on it.
  */
 import { describe, expect, it } from "vitest";
+import { COL_CURSOR } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import type { Grid, GridFace } from "../../engine/grid/index.ts";
 import { Midend } from "../../engine/midend.ts";
@@ -49,7 +50,6 @@ import {
 } from "./params.ts";
 import {
   border,
-  COL_CURSOR,
   COL_MISTAKE,
   COL_PENCIL,
   COL_PENCIL_BODY,

@@ -12,6 +12,11 @@
  */
 
 import { describe, expect, it } from "vitest";
+import {
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+} from "../../engine/color/roles.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/pointer.ts";
@@ -34,9 +39,6 @@ import { untangleGame } from "./index.ts";
 import {
   COL_CROSSEDLINE,
   COL_DRAGPOINT,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_HINT_CELL,
   COL_LINE,
   COL_OUTLINE,
   COL_POINT,
@@ -131,7 +133,7 @@ describe("Untangle render scenarios", () => {
     const cleared = stepMarks(hint).of("outline", CROSSING);
     expect(cleared.length).toBeGreaterThan(0);
     const rings = recording.ops.filter(
-      (o) => o.op === "circle" && o.fill === -1 && o.outline === COL_HINT_CELL,
+      (o) => o.op === "circle" && o.fill === -1 && o.outline === COL_HINT_OUTLINE,
     );
     expect(rings).toHaveLength(2 * cleared.length);
 

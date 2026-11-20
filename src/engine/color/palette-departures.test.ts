@@ -59,9 +59,28 @@ const ASSIGNMENT =
  * label counts as one. */
 const POSITIONAL = /^\s*([^/]+?),\s*\/\/\s*(?:\d+\s+)?(COL_[A-Z0-9_]+)(.*)$/;
 
-function assignments(): Assignment[] {
+/** The role slots `rolePalette` fills, which no game assigns: where a slot
+ * holding its role is found once every game takes the role from there. */
+const ROLE_SOURCES: [string, { path: string; text: string }[]][] = [
+  [
+    "roles",
+    Object.entries(
+      import.meta.glob<string>("./roles.ts", {
+        query: "?raw",
+        import: "default",
+        eager: true,
+      }),
+    ).map(([path, text]) => ({ path, text })),
+  ],
+];
+
+function assignments(
+  sources: Iterable<
+    [string, readonly { path: string; text: string }[]]
+  > = gameSourceFiles,
+): Assignment[] {
   const found: Assignment[] = [];
-  for (const [game, files] of gameSourceFiles)
+  for (const [game, files] of sources)
     for (const { path: file, text: source } of files) {
       const lines = source.split("\n");
       lines.forEach((text, i) => {
@@ -103,12 +122,22 @@ describe("a departure from a shared role is stated at the assignment", () => {
     // first shape alone could not see.
     const games = new Set(all.map((a) => a.game));
     expect([...games].sort()).toEqual(REGISTERED_IDS);
-    // Each meaning is found under its slot name, and found holding its role:
-    // a name that matched nothing, or a value the comparison below could not
-    // recognize, would leave that meaning unchecked or every game in breach.
-    for (const { meaning, roles, slots } of byRole)
+    // Each meaning is found under its slot name, and found holding its role,
+    // in a game or in the role slots: a name that matched nothing, or a value
+    // the comparison below could not recognize, would leave that meaning
+    // unchecked or every game in breach.
+    const roleSlots = assignments(ROLE_SOURCES);
+    expect(roleSlots.length).toBeGreaterThan(0);
+    for (const { meaning, roles, slot } of Object.entries(ROLES).map(
+      ([meaning, r]) => ({
+        meaning,
+        ...r,
+      }),
+    ))
       expect(
-        slots.some((a) => roles.includes(a.value)),
+        [...all, ...roleSlots].some(
+          (a) => slot.test(a.slot) && roles.includes(a.value),
+        ),
         `no ${meaning} slot holds its role`,
       ).toBe(true);
   });

@@ -11,14 +11,17 @@
 
 import {
   cellSurface,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   MOVED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { strokeScaledPolygon } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
@@ -51,18 +54,16 @@ export function moveTime(state: CubeState): number {
 
 export const PREFERRED_TILE_SIZE = 48;
 
-export const COL_BACKGROUND = 0; // the board around the arena
-export const COL_BORDER = 1; // the solid's edges
-export const COL_PAINT = 2; // a painted square, and a face that has picked one up
-export const COL_GRID = 3; // the line between two squares of the arena
-export const COL_CELL = 4; // a plain square
+// `COL_BACKGROUND` is the board around the arena; the win flash (`COL_FLASH`,
+// `COL_FLASH_LEAD`) is on a square of the arena; `COL_HINT_OUTLINE` outlines
+// the painted square a hint step works toward.
+export const COL_BORDER = FIRST_GAME_SLOT; // the solid's edges
+export const COL_PAINT = FIRST_GAME_SLOT + 1; // a painted square, and a face that has picked one up
+export const COL_GRID = FIRST_GAME_SLOT + 2; // the line between two squares of the arena
+export const COL_CELL = FIRST_GAME_SLOT + 3; // a plain square
 /** A plain face of the solid, lifted: the one thing on the board that stands
  * above it. */
-export const COL_SOLID = 5;
-export const COL_FLASH = 6; // a square of the arena the win flash's body is on
-export const COL_FLASH_LEAD = 7; // and one its leading edge is on
-/** The painted square a hint step works toward: its outline. */
-export const COL_HINT_EVIDENCE = 8;
+export const COL_SOLID = FIRST_GAME_SLOT + 4;
 
 export interface CubeDrawState {
   tileSize: number;
@@ -74,8 +75,7 @@ export interface CubeDrawState {
 }
 
 export function colors(defaultBackground: Color): Color[] {
-  const ret: Color[] = [];
-  ret[COL_BACKGROUND] = defaultBackground;
+  const ret = rolePalette(defaultBackground);
   ret[COL_BORDER] = INK;
   ret[COL_PAINT] = MOVED;
   ret[COL_GRID] = surfaceGrid(defaultBackground);
@@ -84,9 +84,6 @@ export function colors(defaultBackground: Color): Color[] {
   // shows whether it carries paint, so a plain face is a surface and the
   // paint is the only hue on the solid.
   ret[COL_SOLID] = givenSurface(defaultBackground);
-  ret[COL_FLASH] = FLASH;
-  ret[COL_FLASH_LEAD] = FLASH_LEAD;
-  ret[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   return ret;
 }
 
@@ -191,11 +188,7 @@ export function redraw(
     const tone = flash.win(sweepStep(cx, cy));
     dr.drawPolygon(
       coords,
-      st.blue[i]
-        ? COL_PAINT
-        : tone
-          ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-          : COL_CELL,
+      st.blue[i] ? COL_PAINT : tone ? winSlot(tone) : COL_CELL,
       COL_GRID,
     );
   }
@@ -222,7 +215,7 @@ export function redraw(
   };
   const outlineSquare = (i: number) => {
     const { corners, center } = squareAt(i);
-    strokeScaledPolygon(dr, corners, center, 0.75, COL_HINT_EVIDENCE, thickness);
+    strokeScaledPolygon(dr, corners, center, 0.75, COL_HINT_OUTLINE, thickness);
   };
   // The ring is the circle inside the square's sides (a triangle's as much
   // as a square's), drawn in from them as far as the outline is, so a ring

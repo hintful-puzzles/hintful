@@ -9,17 +9,20 @@
  */
 
 import {
-  CURSOR,
   cellSurface,
   clueDoneColor,
-  FLASH,
-  FLASH_LEAD,
   GOAL_WASH,
   givenSurface,
   highlightWash,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
@@ -54,27 +57,22 @@ export const SLIDE_S = 0.18;
 
 // --- palette ----------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_EDGE = 1;
+const COL_EDGE = FIRST_GAME_SLOT;
 /** An operator's button. */
-const COL_CELL = 2;
+const COL_CELL = FIRST_GAME_SLOT + 1;
 /** A number, dealt or made: one ground, so a made number does not read as
  * a different kind of tile; its sum beneath its value is what tells it. */
-const COL_GIVEN = 3;
+const COL_GIVEN = FIRST_GAME_SLOT + 2;
 /** The selected number and the chosen operator. */
-const COL_SELECTED = 4;
-const COL_TEXT = 5;
+const COL_SELECTED = FIRST_GAME_SLOT + 3;
+const COL_TEXT = FIRST_GAME_SLOT + 4;
 /** A number the chosen operator cannot combine with the selected one. */
-const COL_DIM = 6;
+const COL_DIM = FIRST_GAME_SLOT + 5;
 /** The target's ground: what the player seeks. */
-const COL_TARGET = 7;
-const COL_CURSOR = 8;
-const COL_FLASH = 9;
-const COL_FLASH_LEAD = 10;
+const COL_TARGET = FIRST_GAME_SLOT + 6;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_EDGE] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_GIVEN] = givenSurface(defaultBackground);
@@ -82,9 +80,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TEXT] = INK;
   out[COL_DIM] = clueDoneColor(defaultBackground);
   out[COL_TARGET] = GOAL_WASH;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -255,7 +250,7 @@ function fitting(text: string, width: number, most: number): number {
 }
 
 function ground(look: Look, base: number): number {
-  if (look.tone) return winSlot(look.tone, COL_FLASH, COL_FLASH_LEAD);
+  if (look.tone) return winSlot(look.tone);
   return look.flags & F_SELECTED ? COL_SELECTED : base;
 }
 
@@ -327,10 +322,7 @@ function drawElement(
   const shown = labels(ts, i, look, r);
 
   if (i === TARGET) {
-    dr.drawRect(
-      r,
-      look.tone ? winSlot(look.tone, COL_FLASH, COL_FLASH_LEAD) : COL_TARGET,
-    );
+    dr.drawRect(r, look.tone ? winSlot(look.tone) : COL_TARGET);
   } else if (i >= OP_BASE) {
     dr.drawRect(r, COL_EDGE);
     dr.drawRect(
@@ -351,7 +343,7 @@ function drawElement(
       dr,
       { box: r, outer: 0, inner: tone ? Math.max(2, ts >> 4) : 1 },
       MARK_ALL,
-      tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_EDGE,
+      tone ? winSlot(tone) : COL_EDGE,
     );
   }
   for (const { origin, options, text: s } of shown)

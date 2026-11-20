@@ -357,17 +357,33 @@ it("no game holds the ring's ink", () => {
  * the stripes in its own (`resolvePalette`).
  *
  * Counted by game id over `gameSourceFiles`, which credits a shared family's
- * renderer (`engine/edge-clue-latin/`) to every game that draws with it.
+ * renderer (`engine/edge-clue-latin/`) to every game that draws with it. A
+ * game whose palette starts from `rolePalette` takes every role `roles.ts`
+ * fills, read off that file's own import from `palette.ts`.
  */
 it("declares no shared role fewer than two games take", () => {
+  const fromPalette = (text: string): string[] =>
+    [...text.matchAll(/^import\s*\{([^}]*)\}\s*from\s*"[^"]*\/palette\.ts"/gm)].flatMap(
+      (m) => m[1].split(",").map((n) => n.trim()),
+    );
+  const rolesSource = Object.values(
+    import.meta.glob<string>("./roles.ts", {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    }),
+  );
+  expect(rolesSource).toHaveLength(1);
+  const filledByRoles = fromPalette(rolesSource[0]);
+  expect(filledByRoles).toContain("CURSOR");
   const takenBy = new Map<string, Set<string>>();
   for (const [id, files] of gameSourceFiles)
-    for (const { text } of files)
-      for (const m of text.matchAll(
-        /^import\s*\{([^}]*)\}\s*from\s*"[^"]*\/palette\.ts"/gm,
-      ))
-        for (const name of m[1].split(",").map((n) => n.trim()))
-          takenBy.set(name, (takenBy.get(name) ?? new Set()).add(id));
+    for (const { text } of files) {
+      const names = fromPalette(text);
+      if (/\brolePalette\b/.test(text)) names.push(...filledByRoles);
+      for (const name of names)
+        takenBy.set(name, (takenBy.get(name) ?? new Set()).add(id));
+    }
   const lonely = Object.keys(roles)
     .map((name) => ({
       name,

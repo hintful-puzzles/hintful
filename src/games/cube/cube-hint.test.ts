@@ -4,6 +4,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
@@ -18,7 +19,7 @@ import { newDesc } from "./generator.ts";
 import { hint } from "./hint.ts";
 import { cubeGame } from "./index.ts";
 import { SQUARE } from "./kinds.ts";
-import { COL_HINT_EVIDENCE, redraw } from "./render.ts";
+import { redraw } from "./render.ts";
 import { DIR_CHARS, executeMove, rollDest } from "./roll.ts";
 import { SolidType } from "./solids.ts";
 import { canCollectWithoutDropping } from "./solver.ts";
@@ -239,8 +240,8 @@ describe("cube hint marks", () => {
     // its four sides, so the two differ in shape; nothing in a hint color
     // fills.
     expectRing(dr.ops);
-    expect(lines.filter((o) => o.color === COL_HINT_EVIDENCE)).toHaveLength(4);
-    expect(opsOfKind(dr.ops, "polygon").some((o) => o.fill === COL_HINT_EVIDENCE)).toBe(
+    expect(lines.filter((o) => o.color === COL_HINT_OUTLINE)).toHaveLength(4);
+    expect(opsOfKind(dr.ops, "polygon").some((o) => o.fill === COL_HINT_OUTLINE)).toBe(
       false,
     );
   });

@@ -1,18 +1,19 @@
 /**
  * Tier-2.5 render scenarios for the Slant hint: drive a real Midend to a
  * displayed hint step and capture `redraw`. Targeted op assertions (the ringed
- * target, the recolored clue digit, the outlined `COL_HINT_CELL`
+ * target, the recolored clue digit, the outlined `COL_HINT_OUTLINE`
  * evidence) plus one snapshot, so a render regression is a reviewable text
  * diff.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { SlantHint } from "./hint.ts";
 import { slantGame } from "./index.ts";
-import { COL_GRID, COL_HINT_CELL } from "./render.ts";
+import { COL_GRID } from "./render.ts";
 import { DIFF_EASY, DIFF_HARD } from "./state.ts";
 
 const lit = (step: HintStep<unknown>): SlantHint => {
@@ -67,7 +68,7 @@ describe("Slant hint render scenarios", () => {
     expectRing(recording.ops, { rings: 1 + (h.siblings?.length ?? 0) });
     // The driving clue's digit is recolored, as an outline.
     expect(
-      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
+      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_OUTLINE),
     ).toBe(true);
     // Other clue digits still drawn; the grid frame is present.
     expect(recording.ops.some((o) => o.op === "text")).toBe(true);
@@ -77,7 +78,7 @@ describe("Slant hint render scenarios", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("loop frame: the closing chain outlines COL_HINT_CELL under one ringed target", () => {
+  it("loop frame: the closing chain outlines COL_HINT_OUTLINE under one ringed target", () => {
     const { recording, h } = hintFrame("loop");
 
     expect(h.area?.length ?? 0).toBeGreaterThan(0);
@@ -85,18 +86,18 @@ describe("Slant hint render scenarios", () => {
     expectRing(recording.ops);
     // The chain is **outlined**, not shaded: its squares carry the very
     // diagonals the deduction reasons from.
-    const chain = markSides(recording.ops, COL_HINT_CELL);
+    const chain = markSides(recording.ops, COL_HINT_OUTLINE);
     expect(chain.length).toBeGreaterThan(0);
     for (const s of chain) expect(isThin(s)).toBe(true);
   });
 
-  it("equivalence frame: the cited anchor is outlined in COL_HINT_CELL", () => {
+  it("equivalence frame: the cited anchor is outlined in COL_HINT_OUTLINE", () => {
     const { recording, h } = hintFrame("equivalence");
 
     expect(h.ref).toBeDefined();
     expectRing(recording.ops);
-    expect(recording.ops.some((o) => "color" in o && o.color === COL_HINT_CELL)).toBe(
-      true,
-    );
+    expect(
+      recording.ops.some((o) => "color" in o && o.color === COL_HINT_OUTLINE),
+    ).toBe(true);
   });
 });
