@@ -2401,7 +2401,7 @@ describe("Midend executeHint plays a step's gesture, never its move", () => {
 
 describe("Midend mistake overlay (findMistakes lifecycle)", () => {
   // A game that flags exactly one mistake when count === 1, and whose
-  // redraw emits a sentinel op (drawCircle color 999) iff the engine
+  // redraw emits a sentinel op (a circle of radius 999) iff the engine
   // handed it a non-empty mistakes overlay — so a test can observe the
   // overlay being shown and then cleared on the next transition.
   const MISTAKE_SENTINEL = 999;
@@ -2411,12 +2411,12 @@ describe("Midend mistake overlay (findMistakes lifecycle)", () => {
     redraw: (dr, ds, prev, s, dir, ui, at, ft, hint, mistakes) => {
       fakeGame.redraw?.(dr, ds, prev, s, dir, ui, at, ft, hint);
       if (mistakes && mistakes.length > 0) {
-        dr.drawCircle({ x: 0, y: 0 }, 1, MISTAKE_SENTINEL, MISTAKE_SENTINEL);
+        dr.drawCircle({ x: 0, y: 0 }, MISTAKE_SENTINEL, 0, 0);
       }
     },
   };
   const sawSentinel = (ops: ReturnType<typeof recordingDrawing>["ops"]) =>
-    ops.some((o) => o.op === "circle" && o.fill === MISTAKE_SENTINEL);
+    ops.some((o) => o.op === "circle" && o.r === MISTAKE_SENTINEL);
 
   it("reports the capability and count, and displays then clears the overlay", () => {
     const h = harness(mistakeGame);

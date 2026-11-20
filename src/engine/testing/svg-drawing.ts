@@ -20,10 +20,6 @@ import { HATCH_OPACITY, hatchBands } from "../hatch.ts";
 import type { Size } from "../types.ts";
 import type { DrawOp } from "./recording-drawing.ts";
 
-/** A palette index below 0 is upstream's "no color" sentinel (e.g. an
- * outline-less polygon); map it to SVG `none`. */
-const paint = (index: number, rgb: string): string => (index < 0 ? "none" : rgb);
-
 const escapeText = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -38,10 +34,10 @@ function opToSvg(op: DrawOp): string {
       return `<line x1="${op.x1}" y1="${op.y1}" x2="${op.x2}" y2="${op.y2}" stroke="${op.rgb}" stroke-width="${Math.max(op.thickness, 1)}"/>`;
     case "polygon": {
       const pts = op.points.map(([x, y]) => `${x},${y}`).join(" ");
-      return `<polygon points="${pts}" fill="${paint(op.fill, op.fillRgb)}" stroke="${paint(op.outline, op.outlineRgb)}"/>`;
+      return `<polygon points="${pts}" fill="${op.fillRgb}" stroke="${op.outlineRgb}"/>`;
     }
     case "circle":
-      return `<circle cx="${op.cx}" cy="${op.cy}" r="${op.r}" fill="${paint(op.fill, op.fillRgb)}" stroke="${paint(op.outline, op.outlineRgb)}"/>`;
+      return `<circle cx="${op.cx}" cy="${op.cy}" r="${op.r}" fill="${op.fillRgb}" stroke="${op.outlineRgb}"/>`;
     case "text":
       return `<text x="${op.x}" y="${op.y}" fill="${op.rgb}" font-size="${op.size}" text-anchor="${anchor(op.align)}"${op.baseline === "mathematical" ? ' dominant-baseline="central"' : ""} font-family="${op.fontType === "fixed" ? "monospace" : "sans-serif"}">${escapeText(op.text)}</text>`;
     case "hatch": {

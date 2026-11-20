@@ -1,9 +1,11 @@
 ## 1. Refuse what the canvas refuses
 
-- [ ] 1.1 List what each canvas drawing method refuses or treats as "none".
-- [ ] 1.2 Move it into one helper both drawings call.
-- [ ] 1.3 See a test fail on a planted `-1` outline; fix every game or
-      fixture the stricter check finds.
+- [x] 1.1 List what each canvas drawing method refuses or treats as "none".
+- [x] 1.2 Move it into one helper both drawings call.
+- [x] 1.3 See a test fail on a planted `-1` outline; fix every game or
+      fixture the stricter check finds. (No game drew an absent color; one
+      midend fixture did. 242 sub-pixel rects left the record, and 981
+      `color#-1` fill labels became `none`.)
 
 ## 2. Snapshots key a color by what it paints
 

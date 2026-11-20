@@ -1,3 +1,9 @@
+import {
+  checkPolygon,
+  hasFill,
+  paintsNothing,
+  paletteInk,
+} from "../engine/drawing-rules.ts";
 import type { GameDrawing, RingOptions } from "../engine/game.ts";
 import { HATCH_OPACITY, hatchBands } from "../engine/hatch.ts";
 import { type RingClear, ringShape } from "../engine/ring.ts";
@@ -118,7 +124,7 @@ export class Drawing implements GameDrawing<Blitter> {
     color: number,
     text: string,
   ): void {
-    if (size < 1) return;
+    if (paintsNothing.text(size)) return;
     this.context.font = [
       this.fontInfo.fontStyle,
       this.fontInfo.fontWeight,
@@ -150,13 +156,13 @@ export class Drawing implements GameDrawing<Blitter> {
   }
 
   drawRect({ x, y, w, h }: Rect, color: number): void {
-    if (w < 1 || h < 1) return;
+    if (paintsNothing.rect({ x, y, w, h })) return;
     this.setUpContext({ fillColor: color, strokeColor: color, lineWidth: 1 });
     this.context.fillRect(x, y, w, h);
   }
 
   drawLine(p1: Point, p2: Point, color: number, thickness: number): void {
-    if (thickness <= 0) return;
+    if (paintsNothing.line(thickness)) return;
     this.context.beginPath();
     // Drawing API points are pixel center; canvas is pixel top left.
     this.context.moveTo(p1.x + 0.5, p1.y + 0.5);
@@ -173,6 +179,7 @@ export class Drawing implements GameDrawing<Blitter> {
   }
 
   drawPolygon(coords: Point[], fillcolor: number, outlinecolor: number): void {
+    checkPolygon(coords);
     // Drawing API points are pixel center; canvas is pixel top left.
     this.context.beginPath();
     this.context.moveTo(coords[0].x + 0.5, coords[0].y + 0.5);
@@ -182,9 +189,9 @@ export class Drawing implements GameDrawing<Blitter> {
     this.context.closePath();
     this.setUpContext({
       strokeColor: outlinecolor,
-      fillColor: fillcolor >= 0 ? fillcolor : undefined,
+      fillColor: hasFill(fillcolor) ? fillcolor : undefined,
     });
-    if (fillcolor >= 0) this.context.fill();
+    if (hasFill(fillcolor)) this.context.fill();
     this.context.stroke();
   }
 
@@ -194,20 +201,20 @@ export class Drawing implements GameDrawing<Blitter> {
     fillcolor: number,
     outlinecolor: number,
   ): void {
-    if (radius <= 0) return;
+    if (paintsNothing.circle(radius)) return;
     this.context.beginPath();
     this.context.arc(cx + 0.5, cy + 0.5, radius, 0, Math.PI * 2, false);
     this.context.closePath();
     this.setUpContext({
       strokeColor: outlinecolor,
-      fillColor: fillcolor >= 0 ? fillcolor : undefined,
+      fillColor: hasFill(fillcolor) ? fillcolor : undefined,
     });
-    if (fillcolor >= 0) this.context.fill();
+    if (hasFill(fillcolor)) this.context.fill();
     this.context.stroke();
   }
 
   drawHatch({ x, y, w, h }: Rect, period: number): void {
-    if (w < 1 || h < 1 || period < 2) return;
+    if (paintsNothing.hatch({ x, y, w, h }, period)) return;
     this.context.save();
     this.context.beginPath();
     this.context.rect(x, y, w, h);
@@ -323,18 +330,10 @@ export class Drawing implements GameDrawing<Blitter> {
     this.context.lineCap = "round";
     this.context.lineJoin = "round";
     if (strokeColor !== undefined) {
-      const strokeStyle = this.palette[strokeColor];
-      if (strokeStyle === undefined) {
-        throw new Error(`strokeColor ${strokeColor} not in palette`);
-      }
-      this.context.strokeStyle = strokeStyle;
+      this.context.strokeStyle = paletteInk(this.palette, strokeColor, "strokeColor");
     }
     if (fillColor !== undefined) {
-      const fillStyle = this.palette[fillColor];
-      if (fillStyle === undefined) {
-        throw new Error(`fillColor ${fillColor} not in palette`);
-      }
-      this.context.fillStyle = fillStyle;
+      this.context.fillStyle = paletteInk(this.palette, fillColor, "fillColor");
     }
   }
 }

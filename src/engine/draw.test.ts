@@ -9,16 +9,19 @@ import {
   strokeScaledPolygon,
 } from "./draw.ts";
 import { opsOfKind, RecordingDrawing } from "./testing/recording-drawing.ts";
+import type { Color } from "./types.ts";
 
 /**
  * These helpers take colors as bare palette indices and no game is involved, so
- * the recorder gets an empty palette: its `rgb` labels read `color#<n>` and the
- * assertions below use the index, which is what a helper's contract is stated
+ * the recorder gets a palette of grays, as many as the indices below reach, and
+ * the assertions use the index, which is what a helper's contract is stated
  * in. The point of using it anyway is that it records EVERY primitive, so a
  * helper that draws something extra is seen.
  */
 function recordingDrawing(): { dr: RecordingDrawing; ops: RecordingDrawing["ops"] } {
-  const dr = new RecordingDrawing([]);
+  const dr = new RecordingDrawing(
+    Array.from({ length: 8 }, (_, i): Color => [i / 8, i / 8, i / 8]),
+  );
   return { dr, ops: dr.ops };
 }
 

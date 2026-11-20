@@ -22,7 +22,12 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { it } from "vitest";
-import { type DrawOp, rgbLabel } from "../../src/engine/testing/recording-drawing.ts";
+import { hasFill } from "../../src/engine/drawing-rules.ts";
+import {
+  type DrawOp,
+  NO_FILL,
+  rgbLabel,
+} from "../../src/engine/testing/recording-drawing.ts";
 import { toSvg } from "../../src/engine/testing/svg-drawing.ts";
 import type { Color } from "../../src/engine/types.ts";
 import { puzzleIds } from "../../src/puzzle/catalog.ts";
@@ -43,8 +48,10 @@ function repaint(ops: readonly DrawOp[], palette: readonly Color[]): DrawOp[] {
   const label = (index: number): string => rgbLabel(palette[index] ?? [1, 0, 1]);
   return ops.map((op) => {
     if (op.op === "clip" || op.op === "unclip") return op;
-    if (op.op === "polygon" || op.op === "circle")
-      return { ...op, fillRgb: label(op.fill), outlineRgb: label(op.outline) };
+    if (op.op === "polygon" || op.op === "circle") {
+      const fillRgb = hasFill(op.fill) ? label(op.fill) : NO_FILL;
+      return { ...op, fillRgb, outlineRgb: label(op.outline) };
+    }
     return { ...op, rgb: label(op.color) };
   });
 }

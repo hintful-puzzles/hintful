@@ -1,10 +1,10 @@
 // Unit-test the shared recording GameDrawing: every primitive is
 // captured in draw order, coordinates are integer-rounded, and palette
-// indices are resolved to stable rgb() labels (with a visible fallback
-// for an undefined index).
+// indices are resolved to stable rgb() labels. Its agreement with the
+// canvas drawing is `src/puzzle/drawing.test.ts`.
 import { describe, expect, it } from "vitest";
 import type { Color } from "../types.ts";
-import { paintsWith, RecordingDrawing } from "./recording-drawing.ts";
+import { NO_FILL, paintsWith, RecordingDrawing } from "./recording-drawing.ts";
 
 // index 0 black, 1 white, 2 a clear blue (0.13, 0.5, 0.85).
 const PALETTE: Color[] = [
@@ -66,7 +66,7 @@ describe("RecordingDrawing", () => {
       2,
       0,
     );
-    dr.drawCircle({ x: 4, y: 4 }, 3, 1, -1);
+    dr.drawCircle({ x: 4, y: 4 }, 3, -1, 1);
 
     expect(dr.ops).toEqual([
       {
@@ -86,11 +86,10 @@ describe("RecordingDrawing", () => {
         cx: 4,
         cy: 4,
         r: 3,
-        fill: 1,
-        fillRgb: "rgb(255, 255, 255)",
-        // -1 ("no color") has no palette entry; surfaces as a label.
-        outline: -1,
-        outlineRgb: "color#-1",
+        fill: -1,
+        fillRgb: NO_FILL,
+        outline: 1,
+        outlineRgb: "rgb(255, 255, 255)",
       },
     ]);
   });
@@ -103,10 +102,14 @@ describe("RecordingDrawing", () => {
     expect(dr.ops.map((o) => o.op)).toEqual(["clip", "rect", "unclip"]);
   });
 
-  it("labels an out-of-range palette index instead of throwing", () => {
+  it("refuses a color the palette lacks, as the canvas does", () => {
     const dr = new RecordingDrawing(PALETTE);
-    dr.drawRect({ x: 0, y: 0, w: 1, h: 1 }, 99);
-    expect(dr.ops[0]).toMatchObject({ color: 99, rgb: "color#99" });
+    expect(() => dr.drawRect({ x: 0, y: 0, w: 1, h: 1 }, 99)).toThrow(
+      "strokeColor 99 not in palette",
+    );
+    expect(() => dr.drawCircle({ x: 0, y: 0 }, 1, 0, -1)).toThrow(
+      "strokeColor -1 not in palette",
+    );
   });
 
   it("paintsWith reads a color, a fill or an outline, and nothing from a clip", () => {

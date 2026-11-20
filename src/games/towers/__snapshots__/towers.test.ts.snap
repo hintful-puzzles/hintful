@@ -3183,7 +3183,7 @@ exports[`towers render > draws the 3D initial frame with clues and tower solids 
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -3405,7 +3405,7 @@ exports[`towers render > draws the 3D initial frame with clues and tower solids 
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4153,7 +4153,7 @@ exports[`towers render > draws the 3D initial frame with clues and tower solids 
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4375,7 +4375,7 @@ exports[`towers render > draws the 3D initial frame with clues and tower solids 
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4733,7 +4733,7 @@ exports[`towers render > draws the 3D initial frame with clues and tower solids 
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -4925,7 +4925,7 @@ exports[`towers render > draws the 3D initial frame with clues and tower solids 
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -5649,7 +5649,7 @@ exports[`towers render > draws the 3D initial frame with clues and tower solids 
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -5861,7 +5861,7 @@ exports[`towers render > draws the 3D initial frame with clues and tower solids 
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",

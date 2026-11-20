@@ -14,6 +14,10 @@
  *  - ops are recorded in draw order (the order the game emits them,
  *    which is also their z-order — last drawn on top).
  *
+ * It accepts what the canvas drawing accepts, through the same
+ * `drawing-rules.ts`: a color the palette lacks throws here as it would in
+ * the app, and a call the canvas paints nothing for is not recorded.
+ *
  * `startDraw`/`endDraw`/`drawUpdate` are framework bookkeeping, not
  * visual content, so they are accepted and ignored. Blitter operations
  * (drag sprites) are no-ops: an in-process frame has nothing to save or
@@ -21,9 +25,19 @@
  */
 
 import { HINT_RING, HINT_STRIPES } from "../color/palette.ts";
+import {
+  checkPolygon,
+  hasFill,
+  type InkRole,
+  paintsNothing,
+  paletteInk,
+} from "../drawing-rules.ts";
 import type { GameDrawing, RingOptions } from "../game.ts";
 import { type RingClear, ringShape } from "../ring.ts";
 import type { Color, DrawTextOptions, Point, Rect } from "../types.ts";
+
+/** The `fillRgb` of a polygon or circle drawn with no fill. */
+export const NO_FILL = "none";
 
 /** One captured draw primitive. `color` is the palette index the game
  * passed; `rgb`/`fillRgb`/`outlineRgb` are that index resolved through
@@ -137,14 +151,15 @@ export class RecordingDrawing implements GameDrawing {
         : [...palette, HINT_RING, HINT_STRIPES];
   }
 
-  /** A palette index as a stable `rgb(r, g, b)` label (components 0..255). An
-   * index with no palette entry (e.g. a game drawing with a color it forgot to
-   * define) resolves to `color#<index>` rather than throwing, so a bug surfaces
-   * as a visible, diffable label. */
-  private rgb(index: number): string {
-    const c = this.palette[index];
-    if (!c) return `color#${index}`;
-    return rgbLabel(c);
+  /** A palette index as a stable `rgb(r, g, b)` label (components 0..255),
+   * refused as the canvas refuses it when the palette has no such entry. */
+  private rgb(index: number, role: InkRole): string {
+    return rgbLabel(paletteInk(this.palette, index, role));
+  }
+
+  /** A fill's label: {@link NO_FILL} where the canvas fills nothing. */
+  private fillRgb(index: number): string {
+    return hasFill(index) ? this.rgb(index, "fillColor") : NO_FILL;
   }
 
   /**
@@ -174,10 +189,17 @@ export class RecordingDrawing implements GameDrawing {
   }
 
   drawRect(rect: Rect, color: number): void {
-    this.ops.push({ op: "rect", ...roundRect(rect), color, rgb: this.rgb(color) });
+    if (paintsNothing.rect(rect)) return;
+    this.ops.push({
+      op: "rect",
+      ...roundRect(rect),
+      color,
+      rgb: this.rgb(color, "strokeColor"),
+    });
   }
 
   drawLine(p1: Point, p2: Point, color: number, thickness: number): void {
+    if (paintsNothing.line(thickness)) return;
     this.ops.push({
       op: "line",
       x1: round(p1.x),
@@ -186,7 +208,7 @@ export class RecordingDrawing implements GameDrawing {
       y2: round(p2.y),
       thickness: round(thickness),
       color,
-      rgb: this.rgb(color),
+      rgb: this.rgb(color, "strokeColor"),
     });
   }
 
@@ -197,13 +219,15 @@ export class RecordingDrawing implements GameDrawing {
   }
 
   drawPolygon(coords: Point[], fillColor: number, outlineColor: number): void {
+    checkPolygon(coords);
+    const outlineRgb = this.rgb(outlineColor, "strokeColor");
     this.ops.push({
       op: "polygon",
       points: coords.map((p) => [round(p.x), round(p.y)] as const),
       fill: fillColor,
-      fillRgb: this.rgb(fillColor),
+      fillRgb: this.fillRgb(fillColor),
       outline: outlineColor,
-      outlineRgb: this.rgb(outlineColor),
+      outlineRgb,
     });
   }
 
@@ -213,19 +237,22 @@ export class RecordingDrawing implements GameDrawing {
     fillColor: number,
     outlineColor: number,
   ): void {
+    if (paintsNothing.circle(radius)) return;
+    const outlineRgb = this.rgb(outlineColor, "strokeColor");
     this.ops.push({
       op: "circle",
       cx: round(center.x),
       cy: round(center.y),
       r: round(radius),
       fill: fillColor,
-      fillRgb: this.rgb(fillColor),
+      fillRgb: this.fillRgb(fillColor),
       outline: outlineColor,
-      outlineRgb: this.rgb(outlineColor),
+      outlineRgb,
     });
   }
 
   drawText(origin: Point, options: DrawTextOptions, color: number, text: string): void {
+    if (paintsNothing.text(options.size)) return;
     this.ops.push({
       op: "text",
       x: round(origin.x),
@@ -236,18 +263,19 @@ export class RecordingDrawing implements GameDrawing {
       fontType: options.fontType,
       size: round(options.size),
       color,
-      rgb: this.rgb(color),
+      rgb: this.rgb(color, "fillColor"),
     });
   }
 
   drawHatch(rect: Rect, period: number): void {
+    if (paintsNothing.hatch(rect, period)) return;
     const color = this.palette.length - 1;
     this.ops.push({
       op: "hatch",
       ...roundRect(rect),
       period: round(period),
       color,
-      rgb: this.rgb(color),
+      rgb: this.rgb(color, "fillColor"),
     });
   }
 
@@ -265,7 +293,7 @@ export class RecordingDrawing implements GameDrawing {
       radius: round(radius),
       thickness: round(thickness),
       color,
-      rgb: this.rgb(color),
+      rgb: this.rgb(color, "strokeColor"),
     });
     if (!inside) return;
     this.clip(rect);

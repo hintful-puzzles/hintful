@@ -137,6 +137,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `overlay-sidecar.ts` — the overlay diff-key rule as a type |
 | – `candidate-bits.ts` — one candidate encoding, range-checked |
 | – `draw.ts` — shared drawing primitives |
+| – `drawing-rules.ts` — what a drawing accepts |
 | – `completion-status.ts` — the status bar's completion words |
 | – `win-wave.ts` — the win flash |
 | – `easing.ts` — the curve a move animates along |
@@ -1658,6 +1659,12 @@ When you extract a shape, check whether its dimensions were drifting too.
 An extraction that leaves the emitted op order unchanged moves no render
 snapshot, but an unchanged snapshot can also mean nothing was watching:
 break the helper on purpose and see what fails.
+
+### `drawing-rules.ts` — what a drawing accepts
+
+The canvas drawing and the test recorder both call it, so a test fails on a
+color the app would refuse, and records nothing the canvas would not paint.
+A new `GameDrawing` calls it too.
 
 ### `completion-status.ts` — the status bar's completion words
 

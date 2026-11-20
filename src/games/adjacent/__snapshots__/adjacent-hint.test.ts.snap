@@ -22,7 +22,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -122,7 +122,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -234,7 +234,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -334,7 +334,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -446,7 +446,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -558,7 +558,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -658,7 +658,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -770,7 +770,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -870,7 +870,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -982,7 +982,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -1094,7 +1094,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -1182,7 +1182,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -1302,7 +1302,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -1366,7 +1366,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -1466,7 +1466,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -1566,7 +1566,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -1666,7 +1666,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -1778,7 +1778,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -1878,7 +1878,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -1990,7 +1990,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -2102,7 +2102,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -2166,7 +2166,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -2266,7 +2266,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -2354,7 +2354,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
@@ -2454,7 +2454,7 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",

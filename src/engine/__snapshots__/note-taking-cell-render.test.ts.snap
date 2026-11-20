@@ -18,7 +18,7 @@ exports[`abcd > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 9,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -63,7 +63,7 @@ exports[`abcd > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 9,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -99,7 +99,7 @@ exports[`abcd > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 9,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -156,7 +156,7 @@ exports[`abcd > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 9,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -256,7 +256,7 @@ exports[`adjacent > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -319,7 +319,7 @@ exports[`adjacent > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -371,7 +371,7 @@ exports[`adjacent > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -425,7 +425,7 @@ exports[`adjacent > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -500,7 +500,7 @@ exports[`adjacent > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -2063,7 +2063,7 @@ exports[`mathrax > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 1,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -2184,7 +2184,7 @@ exports[`mathrax > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 1,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -2296,7 +2296,7 @@ exports[`mathrax > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 1,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -2429,7 +2429,7 @@ exports[`mathrax > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 1,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -3036,7 +3036,7 @@ exports[`salad > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 3,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -3081,7 +3081,7 @@ exports[`salad > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 3,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -3117,7 +3117,7 @@ exports[`salad > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 3,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -3174,7 +3174,7 @@ exports[`salad > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 3,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -6413,7 +6413,7 @@ exports[`unequal > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -6458,7 +6458,7 @@ exports[`unequal > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -6504,7 +6504,7 @@ exports[`unequal > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -6540,7 +6540,7 @@ exports[`unequal > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
@@ -6597,7 +6597,7 @@ exports[`unequal > matches its recorded frames 1`] = `
     },
     {
       "fill": -1,
-      "fillRgb": "color#-1",
+      "fillRgb": "none",
       "op": "polygon",
       "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",

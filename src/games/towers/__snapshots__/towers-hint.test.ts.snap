@@ -615,7 +615,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -937,7 +937,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2175,7 +2175,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -2621,7 +2621,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -6915,7 +6915,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -7227,7 +7227,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -7503,7 +7503,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -7881,7 +7881,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -8623,7 +8623,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -8991,7 +8991,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -9255,7 +9255,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
@@ -9509,7 +9509,7 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "fill": -1,
-    "fillRgb": "color#-1",
+    "fillRgb": "none",
     "op": "polygon",
     "outline": 1,
     "outlineRgb": "rgb(0, 0, 0)",
