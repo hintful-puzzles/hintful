@@ -16,7 +16,8 @@
  *  - **not the exactly-one situation**, which `descNeedsOne` words, since two
  *    games wording it differently is still one situation.
  *
- * ON THE INSTRUMENT: keyed on the call's shape wherever it appears, including
+ * ON THE INSTRUMENT: keyed on a call of the export, bound through its import,
+ * wherever it appears, including
  * the engine (the grid tilings reach a player through Loopy), and a call whose
  * argument is not a plain literal fails, since the sentence could not be read.
  */
@@ -37,6 +38,7 @@ import {
   validateDesc,
 } from "./desc-error.ts";
 import { difficultyItem, tierNames } from "./difficulty.ts";
+import { parsed, resolveSpecifier, usesOf, where } from "./testing/syntax.ts";
 
 const sources = {
   ...import.meta.glob<string>("../games/**/*.ts", {
@@ -69,35 +71,32 @@ interface Call {
 
 /** `src/games/<id>/…` belongs to `<id>`; anything else to the engine. */
 function ownerOf(path: string): string {
-  return /\.\.\/games\/([^/]+)\//.exec(path)?.[1] ?? "engine";
+  return /^src\/games\/([^/]+)\//.exec(path)?.[1] ?? "engine";
 }
+
+const DESC_ERROR = { module: "src/engine/desc-error.ts", name: "puzzleDescError" };
 
 const calls: Call[] = [];
 let filesScanned = 0;
-for (const [path, text] of Object.entries(sources)) {
-  if (path.endsWith(".test.ts") || path.endsWith("/desc-error.ts")) continue;
+for (const [key, text] of Object.entries(sources)) {
+  const path = resolveSpecifier("src/engine/x.ts", key);
+  if (path.endsWith(".test.ts") || path === DESC_ERROR.module) continue;
   filesScanned++;
-  const sf = ts.createSourceFile(path, text, ts.ScriptTarget.ESNext, true);
-  const visit = (n: ts.Node): void => {
-    if (
-      ts.isCallExpression(n) &&
-      ts.isIdentifier(n.expression) &&
-      n.expression.text === "puzzleDescError"
-    ) {
-      const arg = n.arguments[0];
-      const line = sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
-      calls.push({
-        sentence:
-          arg && (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg))
-            ? arg.text
-            : null,
-        owner: ownerOf(path),
-        where: `${path}:${line}`,
-      });
-    }
-    ts.forEachChild(n, visit);
-  };
-  visit(sf);
+  // Bound through the import, so a renamed import is read and a local
+  // function of the same name is not.
+  for (const { node, kind } of usesOf(parsed(path, text), DESC_ERROR)) {
+    if (kind !== "call") continue;
+    const call = node.parent as ts.CallExpression;
+    const arg = call.arguments[0];
+    calls.push({
+      sentence:
+        arg && (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg))
+          ? arg.text
+          : null,
+      owner: ownerOf(path),
+      where: where(call),
+    });
+  }
 }
 
 describe("a game's own description error", () => {

@@ -160,6 +160,97 @@ export function importedNames(sf: ts.SourceFile, module: string): string[] {
   return out;
 }
 
+/** A function or a constant a name is bound to. */
+export type Binding =
+  | { readonly kind: "function"; readonly fn: ts.FunctionLikeDeclaration }
+  | { readonly kind: "const"; readonly init: ts.Expression };
+
+/** What `name` is declared as in `sf` itself: a function declared anywhere
+ * in it, or a constant at its top level. */
+function ownDeclaration(sf: ts.SourceFile, name: string): Binding | null {
+  for (const n of nodesOf(sf))
+    if (ts.isFunctionDeclaration(n) && n.name?.text === name && n.body !== undefined)
+      return { kind: "function", fn: n };
+  for (const st of sf.statements)
+    if (ts.isVariableStatement(st))
+      for (const d of st.declarationList.declarations)
+        if (ts.isIdentifier(d.name) && d.name.text === name && d.initializer)
+          return ts.isArrowFunction(d.initializer) ||
+            ts.isFunctionExpression(d.initializer)
+            ? { kind: "function", fn: d.initializer }
+            : { kind: "const", init: d.initializer };
+  return null;
+}
+
+/** The declaration the module at `path` exports as `name`: its own, or one
+ * it re-exports, by name or through `export *`. */
+function exportedDeclaration(
+  path: string,
+  name: string,
+  treeAt: (path: string) => ts.SourceFile | null,
+  seen: ReadonlySet<string>,
+): Binding | null {
+  const sf = treeAt(path);
+  if (sf === null || seen.has(path)) return null;
+  const own = ownDeclaration(sf, name);
+  if (own) return own;
+  const next = new Set([...seen, path]);
+  for (const st of sf.statements) {
+    if (
+      !ts.isExportDeclaration(st) ||
+      st.moduleSpecifier === undefined ||
+      !ts.isStringLiteral(st.moduleSpecifier)
+    )
+      continue;
+    const from = resolveSpecifier(sf.fileName, st.moduleSpecifier.text);
+    const clause = st.exportClause;
+    if (clause === undefined) {
+      const found = exportedDeclaration(from, name, treeAt, next);
+      if (found) return found;
+    } else if (ts.isNamedExports(clause)) {
+      const el = clause.elements.find((e) => e.name.text === name);
+      if (el)
+        return exportedDeclaration(
+          from,
+          (el.propertyName ?? el.name).text,
+          treeAt,
+          next,
+        );
+    }
+  }
+  return null;
+}
+
+/**
+ * What `name`, as written in `sf`, is bound to: its declaration in `sf`, or
+ * else the declaration its named import leads to, through any re-exports, in
+ * the trees `treeAt` gives by repo-relative path. `null` where neither
+ * reaches a function or a constant: a parameter, a package.
+ */
+export function declarationOf(
+  sf: ts.SourceFile,
+  name: string,
+  treeAt: (path: string) => ts.SourceFile | null,
+): Binding | null {
+  const own = ownDeclaration(sf, name);
+  if (own) return own;
+  for (const st of sf.statements) {
+    if (!ts.isImportDeclaration(st) || !ts.isStringLiteral(st.moduleSpecifier))
+      continue;
+    const b = st.importClause?.namedBindings;
+    if (b === undefined || !ts.isNamedImports(b)) continue;
+    const el = b.elements.find((e) => e.name.text === name);
+    if (el === undefined) continue;
+    return exportedDeclaration(
+      resolveSpecifier(sf.fileName, st.moduleSpecifier.text),
+      (el.propertyName ?? el.name).text,
+      treeAt,
+      new Set(),
+    );
+  }
+  return null;
+}
+
 /** One export of one module, by repo-relative path: what a guard asks after,
  * rather than a spelling of its name. */
 export interface ExportRef {

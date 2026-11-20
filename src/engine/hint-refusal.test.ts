@@ -16,9 +16,10 @@
  *  - **a dead end's words**: it tells the player to undo, as every kind
  *    `isDeadEnd` calls one does, and no other kind does.
  *
- * ON THE INSTRUMENT: keyed on the call's shape wherever it appears, including
- * the engine's hint builders. A template's words are read with each
- * substitution as a hole, a `markedDeadEnd`'s through its `phrase` template,
+ * ON THE INSTRUMENT: keyed on a call of either escape, bound through its
+ * import, wherever it appears, including the engine's hint builders. A
+ * template's words are read with each substitution as a hole, a
+ * `markedDeadEnd`'s through its `phrase` template,
  * and a call whose argument is none of these fails, since its sentence could
  * not be read.
  */
@@ -37,6 +38,7 @@ import {
   SEARCH_OUT_OF_REACH,
 } from "./hint-refusal.ts";
 import { NO_SOLUTION_FROM_HERE, SOLUTION_UNKNOWN } from "./solve-failure.ts";
+import { parsed, resolveSpecifier, usesOf, where } from "./testing/syntax.ts";
 
 const sources = {
   ...import.meta.glob<string>("../games/**/*.ts", {
@@ -85,8 +87,11 @@ interface Call {
 
 /** `src/games/<id>/…` belongs to `<id>`; anything else to the engine. */
 function ownerOf(path: string): string {
-  return /\.\.\/games\/([^/]+)\//.exec(path)?.[1] ?? "engine";
+  return /^src\/games\/([^/]+)\//.exec(path)?.[1] ?? "engine";
 }
+
+const REFUSAL = "src/engine/hint-refusal.ts";
+const PHRASE = { module: "src/engine/hint-words.ts", name: "phrase" };
 
 function templateText(t: ts.TemplateLiteral): string {
   if (ts.isNoSubstitutionTemplateLiteral(t)) return t.text;
@@ -98,8 +103,7 @@ function sentenceOf(via: string, arg?: ts.Expression): string | null {
   if (via === "markedDeadEnd") {
     const tagged =
       ts.isTaggedTemplateExpression(arg) &&
-      ts.isIdentifier(arg.tag) &&
-      arg.tag.text === "phrase";
+      usesOf(arg.getSourceFile(), PHRASE).some(({ node }) => node === arg.tag);
     return tagged ? templateText(arg.template) : null;
   }
   if (ts.isStringLiteral(arg)) return arg.text;
@@ -110,28 +114,24 @@ function sentenceOf(via: string, arg?: ts.Expression): string | null {
 
 const calls: Call[] = [];
 let filesScanned = 0;
-for (const [path, text] of Object.entries(sources)) {
-  if (path.endsWith(".test.ts") || path.endsWith("/hint-refusal.ts")) continue;
+for (const [key, text] of Object.entries(sources)) {
+  const path = resolveSpecifier("src/engine/x.ts", key);
+  if (path.endsWith(".test.ts") || path === REFUSAL) continue;
   filesScanned++;
-  const sf = ts.createSourceFile(path, text, ts.ScriptTarget.ESNext, true);
-  const visit = (n: ts.Node): void => {
-    if (
-      ts.isCallExpression(n) &&
-      ts.isIdentifier(n.expression) &&
-      ESCAPES.has(n.expression.text)
-    ) {
-      const via = n.expression.text;
-      const line = sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
+  const sf = parsed(path, text);
+  // Bound through the import, so a renamed import is read and a local
+  // function of the same name is not.
+  for (const via of ESCAPES)
+    for (const { node, kind } of usesOf(sf, { module: REFUSAL, name: via })) {
+      if (kind !== "call") continue;
+      const call = node.parent as ts.CallExpression;
       calls.push({
-        sentence: sentenceOf(via, n.arguments[0]),
+        sentence: sentenceOf(via, call.arguments[0]),
         via,
         owner: ownerOf(path),
-        where: `${path}:${line}`,
+        where: where(call),
       });
     }
-    ts.forEachChild(n, visit);
-  };
-  visit(sf);
 }
 
 describe("a game's own hint refusal", () => {

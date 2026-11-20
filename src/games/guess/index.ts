@@ -151,7 +151,7 @@ function clearMarks(state: GuessState, pos: number): GuessMove | null {
 
 /**
  * ASCII carriage return — the Submit key's own code. This frontend maps a
- * physical Enter to `CURSOR_SELECT` (`view-interactive.ts`'s `puzzleKeyMap`),
+ * physical Enter to `CURSOR_SELECT` (`engine/key-map.ts`),
  * so 13 arrives from the panel and from nowhere else, and the two spellings of
  * "send this row" stay distinguishable: Enter submits from the cursor's submit
  * position, this key submits from wherever the player is.

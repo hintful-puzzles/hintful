@@ -24,10 +24,12 @@
  * preserved (no Node typings imported into source).
  */
 
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { nodesOf, parsed, shown } from "./engine/testing/syntax.ts";
 import { puzzleIds } from "./puzzle/catalog.ts";
 
-// Raw text of every .ts file under src/, eagerly loaded for regex scanning.
+// Raw text of every .ts file under src/, eagerly loaded for scanning.
 const sourceModules = import.meta.glob<string>("./**/*.ts", {
   query: "?raw",
   import: "default",
@@ -57,8 +59,6 @@ function resolveAgainst(sourceFile: string, relPath: string): string {
   return `.${resolved}`;
 }
 
-const URL_REF_RE = /new\s+URL\s*\(\s*(['"`])([\s\S]*?)\1\s*,\s*import\.meta\.url\s*\)/g;
-
 interface UrlRef {
   source: string;
   line: number;
@@ -67,18 +67,47 @@ interface UrlRef {
   isDynamic: boolean;
 }
 
+/** Whether `e` is `import.meta.url`. */
+const isImportMetaUrl = (e: ts.Expression): boolean =>
+  ts.isPropertyAccessExpression(e) &&
+  e.name.text === "url" &&
+  ts.isMetaProperty(e.expression) &&
+  e.expression.keywordToken === ts.SyntaxKind.ImportKeyword;
+
+/** Each `new URL(path, import.meta.url)` in the file, read off its syntax
+ * tree: a path written as a string or a template, whose static part is what
+ * precedes its first substitution. */
 function findUrlRefs(file: string, contents: string): UrlRef[] {
+  const sf = parsed(`src/${file.slice(2)}`, contents);
   const refs: UrlRef[] = [];
-  for (const match of contents.matchAll(URL_REF_RE)) {
-    const rawPath = match[2];
-    const noQuery = rawPath.replace(/\?[\s\S]*$/, "");
-    const interpIdx = noQuery.indexOf("${");
-    const isDynamic = interpIdx !== -1;
-    const staticPrefix = isDynamic ? noQuery.slice(0, interpIdx) : noQuery;
-    const resolvedPath = resolveAgainst(file, staticPrefix);
-    const idx = match.index ?? 0;
-    const line = contents.slice(0, idx).split("\n").length;
-    refs.push({ source: file, line, rawPath, resolvedPath, isDynamic });
+  for (const n of nodesOf(sf)) {
+    if (
+      !ts.isNewExpression(n) ||
+      !ts.isIdentifier(n.expression) ||
+      n.expression.text !== "URL"
+    )
+      continue;
+    const [path, base] = n.arguments ?? [];
+    if (path === undefined || base === undefined || !isImportMetaUrl(base)) continue;
+    let rawPath: string;
+    let head: string;
+    if (ts.isStringLiteralLike(path)) head = rawPath = path.text;
+    else if (ts.isTemplateExpression(path)) {
+      head = path.head.text;
+      rawPath = path.getText().slice(1, -1);
+    } else {
+      // A path computed some other way cannot be checked here: say so.
+      head = rawPath = `<${shown(path)}>`;
+    }
+    const isDynamic = !ts.isStringLiteralLike(path);
+    const staticPrefix = head.replace(/\?[\s\S]*$/, "");
+    refs.push({
+      source: file,
+      line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1,
+      rawPath,
+      resolvedPath: resolveAgainst(file, staticPrefix),
+      isDynamic,
+    });
   }
   return refs;
 }

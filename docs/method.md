@@ -106,6 +106,10 @@ to learn a fact, give the producer a field for the fact, as `HintStep.rung`
 does ([`hints.md`](./hints.md) § "Name the rung a step speaks"). A regex
 stays right where the wording is the thing under test.
 
+A guard that reads our own TypeScript reads its syntax tree, bound through
+the imports, or imports the fact outright; it does not match its text
+([`testing.md`](./testing.md) § "A guard that only reads source").
+
 ## A count written in prose is a census nobody re-runs
 
 Write the query, not its answer. "The games that call `latinSolver`" cannot

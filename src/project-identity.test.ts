@@ -21,9 +21,17 @@
  * `"types": []`), as every other source-scanning test here does.
  */
 import { render } from "lit";
+import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";
 import privacyHtml from "./assets/privacy.html?raw";
 import { aboutBlurb, credits } from "./dialogs/about-dialog.ts";
+import {
+  callsTo,
+  nodesOf,
+  parsed,
+  resolveSpecifier,
+  usesOf,
+} from "./engine/testing/syntax.ts";
 import { APP_NAME, APP_TAGLINE, ISSUES_URL, REPO_URL } from "./project-identity.ts";
 
 const PUZZLES_WEB = "https://github.com/medmunds/puzzles-web";
@@ -116,6 +124,48 @@ const sources = import.meta.glob<string>(
   { query: "?raw", import: "default", eager: true },
 );
 
+/** The app's own TypeScript among {@link sources}, tests left out. */
+const tsSources = (): string[] =>
+  Object.keys(sources).filter((k) => k.endsWith(".ts") && !k.endsWith(".test.ts"));
+
+/** A TypeScript source of {@link sources}, parsed under its repo path. */
+function tree(key: string): ts.SourceFile {
+  const text = sources[key];
+  if (text === undefined) throw new Error(`${key} was not read`);
+  return parsed(resolveSpecifier("src/x.ts", key), text);
+}
+
+const IDENTITY = "src/project-identity.ts";
+
+/** The names of the properties whose value is `e`, or is `x || e`: where a
+ * value is handed on under a name. */
+function handedOnAs(e: ts.Node): string | null {
+  let n = e;
+  const p = n.parent;
+  if (
+    ts.isBinaryExpression(p) &&
+    p.operatorToken.kind === ts.SyntaxKind.BarBarToken &&
+    p.right === n
+  )
+    n = p;
+  return ts.isPropertyAssignment(n.parent) && ts.isIdentifier(n.parent.name)
+    ? n.parent.name.text
+    : null;
+}
+
+/** The property names in `sf` that `name` from the identity module is
+ * handed on as. */
+const identityHandedOnAs = (sf: ts.SourceFile, name: string): (string | null)[] =>
+  usesOf(sf, { module: IDENTITY, name }).map(({ node }) => handedOnAs(node));
+
+/** The initializer of each property named `name` in `sf`. */
+const propertyValues = (sf: ts.SourceFile, name: string): ts.Expression[] =>
+  [...nodesOf(sf)].flatMap((n) =>
+    ts.isPropertyAssignment(n) && ts.isIdentifier(n.name) && n.name.text === name
+      ? [n.initializer]
+      : [],
+  );
+
 describe("no other surface still carries the predecessor's identity", () => {
   const thisFile = "./project-identity.test.ts";
 
@@ -151,10 +201,13 @@ describe("no other surface still carries the predecessor's identity", () => {
     const template = sources["../templates/index.html.hbs"];
     expect(template).toMatch(/<h1[^>]*>\{\{ appName \}\}<\/h1>/);
     expect(template).toMatch(/<title>\{\{ appName \}\}/);
-    const config = sources["../vite.config.ts"];
-    expect(config).toMatch(/appName: APP_NAME/);
-    expect(config).toMatch(/tagline: APP_TAGLINE/);
-    expect(config).toMatch(/name: env\["VITE_APP_NAME"\] \|\| APP_NAME/);
+    // The build hands the identity module's names on to the templates and the
+    // manifest: read as the properties they are the values of.
+    const config = tree("../vite.config.ts");
+    expect(identityHandedOnAs(config, "APP_NAME")).toEqual(
+      expect.arrayContaining(["appName", "name"]),
+    );
+    expect(identityHandedOnAs(config, "APP_TAGLINE")).toContain("tagline");
   });
 
   it("lets the header and page titles speak for the product, naming no one else", () => {
@@ -170,7 +223,13 @@ describe("no other surface still carries the predecessor's identity", () => {
       );
     }
     expect(sources["../templates/index.html.hbs"]).toMatch(/\{\{ tagline \}\}/);
-    expect(sources["./screens/home-screen.ts"]).toMatch(/\$\{APP_TAGLINE\}/);
+    expect(
+      usesOf(tree("./screens/home-screen.ts"), {
+        module: IDENTITY,
+        name: "APP_TAGLINE",
+      }).some(({ node }) => ts.isTemplateSpan(node.parent)),
+      "the home screen's header shows the tagline",
+    ).toBe(true);
     expect(sources["./screens/home-screen.ts"]).not.toMatch(/Tatham/);
   });
 });
@@ -226,7 +285,7 @@ describe("the privacy notes say what the app does with a player's data", () => {
     // A tag added to a report with no word for it in the notes is how the
     // notes stop being true. Each is listed here beside the word that covers
     // it, and the list is held to what the sources set through the SDK's
-    // `setTag`, `setTags` and `setContext`.
+    // `setTag`, `setTags` and `setContext`, called on `Sentry` or on a scope.
     const COVERED_BY: Record<string, RegExp> = {
       puzzleId: /which game/i,
       Puzzle: /its type, its game ID and how many moves in/i,
@@ -237,13 +296,30 @@ describe("the privacy notes say what the app does with a player's data", () => {
       "lit.render_recovery": /repair part of its display/i,
     };
     const set = new Set<string>();
-    for (const [file, source] of Object.entries(sources)) {
-      if (file.endsWith(".test.ts")) continue;
-      for (const m of source.matchAll(/Sentry\.set(?:Tag|Context)\(\s*"([^"]+)"/g))
-        set.add(m[1]);
-      for (const block of source.matchAll(/Sentry\.setTags\(\{([^}]*)\}/g))
-        for (const key of block[1].matchAll(/"([^"]+)":/g)) set.add(key[1]);
+    let unread = 0;
+    for (const file of tsSources()) {
+      const sf = tree(file);
+      for (const call of [...callsTo(sf, "setTag"), ...callsTo(sf, "setContext")]) {
+        const [name] = call.arguments;
+        if (name !== undefined && ts.isStringLiteralLike(name)) set.add(name.text);
+        else unread++;
+      }
+      for (const call of callsTo(sf, "setTags")) {
+        const [tags] = call.arguments;
+        if (tags === undefined || !ts.isObjectLiteralExpression(tags)) {
+          unread++;
+          continue;
+        }
+        for (const p of tags.properties)
+          if (p.name !== undefined && ts.isStringLiteralLike(p.name))
+            set.add(p.name.text);
+          else if (p.name !== undefined && ts.isIdentifier(p.name))
+            set.add(p.name.text);
+          else unread++;
+      }
     }
+    // A name the scan cannot read is a tag the notes cannot be held to.
+    expect(unread, "a tag or context set under a computed name").toBe(0);
     expect([...set].sort()).toEqual(Object.keys(COVERED_BY).sort());
     for (const [name, words] of Object.entries(COVERED_BY))
       expect(text, `${name} is attached and the notes do not say so`).toMatch(words);
@@ -252,16 +328,30 @@ describe("the privacy notes say what the app does with a player's data", () => {
   it("keeps the crash-report promises bound to the code that keeps them", () => {
     // The notes say personal information is switched off in the reporting.
     // This is the line that makes it so.
-    expect(sources["./utils/sentry.ts"]).toMatch(/sendDefaultPii: false/);
+    const sentry = tree("./utils/sentry.ts");
+    expect(propertyValues(sentry, "sendDefaultPii").map((v) => v.kind)).toEqual([
+      ts.SyntaxKind.FalseKeyword,
+    ]);
     // "Nothing is sent unless you choose": `report-consent.test.ts` drives the
     // real `initSentry` and checks that nothing reaches the transport before
     // consent, and what does after it. This holds `initSentry` to the gate
     // that test exercises.
-    expect(sources["./utils/sentry.ts"]).toMatch(/transport: reportConsent\.gate\(/);
+    const gate = usesOf(sentry, {
+      module: "src/utils/report-consent.ts",
+      name: "reportConsent",
+    }).flatMap(({ node }) => {
+      const access = node.parent;
+      return ts.isPropertyAccessExpression(access) && access.name.text === "gate"
+        ? [access.parent]
+        : [];
+    });
+    const transport = propertyValues(sentry, "transport");
+    expect(transport).toHaveLength(1);
+    expect(gate).toContain(transport[0]);
     // "Nothing you have saved": no save is attached to a report anywhere.
-    const attaching = Object.entries(sources)
-      .filter(([, text]) => /\.addAttachment\(/.test(text))
-      .map(([file]) => file);
+    const attaching = tsSources().filter(
+      (file) => callsTo(tree(file), "addAttachment").length > 0,
+    );
     expect(attaching).toEqual([]);
   });
 });

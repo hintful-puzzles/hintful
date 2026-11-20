@@ -30,7 +30,9 @@
  * attribute being **absent**, which is indistinguishable from nobody having
  * thought about it.
  */
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { nodesOf, parsed } from "./engine/testing/syntax.ts";
 
 const sources = import.meta.glob<string>("./**/*.ts", {
   query: "?raw",
@@ -57,26 +59,18 @@ const MODAL_ON_PURPOSE: Record<string, string> = {
 };
 
 /**
- * Blank `//` and `/* … *␝/` comments so a *mention* of a tag cannot vouch for
+ * The markup a file renders: the text of each `html` template, read off the
+ * syntax tree. A comment is no node, so a *mention* of a tag cannot vouch for
  * one — `help-viewer.ts` carries the comment "use `<div slot=label>` rather
  * than `<wa-drawer label=...>`", which this scan counted as a second, undecided
  * drawer on its first run.
- *
- * Comments are blanked to spaces rather than deleted so every remaining
- * character keeps its offset and line number.
- *
- * Template literals are deliberately left intact, because that is where the
- * real markup lives. The one thing that could go wrong is a `//` inside a
- * string on the same line as a dialog tag (a URL); no such line exists, and the
- * tag-count floor below would notice mass blanking.
- *
- * **Kept local on purpose.** `module-layering.test.ts` strips comments too, but
- * deletes block comments outright, having no use for offsets. Sharing a word
- * is not sharing a purpose, and this had exactly one consumer when a shared
- * home was tried.
  */
-function stripComments(src: string): string {
-  return src.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (m) => m.replace(/[^\n]/g, " "));
+function markup(path: string, text: string): string[] {
+  return [...nodesOf(parsed(path, text))].flatMap((n) =>
+    ts.isTaggedTemplateExpression(n) && ts.isIdentifier(n.tag) && n.tag.text === "html"
+      ? [n.template.getText()]
+      : [],
+  );
 }
 
 /** Every file rendering a `wa-dialog` or `wa-drawer`, and whether *every*
@@ -91,9 +85,9 @@ function dialogFiles(): { file: string; tags: number; dismissing: number }[] {
     if (/\.test\.ts$/.test(file)) continue;
     // The opening tag, up to its closing `>`, with `>` inside a `${...}`
     // expression tolerated because Lit templates are full of them.
-    const tags = [
-      ...stripComments(text).matchAll(/<wa-(?:dialog|drawer)\b([\s\S]*?)>/g),
-    ];
+    const tags = markup(`src/${file.slice(2)}`, text).flatMap((t) => [
+      ...t.matchAll(/<wa-(?:dialog|drawer)\b([\s\S]*?)>/g),
+    ]);
     if (tags.length === 0) continue;
     const dismissing = tags.filter((m) => /light-dismiss/.test(m[1])).length;
     out.push({ file, tags: tags.length, dismissing });

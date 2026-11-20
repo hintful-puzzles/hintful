@@ -42,30 +42,33 @@
  * See docs/input.md § "The numeric keypad never arrives".
  */
 
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import * as decimal from "./decimal.ts";
+import * as descAlphabet from "./desc-alphabet.ts";
+import { puzzleKeyMap } from "./key-map.ts";
+import * as pointer from "./pointer.ts";
 import { BACKSPACE, DELETE, ESCAPE } from "./pointer.ts";
+import * as runLength from "./run-length.ts";
 import { REGISTERED_GAMES } from "./testing/enrollment.ts";
+import {
+  nodesOf,
+  parsed,
+  resolveSpecifier,
+  shown,
+  usesOf,
+  where,
+} from "./testing/syntax.ts";
 import { PuzzleButton } from "./types.ts";
 
 /**
- * Sources as text, via Vite's `import.meta.glob` rather than `node:fs` —
- * following `asset-integrity.test.ts` and `palette-source.test.ts`, which keeps
- * the test inside the browser-shaped type world and preserves the project's
- * `"types": []` posture.
+ * Game sources, read as syntax trees.
  *
  * A glob is not an import specifier, so a bulk rewriter that repoints imports
  * after a file move leaves it behind — and an unmatched glob yields `{}`, so
  * every assertion below would pass over nothing. That is what the vacuity
  * assertions are for.
  */
-const frontendSource: string = Object.values(
-  import.meta.glob<string>("../puzzle/components/view-interactive.ts", {
-    query: "?raw",
-    import: "default",
-    eager: true,
-  }),
-)[0];
-
 const gameModules = import.meta.glob<string>("../games/**/*.ts", {
   query: "?raw",
   import: "default",
@@ -73,14 +76,57 @@ const gameModules = import.meta.glob<string>("../games/**/*.ts", {
 });
 
 /**
- * The engine modules holding facts no game may restate, as source. A module
- * is here because a game restating what it owns is the defect §2 guards —
- * the export lists themselves are still read from the modules.
+ * The engine modules holding facts no game may restate. A module is here
+ * because a game restating what it owns is the defect §2 guards; what each
+ * exports is read off the module itself.
  */
-const factModuleSources: Record<string, string> = import.meta.glob<string>(
-  ["./pointer.ts", "./decimal.ts", "./desc-alphabet.ts", "./run-length.ts"],
-  { query: "?raw", import: "default", eager: true },
-);
+const FACT_MODULES: readonly Record<string, unknown>[] = [
+  pointer,
+  decimal,
+  descAlphabet,
+  runLength,
+];
+
+/** The names a game's button goes by where it is compared against a code:
+ * `interpretMove`'s parameter and the locals it is read into. The bound of
+ * what §1 sees, as `coord-conversion.test.ts`'s tile size is. */
+const BUTTON = new Set(["button", "btn", "raw", "rawButton", "key"]);
+
+const isButton = (e: ts.Expression): boolean =>
+  ts.isIdentifier(e) && BUTTON.has(e.text);
+
+const EQUALITY = new Set([
+  ts.SyntaxKind.EqualsEqualsToken,
+  ts.SyntaxKind.EqualsEqualsEqualsToken,
+  ts.SyntaxKind.ExclamationEqualsToken,
+  ts.SyntaxKind.ExclamationEqualsEqualsToken,
+]);
+
+/** What a button is compared against in `sf`: each `button === x` (either
+ * way round) and each `case x:` of a `switch (button)`, with `x`. */
+function buttonComparisons(
+  sf: ts.SourceFile,
+): { node: ts.Node; other: ts.Expression }[] {
+  const out: { node: ts.Node; other: ts.Expression }[] = [];
+  for (const n of nodesOf(sf)) {
+    if (ts.isBinaryExpression(n) && EQUALITY.has(n.operatorToken.kind)) {
+      if (isButton(n.left)) out.push({ node: n, other: n.right });
+      else if (isButton(n.right)) out.push({ node: n, other: n.left });
+    } else if (ts.isSwitchStatement(n) && isButton(n.expression)) {
+      for (const clause of n.caseBlock.clauses)
+        if (ts.isCaseClause(clause))
+          out.push({ node: clause, other: clause.expression });
+    }
+  }
+  return out;
+}
+
+/** The numeric literals a button is compared against in `sf`. */
+function numericComparisons(sf: ts.SourceFile): { node: ts.Node; code: number }[] {
+  return buttonComparisons(sf).flatMap(({ node, other }) =>
+    ts.isNumericLiteral(other) ? [{ node, code: Number(other.text) }] : [],
+  );
+}
 
 /**
  * Every code the **on-screen key panel** can deliver, read from the live
@@ -104,98 +150,29 @@ function panelCodesByGame(): Map<string, Set<number>> {
   return byGame;
 }
 
-/** `../games/unruly/index.ts` → `unruly`. */
+/** `src/games/unruly/index.ts` → `unruly`. */
 function gameIdOf(path: string): string {
-  return /\/games\/([^/]+)\//.exec(path)?.[1] ?? "";
+  return /^src\/games\/([^/]+)\//.exec(path)?.[1] ?? "";
 }
 
 /**
- * Every code `puzzleKeyMap` can deliver, read **from the frontend source**
- * rather than restated here. Restating it would make this test agree with a
- * copy of the map instead of with the map — the exact shape of "a guard that
- * measures a neighbor of the thing it guards".
- *
- * Entries are either a bare number (`Escape: 27`) or a `PuzzleButton.NAME`,
- * which is resolved through the real enum.
+ * Every code the key map can deliver, read off the map itself
+ * (`engine/key-map.ts`, which the view reads).
  *
  * Printable characters (32..126) are excluded from the analysis entirely: the
- * key map falls through to "any single character → its char code", so every one
+ * view falls through to "any single character → its char code", so every one
  * of them is emittable and a game testing `'m'` is fine.
  */
-function emittableCodes(): Set<number> {
-  const map = /static puzzleKeyMap[^{]*\{([\s\S]*?)\n {2}\} as const;/.exec(
-    frontendSource ?? "",
-  );
-  if (!map) throw new Error("emittable-keys: could not find puzzleKeyMap");
+const emittableFromKeyMap = new Set<number>(Object.values(puzzleKeyMap));
 
-  const codes = new Set<number>();
-  for (const [, value] of map[1].matchAll(/^\s*(?:"[^"]*"|[\w ]+):\s*(.+?),\s*$/gm)) {
-    const raw = value.trim();
-    const named = /^PuzzleButton\.(\w+)$/.exec(raw);
-    const n = named
-      ? (PuzzleButton as unknown as Record<string, number>)[named[1]]
-      : Number(raw);
-    if (Number.isInteger(n)) codes.add(n);
-  }
-  return codes;
-}
+/** Every non-test `.ts` file under `src/games/`, parsed. */
+const sources: ts.SourceFile[] = Object.entries(gameModules)
+  .filter(([key]) => !key.includes(".test."))
+  .map(([key, text]) => parsed(resolveSpecifier("src/engine/x.ts", key), text));
 
-/** Every non-test `.ts` file under `src/games/`, with its path. */
-function gameSources(): { path: string; text: string }[] {
-  return Object.entries(gameModules)
-    .filter(([path]) => !path.includes(".test."))
-    .map(([path, text]) => ({ path, text }));
-}
-
-/**
- * Numeric literals a game compares a button against — `button === 8`,
- * `btn === 0x30`. Deliberately narrow: it matches the *shape that has actually
- * shipped the bug* rather than trying to understand the expression, so it
- * cannot quietly stop matching anything. Its own vacuity is asserted below.
- */
-const COMPARISON =
-  /\b(?:button|btn|raw|rawButton|key)\s*===?\s*(0x[0-9a-fA-F]+|\d+)\b/g;
-
-/**
- * The second shape, and it shipped a live defect that the first could not see.
- *
- * `switch (button) { case 8: … }` compares a button against a control code
- * exactly as `button === 8` does, and the regex above matches neither the
- * `switch` header nor the `case`. Unruly's `decideValue` carried `case 8:` for
- * months *after* the collection-wide erase-key sweep had "fixed" it — its
- * `interpretMove` gate called `isEraseKey`, so `DELETE` (127) passed the gate,
- * reached the switch, matched nothing and fell through to `default`. The erase
- * key read as wired at every level and was dead at the last one.
- *
- * A `case` cannot call a predicate, so the correct form spells both codes
- * (`case BACKSPACE: case DELETE:`). This finds
- * the ones that spell only one, by scanning the body of each `switch` whose
- * subject is a button for numeric `case` labels.
- */
-function switchCases(text: string): { line: number; code: number; src: string }[] {
-  const out: { line: number; code: number; src: string }[] = [];
-  const lines = text.split("\n");
-  for (let i = 0; i < lines.length; i++) {
-    if (!/switch\s*\(\s*(?:button|btn|raw|rawButton|key)\s*\)/.test(lines[i])) continue;
-    // Walk to the closing brace by depth, so a nested block cannot end it early.
-    let depth = 0;
-    for (let j = i; j < lines.length; j++) {
-      for (const ch of lines[j]) {
-        if (ch === "{") depth++;
-        else if (ch === "}") depth--;
-      }
-      if (j > i) {
-        const m = /^\s*case\s+(0x[0-9a-fA-F]+|\d+)\s*:/.exec(lines[j]);
-        if (m) out.push({ line: j + 1, code: Number(m[1]), src: lines[j].trim() });
-      }
-      if (depth <= 0 && j > i) break;
-    }
-  }
-  return out;
-}
+const at = (n: ts.Node): string => `${where(n)}  ${shown(n)}`;
 
 describe("no game tests a button this frontend cannot send", () => {
-  const emittableFromKeyMap = emittableCodes();
   const panels = panelCodesByGame();
   /**
    * What can reach *this* game. The keyboard half is the same for everyone; the
@@ -206,11 +183,8 @@ describe("no game tests a button this frontend cannot send", () => {
    */
   const emittable = (path: string) =>
     new Set([...emittableFromKeyMap, ...(panels.get(gameIdOf(path)) ?? [])]);
-  const sources = gameSources();
 
   it("reads a plausible key map and a plausible set of game sources", () => {
-    // The vacuity guard: a parser that read only bare numbers would miss every
-    // `PuzzleButton.NAME` entry, and this assertion is what says so.
     expect(emittableFromKeyMap.size).toBeGreaterThanOrEqual(8);
     expect(emittableFromKeyMap).toContain(DELETE);
     expect(emittableFromKeyMap).toContain(ESCAPE);
@@ -221,38 +195,36 @@ describe("no game tests a button this frontend cannot send", () => {
     // asserted too: a glob whose shape changed would key every lookup on `""`
     // and quietly hand every game an empty panel.
     expect(panels.size).toBeGreaterThanOrEqual(12);
-    expect(gameIdOf("../games/unruly/index.ts")).toBe("unruly");
-    expect(new Set(sources.map((f) => gameIdOf(f.path))).size).toBeGreaterThan(50);
+    expect(gameIdOf("src/games/unruly/index.ts")).toBe("unruly");
+    expect(new Set(sources.map((f) => gameIdOf(f.fileName))).size).toBeGreaterThan(50);
   });
 
   it("finds the comparisons it claims to check", () => {
     // The second half of the vacuity guard, and the one that matters more: the
     // codes above are useless if nothing is scanned against them. Games do
     // compare buttons to numeric literals — letter keys, the digits going
-    // through `digitOf` — and if that stops being true this regex has gone stale
+    // through `digitOf` — and if that stops being true this scan has gone stale
     // rather than the collection having become clean.
-    const hits = sources.flatMap((f) => [...f.text.matchAll(COMPARISON)]);
-    expect(hits.length).toBeGreaterThan(10);
+    expect(sources.flatMap(numericComparisons).length).toBeGreaterThan(10);
   });
 
   it("has no comparison against an unsendable control code", () => {
+    // `switch (button) { case 8: … }` compares a button against a control code
+    // exactly as `button === 8` does, and shipped a live defect a scan for the
+    // `===` alone could not see: Unruly's `decideValue` carried `case 8:` for
+    // months *after* the collection-wide erase-key sweep had "fixed" it — its
+    // `interpretMove` gate called `isEraseKey`, so `DELETE` (127) passed the
+    // gate, reached the switch, matched nothing and fell through to `default`.
+    // A `case` cannot call a predicate, so the correct form spells both codes
+    // (`case BACKSPACE: case DELETE:`).
     const dead: string[] = [];
-    for (const { path, text } of sources) {
-      const reachable = emittable(path);
-      const lines = text.split("\n");
-      lines.forEach((line, i) => {
-        for (const [, literal] of line.matchAll(COMPARISON)) {
-          const code = Number(literal);
-          // Printable ASCII always reaches games via the char-code fallback.
-          if (code >= 32 && code <= 126) continue;
-          if (reachable.has(code)) continue;
-          dead.push(`${path}:${i + 1}  ${line.trim()}`);
-        }
-      });
-      for (const { line, code, src } of switchCases(text)) {
+    for (const sf of sources) {
+      const reachable = emittable(sf.fileName);
+      for (const { node, code } of numericComparisons(sf)) {
+        // Printable ASCII always reaches games via the char-code fallback.
         if (code >= 32 && code <= 126) continue;
         if (reachable.has(code)) continue;
-        dead.push(`${path}:${line}  ${src}`);
+        dead.push(at(node));
       }
     }
 
@@ -266,8 +238,8 @@ describe("no game tests a button this frontend cannot send", () => {
     // `isCancelKey`, since a bare comparison is half-wired whichever half it
     // picks.
     expect(emittableFromKeyMap.has(BACKSPACE)).toBe(false);
-    expect(emittable("../games/abcd/index.ts").has(BACKSPACE)).toBe(true);
-    expect(emittable("../games/unruly/index.ts").has(BACKSPACE)).toBe(false);
+    expect(emittable("src/games/abcd/index.ts").has(BACKSPACE)).toBe(true);
+    expect(emittable("src/games/unruly/index.ts").has(BACKSPACE)).toBe(false);
     expect(dead).toEqual([]);
   });
 
@@ -276,25 +248,36 @@ describe("no game tests a button this frontend cannot send", () => {
     // switches on a button, this scan has gone stale rather than the collection
     // having become clean. (The population shrinks as games hand their buttons
     // to the target-verb model, which is why this is not a fixed count.)
-    const subjects = sources.filter((f) =>
-      /switch\s*\(\s*(?:button|btn|raw|rawButton|key)\s*\)/.test(f.text),
+    const subjects = sources.filter((sf) =>
+      [...nodesOf(sf)].some((n) => ts.isSwitchStatement(n) && isButton(n.expression)),
     );
     expect(subjects.length).toBeGreaterThan(0);
     // No numeric label is left in the population — the last three were Unruly's
-    // `'0'`, `'1'`, `'2'`, retired by `digitOf` — so the scanner is proved on a
-    // planted switch instead of on a floor the collection would have to fail to
-    // keep. A nested block precedes the label so the depth walk is exercised.
-    const planted = [
-      "switch (button) {",
-      "  case CURSOR_SELECT: {",
-      "    if (x) { y(); }",
-      "    break;",
-      "  }",
-      "  case 8:",
-      "    return EMPTY;",
-      "}",
-    ].join("\n");
-    expect(switchCases(planted)).toEqual([{ line: 6, code: 8, src: "case 8:" }]);
+    // `'0'`, `'1'`, `'2'`, retired by `digitOf` — so the scan is proved on
+    // planted code instead of on a floor the collection would have to fail to
+    // keep: a label after a nested block, a comparison written backwards, and
+    // neither in a comment.
+    const planted = parsed(
+      "src/games/plant/keys.ts",
+      [
+        "switch (button) {",
+        "  case CURSOR_SELECT: {",
+        "    if (x) { y(); }",
+        "    break;",
+        "  }",
+        "  case 8:",
+        "    return EMPTY;",
+        "}",
+        "if (27 === btn) z();",
+        "// button === 9",
+      ].join("\n"),
+    );
+    expect(
+      numericComparisons(planted).map(({ node, code }) => [at(node), code]),
+    ).toEqual([
+      ["src/games/plant/keys.ts:6  case 8: return EMPTY;", 8],
+      ["src/games/plant/keys.ts:9  27 === btn", 27],
+    ]);
   });
 
   it("writes the named buttons by name, not as magic numbers", () => {
@@ -305,16 +288,10 @@ describe("no game tests a button this frontend cannot send", () => {
     // each spelled all four arrow keys this way, two of them with the constant's
     // name in a trailing comment — which is a name that cannot be grepped, cannot
     // be renamed, and cannot be wrong out loud.
-    const magic: string[] = [];
-    for (const { path, text } of sources) {
-      text.split("\n").forEach((line, i) => {
-        for (const [, literal] of line.matchAll(COMPARISON)) {
-          const code = Number(literal);
-          if (code >= 0x200 && emittableFromKeyMap.has(code))
-            magic.push(`${path}:${i + 1}  ${line.trim()}`);
-        }
-      });
-    }
+    const magic = sources
+      .flatMap(numericComparisons)
+      .filter(({ code }) => code >= 0x200 && emittableFromKeyMap.has(code))
+      .map(({ node }) => at(node));
     expect(magic).toEqual([]);
   });
 
@@ -329,16 +306,22 @@ describe("no game tests a button this frontend cannot send", () => {
     // legitimate `= 8`s (`COL_CURSOR`, `DIR_MAX`, `F_DOT_BLACK`) is that the
     // constant is then **compared against a button**. So match on both.
     const copies: string[] = [];
-    for (const { path, text } of sources) {
-      const lines = text.split("\n");
-      lines.forEach((line, i) => {
-        const m = /^const (\w+)\s*=\s*(8|27)\s*;/.exec(line);
-        if (!m) return;
-        const used = new RegExp(
-          `(?:button|btn|raw|rawButton|key)\\s*===?\\s*${m[1]}\\b|case ${m[1]}\\s*:`,
-        );
-        if (used.test(text)) copies.push(`${path}:${i + 1}  ${line.trim()}`);
-      });
+    for (const sf of sources) {
+      const compared = new Set(
+        buttonComparisons(sf).flatMap(({ other }) =>
+          ts.isIdentifier(other) ? [other.text] : [],
+        ),
+      );
+      for (const n of nodesOf(sf))
+        if (
+          ts.isVariableDeclaration(n) &&
+          ts.isIdentifier(n.name) &&
+          n.initializer !== undefined &&
+          ts.isNumericLiteral(n.initializer) &&
+          [8, 27].includes(Number(n.initializer.text)) &&
+          compared.has(n.name.text)
+        )
+          copies.push(at(n));
     }
     expect(copies).toEqual([]);
   });
@@ -358,45 +341,60 @@ describe("no game tests a button this frontend cannot send", () => {
     // char-code fallback rejects for being longer than one character), and a
     // laptop may have no numpad at all. So a keypad binding must never be the
     // *only* route to an input — which is what Inertia's diagonals were.
+    const POINTER = "src/engine/pointer.ts";
+    const cursorKeys = Object.keys(pointer).filter((n) => n.startsWith("CURSOR_"));
     let binders = 0;
-    for (const { path, text } of sources) {
-      if (!/MOD_NUM_KEYPAD\s*\|/.test(text)) continue;
+    for (const sf of sources) {
+      // A binding is the bit or'ed with a key's code, either way round; a mask
+      // (`~MOD_MASK | MOD_NUM_KEYPAD`) and the bit forced onto a bare button
+      // (`button | MOD_NUM_KEYPAD`) bind no key.
+      const binds = usesOf(sf, { module: POINTER, name: "MOD_NUM_KEYPAD" }).some(
+        ({ node }) => {
+          const p = node.parent;
+          if (
+            !ts.isBinaryExpression(p) ||
+            p.operatorToken.kind !== ts.SyntaxKind.BarToken
+          )
+            return false;
+          return ts.isNumericLiteral(p.left === node ? p.right : p.left);
+        },
+      );
+      if (!binds) continue;
       // The bare form of the same key must be accepted somewhere in the file:
-      // a named cursor key; `digitOf`, which looks through the keypad bit and
-      // so is a bare-key route by construction; or a hand-off to the
-      // target-verb model, whose arrows and Enter reach every target (Twiddle's
-      // keypad turns a block the cursor can reach and Enter turns).
+      // a named cursor key compared with the button; `digitOf`, which looks
+      // through the keypad bit and so is a bare-key route by construction; or
+      // a hand-off to the target-verb model, whose arrows and Enter reach every
+      // target (Twiddle's keypad turns a block the cursor can reach and Enter
+      // turns).
+      const cursorCompared = buttonComparisons(sf).some(({ other }) =>
+        cursorKeys.some((name) =>
+          usesOf(sf, { module: POINTER, name }).some(({ node }) => node === other),
+        ),
+      );
+      const called = (module: string, name: string): boolean =>
+        usesOf(sf, { module, name }).some((u) => u.kind === "call");
       expect(
-        /button === CURSOR_/.test(text) ||
-          /\bdigitOf\(/.test(text) ||
-          /\binterpretTargetVerbs\(/.test(text),
-        `${path} binds MOD_NUM_KEYPAD with no bare-key route`,
+        cursorCompared ||
+          called(POINTER, "digitOf") ||
+          called("src/engine/target-verb.ts", "interpretTargetVerbs"),
+        `${sf.fileName} binds MOD_NUM_KEYPAD with no bare-key route`,
       ).toBe(true);
       binders++;
     }
-    // The scan keys on the constant's name; spelling the bit differently, or
-    // losing the last binder, would leave this green over nothing.
+    // Losing the last binder, or the bit moving out of `pointer.ts`, would
+    // leave this green over nothing.
     expect(binders, "no game binds MOD_NUM_KEYPAD at all").toBeGreaterThan(0);
   });
 });
 
 describe("no game privately restates what an engine fact module owns", () => {
-  const sources = gameSources();
-
-  /** Every value the fact modules export, read from their sources. Deriving
+  /** Every value the fact modules export, read off the modules. Deriving
    * the list rather than writing one is the point: a helper added there is
    * guarded on the day it lands, with nobody remembering to extend this. */
-  const exported = new Set(
-    Object.values(factModuleSources).flatMap((text) =>
-      // `function\*?`: a generator (`run-length.ts`'s scanner) is an export too.
-      [...text.matchAll(/^export (?:const|function\*?) (\w+)/gm)].map((m) => m[1]),
-    ),
-  );
+  const exported = new Set(FACT_MODULES.flatMap((m) => Object.keys(m)));
 
   it("reads a plausible export list", () => {
-    // Vacuity: an empty set would make the sweep below pass over nothing, and
-    // a glob that matched fewer modules than named would guard fewer facts.
-    expect(Object.keys(factModuleSources)).toHaveLength(4);
+    // Vacuity: an empty set would make the sweep below pass over nothing.
     expect(exported.size).toBeGreaterThanOrEqual(20);
     for (const name of [
       "isMouseDown",
@@ -412,13 +410,18 @@ describe("no game privately restates what an engine fact module owns", () => {
   });
 
   it("finds no game-local declaration shadowing one", () => {
+    // A function or a variable declared under the name, at any depth: a
+    // local copy inside a function is as private as one at the top.
     const shadows: string[] = [];
-    for (const { path, text } of sources) {
-      text.split("\n").forEach((line, i) => {
-        const m = /^(?:export )?(?:const|function) (\w+)\b/.exec(line);
-        if (m && exported.has(m[1])) shadows.push(`${path}:${i + 1}  ${line.trim()}`);
-      });
-    }
+    for (const sf of sources)
+      for (const n of nodesOf(sf))
+        if (
+          (ts.isFunctionDeclaration(n) || ts.isVariableDeclaration(n)) &&
+          n.name !== undefined &&
+          ts.isIdentifier(n.name) &&
+          exported.has(n.name.text)
+        )
+          shadows.push(`${where(n)}  ${n.name.text}`);
     // Group, Tents and Untangle each carried their own `isMouseDown` family —
     // survivors of the promotion that removed 27 other copies — and when the
     // scan widened to `decimal.ts` it found nine `isDigit`s and Unequal's

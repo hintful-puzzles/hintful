@@ -17,6 +17,7 @@
  * inferred from the sweep passing.
  */
 
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { renderHelpPage } from "./describe/help-page.ts";
 import {
@@ -57,6 +58,7 @@ import {
 } from "./engine/testing/enrollment.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 import { itOverWholeSweep } from "./engine/testing/slow.ts";
+import { nodesOf, parsed } from "./engine/testing/syntax.ts";
 import { TOUCH_PLACEHOLDER } from "./engine/touch-help.ts";
 import { WING_PLACEHOLDER } from "./engine/wing.ts";
 import { puzzleDataMap, puzzleIds } from "./puzzle/catalog.ts";
@@ -571,7 +573,7 @@ const allHelpPages = [
   ...gameDescriptions.values(),
 ];
 
-/** The app's icon map as text — the naming convention a help glyph follows.
+/** The app's icon map's source — the naming convention a help glyph follows.
  * (It is not the *resolution* path: see "the help's glyphs are a closed set".) */
 const iconsSource = import.meta.glob<string>("./icons.ts", {
   query: "?raw",
@@ -873,14 +875,34 @@ describe("the help's glyphs are a closed set", () => {
     // `src/icons.ts` is not loaded by a help page, so this is not the
     // resolution path — it is the naming convention, which is worth holding to
     // so a help glyph and the toolbar button it describes stay the same picture.
-    const appIconNames = new Set(
-      [...(iconsSource ?? "").matchAll(/^\s*"?([a-z0-9-]+)"?:\s*\w+Icon,/gm)].map(
-        (m) => m[1],
-      ),
-    );
-    expect(appIconNames.size, "the icon map pattern stopped matching").toBeGreaterThan(
-      20,
-    );
+    // The map's keys, read off its object literal: a key is a name whatever
+    // its value is spelled as.
+    const appIconNames = new Set<string>();
+    for (const n of nodesOf(parsed("src/icons.ts", iconsSource ?? ""))) {
+      if (
+        !ts.isVariableDeclaration(n) ||
+        !ts.isIdentifier(n.name) ||
+        n.name.text !== "defaultIcons" ||
+        n.initializer === undefined
+      )
+        continue;
+      // `{ … } as const`, or any other assertion around the literal.
+      let map: ts.Expression = n.initializer;
+      while (
+        ts.isAsExpression(map) ||
+        ts.isSatisfiesExpression(map) ||
+        ts.isParenthesizedExpression(map)
+      )
+        map = map.expression;
+      if (ts.isObjectLiteralExpression(map))
+        for (const p of map.properties)
+          if (
+            p.name !== undefined &&
+            (ts.isStringLiteral(p.name) || ts.isIdentifier(p.name))
+          )
+            appIconNames.add(p.name.text);
+    }
+    expect(appIconNames.size, "no icon map read from src/icons.ts").toBeGreaterThan(20);
     // The help has a handful of glyphs of its own (install instructions,
     // `experimental`) that no app control uses; they are named here so the set
     // stays closed rather than the assertion being softened to a subset test.

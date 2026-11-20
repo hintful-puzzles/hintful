@@ -1,6 +1,7 @@
 import { css, html } from "lit";
 import { customElement, eventOptions, property } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
+import { puzzleKeyMap } from "../../engine/key-map.ts";
 import { digitOf } from "../../engine/pointer.ts";
 import { type Point, PuzzleButton } from "../../engine/types.ts";
 import { audioClick } from "../../utils/audio.ts";
@@ -149,31 +150,8 @@ export class PuzzleViewInteractive extends PuzzleView {
   // Keyboard events
   //
 
-  static puzzleKeyMap: { [key: KeyboardEvent["key"]]: PuzzleButton | number } = {
-    ArrowDown: PuzzleButton.CURSOR_DOWN,
-    ArrowUp: PuzzleButton.CURSOR_UP,
-    ArrowLeft: PuzzleButton.CURSOR_LEFT,
-    ArrowRight: PuzzleButton.CURSOR_RIGHT,
-    Accept: PuzzleButton.CURSOR_SELECT,
-    CrSel: PuzzleButton.CURSOR_SELECT,
-    Enter: PuzzleButton.CURSOR_SELECT,
-    Select: PuzzleButton.CURSOR_SELECT,
-    " ": PuzzleButton.CURSOR_SELECT2,
-    // Upstream's two "put it back / rub it out" keys. A game that wants either
-    // must test **both** codes below: this map sends 127 for Backspace, where
-    // upstream's own ports send `'\b'` (8), so a transcribed `button == '\b'`
-    // is a key that can never fire.
-    Escape: 27,
-    Backspace: 127,
-    Clear: 127,
-    Delete: 127,
-    Undo: PuzzleButton.UI_UNDO,
-    Redo: PuzzleButton.UI_REDO,
-    // Tab: Only Untangle uses it; intercepting would create a tab-order trap
-  } as const;
-
   eventKeyToPuzzleKey(key: KeyboardEvent["key"]): number | null {
-    const button = PuzzleViewInteractive.puzzleKeyMap[key];
+    const button = puzzleKeyMap[key];
     if (button !== undefined) return button;
     if (key.length === 1) {
       const code = key.charCodeAt(0);

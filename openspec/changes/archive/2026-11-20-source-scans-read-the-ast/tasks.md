@@ -29,24 +29,16 @@
       against the regex reads it replaces. `testing/syntax.ts`. Parsing the
       580 game and engine files took 377 ms against 1657 ms for the comment
       stripping the text scans ran (2026-11-20).
-- 2.2 progress: groups (a), (b) and (c) done. Next, (d). Notes for it:
-      - `syntax.ts` holds `parsed`, `nodesOf`, `usesOf`, `importsOf`,
-        `importedModules`, `importedNames`, `callsTo`, `where`, `shown`;
-        `enrollment.ts` holds `gamesUsing`/`gamesNotUsing`/`gamesImporting`/
-        `gamesCallingMethod`/`gameSyntax`.
-      - (c) found: `palette-departures`' positional form had no instance
-        left, so it went rather than converting; `palette-source`'s channel
-        rule now keys on the `Color` type, any name; `cursor-vocabulary`'s
-        `pointer.ts` export check guarded only its own prose and went.
-      - `emittable-keys`: `puzzleKeyMap` is a public static on
-        `PuzzleViewInteractive`, readable at run time; the fact modules'
-        exports are their namespaces' keys.
-      - The tree scans keyed on a callee's spelling (`desc-error`,
-        `hint-refusal`, `params-refusal`) bind it through `usesOf`.
-- [ ] 2.2 Replace each scan a declaration can answer; convert the rest to
+- [x] 2.2 Replace each scan a declaration can answer; convert the rest to
       the syntax tree. Plant the defect each scan exists for and see it fail.
+      The key map moved to `engine/key-map.ts`, which the view reads, since
+      an engine test may import nothing outside the engine; the fact
+      modules' exports are their namespaces' keys. `dialog-dismissal`'s
+      markup is now read from `html` templates on the tree, past a URL's
+      `//`. `params-refusal` follows a name to its own declaration through
+      imports and re-exports (`declarationOf`), not to any same-named one.
 
 ## 3. Finish
 
-- [ ] 3.1 `docs/method.md` and `docs/testing.md` say how a scan reads source.
+- [x] 3.1 `docs/method.md` and `docs/testing.md` say how a scan reads source.
       Commit, push, archive.

@@ -32,9 +32,11 @@
  * A game may be listed below and still have its error frame well covered.
  */
 
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { capabilitySets } from "./engine/testing/enrollment.ts";
 import { expectLedger } from "./engine/testing/ledger.ts";
+import { callsTo, nodesOf, parsed, resolveSpecifier } from "./engine/testing/syntax.ts";
 import "./games/index.ts";
 
 /** Every game's **test** files, by game id — the opposite of the usual scan. */
@@ -44,14 +46,23 @@ const testSources = (() => {
     import: "default",
     eager: true,
   });
-  const byGame = new Map<string, string[]>();
-  for (const [path, text] of Object.entries(modules)) {
-    const id = path.split("/")[2];
+  const byGame = new Map<string, ts.SourceFile[]>();
+  for (const [key, text] of Object.entries(modules)) {
+    const id = key.split("/")[2];
     if (!id) continue;
-    byGame.set(id, [...(byGame.get(id) ?? []), text]);
+    const sf = parsed(resolveSpecifier("src/x.ts", key), text);
+    byGame.set(id, [...(byGame.get(id) ?? []), sf]);
   }
   return byGame;
 })();
+
+/** The name a call is made through, or `null` for a computed callee. */
+function calleeName(call: ts.CallExpression): string | null {
+  const e = call.expression;
+  if (ts.isIdentifier(e)) return e.text;
+  if (ts.isPropertyAccessExpression(e)) return e.name.text;
+  return null;
+}
 
 /**
  * Does any of this game's test files drive the mistake overlay onto a frame and
@@ -69,18 +80,26 @@ const testSources = (() => {
  * than a file key, deliberately: two of these games call `findMistakes` in one
  * file and paint it in another.
  */
-function isCovered(sources: readonly string[]): boolean {
-  return sources.some((text) => {
-    if (text.includes("showMistakes")) return true;
-    return text.split(/\bit\(/).some(
-      (block) =>
-        /findMistakes\??[.(]/.test(block) &&
-        // `[Rr]edraw` and not `\bredraw`: a game whose export collides with
-        // something in its own test file imports it aliased, as Galaxies
+function isCovered(sources: readonly ts.SourceFile[]): boolean {
+  return sources.some((sf) => {
+    const nodes = [...nodesOf(sf)];
+    if (nodes.some((n) => ts.isIdentifier(n) && n.text === "showMistakes")) return true;
+    return callsTo(sf, "it").some((block) => {
+      const names = [...nodesOf(block)].flatMap((n) =>
+        ts.isCallExpression(n) ? [calleeName(n) ?? ""] : [],
+      );
+      return (
+        names.includes("findMistakes") &&
+        // `[Rr]edraw` and not `redraw` alone: a game whose export collides
+        // with something in its own test file imports it aliased, as Galaxies
         // calls `galaxiesRedraw(`.
-        /[Rr]edraw\w*\(/.test(block) &&
-        /\.ops\b|toMatchSnapshot/.test(block),
-    );
+        names.some((name) => /[Rr]edraw/.test(name)) &&
+        (names.includes("toMatchSnapshot") ||
+          [...nodesOf(block)].some(
+            (n) => ts.isPropertyAccessExpression(n) && n.name.text === "ops",
+          ))
+      );
+    });
   });
 }
 

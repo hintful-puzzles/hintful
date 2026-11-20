@@ -1,6 +1,8 @@
+import type ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { gamesUsing } from "./enrollment.ts";
 import {
+  declarationOf,
   importedModules,
   importedNames,
   parsed,
@@ -77,6 +79,31 @@ describe("a module's imports", () => {
       "src/games/plant/c.ts",
       "src/games/plant/e.ts",
     ]);
+  });
+});
+
+describe("a name's declaration", () => {
+  it("is followed through an import, a renaming and both kinds of re-export", () => {
+    const trees = new Map(
+      Object.entries({
+        "src/plant/use.ts":
+          'import { f as g, K } from "./barrel.ts";\nfunction own() {}\n',
+        "src/plant/barrel.ts":
+          'export { h as f } from "./impl.ts";\nexport * from "./k.ts";',
+        "src/plant/impl.ts": 'export function h() { return "h"; }',
+        "src/plant/k.ts": 'export const K = "k";',
+      }).map(([path, text]) => [path, parsed(path, text)]),
+    );
+    const at = (path: string) => trees.get(path) ?? null;
+    const use = trees.get("src/plant/use.ts") as ts.SourceFile;
+    const g = declarationOf(use, "g", at);
+    expect(g?.kind === "function" && g.fn.getSourceFile().fileName).toBe(
+      "src/plant/impl.ts",
+    );
+    const k = declarationOf(use, "K", at);
+    expect(k?.kind === "const" && k.init.getText()).toBe('"k"');
+    expect(declarationOf(use, "own", at)?.kind).toBe("function");
+    expect(declarationOf(use, "nothing", at)).toBeNull();
   });
 });
 

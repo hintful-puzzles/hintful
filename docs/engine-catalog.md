@@ -116,6 +116,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `solve-failure.ts` — what Solve says when it will not solve |
 | Input |
 | – `pointer.ts` — button codes and cursor helpers |
+| – `key-map.ts` — what the keyboard sends |
 | – `key-labels.ts` — on-screen keypad builders |
 | Game IDs: descs and params |
 | – `run-length.ts` — the letter-run desc grammar |
@@ -1377,6 +1378,13 @@ locally**, a magic number where a named button exists included. Exemplar:
 list. `cursor-vocabulary.test.ts` fails a cursor held under any other
 field, whatever it is named. `decimal.test.ts` finds a digit code in a game
 by its value: a `48`, a `0x39`, a numeric `case`, a `c >= "0"`.
+
+### `key-map.ts` — what the keyboard sends
+
+`puzzleKeyMap`: each named key the view maps to a button code, read by the
+view and by `emittable-keys.test.ts`, which fails a game testing a code
+neither this map nor the game's own keypad sends. A game reads none of it:
+test the named button from `pointer.ts`.
 
 ### `key-labels.ts` — on-screen keypad builders
 

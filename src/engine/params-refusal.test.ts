@@ -12,13 +12,21 @@
  * holding a function) and follows what a `return` hands back: both branches of
  * a conditional, the text of a template with each substitution read as a word,
  * a constant by its declaration (`AREA_TOO_LARGE`), and a call by the returns
- * of the function it names (Loopy's `gridValidateParams`). An expression it
+ * of the function it names (Loopy's `gridValidateParams`), each name bound in
+ * its own file or through its import. An expression it
  * cannot follow fails, since the sentence could not be read. Whether a sentence
  * is a fragment ("Too many mines for grid size") is a matter of reading; what
  * this holds is the form a reader can check at a glance.
  */
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import {
+  declarationOf,
+  nodesOf,
+  parsed,
+  resolveSpecifier,
+  where,
+} from "./testing/syntax.ts";
 
 const sources = {
   ...import.meta.glob<string>("../games/**/*.ts", {
@@ -41,123 +49,99 @@ interface Refusal {
   where: string;
 }
 
-/** Every `validateParams`, and every top-level function and constant by name,
- * across the files given. */
-function index(files: Record<string, string>) {
-  const validators: { fn: FunctionNode; sf: ts.SourceFile; path: string }[] = [];
-  const functions = new Map<
-    string,
-    { fn: FunctionNode; sf: ts.SourceFile; path: string }
-  >();
-  const constants = new Map<
-    string,
-    { init: ts.Expression; sf: ts.SourceFile; path: string }
-  >();
-  for (const [path, text] of Object.entries(files)) {
-    const sf = ts.createSourceFile(path, text, ts.ScriptTarget.ESNext, true);
-    const visit = (n: ts.Node): void => {
-      if (ts.isFunctionDeclaration(n) && n.name) {
-        functions.set(n.name.text, { fn: n, sf, path });
-        if (n.name.text === "validateParams") validators.push({ fn: n, sf, path });
-      } else if (ts.isMethodDeclaration(n) && n.name.getText(sf) === "validateParams") {
-        validators.push({ fn: n, sf, path });
-      } else if (
+/** Every `validateParams` across `trees`: a declaration, a method, or a
+ * property or constant holding a function. Keyed on the name because it is
+ * the `Game` contract's member, which no import binds. */
+function validatorsIn(trees: readonly ts.SourceFile[]): FunctionNode[] {
+  const out: FunctionNode[] = [];
+  for (const sf of trees)
+    for (const n of nodesOf(sf)) {
+      const named = (name: ts.Node | null): boolean =>
+        name !== null && ts.isIdentifier(name) && name.text === "validateParams";
+      if (
+        (ts.isFunctionDeclaration(n) || ts.isMethodDeclaration(n)) &&
+        named(n.name ?? null)
+      )
+        out.push(n);
+      else if (
         (ts.isPropertyAssignment(n) || ts.isVariableDeclaration(n)) &&
-        n.initializer
-      ) {
-        const name = n.name.getText(sf);
-        const init = n.initializer;
-        if (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) {
-          if (name === "validateParams") validators.push({ fn: init, sf, path });
-        } else if (ts.isVariableDeclaration(n) && n.parent.parent.parent === sf) {
-          // Top level only: a local `const err` in another file is not one.
-          constants.set(name, { init, sf, path });
-        }
-      }
-      ts.forEachChild(n, visit);
-    };
-    visit(sf);
-  }
-  return { validators, functions, constants };
+        named(n.name) &&
+        n.initializer !== undefined &&
+        (ts.isArrowFunction(n.initializer) || ts.isFunctionExpression(n.initializer))
+      )
+        out.push(n.initializer);
+    }
+  return out;
 }
 
-/** What `validateParams` can return, followed through constants and calls. */
+/** What `validateParams` can return, followed through the constants and the
+ * calls each name is bound to: a declaration in the same file, or the one its
+ * import leads to (`syntax.ts`'s `declarationOf`). */
 function refusals(files: Record<string, string>): {
   refusals: Refusal[];
   validators: number;
 } {
-  const { validators, functions, constants } = index(files);
+  const trees = new Map(
+    Object.entries(files).map(([path, text]) => [path, parsed(path, text)]),
+  );
+  const treeAt = (path: string) => trees.get(path) ?? null;
   const out: Refusal[] = [];
-  const where = (n: ts.Node, sf: ts.SourceFile, path: string) =>
-    `${path}:${sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1}`;
 
-  const read = (
-    e: ts.Expression,
-    sf: ts.SourceFile,
-    path: string,
-    seen: Set<string>,
-  ): void => {
+  const read = (e: ts.Expression, seen: ReadonlySet<ts.Node>): void => {
+    const sf = e.getSourceFile();
     if (ts.isParenthesizedExpression(e)) {
-      read(e.expression, sf, path, seen);
+      read(e.expression, seen);
       return;
     }
     if (e.kind === ts.SyntaxKind.NullKeyword) return;
     if (ts.isConditionalExpression(e)) {
-      read(e.whenTrue, sf, path, seen);
-      read(e.whenFalse, sf, path, seen);
+      read(e.whenTrue, seen);
+      read(e.whenFalse, seen);
       return;
     }
     if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) {
-      out.push({ text: e.text, where: where(e, sf, path) });
+      out.push({ text: e.text, where: where(e) });
       return;
     }
     if (ts.isTemplateExpression(e)) {
       const text =
         e.head.text + e.templateSpans.map((s) => `X${s.literal.text}`).join("");
-      out.push({ text, where: where(e, sf, path) });
+      out.push({ text, where: where(e) });
       return;
     }
-    if (ts.isIdentifier(e) && !seen.has(e.text)) {
-      const found = constants.get(e.text);
-      if (found) {
-        read(found.init, found.sf, found.path, new Set([...seen, e.text]));
+    if (ts.isIdentifier(e)) {
+      const bound = declarationOf(sf, e.text, treeAt);
+      if (bound?.kind === "const" && !seen.has(bound.init)) {
+        read(bound.init, new Set([...seen, bound.init]));
         return;
       }
     }
-    if (
-      ts.isCallExpression(e) &&
-      ts.isIdentifier(e.expression) &&
-      !seen.has(e.expression.text)
-    ) {
-      const found = functions.get(e.expression.text);
-      if (found) {
-        returns(found.fn, found.sf, found.path, new Set([...seen, e.expression.text]));
+    if (ts.isCallExpression(e) && ts.isIdentifier(e.expression)) {
+      const bound = declarationOf(sf, e.expression.text, treeAt);
+      if (bound?.kind === "function" && !seen.has(bound.fn)) {
+        returns(bound.fn, new Set([...seen, bound.fn]));
         return;
       }
     }
-    out.push({ text: null, where: where(e, sf, path) });
+    out.push({ text: null, where: where(e) });
   };
 
-  const returns = (
-    fn: FunctionNode,
-    sf: ts.SourceFile,
-    path: string,
-    seen: Set<string>,
-  ): void => {
+  const returns = (fn: FunctionNode, seen: ReadonlySet<ts.Node>): void => {
     if (!fn.body) return;
     if (!ts.isBlock(fn.body)) {
-      read(fn.body, sf, path, seen);
+      read(fn.body, seen);
       return;
     }
     const visit = (n: ts.Node): void => {
       if (ts.isFunctionLike(n)) return;
-      if (ts.isReturnStatement(n) && n.expression) read(n.expression, sf, path, seen);
+      if (ts.isReturnStatement(n) && n.expression) read(n.expression, seen);
       ts.forEachChild(n, visit);
     };
     ts.forEachChild(fn.body, visit);
   };
 
-  for (const { fn, sf, path } of validators) returns(fn, sf, path, new Set());
+  const validators = validatorsIn([...trees.values()]);
+  for (const fn of validators) returns(fn, new Set());
   return { refusals: out, validators: validators.length };
 }
 
@@ -169,7 +153,9 @@ function isSentence(text: string): boolean {
 }
 
 const tree = Object.fromEntries(
-  Object.entries(sources).filter(([path]) => !path.endsWith(".test.ts")),
+  Object.entries(sources)
+    .filter(([key]) => !key.endsWith(".test.ts"))
+    .map(([key, text]) => [resolveSpecifier("src/engine/x.ts", key), text]),
 );
 const found = refusals(tree);
 
@@ -201,8 +187,10 @@ describe("a params refusal", () => {
   it("is read through constants and calls, and a fragment is caught", () => {
     // The instrument on a known positive: each route the tree uses, with one
     // fragment planted on each.
+    // A name is followed to what it is bound to: `helper` in `a.ts` is its
+    // own, not `c.ts`'s, and `b.ts` reaches `c.ts`'s through a renamed import.
     const planted = refusals({
-      "a.ts": `
+      "src/plant/a.ts": `
         const TOO_BIG = "Grid is too big";
         function helper(n: number): string | null {
           return n > 2 ? "Helper refusal." : "helper fragment";
@@ -212,9 +200,13 @@ describe("a params refusal", () => {
           if (p.w > 9) return \`Width must be at most \${9}\`;
           return p.w === 3 ? helper(p.w) : null;
         }`,
-      "b.ts": `export const game = {
-          validateParams: (p: { w: number }) => (p.w ? null : "Fine."),
+      "src/plant/b.ts": `import { helper as shared } from "./c.ts";
+        export const game = {
+          validateParams: (p: { w: number }) => (p.w ? shared() : "Fine."),
         };`,
+      "src/plant/c.ts": `export function helper(): string {
+          return "c's own fragment";
+        }`,
     });
     expect(planted.validators).toBe(2);
     expect(
@@ -224,6 +216,7 @@ describe("a params refusal", () => {
       ["Width must be at most X", false],
       ["Helper refusal.", true],
       ["helper fragment", false],
+      ["c's own fragment", false],
       ["Fine.", true],
     ]);
   });

@@ -1097,7 +1097,16 @@ tree per file per worker, so a second guard over the same sources pays
 nothing, and a parse costs a quarter of the comment stripping a text scan
 needs. Key the query on what the code refers to: an export by its module
 and name (`usesOf`, `gamesUsing`), an import by its resolved path
-(`importedModules`), a node by its kind. A regex stays right only where the
+(`importedModules`, `importedNames`), a name by the declaration it is bound
+to through its imports and re-exports (`declarationOf`), a node by its kind.
+Where the question is a type, as "a value that is a `Color`" is, build a
+`ts.Program` and ask the checker by the type's symbol
+(`palette-source.test.ts`). A name is the key only where nothing binds it,
+and the guard says so: a member of the `Game` contract (`validateParams`), or
+a parameter's local names, stated as the scan's bound. Before parsing a
+fact out of a file, ask whether the test can import it: a value in a module
+of its own is read by importing it (`engine/key-map.ts`, which the view
+reads, as `emittable-keys.test.ts` does). A regex stays right only where the
 text is the subject: a sentence a player reads, help markdown, YAML, markup,
 a shell script, or a byte the file must not hold. Plant the defect a
 converted scan exists for and see it fail, as `syntax.test.ts` does for the

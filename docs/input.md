@@ -103,7 +103,8 @@ declaration that shadows one.
 
 A press reaches a game from `puzzle/components/view-interactive.ts`, through
 the worker, as `Midend.processInput` calling `interpretMove`. A key arrives as
-a bare character code from the view's `puzzleKeyMap`.
+a bare character code from the engine's `puzzleKeyMap` (`engine/key-map.ts`),
+which the view reads.
 
 **Shift on a key is yours to read, and you need not strip it.** A key held
 with Shift arrives with `MOD_SHFT` set, a capital letter included. If the game
