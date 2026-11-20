@@ -1,0 +1,135 @@
+# yaml-language-server: $schema=../../describe/description.schema.json
+
+game: skeleton
+help:
+  rules: |-
+    Find the hidden code in a few guesses. The code is a row of different
+    digits, and so is every guess, as long as the code. Each digit of a
+    guess is scored: on a filled square where the code has that digit in
+    that place, on a disc where the code has it in another place, and in
+    faint ink where the code does not have it.
+  controls: |-
+    Type a guess with the digit keys, or with the buttons below the board.
+    Each digit goes into the first empty square of the row you are filling,
+    and the frame shows where the next one will land. Press **Submit** once
+    the row is full. A row that uses a digit twice isn't sent: it gets a red
+    frame, and the line below the board says why.
+
+    Tap a square of the row you are filling to choose where the next digit
+    goes instead, which is how you change one digit. **Clear**, or
+    Backspace, empties the square you chose, or rubs out the last digit you
+    typed if you have not chosen one.
+
+    ### The keyboard
+
+    Left and right move the frame along the row. Enter submits the guess
+    once the frame is past its last square; on a square, Enter switches
+    Marks mode on and off.
+  sections:
+    - heading: The answer row
+      body: |-
+        Below the rows is the answer row: one slot for each digit of the
+        code, each showing every digit that could still be there. It is
+        where you keep track of what you have worked out.
+
+        Tap a slot to rule digits out of it: the frame moves there, and the
+        digit buttons now rule their digit out of that slot, or put it back
+        if it is already out; **Clear** puts every digit back. Tapping a
+        square of the row you are filling takes you back to entering digits.
+        **Marks** switches between the two as well.
+
+        **Check & save** checks the answer row against the code. A slot
+        where you have ruled out the digit that is really there gets a red
+        frame. It never judges your guesses: a guess that isn't the code is
+        how you learn more.
+  hints: |-
+    **Next hint** first points out any digit a scored row proves is not in
+    the code, and rules it out of the answer row for you. It reasons only
+    from the scores, never from the marks already in your answer row.
+
+    {{hint-marks}}
+
+    When nothing more follows, the hint suggests a guess in the ringed
+    squares. The guess always fits every score so far, so it could be the
+    code, and the hint tells you how many codes still fit and the most that
+    could be left after it. That part is a suggestion rather than a
+    deduction, and the hint says so by counting rather than arguing.
+name: Skeleton
+family: code
+sizes:
+  len: { min: 3, max: 6 }
+  nsymbols: { min: 3, max: 9 }
+space:
+  # The answer row: a slot a cell.
+  grid: { w: "len", h: "1" }
+  units: []
+answer:
+  # A digit a slot.
+  value: { sort: cell, domain: "range(1, nsymbols)" }
+rules:
+  distinct: "distinct(value(s) over s in cells)"
+clues:
+  # A scored guess: its digit in each slot and that slot's mark, 2 where the
+  # code has the digit there, 1 where it has it in another slot, and 0 where
+  # it does not have it. No guess repeats a digit.
+  score:
+    at: board
+    fields:
+      peg: { at: cell, value: "range(1, nsymbols)" }
+      mark: { at: cell, value: "range(0, 2)" }
+    means: >-
+      forall s in cells:
+        (mark(k, s) = 2 iff value(s) = peg(k, s))
+        and (mark(k, s) = 0 iff count(t in cells where value(t) = peg(k, s)) = 0)
+freedom: { kind: query }
+deal:
+  answer: a different digit a slot, at random
+tiers: [Normal]
+names:
+  absent: "a digit scored absent"
+techniques:
+  # A digit a guess scored absent is in no slot of the code.
+  - id: absent
+    tier: Normal
+    for: "k in clues(score), s in cells where mark(k, s) = 0"
+    conclude: "forall t in cells: strike(t, peg(k, s))"
+# A step's words use the striped row, the scored guess it reads; the ringed
+# digits of the answer row, which it rules out; and the ringed squares of the
+# row being filled, where a suggested guess goes. A deduction ends on the
+# digits it rules out; whether "so" may be said is the rival judging's
+# (`hint.ts`), passed as the relation. A probe is chosen by what it leaves,
+# and ends on that.
+phrases:
+  # `several` is fixed when the step is made, so a step the player has
+  # partly made keeps its words.
+  out: "{if several: {ring: the ringed digits} are out | {ring: the ringed digit} is out}"
+  row: "{stripes row: the striped row}"
+steps:
+  # `digit` is the one the row scored absent.
+  absent:
+    ring: digit
+    terms: { several: flag, digit: number }
+    marks: { stripes: [row] }
+    look: "{row} scored its {digit} absent"
+    follows: "the code has no {digit}"
+    move: "{out}"
+  # `code` is the guess.
+  onlyAnswer:
+    ring: square
+    terms: { code: word }
+    look: "{code} is the only code that fits every score"
+    move: "guess it in {ring: the ringed squares}"
+  # `fitting` codes fit every score; `worst` is the most this guess can
+  # leave, whatever it scores.
+  opening:
+    ring: square
+    terms: { code: word, fitting: number, worst: number }
+    look: "nothing is scored yet"
+    move: "guess {code} in {ring: the ringed squares}"
+    effect: "at most {worst} of the {fitting} codes will be left"
+  probe:
+    ring: square
+    terms: { code: word, fitting: number, worst: number }
+    look: "{fitting} codes fit every score, and {code} is one"
+    move: "guess it in {ring: the ringed squares}"
+    effect: "it may win, or leave at most {worst}"

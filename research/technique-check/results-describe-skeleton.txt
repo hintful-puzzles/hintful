@@ -1,9 +1,10 @@
+--  skeleton nsymbols=3: no board of order 4 has an answer, so nothing is checked there
+ok  skeleton nsymbols=3 absent                         3  sound    (want sound   )     2 queries    0.0s
+ok  skeleton nsymbols=3 absent (planted)               3  unsound  (want unsound )     1 queries    0.0s   at clue score 0
+ok  skeleton nsymbols=4 absent                         3  sound    (want sound   )     2 queries    0.0s
+ok  src/skeleton/code/skeleton.description.yaml#absent: recorded sound, proved whole on all 2 boards
 --  skeleton: no board of order 3 has an answer, so nothing is checked there
-ok  skeleton   forced                         4  sound    (want sound   )    16 queries    3.7s
-ok  skeleton   forced (planted)               4  unsound  (want unsound )     2 queries    0.5s   at cell 1
-ok  src/skeleton/edges/skeleton.description.yaml#forced: recorded sound, proved whole on all 1 boards
-ok  skeleton   pairBreaks                     4  sound    (want sound   )    16 queries   79.4s
-ok  skeleton   pairBreaks (planted)           4  unsound  (want unsound )     2 queries    0.6s   at cell 1
-ok  src/skeleton/edges/skeleton.description.yaml#pairBreaks: recorded sound, proved whole on all 1 boards
+ok  skeleton   forced                         current: recorded src/skeleton/edges/skeleton.description.yaml#forced d53254da4816de74
+ok  skeleton   pairBreaks                     current: recorded src/skeleton/edges/skeleton.description.yaml#pairBreaks 5bbfbd40580a714a
 ok  skeleton   count                          current: recorded src/skeleton/grid/skeleton.description.yaml#count ce7c19a6fc164862
 ok  skeleton   shared                         current: recorded src/skeleton/grid/skeleton.description.yaml#shared 174fec326783f63e

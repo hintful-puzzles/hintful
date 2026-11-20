@@ -4,14 +4,16 @@
  * line in the registry, and, where its change is open, the change's promise of
  * a spec.
  *
- * Usage: node scripts/new-game-register.mjs <gameId> <description> <objective>
+ * Usage: node scripts/new-game-register.mjs <gameId> <description> <objective> <family>
  *
  * **It registers at once so that the first verdict is a whole one.** No
  * cross-game guard reads a game until it is registered, and the records those
  * guards hold by hand refuse a new game one by one; registered from the start,
  * `npm run game` names them all on its first run. The entry describes the
  * skeleton's puzzle, as the copy's help page does, until the author replaces
- * both, and the family is the one the copy's description names.
+ * both. `family` is the catalog's (`puzzleFamilies` in `catalog-data.ts`),
+ * which the skeleton's kind names: a description's `family` is another
+ * vocabulary, and a code game's is `code` where the catalog's is `hidden`.
  *
  * **A change scaffolded without a delta says so with `skip_specs`**, which
  * `openspec validate` refuses once a spec delta exists. A game owes its spec
@@ -20,9 +22,11 @@
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-const [game, description, objective] = process.argv.slice(2);
-if (!game || !description || !objective) {
-  console.error("usage: new-game-register.mjs <gameId> <description> <objective>");
+const [game, description, objective, family] = process.argv.slice(2);
+if (!game || !description || !objective || !family) {
+  console.error(
+    "usage: new-game-register.mjs <gameId> <description> <objective> <family>",
+  );
   process.exit(2);
 }
 const pascal = game[0].toUpperCase() + game.slice(1);
@@ -30,11 +34,6 @@ const fail = (msg) => {
   console.error(`new-game-register: ${msg}`);
   process.exit(1);
 };
-
-const family = /^family: (\w+)$/m.exec(
-  readFileSync(`src/games/${game}/${game}.description.yaml`, "utf8"),
-)?.[1];
-if (!family) fail(`src/games/${game}/${game}.description.yaml names no family`);
 
 /** Put `insert` into `lines` before the first of `keyed` (line indices with
  * their sort keys) whose key sorts after `key`, else before line `end`. */

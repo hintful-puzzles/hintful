@@ -9,12 +9,13 @@ script stamps out a new game from the skeleton" in
 | --- | --- |
 | [`grid`](./grid) | A square grid of cells the player marks, solved by deduction. |
 | [`edges`](./edges) | Lines the player draws along the edges between squares, solved by deduction with connectivity. |
+| [`code`](./code) | A hidden answer found by guessing rows scored against it, with an answer row of rule-outs. It has no generator and no solver: the answer is the desc. |
 
 **A skeleton is a small game that plays**, written the shared way for every
 concern that has one: params, presets, the desc, input, the solver's ladder,
 the generator's tier gate, the mistake check, the hint and its marks, the
-renderer's tile cache, and the tests. Its puzzle is only there to make those
-run. A copy is the author's own from the moment it is made: nothing in a game
+renderer's tile cache, and the tests, each where its kind has it. Its puzzle
+is only there to make those run. A copy is the author's own from the moment it is made: nothing in a game
 refers back here, and the engine does not know these directories exist.
 
 **It is source, so the gate holds it.** The typecheck reads it, so a change

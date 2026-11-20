@@ -80,6 +80,7 @@ guides is for a game that is not yours.
 | Cells marked by state | sets each cell to one of a few states | deduction | the `grid` skeleton, Unruly |
 | Edges and loops | marks the edges between cells, or joins things | deduction, with connectivity | the `edges` skeleton, Tracks |
 | Moves and search | makes moves toward a goal, and no single move is forced | a search or a heuristic | Pegs |
+| Hidden answer and feedback | guesses a hidden answer a row at a time, each row scored, and rules values out of an answer row | guessing against the scores, with deductions as marks | the `code` skeleton, Guess |
 
 **Every game.**
 
@@ -195,6 +196,27 @@ guides is for a game that is not yours.
   answer is hidden.
 - It skips the deduction sections above, and difficulty tiers unless the
   game has them.
+
+**Hidden answer and feedback** adds:
+
+- [`hints-search.md`](./hints-search.md): its opening; `hints-search.md` §
+  "A hidden answer: marks for what is proved, a count for the guess";
+  `hints-search.md` § "A hidden answer: one tracer, and a test that the hint
+  cannot peek".
+- `engine-catalog.md` § "`code-rows.ts` — the code-breaking mechanic",
+  which holds the working row and the answer row of rule-outs.
+- `solver-and-generator.md` § "One answer, even when it is hidden".
+- `hints-marks.md` § "Give the facts a notation"; `hints-marks.md` § "Hatch
+  the line the sentence names".
+- `mechanics.md` § "Mistake checking is part of done", which checks the
+  answer row and never a guess; `mechanics.md` § "Pencil marks: the full
+  note-taking UX", for the answer row's notes mode.
+- `input.md` § "The on-screen keypad".
+- `descriptions.md` § "Checking a technique sound", for each rule-out the
+  scores prove.
+- It skips the deduction sections above, difficulty tiers and the generator:
+  the answer is the desc, dealt at random, so `solver-and-generator.md` §
+  "Every retry loop is bounded" has no loop to bound.
 
 ## Before you start
 

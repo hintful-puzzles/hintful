@@ -337,6 +337,7 @@
   "src/games/unruly/unruly.description.yaml#unique": "ded2bc81e95a2323",
   "src/games/wordtrail/wordtrail.description.yaml#onlyLength": "9f88f920bd073076",
   "src/games/wordtrail/wordtrail.description.yaml#onlyWord": "745b68dab766fdca",
+  "src/skeleton/code/skeleton.description.yaml#absent": "706d2e11aaa9851d",
   "src/skeleton/edges/skeleton.description.yaml#forced": "d53254da4816de74",
   "src/skeleton/edges/skeleton.description.yaml#pairBreaks": "5bbfbd40580a714a",
   "src/skeleton/grid/skeleton.description.yaml#count": "ce7c19a6fc164862",

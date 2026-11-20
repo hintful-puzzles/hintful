@@ -13,7 +13,7 @@
 # leaves undone.
 #
 # `kind` names the skeleton, a directory of src/skeleton/ whose table says
-# what each is for: `grid` (the default) or `edges`. The checklist differs
+# what each is for: `grid` (the default), `edges` or `code`. The checklist differs
 # where the skeletons do, which the `case` below says.
 
 set -euo pipefail
@@ -43,7 +43,9 @@ if [ ! -d "${SRC}" ]; then
   exit 2
 fi
 
-# What the checklist says of this kind's copy.
+# What the checklist says of this kind's copy, and the catalog entry it is
+# registered with: the kind's family in the catalog's own vocabulary, and the
+# skeleton puzzle's words, which the author replaces.
 case "${KIND}" in
   grid)
     HAS="params and their codec, presets,
@@ -54,6 +56,7 @@ tile-cached renderer, and tests for each."
      ${GAME}.description.yaml, the board in state.ts. Rename what the copy calls a \"mark\", a
      \"clue\" and its two rungs to this puzzle's own words as you go."
     ROLES="Each of the three hint roles in hintMarks (ring, outline, stripes)"
+    FAMILY="shading"
     DESCRIPTION="Shading puzzle"
     OBJECTIVE="Shade squares so that every number counts the shaded squares beside it."
     ;;
@@ -71,8 +74,27 @@ tests for each."
      words as you go. The generator's answer is a loop through every square;
      a puzzle with other answers draws its own."
     ROLES="Each of the two hint roles in hintMarks (ring, outline)"
+    FAMILY="lines"
     DESCRIPTION="Loop puzzle"
     OBJECTIVE="Draw one loop through every square that never crosses a wall."
+    ;;
+  code)
+    HAS="params and their codec, presets,
+the desc as the hidden answer, the shared working row (keys, a tap, Submit and
+a refused row), the scores, the answer row of rule-outs with its notes mode and
+mistake check, the reference panel, an explained hint (a rule-out the scores
+prove, then a counted guess) with its marks and gesture, a tile-cached
+renderer, and tests for each, the walk over every answer among them. It has no
+generator and no solver: the answer is the desc."
+    PUZZLE="The rules and the hint's sentences live in
+     ${GAME}.description.yaml, the score and what a guess may be in state.ts.
+     Rename what the copy calls a \"digit\" and a \"code\" to this puzzle's own
+     words as you go; keep the hint reading the scores and never the answer,
+     which its test checks."
+    ROLES="Each of the two hint roles in hintMarks (ring, stripes)"
+    FAMILY="hidden"
+    DESCRIPTION="Code-breaking puzzle"
+    OBJECTIVE="Find the hidden code from how each guess is scored."
     ;;
   *)
     echo "scripts/new-game.sh has no checklist for kind '${KIND}'" >&2
@@ -124,7 +146,7 @@ cd "${REPO_ROOT}"
 
 # Registered in the collection, so that every cross-game guard reads it from
 # the first verdict on (the script's header says why).
-node scripts/new-game-register.mjs "${GAME}" "${DESCRIPTION}" "${OBJECTIVE}"
+node scripts/new-game-register.mjs "${GAME}" "${DESCRIPTION}" "${OBJECTIVE}" "${FAMILY}"
 
 # A longer name reflows lines, and the imports added want their sorted place.
 npx biome check --write "src/games/${GAME}" src/games/index.ts src/puzzle/catalog-data.ts > /dev/null

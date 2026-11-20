@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`skeleton: pinned hint positions > says, at each pin 1`] = `
+{
+  "absent": "The striped row scored its 2 absent, so the code has no 2: the ringed digits are out.",
+  "onlyAnswer": "213 is the only code that fits every score, so guess it in the ringed squares.",
+  "opening": "Nothing is scored yet. Guess 123 in the ringed squares: at most 12 of the 120 codes will be left.",
+  "probe": "9 codes fit every score, and 2341 is one. Guess it in the ringed squares: it may win, or leave at most 2.",
+}
+`;

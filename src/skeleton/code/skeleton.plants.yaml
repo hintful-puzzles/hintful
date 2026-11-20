@@ -1,0 +1,8 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A digit scored elsewhere read as absent too.
+  absent:
+    for: "k in clues(score), s in cells where mark(k, s) <= 1"
