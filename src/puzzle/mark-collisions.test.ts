@@ -6,88 +6,134 @@
  * no number (owner, 2026-10-23). The marks are read off each game's own frames
  * (`mark-collisions.ts`), so a game joins by being registered.
  *
- * {@link DECLARED} is a ledger, one entry per pair with its reason: two slots
+ * {@link DECLARED} is a ledger, one entry per meaning with its reason: slots
  * that are one meaning, or that the player tells apart by something the stroke
- * alone does not show. It is held exact, so an entry whose pair no longer
- * collides fails and cannot outlive its reason.
+ * alone does not show. Every collision on the boards read must be declared,
+ * and an entry none of whose pairs collides on any of them fails, so it cannot
+ * outlive its reason.
  */
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import type { DrawOp } from "../engine/testing/recording-drawing.ts";
+import { FIRST_SHARE, ofThisShare } from "../engine/testing/sweep-share.ts";
 import * as ballsort from "../games/ballsort/render.ts";
+import * as boats from "../games/boats/render.ts";
 import * as dominosa from "../games/dominosa/render.ts";
 import * as galaxies from "../games/galaxies/render.ts";
 import * as mosaic from "../games/mosaic/render.ts";
 import * as path from "../games/path/render.ts";
+import * as salad from "../games/salad/render.ts";
 import * as sticks from "../games/sticks/render.ts";
 import * as untangle from "../games/untangle/render.ts";
 import * as wordtrail from "../games/wordtrail/render.ts";
 import { puzzleIds } from "./catalog.ts";
-import { alike, frameMarks, markCollisions } from "./mark-collisions.ts";
+import {
+  alike,
+  frameMarks,
+  type MarkCensus,
+  markCollisions,
+} from "./mark-collisions.ts";
 
+/**
+ * A declaration names slots by what they mean: any slot of `among` drawn as
+ * one mark in one color with any other of `among`, or with any of `against`
+ * when it is given. A family of slots, a color's text for each of a game's
+ * colors, is declared once, so which of its members collide may move with
+ * the boards dealt and the ledger does not.
+ */
 interface Declared {
-  pair: [number, number];
+  among: readonly number[];
+  against?: readonly number[];
   why: string;
 }
+
+/** Every pair a declaration covers. */
+const pairsOf = ({ among, against }: Declared): string[] =>
+  (against ?? among).flatMap((b) =>
+    among.filter((a) => a !== b).map((a) => key([a, b])),
+  );
 
 const NUMBER_ON_A_PIECE =
   "one number, in ink on an open cell and in white on a dark piece; the dark scheme lightens both";
 
-/** Ball Sort's square, diamond, plus and cross, each a four-cornered
- * polygon to the reading, are four colors' symbols, each drawn on a ball of
- * its own color. */
-const BALLSORT_SYMBOLS = [2, 3, 4, 5].map((i) => ballsort.COL_SYMBOL + i);
+/** The `n` slots from `first` on, one for each of a game's colors. */
+const family = (first: number, n: number): number[] =>
+  Array.from({ length: n }, (_, i) => first + i);
 
 const DECLARED: Record<string, Declared[]> = {
-  ballsort: BALLSORT_SYMBOLS.flatMap((a, k) =>
-    BALLSORT_SYMBOLS.slice(k + 1).map((b) => ({
-      pair: [a, b] as [number, number],
+  // Ball Sort's square, diamond, plus and cross, each a four-cornered polygon
+  // to the reading, are four colors' symbols.
+  ballsort: [
+    {
+      among: family(ballsort.COL_SYMBOL + 2, 4),
       why: "two colors' symbols, each on a ball of its own color, a square apart from a diamond by its corners and a plus from a cross by its angle",
-    })),
-  ),
+    },
+  ],
+  boats: [
+    {
+      among: [boats.COL_COUNT],
+      against: [boats.COL_INK],
+      why: "a count beside the grid and the waves of a square the puzzle gave as water: a digit outside the grid, a tilde inside it",
+    },
+  ],
   dominosa: [
-    { pair: [dominosa.COL_TEXT, dominosa.COL_DOMINOTEXT], why: NUMBER_ON_A_PIECE },
+    {
+      among: [dominosa.COL_TEXT],
+      against: [dominosa.COL_DOMINOTEXT],
+      why: NUMBER_ON_A_PIECE,
+    },
   ],
   galaxies: [
     {
-      pair: [galaxies.COL_EDGE, galaxies.COL_ARROW],
+      among: [galaxies.COL_EDGE],
+      against: [galaxies.COL_ARROW],
       why: "an arrow's shaft beside the grid in a black dot's region: the arrow has a head and sits inside a cell",
     },
   ],
   mosaic: [
-    { pair: [mosaic.COL_TEXT, mosaic.COL_TEXT_ON_PIECE], why: NUMBER_ON_A_PIECE },
-  ],
-  path: [
-    // Yellow, the second number's color on the board dealt here, is pale
-    // enough that its number takes ink.
     {
-      pair: [path.COL_TEXT, path.COL_PAIR_TEXT],
-      why: "one number, in ink on an open disc and in ink on a pale yellow filled one",
+      among: [mosaic.COL_TEXT],
+      against: [mosaic.COL_TEXT_ON_PIECE],
+      why: NUMBER_ON_A_PIECE,
     },
   ],
-  sticks: [{ pair: [sticks.COL_NUMBER, sticks.COL_TEXT], why: NUMBER_ON_A_PIECE }],
+  // A pair's color pale enough that its number takes ink.
+  path: [
+    {
+      among: [path.COL_TEXT, ...family(path.COL_PAIR_TEXT, path.PAIRS)],
+      why: "one number, in ink on an open disc or on a pale filled one, whose color says which pair it is",
+    },
+  ],
+  salad: [
+    {
+      among: [salad.COL_BORDERCLUE],
+      against: [salad.COL_I_NUM],
+      why: "a letter, as a clue outside the grid and as a given inside it: the clue's place says it is one",
+    },
+  ],
+  sticks: [
+    { among: [sticks.COL_NUMBER], against: [sticks.COL_TEXT], why: NUMBER_ON_A_PIECE },
+  ],
   untangle: [
     {
-      pair: [untangle.COL_LINE, untangle.COL_OUTLINE],
+      among: [untangle.COL_LINE],
+      against: [untangle.COL_OUTLINE],
       why: "an edge beside the play area's frame: an edge ends at a vertex at each end",
     },
   ],
-  // The first two words' colors, yellow and violet, are pale enough in the
-  // light scheme that their letters take ink, as an open letter's does.
-  wordtrail: (
-    [
-      [wordtrail.COL_TEXT, wordtrail.COL_HUE_TEXT],
-      [wordtrail.COL_TEXT, wordtrail.COL_HUE_TEXT + 1],
-      [wordtrail.COL_HUE_TEXT, wordtrail.COL_HUE_TEXT + 1],
-    ] as [number, number][]
-  ).map((pair) => ({
-    pair,
-    why: "one letter, in ink on an open disc or on a word's colored disc, which says what word it is in",
-  })),
+  // A word's color pale enough in the light scheme that its letters take ink,
+  // as an open letter's does.
+  wordtrail: [
+    {
+      among: [wordtrail.COL_TEXT, ...family(wordtrail.COL_HUE_TEXT, wordtrail.HUES)],
+      why: "one letter, in ink on an open disc or on a word's colored disc, which says what word it is in",
+    },
+  ],
 };
 
-const key = ([a, b]: readonly [number, number]): string =>
-  `${Math.min(a, b)}:${Math.max(a, b)}`;
+function key([a, b]: readonly [number, number]): string {
+  return `${Math.min(a, b)}:${Math.max(a, b)}`;
+}
 
 describe("a mark's shape is read off the ops", () => {
   const line = (x2: number, y2: number, thickness: number, color = 1): DrawOp => ({
@@ -190,41 +236,63 @@ describe("a mark's shape is read off the ops", () => {
   });
 });
 
+const censuses = new Map<string, MarkCensus>();
+function censusOf(id: string): MarkCensus {
+  const census = censuses.get(id) ?? markCollisions(id);
+  censuses.set(id, census);
+  return census;
+}
+
 describe("no two unrelated marks are one color and one shape", () => {
-  for (const id of puzzleIds) {
+  for (const id of ofThisShare(puzzleIds)) {
     it(`${id}: every collision is declared, and every declaration collides`, () => {
-      const census = markCollisions(id);
+      const census = censusOf(id);
       // Frames that painted next to nothing would pass everything below.
       expect(census.marks.size).toBeGreaterThanOrEqual(3);
-      const found = census.collisions.map((c) => key([c.a, c.b])).sort();
-      const declared = (DECLARED[id] ?? []).map((d) => key(d.pair)).sort();
-      const shown = census.collisions.map(
-        ({ a, b, marks: [p, q], scheme }) =>
-          `slots ${a} and ${b}: ${p.kind} ${p.size}x${p.length} and ${q.size}x${q.length}, one color in ${scheme}`,
-      );
+      const declarations = DECLARED[id] ?? [];
+      const covered = new Set(declarations.flatMap(pairsOf));
+      const undeclared = census.collisions
+        .filter((c) => !covered.has(key([c.a, c.b])))
+        .map(
+          ({ a, b, marks: [p, q], scheme }) =>
+            `slots ${a} and ${b}: ${p.kind} ${p.size}x${p.length} and ${q.size}x${q.length}, one color in ${scheme}`,
+        );
+      const found = new Set(census.collisions.map((c) => key([c.a, c.b])));
+      const stale = declarations
+        .filter((d) => !pairsOf(d).some((p) => found.has(p)))
+        .map((d) => d.why);
+      const boards = census.boards.map((b) => b.id).join(", ");
       expect(
-        found,
-        `${id}: slots drawn as one mark in one color, against those declared in ` +
+        undeclared,
+        `${id}: slots drawn as one mark in one color, on ${boards}, and not in ` +
           `DECLARED.${id} (src/puzzle/mark-collisions.test.ts). Tell the marks ` +
-          "apart, or declare the pair with why it may look the same; remove a " +
-          `declaration nothing collides with.\n${shown.join("\n")}`,
-      ).toEqual(declared);
+          "apart, or declare the pair, or the family of slots it is one of, " +
+          "with why it may look the same.",
+      ).toEqual([]);
+      expect(
+        stale,
+        `${id}: declarations in DECLARED.${id} (src/puzzle/mark-collisions.test.ts) ` +
+          `that no board of ${boards} collides on; remove each one.`,
+      ).toEqual([]);
     });
+
+    // The pair this guard exists for is still the same mark, so it is the
+    // wall's color alone that keeps it apart, and the guard would see it
+    // collapse.
+    if (id === "path")
+      it("path: a wall and a line reaching no number are one mark", () => {
+        const { marks } = censusOf("path");
+        expect(
+          alike(marks.get(path.COL_LINE) ?? [], marks.get(path.COL_WALL) ?? []),
+        ).not.toBeNull();
+      });
   }
 
-  it("names only games that exist, and gives every entry a reason", () => {
-    for (const [id, entries] of Object.entries(DECLARED)) {
-      expect(puzzleIds).toContain(id);
-      for (const d of entries) expect(d.why.length).toBeGreaterThan(20);
-    }
-  });
-
-  // The pair this guard exists for is still the same mark, so it is the wall's
-  // color alone that keeps it apart, and the guard would see it collapse.
-  it("path: a wall and a line reaching no number are one mark", () => {
-    const { marks } = markCollisions("path");
-    expect(
-      alike(marks.get(path.COL_LINE) ?? [], marks.get(path.COL_WALL) ?? []),
-    ).not.toBeNull();
-  });
+  if (FIRST_SHARE)
+    it("names only games that exist, and gives every entry a reason", () => {
+      for (const [id, entries] of Object.entries(DECLARED)) {
+        expect(puzzleIds).toContain(id);
+        for (const d of entries) expect(d.why.length).toBeGreaterThan(20);
+      }
+    });
 });

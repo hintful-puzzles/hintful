@@ -109,7 +109,7 @@ export const COL_SHIP = 4;
 export const COL_SHIP_ERROR = 5;
 const COL_SHIP_FLEET_DONE = 6;
 const COL_SHIP_FLEET_STRIPE = 7;
-const COL_COUNT = 8;
+export const COL_COUNT = 8;
 const COL_COUNT_ERROR = 9;
 export const COL_COLLISION_ERROR = 10;
 export const COL_COLLISION_TEXT = 11;
@@ -117,7 +117,7 @@ export const COL_HINT_CELL = 12;
 const COL_CELL = 13; // the surface of an undecided square
 export const COL_GIVEN = 14; // the lifted surface under a segment the puzzle gave
 /** The waves on a given water square and the edge of a collision diamond. */
-const COL_INK = 15;
+export const COL_INK = 15;
 export const COL_FLASH = 16; // the ground of a square the win flash's body is on
 export const COL_FLASH_LEAD = 17; // and of one its leading edge is on
 

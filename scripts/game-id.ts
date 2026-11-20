@@ -2,7 +2,7 @@
  * Print a game's ID for a board: `npm run game-id -- <game> [<params>]
  * (--seed <seed> | --desc <desc>)`.
  *
- * A guard that pins a board (`warm-repaint.test.ts`'s `PINNED` and `WRONG`,
+ * A guard that pins a board (`warm-repaint.test.ts`'s `WRONG`,
  * `no-solution-load.test.ts`'s `REFUSED`) takes it as `params:desc`. This
  * deals or reads the board through the midend the app runs
  * (`src/engine/testing/game-id-of.ts`) and prints the ID it announces, so a

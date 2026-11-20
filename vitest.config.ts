@@ -47,7 +47,8 @@ function passFiles(): { include: string[]; exclude: string[] } {
  * case per game, was over whole, and so was the near-miss sweep, charged for
  * a board of every game (Gate run 42690070962, 2026-11-09), and so was the
  * skip comparison, which deals Loopy's boards twice (Gate run 42732884245,
- * 2026-11-10).
+ * 2026-11-10), and so is the mark-collision sweep, which solves a board of
+ * every mode of every game (110 s here, 2026-11-20).
  */
 const SPREAD = [
   "src/engine/hint-resume.test.ts",
@@ -55,6 +56,7 @@ const SPREAD = [
   "src/engine/warm-repaint.test.ts",
   "src/engine/desc-error-games.test.ts",
   "src/engine/ladder-skip.test.ts",
+  "src/puzzle/mark-collisions.test.ts",
 ];
 
 /** How many shares a spread file is walked in: CI's core count, so each file

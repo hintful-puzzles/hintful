@@ -957,6 +957,11 @@ setting deals that one with `dealtAgain`, from the same seed.
   needs one. Never seed a deal from the guard's own name.
 - A sweep reports on the boards it walked; a sentence or a rung that matters
   is pinned to a board (§ "Pinning a hint's positions").
+- **A guard's verdict moves only when what it guards moves.** A change to a
+  dealer or shared data moves every seed's board, so a guard that needs a
+  rarer board searches the dealt boards in a fixed order up to a bound
+  (`warm-repaint.test.ts`'s `searchBoards`), and a ledger held exact reads
+  several boards and declares by meaning (`mark-collisions.test.ts`).
 - A game's own test deals as it likes.
 
 ### One board of each kind, and the rest in the slow tier

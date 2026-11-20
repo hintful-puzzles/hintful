@@ -98,7 +98,7 @@ const COL_FLASH_LEAD = 14;
 const COL_PAIR = 15;
 /** How many of the free colors pairs take: all but the gray, whose line in
  * the dark scheme sits near the white of a line reaching no number. */
-const PAIRS = 9;
+export const PAIRS = 9;
 /** The first of the numbers on a pair's filled disc, one slot a color. */
 export const COL_PAIR_TEXT = COL_PAIR + PAIRS;
 /** A wall between two squares. */

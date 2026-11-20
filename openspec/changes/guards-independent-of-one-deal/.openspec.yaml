@@ -1,6 +1,2 @@
-# Deltas are written when the work is done, most likely modifying `testing`
-# (what a cross-game guard reads) and `engine-colors` (the mark-collision
-# rule's ledger).
 schema: spec-driven
 created: 2026-11-19
-skip_specs: true

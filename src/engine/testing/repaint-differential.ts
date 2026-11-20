@@ -386,9 +386,9 @@ const WALK_STEPS = 200;
  * at the first mismatch.
  *
  * The board is dealt from `seed` at the default params, or is `board` (a game
- * id, `params:desc`) when a frame the run must reach needs a position no deal
- * reliably gives: the seeded run reaches what is common, and a pinned board is
- * how a game puts its rarer marks in front of it. `moves` are played on the
+ * id, `params:desc`) when a frame the run must reach needs a position the
+ * seeded deal does not give: the seeded run reaches what is common, and
+ * another board puts a game's rarer marks in front of it. `moves` are played on the
  * board before the run, and the board they leave is checked as Check & save
  * checks it: they are how a run reaches a mistake, which no desc can hold.
  */

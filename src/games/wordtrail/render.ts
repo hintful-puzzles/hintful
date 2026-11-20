@@ -97,7 +97,7 @@ export const COL_TEXT = 13;
  * set's first nine, as Path's pairs take them, since its gray reads as a
  * dark square. A board of more words than that takes them round again. */
 const COL_HUE = 14;
-const HUES = 9;
+export const HUES = 9;
 /** The first of the letters on each word color's disc, a slot a color. */
 export const COL_HUE_TEXT = COL_HUE + HUES;
 /** The outline round the letters of the word the dictionary spotlights:

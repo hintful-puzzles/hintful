@@ -55,7 +55,7 @@ The skeleton's [`render.ts`](../src/skeleton/grid/render.ts) does steps 1 to
 | – Overlay sidecars | a mistake, hint or highlight is handed to the cell painter beside the tile value |
 | – A cue with no tile to live in | a cue sits in a margin or a panel with a cache of its own, or you change how a cached cue is drawn |
 | – When the packed key runs out of bits | a new flag does not fit the tile word |
-| – A warm frame must match a fresh one | `warm-repaint.test.ts` names your game, or its hint paints a mark the seeded run never shows |
+| – A warm frame must match a fresh one | `warm-repaint.test.ts` names your game, or its hint paints a mark no run shows |
 | – A mark that crosses tiles | a mark, bar or arrow covers more than one tile |
 | – Prove the overlay repaints | your game shows a mistake overlay, or repaints its whole frame with no cache |
 | – A mark band with `outer: 0` lies inside the tile's clip | a tile's drawn outline is not the rect it clips to, or hint marks pile up as the hint walks |
@@ -248,13 +248,14 @@ and thick lines.
 `role|kind` read through `StepMarks.of(role, kind)` in a role the legend
 (`hintMarks`) lists, and every role in the legend must be asked for.
 
-- **A mark the seeded run never shows needs a board that does**, named in
-  the test's `PINNED` as the board itself (`params:desc`), never as a seed.
-  Find one by walking deals across the presets until the plan paints the
-  pair.
-- **A pin must paint something the seeded run does not**; one the run has
-  caught up with fails and is removed.
-- **A mark no board reaches goes in `UNREACHED`** with its reason.
+- **A mark the seeded run never shows is searched for**, over the boards
+  every sweep deals, each mode's first then each one's next, up to
+  `SEARCH_BOUND`; the run prints which board painted what. Nothing is
+  pinned by hand, so a change that moves which board a seed deals does not
+  fail the guard.
+- **A mark no board within the bound reaches** is a hint that never paints
+  it on a dealt board, a bound too low, or a mark that goes in `UNREACHED`
+  with its reason.
 - **A mark that is not a hint mark is outside that requirement.** Pin its
   board and event seed in the game's own test (exemplar: `bricks.test.ts`,
   "takes an edge diamond away whole, ground included").
@@ -1038,10 +1039,13 @@ Each guard reads every game without being told about it.
   of its own, as Path's walls took `wallFill`. A pair that is one meaning (a
   number in ink on a cell and in white on a dark piece), or that the player
   tells apart by more than the stroke (an arrow's head), goes in its
-  `DECLARED` with the reason. A rim is no mark of its own, and neither are a
-  bevel's `darkSwaps` edges. It reads the deal and the board half solved by
-  the hint, so a slot only a drag, a mistake or the flash brings out is not
-  covered.
+  `DECLARED` with the reason. Declare a family of slots once, as the text on
+  each of a game's colors with its plain text (Wordtrail's words, Path's
+  pairs), so which members collide may move with the boards dealt. A rim is
+  no mark of its own, and neither are a bevel's `darkSwaps` edges. It reads
+  the deal and the board half solved by the hint, on a board of every mode
+  and the default one, so a slot only a drag, a mistake or the flash brings
+  out is not covered.
 - [`bevels.test.ts`](../src/puzzle/bevels.test.ts) fails when a bevel's
   lighter color is not the lighter one in both schemes, which is a forgotten
   `darkSwaps` pair, and when a game draws the shared bevel shape itself. It

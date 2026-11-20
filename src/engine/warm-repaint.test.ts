@@ -19,7 +19,10 @@
  * marks for (`StepMarks.of`), in a role the game's legend lists. A mark the run
  * never shows passes the comparison whatever its tile key gets wrong, which is
  * how Pegs' stripes and arrows went unchecked. Where the seeded deal does not
- * reach a mark, the game pins a board that does ({@link PINNED}). The
+ * reach a mark, a bounded search over the boards every sweep deals finds one
+ * that does ({@link searchBoards}). A board pinned by hand had to be found
+ * again whenever a change to shared data, a word list or a dealer, moved
+ * which board the seed dealt. The
  * requirement reads hint marks only: a mark the rules draw (Bricks' gravity
  * diamond) is held by a board pinned in its game's own tests. A game that finds
  * mistakes must have painted a mistake overlay on a warm frame, and taken it
@@ -31,8 +34,10 @@ import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import type { MarkRole } from "./hint-words.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { dealt } from "./testing/dealt.ts";
 import type { AnyGame } from "./testing/input-probe.ts";
 import { expectLedger } from "./testing/ledger.ts";
+import { dealtBoards } from "./testing/presets.ts";
 import {
   type RepaintRun,
   repaintDifferential,
@@ -41,82 +46,29 @@ import { FIRST_SHARE, ofThisShare } from "./testing/sweep-share.ts";
 
 const IDS = registeredGameIds().sort();
 const EVENTS = 60;
-/** Input events on a pinned board, before the walk of its hint's plan. */
-const PINNED_EVENTS = 20;
+/** Input events on a wrong board, before the walk of its hint's plan. */
+const WRONG_EVENTS = 20;
+
+/** Boards the search tries at most, for a game whose deal leaves a mark
+ * unpainted. The furthest any game needed was the ninth (2026-11-20); a mark
+ * past the bound fails the game, so the bound costs only a failing run. */
+const SEARCH_BOUND = 24;
 
 /**
- * Boards a game's run starts from as well as its deal, each because the
- * seeded run never paints a mark its renderer can paint. A board is the
- * input itself (`params:desc`), never a seed, since a seed reaches a mark only
- * through a generator that is free to stop dealing it. Each must paint a mark
- * the seeded run does not, so a pin the run has caught up with is named.
+ * The boards searched, in order, for a mark no earlier run painted: every mode
+ * and tier on the smallest board offering it, then a second board of each,
+ * and so on up to {@link SEARCH_BOUND}. They are the boards every cross-game
+ * sweep deals, so the search deals nothing of its own until it asks for a
+ * second round.
  */
-const PINNED: Readonly<Record<string, readonly string[]>> = {
-  // A striped square: the reach of the one run that can fill it.
-  ascent: ["5x5mRdt:25_1a4b24_2_8_6_22d12a15a17c19a"],
-  // A striped pour, which a hint names only on a board with two pours.
-  ballsort: ["5h4e1:bcd,ceaa,ade,acce,dbde,bb"],
-  crossing: [
-    // A note ruled out in a square, which the 7x7 deal's plan never needs:
-    // this plan's third step narrows notes its second wrote.
-    "7x9:4a1a1b8a1b1a2a1a1b1a2a1a1a2a1a7a1a1b4,27,36,189,294,475,546,858,918,4179,5566,6259,6855,7594,7878,8742,9482,9663",
-    // The outlined squares a number's one run clashes with elsewhere, which
-    // the deal's plan takes later than its run reaches.
-    "7x7du:a8a1b2a5a2c3a2a2b1a1a7,11,13,19,43,49,53,58,83,88,112,175,356,36961,56159,143643,2985635",
-  ],
-  // The outlined cells a placement reasons from.
-  filling: [
-    "9x13:b6d9b4a86699255b6c4a5b6a98c6b9d778299a877b7a2b4e5a499b3d9b95a52a995b5d9c8d5a6a8c",
-  ],
-  // An outlined wall, which only the Unreasonable rungs reason from.
-  galaxies: ["7x7du:mbgziedzjfzepcbd"],
-  // A struck note, which Tricky's eliminations make.
-  group: ["8dh:1_2_3_4_5_6_7_8_2g3f7_4e5a5a4e6a8e7e8a8e6_2"],
-  // An outlined answer slot, read when a color is placed by elimination.
-  guess: ["c8p5g12Bm:3bc2d346bb"],
-  loopy: [
-    // Outlined corners, then outlined pairs of edges.
-    "7x7t0dn:a322a2a2b1a2a1a2a13b332c30b21b22d3a2c3",
-    "7x7t0dh:323b23a2b23a23a2a122c22a2c21332a23d2a21a",
-  ],
-  // A struck note.
-  mathrax: ["5dn:m1g1c,aS2cS1S3dS0d"],
-  // A side noted and a step citing the note: the seeded deal's plan opens
-  // with locks, which mark only squares.
-  net: ["5x5de:862912b7641b336ab5eccda18"],
-  // Outlined edges, the pair of lines a square is tried with.
-  path: ["5x5dn:d1a2_3e4b4_2b1c3"],
-  rect: [
-    // A striped core two clues overlap on.
-    "17x17:e6a14a4c2b3c5a2zb2a9b5f45v6a2m4g3c4c2c4_6j11e2h3_3d5a2f18h3m4_2h20m4b5i2q14d18b8a4c15a2k5_5i6g",
-    // A ringed line.
-    "10x10e0.5:a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c",
-  ],
-  sokoban: [
-    // Arrows on the ways a barrel can still finish.
-    "10x12:w11fs2f2w5fs2ws3fw2s7w4s2usbs2w2tbsfs2bsw2tbswst2bw4s2ws2tw3tbsws2fw6f2s2w8s2w11",
-    // An outlined target, the one to leave empty until the ringed one is filled.
-    "10x12:w11tbtbs2btw3s4btw4fws2bstw3s3fs3w2tbs4tbw2s2tsfbstw2sb2susf2w2fsts5w2s2fs4fw3fs3w14",
-  ],
-  // The number just placed, outlined, and a struck note.
-  seismic: ["4x4dh:1b3a2babaa1,i1f"],
-  // An outlined cell.
-  signpost: ["4x4c:1eefgc10cafcfcebca16a"],
-  // A same-slant mark ringed where it is placed, then outlined where a clue
-  // reads it, which the deal's plan reaches later than its run walks.
-  slant: ["8x8dh:j33a3a11b3b2b2d21c1b313131b32d1b12313g2a12b0c1c"],
-  solo: [
-    // Outlined cells, then a struck note.
-    "2x3da:6f2b3c5b4_4b5c1b2f1",
-    "2x3di:3c5b4a2d4b2_2b5d2a1b1c6",
-  ],
-  // A ringed cell and a ringed tally set.
-  subsets: ["4x4n4de:_,_RL,10R,_,_,9D,_,_D,_URD,_,_DL,_,_,4R,_,5UL"],
-  // A striped piece.
-  tracks: [
-    "15x15dh:zbAzzg5aCgAd5m5Cc9a9bCeAuAs9zsCc,5,3,3,3,3,4,11,12,8,4,10,S10,7,11,12,2,5,8,6,3,5,S9,9,13,15,13,9,6,1,2",
-  ],
-};
+function* searchBoards(game: AnyGame): Generator<string> {
+  const presets = dealtBoards(game, { scalarEnds: false });
+  for (let k = 0; k < SEARCH_BOUND; k++) {
+    const { params } = presets[k % presets.length];
+    const n = Math.floor(k / presets.length);
+    yield `${game.encodeParams(params, true)}:${dealt(game, params, n).desc}`;
+  }
+}
 
 /**
  * A wrong board for each game whose seeded run never checks one: a board, and
@@ -226,7 +178,6 @@ describe("a warm frame matches a fresh one", () => {
     });
 
     it("pins and excuses only games it knows", () => {
-      expect(Object.keys(PINNED).filter((id) => !IDS.includes(id))).toEqual([]);
       expect(Object.keys(UNREACHED).filter((id) => !IDS.includes(id))).toEqual([]);
       expect(
         Object.keys(WRONG).filter(
@@ -249,18 +200,6 @@ describe("a warm frame matches a fresh one", () => {
       ).toBeGreaterThan(0);
     }
 
-    const pinned: RepaintRun[] = (PINNED[id] ?? []).map((board) => {
-      const r = repaintDifferential(game, id, PINNED_EVENTS, board);
-      expect(r.mismatch, `${board}: ${JSON.stringify(r.mismatch)}`).toBeNull();
-      const adds = [...r.reached.marks].filter((p) => !run.reached.marks.has(p));
-      expect(
-        adds,
-        `${board} paints nothing the seeded run does not: remove it from ` +
-          "PINNED (src/engine/warm-repaint.test.ts)",
-      ).not.toEqual([]);
-      return r;
-    });
-
     if (typeof game.findMistakes === "function") {
       const pin = WRONG[id];
       if (pin) {
@@ -269,7 +208,7 @@ describe("a warm frame matches a fresh one", () => {
           "the seeded run checks a wrong board: remove its entry from WRONG " +
             "(src/engine/warm-repaint.test.ts)",
         ).toBe(0);
-        const r = repaintDifferential(game, id, PINNED_EVENTS, pin.board, pin.moves);
+        const r = repaintDifferential(game, id, WRONG_EVENTS, pin.board, pin.moves);
         expect(r.mismatch, `${pin.board}: ${JSON.stringify(r.mismatch)}`).toBeNull();
         expect(
           r.reached.mistaken,
@@ -292,32 +231,58 @@ describe("a warm frame matches a fresh one", () => {
       expect(Object.keys(legend)).toEqual([]);
       return;
     }
-    const runs = [run, ...pinned];
+    const runs: RepaintRun[] = [run];
+    const roleOf = (pair: string) => pair.slice(0, pair.indexOf("|")) as MarkRole;
+    const excused = UNREACHED[id] ?? {};
+    /** The marks the renderer asked for that no run has painted yet. */
+    const unpainted = (): string[] => {
+      const painted = new Set(runs.flatMap((r) => [...r.reached.marks]));
+      const asked = new Set(runs.flatMap((r) => [...r.reached.asked]));
+      return [...asked]
+        .filter((p) => roleOf(p) in legend && !painted.has(p) && !(p in excused))
+        .sort();
+    };
+    const covered: string[] = [];
+    let tried = 0;
+    for (const board of searchBoards(game)) {
+      const before = unpainted();
+      if (before.length === 0) break;
+      tried++;
+      // No input events: the hint's opening steps and the walk of its plan
+      // are what paint its marks, and the seeded run's events already reached
+      // the input paths.
+      const r = repaintDifferential(game, id, 0, board);
+      expect(r.mismatch, `${board}: ${JSON.stringify(r.mismatch)}`).toBeNull();
+      runs.push(r);
+      const now = before.filter((p) => r.reached.marks.has(p));
+      if (now.length > 0) covered.push(`${now.join(", ")} on ${board} (#${tried})`);
+    }
+    // Which board painted what, so a game whose search runs long is seen.
+    if (covered.length > 0)
+      console.log(`${id}: the search painted ${covered.join("; ")}`);
+
     const painted = new Set(runs.flatMap((r) => [...r.reached.marks]));
     const asked = new Set(runs.flatMap((r) => [...r.reached.asked]));
     // Vacuity: a hinted game painted a hint frame and its renderer read marks.
     expect(run.reached.hinted, "has a hint, painted no hint frame").toBeGreaterThan(0);
     expect(asked.size, "the renderer never read the hint's marks").toBeGreaterThan(0);
 
-    const roleOf = (pair: string) => pair.slice(0, pair.indexOf("|")) as MarkRole;
     // Every role the help's list of marks describes is one the renderer paints.
     const unread = (Object.keys(legend) as MarkRole[]).filter(
       (role) => ![...asked].some((p) => roleOf(p) === role),
     );
     expect(unread, "the legend lists roles the renderer never reads").toEqual([]);
 
-    const excused = UNREACHED[id] ?? {};
     const missing = [...asked]
       .filter((p) => roleOf(p) in legend && !painted.has(p))
       .sort();
     expectLedger(missing, excused, {
       table: `UNREACHED.${id}`,
       file: "src/engine/warm-repaint.test.ts",
-      found: "marks the renderer can paint that no run painted",
+      found: `marks the renderer can paint that no run painted, the seeded one and ${tried} searched boards`,
       add:
-        `pin a board whose hint paints it in PINNED.${id} ` +
-        `(\`npm run game-id -- ${id} --seed <any>\` prints one), or add the ` +
-        "mark with why the hint never draws it",
+        "make a hint on a dealt board paint it, raise SEARCH_BOUND if the " +
+        "search stopped there, or add the mark with why the hint never draws it",
     });
   });
 });

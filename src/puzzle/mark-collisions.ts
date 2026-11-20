@@ -10,8 +10,9 @@
  * own frames, as the ops it drew with that slot, and two slots collide only
  * where both the color and the mark match.
  *
- * **What it looks at is three frames**: the deal, the board half solved by
- * playing the hint, and that board with its next hint step shown. A slot only
+ * **What it looks at is three frames of each of a few boards**: the deal, the
+ * board half solved by playing the hint, and that board with its next hint
+ * step shown. A slot only
  * a drag, a mistake or the solved flash brings out is on none of them, so
  * {@link MarkCensus.marks} says which slots were seen at all.
  *
@@ -20,6 +21,8 @@
 
 import { Midend } from "../engine/midend.ts";
 import { getTsGame } from "../engine/registry.ts";
+import { dealt } from "../engine/testing/dealt.ts";
+import { dealtBoards } from "../engine/testing/presets.ts";
 import { type DrawOp, RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { colorDistance } from "./neighbor-contrast.ts";
 import { schemeOf, schemePalettes } from "./scheme-palettes.ts";
@@ -169,9 +172,31 @@ function pathKey(op: Extract<DrawOp, { op: "line" }>): string {
   return `${p} ${q}`;
 }
 
+/**
+ * The boards a game is measured on: every mode and tier, each on the smallest
+ * board offering it. One board was not enough: a slot that only some boards
+ * paint, as a word color only a board of that many words does, made the
+ * verdict move with whichever board a seed dealt, so a change to a shared
+ * word list failed it.
+ */
+function measuredBoards(id: string): string[] {
+  const game = getTsGame(id);
+  if (!game) throw new Error(`${id} is not registered`);
+  // The board a player is first dealt as well, where no preset is it.
+  const params = [
+    game.defaultParams(),
+    ...dealtBoards(game, { scalarEnds: false }).map((b) => b.params),
+  ];
+  const ids = params.map((p) => `${game.encodeParams(p, true)}:${dealt(game, p).desc}`);
+  return [...new Set(ids)];
+}
+
 /** The frames a game is measured on, as draw records, with the tile size they
  * were drawn at. */
-function playedFrames(id: string): {
+function playedFrames(
+  id: string,
+  gameId: string,
+): {
   frames: DrawOp[][];
   tileSize: number;
   /** Hint steps a whole solve took, of which half were played. */
@@ -179,8 +204,6 @@ function playedFrames(id: string): {
 } {
   const game = getTsGame(id);
   if (!game) throw new Error(`${id} is not registered`);
-  const params = game.defaultParams();
-  const gameId = `${game.encodeParams(params, true)}#mark-collisions`;
   const midend = new Midend(game);
   const palette = schemePalettes(id).light;
   const capture = (): DrawOp[] => {
@@ -219,7 +242,7 @@ function playedFrames(id: string): {
 
 /** A solve longer than this is cut off; half of it is still a board with play
  * on it. */
-const MAX_STEPS = 400;
+const MAX_STEPS = 60;
 
 /** Two sizes closer than this factor are one mark to the eye. Path's ink wall
  * (3 px) beside its ink line (5 px) read as one, at 1.67; twice as thick is
@@ -245,8 +268,9 @@ export interface MarkCensus {
   marks: Map<number, Mark[]>;
   /** How many slots `colors()` returns. */
   defined: number;
-  /** Hint steps a whole solve took; the frames half way through it are read. */
-  steps: number;
+  /** Each board read, as a game id, with the hint steps its whole solve took;
+   * the frames half way through it are read. */
+  boards: { id: string; steps: number }[];
 }
 
 /** Every pair of a game's slots drawn as one mark in one color. */
@@ -268,15 +292,19 @@ export function markCollisions(id: string): MarkCensus {
   // A bevel's lit and shadow edges are the rim of the tile they raise.
   const bevel = new Set(darkSwaps.flat());
 
-  const { frames, tileSize, steps } = playedFrames(id);
   const distinct = new Map<number, Map<string, Mark>>();
-  for (const ops of frames)
-    for (const mark of frameMarks(ops, tileSize)) {
-      if (mark.slot >= defined || bevel.has(mark.slot)) continue;
-      const seen = distinct.get(mark.slot) ?? new Map<string, Mark>();
-      distinct.set(mark.slot, seen);
-      seen.set(`${mark.kind} ${mark.size} ${mark.length}`, mark);
-    }
+  const boards: MarkCensus["boards"] = [];
+  for (const board of measuredBoards(id)) {
+    const { frames, tileSize, steps } = playedFrames(id, board);
+    boards.push({ id: board, steps });
+    for (const ops of frames)
+      for (const mark of frameMarks(ops, tileSize)) {
+        if (mark.slot >= defined || bevel.has(mark.slot)) continue;
+        const seen = distinct.get(mark.slot) ?? new Map<string, Mark>();
+        distinct.set(mark.slot, seen);
+        seen.set(`${mark.kind} ${mark.size} ${mark.length}`, mark);
+      }
+  }
   const bySlot = new Map(
     [...distinct].map(([slot, seen]) => [slot, [...seen.values()]]),
   );
@@ -296,7 +324,7 @@ export function markCollisions(id: string): MarkCensus {
       const scheme = inLight && inDark ? "both" : inLight ? "light" : "dark";
       collisions.push({ a, b, marks, scheme });
     }
-  return { collisions, marks: bySlot, defined, steps };
+  return { collisions, marks: bySlot, defined, boards };
 }
 
 /** The first two marks, one from each list, of one kind and a like size and
