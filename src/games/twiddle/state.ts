@@ -3,6 +3,7 @@ import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-erro
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -255,17 +256,15 @@ const TEXT_ARROWS = "^<v>"; // orientation arrows: up, left, down, right
 export function textFormat(state: TwiddleState): string {
   const { w, h, numbers, orient, orientable } = state;
   const col = numbers.reduce((max, v) => Math.max(max, String(v).length), 0);
-  const lines: string[] = [];
-  for (let y = 0; y < h; y++) {
-    const cells: string[] = [];
-    for (let x = 0; x < w; x++) {
-      let cell = String(numbers[y * w + x]).padStart(col);
-      if (orientable) cell += TEXT_ARROWS[orient[y * w + x]];
-      cells.push(cell);
-    }
-    lines.push(cells.join(" "));
-  }
-  return lines.join("\n");
+  return gridText(
+    w,
+    h,
+    (x, y) => {
+      const cell = String(numbers[y * w + x]).padStart(col);
+      return orientable ? cell + TEXT_ARROWS[orient[y * w + x]] : cell;
+    },
+    { across: " ", finalNewline: false },
+  );
 }
 
 // --- generator --------------------------------------------------------

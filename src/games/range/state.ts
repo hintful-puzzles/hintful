@@ -20,6 +20,7 @@ import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-erro
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { boxedGridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { SHADED_NAME } from "../../engine/piece.ts";
@@ -253,16 +254,13 @@ export function textFormat(s: RangeState): string {
   const { w, h, grid } = s;
   let cw = 0; // every cell is as wide as the widest clue
   for (const v of grid) if (v > 0) cw = Math.max(cw, String(v).length);
-  const gridline = `+${`${"-".repeat(cw)}+`.repeat(w)}`;
-
-  const lines: string[] = [];
-  for (let r = 0; r < h; r++) {
-    const cells = Array.from({ length: w }, (_, c) => {
+  return boxedGridText(w, h, {
+    corner: "+",
+    top: "-".repeat(cw),
+    left: "|",
+    cell: (c, r) => {
       const v = grid[idx(r, c, w)];
       return v > 0 ? String(v).padStart(cw) : MARK_GLYPH[v].repeat(cw);
-    });
-    lines.push(gridline, `|${cells.join("|")}|`);
-  }
-  lines.push(gridline);
-  return `${lines.join("\n")}\n`;
+    },
+  });
 }

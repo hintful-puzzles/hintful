@@ -295,6 +295,7 @@ export const flipGame: Game<
     ]);
   },
 
+  // Not `boxedGridText`: a square is three lines high, its 3x3 neighborhood.
   textFormat(s): string {
     const { w, h } = s;
     const wh = w * h;

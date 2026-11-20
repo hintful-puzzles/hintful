@@ -27,6 +27,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
@@ -356,8 +357,8 @@ export function textFormat(state: PatternState): string {
   const leftGap = Math.max(0, ...rowClueStrs.map((s) => s.length));
   const pad = (n: number) => " ".repeat(Math.max(0, n));
 
-  const lines: string[] = [];
   // Column-clue header rows, bottom-aligned.
+  let header = "";
   for (let r = 0; r < topGap; r++) {
     let line = pad(leftGap);
     for (let x = 0; x < w; x++) {
@@ -365,16 +366,17 @@ export function textFormat(state: PatternState): string {
       const idx = r - (topGap - c.length);
       line += idx >= 0 ? String(c[idx]).padStart(2) : "  ";
     }
-    lines.push(line.replace(/\s+$/, ""));
+    header += `${line.replace(/\s+$/, "")}\n`;
   }
   // Grid rows with left clues.
-  for (let y = 0; y < h; y++) {
-    let line = rowClueStrs[y].padStart(leftGap);
-    for (let x = 0; x < w; x++) {
+  const rows = gridText(
+    w,
+    h,
+    (x, y) => {
       const v = grid[y * w + x];
-      line += v === GRID_FULL ? " #" : v === GRID_EMPTY ? " ." : " ?";
-    }
-    lines.push(line);
-  }
-  return `${lines.join("\n")}\n`;
+      return v === GRID_FULL ? " #" : v === GRID_EMPTY ? " ." : " ?";
+    },
+    { ends: (y) => [rowClueStrs[y].padStart(leftGap), ""] },
+  );
+  return header + rows;
 }

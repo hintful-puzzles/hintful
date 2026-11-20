@@ -16,6 +16,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -181,20 +182,9 @@ export function neighbors(w: number, h: number, i: number): number[] {
 
 export function textFormat(s: SkeletonState): string {
   const { w, h, clues, grid } = s;
-  let out = "";
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      out +=
-        clues[i] !== NO_CLUE
-          ? String(clues[i])
-          : grid[i] === FILLED
-            ? "#"
-            : grid[i] === CROSSED
-              ? "x"
-              : ".";
-    }
-    out += "\n";
-  }
-  return out;
+  return gridText(w, h, (x, y) => {
+    const i = y * w + x;
+    if (clues[i] !== NO_CLUE) return String(clues[i]);
+    return grid[i] === FILLED ? "#" : grid[i] === CROSSED ? "x" : ".";
+  });
 }

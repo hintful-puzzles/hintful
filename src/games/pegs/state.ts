@@ -8,6 +8,7 @@ import { type DescParse, descValue, puzzleDescError } from "../../engine/desc-er
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -189,15 +190,15 @@ export function status(s: PegsState): GameStatus {
 
 export function textFormat(s: PegsState): string {
   const { w, h } = s;
-  let ret = "";
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
+  return gridText(
+    w,
+    h,
+    (x, y) => {
       const v = s.grid[y * w + x];
-      ret += v === GRID_HOLE ? "-" : v === GRID_PEG ? "*" : " ";
-    }
-    if (y < h - 1) ret += "\n";
-  }
-  return ret;
+      return v === GRID_HOLE ? "-" : v === GRID_PEG ? "*" : " ";
+    },
+    { finalNewline: false },
+  );
 }
 
 // --- move serialization ----------------------------------------------

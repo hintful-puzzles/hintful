@@ -13,6 +13,7 @@ import { difficultyItem } from "../../engine/difficulty.ts";
 import { regionNumbers } from "../../engine/divide.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -200,15 +201,14 @@ const REGION_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 /** Each square as its region's letter and its mark: `#` shaded, `x` clear. */
 export function textFormat(s: NorinoriState): string {
   const { w, h, regions, grid } = s;
-  let out = "";
-  for (let y = 0; y < h; y++) {
-    const row: string[] = [];
-    for (let x = 0; x < w; x++) {
+  return gridText(
+    w,
+    h,
+    (x, y) => {
       const i = y * w + x;
       const mark = grid[i] === SHADED ? "#" : grid[i] === CROSSED ? "x" : ".";
-      row.push(REGION_LETTERS[regions[i] % REGION_LETTERS.length] + mark);
-    }
-    out += `${row.join(" ")}\n`;
-  }
-  return out;
+      return REGION_LETTERS[regions[i] % REGION_LETTERS.length] + mark;
+    },
+    { across: " " },
+  );
 }

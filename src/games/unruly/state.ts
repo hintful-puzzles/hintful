@@ -12,6 +12,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
@@ -229,13 +230,8 @@ export function status(state: UnrulyState): GameStatus {
 
 export function textFormat(state: UnrulyState): string {
   const { w2, h2, grid } = state;
-  let out = "";
-  for (let y = 0; y < h2; y++) {
-    for (let x = 0; x < w2; x++) {
-      const c = grid[y * w2 + x];
-      out += `${c === ONE ? "1" : c === ZERO ? "0" : "."} `;
-    }
-    out += "\n";
-  }
-  return out;
+  return gridText(w2, h2, (x, y) => {
+    const c = grid[y * w2 + x];
+    return `${c === ONE ? "1" : c === ZERO ? "0" : "."} `;
+  });
 }

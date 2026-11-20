@@ -22,6 +22,7 @@ import {
 import { readDesc } from "../desc-reader.ts";
 import { difficultyItem } from "../difficulty.ts";
 import type { GameDrawing, ParamConfigItem } from "../game.ts";
+import { gridText } from "../grid-text.ts";
 import type { Ladder } from "../ladder-runtime.ts";
 import type { LatinSolver } from "../latin.ts";
 import { numberItem, squareSize } from "../params.ts";
@@ -423,25 +424,19 @@ export function status(s: EdgeClueState): "solved" | "ongoing" {
 /** ASCII grid with inter-cell clue glyphs, matching `game_text_format`. */
 export function textFormat(s: EdgeClueState): string {
   const o = s.order;
-  const grid = s.grid;
-  let out = "";
-
-  for (let y = 0; y < o; y++) {
-    for (let x = 0; x < o; x++) {
-      const n = grid[y * o + x];
-      out += n > 0 ? displayChar(n, o) : ".";
-      if (x < o - 1) out += s.kind.glyph(s.clueFlags, o, x, y, "right");
-    }
-    out += "\n";
-
-    if (y < o - 1) {
-      for (let x = 0; x < o; x++) {
-        out += s.kind.glyph(s.clueFlags, o, x, y, "down");
-        if (x < o - 1) out += " ";
-      }
-      out += "\n";
-    }
-  }
-
-  return out;
+  return gridText(
+    o,
+    o,
+    (x, y) => {
+      const n = s.grid[y * o + x];
+      return n > 0 ? displayChar(n, o) : ".";
+    },
+    {
+      across: (x, y) => s.kind.glyph(s.clueFlags, o, x, y, "right"),
+      between: {
+        down: (x, y) => s.kind.glyph(s.clueFlags, o, x, y, "down"),
+        middle: " ",
+      },
+    },
+  );
 }

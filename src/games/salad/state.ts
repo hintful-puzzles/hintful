@@ -32,6 +32,7 @@ import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, letters, num, paramsCodec, size } from "../../engine/params-codec.ts";
@@ -649,50 +650,23 @@ export function clueSide(cd: number, o: number): (typeof CLUE_SIDES)[number] {
  * rims of border clues outside it. */
 export function textFormat(s: SaladState): string {
   const o = s.order;
-  const lr = 8 + o * 2; // upstream's line length, including the newline
-  const rows: string[][] = [];
-  for (let i = 0; i < o + 4; i++) rows.push(new Array<string>(lr - 1).fill(" "));
-
-  const put = (row: number, col: number, ch: string): void => {
-    rows[row][col] = ch;
-  };
-
-  // Corners and the box.
-  put(1, 2, "+");
-  put(1, lr - 4, "+");
-  put(o + 2, 2, "+");
-  put(o + 2, lr - 4, "+");
-  for (let i = 3; i < lr - 4; i++) {
-    put(1, i, "-");
-    put(o + 2, i, "-");
-  }
-  for (let i = 2; i < 2 + o; i++) {
-    put(i, 2, "|");
-    put(i, o * 2 + 4, "|");
-  }
-
-  // Grid contents.
-  for (let i = 0; i < o; i++) {
-    for (let j = 0; j < o; j++) {
+  // Border clues are always letters, as upstream prints them.
+  const clue = (i: number): string =>
+    s.borderclues[i] ? letterChar(s.borderclues[i]) : " ";
+  const clueRow = (side: number): string =>
+    `    ${Array.from({ length: o }, (_, i) => `${clue(i + o * side)} `).join("")}   \n`;
+  const rim = `  +${"-".repeat(2 * o + 1)}+  \n`;
+  const rows = gridText(
+    o,
+    o,
+    (j, i) => {
       const d = s.grid[i * o + j];
       const hole = s.holes[i * o + j];
-      let c: string;
-      if (hole === CROSS) c = "x";
-      else if (!d) c = hole === CIRCLE ? "O" : ".";
-      else c = symbolChar(s.mode, d);
-      put(i + 2, 2 * j + 4, c);
-    }
-  }
-
-  // Border clues (always letters, as upstream prints them).
-  for (let i = 0; i < o; i++) {
-    if (s.borderclues[i]) put(0, i * 2 + 4, letterChar(s.borderclues[i]));
-    if (s.borderclues[i + o]) put(i + 2, 0, letterChar(s.borderclues[i + o]));
-    if (s.borderclues[i + o * 2])
-      put(o + 3, i * 2 + 4, letterChar(s.borderclues[i + o * 2]));
-    if (s.borderclues[i + o * 3])
-      put(i + 2, lr - 2, letterChar(s.borderclues[i + o * 3]));
-  }
-
-  return `${rows.map((r) => r.join("")).join("\n")}\n`;
+      if (hole === CROSS) return "x";
+      if (!d) return hole === CIRCLE ? "O" : ".";
+      return symbolChar(s.mode, d);
+    },
+    { across: " ", ends: (i) => [`${clue(i + o)} | `, ` | ${clue(i + o * 3)}`] },
+  );
+  return clueRow(0) + rim + rows + rim + clueRow(2);
 }

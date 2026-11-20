@@ -7,6 +7,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -174,20 +175,16 @@ export function encodeDesc(s: SinglesState): string {
 // --- text format (upstream game_text_format) -------------------------------
 
 export function textFormat(s: SinglesState): string {
-  let out = "";
-  for (let y = 0; y < s.h; y++) {
-    for (let x = 0; x < s.w; x++) {
-      const i = y * s.w + x;
-      if (x > 0) out += " ";
-      out += s.flags[i] & F_BLACK ? "*" : n2c(s.nums[i]);
-    }
-    out += "\n";
-    for (let x = 0; x < s.w; x++) {
-      const i = y * s.w + x;
-      if (x > 0) out += " ";
-      out += s.flags[i] & F_CIRCLE ? "~" : " ";
-    }
-    out += "\n";
-  }
-  return out;
+  // Each row is two lines, the number over its circle: the last row's circles
+  // too, so they are rows of the walk rather than lines between its rows.
+  return gridText(
+    s.w,
+    2 * s.h,
+    (x, line) => {
+      const i = (line >> 1) * s.w + x;
+      if (line & 1) return s.flags[i] & F_CIRCLE ? "~" : " ";
+      return s.flags[i] & F_BLACK ? "*" : n2c(s.nums[i]);
+    },
+    { across: " " },
+  );
 }

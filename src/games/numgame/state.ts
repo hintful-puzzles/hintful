@@ -13,6 +13,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { numberItem } from "../../engine/params.ts";
 import { choice, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -274,13 +275,8 @@ export function textFormat(s: NumgameState): string {
       : t.made === null
         ? String(t.value)
         : `${t.value} (${madeText(t.made)})`;
-  const rows: string[] = [];
-  for (let i = 0; i < PLACES; i += ROW)
-    rows.push(
-      s.slots
-        .slice(i, i + ROW)
-        .map(cell)
-        .join("  "),
-    );
-  return `Target: ${s.target}\n${rows.join("\n")}\n`;
+  const slots = gridText(ROW, PLACES / ROW, (x, y) => cell(s.slots[y * ROW + x]), {
+    across: "  ",
+  });
+  return `Target: ${s.target}\n${slots}`;
 }

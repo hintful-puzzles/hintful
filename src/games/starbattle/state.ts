@@ -13,6 +13,7 @@ import { difficultyItem } from "../../engine/difficulty.ts";
 import { regionNumbers } from "../../engine/divide.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, num, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -248,15 +249,14 @@ export function touching(size: number, i: number): number[] {
 /** Each cell as its region's letter and its mark: `*` a star, `x` a cross. */
 export function textFormat(s: StarbattleState): string {
   const { size, regions, grid } = s;
-  let out = "";
-  for (let y = 0; y < size; y++) {
-    const row: string[] = [];
-    for (let x = 0; x < size; x++) {
+  return gridText(
+    size,
+    size,
+    (x, y) => {
       const i = y * size + x;
       const mark = grid[i] === STAR ? "*" : grid[i] === CROSSED ? "x" : ".";
-      row.push(REGION_LETTERS[regions[i]] + mark);
-    }
-    out += `${row.join(" ")}\n`;
-  }
-  return out;
+      return REGION_LETTERS[regions[i]] + mark;
+    },
+    { across: " " },
+  );
 }

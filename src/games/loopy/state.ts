@@ -592,6 +592,9 @@ export function isSolved(state: LoopyState): boolean {
  * by having `textFormat`, so the param-dependence is carried by returning
  * `null` instead (the midend and the share dialog treat an absent
  * rendering as "no text panel").
+ *
+ * Not `boxedGridText`: the square tiling is the general grid's, its edges
+ * found by their dots' coordinates rather than by a cell's place.
  */
 export function textFormat(state: LoopyState): string | null {
   if (state.gridType !== 0) return null;

@@ -17,6 +17,7 @@ import type {
   SolveResult,
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { clearKey, numberKeys } from "../../engine/key-labels.ts";
 import { modifierItem } from "../../engine/modifier.ts";
@@ -549,21 +550,21 @@ function textFormat(state: AscentState): string | null {
   const w = state.w;
   const h = state.h;
   const space = w * h >= 100 ? 3 : 2;
-  let out = "";
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      let n = state.grid[y * w + x];
-      if (isNumberEdge(n)) n = fromNumberEdge(n);
-      let cell: string;
-      if (n >= 0) cell = String(n + 1);
-      else if (n === NUMBER_WALL) cell = "#";
-      else if (n === NUMBER_BOUND) cell = " ";
-      else cell = ".";
-      out += cell.padStart(space, " ");
-      out += x < w - 1 ? " " : "\n";
-    }
-  }
-  return out;
+  const cell = (n: number): string => {
+    if (n >= 0) return String(n + 1);
+    if (n === NUMBER_WALL) return "#";
+    if (n === NUMBER_BOUND) return " ";
+    return ".";
+  };
+  return gridText(
+    w,
+    h,
+    (x, y) => {
+      const n = state.grid[y * w + x];
+      return cell(isNumberEdge(n) ? fromNumberEdge(n) : n).padStart(space, " ");
+    },
+    { across: " " },
+  );
 }
 
 // --- Game object ---------------------------------------------------

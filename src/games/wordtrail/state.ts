@@ -17,6 +17,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import {
   CROSS,
   type EdgeChange,
@@ -270,21 +271,20 @@ export function textFormat(s: WordtrailState): string {
         : edges[e] === CROSS
           ? "x"
           : " ";
-  let out = "";
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
+  const grid = gridText(
+    w,
+    h,
+    (x, y) => {
       const i = y * w + x;
-      out += letters[i] === 0 ? "#" : letterChar(letters[i]).toUpperCase();
-      if (x < w - 1) out += join(g.around[i * 4 + RIGHT], "><");
-    }
-    out += "\n";
-    if (y === h - 1) break;
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      out += join(g.around[i * 4 + DOWN], "v^");
-      if (x < w - 1) out += " ";
-    }
-    out += "\n";
-  }
-  return `${out}Words: ${s.lengths.join(", ")}\n`;
+      return letters[i] === 0 ? "#" : letterChar(letters[i]).toUpperCase();
+    },
+    {
+      across: (x, y) => join(g.around[(y * w + x) * 4 + RIGHT], "><"),
+      between: {
+        down: (x, y) => join(g.around[(y * w + x) * 4 + DOWN], "v^"),
+        middle: " ",
+      },
+    },
+  );
+  return `${grid}Words: ${s.lengths.join(", ")}\n`;
 }

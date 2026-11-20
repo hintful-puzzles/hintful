@@ -25,6 +25,7 @@ import { difficultyItem } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -357,26 +358,25 @@ export function status(state: SlantState): GameStatus {
 
 export function textFormat(state: SlantState): string {
   const { w, h, clues, soln } = state;
+  // The clues sit on the corners, so the walk is over the corners and each
+  // square's slash is the middle between four of them.
   const W = w + 1;
-  const H = h + 1;
-  let out = "";
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
+  return gridText(
+    W,
+    h + 1,
+    (x, y) => {
       const c = clues[y * W + x];
-      out += c >= 0 ? String(c) : "+";
-      if (x < w) out += "-";
-    }
-    out += "\n";
-    if (y < h) {
-      for (let x = 0; x < W; x++) {
-        out += "|";
-        if (x < w) {
+      return c >= 0 ? String(c) : "+";
+    },
+    {
+      across: "-",
+      between: {
+        down: "|",
+        middle: (x, y) => {
           const s = soln[y * w + x];
-          out += s !== 0 ? (s < 0 ? "\\" : "/") : " ";
-        }
-      }
-      out += "\n";
-    }
-  }
-  return out;
+          return s !== 0 ? (s < 0 ? "\\" : "/") : " ";
+        },
+      },
+    },
+  );
 }

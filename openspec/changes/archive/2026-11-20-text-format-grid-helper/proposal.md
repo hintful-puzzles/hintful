@@ -16,7 +16,8 @@ First in the owner's order: 8, 1, 6, 10, 7, 11, 9.
 - The grid-shaped `textFormat`s move onto it with their output
   byte-identical. A game whose text is not a grid keeps its own and says why.
 - The skeletons write the helper's form.
-- No player-visible change: the text a player copies is unchanged.
+- No player-visible change: the text a player copies is unchanged, but for
+  the whitespace ending Tents' last line, which now matches upstream's.
 
 ## Impact
 

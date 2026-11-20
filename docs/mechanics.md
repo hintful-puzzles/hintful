@@ -764,7 +764,9 @@ read [`hints.md`](./hints.md), and for `reference` "The reference aid".
   `aux` matters.
 - **`canCheck` comes from `findMistakes` or `hint`.** A hint alone checks
   only for a dead end ("Mistake checking is part of done").
-- **`textFormat` present means a text panel.**
+- **`textFormat` present means a text panel.** A grid's is written with
+  `grid-text.ts` ([`engine-catalog.md`](./engine-catalog.md) §
+  "`grid-text.ts` — a grid's plain-text board").
 - **Where a capability depends on the params, widen the method's return; do
   not add a hook.** `textFormat` returns `string | null`, and the midend and
   the share dialog treat `null` as no text panel for this board. For a

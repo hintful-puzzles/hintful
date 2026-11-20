@@ -15,6 +15,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
+import { boxedGridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import * as inertia from "../../generated/games/inertia/inertia.compiled.ts";
@@ -375,57 +376,29 @@ export function encodeBoard(board: Board, startSquare: number): string {
 
 export function textFormat(s: InertiaState): string {
   const { w, h } = s.params;
-  const cw = 4;
-  const ch = 2;
-  const gw = cw * w + 2;
-  const gh = ch * h + 1;
-  const board: string[] = new Array(gw * gh).fill(" ");
-
-  const put = (i: number, text: string): void => {
-    for (let k = 0; k < text.length; k++) board[i + k] = text[k];
+  const square = (c: number, r: number): string => {
+    switch (s.board.at(c, r)) {
+      case GEM:
+        return " o ";
+      case MINE:
+        return " M ";
+      case STOP:
+        return "( )";
+      case WALL:
+        return "XXX";
+      default:
+        return "   ";
+    }
   };
-
-  for (let r = 0; r < h; r++) {
-    for (let c = 0; c < w; c++) {
-      const cell = r * ch * gw + cw * c;
-      const center = cell + (gw * ch) / 2 + cw / 2;
-      switch (s.board.at(c, r)) {
-        case GEM:
-          board[center] = "o";
-          break;
-        case MINE:
-          board[center] = "M";
-          break;
-        case STOP:
-          board[center - 1] = "(";
-          board[center + 1] = ")";
-          break;
-        case WALL:
-          put(center - 1, "XXX");
-          break;
-      }
-
-      if (r === s.py && c === s.px) {
-        if (!s.dead) board[center] = "@";
-        else put(center - 1, ":-(");
-      }
-
-      board[cell] = "+";
-      for (let k = 1; k < cw; k++) board[cell + k] = "-";
-      for (let k = 1; k < ch; k++) board[cell + k * gw] = "|";
-    }
-    for (let c = 0; c < ch; c++) {
-      board[(r * ch + c) * gw + gw - 2] = c === 0 ? "+" : "|";
-      board[(r * ch + c) * gw + gw - 1] = "\n";
-    }
-  }
-
-  // The closing rule along the bottom, its corners, and the final newline.
-  const len = gw * gh;
-  for (let k = 0; k < gw - 2; k++) board[len - gw + k] = "-";
-  for (let c = 0; c < w; c++) board[len - gw + cw * c] = "+";
-  board[len - 2] = "+";
-  board[len - 1] = "\n";
-
-  return board.join("");
+  return boxedGridText(w, h, {
+    corner: "+",
+    top: "---",
+    left: "|",
+    cell: (c, r) => {
+      const text = square(c, r);
+      if (r !== s.py || c !== s.px) return text;
+      // The player stands at the middle, over what the square holds.
+      return s.dead ? ":-(" : `${text[0]}@${text[2]}`;
+    },
+  });
 }

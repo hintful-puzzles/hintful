@@ -2,6 +2,7 @@ import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-erro
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -173,15 +174,12 @@ export function status(state: SixteenState): "solved" | "ongoing" {
 
 export function textFormat(state: SixteenState): string {
   const colWidth = String(state.n).length;
-  const lines: string[] = [];
-  for (let y = 0; y < state.h; y++) {
-    const cells: string[] = [];
-    for (let x = 0; x < state.w; x++) {
-      cells.push(String(state.tiles[y * state.w + x]).padStart(colWidth));
-    }
-    lines.push(cells.join(" "));
-  }
-  return lines.join("\n");
+  return gridText(
+    state.w,
+    state.h,
+    (x, y) => String(state.tiles[y * state.w + x]).padStart(colWidth),
+    { across: " ", finalNewline: false },
+  );
 }
 
 // --- generator --------------------------------------------------------

@@ -29,6 +29,7 @@ import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
@@ -585,28 +586,31 @@ export function textFormat(s: TracksState): string {
     n < UPPER_ALPHABET_SIZE ? n2cUpper(n) : String(n);
   for (let x = 0; x < w; x++) out += `${countChar(b.numbers[x])} `;
   out += `\n +${"-".repeat(w * 2 - 1)}+\n`;
-  for (let y = 0; y < h; y++) {
-    out += y === b.rowS ? "A-" : " |";
-    for (let x = 0; x < w; x++) {
+  out += gridText(
+    w,
+    h,
+    (x, y) => {
       const f = sEDirs(b, x, y, E_TRACK);
-      if (b.sflags[y * w + x] & S_CLUE) out += "C";
-      else if (f === (L | U) || f === (R | D)) out += "/";
-      else if (f === (L | D) || f === (R | U)) out += "\\";
-      else if (f === (U | D)) out += "|";
-      else if (f === (R | L)) out += "-";
-      else if (b.sflags[y * w + x] & S_NOTRACK) out += "x";
-      else out += " ";
-      out += x < w - 1 ? (f & R ? "-" : " ") : "|";
-    }
-    out += `${countChar(b.numbers[w + y])}\n`;
-    if (y === h - 1) continue;
-    out += " |";
-    for (let x = 0; x < w; x++) {
-      out += sEDirs(b, x, y, E_TRACK) & D ? "|" : " ";
-      out += x < w - 1 ? " " : "|";
-    }
-    out += "\n";
-  }
+      if (b.sflags[y * w + x] & S_CLUE) return "C";
+      if (f === (L | U) || f === (R | D)) return "/";
+      if (f === (L | D) || f === (R | U)) return "\\";
+      if (f === (U | D)) return "|";
+      if (f === (R | L)) return "-";
+      return b.sflags[y * w + x] & S_NOTRACK ? "x" : " ";
+    },
+    {
+      across: (x, y) => (sEDirs(b, x, y, E_TRACK) & R ? "-" : " "),
+      between: {
+        down: (x, y) => (sEDirs(b, x, y, E_TRACK) & D ? "|" : " "),
+        middle: " ",
+      },
+      // The row the track enters by is marked A, and each row's count follows it.
+      ends: (y, between) =>
+        between
+          ? [" |", "|"]
+          : [y === b.rowS ? "A-" : " |", `|${countChar(b.numbers[w + y])}`],
+    },
+  );
   out += " +";
   for (let x = 0; x < w * 2 - 1; x++) out += x === b.colS * 2 ? "|" : "-";
   out += "+\n  ";

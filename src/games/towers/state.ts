@@ -8,6 +8,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -400,15 +401,10 @@ export function textFormat(s: TowersState): string {
   for (let x = 0; x < w; x++) out += ` ${ch(clues[x])}`;
   out += "\n\n";
 
-  // Main grid.
-  for (let y = 0; y < w; y++) {
-    out += ch(clues[y + 2 * w]);
-    out += " ";
-    for (let x = 0; x < w; x++) out += ` ${ch(grid[y * w + x])}`;
-    out += "  ";
-    out += ch(clues[y + 3 * w]);
-    out += "\n";
-  }
+  // Main grid, its row clues at each end.
+  out += gridText(w, w, (x, y) => ` ${ch(grid[y * w + x])}`, {
+    ends: (y) => [`${ch(clues[y + 2 * w])} `, `  ${ch(clues[y + 3 * w])}`],
+  });
 
   // Bottom clue row.
   out += "\n  ";

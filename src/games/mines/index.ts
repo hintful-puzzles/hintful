@@ -33,6 +33,7 @@ import {
 } from "../../engine/color/palette.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   type Game,
@@ -563,22 +564,15 @@ export const minesGame: Game<
   },
 
   textFormat(s: MinesState): string {
-    let out = "";
-    for (let y = 0; y < s.h; y++) {
-      for (let x = 0; x < s.w; x++) {
-        const v = s.grid[y * s.w + x];
-        let c: string;
-        if (v === 0) c = "-";
-        else if (v >= 1 && v <= 8) c = String(v);
-        else if (v === FLAG) c = "*";
-        else if (v === COVERED || v === QUERY) c = "?";
-        else if (v === KILLED) c = "!";
-        else c = " ";
-        out += c;
-      }
-      out += "\n";
-    }
-    return out;
+    return gridText(s.w, s.h, (x, y) => {
+      const v = s.grid[y * s.w + x];
+      if (v === 0) return "-";
+      if (v >= 1 && v <= 8) return String(v);
+      if (v === FLAG) return "*";
+      if (v === COVERED || v === QUERY) return "?";
+      if (v === KILLED) return "!";
+      return " ";
+    });
   },
 
   /** The death flash: a death is not a status, so the engine cannot see it. */

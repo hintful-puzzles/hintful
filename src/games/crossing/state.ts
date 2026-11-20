@@ -32,6 +32,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
@@ -738,14 +739,10 @@ export function newUi(_state: CrossingState): CrossingUi {
  */
 export function textFormat(state: CrossingState): string {
   const { w, h, walls, numbers } = state.puzzle;
-  let out = "";
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      out += walls[i] ? "#" : state.grid[i] ? String(state.grid[i]) : ".";
-    }
-    out += "\n";
-  }
+  let out = gridText(w, h, (x, y) => {
+    const i = y * w + x;
+    return walls[i] ? "#" : state.grid[i] ? String(state.grid[i]) : ".";
+  });
 
   // Upstream writes a sentinel character that the first length group backs over,
   // so each group header is preceded by exactly one newline and the list keeps a

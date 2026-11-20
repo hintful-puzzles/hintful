@@ -20,6 +20,7 @@ import {
 } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -416,14 +417,8 @@ export function statusbarText(state: MosaicState, _ui: MosaicUi): string {
 
 export function textFormat(state: MosaicState): string {
   const { width, height, board } = state;
-  const lines: string[] = [];
-  for (let y = 0; y < height; y++) {
-    let row = "";
-    for (let x = 0; x < width; x++) {
-      const clue = board.clues[y * width + x];
-      row += clue >= 0 ? `|${clue}|` : "| |";
-    }
-    lines.push(row);
-  }
-  return `${lines.join("\n")}\n`;
+  return gridText(width, height, (x, y) => {
+    const clue = board.clues[y * width + x];
+    return clue >= 0 ? `|${clue}|` : "| |";
+  });
 }

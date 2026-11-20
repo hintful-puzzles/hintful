@@ -22,6 +22,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { PresetBoards } from "../../engine/game.ts";
+import { boxedGridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, endParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
@@ -378,27 +379,16 @@ export function newState(p: LightupParams, desc: string): LightupState {
 
 export function textFormat(state: LightupState): string {
   const { w, h, flags, lights } = state;
-  const lines: string[] = [];
-  const gridline = `+${"-+".repeat(w)}`;
-  for (let y = 0; y < h; y++) {
-    lines.push(gridline);
-    let row = "";
-    for (let x = 0; x < w; x++) {
+  return boxedGridText(w, h, {
+    corner: "+",
+    top: "-",
+    left: "|",
+    cell: (x, y) => {
       const i = idx(x, y, w);
-      let c = " ";
-      if (flags[i] & F_BLACK) {
-        c = flags[i] & F_NUMBERED ? String(lights[i]) : "#";
-      } else if (flags[i] & F_LIGHT) {
-        c = "L";
-      } else if (flags[i] & F_IMPOSSIBLE) {
-        c = "x";
-      } else if (lights[i] > 0) {
-        c = ".";
-      }
-      row += `|${c}`;
-    }
-    lines.push(`${row}|`);
-  }
-  lines.push(gridline);
-  return `${lines.join("\n")}\n`;
+      if (flags[i] & F_BLACK) return flags[i] & F_NUMBERED ? String(lights[i]) : "#";
+      if (flags[i] & F_LIGHT) return "L";
+      if (flags[i] & F_IMPOSSIBLE) return "x";
+      return lights[i] > 0 ? "." : " ";
+    },
+  });
 }

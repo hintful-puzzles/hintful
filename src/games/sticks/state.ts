@@ -23,6 +23,7 @@ import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-erro
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -331,13 +332,13 @@ function cloneState(s: SticksState): SticksState {
 
 export function textFormat(s: SticksState): string {
   const { w, h, grid } = s;
-  let out = "";
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
+  return gridText(
+    w,
+    h,
+    (x, y) => {
       const tile = grid[y * w + x];
-      out += tile & F_HOR ? "-" : tile & F_VER ? "|" : tile & F_BLOCK ? "#" : ".";
-      out += x !== w - 1 ? " " : "\n";
-    }
-  }
-  return out;
+      return tile & F_HOR ? "-" : tile & F_VER ? "|" : tile & F_BLOCK ? "#" : ".";
+    },
+    { across: " " },
+  );
 }

@@ -16,6 +16,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
@@ -823,18 +824,13 @@ export function newStateFromDesc(params: BridgesParams, desc: string): BridgesSt
 
 /** Plain-text board rendering (C game_text_format). */
 export function textFormat(state: BridgesState): string {
-  let ret = "";
-  for (let y = 0; y < state.h; y++) {
-    for (let x = 0; x < state.w; x++) {
-      const grid = state.gridAt(x, y);
-      const nl = state.lines[state.idx(x, y)];
-      const is = state.islandAt(x, y);
-      if (is) ret += n2cUpper(is.count);
-      else if (grid & G_LINEV) ret += nl > 1 ? '"' : nl === 1 ? "|" : "!";
-      else if (grid & G_LINEH) ret += nl > 1 ? "=" : nl === 1 ? "-" : "~";
-      else ret += ".";
-    }
-    ret += "\n";
-  }
-  return ret;
+  return gridText(state.w, state.h, (x, y) => {
+    const grid = state.gridAt(x, y);
+    const nl = state.lines[state.idx(x, y)];
+    const is = state.islandAt(x, y);
+    if (is) return n2cUpper(is.count);
+    if (grid & G_LINEV) return nl > 1 ? '"' : nl === 1 ? "|" : "!";
+    if (grid & G_LINEH) return nl > 1 ? "=" : nl === 1 ? "-" : "~";
+    return ".";
+  });
 }

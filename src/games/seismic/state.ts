@@ -31,6 +31,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { boxedGridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -356,21 +357,16 @@ export function newState(p: SeismicParams, desc: string): SeismicState {
 
 export function textFormat(state: SeismicState): string {
   const { w, h, dsf, grid } = state;
-  const rows: string[] = [];
-
-  rows.push(`+${"-+".repeat(w)}`);
-  for (let y = 0; y < h; y++) {
-    let cells = "|";
-    let under = "+";
-    for (let x = 0; x < w; x++) {
+  // An edge is drawn on the rim and between two regions.
+  return boxedGridText(w, h, {
+    corner: "+",
+    top: (x, y) =>
+      y === 0 || y === h || !dsf.equivalent((y - 1) * w + x, y * w + x) ? "-" : " ",
+    left: (x, y) =>
+      x === 0 || x === w || !dsf.equivalent(y * w + x - 1, y * w + x) ? "|" : " ",
+    cell: (x, y) => {
       const c = grid[y * w + x];
-      cells += c > 0 ? String(c) : ".";
-      cells += x === w - 1 || !dsf.equivalent(y * w + x, y * w + x + 1) ? "|" : " ";
-      under += y === h - 1 || !dsf.equivalent(y * w + x, (y + 1) * w + x) ? "-" : " ";
-      under += "+";
-    }
-    rows.push(cells);
-    rows.push(under);
-  }
-  return `${rows.join("\n")}\n`;
+      return c > 0 ? String(c) : ".";
+    },
+  });
 }

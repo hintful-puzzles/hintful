@@ -39,6 +39,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { PresetBoards } from "../../engine/game.ts";
+import { boxedGridText } from "../../engine/grid-text.ts";
 import { endParams, parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -449,38 +450,28 @@ export function boardTextFormat(w: number, h: number, data: Uint8Array): string 
   const dchar = (t: number): string =>
     t === T_EMPTY ? " " : t === T_WALL ? "#" : t === mainClass ? "*" : "%";
 
-  let out = "";
-  for (let y = 0; y < 2 * h + 1; y++) {
-    for (let x = 0; x < 2 * w + 1; x++) {
-      const i = Math.floor(y / 2) * w + Math.floor(x / 2);
-      let v: string;
+  /** The type of square `(x, y)`, outside the board included. */
+  const at = (x: number, y: number): number =>
+    x >= 0 && x < w && y >= 0 && y < h ? dtype(y * w + x) : T_OUTSIDE;
 
-      if (y % 2 && x % 2) {
-        v = dchar(dtype(i));
-      } else if (y % 2) {
-        const j1 = x > 0 ? dtype(i - 1) : T_OUTSIDE;
-        const j2 = x < 2 * w ? dtype(i) : T_OUTSIDE;
-        v = j1 !== j2 ? "|" : dchar(j1);
-      } else if (x % 2) {
-        const j1 = y > 0 ? dtype(i - w) : T_OUTSIDE;
-        const j2 = y < 2 * h ? dtype(i) : T_OUTSIDE;
-        v = j1 !== j2 ? "-" : dchar(j1);
-      } else {
-        const j1 = x > 0 && y > 0 ? dtype(i - w - 1) : T_OUTSIDE;
-        const j2 = x > 0 && y < 2 * h ? dtype(i - 1) : T_OUTSIDE;
-        const j3 = x < 2 * w && y > 0 ? dtype(i - w) : T_OUTSIDE;
-        const j4 = x < 2 * w && y < 2 * h ? dtype(i) : T_OUTSIDE;
-        if (j1 === j2 && j2 === j3 && j3 === j4) v = dchar(j1);
-        else if (j1 === j2 && j3 === j4) v = "|";
-        else if (j1 === j3 && j2 === j4) v = "-";
-        else v = "+";
-      }
-
-      out += v;
-    }
-    out += "\n";
-  }
-  return out;
+  return boxedGridText(w, h, {
+    cell: (x, y) => dchar(at(x, y)),
+    left: (x, y) => {
+      const t = at(x - 1, y);
+      return t !== at(x, y) ? "|" : dchar(t);
+    },
+    top: (x, y) => {
+      const t = at(x, y - 1);
+      return t !== at(x, y) ? "-" : dchar(t);
+    },
+    corner: (x, y) => {
+      const [j1, j2, j3, j4] = [at(x - 1, y - 1), at(x - 1, y), at(x, y - 1), at(x, y)];
+      if (j1 === j2 && j2 === j3 && j3 === j4) return dchar(j1);
+      if (j1 === j2 && j3 === j4) return "|";
+      if (j1 === j3 && j2 === j4) return "-";
+      return "+";
+    },
+  });
 }
 
 /** Upstream `game_text_format`. */

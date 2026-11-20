@@ -15,6 +15,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import type { LineDrawingUi } from "../../engine/line-drawing.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec, unusedLetter } from "../../engine/params-codec.ts";
@@ -208,24 +209,21 @@ export interface PearlUi extends LineDrawingUi {
  * of `+`, with `-` / `|` for lines and `x` for no-line marks between them. */
 export function textFormat(state: PearlState): string {
   const { w, h, clues, lines, marks } = state;
-  const cw = 4;
-  const ch = 2;
-  const rows = Array.from({ length: ch * (h - 1) + 1 }, () =>
-    new Array<string>(cw * (w - 1) + 1).fill(" "),
-  );
-  for (let r = 0; r < h; r++) {
-    for (let c = 0; c < w; c++) {
-      const i = r * w + c;
-      const x = c * cw;
-      const y = r * ch;
-      rows[y][x] = "+BW"[clues[i]];
-      if (c < w - 1 && (lines[i] & R || lines[i + 1] & L))
-        for (let k = 1; k < cw; k++) rows[y][x + k] = "-";
-      if (r < h - 1 && (lines[i] & D || lines[i + w] & U))
-        for (let k = 1; k < ch; k++) rows[y + k][x] = "|";
-      if (c < w - 1 && (marks[i] & R || marks[i + 1] & L)) rows[y][x + (cw >> 1)] = "x";
-      if (r < h - 1 && (marks[i] & D || marks[i + w] & U)) rows[y + (ch >> 1)][x] = "x";
-    }
-  }
-  return rows.map((row) => `${row.join("")}\n`).join("");
+  // A cross is written at the edge's middle over any line there (upstream).
+  return gridText(w, h, (x, y) => "+BW"[clues[y * w + x]], {
+    across: (x, y) => {
+      const i = y * w + x;
+      const end = lines[i] & R || lines[i + 1] & L ? "-" : " ";
+      const middle = marks[i] & R || marks[i + 1] & L ? "x" : end;
+      return end + middle + end;
+    },
+    between: {
+      down: (x, y) => {
+        const i = y * w + x;
+        if (marks[i] & D || marks[i + w] & U) return "x";
+        return lines[i] & D || lines[i + w] & U ? "|" : " ";
+      },
+      middle: "   ",
+    },
+  });
 }

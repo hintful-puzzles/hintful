@@ -26,6 +26,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import {
   CROSS,
   type EdgeChange,
@@ -357,21 +358,11 @@ export function textFormat(s: PathState): string {
     (ends[i] === NO_END ? "+" : String(ends[i])).padStart(width, " ");
   const join = (e: number, line: string): string =>
     walls[e] ? "#" : edges[e] === LINE ? line : edges[e] === CROSS ? "x" : " ";
-  let out = "";
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      out += cell(i);
-      if (x < w - 1) out += join(g.around[i * 4 + RIGHT], "-");
-    }
-    out += "\n";
-    if (y === h - 1) break;
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      out += join(g.around[i * 4 + DOWN], "|").padStart(width, " ");
-      if (x < w - 1) out += " ";
-    }
-    out += "\n";
-  }
-  return out;
+  return gridText(w, h, (x, y) => cell(y * w + x), {
+    across: (x, y) => join(g.around[(y * w + x) * 4 + RIGHT], "-"),
+    between: {
+      down: (x, y) => join(g.around[(y * w + x) * 4 + DOWN], "|").padStart(width, " "),
+      middle: " ",
+    },
+  });
 }

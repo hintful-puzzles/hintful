@@ -2,6 +2,7 @@ import { DESC_REPEATED, type DescParse, descValue } from "../../engine/desc-erro
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -133,16 +134,15 @@ export function status(state: FifteenState): "solved" | "ongoing" {
 
 export function textFormat(state: FifteenState): string {
   const colWidth = String(state.n - 1).length;
-  const lines: string[] = [];
-  for (let y = 0; y < state.h; y++) {
-    const cells: string[] = [];
-    for (let x = 0; x < state.w; x++) {
+  return gridText(
+    state.w,
+    state.h,
+    (x, y) => {
       const v = state.tiles[y * state.w + x];
-      cells.push(v === 0 ? " ".repeat(colWidth) : String(v).padStart(colWidth));
-    }
-    lines.push(cells.join(" "));
-  }
-  return lines.join("\n");
+      return v === 0 ? " ".repeat(colWidth) : String(v).padStart(colWidth);
+    },
+    { across: " ", finalNewline: false },
+  );
 }
 
 // --- generator --------------------------------------------------------

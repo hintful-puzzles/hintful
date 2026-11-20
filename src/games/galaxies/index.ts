@@ -25,6 +25,7 @@ import {
   noSuchTier,
 } from "../../engine/difficulty.ts";
 import { fromCoord } from "../../engine/geometry.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
@@ -1055,33 +1056,20 @@ function refreshHintStep(
 // --- text format and statusbar -------------------------------------
 
 function textFormat(s: GalaxiesState): string {
-  const out: string[] = [];
-  for (let y = 0; y < s.sy; y++) {
-    for (let x = 0; x < s.sx; x++) {
-      const i = idx(s, x, y);
-      const f = s.flags[i];
-      if (f & F_DOT) {
-        out.push("o");
-        continue;
-      }
-      const t = spaceTypeAt(x, y);
-      if (t === SpaceType.Tile) {
-        if (f & F_TILE_ASSOC) {
-          const di = idx(s, s.dotx[i], s.doty[i]);
-          out.push(s.flags[di] & F_DOT_BLACK ? "B" : "W");
-        } else {
-          out.push(" ");
-        }
-      } else if (t === SpaceType.Vertex) {
-        out.push("+");
-      } else {
-        if (f & F_EDGE_SET) out.push(isVerticalEdge(x) ? "|" : "-");
-        else out.push(" ");
-      }
+  return gridText(s.sx, s.sy, (x, y) => {
+    const i = idx(s, x, y);
+    const f = s.flags[i];
+    if (f & F_DOT) return "o";
+    const t = spaceTypeAt(x, y);
+    if (t === SpaceType.Tile) {
+      if (!(f & F_TILE_ASSOC)) return " ";
+      const di = idx(s, s.dotx[i], s.doty[i]);
+      return s.flags[di] & F_DOT_BLACK ? "B" : "W";
     }
-    out.push("\n");
-  }
-  return out.join("");
+    if (t === SpaceType.Vertex) return "+";
+    if (!(f & F_EDGE_SET)) return " ";
+    return isVerticalEdge(x) ? "|" : "-";
+  });
 }
 
 /** The two tiers a player picks, in `GalaxiesDiff` order. Distinct from

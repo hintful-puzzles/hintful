@@ -338,7 +338,8 @@ function cloneState(s: BricksState): BricksState {
 
 /** The sheared-hex board as ASCII (`#` shade, `-` unshade, `.` empty, digit
  * clue, `?` unknown), one cell per two columns, odd rows indented — upstream
- * `game_text_format`. */
+ * `game_text_format`. Not `gridText`: a line holds only its row's playable
+ * cells, so the padded grid's columns do not line up from row to row. */
 export function textFormat(state: BricksState): string {
   const sw = state.w;
   const h = state.h;

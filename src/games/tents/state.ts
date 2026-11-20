@@ -15,6 +15,7 @@ import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-erro
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { boxedGridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
@@ -310,40 +311,23 @@ export function partnerOf(w: number, links: Int8Array, i: number): number {
  * `.` blanks, and the edge numbers along the bottom and right. */
 export function textFormat(state: TentsState): string {
   const { w, h, grid, numbers } = state;
-  const cw = 4;
-  const ch = 2;
-  const gw = (w + 1) * cw + 2;
-  const gh = (h + 1) * ch + 1;
-  const len = gw * gh;
-  const board = new Array<string>(len).fill(" ");
-
-  for (let r = 0; r <= h; r++) {
-    for (let c = 0; c <= w; c++) {
-      const cell = r * ch * gw + cw * c;
-      const center = cell + (gw * ch) / 2 + cw / 2;
-      let n = 1000;
-      if (r < h && c < w) {
-        const v = grid[r * w + c];
-        if (v === BLANK) board[center] = ".";
-        else if (v === TREE) board[center] = "T";
-        else if (v === TENT) board.splice(center - 1, 3, ..."//\\");
-      } else if (c < w) n = numbers[c];
-      else if (r < h) n = numbers[w + r];
-      if (n < 100) {
-        board[center] = String(n % 10);
-        if (n >= 10) board[center - 1] = String(Math.floor(n / 10));
-      }
-      board[cell] = "+";
-      for (let k = 1; k < cw; k++) board[cell + k] = "-";
-      for (let k = 1; k < ch; k++) board[cell + k * gw] = "|";
-    }
-    for (let c = 0; c < ch; c++) {
-      board[(r * ch + c) * gw + gw - 2] = c === 0 ? "+" : r < h ? "|" : " ";
-      board[(r * ch + c) * gw + gw - 1] = "\n";
-    }
-  }
-  for (let k = 0; k < gw - 2 - cw; k++) board[len - gw + k] = "-";
-  for (let c = 0; c <= w; c++) board[len - gw + cw * c] = "+";
-
-  return board.join("");
+  // The clues are a row and a column of boxes past the grid's bottom and
+  // right, and the box at their corner is left open, its bottom-right corner
+  // not written at all (upstream).
+  const corner = (x: number, y: number) => x === w && y === h;
+  const numberText = (n: number): string =>
+    n >= 100 ? `${n}` : n >= 10 ? `${n} ` : ` ${n} `;
+  return boxedGridText(w + 1, h + 1, {
+    corner: (x, y) => (x === w + 1 && y === h + 1 ? "" : "+"),
+    top: (x, y) => (y === h + 1 && x === w ? "   " : "---"),
+    left: (x, y) => (x === w + 1 && y === h ? " " : "|"),
+    cell: (x, y) => {
+      if (corner(x, y)) return "   ";
+      if (y === h) return numberText(numbers[x]);
+      if (x === w) return numberText(numbers[w + y]);
+      const v = grid[y * w + x];
+      // Upstream's tent is these three characters.
+      return v === BLANK ? " . " : v === TREE ? " T " : v === TENT ? "//\\" : "   ";
+    },
+  });
 }

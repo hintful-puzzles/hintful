@@ -44,6 +44,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `code-rows.ts` — the code-breaking mechanic |
 | – `grid/index.ts` — planar-grid geometry (upstream `grid.c`) |
 | – `geometry.ts` — cell ↔ pixel |
+| – `grid-text.ts` — a grid's plain-text board |
 | – `findloop.ts` — loop/bridge finding |
 | – `n-times-root-k.ts` — exact `round(n · √k)` |
 | Ordered collections and small leaves |
@@ -407,6 +408,17 @@ in. `fromCoord` floors, which is right for a pixel in the border.
 of a division by the tile size outside this module is a call to `fromCoord`
 or an entry in `coord-conversion.test.ts`'s ledger, and the site says what
 it does that the helper would not.
+
+### `grid-text.ts` — a grid's plain-text board
+
+Write `textFormat` with it: the game gives each place's text, and the walk
+writes the rows, the lines between them and the newlines. `gridText` for
+cells in rows, joined by edges (`slant/state.ts`) or with a clue at each
+end (`magnets/state.ts`); `boxedGridText` for a rim round every cell
+(`rect/moves.ts`). A clue row above or below is the game's own line.
+
+**A game whose text is not a walk over its places keeps its own and says
+why** at its `textFormat`, as Bricks and Dominosa do.
 
 ### `findloop.ts` — loop/bridge finding
 

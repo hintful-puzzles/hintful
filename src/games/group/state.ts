@@ -28,6 +28,7 @@ import { latinSpace } from "../../engine/describe-runtime.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -497,13 +498,13 @@ export function status(s: GroupState): GameStatus {
 /** ASCII grid of display chars (`.` for blank), matching `game_text_format`. */
 export function textFormat(s: GroupState): string {
   const w = s.w;
-  let out = "";
-  for (let y = 0; y < w; y++) {
-    for (let x = 0; x < w; x++) {
+  return gridText(
+    w,
+    w,
+    (x, y) => {
       const d = s.grid[y * w + x];
-      out += d === 0 ? "." : toChar(d, s.id);
-      out += x === w - 1 ? "\n" : " ";
-    }
-  }
-  return out;
+      return d === 0 ? "." : toChar(d, s.id);
+    },
+    { across: " " },
+  );
 }

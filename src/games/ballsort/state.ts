@@ -12,6 +12,7 @@ import { type DescParse, descValue, puzzleDescError } from "../../engine/desc-er
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { numberItem } from "../../engine/params.ts";
 import { num, paramsCodec, size } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
@@ -314,16 +315,15 @@ export function sortedBoard(s: BallsortState, tubes: readonly number[]): Ballsor
 
 /** One row a slot, the mouths at the top; `.` an empty slot. */
 export function textFormat(s: BallsortState): string {
-  const rows: string[] = [];
-  for (let y = 0; y < s.h; y++) {
-    let row = "";
-    for (let t = 0; t < s.w; t++) {
+  return gridText(
+    s.w,
+    s.h,
+    (t, y) => {
       const v = s.ball[y * s.w + t];
-      row += v === 0 ? "." : COLOR_LETTERS[v - 1];
-    }
-    rows.push(row);
-  }
-  return rows.join("\n");
+      return v === 0 ? "." : COLOR_LETTERS[v - 1];
+    },
+    { finalNewline: false },
+  );
 }
 
 // --- move serialization ----------------------------------------------------

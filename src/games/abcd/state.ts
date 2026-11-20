@@ -27,6 +27,7 @@ import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { modifierItem } from "../../engine/modifier.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
@@ -321,54 +322,40 @@ export function textFormat(state: AbcdState): string | null {
   if (w >= 19 || h >= 19) return null;
   const { grid, numbers } = state;
 
-  const rw = (w + n) * 2 + 1; // row width, incl. the trailing newline column
-  const rh = h + n + 2;
-  const buf = new Array<string>(rw * rh).fill(" ");
-  for (let i = 0; i < rh; i++) buf[rw * (i + 1) - 1] = "\n";
+  const letter = (i: number): string => String.fromCharCode(65 + i);
+  const clue = (num: number): string => (num === NO_NUMBER ? " " : String(num));
 
-  const digit = (num: number): string => String(num);
-
-  // Letters in the top-left corner.
-  for (let i = 0; i < n; i++) {
-    const c = String.fromCharCode(65 + i);
-    buf[rw * (n - 1) + i * 2] = c; // horizontal
-    buf[rw * i + (n - 1) * 2] = c; // vertical
+  // The column clues, a line a letter, with the letters down the left; the
+  // last line also names the letters along it, heading the row clues' columns.
+  let header = "";
+  for (let j = 0; j < n; j++) {
+    const letters =
+      j === n - 1
+        ? Array.from({ length: n }, (_, i) => `${letter(i)} `).join("")
+        : `${" ".repeat((n - 1) * 2)}${letter(j)} `;
+    const clues = Array.from(
+      { length: w },
+      (_, x) => `${clue(numbers[verClue(x, j, n, h)])} `,
+    ).join("");
+    header += `${letters}${clues}\n`;
   }
-  // Top (column) clues.
-  for (let x = 0; x < w; x++)
-    for (let j = 0; j < n; j++) {
-      const num = numbers[verClue(x, j, n, h)];
-      if (num !== NO_NUMBER) buf[rw * j + n * 2 + x * 2] = digit(num);
-    }
-  // Left (row) clues.
-  for (let y = 0; y < h; y++)
-    for (let j = 0; j < n; j++) {
-      const num = numbers[horClue(y, j, n)];
-      if (num !== NO_NUMBER) buf[rw * (y + n + 1) + j * 2] = digit(num);
-    }
-  // Outline corners (a subtle diag-vs-orthogonal cue).
+  // The outline's corners are a subtle diagonal-or-orthogonal cue.
   const corner = state.params.diag ? "*" : "+";
-  buf[rw * n + n * 2 - 1] = corner; // top-left
-  buf[rw * (n + 1) - 2] = corner; // top-right
-  buf[rw * (n + h + 1) + n * 2 - 1] = corner; // bottom-left
-  buf[rw * (n + h + 2) - 2] = corner; // bottom-right
-  // Horizontal borders.
-  for (let i = 0; i < w * 2 - 1; i++) {
-    buf[rw * n + n * 2 + i] = "-"; // top
-    buf[rw * (n + h + 1) + n * 2 + i] = "-"; // bottom
-  }
-  // Vertical borders.
-  for (let y = 0; y < h; y++) {
-    buf[rw * (n + y + 1) + n * 2 - 1] = "|"; // left
-    buf[rw * (n + y + 2) - 2] = "|"; // right
-  }
-  // The entered letters.
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
+  const rim = `${" ".repeat(n * 2 - 1)}${corner}${"-".repeat(w * 2 - 1)}${corner}\n`;
+  const rows = gridText(
+    w,
+    h,
+    (x, y) => {
       const c = grid[y * w + x];
-      buf[rw * (n + y + 1) + (n + x) * 2] =
-        c !== EMPTY ? String.fromCharCode(64 + c) : ".";
-    }
-
-  return buf.join("");
+      return c !== EMPTY ? String.fromCharCode(64 + c) : ".";
+    },
+    {
+      across: " ",
+      ends: (y) => [
+        `${Array.from({ length: n }, (_, j) => clue(numbers[horClue(y, j, n)])).join(" ")}|`,
+        "|",
+      ],
+    },
+  );
+  return header + rim + rows + rim;
 }

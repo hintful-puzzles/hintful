@@ -20,6 +20,7 @@ import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { DESC_TOO_LONG, type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { endParams, paramsLetter, unreadParams } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { newCursor, newDrag } from "../../engine/pointer.ts";
@@ -468,22 +469,18 @@ export function textFormat(s: BoatsState): string | null {
   const { w, h } = s.params;
   if (w > 10 || h > 10) return null;
 
-  const lineLen = w * 2 + 2;
-  const out = new Array<string>(lineLen * (h + 1)).fill(" ");
-  for (let i = 0; i < h + 1; i++) out[(i + 1) * lineLen - 1] = "\n";
-
-  for (let x = 0; x < w; x++)
-    if (s.borderClues[x] !== NO_CLUE)
-      out[lineLen * h + x * 2] = String(s.borderClues[x]);
-  for (let y = 0; y < h; y++)
-    if (s.borderClues[y + w] !== NO_CLUE)
-      out[(y + 1) * lineLen - 2] = String(s.borderClues[y + w]);
-
-  for (let i = 0; i < w * h; i++) {
-    const cell = s.gridClues[i] !== EMPTY ? s.gridClues[i] : s.grid[i];
-    out[(i % w) * 2 + Math.floor(i / w) * lineLen] = TEXT_CHARS[cell] ?? "?";
-  }
-
+  const clue = (i: number): string =>
+    s.borderClues[i] !== NO_CLUE ? String(s.borderClues[i]) : " ";
+  const rows = gridText(
+    w,
+    h,
+    (x, y) => {
+      const i = y * w + x;
+      const cell = s.gridClues[i] !== EMPTY ? s.gridClues[i] : s.grid[i];
+      return `${TEXT_CHARS[cell] ?? "?"} `;
+    },
+    { ends: (y) => ["", clue(y + w)] },
+  );
   // No trailing newline: upstream's buffer ends with a NUL in that slot.
-  return out.slice(0, -1).join("");
+  return `${rows}${Array.from({ length: w }, (_, x) => `${clue(x)} `).join("")} `;
 }

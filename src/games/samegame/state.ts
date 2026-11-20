@@ -2,6 +2,7 @@ import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,
@@ -443,10 +444,5 @@ export function status(state: SamegameState): GameStatus {
 /** One digit per tile, a space for an empty cell. Upstream also spells
  * colors from 10 as letters, which `validateParams` puts out of reach. */
 export function textFormat({ w, h, tiles }: SamegameState): string {
-  let out = "";
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) out += tiles[y * w + x] || " ";
-    out += "\n";
-  }
-  return out;
+  return gridText(w, h, (x, y) => String(tiles[y * w + x] || " "));
 }

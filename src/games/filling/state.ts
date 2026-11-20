@@ -33,6 +33,7 @@ import {
 import { noSuchTier } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { boxedGridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -298,15 +299,13 @@ export function status(state: FillingState): GameStatus {
 /** Bordered ASCII grid (upstream `board_to_string`). */
 export function textFormat(state: FillingState): string {
   const { w, h, board } = state;
-  const sep = `+${"---+".repeat(w)}\n`;
-  let out = sep;
-  for (let y = 0; y < h; y++) {
-    let row = "|";
-    for (let x = 0; x < w; x++) {
+  return boxedGridText(w, h, {
+    corner: "+",
+    top: "---",
+    left: "|",
+    cell: (x, y) => {
       const v = board[y * w + x];
-      row += v ? ` ${v} |` : "   |";
-    }
-    out += `${row}\n${sep}`;
-  }
-  return out;
+      return v ? ` ${v} ` : "   ";
+    },
+  });
 }

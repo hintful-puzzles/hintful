@@ -16,6 +16,7 @@ import {
 import { MAX_CANDIDATE_VALUE } from "../../engine/candidate-bits.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import {
@@ -359,33 +360,28 @@ const DIR_STRINGS = ["N ", "NE", "E ", "SE", "S ", "SW", "W ", "NW"] as const;
 
 function textFormat(s: SignpostState): string {
   const { w, h, n } = s;
-  let ret = "";
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      ret += DIR_STRINGS[s.dirs[i]];
-      ret += s.flags[i] & FLAG_IMMUTABLE ? "I" : " ";
-      ret += " ";
+  const number = (num: number): string => {
+    if (num === 0) return "   ";
+    const nn = num % (n + 1);
+    const set = Math.floor(num / (n + 1));
+    const tens = nn >= 10 ? String(Math.floor(nn / 10)) : " ";
+    // A set's letter takes the place of the trailing space ('a' - 1 + set).
+    return set === 0
+      ? `${tens}${nn % 10} `
+      : `${String.fromCharCode(set + 96)}${tens}${nn % 10}`;
+  };
+  // Each row is three lines: the arrows, the numbers under them, and a blank.
+  return gridText(w, 3 * h, (x, line) => {
+    const i = Math.floor(line / 3) * w + x;
+    switch (line % 3) {
+      case 0:
+        return `${DIR_STRINGS[s.dirs[i]]}${s.flags[i] & FLAG_IMMUTABLE ? "I" : " "} `;
+      case 1:
+        return `${number(s.nums[i])} `;
+      default:
+        return "";
     }
-    ret += "\n";
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      const num = s.nums[i];
-      if (num === 0) {
-        ret += "   ";
-      } else {
-        const nn = num % (n + 1);
-        const set = Math.floor(num / (n + 1));
-        if (set !== 0) ret += String.fromCharCode(set + 96); // 'a' - 1 + set
-        ret += nn >= 10 ? String(Math.floor(nn / 10)) : " ";
-        ret += String(nn % 10);
-        if (set === 0) ret += " ";
-      }
-      ret += " ";
-    }
-    ret += "\n\n";
-  }
-  return ret;
+  });
 }
 
 // --- rendering plumbing ----------------------------------------------

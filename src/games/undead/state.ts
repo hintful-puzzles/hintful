@@ -8,6 +8,7 @@ import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace, traceSight } from "../../engine/describe-runtime.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -594,33 +595,21 @@ export function textFormat(s: UndeadState): string {
   const w = common.w;
   const h = common.h;
   const stride = w + 2;
-  let out = `G: ${common.numGhosts} V: ${common.numVampires} Z: ${common.numZombies}\n\n`;
-  for (let y = 0; y < h + 2; y++) {
-    for (let x = 0; x < w + 2; x++) {
-      const c = common.grid[x + y * stride];
-      const xi = common.xinfo[x + y * stride];
-      const r = grid2range(x, y, w, h);
-      if (r !== -1) {
-        out += c.toString().padStart(2, " ");
-      } else if (c === CELL_MIRROR_L) {
-        out += " \\";
-      } else if (c === CELL_MIRROR_R) {
-        out += " /";
-      } else if (xi >= 0) {
-        const g = s.guess[xi];
-        out +=
-          g === MON_GHOST
-            ? " G"
-            : g === MON_VAMPIRE
-              ? " V"
-              : g === MON_ZOMBIE
-                ? " Z"
-                : " .";
-      } else {
-        out += "  ";
-      }
-    }
-    out += "\n";
-  }
-  return out;
+  const grid = gridText(w + 2, h + 2, (x, y) => {
+    const c = common.grid[x + y * stride];
+    const xi = common.xinfo[x + y * stride];
+    if (grid2range(x, y, w, h) !== -1) return c.toString().padStart(2, " ");
+    if (c === CELL_MIRROR_L) return " \\";
+    if (c === CELL_MIRROR_R) return " /";
+    if (xi < 0) return "  ";
+    const g = s.guess[xi];
+    return g === MON_GHOST
+      ? " G"
+      : g === MON_VAMPIRE
+        ? " V"
+        : g === MON_ZOMBIE
+          ? " Z"
+          : " .";
+  });
+  return `G: ${common.numGhosts} V: ${common.numVampires} Z: ${common.numZombies}\n\n${grid}`;
 }

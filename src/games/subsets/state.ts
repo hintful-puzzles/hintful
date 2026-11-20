@@ -301,6 +301,7 @@ export function encodeDesc(state: SubsetsState): string {
 
 const CODE_A = "A".charCodeAt(0);
 
+/** Not `gridText`: a cell is a block of several lines, its candidates. */
 export function textFormat(state: SubsetsState): string {
   const { w, h, n } = state;
   const cw = CELL_WIDTH;

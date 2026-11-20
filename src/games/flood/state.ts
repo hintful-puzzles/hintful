@@ -7,6 +7,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { parseDimensions, unreadParams } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -207,9 +208,7 @@ export function status(state: FloodState): GameStatus {
 
 export function textFormat(state: FloodState): string {
   const { w, h, grid } = state;
-  let text = "";
-  for (let y = 0; y < h; y++) text += `${grid.subarray(y * w, (y + 1) * w).join("")}\n`;
-  return text;
+  return gridText(w, h, (x, y) => String(grid[y * w + x]));
 }
 
 // --- generator --------------------------------------------------------

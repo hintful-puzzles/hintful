@@ -24,6 +24,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -488,53 +489,38 @@ export function executeMove(state: MagnetsState, move: MagnetsMove): MagnetsStat
 export function textFormat(state: MagnetsState): string {
   const { w, h, grid, flags, common } = state;
   const { dominoes, rowcount, colcount } = common;
-  const lines: string[] = [];
+  const totals = (sign: number): string =>
+    Array.from({ length: w }, (_, x) => ` ${clueChar(colcount[x * 3 + sign])}`).join(
+      "",
+    );
+  const hborder = ` +${"-".repeat(w * 2 - 1)}+\n`;
 
-  // Top row: '+' then column '+' totals.
-  let top = "+";
-  for (let x = 0; x < w; x++) top += ` ${clueChar(colcount[x * 3 + POSITIVE])}`;
-  lines.push(top);
-
-  const hborder = ` +${"-".repeat(w * 2 - 1)}+`;
-  lines.push(hborder);
-
-  for (let y = 0; y < h; y++) {
-    let row = `${clueChar(rowcount[y * 3 + POSITIVE])}|`;
-    for (let x = 0; x < w; x++) {
+  // A wall is drawn between two cells of different dominoes.
+  const cells = gridText(
+    w,
+    h,
+    (x, y) => {
       const i = y * w + x;
-      row +=
-        dominoes[i] === i
-          ? "#"
-          : grid[i] === POSITIVE
-            ? "+"
-            : grid[i] === NEGATIVE
-              ? "-"
-              : flags[i] & GS_SET
-                ? "*"
-                : " ";
-      if (x < w - 1) row += dominoes[i] === i + 1 ? " " : "|";
-    }
-    row += `|${clueChar(rowcount[y * 3 + NEGATIVE])}`;
-    lines.push(row);
+      if (dominoes[i] === i) return "#";
+      if (grid[i] === POSITIVE) return "+";
+      if (grid[i] === NEGATIVE) return "-";
+      return flags[i] & GS_SET ? "*" : " ";
+    },
+    {
+      across: (x, y) => (dominoes[y * w + x] === y * w + x + 1 ? " " : "|"),
+      between: {
+        down: (x, y) => (dominoes[y * w + x] === (y + 1) * w + x ? " " : "-"),
+        middle: "+",
+      },
+      ends: (y, between) =>
+        between
+          ? [" |", "|"]
+          : [
+              `${clueChar(rowcount[y * 3 + POSITIVE])}|`,
+              `|${clueChar(rowcount[y * 3 + NEGATIVE])}`,
+            ],
+    },
+  );
 
-    if (y < h - 1) {
-      let mid = " |";
-      for (let x = 0; x < w; x++) {
-        const i = y * w + x;
-        mid += dominoes[i] === i + w ? " " : "-";
-        if (x < w - 1) mid += "+";
-      }
-      mid += "|";
-      lines.push(mid);
-    }
-  }
-
-  lines.push(hborder);
-
-  let bottom = " ";
-  for (let x = 0; x < w; x++) bottom += ` ${clueChar(colcount[x * 3 + NEGATIVE])}`;
-  bottom += " -";
-  lines.push(bottom);
-
-  return `${lines.join("\n")}\n`;
+  return `+${totals(POSITIVE)}\n${hborder}${cells}${hborder} ${totals(NEGATIVE)} -\n`;
 }

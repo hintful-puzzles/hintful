@@ -415,6 +415,9 @@ function drawDomino(
   }
 }
 
+/** Not `boxedGridText`: each placed domino's outline is drawn over the canvas,
+ * keeping a corner an earlier domino wrote, so an edge is not a function of
+ * its own place. */
 function textFormat(state: DominosaState): string | null {
   // A square has three characters for its number (upstream
   // `game_can_format_as_text_now`).

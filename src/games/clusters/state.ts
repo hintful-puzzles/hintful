@@ -15,6 +15,7 @@ import { type DescParse, descValue } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import { PAIR_NAMES, type PairIndex } from "../../engine/piece.ts";
@@ -248,15 +249,10 @@ export function executeMove(state: ClustersState, move: ClustersMove): ClustersS
 
 export function textFormat(s: ClustersState): string {
   const { w, h, grid } = s;
-  let out = "";
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const c = grid[y * w + x];
-      const base = c & F_COLOR_0 ? "r" : c & F_COLOR_1 ? "b" : ".";
-      // Uppercase for a given dot (never on an empty cell — givens are colored).
-      out += `${c & F_SINGLE ? base.toUpperCase() : base} `;
-    }
-    out += "\n";
-  }
-  return out;
+  return gridText(w, h, (x, y) => {
+    const c = grid[y * w + x];
+    const base = c & F_COLOR_0 ? "r" : c & F_COLOR_1 ? "b" : ".";
+    // Uppercase for a given dot (never on an empty cell — givens are colored).
+    return `${c & F_SINGLE ? base.toUpperCase() : base} `;
+  });
 }

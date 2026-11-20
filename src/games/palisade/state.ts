@@ -28,6 +28,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { boxedGridText } from "../../engine/grid-text.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,
@@ -267,38 +268,21 @@ export function status(state: PalisadeState): GameStatus {
 
 export function textFormat(state: PalisadeState): string {
   const { w, h, clues, borders } = state;
-  const cw = 4;
-  const ch = 2;
-  const gw = cw * w + 2;
-  const gh = ch * h + 1;
-  const len = gw * gh;
-  const board = new Array<string>(len).fill(" ");
-
-  for (let r = 0; r < h; r++) {
-    for (let c = 0; c < w; c++) {
-      const cell = r * ch * gw + cw * c;
-      const center = cell + (gw * ch) / 2 + cw / 2;
-      const i = r * w + c;
-      const clue = clues[i];
-
-      if (clue !== EMPTY) board[center] = String(clue);
-      board[cell] = "+";
-
-      if (borders[i] & BORDER_U) {
-        for (let j = 1; j < cw; j++) board[cell + j] = "-";
-      } else if (borders[i] & DISABLED(BORDER_U)) {
-        board[cell + cw / 2] = "x";
-      }
-
-      if (borders[i] & BORDER_L) board[cell + gw] = "|";
-      else if (borders[i] & DISABLED(BORDER_L)) board[cell + gw] = "x";
-    }
-    for (let c = 0; c < ch; c++) {
-      board[(r * ch + c) * gw + gw - 2] = c ? "|" : "+";
-      board[(r * ch + c) * gw + gw - 1] = "\n";
-    }
-  }
-  // Bottom rim: copy the first row's '+'/'-' pattern.
-  for (let j = 0; j < gw; j++) board[len - gw + j] = board[j];
-  return board.join("");
+  return boxedGridText(w, h, {
+    corner: "+",
+    // The bottom rim repeats the top row's edges (upstream).
+    top: (x, y) => {
+      const b = borders[(y === h ? 0 : y) * w + x];
+      return b & BORDER_U ? "---" : b & DISABLED(BORDER_U) ? " x " : "   ";
+    },
+    left: (x, y) => {
+      if (x === w) return "|";
+      const b = borders[y * w + x];
+      return b & BORDER_L ? "|" : b & DISABLED(BORDER_L) ? "x" : " ";
+    },
+    cell: (x, y) => {
+      const clue = clues[y * w + x];
+      return clue === EMPTY ? "   " : ` ${clue} `;
+    },
+  });
 }

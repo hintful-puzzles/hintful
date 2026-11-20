@@ -7,6 +7,7 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { descValue } from "../../engine/desc-error.ts";
+import { boxedGridText } from "../../engine/grid-text.ts";
 import type { GameStatus, Rect } from "../../engine/types.ts";
 import { linesAnswer } from "./solver.ts";
 import {
@@ -428,29 +429,19 @@ export function textFormat(state: RectState): string {
   const vOn = (cx: number, cy: number) =>
     cx === 0 || cx === w || (vrange(w, h, cx, cy) && vedge[cy * w + cx] !== 0);
 
-  let out = "";
-  for (let y = 0; y <= 2 * h; y++) {
-    for (let x = 0; x <= 2 * w; x++) {
-      const cx = Math.floor(x / 2);
-      const cy = Math.floor(y / 2);
-      if (x & y & 1) {
-        out += clueText(state, cy * w + cx).padStart(col);
-      } else if (x & 1) {
-        out += (hOn(cx, cy) ? "-" : " ").repeat(col);
-      } else if (y & 1) {
-        out += vOn(cx, cy) ? "|" : " ";
-      } else {
-        const hl = hOn(cx - 1, cy);
-        const hr = hOn(cx, cy);
-        const vu = vOn(cx, cy - 1);
-        const vd = vOn(cx, cy);
-        if (!hl && !hr && !vu && !vd) out += " ";
-        else if (hl && hr && !vu && !vd) out += "-";
-        else if (!hl && !hr && vu && vd) out += "|";
-        else out += "+";
-      }
-    }
-    out += "\n";
-  }
-  return out;
+  return boxedGridText(w, h, {
+    cell: (cx, cy) => clueText(state, cy * w + cx).padStart(col),
+    top: (cx, cy) => (hOn(cx, cy) ? "-" : " ").repeat(col),
+    left: (cx, cy) => (vOn(cx, cy) ? "|" : " "),
+    corner: (cx, cy) => {
+      const hl = hOn(cx - 1, cy);
+      const hr = hOn(cx, cy);
+      const vu = vOn(cx, cy - 1);
+      const vd = vOn(cx, cy);
+      if (!hl && !hr && !vu && !vd) return " ";
+      if (hl && hr && !vu && !vd) return "-";
+      if (!hl && !hr && vu && vd) return "|";
+      return "+";
+    },
+  });
 }

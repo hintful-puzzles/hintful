@@ -32,6 +32,7 @@ import {
 import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/game.ts";
+import { gridText } from "../../engine/grid-text.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
@@ -525,33 +526,22 @@ export function newUi(): SpokesUi {
  * `\` and `/` for the drawn lines, a space for anything else. */
 export function textFormat(s: SpokesState): string {
   const { w, h } = s;
-  const out: string[] = [];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      out.push(s.numbers[i] ? String(s.numbers[i]) : " ");
-      out.push(
-        x === w - 1
-          ? "\n"
-          : getSpoke(s.spokes[i], DIR_RIGHT) === SPOKE_LINE
-            ? "-"
-            : " ",
-      );
-    }
-    if (y === h - 1) break;
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      out.push(getSpoke(s.spokes[i], DIR_BOT) === SPOKE_LINE ? "|" : " ");
-      out.push(
-        x === w - 1
-          ? "\n"
-          : getSpoke(s.spokes[i], DIR_BOTRIGHT) === SPOKE_LINE
-            ? "\\"
-            : getSpoke(s.spokes[i + 1], DIR_BOTLEFT) === SPOKE_LINE
-              ? "/"
-              : " ",
-      );
-    }
-  }
-  return out.join("");
+  const line = (x: number, y: number, dir: number): boolean =>
+    getSpoke(s.spokes[y * w + x], dir) === SPOKE_LINE;
+  return gridText(
+    w,
+    h,
+    (x, y) => {
+      const n = s.numbers[y * w + x];
+      return n ? String(n) : " ";
+    },
+    {
+      across: (x, y) => (line(x, y, DIR_RIGHT) ? "-" : " "),
+      between: {
+        down: (x, y) => (line(x, y, DIR_BOT) ? "|" : " "),
+        middle: (x, y) =>
+          line(x, y, DIR_BOTRIGHT) ? "\\" : line(x + 1, y, DIR_BOTLEFT) ? "/" : " ",
+      },
+    },
+  );
 }
